@@ -1,0 +1,49 @@
+{
+  "@graph": [
+    {
+      "@id": "http://data.oasis-eu.org/project-OASIS",
+      "@type": "http://xmlns.com/foaf/0.1/Project",
+      "http://xmlns.com/foaf/0.1/homepage": {
+        "@id": "http://www.oasis-eu.org/"
+      },
+      "http://xmlns.com/foaf/0.1/name": "OASIS"
+    },
+    {
+      "@id": "http://data.oasis-eu.org/org-PoleNumerique",
+      "@type": "http://www.w3.org/ns/org#Organization",
+      "http://www.w3.org/ns/org#hasSite": {
+        "@id": "http://data.oasis-eu.org/site-Rhovalparc"
+      },
+      "http://xmlns.com/foaf/0.1/name": "P\u00f4le Num\u00e9rique"
+    },
+    {
+      "@id": "http://data.oasis-eu.org/person-BrunoThuillier",
+      "@type": "http://xmlns.com/foaf/0.1/Person",
+      "http://www.w3.org/ns/org#memberOf": {
+        "@id": "http://data.oasis-eu.org/org-PoleNumerique"
+      },
+      "http://xmlns.com/foaf/0.1/currentProject": {
+        "@id": "http://data.oasis-eu.org/project-OASIS"
+      },
+      "http://xmlns.com/foaf/0.1/name": "Bruno Thuillier"
+    },
+    {
+      "@id": "http://data.oasis-eu.org/site-Rhovalparc",
+      "@type": "http://www.w3.org/ns/org#Site",
+      "http://sw-portal.deri.org/ontologies/swportal#hasAddress": {
+        "@type": "http://sw-portal.deri.org/ontologies/swportal#PostalAddress",
+        "http://sw-portal.deri.org/ontologies/swportal#hasStreetAddress": "1 avenue de la Gare - All\u00e9e B - B.P. 15155 - 26958 VALENCE CEDEX 9",
+        "http://sw-portal.deri.org/ontologies/swportal#inCity": {
+          "@id": "http://id.insee.fr/geo/commune/26362"
+        }
+      },
+      "http://xmlns.com/foaf/0.1/name": "Rhovalparc"
+    },
+    {
+      "@id": "http://id.insee.fr/geo/commune/26362",
+      "@type": "http://rdf.insee.fr/def/geo#Commune",
+      "http://rdf.insee.fr/def/geo#codeINSEE": "26362",
+      "http://rdf.insee.fr/def/geo#nom": "Valence"
+    }
+  ]
+}

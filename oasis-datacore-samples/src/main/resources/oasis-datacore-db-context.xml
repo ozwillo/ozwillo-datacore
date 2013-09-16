@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns:context="http://www.springframework.org/schema/context"
+          xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+          xsi:schemaLocation=
+          "http://www.springframework.org/schema/context
+          http://www.springframework.org/schema/context/spring-context-3.2.xsd
+          http://www.springframework.org/schema/data/mongo
+          http://www.springframework.org/schema/data/mongo/spring-mongo-1.2.xsd
+          http://www.springframework.org/schema/beans
+          http://www.springframework.org/schema/beans/spring-beans-3.2.xsd">
+
+    <!-- Default bean name is 'mongo' -->
+    <mongo:mongo host="${oasis.datacore.mongodb.host}" port="${oasis.datacore.mongodb.port}">
+    <!-- mongo:options connections-per-host="8"
+                   threads-allowed-to-block-for-connection-multiplier="4"
+                   connect-timeout="1000"
+                   max-wait-time="1500}"
+                   auto-connect-retry="true"
+                   socket-keep-alive="true"
+                   socket-timeout="1500"
+                   slave-ok="true"
+                   write-number="1"
+                   write-timeout="0"
+                   write-fsync="true"/ -->
+  </mongo:mongo>
+  <!-- mongo:mongo id="replicaSetMongo" replica-set="127.0.0.1:27017,localhost:27018"/ -->
+  
+  
+  
+  <!-- replacing default MappingMongoConverter for null prop save hack
+  (can't be done using mongo:mapping-converter, see http://forum.springsource.org/showthread.php?141254-Spring-Data-MongoDB-mappingConverter-mapKeyDotReplacement-config-problem )
+  see also :
+  http://www.mkyong.com/mongodb/spring-data-mongodb-remove-_class-column/
+  http://www.javacodegeeks.com/2012/01/mongodb-with-spring-data-project.html
+  http://aredko.blogspot.fr/2011/08/exploiting-mongodb-together-with-spring.html
+  -->
+  <bean id="mappingContext" class="org.springframework.data.mongodb.core.mapping.MongoMappingContext"/>
+  <bean id="mappingConverter" class="org.springframework.data.mongodb.core.convert.DatacoreMappingMongoConverter">
+     <constructor-arg name="mongoDbFactory" ref="mongoDbFactory" />
+     <constructor-arg name="mappingContext" ref="mappingContext" />
+     <!-- property name="customConversions">
+        <bean class="org.springframework.data.mongodb.core.convert.CustomConversions">
+           <constructor-arg name="converters">
+              <list>
+                 <bean class="org.oasis.datacore.sample.converter.ExampleWriteConverter"/>
+                 <bean class="org.oasis.datacore.sample.converter.ExampleReadConverter"/>
+              </list>
+           </constructor-arg>
+        </bean>
+     </property -->
+ </bean>
+ 
+  
+  <!-- auditing see http://maciejwalkowiak.pl/blog/2013/05/24/auditing-entities-in-spring-data-mongodb/ -->
+  <!-- mongo:auditing / -->
+  <mongo:auditing auditor-aware-ref="auditor" />
+  <bean id="auditor" class="org.oasis.datacore.sdk.security.spring.OasisAuthAuditor"/>
+
+        <mongo:db-factory id="mongoDbFactory" dbname="datacore_crm"/>
+        	<!-- TODO write-concern="..." -->
+        	<!-- TODO in prod, auth :
+        	username="${oasis.datacore.mongodb.username}"
+        	password="${oasis.datacore.mongodb.password}" -->
+
+ <!-- Mongo Template.
+ Referenced components (mappingConverter...) have to be specified if they are custom
+ (and then this declaration must happen after their's). -->
+	<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
+		<constructor-arg name="mongoDbFactory" ref="mongoDbFactory" />
+      <constructor-arg name="mongoConverter" ref="mappingConverter" />
+	</bean>
+   <mongo:repositories base-package="org.oasis.datacore" /><!-- TODO finer : for account test -->
+
+ <!-- Custom converters.
+ Referenced components (mappingConverter...) have to be specified if they are custom
+ (and then this declaration must happen after their's). -->
+<mongo:mapping-converter
+   mapping-context-ref="mappingContext"
+   mongo-template-ref="mongoTemplate"
+   db-factory-ref="mongoDbFactory">
+  <mongo:custom-converters>
+    <mongo:converter>
+      <bean class="org.oasis.datacore.sample.converter.ExampleWriteConverter"/>
+    </mongo:converter>
+    <mongo:converter>
+        <bean class="org.oasis.datacore.sample.converter.ExampleReadConverter"/>
+    </mongo:converter>
+  </mongo:custom-converters>
+</mongo:mapping-converter>
+
+   <context:component-scan base-package="org.oasis.datacore" /><!-- TODO finer : for openelec sample -->
+   <context:annotation-config />
+   
+</beans>

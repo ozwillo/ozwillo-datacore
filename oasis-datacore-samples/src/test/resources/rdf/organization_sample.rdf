@@ -1,0 +1,19 @@
+<http://data.oasis-eu.org/project-OASIS> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Project> .
+<http://data.oasis-eu.org/project-OASIS> <http://xmlns.com/foaf/0.1/name> "OASIS" .
+<http://data.oasis-eu.org/project-OASIS> <http://xmlns.com/foaf/0.1/homepage> <http://www.oasis-eu.org/> .
+<http://data.oasis-eu.org/org-PoleNumerique> <http://xmlns.com/foaf/0.1/name> "P\u00F4le Num\u00E9rique" .
+<http://data.oasis-eu.org/org-PoleNumerique> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/org#Organization> .
+<http://data.oasis-eu.org/org-PoleNumerique> <http://www.w3.org/ns/org#hasSite> <http://data.oasis-eu.org/site-Rhovalparc> .
+<http://data.oasis-eu.org/site-Rhovalparc> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/org#Site> .
+<http://data.oasis-eu.org/site-Rhovalparc> <http://sw-portal.deri.org/ontologies/swportal#hasAddress> _:ub14bL21C1 .
+<http://data.oasis-eu.org/site-Rhovalparc> <http://xmlns.com/foaf/0.1/name> "Rhovalparc" .
+<http://id.insee.fr/geo/commune/26362> <http://rdf.insee.fr/def/geo#nom> "Valence" .
+<http://id.insee.fr/geo/commune/26362> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rdf.insee.fr/def/geo#Commune> .
+<http://id.insee.fr/geo/commune/26362> <http://rdf.insee.fr/def/geo#codeINSEE> "26362" .
+<http://data.oasis-eu.org/person-BrunoThuillier> <http://xmlns.com/foaf/0.1/currentProject> <http://data.oasis-eu.org/project-OASIS> .
+<http://data.oasis-eu.org/person-BrunoThuillier> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
+<http://data.oasis-eu.org/person-BrunoThuillier> <http://www.w3.org/ns/org#memberOf> <http://data.oasis-eu.org/org-PoleNumerique> .
+<http://data.oasis-eu.org/person-BrunoThuillier> <http://xmlns.com/foaf/0.1/name> "Bruno Thuillier" .
+_:ub14bL21C1 <http://sw-portal.deri.org/ontologies/swportal#hasStreetAddress> "1 avenue de la Gare - All\u00E9e B - B.P. 15155 - 26958 VALENCE CEDEX 9" .
+_:ub14bL21C1 <http://sw-portal.deri.org/ontologies/swportal#inCity> <http://id.insee.fr/geo/commune/26362> .
+_:ub14bL21C1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://sw-portal.deri.org/ontologies/swportal#PostalAddress> .

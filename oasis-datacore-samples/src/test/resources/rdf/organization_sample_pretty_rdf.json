@@ -1,0 +1,133 @@
+{
+  "xmlns$igeo": "http://rdf.insee.fr/def/geo#", 
+  "http://data.oasis-eu.org/site-Rhovalparc": {
+    "foaf$name": [
+      {
+        "type": "literal", 
+        "value": "Rhovalparc"
+      }
+    ], 
+    "swpo$hasAddress": [
+      {
+        "type": "bnode", 
+        "value": "_$ub7bL21C1"
+      }
+    ], 
+    "rdf$type": [
+      {
+        "type": "uri", 
+        "value": "http://www.w3.org/ns/org#Site"
+      }
+    ]
+  }, 
+  "http://data.oasis-eu.org/project-OASIS": {
+    "foaf$name": [
+      {
+        "type": "literal", 
+        "value": "OASIS"
+      }
+    ], 
+    "foaf$homepage": [
+      {
+        "type": "uri", 
+        "value": "http://www.oasis-eu.org/"
+      }
+    ], 
+    "rdf$type": [
+      {
+        "type": "uri", 
+        "value": "http://xmlns.com/foaf/0.1/Project"
+      }
+    ]
+  }, 
+  "_$ub7bL21C1": {
+    "swpo$inCity": [
+      {
+        "type": "uri", 
+        "value": "http://id.insee.fr/geo/commune/26362"
+      }
+    ], 
+    "swpo$hasStreetAddress": [
+      {
+        "type": "literal", 
+        "value": "1 avenue de la Gare - Allée B - B.P. 15155 - 26958 VALENCE CEDEX 9"
+      }
+    ], 
+    "rdf$type": [
+      {
+        "type": "uri", 
+        "value": "http://sw-portal.deri.org/ontologies/swportal#PostalAddress"
+      }
+    ]
+  }, 
+  "xmlns$swpo": "http://sw-portal.deri.org/ontologies/swportal#", 
+  "http://data.oasis-eu.org/org-PoleNumerique": {
+    "foaf$name": [
+      {
+        "type": "literal", 
+        "value": "Pôle Numérique"
+      }
+    ], 
+    "org$hasSite": [
+      {
+        "type": "uri", 
+        "value": "http://data.oasis-eu.org/site-Rhovalparc"
+      }
+    ], 
+    "rdf$type": [
+      {
+        "type": "uri", 
+        "value": "http://www.w3.org/ns/org#Organization"
+      }
+    ]
+  }, 
+  "http://data.oasis-eu.org/person-BrunoThuillier": {
+    "foaf$name": [
+      {
+        "type": "literal", 
+        "value": "Bruno Thuillier"
+      }
+    ], 
+    "foaf$currentProject": [
+      {
+        "type": "uri", 
+        "value": "http://data.oasis-eu.org/project-OASIS"
+      }
+    ], 
+    "rdf$type": [
+      {
+        "type": "uri", 
+        "value": "http://xmlns.com/foaf/0.1/Person"
+      }
+    ], 
+    "org$memberOf": [
+      {
+        "type": "uri", 
+        "value": "http://data.oasis-eu.org/org-PoleNumerique"
+      }
+    ]
+  }, 
+  "xmlns$org": "http://www.w3.org/ns/org#", 
+  "xmlns$rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#", 
+  "xmlns$foaf": "http://xmlns.com/foaf/0.1/", 
+  "http://id.insee.fr/geo/commune/26362": {
+    "igeo$nom": [
+      {
+        "type": "literal", 
+        "value": "Valence"
+      }
+    ], 
+    "rdf$type": [
+      {
+        "type": "uri", 
+        "value": "http://rdf.insee.fr/def/geo#Commune"
+      }
+    ], 
+    "igeo$codeINSEE": [
+      {
+        "type": "literal", 
+        "value": "26362"
+      }
+    ]
+  }
+}

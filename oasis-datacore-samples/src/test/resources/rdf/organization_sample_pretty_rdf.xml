@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:igeo="http://rdf.insee.fr/def/geo#"
+  xmlns:org="http://www.w3.org/ns/org#"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:foaf="http://xmlns.com/foaf/0.1/"
+  xmlns:swpo="http://sw-portal.deri.org/ontologies/swportal#"
+>
+  <foaf:Person rdf:about="http://data.oasis-eu.org/person-BrunoThuillier">
+    <foaf:name>Bruno Thuillier</foaf:name>
+    <org:memberOf>
+      <org:Organization rdf:about="http://data.oasis-eu.org/org-PoleNumerique">
+        <org:hasSite rdf:resource="http://data.oasis-eu.org/site-Rhovalparc"/>
+        <foaf:name>Pôle Numérique</foaf:name>
+      </org:Organization>
+    </org:memberOf>
+    <foaf:currentProject>
+      <foaf:Project rdf:about="http://data.oasis-eu.org/project-OASIS">
+        <foaf:name>OASIS</foaf:name>
+        <foaf:homepage rdf:resource="http://www.oasis-eu.org/"/>
+      </foaf:Project>
+    </foaf:currentProject>
+  </foaf:Person>
+  <org:Site rdf:about="http://data.oasis-eu.org/site-Rhovalparc">
+    <foaf:name>Rhovalparc</foaf:name>
+    <swpo:hasAddress>
+      <swpo:PostalAddress rdf:nodeID="ub13bL21C1">
+        <swpo:inCity rdf:resource="http://id.insee.fr/geo/commune/26362"/>
+        <swpo:hasStreetAddress>1 avenue de la Gare - Allée B - B.P. 15155 - 26958 VALENCE CEDEX 9</swpo:hasStreetAddress>
+      </swpo:PostalAddress>
+    </swpo:hasAddress>
+  </org:Site>
+  <igeo:Commune rdf:about="http://id.insee.fr/geo/commune/26362">
+    <igeo:nom>Valence</igeo:nom>
+    <igeo:codeINSEE>26362</igeo:codeINSEE>
+  </igeo:Commune>
+</rdf:RDF>

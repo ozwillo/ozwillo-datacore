@@ -1,0 +1,35 @@
+@prefix dcterms:<http://purl.org/dc/terms/>.
+@prefix foaf:<http://xmlns.com/foaf/0.1/>.
+@prefix org:<http://www.w3.org/ns/org#>.
+@prefix igeo:<http://rdf.insee.fr/def/geo#>.
+@prefix swpo:<http://sw-portal.deri.org/ontologies/swportal#>.
+@prefix oasis:<http://data.oasis-eu.org/>.
+### The commune of Valence. A full description is provided by INSEE at this URI.
+<http://id.insee.fr/geo/commune/26362>
+a igeo:Commune;
+igeo:nom "Valence";
+igeo:codeINSEE "26362".
+### The organization "Pôle Numérique"
+oasis:org-PoleNumerique
+a org:Organization;
+foaf:name "Pôle Numérique";
+org:hasSite oasis:site-Rhovalparc.
+### The physical site of this organisation, with its address. The address is described as a « blank node » (no URI)
+oasis:site-Rhovalparc
+a org:Site;
+foaf:name "Rhovalparc";
+swpo:hasAddress
+[ a swpo:PostalAddress;
+swpo:hasStreetAddress "1 avenue de la Gare - Allée B - B.P. 15155 - 26958 VALENCE CEDEX 9";
+swpo:inCity <http://id.insee.fr/geo/commune/26362> ].
+### A member of this organization
+oasis:person-BrunoThuillier
+a foaf:Person;
+org:memberOf oasis:org-PoleNumerique;
+foaf:name "Bruno Thuillier";
+foaf:currentProject oasis:project-OASIS.
+### The OASIS project
+oasis:project-OASIS
+a foaf:Project;
+foaf:name "OASIS";
+foaf:homepage <http://www.oasis-eu.org/>.
