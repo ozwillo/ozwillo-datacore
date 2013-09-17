@@ -215,7 +215,7 @@ public class OpenelecDatacoreMetamodelTest {
       
       // create bureau in datacore
       Map<String, DCEntity> bureauDeVoteSubresources = new HashMap<String, DCEntity>(1);
-      lyonCityCopiedSubresources.put("bureauCollectivite", lyonCity); // TODO shorter names (auto ??)
+      bureauDeVoteSubresources.put("bureauCollectivite", lyonCity); // TODO shorter names (auto ??)
       String bureauDeVoteUri = DCResourceModel.DATACORE_BASE_URI + bureauDeVoteModel.getName()
             + "/Lyon325"; // uri (from id query params !?), TODO only suffix ??
       DCEntity bureauDeVote = newResource(bureauDeVoteModel, bureauDeVoteUri, bureauDeVoteSubresources); // TODO also uri

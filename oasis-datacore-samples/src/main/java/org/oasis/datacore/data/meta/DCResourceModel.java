@@ -32,11 +32,15 @@ public class DCResourceModel {
    public String toString() {
       StringBuffer sbuf = new StringBuffer(DCResourceModel.class.getSimpleName());
       sbuf.append("[");
-      if (extendedResourceModel == null) {
+      sbuf.append(this.name);
+      if (extendedResourceModel != null) {
          sbuf.append(" extends " + extendedResourceModel.getTargetModel().getName());
       }
-      if (copiedSubresourceModels == null && !copiedSubresourceModels.isEmpty()) {
-         sbuf.append(" and copies subresources : ");
+      if (copiedSubresourceModels != null && !copiedSubresourceModels.isEmpty()) {
+         if (extendedResourceModel != null) {
+            sbuf.append(" and ");
+         }
+         sbuf.append(" copies subresources : ");
          toString(sbuf, copiedSubresourceModels.get(0));
          for (int i = 1; i < copiedSubresourceModels.size(); i++) {
             sbuf.append(", ");
