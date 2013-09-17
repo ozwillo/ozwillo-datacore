@@ -73,9 +73,13 @@ public class OpenelecDatacoreMetamodelTest {
       bureauDeVote.setUri(bureauDeVoteUri); // TODO Q not obligatory if embedded ? or then only sub-uri ??
       mgo.save(bureauDeVote, "bureauDeVote");
       Assert.assertNotNull(bureauDeVote.getId());
+      Assert.assertEquals(new Long(0), bureauDeVote.getVersion());
       DCEntity foundBureauDeVote = mgo.findOne(new Query(new Criteria("id").is(bureauDeVote.getId())), DCEntity.class, "bureauDeVote");
       Assert.assertNotNull(foundBureauDeVote);
-      Assert.assertNotNull(foundBureauDeVote.getId());
+      Assert.assertEquals(new Long(0), foundBureauDeVote.getVersion());
+      mgo.save(bureauDeVote, "bureauDeVote"); // NB. in spring data 1.2.0 would fail on bug https://jira.springsource.org/browse/DATAMONGO-620
+      // (MongoTemplate.doSaveVersioned(...) does not consider collection handed into the method)
+      Assert.assertEquals(new Long(1), bureauDeVote.getVersion());
       
       // setting collectivite of bureau as an embedded (TODO Q enriched ??) readonly copy
       bureauDeVote.getProperties().put("bureauCollectivite", lyonCity); // TODO shorter names (auto ??)
@@ -148,6 +152,7 @@ public class OpenelecDatacoreMetamodelTest {
       
       DCResourceModel bureauDeVoteModel = new DCResourceModel();
       bureauDeVoteModel.setName("bureauDeVote"); // TODO in param or lyonCity DCEntity ?? TODO rather rdf_type:{x,y} list ???
+      bureauDeVoteModel.getCopiedSubresourceModels().add(new CopiedSubresourceDCModel("bureauCollectivite", cityModel)); // external subresource sample
       
       Map<String,DCEntity> copiedSubresourceDCEntityMap = new HashMap<String,DCEntity>(0);
       ///copiedSubresourceDCEntities.put("mairie", lyonMairieDCEntity);
@@ -187,6 +192,7 @@ public class OpenelecDatacoreMetamodelTest {
       String franceCountryUri = DCResourceModel.DATACORE_BASE_URI + countryModel.getName()
             + "/France"; // uri (from id query params !?) TODO type as field, not prefix
       DCEntity franceCountry = newResource(countryModel, franceCountryUri, null); // TODO also uri
+      franceCountry.getProperties().put("name", "France");
       mgo.save(franceCountry, countryModel.getName());
       
       // create new city in datacore (independently of OpenElec bureau's collectivite)
@@ -208,9 +214,11 @@ public class OpenelecDatacoreMetamodelTest {
       
       
       // create bureau in datacore
+      Map<String, DCEntity> bureauDeVoteSubresources = new HashMap<String, DCEntity>(1);
+      lyonCityCopiedSubresources.put("bureauCollectivite", lyonCity); // TODO shorter names (auto ??)
       String bureauDeVoteUri = DCResourceModel.DATACORE_BASE_URI + bureauDeVoteModel.getName()
             + "/Lyon325"; // uri (from id query params !?), TODO only suffix ??
-      DCEntity bureauDeVote = newResource(bureauDeVoteModel, bureauDeVoteUri, null); // TODO also uri
+      DCEntity bureauDeVote = newResource(bureauDeVoteModel, bureauDeVoteUri, bureauDeVoteSubresources); // TODO also uri
       // TODO have a transient reference to model in entity ?? fill it in lifecycle event ??? AND / OR baseType ?
       ////lyonCity.setProperties(new HashMap<String,Object>()); // TODO does doing it by default it take (too much) place in mongodb ???
       bureauDeVote.getProperties().put("code", "Lyon325"); // TODO index (in metamodel) obviously
@@ -227,9 +235,9 @@ public class OpenelecDatacoreMetamodelTest {
       Assert.assertNotNull(foundBureauDeVote);
       Assert.assertNotNull(foundBureauDeVote.getId());
       
-      // setting collectivite of bureau as an embedded (TODO Q enriched ??) readonly copy
-      bureauDeVote.getProperties().put("bureauCollectivite", lyonCity); // TODO shorter names (auto ??)
-      mgo.save(bureauDeVote, bureauDeVoteModel.getName());
+      // setting collectivite of bureau as an embedded (TODO Q enriched ??) readonly copy TODO allow optional ?
+      ////bureauDeVote.getProperties().put("bureauCollectivite", lyonCity);
+      ////mgo.save(bureauDeVote, bureauDeVoteModel.getName());
       
       // getting bureauDeVote as REST (in fr TODO more) :
       // { _uri:"...", _v:1, (type:"bureauDeVote",) code:"Lyon325", bureauCollectivite:{ _uri:"...", (type:"city",) _v:0, name:"Lyon" } } TODO Q also type / collection ? (yes easier for JAXRS etc.)
@@ -271,6 +279,24 @@ public class OpenelecDatacoreMetamodelTest {
       
       // querying inseeVille :
       // query("insee.ville", { "inseeCode":"INSEE.Lyon" OR "_src0.name":"Lyon" OR "_src.name":"Lyon" })
+      // by INSEE code :
+      List<DCEntity> lyonInseeVilleRes = mgo.find(new Query(new Criteria("properties.inseeCode").is("INSEE.Lyon")),
+            DCEntity.class, inseeVilleModel.getName());
+      Assert.assertNotNull(lyonInseeVilleRes);
+      Assert.assertEquals(1, lyonInseeVilleRes.size());
+      Assert.assertEquals(lyonInseeVille.getId(), lyonInseeVilleRes.get(0).getId());
+      // by (extended) name :
+      lyonInseeVilleRes = mgo.find(new Query(new Criteria("properties.name").is("Lyon")),
+            DCEntity.class, inseeVilleModel.getName());
+      Assert.assertNotNull(lyonInseeVilleRes);
+      Assert.assertEquals(1, lyonInseeVilleRes.size());
+      Assert.assertEquals(lyonInseeVille.getId(), lyonInseeVilleRes.get(0).getId());
+      // by (embedded) country :
+      List<DCEntity> franceInseeVilleRes = mgo.find(new Query(new Criteria("properties.inCountry.properties.name").is("France")),
+            DCEntity.class, inseeVilleModel.getName());
+      Assert.assertNotNull(franceInseeVilleRes);
+      Assert.assertEquals(1, franceInseeVilleRes.size());
+      Assert.assertEquals(lyonInseeVille.getId(), franceInseeVilleRes.get(0).getId());
       
       // NB. as is, there is no way to query bureauDeVote by inseeVille in a single query
       // however that could be done :
@@ -278,6 +304,26 @@ public class OpenelecDatacoreMetamodelTest {
       // * or if done often by a consumer by defining a new bureauDeVote collection with additional city fields copied from insee.ville
       // (ideally, the consumer would have to tell bureauDeVote's master (an OpenElec instance) about it,)
       // this way it could choose to enrich its own data rather than have heavier copy / synchronization jobs on its data)
+      
+      // querying bureauDeVote :
+      // by canton code :
+      List<DCEntity> bureauDeVoteRes = mgo.find(new Query(new Criteria("properties.code").is("Lyon325")),
+            DCEntity.class, bureauDeVoteModel.getName());
+      Assert.assertNotNull(bureauDeVoteRes);
+      Assert.assertEquals(1, bureauDeVoteRes.size());
+      Assert.assertEquals(bureauDeVote.getId(), bureauDeVoteRes.get(0).getId());
+      // by (extended) name :
+      bureauDeVoteRes = mgo.find(new Query(new Criteria("properties.bureauCollectivite.properties.name").is("Lyon")),
+            DCEntity.class, bureauDeVoteModel.getName());
+      Assert.assertNotNull(bureauDeVoteRes);
+      Assert.assertEquals(1, bureauDeVoteRes.size());
+      Assert.assertEquals(bureauDeVote.getId(), bureauDeVoteRes.get(0).getId());
+      // by (embedded) country :
+      bureauDeVoteRes = mgo.find(new Query(new Criteria("properties.bureauCollectivite.properties.inCountry.properties.name").is("France")),
+            DCEntity.class, bureauDeVoteModel.getName());
+      Assert.assertNotNull(bureauDeVoteRes);
+      Assert.assertEquals(1, bureauDeVoteRes.size());
+      Assert.assertEquals(bureauDeVote.getId(), bureauDeVoteRes.get(0).getId());
       
       // NB. there must be no cycles !
       // reciprocal copy of different fields (could be done but) is better replaced by a commonly managed / updated reference collection
@@ -301,14 +347,15 @@ public class OpenelecDatacoreMetamodelTest {
          throw new Exception("New DCEntity is missing extended resource of type "
                + extendedResourceModel.getTargetModel().getName() + " and uri "
                + extendedResourceDCEntity.getUri());
-      } else if (extendedResourceDCEntityFound.getVersion() != extendedResourceDCEntity.getVersion()) {
-         throw new Exception("New DCEntity has extended resource with inconsistent version (of type"
+      } else if (!extendedResourceDCEntityFound.getVersion().equals(extendedResourceDCEntity.getVersion())) {
+         throw new Exception("New DCEntity has extended resource with inconsistent version (of type "
                + extendedResourceModel.getTargetModel().getName() + " and uri "
                + extendedResourceDCEntity.getUri() + ")");
       }
       
       DCEntity dcEntity = new DCEntity(extendedResourceDCEntity);
       dcEntity.setId(null); // to allow generation of new id
+      dcEntity.setVersion(null); // to init of version to 0
       // NB. dcEntity is the same as extendedResourceDCEntity.uri
       // TODO extendedResourceDCEntity.id (more like DBRef actually) (and same for _v, _t) could be put
       // in dcEntity HOWEVER would have to be renamed at each inheritance stage
@@ -328,7 +375,6 @@ public class OpenelecDatacoreMetamodelTest {
    public DCEntity newResource(DCResourceModel dcResourceModel, String uri,
          Map<String,DCEntity> copiedSubresourceDCEntityMap) throws Exception {
       DCEntity dcEntity = new DCEntity();
-      dcEntity.setId(null); // to allow generation of new id
       if (uri == null || uri.length() == 0) {
          throw new Exception("URI should never be null");
       }

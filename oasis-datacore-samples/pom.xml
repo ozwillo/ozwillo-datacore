@@ -20,7 +20,7 @@
         <cglib.version>2.2.2</cglib.version>
         
         <!-- spring data on mongodb -->
-        <spring-data-mongodb.version>1.2.0.RELEASE</spring-data-mongodb.version>
+        <spring-data-mongodb.version>1.2.3.RELEASE</spring-data-mongodb.version>
         <mongodb.version>2.11.2</mongodb.version>
     </properties>
 

@@ -44,6 +44,13 @@ public class CrmTest {
 		mgo.save(contact1);
 		Assert.assertNotNull(contact1.getId());
 		System.out.println("1. contact : " + contact1.getId());
+      Assert.assertEquals(new Long(0), contact1.getVersion());
+      Assert.assertEquals("createdAt and lastModifiedAt should be the same",
+            contact1.getCreatedAt(), contact1.getLastModified());
+      
+      // checking auto version increment (with no diff handling)
+      mgo.save(contact1);
+      Assert.assertEquals(new Long(1), contact1.getVersion());
 		
 		// list
 		List<Contact> contacts = mgo.findAll(Contact.class);
@@ -56,8 +63,8 @@ public class CrmTest {
 		Assert.assertEquals("John", existingContact.getFirstname());
 		Assert.assertNotNull("audit user should have been filled", existingContact.getCreatedBy());
 		Assert.assertNotNull("audit user should have been filled", existingContact.getLastModifiedBy());
-		Assert.assertEquals("createdAt and lastModifiedAt should be the same",
-				existingContact.getCreatedAt(), existingContact.getLastModified());
+      Assert.assertNotEquals("createdAt and lastModifiedAt should be different",
+            existingContact.getCreatedAt(), existingContact.getLastModified());
 		System.out.println("2. find - existingContact : " + existingContact.getFirstname());
 	 
 		// update firstname using on the fly mode and find it again
