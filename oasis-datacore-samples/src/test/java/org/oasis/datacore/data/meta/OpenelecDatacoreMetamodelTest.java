@@ -1,6 +1,5 @@
 package org.oasis.datacore.data.meta;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,12 +8,7 @@ import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.ParentRunner;
-import org.junit.runners.model.FrameworkMethod;
 import org.oasis.datacore.data.DCEntity;
-import org.oasis.datacore.data.meta.CopiedSubresourceDCModel;
-import org.oasis.datacore.data.meta.DCResourceModel;
-import org.oasis.datacore.data.meta.ExtendedResourceDCModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -23,7 +17,9 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.CommandResult;
 import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:oasis-datacore-crm-test-context.xml" })
@@ -139,6 +135,45 @@ public class OpenelecDatacoreMetamodelTest {
       // reciprocal copy of different fields (could be done but) is better replaced by a commonly managed / updated reference collection
    }
 
+   
+   /**
+    * Produces logs :
+    *
+Defined DCResourceModel[country]
+with indexes [{ "v" : 1 , "key" : { "_id" : 1} , "ns" : "datacore_crm.country" , "name" : "_id_"},
+   { "v" : 1 , "key" : { "_p.name" : 1} , "ns" : "datacore_crm.country" , "name" : "_p.name_1"}]
+Defined DCResourceModel[city copies subresources : inCountry=DCResourceModel[country]]
+with indexes [{ "v" : 1 , "key" : { "_id" : 1} , "ns" : "datacore_crm.city" , "name" : "_id_"},
+   { "v" : 1 , "key" : { "_p.name" : 1 , "_p.inCountry._p.name" : 1} ,
+   "ns" : "datacore_crm.city" , "name" : "_p.name_1__p.inCountry._p.name_1"},
+   { "v" : 1 , "key" : { "_p.inCountry._p.name" : 1} , "ns" : "datacore_crm.city" , "name" : "_p.inCountry._p.name_1"}]
+Defined DCResourceModel[bureauDeVote copies subresources : bureauCollectivite=DCResourceModel[city]]
+with indexes [{ "v" : 1 , "key" : { "_id" : 1} , "ns" : "datacore_crm.bureauDeVote" , "name" : "_id_"},
+   { "v" : 1 , "key" : { "code" : 1} , "ns" : "datacore_crm.bureauDeVote" , "name" : "code_1"},
+   { "v" : 1 , "key" : { "_p.bureauCollectivite._p.name" : 1 , "_p.bureauCollectivite._p.inCountry._p.name" : 1} ,
+   "ns" : "datacore_crm.bureauDeVote" , "name" : "collectivite_name__collectivite_inCountry_name"},
+   { "v" : 1 , "key" : { "_p.bureauCollectivite._p.inCountry._p.name" : 1} , "ns" : "datacore_crm.bureauDeVote" ,
+   "name" : "_p.bureauCollectivite._p.inCountry._p.name_1"}]
+Defined DCResourceModel[insee.ville extends city]
+with indexes [{ "v" : 1 , "key" : { "_id" : 1} , "ns" : "datacore_crm.insee.ville" , "name" : "_id_"},
+   { "v" : 1 , "key" : { "_p.inseeCode" : 1} , "ns" : "datacore_crm.insee.ville" , "name" : "_p.inseeCode_1"},
+   { "v" : 1 , "key" : { "_p.name" : 1 , "_p.inCountry._p.name" : 1} , "ns" : "datacore_crm.insee.ville" ,
+   "name" : "_p.name_1__p.inCountry._p.name_1"}, { "v" : 1 , "key" : { "_p.inCountry._p.name" : 1} ,
+   "ns" : "datacore_crm.insee.ville" , "name" : "_p.inCountry._p.name_1"}]
+    * 
+    * and :
+    * 
+For query on inseeVille { "_p.name" : "Lyon" , "_p.inCountry._p.name" : "France"} ,
+   { "cursor" : "BtreeCursor _p.name_1__p.inCountry._p.name_1" , "isMultiKey" : false , "n" : 1 ,
+   "nscannedObjects" : 1 , "nscanned" : 1 , "nscannedObjectsAllPlans" : 1 , "nscannedAllPlans" : 1 ,
+   "scanAndOrder" : false , "indexOnly" : false , "nYields" : 0 , "nChunkSkips" : 0 , "millis" : 0 ,
+   "indexBounds" : { "_p.name" : [ [ "Lyon" , "Lyon"]] , "_p.inCountry._p.name" : [ [ "France" , "France"]]} ,
+   "allPlans" : [ { "cursor" : "BtreeCursor _p.name_1__p.inCountry._p.name_1" , "n" : 1 ,
+   "nscannedObjects" : 1 , "nscanned" : 1 , "indexBounds" : { "_p.name" : [ [ "Lyon" , "Lyon"]] ,
+   "_p.inCountry._p.name" : [ [ "France" , "France"]]}}] , "server" : "mdutoo-laptop2:27017"}
+    * 
+    * @throws Exception
+    */
    @Test
    public void testMetamodel() throws Exception {
 
@@ -174,17 +209,36 @@ public class OpenelecDatacoreMetamodelTest {
       mgo.dropCollection(bureauDeVoteModel.getName());
       mgo.dropCollection(inseeVilleModel.getName());
       
-      // init datacore collections
+      // init datacore collections & indexes :
+      // (TODO define indexes in metamodel / according to queries, possibly auto from extended / embedded)
+      // TODO FAQ indexes and (spring data) Criteria queries must use actual mongo field names (rather than java ones) even when @Field !!
+      
       DBCollection countryColl = mgo.createCollection(countryModel.getName());
+      countryColl.createIndex(new BasicDBObject("_p.name", 1)); // query country by name
+      System.out.println("Defined " + countryModel + "\nwith indexes " + mgo.getCollection(countryModel.getName()).getIndexInfo());
+      
       DBCollection cityColl = mgo.createCollection(cityModel.getName());
-      cityColl.createIndex(new BasicDBObject("name", 1)); // TODO in metamodel / according to queries
+      cityColl.createIndex(new BasicDBObject("_p.name", 1)
+         .append("_p.inCountry._p.name", 1)); // query city by name and OPT (embedded) country name
       ///cityColl.createIndex(new BasicDBObject("precincts.name", 1)); // TODO embedded subresource sample
-      ///cityColl.createIndex(new BasicDBObject("inCountry.name", 1)); // TODO external subresource sample
+      cityColl.createIndex(new BasicDBObject("_p.inCountry._p.name", 1)); // query by (embedded) country name
+      System.out.println("Defined " + cityModel + "\nwith indexes " + mgo.getCollection(cityModel.getName()).getIndexInfo());
+      
       DBCollection bureauDeVoteColl = mgo.createCollection(bureauDeVoteModel.getName());
-      ///bureauDeVoteColl.createIndex(new BasicDBObject("code_canton", 1)); // TODO in metamodel / according to queries
+      bureauDeVoteColl.createIndex(new BasicDBObject("code", 1)); // by code
+      bureauDeVoteColl.createIndex(new BasicDBObject("_p.bureauCollectivite._p.name", 1)
+         .append("_p.bureauCollectivite._p.inCountry._p.name", 1), // query by (embedded) city name and OPT (doubly embedded) country name
+         new BasicDBObject("name", "collectivite_name__collectivite_inCountry_name") // TODO & FAQ else index name too long (128 char max, no '(' etc.)
+         .append("ns", bureauDeVoteColl.getFullName())); // FAQ db prefix ex. datacore.bureauDeVote. ! else error 10096 "invalid ns to index", though not required in js CLI
+      bureauDeVoteColl.createIndex(new BasicDBObject("_p.bureauCollectivite._p.inCountry._p.name", 1)); // query by (doubly embedded) country name
+      System.out.println("Defined " + bureauDeVoteModel + "\nwith indexes " + mgo.getCollection(bureauDeVoteModel.getName()).getIndexInfo());
+      
       DBCollection inseeVilleColl = mgo.createCollection(inseeVilleModel.getName());
-      inseeVilleColl.createIndex(new BasicDBObject("name", 1)); // TODO auto following extended metamodel ?!?
-      ///inseeVilleColl.createIndex(new BasicDBObject("inseeCode", 1)); // TODO in metamodel / according to queries
+      inseeVilleColl.createIndex(new BasicDBObject("_p.inseeCode", 1)); // query by inseeCode
+      inseeVilleColl.createIndex(new BasicDBObject("_p.name", 1)
+         .append("_p.inCountry._p.name", 1)); // query by (extended) city name and OPT  (embedded) country name
+      inseeVilleColl.createIndex(new BasicDBObject("_p.inCountry._p.name", 1)); // query by (embedded) country name TODO only french cities ???
+      System.out.println("Defined " + inseeVilleModel + "\nwith indexes " + mgo.getCollection(inseeVilleModel.getName()).getIndexInfo());
       
       // create resource data instances :
       
@@ -194,6 +248,7 @@ public class OpenelecDatacoreMetamodelTest {
       DCEntity franceCountry = newResource(countryModel, franceCountryUri, null); // TODO also uri
       franceCountry.getProperties().put("name", "France");
       mgo.save(franceCountry, countryModel.getName());
+      Assert.assertEquals(franceCountry.getModelName(), countryModel.getName());
       
       // create new city in datacore (independently of OpenElec bureau's collectivite)
       Map<String, DCEntity> lyonCityCopiedSubresources = new HashMap<String, DCEntity>(1);
@@ -207,6 +262,9 @@ public class OpenelecDatacoreMetamodelTest {
       ///lyonCity.getProperties().put("precincts", precinctMap); // embedded sample TODO Q uri not obligatory if embedded ? or then only sub-uri ??
       mgo.save(lyonCity, cityModel.getName()); // TODO Q collection = use case != rdf:type ? or even several types ???
       Assert.assertNotNull(lyonCity.getId());
+      Assert.assertEquals(lyonCity.getUri(), lyonCityUri);
+      Assert.assertEquals(lyonCity.getModelName(), cityModel.getName());
+      Assert.assertEquals(lyonCity.getProperties().get("inCountry"), franceCountry);
 
       // getting lyonCity as REST (in fr TODO more) :
       // { _uri:"...", _v:0, (type:"city",) name:"Lyon" } TODO Q also type / collection ? (yes easier for JAXRS etc.) ; TODO Q also _id ??
@@ -234,6 +292,13 @@ public class OpenelecDatacoreMetamodelTest {
       DCEntity foundBureauDeVote = mgo.findOne(new Query(new Criteria("id").is(bureauDeVote.getId())), DCEntity.class, "bureauDeVote");
       Assert.assertNotNull(foundBureauDeVote);
       Assert.assertNotNull(foundBureauDeVote.getId());
+      Assert.assertEquals(foundBureauDeVote.getUri(), bureauDeVoteUri);
+      Assert.assertEquals(foundBureauDeVote.getModelName(), bureauDeVoteModel.getName());
+      Assert.assertTrue(foundBureauDeVote.getProperties().get("bureauCollectivite") instanceof DCEntity);
+      Assert.assertTrue(((DCEntity) foundBureauDeVote.getProperties().get("bureauCollectivite"))
+            .getProperties().get("inCountry") instanceof DCEntity);
+      Assert.assertEquals(((DCEntity) ((DCEntity) foundBureauDeVote.getProperties().get("bureauCollectivite"))
+            .getProperties().get("inCountry")).getId(), franceCountry.getId());
       
       // setting collectivite of bureau as an embedded (TODO Q enriched ??) readonly copy TODO allow optional ?
       ////bureauDeVote.getProperties().put("bureauCollectivite", lyonCity);
@@ -267,6 +332,11 @@ public class OpenelecDatacoreMetamodelTest {
       lyonInseeVille.getProperties().put("inseeCode", "INSEE.Lyon"); // TODO set, TODO check that fields are not copied (readonly), TODO and not in model OR only when copiable / retrievable by others ??
       mgo.save(lyonInseeVille, inseeVilleModel.getName()); // but different collection !! (which incidentally is also a separate rdf:type)
       Assert.assertNotNull(lyonInseeVille.getId());
+      Assert.assertEquals(lyonInseeVille.getUri(), lyonCityUri);
+      Assert.assertEquals(lyonInseeVille.getModelName(), inseeVilleModel.getName());
+      Assert.assertTrue(lyonInseeVille.getProperties().get("inCountry") instanceof DCEntity);
+      Assert.assertEquals(((DCEntity) lyonInseeVille.getProperties().get("inCountry"))
+            .getId(), franceCountry.getId());
 
       // getting lyonInseeVille as REST (in fr TODO more) :
       // { _uri:"...", _v:0, name:"Lyon", inseeCode:"INSEE.Lyon" } TODO Q also type / collection ? (yes easier for JAXRS etc.) ; TODO Q also _id ??
@@ -280,19 +350,30 @@ public class OpenelecDatacoreMetamodelTest {
       // querying inseeVille :
       // query("insee.ville", { "inseeCode":"INSEE.Lyon" OR "_src0.name":"Lyon" OR "_src.name":"Lyon" })
       // by INSEE code :
-      List<DCEntity> lyonInseeVilleRes = mgo.find(new Query(new Criteria("properties.inseeCode").is("INSEE.Lyon")),
+      List<DCEntity> lyonInseeVilleRes = mgo.find(new Query(new Criteria("_p.inseeCode").is("INSEE.Lyon")),
             DCEntity.class, inseeVilleModel.getName());
       Assert.assertNotNull(lyonInseeVilleRes);
       Assert.assertEquals(1, lyonInseeVilleRes.size());
       Assert.assertEquals(lyonInseeVille.getId(), lyonInseeVilleRes.get(0).getId());
-      // by (extended) name :
-      lyonInseeVilleRes = mgo.find(new Query(new Criteria("properties.name").is("Lyon")),
+      // by (extended) city (using first part of city & country index) :
+      lyonInseeVilleRes = mgo.find(new Query(new Criteria("_p.name").is("Lyon")),
             DCEntity.class, inseeVilleModel.getName());
       Assert.assertNotNull(lyonInseeVilleRes);
       Assert.assertEquals(1, lyonInseeVilleRes.size());
       Assert.assertEquals(lyonInseeVille.getId(), lyonInseeVilleRes.get(0).getId());
+      // by (extended) city and (extended and embedded) country :
+      lyonInseeVilleRes = mgo.find(new Query(new Criteria("_p.name").is("Lyon")
+            .and("_p.inCountry._p.name").is("France")),
+            DCEntity.class, inseeVilleModel.getName());
+      Assert.assertNotNull(lyonInseeVilleRes);
+      Assert.assertEquals(1, lyonInseeVilleRes.size());
+      Assert.assertEquals(lyonInseeVille.getId(), lyonInseeVilleRes.get(0).getId());
+      BasicDBObject lyonInseeVilleByCityAndCountryDBO = new BasicDBObject("_p.name", "Lyon")
+         .append("_p.inCountry._p.name", "France");
+      System.out.println("For query on inseeVille " + lyonInseeVilleByCityAndCountryDBO + " , "
+         + mgo.getCollection(cityModel.getName()).find(lyonInseeVilleByCityAndCountryDBO).explain());
       // by (embedded) country :
-      List<DCEntity> franceInseeVilleRes = mgo.find(new Query(new Criteria("properties.inCountry.properties.name").is("France")),
+      List<DCEntity> franceInseeVilleRes = mgo.find(new Query(new Criteria("_p.inCountry._p.name").is("France")),
             DCEntity.class, inseeVilleModel.getName());
       Assert.assertNotNull(franceInseeVilleRes);
       Assert.assertEquals(1, franceInseeVilleRes.size());
@@ -306,25 +387,55 @@ public class OpenelecDatacoreMetamodelTest {
       // this way it could choose to enrich its own data rather than have heavier copy / synchronization jobs on its data)
       
       // querying bureauDeVote :
-      // by canton code :
-      List<DCEntity> bureauDeVoteRes = mgo.find(new Query(new Criteria("properties.code").is("Lyon325")),
+      // by code :
+      List<DCEntity> bureauDeVoteRes = mgo.find(new Query(new Criteria("_p.code").is("Lyon325")),
             DCEntity.class, bureauDeVoteModel.getName());
       Assert.assertNotNull(bureauDeVoteRes);
       Assert.assertEquals(1, bureauDeVoteRes.size());
       Assert.assertEquals(bureauDeVote.getId(), bureauDeVoteRes.get(0).getId());
-      // by (extended) name :
-      bureauDeVoteRes = mgo.find(new Query(new Criteria("properties.bureauCollectivite.properties.name").is("Lyon")),
+      // by (embedded) city (using first part of city and country index) :
+      bureauDeVoteRes = mgo.find(new Query(new Criteria("_p.bureauCollectivite._p.name").is("Lyon")),
             DCEntity.class, bureauDeVoteModel.getName());
       Assert.assertNotNull(bureauDeVoteRes);
       Assert.assertEquals(1, bureauDeVoteRes.size());
       Assert.assertEquals(bureauDeVote.getId(), bureauDeVoteRes.get(0).getId());
-      // by (embedded) country :
-      bureauDeVoteRes = mgo.find(new Query(new Criteria("properties.bureauCollectivite.properties.inCountry.properties.name").is("France")),
+      // by (embedded) city and (doubly embedded) country :
+      bureauDeVoteRes = mgo.find(new Query(new Criteria("_p.bureauCollectivite._p.name").is("Lyon")
+            .and("_p.bureauCollectivite._p.inCountry._p.name").is("France")),
             DCEntity.class, bureauDeVoteModel.getName());
       Assert.assertNotNull(bureauDeVoteRes);
       Assert.assertEquals(1, bureauDeVoteRes.size());
       Assert.assertEquals(bureauDeVote.getId(), bureauDeVoteRes.get(0).getId());
+      // by (doubly embedded) country :
+      bureauDeVoteRes = mgo.find(new Query(new Criteria("_p.bureauCollectivite._p.inCountry._p.name").is("France")),
+            DCEntity.class, bureauDeVoteModel.getName());
+      Assert.assertNotNull(bureauDeVoteRes);
+      Assert.assertEquals(1, bureauDeVoteRes.size());
+      Assert.assertEquals(bureauDeVote.getId(), bureauDeVoteRes.get(0).getId());
+
+      // querying city :
+      // query("city", { "name":"Lyon" OR "inCountry.name":"Lyon" })
+      // by name (using first part of name and country index) :
+      List<DCEntity> lyonCityRes = mgo.find(new Query(new Criteria("_p.name").is("Lyon")),
+            DCEntity.class, cityModel.getName());
+      Assert.assertNotNull(lyonCityRes);
+      Assert.assertEquals(1, lyonCityRes.size());
+      Assert.assertEquals(lyonCity.getId(), lyonCityRes.get(0).getId());
+      // by name and (embedded) country :
+      lyonCityRes = mgo.find(new Query(new Criteria("_p.name").is("Lyon")
+            .and("_p.inCountry._p.name").is("France")),
+            DCEntity.class, cityModel.getName());
+      Assert.assertNotNull(lyonCityRes);
+      Assert.assertEquals(1, lyonCityRes.size());
+      Assert.assertEquals(lyonCity.getId(), lyonCityRes.get(0).getId());
+      // by country :
+      lyonCityRes = mgo.find(new Query(new Criteria("_p.inCountry._p.name").is("France")),
+            DCEntity.class, cityModel.getName());
+      Assert.assertNotNull(lyonCityRes);
+      Assert.assertEquals(1, lyonCityRes.size());
+      Assert.assertEquals(lyonCity.getId(), lyonCityRes.get(0).getId());
       
+
       // NB. there must be no cycles !
       // reciprocal copy of different fields (could be done but) is better replaced by a commonly managed / updated reference collection
    }
@@ -356,6 +467,7 @@ public class OpenelecDatacoreMetamodelTest {
       DCEntity dcEntity = new DCEntity(extendedResourceDCEntity);
       dcEntity.setId(null); // to allow generation of new id
       dcEntity.setVersion(null); // to init of version to 0
+      dcEntity.setModelName(dcResourceModel.getName()); // to override extended one
       // NB. dcEntity is the same as extendedResourceDCEntity.uri
       // TODO extendedResourceDCEntity.id (more like DBRef actually) (and same for _v, _t) could be put
       // in dcEntity HOWEVER would have to be renamed at each inheritance stage
@@ -509,6 +621,12 @@ public class OpenelecDatacoreMetamodelTest {
       String extendedDCEntityBaseType = extendedResourceDCEntity.getModelName();
       ///String extendedDCEntityBaseType = "city"; // TODO in param or lyonCity DCEntity ?? TODO rather rdf_type:{x,y} list ???
       return dcResourceModel.getName().equals(extendedDCEntityBaseType);
+   }
+
+
+   @Test
+   public void testI18nMetamodel() throws Exception {
+
    }
    
 }

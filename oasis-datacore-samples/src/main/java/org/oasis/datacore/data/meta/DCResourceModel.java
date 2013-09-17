@@ -19,6 +19,8 @@ public class DCResourceModel {
    private String name;
    private ExtendedResourceDCModel extendedResourceModel; // TODO several ones ???!!!
    private List<CopiedSubresourceDCModel> copiedSubresourceModels;
+   private List<DCField> fields; // TODO mergeable as list or map : as boolean(s) or dedicated types ???
+   private List<DCField> allFields; // TODO is only a cache ; TODO field to orig model inverse link
 
    /** for persistence fw */
    public DCResourceModel() {

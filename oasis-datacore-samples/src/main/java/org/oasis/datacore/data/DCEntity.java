@@ -75,7 +75,9 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    @Field("_chBy")
    private String lastModifiedBy;
    
-   /** TODO rather persisted at root ?? */
+   /** TODO Q rather store properties at root (using lifecycle event) ?
+    * NOT REQUIRED for storage efficiency if renamed "_p", TODO Q maybe index perfs ?? (should not) */
+   @Field("_p")
    private HashMap<String,Object> properties;
 
    // TODO also spring mongo :

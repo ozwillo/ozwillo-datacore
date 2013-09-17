@@ -1,5 +1,6 @@
 package org.oasis.datacore.data.meta;
 
+// TODO make it an EmbeddedDCResourceModel that itself can extend and have fields but also embed
 public class CopiedSubresourceDCModel extends CopiedResourceDCModel {
 
    private String attribute;

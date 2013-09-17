@@ -19,14 +19,13 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.mongodb.DB;
 import com.mongodb.DBRef;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:oasis-datacore-crm-test-context.xml" })
 public class TransactionTest {
 
-   @Autowired
-   private MongoTemplate mgt; // only for manual DBRef
 	@Autowired
 	private MongoOperations mgo;
 	@Autowired
@@ -42,6 +41,8 @@ public class TransactionTest {
 		Assert.assertEquals(0,  mgo.findAll(Transaction.class).size());
       mgo.remove(new Query(), Account.class);
       Assert.assertEquals(0,  mgo.findAll(Account.class).size());
+      
+      DB db = mgo.getCollection(mgo.getCollectionName(Transaction.class)).getDB(); // only for manual DBRef
 		
 		// creates initial accounts
 		Account accountA = new Account();
@@ -85,7 +86,7 @@ public class TransactionTest {
       mgo.updateFirst(new Query(new Criteria("id").is(accountA.getId()))
          .addCriteria(new Criteria("pendingTransactions").ne(tx)),
          new Update().set("balance", accountA.getBalance() - transactionValue) // could use $inc
-         .push("pendingTransactions", new DBRef(mgt.getDb(), "transactions", new ObjectId(tx.getId()))), Account.class);
+         .push("pendingTransactions", new DBRef(db, "transactions", new ObjectId(tx.getId()))), Account.class);
       // ALT 1 (OPT reget then) update after manual condition check ("only if tx pending", still consistent because of optimistic locking)
       // OPT reget ALT 1.1 with mongo condition
       ///accountA = mgo.findOne(new BasicQuery("{ id:\"" + accountA.getId()
