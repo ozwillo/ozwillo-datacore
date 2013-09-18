@@ -1,5 +1,6 @@
 package org.oasis.datacore.data.meta;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -438,10 +439,242 @@ For query on inseeVille { "_p.name" : "Lyon" , "_p.inCountry._p.name" : "France"
 
       // NB. there must be no cycles !
       // reciprocal copy of different fields (could be done but) is better replaced by a commonly managed / updated reference collection
+      
+      
+      // i18n ALT other props :
+      
+      // indexes :
+      // create one per query AND per language
+      countryColl.createIndex(new BasicDBObject("_p.name@es", 1)); // query country by name
+      countryColl.createIndex(new BasicDBObject("_p.name@fr", 1)); // query country by name
+      countryColl.createIndex(new BasicDBObject("_p.name@default", 1)); // query country by name
+      cityColl.createIndex(new BasicDBObject("_p.name@es", 1)
+         .append("_p.inCountry._p.name@es", 1)); // query city by name and OPT (embedded) country name
+      cityColl.createIndex(new BasicDBObject("_p.name@fr", 1)
+         .append("_p.inCountry._p.name@fr", 1)); // query city by name and OPT (embedded) country name
+      cityColl.createIndex(new BasicDBObject("_p.name@default", 1)
+         .append("_p.inCountry._p.name@default", 1)); // "default" locale
+      cityColl.createIndex(new BasicDBObject("_p.inCountry._p.name@es", 1)); // query by (embedded) country name
+      cityColl.createIndex(new BasicDBObject("_p.inCountry._p.name@fr", 1)); // query by (embedded) country name
+      cityColl.createIndex(new BasicDBObject("_p.inCountry._p.name@default", 1)); // "default" locale
+      
+      // samples
+      franceCountry.getProperties().put("name@es", "Francia"); // name : [ "Francia@es", "France@fr", ?"France@default" ] ^France@.*$ OU France@default
+      franceCountry.getProperties().put("name@default", "Francia"); // TODO auto add default : at first time AND / OR according to its model's default...
+      franceCountry.getProperties().put("name@fr", "France"); // name@default:"France" OR name.default:"France" ; @i18n ; default conf dans model
+      franceCountry.getProperties().put("name@en", "France");
+      mgo.save(franceCountry, countryModel.getName());
+      Assert.assertEquals(franceCountry.getProperties().get("name@es"), "Francia");
+      
+      updateResource(lyonCity, cityModel); // updating lyonCity withh latest embedded franceCountry changes
+      lyonCity.getProperties().put("name@es", "Lyon");
+      lyonCity.getProperties().put("name@default", "Lyon"); // TODO auto add default : at first time AND / OR according to its model's default...
+      lyonCity.getProperties().put("name@fr", "Lyon");
+      // NO EN VALUE
+      mgo.save(lyonCity, cityModel.getName());
+      Assert.assertEquals(lyonCity.getProperties().get("name@es"), "Lyon");
+      Assert.assertTrue(lyonCity.getProperties().get("inCountry") instanceof DCEntity);
+      Assert.assertEquals(((DCEntity) lyonCity.getProperties().get("inCountry"))
+            .getProperties().get("name@es"), "Francia");
+      
+      // queries
+      // by es name :
+      List<DCEntity> franceCountryRes = mgo.find(new Query(new Criteria("_p.name@es").is("Francia")),
+            DCEntity.class, countryModel.getName());
+      Assert.assertNotNull(franceCountryRes);
+      Assert.assertEquals(1, franceCountryRes.size());
+      Assert.assertEquals(franceCountry.getId(), franceCountryRes.get(0).getId());
+      // by es name and (embedded) es country :
+      lyonCityRes = mgo.find(new Query(new Criteria("_p.name@es").is("Lyon")
+            .and("_p.inCountry._p.name@es").is("Francia")),
+            DCEntity.class, cityModel.getName());
+      Assert.assertNotNull(lyonCityRes);
+      Assert.assertEquals(1, lyonCityRes.size());
+      Assert.assertEquals(lyonCity.getId(), lyonCityRes.get(0).getId());
+      // default behaviour - by default name and (embedded) default country :
+      lyonCityRes = mgo.find(new Query(new Criteria("_p.name@default").is("Lyon")
+            .and("_p.inCountry._p.name@default").is("Francia")),
+            DCEntity.class, cityModel.getName());
+      Assert.assertNotNull(lyonCityRes);
+      Assert.assertEquals(1, lyonCityRes.size());
+      Assert.assertEquals(lyonCity.getId(), lyonCityRes.get(0).getId());
+      // HOWEVER can't query by en name and (embedded) en country since no en city value
+      // (SAVE IF all other translations are auto set to the default one)
+      // in this case, must do it in several queries i.e. user-driven browsing : first find country in es,
+      // then its city using default
+
+      
+      // i18n ALT map :
+      
+      // indexes :
+      // create one per query AND per language (and not a a single generic BLOB index because several languages are "never" queried together, see http://edgystuff.tumblr.com/post/47178201123/mongodb-indexing-tip-3-too-many-fields-to-index-use )
+      countryColl.createIndex(new BasicDBObject("_p.nameI18n.es", 1)); // query country by name
+      countryColl.createIndex(new BasicDBObject("_p.nameI18n.fr", 1)); // query country by name
+      countryColl.createIndex(new BasicDBObject("_p.nameI18n.default", 1)); // "default" locale
+      cityColl.createIndex(new BasicDBObject("_p.nameI18n.es", 1)
+         .append("_p.inCountry._p.nameI18n.es", 1)); // query city by name and OPT (embedded) country name
+      cityColl.createIndex(new BasicDBObject("_p.nameI18n.fr", 1)
+         .append("_p.inCountry._p.nameI18n.fr", 1)); // query city by name and OPT (embedded) country name
+      cityColl.createIndex(new BasicDBObject("_p.nameI18n.default", 1)
+         .append("_p.inCountry._p.nameI18n.default", 1)); // "default" locale
+      cityColl.createIndex(new BasicDBObject("_p.inCountry._p.nameI18n.es", 1)); // query by (embedded) country name
+      cityColl.createIndex(new BasicDBObject("_p.inCountry._p.nameI18n.fr", 1)); // query by (embedded) country name
+      cityColl.createIndex(new BasicDBObject("_p.inCountry._p.nameI18n.default", 1)); // "default" locale
+      
+      // samples
+      HashMap<String, String> franceCountryNameI18nMap = new HashMap<String,String>();
+      franceCountryNameI18nMap.put("es", "Francia");
+      franceCountryNameI18nMap.put("default", "Francia"); // TODO auto add default : at first time AND / OR according to its model's default...
+      franceCountryNameI18nMap.put("fr", "France");
+      franceCountryNameI18nMap.put("en", "France");
+      franceCountry.getProperties().put("nameI18n", franceCountryNameI18nMap);
+      mgo.save(franceCountry, countryModel.getName());
+      Assert.assertTrue(franceCountry.getProperties().get("nameI18n") instanceof Map<?, ?>);
+      Assert.assertEquals(((Map<String,String>) franceCountry.getProperties().get("nameI18n")).get("es"), "Francia");
+      
+      updateResource(lyonCity, cityModel); // updating lyonCity withh latest embedded franceCountry changes
+      HashMap<String, String> lyonCityNameI18nMap = new HashMap<String,String>();
+      lyonCityNameI18nMap.put("es", "Lyon");
+      lyonCityNameI18nMap.put("default", "Lyon"); // TODO auto add default : at first time AND / OR according to its model's default...
+      lyonCityNameI18nMap.put("fr", "Lyon");
+      // NO EN VALUE
+      lyonCity.getProperties().put("nameI18n", lyonCityNameI18nMap);
+      mgo.save(lyonCity, cityModel.getName());
+      Assert.assertTrue(lyonCity.getProperties().get("nameI18n") instanceof Map<?, ?>);
+      Assert.assertEquals(((Map<String,String>) lyonCity.getProperties().get("nameI18n")).get("es"), "Lyon");
+      Assert.assertTrue(lyonCity.getProperties().get("inCountry") instanceof DCEntity);
+      Assert.assertTrue(((DCEntity) lyonCity.getProperties().get("inCountry"))
+            .getProperties().get("nameI18n") instanceof Map<?, ?>);
+      Assert.assertEquals(((Map<String,String>) ((DCEntity) lyonCity.getProperties().get("inCountry"))
+            .getProperties().get("nameI18n")).get("es"), "Francia");
+      
+      // queries
+      // by es name :
+      franceCountryRes = mgo.find(new Query(new Criteria("_p.name@es").is("Francia")),
+            DCEntity.class, countryModel.getName());
+      Assert.assertNotNull(franceCountryRes);
+      Assert.assertEquals(1, franceCountryRes.size());
+      Assert.assertEquals(franceCountry.getId(), franceCountryRes.get(0).getId());
+      // by es name and (embedded) es country :
+      lyonCityRes = mgo.find(new Query(new Criteria("_p.name@es").is("Lyon")
+            .and("_p.inCountry._p.name@es").is("Francia")),
+            DCEntity.class, cityModel.getName());
+      Assert.assertNotNull(lyonCityRes);
+      Assert.assertEquals(1, lyonCityRes.size());
+      Assert.assertEquals(lyonCity.getId(), lyonCityRes.get(0).getId());
+      // default behaviour - by default name and (embedded) default country :
+      lyonCityRes = mgo.find(new Query(new Criteria("_p.name@default").is("Lyon")
+            .and("_p.inCountry._p.name@default").is("Francia")),
+            DCEntity.class, cityModel.getName());
+      Assert.assertNotNull(lyonCityRes);
+      Assert.assertEquals(1, lyonCityRes.size());
+      Assert.assertEquals(lyonCity.getId(), lyonCityRes.get(0).getId());
+      // HOWEVER can't query by en name and (embedded) en country since no en city value
+      // (SAVE IF all other translations are auto set to the default one)
+      // in this case, must do it in several queries i.e. user-driven browsing : first find country in es,
+      // then its city using default
+
+      
+      // i18n ALT suffixed values list :
+      
+      // indexes :
+      // create one per query AND per language (and not a a single generic BLOB index because several languages are "never" queried together, see http://edgystuff.tumblr.com/post/47178201123/mongodb-indexing-tip-3-too-many-fields-to-index-use )
+      countryColl.createIndex(new BasicDBObject("_p.nameI18n.es", 1)); // query country by name
+      countryColl.createIndex(new BasicDBObject("_p.nameI18n.fr", 1)); // query country by name
+      countryColl.createIndex(new BasicDBObject("_p.nameI18n.default", 1)); // "default" locale
+      cityColl.createIndex(new BasicDBObject("_p.nameI18n.es", 1)
+         .append("_p.inCountry._p.nameI18n.es", 1)); // query city by name and OPT (embedded) country name
+      cityColl.createIndex(new BasicDBObject("_p.nameI18n.fr", 1)
+         .append("_p.inCountry._p.nameI18n.fr", 1)); // query city by name and OPT (embedded) country name
+      cityColl.createIndex(new BasicDBObject("_p.nameI18n.default", 1)
+         .append("_p.inCountry._p.nameI18n.default", 1)); // "default" locale
+      cityColl.createIndex(new BasicDBObject("_p.inCountry._p.nameI18n.es", 1)); // query by (embedded) country name
+      cityColl.createIndex(new BasicDBObject("_p.inCountry._p.nameI18n.fr", 1)); // query by (embedded) country name
+      cityColl.createIndex(new BasicDBObject("_p.inCountry._p.nameI18n.default", 1)); // "default" locale
+      
+      // samples
+      ArrayList<String> franceCountryNameI18nList = new ArrayList<String>();
+      franceCountryNameI18nList.add("Francia@es");
+      franceCountryNameI18nList.add("France@fr");
+      franceCountryNameI18nList.add("France@en");
+      franceCountry.getProperties().put("name@i18nl", franceCountryNameI18nList);
+      mgo.save(franceCountry, countryModel.getName());
+      Assert.assertTrue(franceCountry.getProperties().get("name@i18nl") instanceof List<?>);
+      Assert.assertEquals(((List<String>) franceCountry.getProperties().get("name@i18nl")).get(0), "Francia@es");
+      
+      updateResource(lyonCity, cityModel); // updating lyonCity withh latest embedded franceCountry changes
+      ArrayList<String> lyonCityNameI18nList = new ArrayList<String>();
+      lyonCityNameI18nList.add("Lyon@es");
+      lyonCityNameI18nList.add("Lyon@fr");
+      // NO EN VALUE
+      lyonCity.getProperties().put("name@i18nl", lyonCityNameI18nList);
+      mgo.save(lyonCity, cityModel.getName());
+      Assert.assertTrue(lyonCity.getProperties().get("name@i18nl") instanceof List<?>);
+      Assert.assertEquals(((List<String>) lyonCity.getProperties().get("name@i18nl")).get(0), "Lyon@es");
+      Assert.assertTrue(lyonCity.getProperties().get("inCountry") instanceof DCEntity);
+      Assert.assertTrue(((DCEntity) lyonCity.getProperties().get("inCountry"))
+            .getProperties().get("name@i18nl") instanceof List<?>);
+      Assert.assertEquals(((List<String>) ((DCEntity) lyonCity.getProperties().get("inCountry"))
+            .getProperties().get("name@i18nl")).get(0), "Francia@es");
+      
+      // queries
+      // by es name :
+      franceCountryRes = mgo.find(new Query(new Criteria("_p.name@i18nl").is("Francia@es")),
+            DCEntity.class, countryModel.getName());
+      Assert.assertNotNull(franceCountryRes);
+      Assert.assertEquals(1, franceCountryRes.size());
+      Assert.assertEquals(franceCountry.getId(), franceCountryRes.get(0).getId());
+      // by es name and (embedded) es country :
+      lyonCityRes = mgo.find(new Query(new Criteria("_p.name@i18nl").is("Lyon@es")
+            .and("_p.inCountry._p.name@i18nl").is("Francia@es")),
+            DCEntity.class, cityModel.getName());
+      Assert.assertNotNull(lyonCityRes);
+      Assert.assertEquals(1, lyonCityRes.size());
+      Assert.assertEquals(lyonCity.getId(), lyonCityRes.get(0).getId());
+      // default behaviour - by (any) name prefix and (embedded) (any) country prefix :
+      lyonCityRes = mgo.find(new Query(new Criteria("_p.name@i18nl").regex("^Lyon.*")
+            .and("_p.inCountry._p.name@i18nl").regex("^Francia.*")),
+            DCEntity.class, cityModel.getName());
+      Assert.assertNotNull(lyonCityRes);
+      Assert.assertEquals(1, lyonCityRes.size());
+      Assert.assertEquals(lyonCity.getId(), lyonCityRes.get(0).getId());
+      // NB. this allows to query on (all fields including) available en fields even if some are not there
+      // which may be useful in a highly variously / sparsely localized environment like OASIS lay be
+      // HOWEVER this doesn't allow to lookup in a given language and use default value if not available
+      
+      // so the only way to lookup in a given language and use default value if not available is
+      // to set ALL translations to default value, but this is place-consuming !!
+   }
+   
+   
+   public void testDataQualityAndMergedInheritedProperties() {
+      
+      Assert.assertTrue(true);
+      
+      // test it manually in mongodc CLI :
+      /*
+
+db.testproplist.remove({})
+db.testproplist.insert({ _mdln:"insee.ville", proplist:[{ rdftype:"city", name:"Lyon", inCountry:{ _mdln:"country", proplist:[{ name:"France", "_q":5 }] }, "_q":8 }, { rdftype:"insee.ville", inseeCode:"INSEE.Lyon", "_q":3 }] })
+db.testproplist.ensureIndex({ "proplist.inCountry.proplist.name":1, "proplist.name":1, "proplist._q":1 })
+db.testproplist.find({ "proplist.inCountry.proplist.name":"France", "proplist._q":{ "$gt" : 3} })
+
+.explain() => OK
+
+> db.testproplist.remove({})
+> db.testproplist.insert({ _mdln:"insee.ville", proplist:[{ _src:"city", rdftype:"city", name:"Lyon", inCountry:{ _mdln:"country", proplist:[{ name:"France", "_q":5 }] }, "_q":8 }, { _src:"insee.ville", rdftype:"insee.ville", inseeCode:"INSEE.Lyon", "_q":3 }] })
+> db.testproplist.ensureIndex({ "proplist.inCountry.proplist.name":1, "proplist.name":1, "proplist._q":1, "proplist._src":1 })
+> db.testproplist.find({ "proplist.inCountry.proplist.name":"France", "proplist._q":{ "$gt" : 7}, "proplist._src":"insee.ville" })
+
+=> WARNING returns a false positive that disappears at flattening
+
+       */
    }
 
+   
    /**
-    * TODO check extended & copied types as in updateResource(...)
+    * TODO check extended & copied types as in updateResource(...).
+    * Doesn't save in db.
     * @param dcResourceModel TODO not null
     * @param extendedResourceDCEntity not null, else use String param'd alternate method
     * @param copiedSubresourceDCEntityMap
@@ -482,7 +715,8 @@ For query on inseeVille { "_p.name" : "Lyon" , "_p.inCountry._p.name" : "France"
       //////////////////updateResource(dcEntity, dcResourceModel);
       return dcEntity;
    }
-   /** To use (only) if no extended resource model 
+   /** To use (only) if no extended resource model.
+    * Doesn't save in db.
     * @throws Exception */
    public DCEntity newResource(DCResourceModel dcResourceModel, String uri,
          Map<String,DCEntity> copiedSubresourceDCEntityMap) throws Exception {
@@ -507,13 +741,15 @@ For query on inseeVille { "_p.name" : "Lyon" , "_p.inCountry._p.name" : "France"
       //////////////////updateResource(dcEntity, dcResourceModel);
       return dcEntity;
    }
-   /** SHOULD NOT BE USED updates are rather down top-down per extended / copied model change */
+   /** SHOULD NOT BE USED updates are rather down top-down per extended / copied model change.
+    * Doesn't save in db. */
    private void updateResource(DCEntity dcEntity) throws Exception {
       //DCResourceModel dcResourceModel = dcMetamodel.getModel(dcEntity.getBaseType()); // TODO
       DCResourceModel dcResourceModel = null;
       updateResource(dcEntity, dcResourceModel);
    }
-   /** SHOULD NOT BE USED updates are rather down top-down per extended / copied model change */
+   /** SHOULD NOT BE USED updates are rather down top-down per extended / copied model change.
+    * Doesn't save in db. */
    private void updateResource(DCEntity dcEntity, DCResourceModel dcResourceModel) throws Exception {
       ExtendedResourceDCModel extendedResourceModel = dcResourceModel.getExtendedResourceModel();
       if (extendedResourceModel != null) {
