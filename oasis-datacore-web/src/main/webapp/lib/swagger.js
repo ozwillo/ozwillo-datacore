@@ -850,6 +850,18 @@
           }
         }
       }
+      
+      // OASIS HACK start
+      for (var arg in args) {
+          if (arg.startsWith("#")) {
+              if (queryParams !== "") {
+                  queryParams += "&";
+              }
+              queryParams += encodeURI(args[arg]); // NOT encodeURIComponent because & and =
+          }
+      }
+  	  // OASIS HACK end
+      
       if ((queryParams != null) && queryParams.length > 0) {
         url += "?" + queryParams;
       }
