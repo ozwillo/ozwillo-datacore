@@ -17,11 +17,13 @@ public class DCResourceModel {
    /** Unique ; also serves as collection name (so a model serves for a single collection,
     * because it models a single use context / case, which is the base type of the entity). */
    private String name;
-   private ExtendedResourceDCModel extendedResourceModel; // TODO several ones ???!!!
+   private ExtendedResourceDCModel extendedResourceModel;
+   //private List<ExtendedResourceDCModel> extendedResourceModel; // TODO rather several ones ???!!!
    private List<CopiedSubresourceDCModel> copiedSubresourceModels;
-   private List<DCField> fields; // TODO mergeable as list or map : as boolean(s) or dedicated types ???
-   private List<DCField> allFields; // TODO is only a cache ; TODO field to orig model inverse link
-
+   private List<DCField> fields; // TODO boolean to allow optional alternate values (as boolean(s) or dedicated types ?) ?? 
+   private List<DCField> allFields; // TODO OPT (for copy model) is only a cache ; TODO field to orig model inverse link
+   // TODO "field groups" (submodels / aspects) of AND / OR same quality, source, rights, queriable / index ??????? 
+   
    /** for persistence fw */
    public DCResourceModel() {
       

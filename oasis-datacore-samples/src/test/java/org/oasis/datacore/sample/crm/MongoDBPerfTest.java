@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.mongodb.BasicDBObject;
@@ -23,6 +24,7 @@ import com.mongodb.MongoClient;
  * @author mdutoo
  *
  */
+@Ignore // not to slow tests down
 public class MongoDBPerfTest {
 
     private static DB perfs;

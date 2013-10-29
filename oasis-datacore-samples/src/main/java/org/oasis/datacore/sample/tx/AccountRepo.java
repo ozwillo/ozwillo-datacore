@@ -6,6 +6,10 @@ import org.springframework.data.mongodb.repository.Query;
 
 /**
  * see https://blog.codecentric.de/en/2012/02/spring-data-mongodb/
+ * 
+ * how to enrich it with custom methods :
+ * http://docs.spring.io/spring-data/data-jpa/docs/current/reference/html/repositories.html#repositories.single-repository-behaviour
+ * 
  * @author mdutoo
  *
  */

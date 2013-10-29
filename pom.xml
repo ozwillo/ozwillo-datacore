@@ -1,0 +1,463 @@
+<?xml version="1.0"?>
+<!--
+OASIS Datacore
+Copyright (c) 2013 Open Wide
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Contact : http://www.oasis-eu.org/ oasis-eu-datacore-dev@googlegroups.com
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.oasis.datacore</groupId>
+  <artifactId>oasis-datacore</artifactId>
+  <name>OASIS Datacore</name>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <!-- =================== -->
+  <!-- Project information -->
+  <!-- =================== -->
+  <licenses>
+    <license>
+      <name>The GNU Lesser General Public License, Version 3</name>
+      <url>http://www.gnu.org/licenses/lgpl-3.0.txt</url>
+    </license>
+  </licenses>
+
+  <organization>
+    <name>OASIS Consortium</name>
+    <url>http://www.oasis-eu.org/</url>
+  </organization>
+
+  <url>http://www.oasis-eu.org/</url>
+  <scm>
+    <connection>scm:git:git://github.com/pole-numerique/oasis-datacore.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com:pole-numerique/oasis-datacore.git</developerConnection>
+    <url>https://github.com/oasis-datacore/oasis-datacorehttps://github.com/pole-numerique/oasis-datacore</url>
+  </scm>
+
+  <mailingLists>
+    <mailingList>
+      <name>OASIS Datacore developers mailing-list</name>
+      <archive>https://groups.google.com/forum/?fromgroups#!forum/oasis-datacore-dev</archive>
+      <post>oasis-datacore-dev@googlegroups.com</post>
+    </mailingList>
+  </mailingLists>
+  <issueManagement>
+    <!-- Missing -->
+  </issueManagement>
+  <ciManagement>
+    <!-- Missing -->
+  </ciManagement>
+
+  <developers>
+    <developer>
+      <id>mdutoo</id>
+      <name>Marc Dutoo</name>
+      <email>marc.dutoo@openwide.fr</email>
+      <organization>Open Wide</organization>
+      <organizationUrl>http://www.openwide.fr</organizationUrl>
+      <roles>
+        <role>Architect</role>
+        <role>Developer</role>
+      </roles>
+    </developer>
+  </developers>
+
+
+  <!-- ========== -->
+  <!-- Properties -->
+  <!-- ========== -->
+   <properties>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      
+      <oasis-datacore.version>1.0-SNAPSHOT</oasis-datacore.version>
+       
+      <java.version>1.7</java.version>
+      
+      <!-- testing : -->
+      <junit.version>4.11</junit.version><!-- 4.11 solves method execution order bug -->
+      <jetty.version>8.1.12.v20130726</jetty.version><!-- cxf's -->
+      
+      
+      <!--  logging -->
+      <slf4j.version>1.7.5</slf4j.version>
+      <log4j.version>1.2.17</log4j.version>
+      
+      <!-- spring IoC -->
+      <!-- spring.version>3.2.4.RELEASE</spring.version -->
+      <spring.version>3.1.4.RELEASE</spring.version><!-- brought by spring data's -->
+      <cglib.version>2.2.2</cglib.version>
+      
+      <!-- spring data on mongodb -->
+      <spring-data-mongodb.version>1.2.3.RELEASE</spring-data-mongodb.version><!-- WARNING depends on spring 3.1.4.RELEASE -->
+      <mongodb.version>2.11.2</mongodb.version>
+      <joda-time.version>2.2</joda-time.version>
+      
+      <!-- spring data on neo4j (TODO for Social Graph mock ?!?) -->
+      <spring-data-neo4j.version>2.2.2.RELEASE</spring-data-neo4j.version>
+      <neo4j.version>1.8.1</neo4j.version><!-- depended on by spring ; NB. 1.9.4 not compatible, 2.0 not out yet -->
+      
+      <!-- TODO ? -->
+      <logback.version>1.0.13</logback.version>
+      <validation-api.version>1.1.0.Final</validation-api.version>
+      
+      <!-- REST -->
+      <jackson.version>2.2.3</jackson.version><!-- latest, also jsonld-java's as of 201309 -->
+      <cxf.version>2.7.7</cxf.version>
+      <jaxrs.version>2.0-m10</jaxrs.version><!-- from CXF ; rather than 2.0, else ClassNotFoundException: javax.ws.rs.client.ClientException -->
+      
+      <ehcache.version>2.7.4</ehcache.version><!-- for client-side cache -->
+      
+      <commons-collections.version>3.2.1</commons-collections.version><!-- for ListUtils -->
+      <commons-lang.version>2.6</commons-lang.version><!-- for ExceptionUtils -->
+      <commons-io.version>2.4</commons-io.version><!-- for IOUtils TODO used ?? -->
+      
+      <swagger.version>1.3.0</swagger.version><!-- for apidoc -->
+      
+  </properties>
+
+  <!-- ======= -->
+  <!-- Modules -->
+  <!-- ======= -->
+  <modules>
+    <!-- module>oasis-datacore-test</module -->
+    <!-- module>oasis-datacore-samples</module -->
+    <module>oasis-datacore-core</module><!-- TODO -api (PermissionDataService to be called by Social Graph, or in -rest ?), -impl ? -->
+    <module>oasis-datacore-rest-api</module>
+    <module>oasis-datacore-rest-cxf</module>
+    <module>oasis-datacore-rest-server</module>
+    <module>oasis-datacore-web</module>
+    <!-- TODO mocks ex. Social Graph ? -->
+    <!-- TODO features ex. approval workflow, RDF/SPARQL, backend UI ?? -->
+  </modules>
+
+  <!-- ============ -->
+  <!--  Profiles   -->
+  <!-- ============ -->
+  <profiles>
+    <!-- TODO mocks, samples profiles ? -->
+  </profiles>
+  
+
+  <!-- ============ -->
+  <!-- Dependencies -->
+  <!-- ============ -->
+  <dependencies>
+    <!-- Testing : -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <scope>test</scope>
+    </dependency -->
+  </dependencies>
+
+  <!-- ======================== -->
+  <!-- Dependencies constraints -->
+  <!-- ======================== -->
+  <dependencyManagement>
+    <dependencies>
+      <!-- Testing -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+      <version>${jetty.version}</version>
+    </dependency>
+      
+      <!-- Datacore -->
+      <dependency>
+        <groupId>org.oasis.datacore</groupId>
+        <artifactId>oasis-datacore-samples</artifactId>
+        <version>${oasis-datacore.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.oasis.datacore</groupId>
+        <artifactId>oasis-datacore-core</artifactId>
+        <version>${oasis-datacore.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.oasis.datacore</groupId>
+        <artifactId>oasis-datacore-rest-api</artifactId>
+        <version>${oasis-datacore.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.oasis.datacore</groupId>
+        <artifactId>oasis-datacore-rest-server</artifactId>
+        <version>${oasis-datacore.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.oasis.datacore</groupId>
+        <artifactId>oasis-datacore-rest-cxf</artifactId>
+        <version>${oasis-datacore.version}</version>
+      </dependency>
+      
+      <!-- logging : using slf4j facade
+      slf4j/logback (log4j successor) more recent, but log4j backend easier with spring & for single conf file
+      why http://stackoverflow.com/questions/2533614/what-are-the-latest-options-in-java-logging-frameworks
+      how http://stackoverflow.com/questions/4311026/how-to-get-slf4j-hello-world-working-with-log4j
+      LATER slf4j also for spring (using jcl-over-slf4j) http://spring.io/blog/2009/12/04/logging-dependencies-in-spring/
+      LATER2 logback see gru http://www.lordofthejars.com/2012/04/hey-teachers-leave-them-kids-alone-all.html
+      LATER3 mongo-backed logging ?? https://github.com/deftlabs/mongo-java-logging
+      -->
+      <dependency>
+         <groupId>org.slf4j</groupId>
+         <artifactId>slf4j-api</artifactId>
+         <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.slf4j</groupId>
+         <artifactId>slf4j-log4j12</artifactId>
+         <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>log4j</groupId>
+         <artifactId>log4j</artifactId>
+         <version>${log4j.version}</version>
+      </dependency>
+      <!-- LATER for logback backend instead -->
+            <!-- dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>jcl-over-slf4j</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
+            </dependency -->
+
+      <!-- Spring framework -->
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-core</artifactId>
+         <version>${spring.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-context</artifactId>
+         <version>${spring.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-test</artifactId>
+         <version>${spring.version}</version>
+      </dependency>
+      <!-- to support @Configuration see
+      http://www.mkyong.com/spring3/cglib-is-required-to-process-configuration-classes/ -->
+      <dependency>
+         <groupId>cglib</groupId>
+         <artifactId>cglib</artifactId>
+         <version>${cglib.version}</version>
+      </dependency>
+ 
+      <!-- mongodb java driver -->
+      <dependency>
+         <groupId>org.mongodb</groupId>
+         <artifactId>mongo-java-driver</artifactId>
+         <version>${mongodb.version}</version>
+      </dependency>
+      <!-- Spring data mongodb -->
+      <dependency>
+         <groupId>org.springframework.data</groupId>
+         <artifactId>spring-data-mongodb</artifactId>
+         <version>${spring-data-mongodb.version}</version>
+      </dependency>
+      <!-- for date (including in spring data auditing) -->
+      <dependency>
+          <groupId>joda-time</groupId>
+          <artifactId>joda-time</artifactId>
+          <version>${joda-time.version}</version>
+      </dependency>
+            
+      <!-- REST : -->
+      <!-- Jackson JAXRS (pulls all other deps) -->
+      <dependency>
+        <groupId>com.fasterxml.jackson.jaxrs</groupId>
+        <artifactId>jackson-jaxrs-json-provider</artifactId><!-- brings JacksonJsonProvider, to configure in clients -->
+        <version>${jackson.version}</version>
+      </dependency>
+      <!-- NB. other Jackson deps : ex. for mere (JSONLD) parsing only core & databind -->
+      <!-- JAXRS API -->
+      <dependency>
+       <groupId>javax.ws.rs</groupId>
+       <artifactId>javax.ws.rs-api</artifactId>
+       <version>${jaxrs.version}</version>
+      </dependency>
+      <!-- Servlet 3, from CXF's Jetty and compatible with Tomcat 7 ; otherwise javax.servlet javax.servlet-api 3.1.0 ?? -->
+      <dependency>
+       <groupId>org.apache.geronimo.specs</groupId>
+       <artifactId>geronimo-servlet_3.0_spec</artifactId>
+       <version>1.0</version>
+       <scope>provided</scope>
+      </dependency>
+    <!-- CXF -->
+    <dependency>
+      <groupId>org.apache.cxf</groupId>
+      <artifactId>cxf-rt-frontend-jaxrs</artifactId>
+      <version>${cxf.version}</version>
+    </dependency>
+    <!--  dependency>
+      <groupId>org.apache.cxf</groupId>
+      <artifactId>cxf-rt-frontend-jaxws</artifactId>
+      <version>${cxf.version}</version>
+    </dependency --><!-- for SOAP -->
+    <dependency>
+      <groupId>org.apache.cxf</groupId>
+      <artifactId>cxf-rt-transports-http</artifactId>
+      <version>${cxf.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.cxf</groupId>
+      <artifactId>cxf-rt-transports-http-jetty</artifactId>
+      <version>${cxf.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.cxf</groupId>
+      <artifactId>cxf-rt-transports-local</artifactId>
+      <version>${cxf.version}</version>
+    </dependency>
+    <!-- for async BUT ONLY ON JETTY -->
+    <!-- dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-continuation</artifactId>
+      <version>8.0.4.v20111024</version>
+    </dependency -->
+    <!-- XXX Needed by Apache CXF, but missing from the deps. hierarchy ??? -->
+    <!-- dependency>
+      <groupId>org.apache.xmlgraphics</groupId>
+      <artifactId>batik-ext</artifactId>
+      <version>1.7</version>
+    </dependency -->
+      
+      <!--  for client-side cache -->
+      <dependency>
+         <groupId>net.sf.ehcache.internal</groupId>
+         <artifactId>ehcache-core</artifactId>
+         <version>${ehcache.version}</version>
+         <!-- groupId>net.sf.ehcache</groupId>
+         <artifactId>ehcache</artifactId>
+         <type>pom</type --><!-- NO worked in 2.6.0 but not in 2.7.4 anymore because
+         no more dependencies to ehcache-core etc. (but in 2.9 works again !)
+         would probably work without type=pom but brings in too much stuff (hibernate, terracotta...) -->
+      </dependency>
+      
+      <!-- for EnumerationUtils, ListUtils... -->
+      <dependency>
+         <groupId>commons-collections</groupId>
+         <artifactId>commons-collections</artifactId>
+         <version>${commons-collections.version}</version>
+      </dependency>
+      <!-- for ExceptionUtils -->
+      <dependency>
+         <groupId>commons-lang</groupId>
+         <artifactId>commons-lang</artifactId>
+         <version>${commons-lang.version}</version>
+      </dependency>
+      <!-- for IOUtils TODO used ?? -->
+      <dependency>
+         <groupId>commons-io</groupId>
+         <artifactId>commons-io</artifactId>
+         <version>${commons-io.version}</version>
+      </dependency>
+      
+      <!-- swagger (for apidoc) : -->
+      <dependency>
+         <groupId>com.wordnik</groupId>
+         <artifactId>swagger-jaxrs_2.10</artifactId>
+         <version>1.3.0</version>
+      </dependency>
+      
+      <!-- for packaging as webapp TODO in another -webapp project ? -->
+      <dependency>
+         <groupId>org.apache.cxf</groupId>
+         <artifactId>cxf-rt-transports-http</artifactId>
+         <version>${cxf.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-web</artifactId>
+         <version>${spring.version}</version>
+      </dependency>
+      
+    </dependencies>
+  </dependencyManagement>
+
+  <!-- ======= -->
+  <!-- Plugins -->
+  <!-- ======= -->
+  <build>
+    <plugins>
+      <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <configuration>
+              <source>${java.version}</source>
+              <target>${java.version}</target>
+          </configuration>
+      </plugin>
+
+			<!-- plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-eclipse-plugin</artifactId>
+				<version>2.9</version>
+				<configuration>
+					<downloadSources>true</downloadSources>
+					<downloadJavadocs>true</downloadJavadocs>
+				</configuration>
+			</plugin -->
+    </plugins>
+
+    <!-- ================= -->
+    <!-- Plugin management -->
+    <!-- ================= -->
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.1</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+  <!-- ============ -->
+  <!-- Repositories -->
+  <!-- ============ -->
+  <repositories>
+    <!-- repository>
+      <id>oasis-datacore-local-libs</id>
+      <name>oasis-datacore local project libraries</name>
+      <url>file://${project.basedir}/lib</url>
+      <layout>default</layout>
+    </repository --><!-- oasis-datacore-core/lib -->
+  </repositories>
+  <pluginRepositories>
+  </pluginRepositories>
+
+  <description>OASIS Datacore is a collaborative Open Data platform.</description>
+</project>
+

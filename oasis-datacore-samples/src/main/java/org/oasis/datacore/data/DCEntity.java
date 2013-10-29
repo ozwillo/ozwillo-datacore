@@ -19,6 +19,13 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+
+/**
+ * TODO replace by -core's
+ * 
+ * @author mdutoo
+ *
+ */
 @Document
 // HOWEVER where it is stored (in which collection) is driven by the metamodel
 public class DCEntity implements Comparable<DCEntity>, Serializable {
@@ -31,22 +38,30 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    protected static final int COMPARE_EQUALS = 0;
    protected static final int COMPARE_GREATER = 1;
 
+   /** TODO replace it by URI (unique save across versions / approvable / diffs) */
    @Id // _id
    private String id; // TODO or ObjectId ??
    /** for optimistic locking */
    @Version
    @Field("_v")
    private Long version;
-   /*@Transient
-   private DCResourceModel model;*/ // TODO have a transient reference to model in entity ?? fill it in lifecycle event ??? AND / OR baseType ?
    @Indexed(unique = true)
    @Field("_uri")
    private String uri; // TODO Q not obligatory if embedded ? or then only sub-uri ??
    // TODO Q also rdf:type, because collection = use case != rdf:type ? or even several types ???
-   /** (not indexed because stays the same in a collection)
-    * TODO or @Transient and filled by service / dao or lifecycle event ?? */
-   @Field("_mdln")
+   /** TODO Q OR NOT because stays the same in a collection (see query uses) ?? (not indexed for the same reason)
+    * and only @Transient and filled by service / dao or lifecycle event ??
+    * TODO LATER rather direct reference filled etc. ? */
+   @Field("_mdln") // TODO _t ?
    private String modelName;
+   /*@Transient
+   private DCResourceModel model;*/ // TODO have a transient reference to model in entity ?? fill it in lifecycle event ??? AND / OR baseType ?
+   /**
+    * TODO Q rather _ts, _a, _m ?? or only as key of submap ???
+    * TODO LATER rather direct references filled etc. ?
+    */
+   @Field("_t")
+   private List<String> types; 
 
    // more auditing see
    // http://maciejwalkowiak.pl/blog/2013/05/24/auditing-entities-in-spring-data-mongodb/
@@ -76,9 +91,10 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    private String lastModifiedBy;
    
    /** TODO Q rather store properties at root (using lifecycle event) ?
-    * NOT REQUIRED for storage efficiency if renamed "_p", TODO Q maybe index perfs ?? (should not) */
+    * not really required for storage efficiency if renamed "_p", TODO Q maybe index size ?? */
    @Field("_p")
    private HashMap<String,Object> properties;
+   //private ArrayList<HashMap<String,Object>> propertiesList; // TODO OPT alternate value properties ?
 
    // TODO also spring mongo :
    // @DBRef : annotated reference (asssociations / relationships) see
@@ -167,6 +183,25 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
       return (this.isNew()) ? super.hashCode() : this.getId().hashCode();
    }
 
+   /**
+    * TODO LATER using Jackson ?????
+    */
+   @Override
+   public String toString() {
+      StringBuilder sb = new StringBuilder("DCEntity[ ");
+      sb.append(this.uri); // includes modelName (& iri)
+      sb.append(" (");
+      sb.append(this.version);
+      sb.append(") +types: ");
+      sb.append("" + this.types);
+      sb.append(" - ");
+      sb.append("" + this.properties);
+      sb.append(" - ");
+      sb.append(this.lastModified);
+      sb.append(" ]");
+      return sb.toString();
+   }
+   
    public String getId() {
       return id;
    }

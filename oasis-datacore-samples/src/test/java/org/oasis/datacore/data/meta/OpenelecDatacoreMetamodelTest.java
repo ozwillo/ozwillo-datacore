@@ -672,6 +672,34 @@ db.testproplist.find({ "proplist.inCountry.proplist.name":"France", "proplist._q
    }
 
    
+   
+   public void testListeDesMairesRightsAndUserConfidentiality() {
+      
+      Assert.assertTrue(true);
+      
+      // test it manually in mongodc CLI :
+      /*
+
+db.maire.remove()
+db.maire.insert({ _mdln:"maire", proplist:[{ _w:"mairie_Lyon", electedIn:2010, ofCity:{ _mdln:"city", proplist:[{ name:"Lyon", _q:6 }] }, isUser:{ _mdln:"user", proplist:[{ name:"Gerard Collomb", "_q":5 }, { _r:"user_confidential_GerardCollomb", mastercard:"8111812356899876" }] }}] })
+db.maire.find({ "proplist.ofCity.proplist.name":"Lyon", "proplist._w":{ $in:[ "mairie_Lyon", "user_confidential_JeanPloye" ] } })
+
+=> returns "maire" document that Jean Ploye rightly has write rights on
+HOWEVER also returns copied confidential info ! so :
+* TODO don't copy confidential info (not useful to more that a single "person group", TODO Q others ??)
+* TODO remove at flattening time in service other copied info that the user has no right on (write or read depending on the request) 
+
+db.maire.find({ "proplist.ofCity.proplist.name":"Lyon", "proplist.isUser.proplist._r":{ $in:[ "user_confidential_GerardCollomb" ] } })
+
+=> returns "maire" document that Gerard Collomb rightly has read (and write) rights on
+NB. this requires to put criteria on all level of copied resources, but not to add indexes on them
+(because rights criteria should not improve query perfs) 
+ 
+       */
+   }
+   
+   
+   
    /**
     * TODO check extended & copied types as in updateResource(...).
     * Doesn't save in db.

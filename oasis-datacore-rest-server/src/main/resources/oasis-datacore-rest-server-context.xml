@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:p="http://www.springframework.org/schema/p"
+      xmlns:context="http://www.springframework.org/schema/context"
+      xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+      xmlns:cxf="http://cxf.apache.org/core"
+      xmlns:httpj="http://cxf.apache.org/transports/http-jetty/configuration"
+      xsi:schemaLocation=
+      "http://www.springframework.org/schema/beans
+      http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+      http://www.springframework.org/schema/context
+      http://www.springframework.org/schema/context/spring-context-3.1.xsd
+      http://cxf.apache.org/core http://cxf.apache.org/schemas/core.xsd
+      http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd
+      http://cxf.apache.org/transports/http-jetty/configuration http://cxf.apache.org/schemas/configuration/http-jetty.xsd">
+
+   <!-- default & overriding some properties (BEFORE import to take precedence over imported properties) -->
+   <!-- default properties -->
+   <context:property-placeholder location="classpath:oasis-datacore-rest-server.properties"
+      ignore-unresolvable="true"/><!-- to let it default to importing PropertyPlaceholder/*Resolver -->
+   <import resource="classpath:oasis-datacore-core-context.xml" />
+
+   <import resource="classpath:META-INF/cxf/cxf.xml" />
+   <!-- import resource="classpath:META-INF/cxf/cxf-extension-http-jetty.xml"/ -->
+   <!-- would be for test server but NO : OldSpringSupport [WARN] Import of META-INF/cxf/cxf-extension-http-jetty.xml has been deprecated and is unnecessary-->
+
+
+
+
+
+
+
+   <!-- import resource="classpath:META-INF/cxf/cxf-servlet.xml" />
+
+   <httpj:engine-factory id="cxf-engine" bus="cxf">
+      <httpj:engine port="${svc.port:8180}" sendServerVersion="false">
+         <httpj:threadingParameters minThreads="5" maxThreads="150" />
+         <httpj:connector>
+            <bean class="org.eclipse.jetty.server.bio.SocketConnector">
+               <property name="port" value="${svc.port:8180}" />
+            </bean>
+         </httpj:connector>
+         <httpj:handlers>
+            <ref bean="web-server-context-static" />
+            <bean class="org.eclipse.jetty.server.handler.DefaultHandler" />
+         </httpj:handlers>
+      </httpj:engine>
+   </httpj:engine-factory>
+
+   <bean id="webappClassPathResource" class="org.springframework.core.io.ClassPathResource">
+      <constructor-arg value="/webapp"/>
+   </bean>
+   <bean id="webappClassPathResourceUri" factory-bean="webappClassPathResource" factory-method="getURI"/>
+   <bean id="webappClassPathResourceUriString" factory-bean="webappClassPathResourceUri" factory-method="toString"/>
+   <bean name="web-server-context-static" class="org.eclipse.jetty.server.handler.ContextHandler">
+      <property name="contextPath" value="/swagger" />
+      <property name="resourceBase" ref="webappClassPathResourceUriString"/>
+      <!- property name="handler">
+         <bean class="org.eclipse.jetty.server.handler.ResourceHandler">
+            <property name="resourceBase" value="./" />
+         </bean>
+      </property ->
+   </bean -->
+
+
+
+
+
+
+
+   <context:component-scan base-package="org.oasis.datacore.rest.api" /><!-- for caching & context -->
+   <context:annotation-config /><!-- actually auto enabled by previous line -->
+
+   <cxf:bus>
+      <cxf:features>
+         <cxf:logging/>
+      </cxf:features>
+      <!-- NB. interceptors specific to a given service (server) are rather configured on it
+      using annotations -->
+   </cxf:bus>
+   
+   
+   <!-- SWAGGER -->
+   <!-- Swagger API listing resource -->
+   <bean id="swaggerResourceJSON" class="com.wordnik.swagger.jaxrs.listing.ApiListingResourceJSON" />
+   <!-- Swagger writers -->
+   <bean id="resourceWriter" class="com.wordnik.swagger.jaxrs.listing.ResourceListingProvider" />
+   <bean id="apiWriter" class="com.wordnik.swagger.jaxrs.listing.ApiDeclarationProvider" />
+   
+   
+   <!-- taken out to allow injection in test -->
+   <bean id="datacoreApiImpl" class="org.oasis.datacore.rest.server.DatacoreApiImpl"/>
+   
+   
+   <!-- injected in ArrayServerInInterceptor -->
+   <bean id="datacoreApiServer.objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper"/>
+   <bean id="datacoreApiServer.jacksonJsonProvider" class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider">
+      <constructor-arg><ref bean="datacoreApiServer.objectMapper"/></constructor-arg>
+   </bean>
+   <!-- Helps supporting POST of single DCResource. Let Jackson accepting single value as ARRRAY.
+   See more details in ArrayServerInInterceptor -->
+   <bean factory-bean="datacoreApiServer.jacksonJsonProvider" factory-method="enable">
+      <constructor-arg value="ACCEPT_SINGLE_VALUE_AS_ARRAY"/>
+      <constructor-arg value="true"/><!-- NOT USED -->
+   </bean>
+         
+   <!-- Spring configuration for Datacore API CXF server -->
+   <jaxrs:server id="datacoreApiServer" address="${datacoreApiServer.baseUrl}">
+      <jaxrs:serviceBeans>
+         <ref bean="datacoreApiImpl"/>
+         <ref bean="swaggerResourceJSON" />
+      </jaxrs:serviceBeans>
+      <jaxrs:providers>
+         <ref bean="datacoreApiServer.jacksonJsonProvider"/>
+         <!-- to add to response error message built out of exception (ex. if WebApplicationException not thrown explicity) :
+         (see http://cxf.apache.org/docs/jax-rs-basics.html#JAX-RSBasics-CustomizingdefaultWebApplicationExceptionmapper ) -->
+         <!-- bean class="org.apache.cxf.jaxrs.impl.WebApplicationExceptionMapper">
+            <property name="addMessageToResponse" value="true"/>
+         </bean -->
+         <ref bean="resourceWriter" />
+         <ref bean="apiWriter" />
+      </jaxrs:providers>
+      <!-- Single value array POST handling interceptors (rather than whole bus) : -->
+      <jaxrs:inInterceptors>
+         <bean class="org.oasis.datacore.rest.server.cxf.ArrayServerInInterceptor">
+            <property name="objectMapper"><ref bean="datacoreApiServer.objectMapper"/></property>
+         </bean>
+      </jaxrs:inInterceptors>
+      <jaxrs:outInterceptors>
+         <bean class="org.oasis.datacore.rest.server.cxf.ArrayServerOutInterceptor"/>
+      </jaxrs:outInterceptors>
+      <!-- TODO also autn --><!-- bean id="authorizationFilter" class="com.bar.providers.AuthorizationRequestHandler"/ -->
+      <jaxrs:features>
+         <cxf:logging/>
+      </jaxrs:features>
+   </jaxrs:server>
+   
+   
+   <!-- SWAGGER - this scans the classes for resources -->
+   <bean id="swaggerConfig" class="com.wordnik.swagger.jaxrs.config.BeanConfig">
+      <property name="resourcePackage" value="org.oasis.datacore.rest.api"/>
+      <property name="version" value="1.0.0"/>
+      <property name="basePath" value="http://localhost:8080/"/><!-- TODO / , ${datacoreApiServer.baseUrl} ?!? -->
+      <property name="title" value="Datacore Resource API"/>
+      <property name="description" value="Allows to manage (CRUD) and find Data Resources, in JSON-LD
+         (like) format and with LDP (W3C Linked Data Platform)-like operations (URIs,finders etc.) ."/>
+      <property name="contact" value="http://www.oasis-eu.org"/>
+      <property name="license" value="Apache 2.0 License"/><!-- TODO LGPL ??? -->
+      <property name="licenseUrl" value="http://www.apache.org/licenses/LICENSE-2.0.html"/>
+      <property name="scan" value="true"/>
+   </bean>
+   
+</beans>

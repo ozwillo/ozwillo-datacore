@@ -1,0 +1,24 @@
+<!--
+OASIS Datacore
+(c) Open Wide 2013
+-->
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:noNamespaceSchemaLocation="ehcache.xsd"
+   updateCheck="false"><!-- else tries to contact terracotta.org -->
+   
+   <diskStore path="java.io.tmpdir"/>
+    
+   <defaultCache 
+      maxElementsInMemory="10000" 
+      eternal="true" 
+      overflowToDisk="false"/><!-- else performance hit -->
+      
+   <!-- TODO could be made to expire ?? -->
+      
+   <!--  cache data resources (freshness checked using ETag) -->
+   <cache name="org.oasis.datacore.rest.api.DCResource" maxElementsInMemory="20000" eternal="true" overflowToDisk="false" />
+   
+   <!-- cache all models (they rarely change) -->
+   <cache name="TODO DCModel" maxElementsInMemory="5000" eternal="true" overflowToDisk="false" />
+    
+</ehcache>   

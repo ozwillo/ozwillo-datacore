@@ -15,6 +15,8 @@
  */
 package org.oasis.datacore.sdk.data.spring;
 
+import org.oasis.datacore.data.DCEntity;
+import org.oasis.datacore.data.meta.DCField;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.AssociationHandler;
@@ -77,12 +79,12 @@ public class DatacoreMappingMongoConverter extends MappingMongoConverter {
             Object propertyObj = wrapper.getProperty(prop, prop.getType(), fieldAccessOnly);
 
             //if (null != propertyObj) { // [OASIS] HACK to allow unset / set to null at save
-               if (/*[OASIS] HACK*/null != propertyObj && !conversions.isSimpleType(propertyObj.getClass())) {
+               if (/*[OASIS] HACK*/null != propertyObj && /*[OASIS] END*/!conversions.isSimpleType(propertyObj.getClass())) {
                   writePropertyInternal(propertyObj, dbo, prop);
                } else {
                   writeSimpleInternal(propertyObj, dbo, prop.getFieldName());
                }
-            //}
+            //} // [OASIS] HACK
          }
       });
 
@@ -91,11 +93,20 @@ public class DatacoreMappingMongoConverter extends MappingMongoConverter {
             MongoPersistentProperty inverseProp = association.getInverse();
             Class<?> type = inverseProp.getType();
             Object propertyObj = wrapper.getProperty(inverseProp, type, useFieldAccessOnly);
-            //if (null != propertyObj) { // [OASIS] HACK
+            //if (null != propertyObj) { // [OASIS] HACK to allow unset / set to null at save
                writePropertyInternal(propertyObj, dbo, inverseProp);
-            //}
+            //} // [OASIS] HACK
          }
       });
+      
+      // [OASIS] HACK to persist Datacore model fields at root level NOT FOR NOW
+      /*if ("DCEntity".equals(entity.getName())) {
+         DCEntity dcEntity = (DCEntity) object;
+         DCModel dcModel = dcModelService.getModel(dcEntity.getType());
+         for (DCField dcField : dcModel.getAllFields()) {
+            
+         }
+      }*/
    }
 
    // overriden for visibility

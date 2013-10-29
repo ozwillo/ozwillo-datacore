@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:p="http://www.springframework.org/schema/p"
+      xmlns:context="http://www.springframework.org/schema/context"
+      xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+      xmlns:cxf="http://cxf.apache.org/core"
+      xmlns:cache="http://www.springframework.org/schema/cache"
+      xsi:schemaLocation=
+      "http://www.springframework.org/schema/beans
+      http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+      http://www.springframework.org/schema/context
+      http://www.springframework.org/schema/context/spring-context-3.1.xsd
+      http://cxf.apache.org/core http://cxf.apache.org/schemas/core.xsd
+      http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd
+      http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache-3.1.xsd">
+
+   <import resource="classpath:META-INF/cxf/cxf.xml" />
+   <!-- import resource="classpath:META-INF/cxf/cxf-extension-http-jetty.xml"/ -->
+   <!-- would be for test server but NO : OldSpringSupport [WARN] Import of META-INF/cxf/cxf-extension-http-jetty.xml has been deprecated and is unnecessary-->
+
+   <!-- default properties -->
+   <context:property-placeholder location="classpath:oasis-datacore-rest-client.properties"
+      ignore-unresolvable="true"/><!-- to let it default to importing PropertyPlaceholder/*Resolver -->
+
+   <!-- client-side cache -->
+   <cache:annotation-driven />
+   <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager" 
+        p:cacheManager-ref="ehcache"/>
+   <bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean" 
+        p:configLocation="ehcache.xml"  
+        p:shared="true"/>
+   <!-- making the DCResource cache available for auto injection in cached client wrapper -->
+   <bean id="datacore.rest.client.cache.rest.api.DCResource" factory-bean="cacheManager" factory-method="getCache">
+      <constructor-arg><value>org.oasis.datacore.rest.api.DCResource</value></constructor-arg>
+   </bean>
+
+   <context:component-scan base-package="org.oasis.datacore.rest.api" /><!-- for caching & context -->
+   <context:annotation-config /><!-- actually auto enabled by previous line -->
+
+   <cxf:bus>
+      <cxf:properties>
+         <!-- entry key="org.apache.cxf.logging.FaultListener" value="org.oasis.datacore.rest.api.cxf.MyFaultListener"/ -->
+      </cxf:properties>
+      <cxf:features>
+         <cxf:logging/>
+      </cxf:features>
+      <!-- NB. interceptors specific to a given service (client) are rather configured on it
+      using annotations -->
+   </cxf:bus>
+
+   <!-- http-conf:conduit name="*.http-conduit">
+      <http-conf:client ProxyServer="localhost" ProxyServerPort="8082" ProxyServerType="HTTP" />
+   </http-conf:conduit -->
+
+   
+   <!-- Spring configuration for Datacore API CXF client -->
+   <!-- Change the port to 8080 to use this test with real server-->
+   <!-- serviceClass="org.oasis.datacore.rest.api.DatacoreApi" -->
+   <jaxrs:client id="datacoreApiClient"
+         serviceClass="org.oasis.datacore.rest.client.DatacoreClientApi"
+         address="${datacoreApiClient.baseUrl}"><!-- TODO auth -->
+      <jaxrs:providers>
+         <!-- JSON provider (Jackson's) : (NB. could setMapper to custom conf'd ObjectMapper) -->
+         <bean class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider"/>
+         <!-- alt JSON provider, wrapping Jackson's by caching logic ON RESPONSE WITH BODY TO ACCESS UNMARSHALLED -->
+         <!-- bean class="org.oasis.datacore.rest.client.CachedClientProviderImpl">
+            <property name="delegate"><bean class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider"/></property>
+         </bean -->
+         <!-- alt to caching ETag interceptors : -->
+         <!-- bean class="org.oasis.datacore.rest.client.CachedClientRequestFilter"/>
+         <bean class="org.oasis.datacore.rest.client.CachedClientResponseFilter"/ -->
+         <bean class="org.oasis.datacore.rest.client.cxf.TextResponseExceptionMapper"/>
+      </jaxrs:providers>
+      <!-- caching ETag interceptors (rather than whole bus) : -->
+      <jaxrs:outInterceptors>
+         <bean class="org.oasis.datacore.rest.client.cxf.QueryParametersClientOutInterceptor"/>
+         <bean class="org.oasis.datacore.rest.client.cxf.ETagClientOutInterceptor"/>
+      </jaxrs:outInterceptors>
+      <!-- jaxrs:inInterceptors>
+         <bean class="org.oasis.datacore.rest.client.cxf.obsolete.ETagClientInInterceptor"/>
+      </jaxrs:inInterceptors -->
+      <!-- TODO also autn -->
+      <jaxrs:features>
+         <cxf:logging/>
+      </jaxrs:features>
+   </jaxrs:client>
+   
+   <bean id="datacoreApiCachedClient" class="org.oasis.datacore.rest.client.DatacoreApiCachedClientImpl">
+      <property name="delegate"><ref bean="datacoreApiClient"/></property><!-- not necessary, autowired -->
+   </bean>
+   
+</beans>

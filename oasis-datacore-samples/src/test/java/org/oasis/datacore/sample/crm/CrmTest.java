@@ -16,6 +16,28 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.WriteResult;
 
+
+/**
+ * ex.
+ * 
+ 
+{
+"_id" : ObjectId("525bc6c5930e7b6345a21376"),
+"_class" : "org.oasis.datacore.sample.crm.Contact",
+"firstname" : "JohnOptimistic",
+"lastname" : "Doe",
+"version" : NumberLong(2),
+"createdAt" : ISODate("2013-10-14T10:26:13.880Z"),
+"changed" : ISODate("2013-10-14T10:26:13.968Z"),
+"createdBy" :
+"mdutoo", "changedBy" :
+"mdutoo"
+}
+
+ * 
+ * @author mdutoo
+ *
+ */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:oasis-datacore-crm-test-context.xml" })
 public class CrmTest {
