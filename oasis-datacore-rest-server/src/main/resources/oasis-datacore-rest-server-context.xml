@@ -106,7 +106,7 @@
    </bean>
          
    <!-- Spring configuration for Datacore API CXF server -->
-   <jaxrs:server id="datacoreApiServer" address="${datacoreApiServer.baseUrl}">
+   <jaxrs:server id="datacoreApiServer" address="${datacoreApiServer.jaxrsBaseUrl}">
       <jaxrs:serviceBeans>
          <ref bean="datacoreApiImpl"/>
          <ref bean="swaggerResourceJSON" />
@@ -141,7 +141,7 @@
    <bean id="swaggerConfig" class="com.wordnik.swagger.jaxrs.config.BeanConfig">
       <property name="resourcePackage" value="org.oasis.datacore.rest.api"/>
       <property name="version" value="1.0.0"/>
-      <property name="basePath" value="http://localhost:8080/"/><!-- TODO / , ${datacoreApiServer.baseUrl} ?!? -->
+      <property name="basePath" value="${datacoreApiServer.baseUrl}"/>
       <property name="title" value="Datacore Resource API"/>
       <property name="description" value="Allows to manage (CRUD) and find Data Resources, in JSON-LD
          (like) format and with LDP (W3C Linked Data Platform)-like operations (URIs,finders etc.) ."/>
