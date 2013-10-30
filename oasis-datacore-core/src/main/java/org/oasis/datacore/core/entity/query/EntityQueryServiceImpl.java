@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.oasis.datacore.core.entity.EntityQueryService;
 import org.oasis.datacore.core.entity.model.DCEntity;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
  *
  */
 @Component
+@Qualifier("datacore.entityQueryService")
 public class EntityQueryServiceImpl implements EntityQueryService {
    
    private Map<String,EntityQueryService> queryEngineMap = new HashMap<String,EntityQueryService>();

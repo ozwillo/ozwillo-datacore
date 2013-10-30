@@ -53,7 +53,6 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -83,6 +82,7 @@ public class DatacoreApiImpl implements DatacoreApi {
    @Autowired
    private DCEntityService entityService;
    @Autowired
+   @org.springframework.beans.factory.annotation.Qualifier("datacore.entityQueryService")
    private EntityQueryService entityQueryService;
    //@Autowired
    //private DCDataEntityRepository dataRepo; // NO rather for (meta)model, for data can't be used because can't specify collection

@@ -39,6 +39,8 @@ NB. alternatively, there is an embedded Jetty container deploying at http://loca
 Documentation
 --------------
 
+See wiki at https://github.com/pole-numerique/oasis-datacore/wiki .
+
 Goals :
 
 * une API compatible RDF
