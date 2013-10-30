@@ -993,6 +993,7 @@ public class DatacoreApiImpl implements DatacoreApi {
          String operatorAndValue, DCField dcField, DCListField dcListField,
          DCQueryParsingContext queryParsingContext) throws ResourceParsingException {
       // TODO (mongo)operator for error & in parse ?
+      String entityFieldPath = "_p." + fieldPath;
       
       if (operatorAndValue.startsWith("=")
             || operatorAndValue.startsWith("==")) { // java-like
@@ -1001,21 +1002,21 @@ public class DatacoreApiImpl implements DatacoreApi {
          // NB. can't sort a single value
          String stringValue = operatorAndValue.substring(1); // TODO more than mongodb
          Object value = checkAndParseFieldValue(dcField, stringValue);
-         queryParsingContext.getCriteria().and(fieldPath).is(value); // TODO same fieldPath for mongodb ??
+         queryParsingContext.getCriteria().and(entityFieldPath).is(value); // TODO same fieldPath for mongodb ??
          
       } else if (operatorAndValue.equals("+")) {
          checkComparable(dcField, fieldPath + operatorAndValue);
          // TODO LATER allow (joined) resource and order per its default order field ??
          // TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
          // TODO check that indexed (or set low limit) ?!??
-         queryParsingContext.addSort(new Sort(Direction.ASC, fieldPath));
+         queryParsingContext.addSort(new Sort(Direction.ASC, entityFieldPath));
 
       } else if (operatorAndValue.equals("-")) {
          checkComparable(dcField, fieldPath + operatorAndValue);
          // TODO LATER allow (joined) resource and order per its default order field ??
          // TODO check that not i18n (which is map ! ; or allow fallback, order for locale) ???
          // TODO check that indexed (or set low limit) ??
-         queryParsingContext.addSort(new Sort(Direction.ASC, fieldPath));
+         queryParsingContext.addSort(new Sort(Direction.ASC, entityFieldPath));
          
       } else if (operatorAndValue.startsWith(">")
             || operatorAndValue.startsWith("&gt;") // xml // TODO ; ?
@@ -1024,10 +1025,10 @@ public class DatacoreApiImpl implements DatacoreApi {
          // TODO LATER allow (joined) resource and order per its default order field ??
          // TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
          // TODO check that indexed (or set low limit) ??
-         int sortIndex = addSort(fieldPath, operatorAndValue, queryParsingContext);
+         int sortIndex = addSort(entityFieldPath, operatorAndValue, queryParsingContext);
          String stringValue = operatorAndValue.substring(3, sortIndex); // TODO more than mongodb
          Object value = parseFieldValue(dcField, stringValue);
-         queryParsingContext.getCriteria().and(fieldPath).gt(value); // TODO same fieldPath for mongodb ??
+         queryParsingContext.getCriteria().and(entityFieldPath).gt(value); // TODO same fieldPath for mongodb ??
          
       } else if (operatorAndValue.startsWith("<")
             || operatorAndValue.startsWith("&lt;") // xml // TODO ; ?
@@ -1036,10 +1037,10 @@ public class DatacoreApiImpl implements DatacoreApi {
          // TODO LATER allow (joined) resource and order per its default order field ??
          // TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
          // TODO check that indexed (or set low limit) ??
-         int sortIndex = addSort(fieldPath, operatorAndValue, queryParsingContext);
+         int sortIndex = addSort(entityFieldPath, operatorAndValue, queryParsingContext);
          String stringValue = operatorAndValue.substring(3, sortIndex); // TODO more than mongodb
          Object value = parseFieldValue(dcField, stringValue);
-         queryParsingContext.getCriteria().and(fieldPath).lt(value); // TODO same fieldPath for mongodb ??
+         queryParsingContext.getCriteria().and(entityFieldPath).lt(value); // TODO same fieldPath for mongodb ??
          
       } else if (operatorAndValue.startsWith(">=")
             || operatorAndValue.startsWith("&gt;=") // xml // TODO ; ?
@@ -1048,10 +1049,10 @@ public class DatacoreApiImpl implements DatacoreApi {
          // TODO LATER allow (joined) resource and order per its default order field ??
          // TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
          // TODO check that indexed (or set low limit) ??
-         int sortIndex = addSort(fieldPath, operatorAndValue, queryParsingContext);
+         int sortIndex = addSort(entityFieldPath, operatorAndValue, queryParsingContext);
          String stringValue = operatorAndValue.substring(4, sortIndex); // TODO more than mongodb
          Object value = parseFieldValue(dcField, stringValue);
-         queryParsingContext.getCriteria().and(fieldPath).gte(value); // TODO same fieldPath for mongodb ??
+         queryParsingContext.getCriteria().and(entityFieldPath).gte(value); // TODO same fieldPath for mongodb ??
          
       } else if (operatorAndValue.startsWith("<=")
             || operatorAndValue.startsWith("&lt;=") // xml // TODO ; ?
@@ -1060,10 +1061,10 @@ public class DatacoreApiImpl implements DatacoreApi {
          // TODO LATER allow (joined) resource and order per its default order field ??
          // TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
          // TODO check that indexed (or set low limit) ??
-         int sortIndex = addSort(fieldPath, operatorAndValue, queryParsingContext);
+         int sortIndex = addSort(entityFieldPath, operatorAndValue, queryParsingContext);
          String stringValue = operatorAndValue.substring(4, sortIndex); // TODO more than mongodb
          Object value = parseFieldValue(dcField, stringValue);
-         queryParsingContext.getCriteria().and(fieldPath).lte(value); // TODO same fieldPath for mongodb ??
+         queryParsingContext.getCriteria().and(entityFieldPath).lte(value); // TODO same fieldPath for mongodb ??
 
       } else if (operatorAndValue.startsWith("<>")
             || operatorAndValue.startsWith("&lt;&gt;") // xml // TODO may happen, ';' ??
@@ -1071,10 +1072,10 @@ public class DatacoreApiImpl implements DatacoreApi {
             || operatorAndValue.startsWith("!=")) { // java-like
          // TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
          // TODO check that indexed (or set low limit) ??
-         int sortIndex = addSort(fieldPath, operatorAndValue, queryParsingContext); // TODO ???????
+         int sortIndex = addSort(entityFieldPath, operatorAndValue, queryParsingContext); // TODO ???????
          String stringValue = operatorAndValue.substring(3, sortIndex); // TODO more than mongodb
          Object value = checkAndParseFieldValue(dcField, stringValue);
-         queryParsingContext.getCriteria().and(fieldPath).ne(value); // TODO same fieldPath for mongodb ??
+         queryParsingContext.getCriteria().and(entityFieldPath).ne(value); // TODO same fieldPath for mongodb ??
          
       } else if (operatorAndValue.startsWith("$in")) { // mongodb
          if ("map".equals(dcField.getType()) || "list".equals(dcField.getType())) {
@@ -1083,10 +1084,10 @@ public class DatacoreApiImpl implements DatacoreApi {
          // TODO check that not date ???
          // TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
          // TODO check that indexed (or set low limit) ??
-         int sortIndex = addSort(fieldPath, operatorAndValue, queryParsingContext); // TODO ???
+         int sortIndex = addSort(entityFieldPath, operatorAndValue, queryParsingContext); // TODO ???
          String stringValue = operatorAndValue.substring(3, sortIndex); // TODO more than mongodb
          List<Object> value = parseFieldListValue(dcField, stringValue);
-         queryParsingContext.getCriteria().and(fieldPath).in(value); // TODO same fieldPath for mongodb ??
+         queryParsingContext.getCriteria().and(entityFieldPath).in(value); // TODO same fieldPath for mongodb ??
          
       } else if (operatorAndValue.startsWith("$nin")) { // mongodb
          if ("map".equals(dcField.getType()) || "list".equals(dcField.getType())) {
@@ -1095,20 +1096,32 @@ public class DatacoreApiImpl implements DatacoreApi {
          // TODO check that not date ???
          // TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
          // TODO check that indexed (or set low limit) ??
-         int sortIndex = addSort(fieldPath, operatorAndValue, queryParsingContext); // TODO ???
+         int sortIndex = addSort(entityFieldPath, operatorAndValue, queryParsingContext); // TODO ???
          String stringValue = operatorAndValue.substring(4, sortIndex); // TODO more than mongodb
          List<Object> value = parseFieldListValue(dcField, stringValue);
-         queryParsingContext.getCriteria().and(fieldPath).nin(value); // TODO same fieldPath for mongodb ??
+         queryParsingContext.getCriteria().and(entityFieldPath).nin(value); // TODO same fieldPath for mongodb ??
          
       } else if (operatorAndValue.startsWith("$regex")) { // mongodb
          if (!"string".equals(dcField.getType())) {
             throw new ResourceParsingException("$regex can only be applied to a string but found "
                   + dcField.getType() + " Field");
          }
-         int sortIndex = addSort(fieldPath, operatorAndValue, queryParsingContext); // TODO ????
+         int sortIndex = addSort(entityFieldPath, operatorAndValue, queryParsingContext); // TODO ????
          String value = operatorAndValue.substring(6, sortIndex); // TODO more than mongodb
-         // TODO prevent or warn if first character(s) not provided in regex
-         queryParsingContext.getCriteria().and(fieldPath).regex(value); // TODO same fieldPath for mongodb ??
+         String options = null;
+         if (value.length() != 0 && value.charAt(0) == '/') {
+            int lastSlashIndex = value.lastIndexOf('/');
+            if (lastSlashIndex != 0) {
+               options = value.substring(lastSlashIndex + 1);
+               value = value.substring(1, lastSlashIndex - 1);
+            }
+         }
+         // TODO prevent or warn if first character(s) not provided in regex (making it much less efficient)
+         if (options == null) {
+            queryParsingContext.getCriteria().and(entityFieldPath).regex(value); // TODO same fieldPath for mongodb ??
+         } else {
+            queryParsingContext.getCriteria().and(entityFieldPath).regex(value, options); // TODO same fieldPath for mongodb ??
+         }
          
       } else if (operatorAndValue.startsWith("$exists")) { // mongodb field
          // TODO TODO rather hasAspect / mixin / type !!!!!!!!!!!!!!!
@@ -1116,7 +1129,7 @@ public class DatacoreApiImpl implements DatacoreApi {
          // TODO sparse index ?????????
          Boolean value = parseBoolean(operatorAndValue.substring(7));
          // TODO TODO can't return false because already failed to find field
-         queryParsingContext.getCriteria().and(fieldPath).exists(value); // TODO same fieldPath for mongodb ??
+         queryParsingContext.getCriteria().and(entityFieldPath).exists(value); // TODO same fieldPath for mongodb ??
          
       //////////////////////////////////
       // list (array) operators :
@@ -1128,7 +1141,7 @@ public class DatacoreApiImpl implements DatacoreApi {
          List<Object> value = checkAndParseFieldPrimitiveListValue(dcListField, dcListField.getListElementField(),
                operatorAndValue.substring(4)); // TODO more than mongodb
          // TODO LATER $all with $elemMatch
-         queryParsingContext.getCriteria().and(fieldPath).all(value); // TODO same fieldPath for mongodb ??
+         queryParsingContext.getCriteria().and(entityFieldPath).all(value); // TODO same fieldPath for mongodb ??
          
       } else if (operatorAndValue.startsWith("$elemMatch")) { // mongodb array
          if (!"list".equals(dcField.getType())) {
@@ -1182,7 +1195,7 @@ public class DatacoreApiImpl implements DatacoreApi {
          // parsing using the latest upmost list field :
          // NB. mongo arrays with millions of items are supported, but let's not go in the Long area
          Integer value = parseInteger(operatorAndValue.substring(5)); 
-         queryParsingContext.getCriteria().and(fieldPath).size(value); // TODO same fieldPath for mongodb ??
+         queryParsingContext.getCriteria().and(entityFieldPath).size(value); // TODO same fieldPath for mongodb ??
          
       } else {
          // defaults to "equals"
@@ -1190,7 +1203,7 @@ public class DatacoreApiImpl implements DatacoreApi {
          // TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
          // NB. can't sort a single value
          Object value = checkAndParseFieldValue(dcField, operatorAndValue);
-         queryParsingContext.getCriteria().and("_p." + fieldPath).is(value); // TODO same fieldPath for mongodb ??
+         queryParsingContext.getCriteria().and(entityFieldPath).is(value); // TODO same fieldPath for mongodb ??
       }
    }
 
@@ -1209,6 +1222,13 @@ public class DatacoreApiImpl implements DatacoreApi {
       // TODO check that indexed (or set low limit) ?!??
    }
 
+   /**
+    * 
+    * @param fieldPath TODO or better DCField ?
+    * @param operatorAndValue
+    * @param queryParsingContext
+    * @return
+    */
    private int addSort(String fieldPath, String operatorAndValue,
          DCQueryParsingContext queryParsingContext) {
       int operatorAndValueLength = operatorAndValue.length();
