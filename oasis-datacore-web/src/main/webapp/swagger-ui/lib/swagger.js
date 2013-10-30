@@ -853,7 +853,7 @@
       
       // OASIS HACK start
       for (var arg in args) {
-          if (arg.startsWith("#")) {
+    	  if(arg != null && arg.length > 0 && arg.substring(0,1)) {
               if (queryParams !== "") {
                   queryParams += "&";
               }
