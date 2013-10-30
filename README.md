@@ -21,11 +21,11 @@ License
 Getting Started
 ---------------
 
-Requirements : Java 7, MongoDB
+Requirements : [Java JDK 7](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html), [MongoDB](http://docs.mongodb.org/manual/installation/)
 
-Build (required Maven 3) : at root, do : mvn clean install
+Build ([Maven 3](http://maven.apache.org/download.cgi) required) : at root, do : mvn clean install
 
-Deployment : put the war contents in a tomcat 7 root and start it :
+Deployment ([Tomcat 7](http://tomcat.apache.org/download-70.cgi) required) : put the war contents in a tomcat 7 root and start it :
 
     cd tomcat7/bin
     cp -rf ../../workspace/oasis-datacore/oasis-datacore-web/target/datacore/* ../webapps/ROOT/
