@@ -31,6 +31,7 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.joda.time.DateTime;
 import org.oasis.datacore.core.entity.DCEntityService;
+import org.oasis.datacore.core.entity.EntityQueryService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.model.DCURI;
 import org.oasis.datacore.core.meta.model.DCField;
@@ -81,6 +82,8 @@ public class DatacoreApiImpl implements DatacoreApi {
    
    @Autowired
    private DCEntityService entityService;
+   @Autowired
+   private EntityQueryService entityQueryService;
    //@Autowired
    //private DCDataEntityRepository dataRepo; // NO rather for (meta)model, for data can't be used because can't specify collection
    @Autowired
@@ -636,20 +639,22 @@ public class DatacoreApiImpl implements DatacoreApi {
       
       // gathering required fields :
       // TODO DCFields, cache & for mixins
-      Set<String> missingFieldNames = new HashSet<String>();
+      Set<String> missingRequiredFieldNames = new HashSet<String>();
       for (String key : mapFields.keySet()) {
          DCField dcField = mapFields.get(key);
          if (dcField.isRequired()) {
-            missingFieldNames.add(key);
+            missingRequiredFieldNames.add(key);
          }
       }
       
       // handling each value :
       for (String key : resourceMap.keySet()) {
-         if (!missingFieldNames.remove(key)) {
+         if (!mapFields.containsKey(key)) {
             resourceParsingContext.addError("Unkown field " + key);
             continue;
          }
+         
+         missingRequiredFieldNames.remove(key);
          
          Object resourceValue = resourceMap.get(key);
          DCField dcField = mapFields.get(key); // TODO DCModel.getField(key)
@@ -665,8 +670,8 @@ public class DatacoreApiImpl implements DatacoreApi {
          }
       }
       
-      if (!missingFieldNames.isEmpty()) {
-         resourceParsingContext.addError("Some Fields are missing : " + missingFieldNames); 
+      if (!missingRequiredFieldNames.isEmpty()) {
+         resourceParsingContext.addError("Some Fields are missing : " + missingRequiredFieldNames); 
       }
    }
    
@@ -852,6 +857,7 @@ public class DatacoreApiImpl implements DatacoreApi {
       }
    }
 
+   // TODO "native" query (W3C LDP-like) also refactored within a dedicated query engine ??
    public List<DCResource> findDataInType(String modelType, UriInfo uriInfo, Integer start, Integer limit) {
 
       DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
@@ -1206,8 +1212,7 @@ public class DatacoreApiImpl implements DatacoreApi {
    private int addSort(String fieldPath, String operatorAndValue,
          DCQueryParsingContext queryParsingContext) {
       int operatorAndValueLength = operatorAndValue.length();
-      int lastIndex = operatorAndValueLength - 1;
-      char lastChar = operatorAndValue.charAt(lastIndex);
+      char lastChar = operatorAndValue.charAt(operatorAndValueLength - 1);
       switch (lastChar) {
       case '+' :
          queryParsingContext.addSort(new Sort(Direction.ASC, fieldPath));
@@ -1215,8 +1220,6 @@ public class DatacoreApiImpl implements DatacoreApi {
       case '-' :
          queryParsingContext.addSort(new Sort(Direction.DESC, fieldPath));
          break;
-      default :
-         return lastIndex;
       }
       return operatorAndValueLength;
    }
@@ -1348,16 +1351,13 @@ public class DatacoreApiImpl implements DatacoreApi {
 
    @Override
    public List<DCResource> queryDataInType(String modelType, String query, String language) {
-      // TODO SPARQL : parse query using ex. Jena parser,
-      // translate it in JSON-LD OR directly in mongo,
-      // add type criteria, default paging & sorting,
-      // execute in mongo & translate back
-      return new ArrayList<DCResource>();
+      List<DCEntity> entities = this.entityQueryService.queryInType(modelType, query, language);
+      return entitiesToResources(entities);
    }
    @Override
    public List<DCResource> queryData(String query, String language) {
-      // TODO SPARQL : same as queryDataInType, but don't add query criteria
-      return new ArrayList<DCResource>();
+      List<DCEntity> entities = this.entityQueryService.query(query, language);
+      return entitiesToResources(entities);
    }
 
    
