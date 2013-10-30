@@ -29,7 +29,8 @@
  
    <servlet-mapping>
       <servlet-name>default</servlet-name><!-- mapping to static resources servlet -->
-      <url-pattern>/swagger-ui/*</url-pattern><!-- path mapping to swagger UI -->
+      <url-pattern>/swagger-ui/*</url-pattern><!-- path mapping to swagger UI in swagger-ui subdirectory.
+      Alternative would be file extension-driven mapping to (swagger files in) root directory. -->
    </servlet-mapping>
  
    <servlet-mapping>
@@ -42,5 +43,10 @@
       <url-pattern>/*</url-pattern><!-- else Swagger JAXRS api-docs resource "not found"
       NB. can be done in a single servlet-mapping since servlet 2.5 -->
    </servlet-mapping>
+   
+   <!-- To redirect from swagger-ui/ to swagger-ui/index.html, BUT doesn't work (?!)
+   <welcome-file-list>
+      <welcome-file>index.html</welcome-file>
+   </welcome-file-list -->
  
 </web-app>

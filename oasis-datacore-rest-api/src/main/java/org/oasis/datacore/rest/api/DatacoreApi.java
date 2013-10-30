@@ -498,10 +498,10 @@ public interface DatacoreApi {
             + "Sorting according to a field is done by providing an HTTP query parameter in the form "
             + "field=sort where 'sort' is + (resp. -) for ascending (resp. descending) order. "
             + "Accepted operators, in their logical/XML/MongoDB/Java forms if any (else -), are : "
-            + "=/-/-/==, >/&gt/$gt/-, </&lt;/$lt/-, >=/&gt;=/$gte/-, <=/&lt;=/$lte/-, "
-            + "<>/&lt;&gt;/$ne/!=, -/-/$in/- (in JSON list), -/-/$nin/- (not in JSON list)"
-            + ", -/-/$regex/-, -/-/$exists/- (field exists) ; list operators : "
-            + "-/-/$all/-, -/-/$elemMatch/- (NOT IMPLEMENTED YET), -/-/$size/- . "
+            + "=/-/-/==, >/&gt/$gt/- (ex. 3), </&lt;/$lt/-, >=/&gt;=/$gte/-, <=/&lt;=/$lte/-, "
+            + "<>/&lt;&gt;/$ne/!=, -/-/$in/- (in JSON list, ex. [0,1]), -/-/$nin/- (not in JSON list)"
+            + ", -/-/$regex/- (Perl's ex. /Lond.*n/i), -/-/$exists/- (field exists, ex. name) ; "
+            + "list operators : -/-/$all/-, -/-/$elemMatch/- (NOT IMPLEMENTED YET), -/-/$size/- . "
             + "Detailed documentation about MongoDB operators can be found at "
             + "http://docs.mongodb.org/manual/reference/operator/query/ .",
             response = DCResource.class, responseContainer="List")
@@ -557,10 +557,10 @@ public interface DatacoreApi {
             + "Sorting according to a field is done by providing an HTTP query parameter in the form "
             + "field=sort where 'sort' is + (resp. -) for ascending (resp. descending) order. "
             + "Accepted operators, in their logical/XML/MongoDB/Java forms if any (else -), are : "
-            + "=/-/-/==, >/&gt/$gt/-, </&lt;/$lt/-, >=/&gt;=/$gte/-, <=/&lt;=/$lte/-, "
-            + "<>/&lt;&gt;/$ne/!=, -/-/$in/- (in JSON list), -/-/$nin/- (not in JSON list)"
-            + ", -/-/$regex/-, -/-/$exists/- (field exists) ; list operators : "
-            + "-/-/$all/-, -/-/$elemMatch/- (NOT IMPLEMENTED YET), -/-/$size/- . "
+            + "=/-/-/==, >/&gt/$gt/- (ex. 3), </&lt;/$lt/-, >=/&gt;=/$gte/-, <=/&lt;=/$lte/-, "
+            + "<>/&lt;&gt;/$ne/!=, -/-/$in/- (in JSON list, ex. [0,1]), -/-/$nin/- (not in JSON list)"
+            + ", -/-/$regex/- (Perl's ex. /Lond.*n/i), -/-/$exists/- (field exists, ex. name) ; "
+            + "list operators : -/-/$all/-, -/-/$elemMatch/- (NOT IMPLEMENTED YET), -/-/$size/- . "
             + "Detailed documentation about MongoDB operators can be found at "
             + "http://docs.mongodb.org/manual/reference/operator/query/ .",
             response = DCResource.class, responseContainer="List")
