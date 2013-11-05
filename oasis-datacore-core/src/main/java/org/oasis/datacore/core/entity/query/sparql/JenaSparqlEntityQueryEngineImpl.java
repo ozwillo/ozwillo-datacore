@@ -3,6 +3,7 @@ package org.oasis.datacore.core.entity.query.sparql;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.oasis.datacore.core.entity.EntityQueryService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.springframework.stereotype.Component;
 
@@ -10,6 +11,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class JenaSparqlEntityQueryEngineImpl extends EntityQueryEngineBase {
 
+   public JenaSparqlEntityQueryEngineImpl() {
+      super(EntityQueryService.LANGUAGE_SPARQL);
+   }
    @Override
    public List<DCEntity> queryInType(String modelType, String query, String language) {
       // TODO SPARQL : parse query using ex. Jena parser,
