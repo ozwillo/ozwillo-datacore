@@ -12,8 +12,10 @@ import org.apache.cxf.message.Message;
 import org.apache.cxf.phase.AbstractPhaseInterceptor;
 import org.apache.cxf.phase.Phase;
 import org.oasis.datacore.rest.api.DCResource;
+import org.oasis.datacore.rest.api.util.UriHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.Cache.ValueWrapper;
 
@@ -34,6 +36,9 @@ public class ETagClientOutInterceptor extends AbstractPhaseInterceptor<Message> 
    @Autowired
    @Qualifier("datacore.rest.client.cache.rest.api.DCResource")
    private Cache resourceCache; // EhCache getNativeCache
+
+   @Value("${datacoreApiClient.containerUrl}") 
+   private String containerUrl;
    
    public ETagClientOutInterceptor() {
       super(Phase.SETUP);
@@ -46,10 +51,12 @@ public class ETagClientOutInterceptor extends AbstractPhaseInterceptor<Message> 
          // when server out i.e. response
          return;
       }
+      
       if ("getData".equals(operationName)) {
          // GET : send If-None-Match=version ETag precondition header
          ////Map<Object,Object> requestContext = getRequestContext(clientOutRequestMessage);
-         String uri = CxfMessageHelper.getUri(clientOutRequestMessage);
+         String endpointUri = CxfMessageHelper.getUri(clientOutRequestMessage);
+         String uri = toContainerUrl(endpointUri);
          //DCData cachedData = cache.get(uri);
          ValueWrapper cachedResourceWrapper = resourceCache.get(uri); // NB. ValueWrapper wraps cached null
          if (cachedResourceWrapper != null) {
@@ -70,7 +77,8 @@ public class ETagClientOutInterceptor extends AbstractPhaseInterceptor<Message> 
                   ((String) CxfMessageHelper.getJaxrsParameter(clientOutRequestMessage, "method")).toUpperCase()))) {
          // DELETE : send If-Match=version ETag precondition header
          ///Map<Object,Object> requestContext = getRequestContext(clientOutRequestMessage);
-         String uri = CxfMessageHelper.getUri(clientOutRequestMessage);
+         String endpointUri = CxfMessageHelper.getUri(clientOutRequestMessage);
+         String uri = toContainerUrl(endpointUri);
          //DCData cachedData = cache.get(uri);
          ValueWrapper cachedResourceWrapper = resourceCache.get(uri); // NB. ValueWrapper wraps cached null
          if (cachedResourceWrapper != null) {
@@ -117,6 +125,20 @@ public class ETagClientOutInterceptor extends AbstractPhaseInterceptor<Message> 
          } // else creation (or forgotten, in which case the server will abort TODO THIS IS TOO MUCH !!!!!!!!!!!!!!!!!!!!!)
       }*/
       // TODO LATER2 list ??
+   }
+
+   private String toContainerUrl(String endpointUri) {
+      try {
+         return UriHelper.toContainerUrl(endpointUri, this.containerUrl);
+      } catch (Exception e) {
+         // should not happen
+         throw new Fault(
+               new ClientException( // or any non-Fault exception, else blocks in
+               // abstractClient.checkClientException() (waits for missing response code)
+               // see http://stackoverflow.com/questions/8316354/cxf-ws-interceptor-stop-processing-respond-with-fault
+               "Endpoint URI is not an URL : " + endpointUri, e),
+               Fault.FAULT_CODE_CLIENT);
+      }
    }
 
 }

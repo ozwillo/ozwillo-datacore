@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCModel;
 
@@ -15,7 +16,23 @@ public class DCResourceParsingContext {
    private List<ResourceParsingLog> errors = null;
    private List<ResourceParsingLog> warnings = null;
    
+   /**
+    * For multi resource parsing, requires enter(DCModel, uri) first
+    */
+   public DCResourceParsingContext() {
+      
+   }
+   
+   /**
+    * For single resource parsing
+    * @param model
+    * @param uri
+    */
    public DCResourceParsingContext(DCModel model, String uri) {
+      this.enter(model, uri);
+   }
+   
+   public void enter(DCModel model, String uri) {
       this.resourceValueStack.add(new DCResourceValue(model.getName(), null, uri));
    }
    
@@ -82,4 +99,53 @@ public class DCResourceParsingContext {
       return this.warnings;
    }
    
+
+   // TODO extract to ResourceParsingService
+   public static String formatParsingErrorsMessage(DCResourceParsingContext resourceParsingContext,
+         boolean detailedErrorsMode) {
+      // TODO or render (HTML ?) template ?
+      StringBuilder sb = new StringBuilder("Parsing aborted, found "
+            + resourceParsingContext.getErrors().size() + " errors "
+            + ((resourceParsingContext.hasWarnings()) ? "(and "
+            + resourceParsingContext.getWarnings().size() + " warnings) " : "")
+            + ".\nErrors:");
+      for (ResourceParsingLog error : resourceParsingContext.getErrors()) {
+         sb.append("\n   - in context ");
+         sb.append(error.getFieldFullPath());
+         sb.append(" : ");
+         sb.append(error.getMessage());
+         if (error.getException() != null) {
+            sb.append(". Exception message : ");
+            sb.append(error.getException().getMessage());
+            if (detailedErrorsMode) {
+               sb.append("\n      Exception details : \n\n");
+               sb.append(ExceptionUtils.getFullStackTrace(error.getException()));
+               sb.append("\n");
+            }
+         }
+      }
+      
+      if (resourceParsingContext.hasWarnings()) {
+         // TODO or render (HTML ?) template ?
+         sb.append("\nWarnings:");
+         for (ResourceParsingLog error : resourceParsingContext.getErrors()) {
+            sb.append("\n   - for field ");
+            sb.append(error.getFieldFullPath());
+            sb.append(" : ");
+            sb.append(error.getMessage());
+            if (error.getException() != null) {
+               sb.append(". Exception message : ");
+               sb.append(error.getException().getMessage());
+               if (detailedErrorsMode) {
+                  sb.append("\n      Exception details : \n\n");
+                  sb.append(ExceptionUtils.getFullStackTrace(error.getException()));
+                  sb.append("\n");
+               }
+            }
+         }
+      }
+      
+      return sb.toString();
+   }
+
 }

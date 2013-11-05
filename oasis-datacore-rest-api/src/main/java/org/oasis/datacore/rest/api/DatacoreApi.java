@@ -500,7 +500,7 @@ public interface DatacoreApi {
             + "Accepted operators, in their logical/XML/MongoDB/Java forms if any (else -), are : "
             + "=/-/-/==, >/&gt/$gt/- (ex. 3), </&lt;/$lt/-, >=/&gt;=/$gte/-, <=/&lt;=/$lte/-, "
             + "<>/&lt;&gt;/$ne/!=, -/-/$in/- (in JSON list, ex. [0,1]), -/-/$nin/- (not in JSON list)"
-            + ", -/-/$regex/- (Perl's ex. /Lond.*n/i), -/-/$exists/- (field exists, ex. name) ; "
+            + ", -/-/$regex/- (Perl's ex. /Lond.*n/i or only Lond.*n), -/-/$exists/- (field exists, ex. name) ; "
             + "list operators : -/-/$all/-, -/-/$elemMatch/- (NOT IMPLEMENTED YET), -/-/$size/- . "
             + "Detailed documentation about MongoDB operators can be found at "
             + "http://docs.mongodb.org/manual/reference/operator/query/ .",
@@ -559,7 +559,7 @@ public interface DatacoreApi {
             + "Accepted operators, in their logical/XML/MongoDB/Java forms if any (else -), are : "
             + "=/-/-/==, >/&gt/$gt/- (ex. 3), </&lt;/$lt/-, >=/&gt;=/$gte/-, <=/&lt;=/$lte/-, "
             + "<>/&lt;&gt;/$ne/!=, -/-/$in/- (in JSON list, ex. [0,1]), -/-/$nin/- (not in JSON list)"
-            + ", -/-/$regex/- (Perl's ex. /Lond.*n/i), -/-/$exists/- (field exists, ex. name) ; "
+            + ", -/-/$regex/- (Perl's ex. /Lond.*n/i or only Lond.*n), -/-/$exists/- (field exists, ex. name) ; "
             + "list operators : -/-/$all/-, -/-/$elemMatch/- (NOT IMPLEMENTED YET), -/-/$size/- . "
             + "Detailed documentation about MongoDB operators can be found at "
             + "http://docs.mongodb.org/manual/reference/operator/query/ .",

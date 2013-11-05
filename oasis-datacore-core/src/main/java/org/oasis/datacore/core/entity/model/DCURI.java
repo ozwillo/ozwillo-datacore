@@ -1,5 +1,6 @@
 package org.oasis.datacore.core.entity.model;
 
+
 /**
  * Datacore Resource URI, for now also works as Social Graph Resource URI.
  * TODO LATER refactor SCURI out of it for Social Graph.
@@ -29,6 +30,7 @@ public class DCURI {
    // TODO model & entity cache ?!?
 
    private String cachedStringUri = null;
+   
    
    public DCURI() {
       

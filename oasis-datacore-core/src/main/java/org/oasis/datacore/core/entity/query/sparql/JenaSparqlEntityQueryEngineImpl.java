@@ -3,25 +3,12 @@ package org.oasis.datacore.core.entity.query.sparql;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
-
-import org.oasis.datacore.core.entity.EntityQueryService;
 import org.oasis.datacore.core.entity.model.DCEntity;
-import org.oasis.datacore.core.entity.query.EntityQueryServiceImpl;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 
 @Component
-public class JenaSparqlEntityQueryEngineImpl implements EntityQueryService {
-   
-   @Autowired
-   private EntityQueryServiceImpl entityQueryServiceImpl;
-   
-   @PostConstruct
-   public void init() {
-      this.entityQueryServiceImpl.registerQueryEngine(EntityQueryService.LANGUAGE_SPARQL, this);
-   }
+public class JenaSparqlEntityQueryEngineImpl extends EntityQueryEngineBase {
 
    @Override
    public List<DCEntity> queryInType(String modelType, String query, String language) {

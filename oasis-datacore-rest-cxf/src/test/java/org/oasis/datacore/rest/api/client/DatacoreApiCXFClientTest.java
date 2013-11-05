@@ -13,6 +13,7 @@ import org.oasis.datacore.rest.client.DatacoreApiCachedClientImpl;
 import org.oasis.datacore.rest.client.DatacoreClientApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -33,6 +34,13 @@ public class DatacoreApiCXFClientTest {
    @Autowired // injection brings control (?)
    @Qualifier("datacoreApiCachedClient") // rather than...
    private DatacoreClientApi datacoreApiClient; // NOT DatacoreApiCachedClientImpl ; Datacore(Client)Api ??
+   
+   /** to be able to build a full uri, to check in tests
+    * TODO rather client-side DCURI or rewrite uri in server */
+   ///@Value("${datacoreApiClient.baseUrl}") 
+   ///private String baseUrl; // useless
+   @Value("${datacoreApiClient.containerUrl}") 
+   private String containerUrl;
 
    /**
     * Tests the CXF client with the DatacoreApi service
@@ -46,7 +54,7 @@ public class DatacoreApiCXFClientTest {
             resource != datacoreApiClient.getData("city", "UK/London", null));
       Assert.assertNotNull(resource.getVersion());
       long version = resource.getVersion();
-      Assert.assertEquals("http://localhost:8180/dc/type/city/UK/London", resource.getUri());
+      Assert.assertEquals(this.containerUrl + "dc/type/city/UK/London", resource.getUri());
       /*Assert.assertEquals("city", resource.getProperties().get("type"));
       Assert.assertEquals("UK/London", resource.getProperties().get("iri"));*/
       Assert.assertEquals("London", resource.getProperties().get("name"));
@@ -54,7 +62,7 @@ public class DatacoreApiCXFClientTest {
       Assert.assertTrue(inCountryFound instanceof Map<?,?>);
       @SuppressWarnings("unchecked")
       Map<String,Object> inCountry = (Map<String,Object>) inCountryFound;
-      Assert.assertEquals("http://localhost:8180/dc/type/country/UK", inCountry.get("uri"));
+      Assert.assertEquals(this.containerUrl + "dc/type/country/UK", inCountry.get("uri"));
       Assert.assertEquals("UK", inCountry.get("name"));
       DCResource postedResource = datacoreApiClient.postDataInType(resource, "city");
       Assert.assertNotNull(postedResource);

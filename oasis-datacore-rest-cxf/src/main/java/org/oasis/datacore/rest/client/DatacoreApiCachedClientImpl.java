@@ -1,42 +1,28 @@
 package org.oasis.datacore.rest.client;
 
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.RedirectionException;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.ClientException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.cxf.interceptor.InInterceptors;
 import org.apache.cxf.interceptor.OutInterceptors;
 import org.oasis.datacore.rest.api.DCResource;
-import org.oasis.datacore.rest.api.DatacoreApi;
-import org.oasis.datacore.rest.client.DatacoreClientApi;
+import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.cxf.ETagClientOutInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.Cache.ValueWrapper;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 
@@ -70,8 +56,10 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
    private Cache resourceCache; // EhCache getNativeCache
    
    /** to be able to build a full uri to evict cached data */
-   @Value("${datacoreApiClient.baseUrl}") 
-   private String baseUrl;
+   ///@Value("${datacoreApiClient.baseUrl}") 
+   ///private String baseUrl; // useless
+   @Value("${datacoreApiClient.containerUrl}") 
+   private String containerUrl;
 
 
    /**
@@ -81,17 +69,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
     * @return
     */
    private String buildUri(String type, String iri) {
-      return buildUri(baseUrl, type, iri);
-   }
-   public static String buildUri(String baseUrl, String modelType, String iri) {
-      String pathPrefix = "/dc/type/";
-      String uri = baseUrl + pathPrefix + modelType + "/" + iri;
-      try {
-         // cannonicalize : TODO reuse server's
-         return new URL(uri).toURI().normalize().toString();
-      } catch (MalformedURLException | URISyntaxException e) {
-         throw new RuntimeException("Bad URL : " + uri);
-      }
+      return UriHelper.buildUri(this.containerUrl, type, iri);
    }
    
    
@@ -337,12 +315,12 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
       this.resourceCache = cache;
    }
 
-   public String getBaseUrl() {
+   /*public String getBaseUrl() {
       return baseUrl;
    }
 
    public void setBaseUrl(String baseUrl) {
       this.baseUrl = baseUrl;
-   }
+   }*/
 
 }

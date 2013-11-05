@@ -14,7 +14,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
-import org.oasis.datacore.rest.client.DatacoreApiCachedClientImpl;
+import org.oasis.datacore.rest.api.util.UriHelper;
 import org.springframework.beans.factory.annotation.Value;
 
 
@@ -29,8 +29,10 @@ import org.springframework.beans.factory.annotation.Value;
 public class DatacoreApiMockServerImpl implements DatacoreApi {
 
    /** to be able to build a full uri */
-   @Value("${datacoreApiClient.baseUrl}") 
-   private String baseUrl;
+   ///@Value("${datacoreApiClient.baseUrl}") 
+   ///private String baseUrl; // useless
+   @Value("${datacoreApiClient.containerUrl}") 
+   private String containerUrl;
    
    /** to be able to follow version for cache etc. tests */
    private long franceBordeauxCityVersion;
@@ -83,7 +85,7 @@ public class DatacoreApiMockServerImpl implements DatacoreApi {
    @Override
    public DCResource getData(String modelType, String iri, Request request) {
       DCResource resource = new DCResource();
-      resource.setUri(DatacoreApiCachedClientImpl.buildUri(baseUrl, modelType, iri));
+      resource.setUri(UriHelper.buildUri(containerUrl, modelType, iri));
       resource.setVersion(0l);
       /*resource.setProperty("type", type);
       resource.setProperty("iri", iri);*/
@@ -95,7 +97,7 @@ public class DatacoreApiMockServerImpl implements DatacoreApi {
       /*countryData.setProperty("type", countryType);
       countryData.setProperty("iri", countryName);*/
       countryData.setProperty("name", countryName);
-      countryData.setUri(DatacoreApiCachedClientImpl.buildUri(baseUrl, countryType, countryName));
+      countryData.setUri(UriHelper.buildUri(containerUrl, countryType, countryName));
       countryData.setVersion(0l);
       resource.setProperty("inCountry", countryData);
       

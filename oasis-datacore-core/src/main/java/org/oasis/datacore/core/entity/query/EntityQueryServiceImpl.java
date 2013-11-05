@@ -23,22 +23,22 @@ public class EntityQueryServiceImpl implements EntityQueryService {
    private Map<String,EntityQueryService> queryEngineMap = new HashMap<String,EntityQueryService>();
 
    @Override
-   public List<DCEntity> queryInType(String modelType, String query, String language) {
+   public List<DCEntity> queryInType(String modelType, String query, String language) throws QueryException {
       return this.getQueryEngine(language).queryInType(modelType, query, language);
    }
    
    @Override
-   public List<DCEntity> query(String query, String language) {
+   public List<DCEntity> query(String query, String language) throws QueryException {
       return this.getQueryEngine(language).query(query, language);
    }
    
-   private EntityQueryService getQueryEngine(String language) {
+   private EntityQueryService getQueryEngine(String language) throws QueryException {
       if (language == null || language.trim().length() == 0) {
-         throw new RuntimeException("Missing language"); // TODO rather business exception ?
+         throw new QueryException("Missing language"); // TODO rather business exception ?
       }
       EntityQueryService queryEngine = this.queryEngineMap.get(language);
       if (queryEngine == null) {
-         throw new RuntimeException("No query engine for language " + language); // TODO rather business exception ?
+         throw new QueryException("No query engine for language " + language); // TODO rather business exception ?
       }
       return queryEngine;
    }

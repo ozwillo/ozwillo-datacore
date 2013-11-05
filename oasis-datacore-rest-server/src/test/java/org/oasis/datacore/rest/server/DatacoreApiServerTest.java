@@ -13,9 +13,8 @@ import org.junit.runners.MethodSorters;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModel;
-import org.oasis.datacore.core.sample.CityCountrySample;
 import org.oasis.datacore.rest.api.DCResource;
-import org.oasis.datacore.rest.client.DatacoreApiCachedClientImpl;
+import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.DatacoreClientApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -60,8 +59,10 @@ public class DatacoreApiServerTest {
    
    /** to be able to build a full uri, to check in tests
     * TODO rather client-side DCURI or rewrite uri in server */
-   @Value("${datacoreApiClient.baseUrl}") 
-   private String baseUrl;
+   ///@Value("${datacoreApiClient.baseUrl}") 
+   ///private String baseUrl; // useless
+   @Value("${datacoreApiClient.containerUrl}") 
+   private String containerUrl;
 
    /** for testing purpose */
    @Autowired
@@ -119,7 +120,7 @@ public class DatacoreApiServerTest {
          Assert.fail("Creation should fail when referenced data doesn't exist");
       } catch (WebApplicationException waex) {
          Assert.assertTrue((waex.getResponse().getEntity() + "").contains(
-               this.baseUrl + "dc/type/country/UK")); // http://localhost:8180/
+               this.containerUrl + "dc/type/country/UK")); // http://localhost:8180/
       }
    }
 
@@ -182,7 +183,7 @@ public class DatacoreApiServerTest {
    private DCResource buildNamedData(String type, String name) {
       DCResource resource = new DCResource();
       String iri = name;
-      resource.setUri(DatacoreApiCachedClientImpl.buildUri(baseUrl, type, iri));
+      resource.setUri(UriHelper.buildUri(containerUrl, type, iri));
       //resource.setVersion(-1l);
       /*resource.setProperty("type", type);
       resource.setProperty("iri", iri);*/
@@ -194,14 +195,14 @@ public class DatacoreApiServerTest {
       String type = "city";
       String iri = countryName + '/' + name;
       DCResource cityResource = new DCResource();
-      cityResource.setUri(DatacoreApiCachedClientImpl.buildUri(baseUrl, type, iri));
+      cityResource.setUri(UriHelper.buildUri(containerUrl, type, iri));
       //cityResource.setVersion(-1l);
       /*cityResource.setProperty("type", type);
       cityResource.setProperty("iri", iri);*/
       cityResource.setProperty("name", name);
       
       String countryType = "country";
-      String countryUri = DatacoreApiCachedClientImpl.buildUri(baseUrl, countryType, countryName);
+      String countryUri = UriHelper.buildUri(containerUrl, countryType, countryName);
       if (embeddedCountry) {
          DCResource countryResource = buildNamedData(countryType, countryName);
          cityResource.setProperty("inCountry", countryResource);
@@ -221,7 +222,7 @@ public class DatacoreApiServerTest {
       Assert.assertNotNull(data);
       Assert.assertNotNull(data.getVersion());
       long version = data.getVersion();
-      Assert.assertEquals(this.baseUrl + "dc/type/city/UK/London", data.getUri()); // http://localhost:8180/
+      Assert.assertEquals(this.containerUrl + "dc/type/city/UK/London", data.getUri()); // http://localhost:8180/
       ///Assert.assertEquals("city", data.getProperties().get("type"));
       ///Assert.assertEquals("UK/London", data.getProperties().get("iri"));
       DCResource postedData = datacoreApiClient.postDataInType(data, "city");
@@ -231,7 +232,8 @@ public class DatacoreApiServerTest {
 
    @Test
    public void test3clientCache() throws Exception {
-      resourceCache.evict(test2Create("France", "Bordeaux").getUri()); // create with country but clean cache
+      String bordeauxUriToEvict = test2Create("France", "Bordeaux").getUri();
+      resourceCache.evict(bordeauxUriToEvict); // create with country but clean cache
 
       try {
          datacoreApiClient.deleteData("city", "France/Bordeaux", null);
@@ -292,7 +294,7 @@ public class DatacoreApiServerTest {
    public void test3find() throws Exception {
       List<DCResource> resources = datacoreApiClient.findDataInType("city", "", null, null);
       Assert.assertEquals(1, resources.size());
-      Assert.assertEquals(this.baseUrl + "dc/type/city/UK/London", resources.get(0).getUri()); // http://localhost:8180/
+      Assert.assertEquals(this.containerUrl + "dc/type/city/UK/London", resources.get(0).getUri()); // http://localhost:8180/
       
       DCResource bordeauxCityData = buildCityData("Bordeaux", "France", true);
       DCResource postedBordeauxCityData = datacoreApiClient.postDataInType(bordeauxCityData, "city");

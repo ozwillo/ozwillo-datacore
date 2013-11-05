@@ -106,7 +106,9 @@
    </bean>
          
    <!-- Spring configuration for Datacore API CXF server -->
-   <jaxrs:server id="datacoreApiServer" address="${datacoreApiServer.jaxrsBaseUrl}">
+   <jaxrs:server id="datacoreApiServer" address="${datacoreApiServer.jaxrsBaseUrl}"
+         staticSubresourceResolution="true"><!-- optimization since no JAXRS annotations on impls,
+         see http://cxf.apache.org/docs/jax-rs-basics.html#JAX-RSBasics-Staticresolutionofsubresources -->
       <jaxrs:serviceBeans>
          <ref bean="datacoreApiImpl"/>
          <ref bean="swaggerResourceJSON" />

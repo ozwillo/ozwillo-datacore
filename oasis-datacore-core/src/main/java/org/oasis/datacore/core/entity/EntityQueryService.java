@@ -3,6 +3,7 @@ package org.oasis.datacore.core.entity;
 import java.util.List;
 
 import org.oasis.datacore.core.entity.model.DCEntity;
+import org.oasis.datacore.core.entity.query.QueryException;
 
 
 /**
@@ -24,7 +25,7 @@ public interface EntityQueryService {
    String LANGUAGE_SPARQL = "SPARQL";
    //String LANGUAGE_LDPQL = "LDPQL";
    
-   public List<DCEntity> queryInType(String modelType, String query, String language);
-   public List<DCEntity> query(String query, String language);
+   public List<DCEntity> queryInType(String modelType, String query, String language) throws QueryException;
+   public List<DCEntity> query(String query, String language) throws QueryException;
    
 }

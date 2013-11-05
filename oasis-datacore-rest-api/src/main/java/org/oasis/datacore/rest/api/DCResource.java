@@ -22,6 +22,9 @@ import com.wordnik.swagger.annotations.ApiModelProperty;
 /**
  * A Datacore data Resource.
  * This class is the Java support for producing JSON-LD-like JSON out of Datacore data.
+ * 
+ * TODO patch date support by Jackson else Caused by: com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException: Unrecognized field "weekOfWeekyear" (class org.joda.time.DateTime)
+ *  
  * @author mdutoo
  *
  */
@@ -109,7 +112,37 @@ public class DCResource {
    public void setVersion(Long version) {
       this.version = version;
    }
-   
+   public List<String> getTypes() {
+      return types;
+   }
+   public void setTypes(List<String> types) {
+      this.types = types;
+   }
+   public DateTime getCreated() {
+      return created;
+   }
+   public void setCreated(DateTime created) {
+      this.created = created;
+   }
+   public DateTime getLastModified() {
+      return lastModified;
+   }
+   public void setLastModified(DateTime lastModified) {
+      this.lastModified = lastModified;
+   }
+   public String getCreatedBy() {
+      return createdBy;
+   }
+   public void setCreatedBy(String createdBy) {
+      this.createdBy = createdBy;
+   }
+   public String getLastModifiedBy() {
+      return lastModifiedBy;
+   }
+   public void setLastModifiedBy(String lastModifiedBy) {
+      this.lastModifiedBy = lastModifiedBy;
+   }
+
    public String toString() {
       try {
          return new ObjectMapper().writeValueAsString(this);
@@ -117,5 +150,4 @@ public class DCResource {
          return "DCResource[" + this.uri + " , bad json]";
       }
    }
-
 }
