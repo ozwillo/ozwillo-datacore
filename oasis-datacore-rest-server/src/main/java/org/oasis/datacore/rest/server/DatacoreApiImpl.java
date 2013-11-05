@@ -15,7 +15,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -740,10 +739,15 @@ public class DatacoreApiImpl implements DatacoreApi {
       // else provided If-None-Match precondition KO (resource didn't change),
       // so return 304 Not Modified (and don't send the dcData back)
       
-      CacheControl cc = new CacheControl();
-      cc.setMaxAge(600); // TODO ??!!
-      //return builder.cacheControl(cc).lastModified(person.getUpdated()).build(); // NB. lastModified would be pretty but not used at HTTP level
-      throw new WebApplicationException(builder.cacheControl(cc).build());
+      // NB. no cache control max age, else HTTP clients won't even send new requests until period ends !
+      //CacheControl cc = new CacheControl();
+      //cc.setMaxAge(600);
+      //builder.cacheControl(cc);
+      
+      // NB. lastModified would be pretty but not used at HTTP level
+      //builder.lastModified(person.getUpdated());
+      
+      throw new WebApplicationException(builder.build());
    }
    
    public void deleteData(String modelType, String iri, HttpHeaders httpHeaders) {
@@ -773,6 +777,7 @@ public class DatacoreApiImpl implements DatacoreApi {
 
       Query query = new Query(Criteria.where("_uri").is(uri).and("_v").is(version));
       mgo.remove(query, collectionName);
+      // TODO get operation result (using native executeCommand instead ?) and if failed throw error status
 
       throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT).build());
    }

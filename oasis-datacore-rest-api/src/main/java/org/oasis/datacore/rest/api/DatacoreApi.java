@@ -48,29 +48,22 @@ import com.wordnik.swagger.annotations.ApiResponses;
 
 /**
  * REST (JSON) Datacore API.
- * TODO DataResourceApi ??
  * 
- * Allows to manage (CRUD) and find Data Resources,
- * in JSON-LD (like ??) format
- * and with LDP (W3C Linked Data Platform)-like operations (URIs,finders etc.) .
- * TODO links
+ * See Swagger API root doc in API_ROOT_DOC constant (used in spring conf).
+ * 
+ * 
+ * ========================
+ * JAXRS definition dev doc :
  * 
  * Available RESTful operations are defined in JAXRS.
  * 
- * Using operations where type of data is provided in URL usually improves performances :
- * "*inType" methods are faster, finder queries with type even more.
- * 
- * On GET, providing the If-None-Match header with an up-to-date ETag (dcData.version) doesn't
- * return the content but an HTTP 304 Not Modified.
- * This allows for efficient web-like client-side caching & refresh.
- * See explanation at http://odino.org/don-t-rape-http-if-none-match-the-412-http-status-code/ .
- * However, the If-Match header with ETag is not checked on POST, PUT, PATCH or DELETE,
- * because it's done anyway at persistence (MongoDB) level at update
- * (and it would make clients - and servers - harder to develop).
- * 
  * NB. operation path must start with / even if relative to resource path
  * else swagger UI playground doesn't work (they're missing their middle slash
- * ex. /dctype/city...).  
+ * ex. /dctype/city...).
+ * 
+ * TODO links
+ * 
+ * TODO DataResourceApi ??
  * 
  * TODO LATER catch persistence (MongoDB) precondition error and prettily return HTTP 412 (Precondition Failed)
  * 
@@ -103,7 +96,36 @@ import com.wordnik.swagger.annotations.ApiResponses;
 public interface DatacoreApi {
    
    public static final String QUERY_PARAMETERS = "#queryParameters";
-   public static final String DC_TYPE_PATH = "/dc/type";
+   public static final String DC_TYPE_PATH = "dc/type";
+   
+   public static final String API_ROOT_DOC = "Allows to manage (CRUD) and find Data Resources, "
+         + "in <a href=\"http://json-ld.org/\">JSON-LD</a>-like (implicit context) format "
+         + "(see also <a ref=\"http://json-ld.org/playground/index.html\">playground</a>) "
+         + "and with <a href=\"http://www.w3.org/2012/ldp/wiki/Main_Page\">W3C LDP</a> "
+         + "(Linked Data Platform)-like operations (URIs,"
+         + "<a href)=\"http://www.w3.org/2012/ldp/wiki/LDPNext\">future collection filtering</a>-inspired "
+         + "finders etc.)."
+         + "\n<br/><br/>\n"
+         + "See : <a href=\"https://github.com/pole-numerique/oasis-datacore/wiki\">"
+         + "examples, FAQ, how to & common use cases, cookbook (writing clients...), full documentation</a>."
+         + "\n<br/><br/>\n"
+         + "IRI have 3 constraints : they must be valid URL endings, unique (not enforced yet),"
+         + " and if possible readable (representative of the resource)."
+         + "\n<br/><br/>\n"
+         + "Using operations where type of data is provided in URL usually improves performances : "
+         + "'*inType' methods are faster, finder queries with type even more."
+         + "\n<br/><br/>\n"
+         + "On GET, providing the If-None-Match header with an up-to-date ETag (dcData.version) "
+         + "doesn't return the content but an HTTP 304 Not Modified. This allows for efficient web-like "
+         + "client-side caching & refresh. See explanation "
+         + "<a href=\"http://odino.org/don-t-rape-http-if-none-match-the-412-http-status-code/\">here</a> ."
+         + "However, the If-Match header with ETag is not checked on POST, PUT, PATCH or DELETE, because"
+         + "it's done anyway at persistence (MongoDB) level at update (and it would make clients - and"
+         + "servers - harder to develop)."
+         + "\n<br/><br/>\n"
+         + "<strong>WARNING</strong> Swagger UI has some limitations (but not other HTTP clients) :"
+         + "\n<br/>&nbsp;&nbsp;- it encodes path parameters, so type & IRI will be wrong if they have "
+         + "encodable characters (ex. slash in IRI)";
    
    /*
     * TODO NO conflicts with postAllDataInType, rather client helper only ? or in interceptors ???
@@ -152,11 +174,14 @@ public interface DatacoreApi {
    @Path("/type/{type}")
    @POST
    @ApiOperation(value = "Creates new data Resource(s) in the given type, or updates them if allowed.",
-      notes = "Mere wrapper over atomic typed POST. Resource URI must be provided but can be "
-            + "relative to type, up-to-date versions are required to update existing resources "
-            + "(which first requires that strict POST mode is not enabled). POST of a single data "
-            + "resource (instead of an array with a single item) is supported.",
-            response = DCResource.class, responseContainer="List")
+      notes = "A single data Resource or an array of several ones (in which case it is a mere wrapper "
+            + "over the atomic case) are accepted. "
+            + "\n<br/><br/>\n"
+            + "Resource URI(s) must be provided but can be relative to type, up-to-date version(s) are "
+            + "required to update existing resources (which first requires that strict POST mode is not "
+            + "enabled). POST of a single data resource (instead of an array with a single item) is "
+            + "supported.",
+            response = DCResource.class, responseContainer="List", position = 0) // fix jdk7 random order in UI
    @ApiResponses(value = {
       @ApiResponse(code = 500, message = "Field parsing errors (format, consistency...)"),
       @ApiResponse(code = 409, message = "Conflict : while trying to update existing "
@@ -181,10 +206,11 @@ public interface DatacoreApi {
    @Path("/")
    @POST
    @ApiOperation(value = "Creates new data Resources, or updates them if allowed.",
-      notes = "Mere wrapper over atomic typed POST. Resource URI must be provided, "
-            + "up-to-date versions are required to update existing resources "
-            + "(which first requires that strict POST mode is not enabled)",
-            response = DCResource.class, responseContainer="List")
+      notes = "Mere wrapper over atomic typed POST. "
+            + "\n<br/><br/>\n"
+            + "Resource URI must be provided, up-to-date versions are required to update "
+            + "existing resources (which first requires that strict POST mode is not enabled)",
+            response = DCResource.class, responseContainer="List", position = 1)
    @ApiResponses(value = {
       @ApiResponse(code = 500, message = "Field parsing errors (format, consistency...)"),
       @ApiResponse(code = 409, message = "Conflict : while trying to update existing "
@@ -210,10 +236,11 @@ public interface DatacoreApi {
    @PATCH
    @ApiOperation(value = "Updates an existing data Resource in the given type.",
       notes = "(For now) mere wrapper over atomic typed non-strict mode POST. "
+            + "\n<br/><br/>\n"
             + "Resource URI (Model type and IRI i.e. Internal Resource Identifier) are required "
             + "but also up-to-date version sent as an ETag in an If-Match=version precondition, "
             + "TODO all fields must be provided OR PATCH behaviour differ from PUT's",
-            response = DCResource.class)
+            response = DCResource.class, position = 2)
    @ApiResponses(value = {
       @ApiResponse(code = 500, message = "Field parsing errors (format, consistency...)"),
       @ApiResponse(code = 409, message = "Conflict : while trying to update existing resource, "
@@ -240,10 +267,11 @@ public interface DatacoreApi {
    @PATCH
    @ApiOperation(value = "Updates existing data Resources in the given type.",
       notes = "Mere wrapper over atomic typed PUT. "
+            + "\n<br/><br/>\n"
             + "Resource URI (Model type and IRI i.e. Internal Resource Identifier) are required "
             + "TODO but also up-to-date version sent as an ETag in an If-Match=version precondition, "
             + "TODO all fields must be provided OR PATCH behaviour differ from PUT's",
-            response = DCResource.class, responseContainer="List")
+            response = DCResource.class, responseContainer="List", position = 3)
    @ApiResponses(value = {
       @ApiResponse(code = 500, message = "Field parsing errors (format, consistency...)"),
       @ApiResponse(code = 409, message = "Conflict : while trying to update existing resource, "
@@ -268,10 +296,11 @@ public interface DatacoreApi {
    @PATCH
    @ApiOperation(value = "Updates existing data Resources.",
       notes = "Mere wrapper over atomic typed PUT. "
+            + "\n<br/><br/>\n"
             + "Resource URI (Model type and IRI i.e. Internal Resource Identifier) are required "
             + "TODO but also up-to-date version sent as an ETag in an If-Match=version precondition, "
             + "TODO all fields must be provided OR PATCH behaviour differ from PUT's",
-            response = DCResource.class, responseContainer="List")
+            response = DCResource.class, responseContainer="List", position = 4)
    @ApiResponses(value = {
       @ApiResponse(code = 500, message = "Field parsing errors (format, consistency...)"),
       @ApiResponse(code = 409, message = "Conflict : while trying to update existing resource, "
@@ -296,12 +325,18 @@ public interface DatacoreApi {
    @GET
    @ApiOperation(value = "Get an existing data Resource.",
       notes = "Resource Model type and IRI (Internal Resource Identifier) are required. "
+            + "\n<br/><br/>\n"
             + "Allows web-style client-side caching : if client sends its current cached "
             + "resource's version as an ETag in an If-None-Match=version precondition, "
             + "the Resource is returned only if this precondition is matched on the server, "
             + "otherwise (if the client's version is not up-to-date with the server's), "
             + "it returns 304 Not Modified, allowing the client to get the Resource from its cache.",
-            response = DCResource.class)
+            response = DCResource.class, position = 5)
+   @ApiImplicitParams({
+      @ApiImplicitParam(name=HttpHeaders.IF_NONE_MATCH, paramType="header", dataType="string",
+            value="version (if matched, returns 304 instead)")
+      // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
+   })
    @ApiResponses(value = {
       @ApiResponse(code = 404, message = "Type model not found"),
       @ApiResponse(code = 304, message = "Resource not modified (client can reuse its cache's)"),
@@ -324,15 +359,19 @@ public interface DatacoreApi {
    @ApiOperation(value = "Deletes an existing data Resource.",
       notes = "Resource Model type and IRI (Internal Resource Identifier) are required, "
             + "but also up-to-date version sent as an ETag in an If-Match=version precondition.",
-            response = DCResource.class)
+            response = DCResource.class, position = 6)
+   @ApiImplicitParams({
+      @ApiImplicitParam(name=HttpHeaders.IF_MATCH, paramType="header", dataType="string",
+            required=true, value="version to match")
+      // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
+   })
    @ApiResponses(value = {
       @ApiResponse(code = 409, message = "Conflict : while trying to delete existing resource, "
             + "optimistic locking error "
             + "(provided resource version is not up-to-date with the server's latest)"),
       @ApiResponse(code = 404, message = "Type model not found"),
       @ApiResponse(code = 400, message = "Bad request : version ETag is missing or not a long integer"),
-      @ApiResponse(code = 304, message = "Resource not modified (client can reuse its cache's)"),
-      @ApiResponse(code = 204, message = "Delete succeeded")
+      @ApiResponse(code = 204, message = "Delete succeeded, or resource not found")
    })
    void deleteData(
          @ApiParam(value = "Model type to look up in", required = true) @PathParam("type") String modelType,
@@ -396,10 +435,11 @@ public interface DatacoreApi {
          + "in the given type, or updates it if allowed.",
       notes = "This is a tunneled version of the POST operation over GET "
             + "to ease up testing (e.g. on web browsers), prefer POST if possible. "
+            + "\n<br/><br/>\n"
             + "Resource URI must be provided but can be relative to type, "
             + "up-to-date version is required to update an existing resource "
             + "(which first requires that strict POST mode is not enabled)",
-            response = DCResource.class)
+            response = DCResource.class, position = 7)
    @ApiResponses(value = {
       @ApiResponse(code = 500, message = "Field parsing errors (format, consistency...)"),
       @ApiResponse(code = 409, message = "Conflict : while trying to update existing "
@@ -434,10 +474,11 @@ public interface DatacoreApi {
             + "an existing data Resource in the given type.",
          notes = "This is a tunneled version of the PUT / PATCH and DELETE operations over GET "
                + "to ease up testing (e.g. on web browsers), prefer PUT / PATCH or DELETE if possible. "
+               + "\n<br/><br/>\n"
                + "Resource URI (Model type and IRI i.e. Internal Resource Identifier) are required "
                + "but also up-to-date version sent as an ETag in an If-Match=version precondition, "
                + "TODO all fields must be provided OR PATCH behaviour differ from PUT's",
-               response = DCResource.class)
+               response = DCResource.class, position = 8)
       @ApiResponses(value = {
          @ApiResponse(code = 500, message = "Field parsing errors (format, consistency...)"),
          @ApiResponse(code = 409, message = "Conflict : while trying to update existing "
@@ -488,23 +529,27 @@ public interface DatacoreApi {
       notes = "Returns all Datacore resources of the given Model type that match all (AND)"
             + "criteria provided in HTTP query parameters, sorted in the given order(s) if any, "
             + "with (limited) pagination."
+            + "\n<br/><br/>\n"
             + "Each additional HTTP query parameter (in Swagger UI, enter them "
             + "as a single URL query string, ex. name=London&population=>100000) "
             + "is a Datacore query criteria in the form field=operatorValueSort "
-            + "where 'field' is the field's dotted path in its model type(s), "
+            + "where 'field' is the field's dotted path within its model type(s), "
             + "'operator' (if any, else defaults to '=') can be in "
             + "logical, XML (most), MongoDB (all) or sometimes Java-like form, "
             + "and 'sort' is an optional + (resp. -) suffix for ascending (resp. descending) order. "
-            + "Sorting according to a field is done by providing an HTTP query parameter in the form "
-            + "field=sort where 'sort' is + (resp. -) for ascending (resp. descending) order. "
+            + "Sorting according to a field not already specified in a criteria is done by providing "
+            + "an HTTP query parameter in the form field=sort where 'sort' is + (resp. -) "
+            + "for ascending (resp. descending) order. "
+            + "\n<br/><br/>\n"
             + "Accepted operators, in their logical/XML/MongoDB/Java forms if any (else -), are : "
             + "=/-/-/==, >/&gt/$gt/- (ex. 3), </&lt;/$lt/-, >=/&gt;=/$gte/-, <=/&lt;=/$lte/-, "
             + "<>/&lt;&gt;/$ne/!=, -/-/$in/- (in JSON list, ex. [0,1]), -/-/$nin/- (not in JSON list)"
             + ", -/-/$regex/- (Perl's ex. /Lond.*n/i or only Lond.*n), -/-/$exists/- (field exists, ex. name) ; "
             + "list operators : -/-/$all/-, -/-/$elemMatch/- (NOT IMPLEMENTED YET), -/-/$size/- . "
-            + "Detailed documentation about MongoDB operators can be found at "
-            + "http://docs.mongodb.org/manual/reference/operator/query/ .",
-            response = DCResource.class, responseContainer="List")
+            + "\n<br/><br/>\n"
+            + "See <a href=\"http://docs.mongodb.org/manual/reference/operator/query/\">"
+            + "detailed documentation about MongoDB operators</a>.",
+            response = DCResource.class, responseContainer="List", position = 9)
    @ApiImplicitParams({
       @ApiImplicitParam(name=QUERY_PARAMETERS, paramType="query", dataType="string", allowMultiple=true,
             value="Each other HTTP query parameter (in Swagger UI, enter them "
@@ -547,23 +592,27 @@ public interface DatacoreApi {
             + "with (limited) pagination."
             + "It is a 'native' query in that it is"
             + "implemented as a single MongoDB query with pagination by default. "
+            + "\n<br/><br/>\n"
             + "Each additional HTTP query parameter (in Swagger UI, enter them "
             + "as a single URL query string, ex. name=London&population=>100000) "
             + "is a Datacore query criteria in the form field=operatorValueSort "
-            + "where 'field' is the field's dotted path in its model type(s), "
+            + "where 'field' is the field's dotted path starting by its model type(s), "
             + "'operator' (if any, else defaults to '=') can be in "
             + "logical, XML (most), MongoDB (all) or sometimes Java-like form, "
             + "and 'sort' is an optional + (resp. -) suffix for ascending (resp. descending) order. "
-            + "Sorting according to a field is done by providing an HTTP query parameter in the form "
-            + "field=sort where 'sort' is + (resp. -) for ascending (resp. descending) order. "
+            + "Sorting according to a field not already specified in a criteria is done by providing "
+            + "an HTTP query parameter in the form field=sort where 'sort' is + (resp. -) "
+            + "for ascending (resp. descending) order. "
+            + "\n<br/><br/>\n"
             + "Accepted operators, in their logical/XML/MongoDB/Java forms if any (else -), are : "
             + "=/-/-/==, >/&gt/$gt/- (ex. 3), </&lt;/$lt/-, >=/&gt;=/$gte/-, <=/&lt;=/$lte/-, "
             + "<>/&lt;&gt;/$ne/!=, -/-/$in/- (in JSON list, ex. [0,1]), -/-/$nin/- (not in JSON list)"
             + ", -/-/$regex/- (Perl's ex. /Lond.*n/i or only Lond.*n), -/-/$exists/- (field exists, ex. name) ; "
             + "list operators : -/-/$all/-, -/-/$elemMatch/- (NOT IMPLEMENTED YET), -/-/$size/- . "
-            + "Detailed documentation about MongoDB operators can be found at "
-            + "http://docs.mongodb.org/manual/reference/operator/query/ .",
-            response = DCResource.class, responseContainer="List")
+            + "\n<br/><br/>\n"
+            + "See <a href=\"http://docs.mongodb.org/manual/reference/operator/query/\">"
+            + "detailed documentation about MongoDB operators</a>.",
+            response = DCResource.class, responseContainer="List", position = 9)
    @ApiImplicitParams({
       @ApiImplicitParam(name=QUERY_PARAMETERS, paramType="query", dataType="string", allowMultiple=true,
             value="Each other HTTP query parameter (in Swagger UI, enter them "
@@ -611,22 +660,37 @@ public interface DatacoreApi {
    @ApiOperation(value = "NOT IMPLEMENTED YET, Executes the query in the given Model type and returns found resources.",
       notes = "Returns all Datacore data of the given type that are found "
             + "by the given query written in the given language. "
-            + "It is a 'native' query in that it is implemented as a single MongoDB query with pagination by default. "
+            + "It is a non-'native', limited query in that it is implemented by several MongoDB queries "
+            + "whose criteria on non-data (URI) fields are limited as defined in their model. Therefore "
+            + "it is advised to rather do several findDataInType queries. "
+            + "\n<br/><br/>\n"
             + "Supported query languages could be : "
-            + "1. SPARQL : "
+            + "\n<br/><br/>\n"
+            + "<strong>1. SPARQL :</strong>"
+            + "\n<br/>\n"
             + "this is a limited form of SPARQL's SELECT statement. By default, the first variable "
-            + "receives an rdf:type predicate to the given type. Fields are adressed in their "
-            + "dotted form without root type."
+            + "receives an rdf:type predicate to the given model type. All other resource variables "
+            + "must be referenced from within this first one (even indirectly)."
+            + "Fields are adressed in their dotted form without root type."
+            + "\n<br/>\n"
             + "Allowed : "
+            + "\n<br/>\n"
             + "PREFIX ?, SELECT(more ??), FROM (type ?), WHERE "
+            + "\n<br/>\n"
             + "a / rdf:type, rdfs:subClassOf ? (for types & aspects) ; always AND / && (never ||), OPTIONAL ?!?"
+            + "\n<br/>\n"
             + " 1.0^^xsd:float ?? "
+            + "\n<br/>\n"
             + "VALUES ?? "
+            + "\n<br/>\n"
             + "FILTER : ! / NOT EXISTS ?, !=, NOT IN, <, > "
+            + "\n<br/>\n"
             + "and string functions : REGEX, more ???, langMatches ??, IRI ?? "
+            + "\n<br/>\n"
             + "count on lists, else no aggregate function (TODO LATER2 using map / reduce) "
+            + "\n<br/>\n"
             + "LIMIT, OFFSET, ORDER BY",
-            response = DCResource.class, responseContainer="List")
+            response = DCResource.class, responseContainer="List", position = 10)
    @ApiResponses(value = {
       @ApiResponse(code = 500, message = "Field parsing errors (format, consistency...)"),
       @ApiResponse(code = 404, message = "Type model not found")
@@ -658,20 +722,34 @@ public interface DatacoreApi {
             + "It is a non-'native', limited query in that it is implemented by several MongoDB queries "
             + "whose criteria on non-data (URI) fields are limited as defined in their model. Therefore "
             + "it is advised to rather do several findDataInType queries. "
+            + "\n<br/><br/>\n"
             + "Supported query languages could be : "
-            + "1. SPARQL : "
-            + "this is a limited form of SPARQL's SELECT statement. Fields are adressed "
-            + "in their dotted form including root type. "
+            + "\n<br/><br/>\n"
+            + "<strong>1. SPARQL :</strong>"
+            + "\n<br/>\n"
+            + "this is a limited form of SPARQL's SELECT statement. When not referenced from within "
+            + "another root resource variable whose model type is specified (even indirectly), "
+            + "other root resource variables must have their model type provided in an rdf:type predicate."
+            + "Fields are adressed in their dotted form with root type."
+            + "\n<br/>\n"
             + "Allowed : "
+            + "\n<br/>\n"
             + "PREFIX ?, SELECT(more ??), FROM (type ?), WHERE "
+            + "\n<br/>\n"
             + "a / rdf:type, rdfs:subClassOf ? (for types & aspects) ; always AND / && (never ||), OPTIONAL ?!?"
+            + "\n<br/>\n"
             + " 1.0^^xsd:float ?? "
+            + "\n<br/>\n"
             + "VALUES ?? "
+            + "\n<br/>\n"
             + "FILTER : ! / NOT EXISTS ?, !=, NOT IN, <, > "
+            + "\n<br/>\n"
             + "and string functions : REGEX, more ???, langMatches ??, IRI ?? "
+            + "\n<br/>\n"
             + "count on lists, else no aggregate function (TODO LATER2 using map / reduce) "
+            + "\n<br/>\n"
             + "LIMIT, OFFSET, ORDER BY",
-            response = DCResource.class, responseContainer="List")
+            response = DCResource.class, responseContainer="List", position = 11)
    @ApiResponses(value = {
       @ApiResponse(code = 500, message = "Field parsing errors (format, consistency...)"),
       @ApiResponse(code = 404, message = "Type model not found")

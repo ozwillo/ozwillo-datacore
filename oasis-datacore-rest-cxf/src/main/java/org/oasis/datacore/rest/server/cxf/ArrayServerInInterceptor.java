@@ -42,8 +42,8 @@ public class ArrayServerInInterceptor extends AbstractPhaseInterceptor<Message> 
    public static final String REQUEST_IS_JSON_ARRAY = ArrayServerInInterceptor.class.getName()
          + "requestIsJsonArray";
    
-   private static final Pattern DC_TYPE_PATTERN = Pattern.compile(
-         DatacoreApi.DC_TYPE_PATH.replaceAll("/", "/+")); // "/?dc/+type"
+   private static final Pattern SLASH_DC_TYPE_PATTERN = Pattern.compile(
+         "/+" + DatacoreApi.DC_TYPE_PATH.replaceAll("/", "/+")); // "/?dc/+type"
    
    /** Used to peek in JSON stream to know whether root is an array or not.
     * NB. can't be autowired because may be used for mocks (and not only actual server impl) */
@@ -112,7 +112,7 @@ public class ArrayServerInInterceptor extends AbstractPhaseInterceptor<Message> 
       if (HttpMethod.POST.equals(requestHttpMethod)) {
          String requestUri = (String) serverInRequestMessage.get(Message.REQUEST_URI);
          // NB. no org.apache.cxf.resource.operation.name yet
-         if (requestUri != null && DC_TYPE_PATTERN.matcher(requestUri).find()) {
+         if (requestUri != null && SLASH_DC_TYPE_PATTERN.matcher(requestUri).find()) {
             return true;
          }
       }

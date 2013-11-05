@@ -145,8 +145,7 @@
       <property name="version" value="1.0.0"/>
       <property name="basePath" value="${datacoreApiServer.baseUrl}"/>
       <property name="title" value="Datacore Resource API"/>
-      <property name="description" value="Allows to manage (CRUD) and find Data Resources, in JSON-LD
-         (like) format and with LDP (W3C Linked Data Platform)-like operations (URIs,finders etc.) ."/>
+      <property name="description" value="#{T(org.oasis.datacore.rest.api.DatacoreApi).API_ROOT_DOC}"/>
       <property name="contact" value="http://www.oasis-eu.org"/>
       <property name="license" value="Apache 2.0 License"/><!-- TODO LGPL ??? -->
       <property name="licenseUrl" value="http://www.apache.org/licenses/LICENSE-2.0.html"/>

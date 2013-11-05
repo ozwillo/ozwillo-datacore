@@ -7,6 +7,8 @@ import java.net.URL;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.oasis.datacore.rest.api.DatacoreApi;
+
 
 /**
  * TODO or in UriService ? BUT also required on client side !
@@ -16,7 +18,7 @@ import java.util.regex.Pattern;
  */
 public class UriHelper {
 
-   public static String DC_TYPE_PREFIX = "dc/type/"; // TODO better from JAXRS annotations using reflection ?
+   public static String DC_TYPE_PREFIX = DatacoreApi.DC_TYPE_PATH + "/"; // TODO better from JAXRS annotations using reflection ?
    
    /** to detect whether relative (rather than absolute) uri */
    ///private static Pattern absoluteUriStartProtocolPattern = Pattern.compile("^http[s]?");

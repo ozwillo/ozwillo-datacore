@@ -1,6 +1,7 @@
 package org.oasis.datacore.core.entity.query.ldp;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -75,8 +76,9 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          }
          DCField dcField = dcModel.getField(fieldPathElements[0]);
          if (dcField == null) {
-            queryParsingContext.addError("In type " + modelType + ", can't find field with path elements"
-                  + fieldPathElements + ": can't find field for first path element " + fieldPathElements[0]);
+            queryParsingContext.addError("In type " + modelType + ", can't find field with path elements "
+                  + Arrays.asList(fieldPathElements) + " : can't find field for first path element "
+                  + fieldPathElements[0]);
             continue;
          }
          
@@ -98,17 +100,18 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
                dcField = ((DCMapField) dcField).getMapFields().get(fieldPathElement);
                if (dcField == null) {
                   queryParsingContext.addError("In type " + modelType + ", can't find field with path elements"
-                        + fieldPathElements + ": can't go below " + i + "th path element "
+                        + Arrays.asList(fieldPathElements) + ": can't go below " + i + "th path element "
                         + fieldPathElement + ", because field is unkown");
                   continue parameterLoop;
                }
             } else if ("resource".equals(dcField.getType())) {
                queryParsingContext.addError("Found criteria requiring join : in type " + modelType + ", field "
-                     + fieldPath + "can't be done in findDataInType, do it rather in all-around finData");
+                     + fieldPath + " (" + i + "th in field path elements " + Arrays.asList(fieldPathElements)
+                     + ") can't be done in findDataInType, do it rather on client side");
                continue parameterLoop; // TODO boum
             } else {
                queryParsingContext.addError("In type " + modelType + ", can't find field with path elements"
-                     + fieldPathElements + ": can't go below " + i + "th element " 
+                     + Arrays.asList(fieldPathElements) + ": can't go below " + i + "th element " 
                      + fieldPathElement + ", because field is neither map nor list but " + dcField.getType());
                continue parameterLoop; // TODO boum
             }

@@ -846,22 +846,18 @@
             if (queryParams !== "") {
               queryParams += "&";
             }
+            
+            // OASIS HACK start
+            if(param.name.substring(0,1) == "#") { // OASIS HACK
+                queryParams += encodeURI(args[param.name]); // NOT encodeURIComponent because & and =
+                continue;
+            }
+        	// OASIS HACK end
+            
             queryParams += encodeURIComponent(param.name) + '=' + encodeURIComponent(args[param.name]);
           }
         }
       }
-      
-      // OASIS HACK start
-      for (var arg in args) {
-    	  if(arg != null && arg.length > 0 && arg.substring(0,1)) {
-              if (queryParams !== "") {
-                  queryParams += "&";
-              }
-              queryParams += encodeURI(args[arg]); // NOT encodeURIComponent because & and =
-          }
-      }
-  	  // OASIS HACK end
-      
       if ((queryParams != null) && queryParams.length > 0) {
         url += "?" + queryParams;
       }
