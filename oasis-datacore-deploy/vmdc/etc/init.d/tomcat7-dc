@@ -13,7 +13,8 @@
 #
 
 # package conf
-INSTALL_PATH=/home/axxx/install
+INSTALL_USER=oasis
+INSTALL_PATH=/home/$INSTALL_USER/install
 TOMCAT_NAME="tomcat7-dc"
 TOMCAT_INSTALL_PATH=$INSTALL_PATH/$TOMCAT_NAME
 SCRIPTNAME=tomcat7-dc
@@ -22,13 +23,13 @@ case "$1" in
   start)
         PWD=`pwd`
         cd $TOMCAT_INSTALL_PATH
-        sudo -u axxx nohup bash -c "./bin/catalina.sh run" 1>>/var/log/$SCRIPTNAME.log 2>> /var/log/$SCRIPTNAME.err.log &
+        sudo -u $INSTALL_USER nohup bash -c "./bin/catalina.sh run" 1>>/var/log/$SCRIPTNAME.log 2>> /var/log/$SCRIPTNAME.err.log &
         cd $PWD
         ;;
   stop)
         PWD=`pwd`
         cd $TOMCAT_INSTALL_PATH
-        sudo -u axxx bash -c "./bin/catalina.sh stop"
+        sudo -u $INSTALL_USER bash -c "./bin/catalina.sh stop"
         cd $PWD
         ;;
   *)
