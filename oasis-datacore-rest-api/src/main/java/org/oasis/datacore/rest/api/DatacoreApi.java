@@ -47,9 +47,10 @@ import com.wordnik.swagger.annotations.ApiResponses;
 
 
 /**
- * REST (JSON) Datacore API.
+ * REST (JSON) Datacore Data resource API.
  * 
- * See Swagger API root doc in API_ROOT_DOC constant (used in spring conf).
+ * See Swagger API root doc in (used in spring conf) in
+ * https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-api/src/main/resources/oasis-datacore-rest-api.properties
  * 
  * 
  * ========================
@@ -61,29 +62,31 @@ import com.wordnik.swagger.annotations.ApiResponses;
  * else swagger UI playground doesn't work (they're missing their middle slash
  * ex. /dctype/city...).
  * 
- * TODO links
- * 
- * TODO DataResourceApi ??
- * 
- * TODO LATER catch persistence (MongoDB) precondition error and prettily return HTTP 412 (Precondition Failed)
- * 
- * TODO Examples
- * 
+ * TODO rename ex. to DataResourceApi ??
  * TODO DatacoreNativeApi with only "native" methods ? AT LEAST NOT FOR CLIENT CACHING
  * 
- * TODO non-native queries ? with limited auto @Queriable joins ??
+ * more features :
+ * * TODO v1 features
+ * * TODO LATER non-native queries ? with limited auto @Queriable joins ??
+ * * TODO LATER2 version system (copy model data, pull / push diffs up to pull requests) ?
+ * * TODO LATER2 mass operations ex. updateMatchingQuery ??
+ * * TODO LATER3 map/reduce ???
  * 
- * TODO updateMatchingQuery ??
+ * more bindings :
+ * * TODO LATER2 XML ??
  * 
- * TODO LATER2 XML ??
+ * more HTTP-like :
+ * * HTTP OPTIONS returns apidoc ? NO not much used, rather swagger for now http://zacstewart.com/2012/04/14/http-options-method.html
+ * * TODO LATER catch persistence (MongoDB) precondition error and prettily return HTTP 412
+ * (Precondition Failed). ETag itself is not checked in POST / PUT / PATCH because version
+ * is checked anyway at mongo update time.
  * 
- * TODO LATER3 map/reduce ???
- * 
- * TODO LATER3 HTTP OPTIONS returns apidoc ? not much used, rather swagger for now http://zacstewart.com/2012/04/14/http-options-method.html
- * 
- * 
- * TODOs :
- * * HTTP Link as HeaderParam for more JSON-LD / LDP-like ?? 
+ * more RDF-like : 
+ * * TODO LATER2 plug jsonld-java on top to provide other JSON-LD representations (compacted, expanded,
+ * framed / embedded...)
+ * * TODO LATER2 provide other RDF languages through content-negociation using json-ld-java,
+ * especially turtle for finder results.
+ * * LATER3 HTTP Link as HeaderParam for more JSON-LD / LDP-like ?? 
  * 
  * @author mdutoo
  *
@@ -97,35 +100,6 @@ public interface DatacoreApi {
    
    public static final String QUERY_PARAMETERS = "#queryParameters";
    public static final String DC_TYPE_PATH = "dc/type";
-   
-   public static final String API_ROOT_DOC = "Allows to manage (CRUD) and find Data Resources, "
-         + "in <a href=\"http://json-ld.org/\">JSON-LD</a>-like (implicit context) format "
-         + "(see also <a ref=\"http://json-ld.org/playground/index.html\">playground</a>) "
-         + "and with <a href=\"http://www.w3.org/2012/ldp/wiki/Main_Page\">W3C LDP</a> "
-         + "(Linked Data Platform)-like operations (URIs,"
-         + "<a href)=\"http://www.w3.org/2012/ldp/wiki/LDPNext\">future collection filtering</a>-inspired "
-         + "finders etc.)."
-         + "\n<br/><br/>\n"
-         + "See : <a href=\"https://github.com/pole-numerique/oasis-datacore/wiki\">"
-         + "examples, FAQ, how to & common use cases, cookbook (writing clients...), full documentation</a>."
-         + "\n<br/><br/>\n"
-         + "IRI have 3 constraints : they must be valid URL endings, unique (not enforced yet),"
-         + " and if possible readable (representative of the resource)."
-         + "\n<br/><br/>\n"
-         + "Using operations where type of data is provided in URL usually improves performances : "
-         + "'*inType' methods are faster, finder queries with type even more."
-         + "\n<br/><br/>\n"
-         + "On GET, providing the If-None-Match header with an up-to-date ETag (dcData.version) "
-         + "doesn't return the content but an HTTP 304 Not Modified. This allows for efficient web-like "
-         + "client-side caching & refresh. See explanation "
-         + "<a href=\"http://odino.org/don-t-rape-http-if-none-match-the-412-http-status-code/\">here</a> ."
-         + "However, the If-Match header with ETag is not checked on POST, PUT, PATCH or DELETE, because"
-         + "it's done anyway at persistence (MongoDB) level at update (and it would make clients - and"
-         + "servers - harder to develop)."
-         + "\n<br/><br/>\n"
-         + "<strong>WARNING</strong> Swagger UI has some limitations (but not other HTTP clients) :"
-         + "\n<br/>&nbsp;&nbsp;- it encodes path parameters, so type & IRI will be wrong if they have "
-         + "encodable characters (ex. slash in IRI)";
    
    /*
     * TODO NO conflicts with postAllDataInType, rather client helper only ? or in interceptors ???

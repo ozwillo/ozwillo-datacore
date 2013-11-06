@@ -19,9 +19,9 @@
   <script type="text/javascript">
     $(function () {
       window.swaggerUi = new SwaggerUi({
-      url: "http://petstore.swagger.wordnik.com/api/api-docs",
+      url: "/api-docs", // OASIS
       dom_id: "swagger-ui-container",
-      supportedSubmitMethods: ['get', 'post', 'put', 'delete'],
+      supportedSubmitMethods: ['get', 'post', 'put', 'delete'], // OASIS TODO PATCH ?!?
       onComplete: function(swaggerApi, swaggerUi){
         if(console) {
           console.log("Loaded SwaggerUI")
@@ -34,7 +34,7 @@
           console.log(data);
         }
       },
-      docExpansion: "none"
+      docExpansion: "list" // OASIS rather than none, full see https://github.com/wordnik/swagger-ui
     });
 
     $('#input_apiKey').change(function() {

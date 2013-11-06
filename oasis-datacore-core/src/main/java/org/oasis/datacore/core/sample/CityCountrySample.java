@@ -33,9 +33,13 @@ public class CityCountrySample {
    @PostConstruct
    public void init() {
       DCModel countryModel = new DCModel(COUNTRY_MODEL_NAME);
+      countryModel.setDocumentation("{ \"uri\": \"http://localhost:8180/dc/type/country/France\", "
+            + "\"name\": \"France\" }");
       countryModel.addField(new DCField("name", "string", true, 100));
       
       DCModel poiModel = new DCModel(POI_MODEL_NAME);
+      poiModel.setDocumentation("{ \"uri\": \"http://localhost:8080/dc/type/city/France/Lyon\", "
+            + "\"inCountry\": \"http://localhost:8080/dc/type/country/France\", \"name\": \"France\" }");
       poiModel.addField(new DCField("name", "string", true, 50));
       poiModel.addField(new DCField("description", "string"));
       poiModel.addField(new DCField("location", "string")); // wkt

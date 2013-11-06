@@ -24,7 +24,7 @@ public class RootRedirectResource {
    private String targetUri;
 
    @GET
-   public void redirectToSwaggert() {
+   public void redirectToSwagger() {
       try {
          throw new WebApplicationException(Response.seeOther(new URI(targetUri)).build());
       } catch (URISyntaxException usex) {

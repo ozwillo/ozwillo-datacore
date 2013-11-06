@@ -17,7 +17,7 @@
 
    <!-- default & overriding some properties (BEFORE import to take precedence over imported properties) -->
    <!-- default properties -->
-   <context:property-placeholder location="classpath:oasis-datacore-rest-server.properties"
+   <context:property-placeholder location="classpath:oasis-datacore-rest-server.properties,classpath:oasis-datacore-rest-api.properties"
       ignore-unresolvable="true"/><!-- to let it default to importing PropertyPlaceholder/*Resolver -->
    <import resource="classpath:oasis-datacore-core-context.xml" />
 
@@ -89,11 +89,12 @@
    <bean id="apiWriter" class="com.wordnik.swagger.jaxrs.listing.ApiDeclarationProvider" />
    
    
-   <!-- taken out to allow injection in test -->
+   <!-- apiImpls taken out to allow injection in test -->
    <bean id="datacoreApiImpl" class="org.oasis.datacore.rest.server.DatacoreApiImpl"/>
+   <bean id="datacore.model.apiImpl" class="org.oasis.datacore.model.rest.server.DataModelApiImpl"/>
    
    
-   <!-- injected in ArrayServerInInterceptor -->
+   <!-- mapper taken out to allow to inject it in ArrayServerInInterceptor -->
    <bean id="datacoreApiServer.objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper"/>
    <bean id="datacoreApiServer.jacksonJsonProvider" class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider">
       <constructor-arg><ref bean="datacoreApiServer.objectMapper"/></constructor-arg>
@@ -111,7 +112,11 @@
          see http://cxf.apache.org/docs/jax-rs-basics.html#JAX-RSBasics-Staticresolutionofsubresources -->
       <jaxrs:serviceBeans>
          <ref bean="datacoreApiImpl"/>
+         <ref bean="datacore.model.apiImpl"/>
          <ref bean="swaggerResourceJSON" />
+         <bean class="org.oasis.datacore.rest.server.RootRedirectResource">
+            <property name="targetUri" value="/swagger-ui/index.html"/>
+         </bean>
       </jaxrs:serviceBeans>
       <jaxrs:providers>
          <ref bean="datacoreApiServer.jacksonJsonProvider"/>
@@ -145,7 +150,7 @@
       <property name="version" value="1.0.0"/>
       <property name="basePath" value="${datacoreApiServer.baseUrl}"/>
       <property name="title" value="Datacore Resource API"/>
-      <property name="description" value="#{T(org.oasis.datacore.rest.api.DatacoreApi).API_ROOT_DOC}"/>
+      <property name="description" value="${datacore.api.doc}"/>
       <property name="contact" value="http://www.oasis-eu.org"/>
       <property name="license" value="Apache 2.0 License"/><!-- TODO LGPL ??? -->
       <property name="licenseUrl" value="http://www.apache.org/licenses/LICENSE-2.0.html"/>
