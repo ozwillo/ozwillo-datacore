@@ -14,7 +14,7 @@
 
    <!-- default properties -->
    <context:property-placeholder location="classpath:oasis-datacore-core.properties"
-      ignore-unresolvable="true"/><!-- to let it default to importing PropertyPlaceholder/*Resolver -->
+      order="0" ignore-unresolvable="true"/><!-- so defaults to importing PropertyPlaceholder/*Resolver -->
    
    <context:component-scan base-package="org.oasis.datacore.core" />
    <context:annotation-config /><!-- actually auto enabled by previous line -->
