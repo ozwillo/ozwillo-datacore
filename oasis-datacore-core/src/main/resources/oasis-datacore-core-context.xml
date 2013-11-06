@@ -12,7 +12,8 @@
       http://www.springframework.org/schema/data/mongo
       http://www.springframework.org/schema/data/mongo/spring-mongo-1.2.xsd">
 
-   <!-- default properties -->
+   <!-- default properties
+   Lowest order takes precedence, here -1 to allow ex. to be overriden by test at -2. -->
    <context:property-placeholder location="classpath:oasis-datacore-core.properties"
       order="0" ignore-unresolvable="true"/><!-- so defaults to importing PropertyPlaceholder/*Resolver -->
    
