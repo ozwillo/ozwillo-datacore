@@ -17,7 +17,7 @@
 
    <!-- default & overriding some properties (BEFORE import to take precedence over imported properties) -->
    <!-- default properties -->
-   <context:property-placeholder location="classpath:oasis-datacore-rest-server.properties,classpath:oasis-datacore-rest-api.properties"
+   <context:property-placeholder location="classpath:oasis-datacore-deploy*.properties,classpath:oasis-datacore-rest-server.properties,classpath:oasis-datacore-rest-api.properties"
       ignore-unresolvable="true"/><!-- to let it default to importing PropertyPlaceholder/*Resolver -->
    <import resource="classpath:oasis-datacore-core-context.xml" />
 
