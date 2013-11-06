@@ -18,11 +18,11 @@
    <!-- default & overriding some properties (BEFORE import to take precedence over imported properties)
    lowest order takes precedence
    (overriding ones are at end of comma-separated location) -->
-   <context:property-placeholder location="classpath:oasis-datacore-rest-api.properties,classpath:oasis-datacore-rest-server.properties"
+   <context:property-placeholder location="classpath:oasis-datacore-rest-api.properties,classpath:oasis-datacore-rest-server.properties,classpath*:oasis-datacore-deploy*.properties"
       order="-1" ignore-unresolvable="true"/><!-- so defaults to importing PropertyPlaceholder/*Resolver -->
    <!-- NB. without * after classpath it doesn't work ! -->
-   <context:property-placeholder location="classpath*:oasis-datacore-deploy*.properties"
-      order="-2" ignore-unresolvable="true"/><!-- to let it default to importing PropertyPlaceholder/*Resolver -->
+   <!-- context:property-placeholder location="classpath:oasis-datacore-deploy.properties"
+      order="-2" ignore-unresolvable="true"/ --><!-- to let it default to importing PropertyPlaceholder/*Resolver -->
    
    <import resource="classpath:oasis-datacore-core-context.xml" />
 
