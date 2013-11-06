@@ -15,9 +15,9 @@
       http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd
       http://cxf.apache.org/transports/http-jetty/configuration http://cxf.apache.org/schemas/configuration/http-jetty.xsd">
 
-   <!-- default & overriding some properties (BEFORE import to take precedence over imported properties) -->
-   <!-- default properties -->
-   <context:property-placeholder location="classpath:oasis-datacore-deploy*.properties,classpath:oasis-datacore-rest-server.properties,classpath:oasis-datacore-rest-api.properties"
+   <!-- default & overriding some properties (BEFORE import to take precedence over imported properties)
+   (overriding ones are at end of comma-separated location) -->
+   <context:property-placeholder location="classpath:oasis-datacore-rest-server.properties,classpath:oasis-datacore-rest-api.properties,classpath:oasis-datacore-deploy*.properties"
       ignore-unresolvable="true"/><!-- to let it default to importing PropertyPlaceholder/*Resolver -->
    <import resource="classpath:oasis-datacore-core-context.xml" />
 
