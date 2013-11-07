@@ -17,10 +17,12 @@
 
    <!-- default & overriding some properties (BEFORE import to take precedence over imported properties)
    (overriding ones are at end of comma-separated location)
-   Lowest order takes precedence, here -1 to allow ex. to be overriden by test at -2. 
+   Lowest order takes precedence, here -1 to allow ex. to be overriden by test at -2, see
+   http://stackoverflow.com/questions/11645360/overriding-properties-in-spring-3-1-with-a-local-properties-file
    However this doesn't work for -deploy*.properties, which has to be put instead in the same
    property placeholder as -server.properties instead and after it to work.
-   Moreover without a first * after classpath (for jars ?) * doesn't work ! -->
+   Moreover without a first * after classpath (for jars ?) * doesn't work !
+   See also http://www.baeldung.com/2012/02/06/properties-with-spring/ -->
    <context:property-placeholder location="classpath:oasis-datacore-rest-api.properties,classpath:oasis-datacore-rest-server.properties,classpath*:oasis-datacore-deploy*.properties"
       order="-1" ignore-unresolvable="true"/><!-- so defaults to importing PropertyPlaceholder/*Resolver -->
    
