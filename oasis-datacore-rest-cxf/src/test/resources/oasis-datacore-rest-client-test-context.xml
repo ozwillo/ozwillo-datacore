@@ -36,6 +36,7 @@
    <!-- Spring configuration for Datacore API CXF mock server -->
    <jaxrs:server id="datacoreApiCXFTestMockServer" address="${datacoreApiClient.baseUrl}">
       <jaxrs:serviceBeans>
+         <bean class="org.oasis.datacore.rest.server.DatacoreApiImpl"/>
          <bean class="org.oasis.datacore.rest.api.client.DatacoreApiMockServerImpl"/>
       </jaxrs:serviceBeans>
       <jaxrs:providers>
