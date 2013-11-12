@@ -276,7 +276,7 @@ public class DatacoreApiServerFullTest {
 			car.setVersion(8l);
 			car.setProperty("model", "updateTest");
 			List<DCResource> listDataToUpdate = new ArrayList<DCResource>();
-			listDataToUpdate.add(car);
+			listDataToUpdate.add(car); 
 			updatedResource = api.putAllDataInType(listDataToUpdate, BrandCarMotorcycleSample.CAR_MODEL_NAME);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(updatedResource);
@@ -286,50 +286,623 @@ public class DatacoreApiServerFullTest {
 		
 	}
 	
+	/**
+	 * URL : /dc/type/${type}
+	 * HTTP Method : PUT
+	 * HTTP Return status : 400
+	 * Trying to update a car with no version
+	 * Excepted behavior from API : HTTPStatus = 400 (bad request) and return null
+	 */
+	@Test
+	public void testPutDcTypeBadRequest() {
+			
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		List<DCResource> updatedResource = null;
+		Assert.assertNull(updatedResource);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.BRAND_MODEL_NAME), BrandCarMotorcycleSample.BRAND_MODEL_NAME);
+		Assert.assertNotNull(postedData);
+		postedData = null;
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.CAR_MODEL_NAME), BrandCarMotorcycleSample.CAR_MODEL_NAME);
+		Assert.assertNotNull(postedData);		
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleSample.CAR_MODEL_NAME, "", 0, 1);
+		
+		try {
+			Assert.assertNotNull(listCars);		
+			DCResource car = listCars.get(0);
+			car.setVersion(null);
+			List<DCResource> listDataToUpdate = new ArrayList<DCResource>();
+			listDataToUpdate.add(car);
+			updatedResource = api.putAllDataInType(listDataToUpdate, BrandCarMotorcycleSample.CAR_MODEL_NAME);
+		} catch (WebApplicationException e) {
+			Assert.assertNull(updatedResource);
+			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			Assert.assertTrue(400 == httpStatus);
+		}
+		
+	}
 	
 	/**
 	 * URL : /dc/type/${type}
 	 * Http method : GET
+	 * HTTP Return status : 200
+	 * Trying to get a list of motorcycle
+	 * Excepted behavior from API : HTTPStatus = 200 (OK) and return the list of motorcycles
 	 */
 	@Test
-	public void testGetDcType() {
-//		api.findDataInType(type, queryParams, start, limit);
+	public void testGetDcTypeOK() {
+		
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.BRAND_MODEL_NAME), BrandCarMotorcycleSample.BRAND_MODEL_NAME);
+		Assert.assertNotNull(postedData);
+		postedData = null;
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.MOTORCYCLE_MODEL_NAME), BrandCarMotorcycleSample.MOTORCYCLE_MODEL_NAME);
+		Assert.assertNotNull(postedData);		
+		List<DCResource> listMotorcycles = api.findDataInType(BrandCarMotorcycleSample.MOTORCYCLE_MODEL_NAME, "", 0, 10);
+		Assert.assertNotNull(listMotorcycles);
+		
+	}
+	
+	/**
+	 * URL : /dc/type/${type}
+	 * Http method : GET
+	 * HTTP Return status : 500
+	 * Trying to get a list of motorcycle with a query on fields that don't exist
+	 * Excepted behavior from API : HTTPStatus = 500 (internal server error) and return null
+	 */
+	@Test
+	public void testGetDcTypeInternalServerError() {
+		
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.BRAND_MODEL_NAME), BrandCarMotorcycleSample.BRAND_MODEL_NAME);
+		Assert.assertNotNull(postedData);
+		postedData = null;
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.MOTORCYCLE_MODEL_NAME), BrandCarMotorcycleSample.MOTORCYCLE_MODEL_NAME);
+		Assert.assertNotNull(postedData);		
+		List<DCResource> listMotorcycles = null;
+		try {
+			listMotorcycles = api.findDataInType(BrandCarMotorcycleSample.MOTORCYCLE_MODEL_NAME, "test=true&noquery=0", 0, 10);
+		} catch (WebApplicationException e) {
+			Assert.assertNull(listMotorcycles);
+			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			Assert.assertTrue(500 == httpStatus);
+		}
+		
+	}
+	
+	/**
+	 * URL : /dc/type/${type}
+	 * Http method : GET
+	 * HTTP Return status : 404
+	 * Trying to get a list of concept cars (model don't exist)
+	 * Excepted behavior from API : HTTPStatus = 404 (not found) and return null
+	 */
+	@Test
+	public void testGetDcTypeNotFound() {
+		
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		List<DCResource> listConceptCars = null;
+		try {
+			listConceptCars = api.findDataInType("ConceptCars", "", 0, 10);
+		} catch (WebApplicationException e) {
+			Assert.assertNull(listConceptCars);
+			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			Assert.assertTrue(404 == httpStatus);
+		}
+		
 	}
 	
 	/**
 	 * URL : /dc/
-	 * Http method : POST
+	 * HTTP Method : POST
+	 * HTTP Return status : 201
+	 * Trying to insert brands into brand collection
+	 * Expected behavior : HTTPStatus = 201 (created) and return inserted data
 	 */
 	@Test
-	public void testPostDc() {
-//		api.postAllData(dcDatas);
+	public void testPostDcCreated() {
+		
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		List<DCResource> postedData = null;
+		Assert.assertNull(postedData);
+		List<DCResource> listData = new ArrayList<DCResource>();
+		listData.addAll(mapData.get(BrandCarMotorcycleSample.BRAND_MODEL_NAME));
+		listData.addAll(mapData.get(BrandCarMotorcycleSample.CAR_MODEL_NAME));
+		
+		postedData = api.postAllData(listData);
+		Assert.assertNotNull(postedData);
+		
 	}
 	
 	/**
 	 * URL : /dc/
-	 * Http method : PUT
-	 */	
+	 * HTTP Method : POST
+	 * HTTP Return status : 400
+	 * Trying to insert brands into car collection
+	 * Excepted behavior from API : HTTPStatus = 400 (bad request) and return null
+	 */
 	@Test
-	public void testPutDc() {
-//		api.putAllData(dcDatas);
+	public void testPostDcBadRequest() {
+		
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		List<DCResource> postedData = null;
+		Assert.assertNull(postedData);
+		List<DCResource> listData = new ArrayList<DCResource>();
+		listData.addAll(mapData.get(BrandCarMotorcycleSample.BRAND_MODEL_NAME));
+		listData.addAll(mapData.get(BrandCarMotorcycleSample.CAR_MODEL_NAME));
+		Assert.assertNotNull(listData);
+		DCResource resource = listData.get(0);
+		Assert.assertNotNull(resource);
+		resource.setUri("\\o$!$");
+		try {
+			postedData = api.postAllData(listData);
+		} catch (WebApplicationException e) {
+			Assert.assertNull(postedData);
+			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			Assert.assertTrue(400 == httpStatus);
+		}
+		
+	}
+	
+	/**
+	 * URL : /dc/
+	 * HTTP Method : POST
+	 * HTTP Return status : 500
+	 * Trying to insert a modified brand (with a non existing property)
+	 * Excepted behavior from API : HTTPStatus = 500 (Internal Server Error) and return null
+	 */
+	@Test
+	public void testPostDcInternalServerError() {
+		
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		List<DCResource> postedData = null;
+		Assert.assertNull(postedData);
+		
+		try {
+			List<DCResource> listData = new ArrayList<DCResource>();
+			listData.addAll(mapData.get(BrandCarMotorcycleSample.BRAND_MODEL_NAME));
+			listData.addAll(mapData.get(BrandCarMotorcycleSample.CAR_MODEL_NAME));
+			Assert.assertNotNull(listData);
+			DCResource resource = listData.get(0);
+			Assert.assertNotNull(resource);
+			resource.setProperty("fault$/!#property", "test");
+			postedData = api.postAllData(listData);
+		} catch (WebApplicationException e) {
+			Assert.assertNull(postedData);
+			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			Assert.assertTrue(500 == httpStatus);
+		}
+		
+	}
+	
+	/**
+	 * URL : /dc/
+	 * HTTP Method : POST
+	 * HTTP Return status : 409
+	 * Trying to insert a modified brand (with an updated property and a version > version on server)
+	 * Excepted behavior from API : HTTPStatus = 409 (conflict) and return null
+	 */
+	@Test
+	public void testPostDcConflict() {
+		
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		List<DCResource> postedData = null;
+		Assert.assertNull(postedData);
+		
+		try {
+			List<DCResource> listData = new ArrayList<DCResource>();
+			listData.addAll(mapData.get(BrandCarMotorcycleSample.BRAND_MODEL_NAME));
+			listData.addAll(mapData.get(BrandCarMotorcycleSample.CAR_MODEL_NAME));
+			Assert.assertNotNull(listData);
+			postedData = api.postAllData(listData);
+			postedData = null;
+			Assert.assertNull(postedData);
+			DCResource resource = listData.get(0);
+			Assert.assertNotNull(resource);
+			resource.setProperty("name", "Toyota");
+			resource.setVersion(8l);
+			List<DCResource> newData = new ArrayList<DCResource>();
+			newData.add(resource);
+			postedData = api.postAllData(newData);
+		} catch (WebApplicationException e) {
+			Assert.assertNull(postedData);
+			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			Assert.assertTrue(409 == httpStatus);
+		}
+		
+	}
+	
+	/**
+	 * URL : /dc/
+	 * HTTP Method : POST
+	 * HTTP Return status : 404
+	 * Trying to insert a data on an non existing model
+	 * Excepted behavior from API : HTTPStatus = 404 (Not Found) and return null
+	 */
+	@Test
+	public void testPostDcNotFound() {
+		
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		List<DCResource> postedData = null;
+		Assert.assertNull(postedData);
+		
+		try {
+			List<DCResource> listData = new ArrayList<DCResource>();
+			listData.addAll(mapData.get(BrandCarMotorcycleSample.BRAND_MODEL_NAME));
+			listData.addAll(mapData.get(BrandCarMotorcycleSample.CAR_MODEL_NAME));
+			Assert.assertNotNull(listData);
+			DCResource resource = listData.get(0);
+			Assert.assertNotNull(resource);
+			resource.getTypes().clear();
+			resource.getTypes().add("TestModel");
+			postedData = api.postAllData(listData);
+		} catch (WebApplicationException e) {
+			Assert.assertNull(postedData);
+			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			Assert.assertTrue(404 == httpStatus);
+		}
+		
+	}
+
+	/**
+	 * URL : /dc/
+	 * HTTP Method : PUT
+	 * HTTP Return status : 201
+	 * Trying to update a motorcycle
+	 * Expected behavior : HTTPStatus = 201 (created) and return inserted data
+	 */
+	@Test
+	public void testPutDcCreated() {
+		
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		List<DCResource> postedData = null;
+		Assert.assertNull(postedData);
+		
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.BRAND_MODEL_NAME), BrandCarMotorcycleSample.BRAND_MODEL_NAME);
+		Assert.assertNotNull(postedData);
+		postedData = null;
+		
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.MOTORCYCLE_MODEL_NAME), BrandCarMotorcycleSample.MOTORCYCLE_MODEL_NAME);
+		Assert.assertNotNull(postedData);		
+		
+		List<DCResource> listMotorcycles = api.findDataInType(BrandCarMotorcycleSample.MOTORCYCLE_MODEL_NAME, "", 0, 1);
+		Assert.assertNotNull(listMotorcycles);
+		DCResource motorcycle = listMotorcycles.get(0);
+		motorcycle.setProperty("hp", new Integer(200));
+		List<DCResource> listDataToUpdate = new ArrayList<DCResource>();
+		listDataToUpdate.add(motorcycle);
+		
+		List<DCResource> updatedResource = null;
+		Assert.assertNull(updatedResource);
+		updatedResource = api.putAllData(listDataToUpdate);
+		
+	}
+	
+	/**
+	 * URL : /dc/
+	 * HTTP Method : PUT
+	 * HTTP Return status : 500
+	 * Trying to update a modified motorcycle (with a non existing property)
+	 * Excepted behavior from API : HTTPStatus = 500 (Internal Server Error) and return null
+	 */
+	@Test
+	public void testPutDcInternalServerError() {
+			
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		List<DCResource> updatedResource = null;
+		Assert.assertNull(updatedResource);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.BRAND_MODEL_NAME), BrandCarMotorcycleSample.BRAND_MODEL_NAME);
+		Assert.assertNotNull(postedData);
+		postedData = null;
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.MOTORCYCLE_MODEL_NAME), BrandCarMotorcycleSample.MOTORCYCLE_MODEL_NAME);
+		Assert.assertNotNull(postedData);		
+		List<DCResource> listMotorcycles = api.findDataInType(BrandCarMotorcycleSample.MOTORCYCLE_MODEL_NAME, "", 0, 1);
+		
+		try {
+			Assert.assertNotNull(listMotorcycles);		
+			DCResource motorcycle = listMotorcycles.get(0);
+			motorcycle.setProperty("fault$/!#property", "test");
+			List<DCResource> listDataToUpdate = new ArrayList<DCResource>();
+			listDataToUpdate.add(motorcycle);
+			updatedResource = api.putAllData(listDataToUpdate);
+		} catch (WebApplicationException e) {
+			Assert.assertNull(updatedResource);
+			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			Assert.assertTrue(500 == httpStatus);
+		}
+		
+	}
+	
+	/**
+	 * URL : /dc/
+	 * HTTP Method : PUT
+	 * HTTP Return status : 409
+	 * Trying to insert a modified motorcycle (with an updated property and a version > version on server)
+	 * Excepted behavior from API : HTTPStatus = 409 (conflict) and return null
+	 */
+	@Test
+	public void testPutDcConflict() {
+			
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		List<DCResource> updatedResource = null;
+		Assert.assertNull(updatedResource);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.BRAND_MODEL_NAME), BrandCarMotorcycleSample.BRAND_MODEL_NAME);
+		Assert.assertNotNull(postedData);
+		postedData = null;
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.MOTORCYCLE_MODEL_NAME), BrandCarMotorcycleSample.MOTORCYCLE_MODEL_NAME);
+		Assert.assertNotNull(postedData);		
+		List<DCResource> listMotorcycles = api.findDataInType(BrandCarMotorcycleSample.MOTORCYCLE_MODEL_NAME, "", 0, 1);
+		
+		try {
+			Assert.assertNotNull(listMotorcycles);		
+			DCResource motorcycle = listMotorcycles.get(0);
+			motorcycle.setVersion(8l);
+			motorcycle.setProperty("model", "updateTest");
+			List<DCResource> listDataToUpdate = new ArrayList<DCResource>();
+			listDataToUpdate.add(motorcycle); 
+			updatedResource = api.putAllData(listDataToUpdate);
+		} catch (WebApplicationException e) {
+			Assert.assertNull(updatedResource);
+			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			Assert.assertTrue(409 == httpStatus);
+		}
+		
+	}
+	
+	/**
+	 * URL : /dc/
+	 * HTTP Method : PUT
+	 * HTTP Return status : 400
+	 * Trying to update a car with no version
+	 * Excepted behavior from API : HTTPStatus = 400 (bad request) and return null
+	 */
+	@Test
+	public void testPutDcBadRequest() {
+			
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		List<DCResource> updatedResource = null;
+		Assert.assertNull(updatedResource);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.BRAND_MODEL_NAME), BrandCarMotorcycleSample.BRAND_MODEL_NAME);
+		Assert.assertNotNull(postedData);
+		postedData = null;
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.MOTORCYCLE_MODEL_NAME), BrandCarMotorcycleSample.MOTORCYCLE_MODEL_NAME);
+		Assert.assertNotNull(postedData);		
+		List<DCResource> listMotorcycles = api.findDataInType(BrandCarMotorcycleSample.MOTORCYCLE_MODEL_NAME, "", 0, 1);
+		
+		try {
+			Assert.assertNotNull(listMotorcycles);		
+			DCResource car = listMotorcycles.get(0);
+			car.setVersion(null);
+			List<DCResource> listDataToUpdate = new ArrayList<DCResource>();
+			listDataToUpdate.add(car);
+			updatedResource = api.putAllData(listDataToUpdate);
+		} catch (WebApplicationException e) {
+			Assert.assertNull(updatedResource);
+			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			Assert.assertTrue(400 == httpStatus);
+		}
+		
 	}
 	
 	/**
 	 * URL : /dc/
 	 * Http method : GET
+	 * HTTP Return status : 200
+	 * Trying to get a list of resources
+	 * Excepted behavior from API : HTTPStatus = 200 (OK) and return the list of motorcycles
 	 */
 	@Test
-	public void testGetDc() {
-//		api.findData(queryParams, start, limit);
+	public void testGetDcOK() {
+		
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.BRAND_MODEL_NAME), BrandCarMotorcycleSample.BRAND_MODEL_NAME);
+		Assert.assertNotNull(postedData);
+		postedData = null;
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.MOTORCYCLE_MODEL_NAME), BrandCarMotorcycleSample.MOTORCYCLE_MODEL_NAME);
+		Assert.assertNotNull(postedData);		
+		List<DCResource> listMotorcycles = api.findData("year=2014", 0, 10);
+		Assert.assertNotNull(listMotorcycles);
+		
+	}
+	
+	/**
+	 * URL : /dc/
+	 * Http method : GET
+	 * HTTP Return status : 500
+	 * Trying to get a list of motorcycle with a query on fields that don't exist
+	 * Excepted behavior from API : HTTPStatus = 500 (internal server error) and return null
+	 */
+	@Test
+	public void testGetDcInternalServerError() {
+		
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.BRAND_MODEL_NAME), BrandCarMotorcycleSample.BRAND_MODEL_NAME);
+		Assert.assertNotNull(postedData);
+		postedData = null;
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.MOTORCYCLE_MODEL_NAME), BrandCarMotorcycleSample.MOTORCYCLE_MODEL_NAME);
+		Assert.assertNotNull(postedData);		
+		List<DCResource> listMotorcycles = null;
+		try {
+			listMotorcycles = api.findData("test=true&noquery=0", 0, 10);
+		} catch (WebApplicationException e) {
+			Assert.assertNull(listMotorcycles);
+			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			Assert.assertTrue(500 == httpStatus);
+		}
+		
+	}
+	
+	/**
+	 * URL : /dc/
+	 * Http method : GET
+	 * HTTP Return status : 404
+	 * Trying to get a list of concept cars (model don't exist)
+	 * Excepted behavior from API : HTTPStatus = 404 (not found) and return null
+	 */
+	@Test
+	public void testGetDcNotFound() {
+		
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		List<DCResource> listConceptCars = null;
+		try {
+			listConceptCars = api.findData("model=conceptcars", 0, 10);
+		} catch (WebApplicationException e) {
+			Assert.assertNull(listConceptCars);
+			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			Assert.assertTrue(404 == httpStatus);
+		}
+		
 	}
 	
 	/**
 	 * URL : /dc/type/${type}/${iri}
-	 * Http method : PUT
+	 * HTTP Method : PUT
+	 * HTTP Return status : 201
+	 * Trying to update a car
+	 * Expected behavior : HTTPStatus = 201 (created) and return inserted data
 	 */
 	@Test
-	public void testPutDcTypeIri() {
-//		api.putDataInType(dcData, modelType, iri);
+	public void testPutDcTypeIriCreated() {
+		
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		List<DCResource> postedData = null;
+		Assert.assertNull(postedData);
+		
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.BRAND_MODEL_NAME), BrandCarMotorcycleSample.BRAND_MODEL_NAME);
+		Assert.assertNotNull(postedData);
+		postedData = null;
+		
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.CAR_MODEL_NAME), BrandCarMotorcycleSample.CAR_MODEL_NAME);
+		Assert.assertNotNull(postedData);		
+		
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleSample.CAR_MODEL_NAME, "", 0, 1);
+		Assert.assertNotNull(listCars);
+		DCResource car = listCars.get(0);
+		car.setProperty("model", "Espace");
+		
+		DCResource updatedResource = null;
+		Assert.assertNull(updatedResource);
+		updatedResource = api.putDataInType(car, BrandCarMotorcycleSample.CAR_MODEL_NAME, car.getUri());
+		
+	}
+	
+	/**
+	 * URL : /dc/type/${type}/${iri}
+	 * HTTP Method : PUT
+	 * HTTP Return status : 500
+	 * Trying to update a modified car (with a non existing property)
+	 * Excepted behavior from API : HTTPStatus = 500 (Internal Server Error) and return null
+	 */
+	@Test
+	public void testPutDcTypeIriInternalServerError() {
+			
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		DCResource updatedResource = null;
+		Assert.assertNull(updatedResource);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.BRAND_MODEL_NAME), BrandCarMotorcycleSample.BRAND_MODEL_NAME);
+		Assert.assertNotNull(postedData);
+		postedData = null;
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.CAR_MODEL_NAME), BrandCarMotorcycleSample.CAR_MODEL_NAME);
+		Assert.assertNotNull(postedData);		
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleSample.CAR_MODEL_NAME, "", 0, 1);
+		
+		try {
+			Assert.assertNotNull(listCars);		
+			DCResource car = listCars.get(0);
+			car.setProperty("fault$/!#property", "test");
+			updatedResource = api.putDataInType(car, BrandCarMotorcycleSample.CAR_MODEL_NAME, car.getUri());
+		} catch (WebApplicationException e) {
+			Assert.assertNull(updatedResource);
+			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			Assert.assertTrue(500 == httpStatus);
+		}
+		
+	}
+	
+	/**
+	 * URL : /dc/type/${type}/${iri}
+	 * HTTP Method : PUT
+	 * HTTP Return status : 409
+	 * Trying to insert a modified brand (with an updated property and a version > version on server)
+	 * Excepted behavior from API : HTTPStatus = 409 (conflict) and return null
+	 */
+	@Test
+	public void testPutDcTypeIriConflict() {
+			
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		DCResource updatedResource = null;
+		Assert.assertNull(updatedResource);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.BRAND_MODEL_NAME), BrandCarMotorcycleSample.BRAND_MODEL_NAME);
+		Assert.assertNotNull(postedData);
+		postedData = null;
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.CAR_MODEL_NAME), BrandCarMotorcycleSample.CAR_MODEL_NAME);
+		Assert.assertNotNull(postedData);		
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleSample.CAR_MODEL_NAME, "", 0, 1);
+		
+		try {
+			Assert.assertNotNull(listCars);		
+			DCResource car = listCars.get(0);
+			car.setVersion(8l);
+			car.setProperty("model", "updateTest");
+			updatedResource = api.putDataInType(car, BrandCarMotorcycleSample.CAR_MODEL_NAME, car.getUri());
+		} catch (WebApplicationException e) {
+			Assert.assertNull(updatedResource);
+			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			Assert.assertTrue(409 == httpStatus);
+		}
+		
+	}
+	
+	/**
+	 * URL : /dc/type/${type}/${iri}
+	 * HTTP Method : PUT
+	 * HTTP Return status : 400
+	 * Trying to update a car with no version
+	 * Excepted behavior from API : HTTPStatus = 400 (bad request) and return null
+	 */
+	@Test
+	public void testPutDcTypeIriBadRequest() {
+			
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		DCResource updatedResource = null;
+		Assert.assertNull(updatedResource);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.BRAND_MODEL_NAME), BrandCarMotorcycleSample.BRAND_MODEL_NAME);
+		Assert.assertNotNull(postedData);
+		postedData = null;
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.CAR_MODEL_NAME), BrandCarMotorcycleSample.CAR_MODEL_NAME);
+		Assert.assertNotNull(postedData);		
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleSample.CAR_MODEL_NAME, "", 0, 1);
+		
+		try {
+			Assert.assertNotNull(listCars);		
+			DCResource car = listCars.get(0);
+			car.setVersion(null);
+			updatedResource = api.putDataInType(car, BrandCarMotorcycleSample.CAR_MODEL_NAME, car.getUri());
+		} catch (WebApplicationException e) {
+			Assert.assertNull(updatedResource);
+			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			Assert.assertTrue(400 == httpStatus);
+		}
+		
 	}
 	
 	/**
