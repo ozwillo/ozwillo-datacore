@@ -13,7 +13,6 @@ import org.apache.cxf.jaxrs.impl.RequestImpl;
 import org.apache.cxf.message.MessageImpl;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
@@ -72,7 +71,7 @@ public class HTTPOperationsTest {
 	 * HTTP Method : POST
 	 * HTTP Return status : 400
 	 * Trying to insert brands into car collection
-	 * Excepted behavior from API : HTTPStatus = 400 (bad request) and return null
+	 * Expected behavior from API : HTTPStatus = 400 (bad request) and return null
 	 */
 	@Test
 	public void testPostDcTypeBadRequest() {
@@ -97,7 +96,7 @@ public class HTTPOperationsTest {
 	 * HTTP Method : POST
 	 * HTTP Return status : 500
 	 * Trying to insert a modified brand (with a non existing property)
-	 * Excepted behavior from API : HTTPStatus = 500 (Internal Server Error) and return null
+	 * Expected behavior from API : HTTPStatus = 500 (Internal Server Error) and return null
 	 */
 	@Test
 	public void testPostDcTypeInternalServerError() {
@@ -127,7 +126,7 @@ public class HTTPOperationsTest {
 	 * HTTP Method : POST
 	 * HTTP Return status : 409
 	 * Trying to insert a modified brand (with an updated property and a version > version on server)
-	 * Excepted behavior from API : HTTPStatus = 409 (conflict) and return null
+	 * Expected behavior from API : HTTPStatus = 409 (conflict) and return null
 	 */
 	@Test
 	public void testPostDcTypeConflict() {
@@ -159,7 +158,7 @@ public class HTTPOperationsTest {
 	 * HTTP Method : POST
 	 * HTTP Return status : 404
 	 * Trying to insert a data on an non existing model
-	 * Excepted behavior from API : HTTPStatus = 404 (Not Found) and return null
+	 * Expected behavior from API : HTTPStatus = 404 (Not Found) and return null
 	 */
 	@Test
 	public void testPostDcTypeNotFound() {
@@ -222,7 +221,7 @@ public class HTTPOperationsTest {
 	 * HTTP Method : PUT
 	 * HTTP Return status : 500
 	 * Trying to update a modified car (with a non existing property)
-	 * Excepted behavior from API : HTTPStatus = 500 (Internal Server Error) and return null
+	 * Expected behavior from API : HTTPStatus = 500 (Internal Server Error) and return null
 	 */
 	@Test
 	public void testPutDcTypeInternalServerError() {
@@ -258,7 +257,7 @@ public class HTTPOperationsTest {
 	 * HTTP Method : PUT
 	 * HTTP Return status : 409
 	 * Trying to insert a modified brand (with an updated property and a version > version on server)
-	 * Excepted behavior from API : HTTPStatus = 409 (conflict) and return null
+	 * Expected behavior from API : HTTPStatus = 409 (conflict) and return null
 	 */
 	@Test
 	public void testPutDcTypeConflict() {
@@ -295,7 +294,7 @@ public class HTTPOperationsTest {
 	 * HTTP Method : PUT
 	 * HTTP Return status : 400
 	 * Trying to update a car with no version
-	 * Excepted behavior from API : HTTPStatus = 400 (bad request) and return null
+	 * Expected behavior from API : HTTPStatus = 400 (bad request) and return null
 	 */
 	@Test
 	public void testPutDcTypeBadRequest() {
@@ -331,7 +330,7 @@ public class HTTPOperationsTest {
 	 * Http method : GET
 	 * HTTP Return status : 200
 	 * Trying to get a list of motorcycle
-	 * Excepted behavior from API : HTTPStatus = 200 (OK) and return the list of motorcycles
+	 * Expected behavior from API : HTTPStatus = 200 (OK) and return the list of motorcycles
 	 */
 	@Test
 	public void testGetDcTypeOK() {
@@ -353,7 +352,7 @@ public class HTTPOperationsTest {
 	 * Http method : GET
 	 * HTTP Return status : 500
 	 * Trying to get a list of motorcycle with a query on fields that don't exist
-	 * Excepted behavior from API : HTTPStatus = 500 (internal server error) and return null
+	 * Expected behavior from API : HTTPStatus = 500 (internal server error) and return null
 	 */
 	@Test
 	public void testGetDcTypeInternalServerError() {
@@ -381,7 +380,7 @@ public class HTTPOperationsTest {
 	 * Http method : GET
 	 * HTTP Return status : 404
 	 * Trying to get a list of concept cars (model don't exist)
-	 * Excepted behavior from API : HTTPStatus = 404 (not found) and return null
+	 * Expected behavior from API : HTTPStatus = 404 (not found) and return null
 	 */
 	@Test
 	public void testGetDcTypeNotFound() {
@@ -403,7 +402,7 @@ public class HTTPOperationsTest {
 	 * URL : /dc/
 	 * HTTP Method : POST
 	 * HTTP Return status : 201
-	 * Trying to insert brands into brand collection
+	 * Trying to insert brands and car
 	 * Expected behavior : HTTPStatus = 201 (created) and return inserted data
 	 */
 	@Test
@@ -426,8 +425,8 @@ public class HTTPOperationsTest {
 	 * URL : /dc/
 	 * HTTP Method : POST
 	 * HTTP Return status : 400
-	 * Trying to insert brands into car collection
-	 * Excepted behavior from API : HTTPStatus = 400 (bad request) and return null
+	 * Trying to insert a list of resources with a bad URI on one resource
+	 * Expected behavior from API : HTTPStatus = 400 (bad request) and return null
 	 * TODO AGI patch comment
 	 */
 	@Test
@@ -458,8 +457,8 @@ public class HTTPOperationsTest {
 	 * URL : /dc/
 	 * HTTP Method : POST
 	 * HTTP Return status : 500
-	 * Trying to insert a modified brand (with a non existing property)
-	 * Excepted behavior from API : HTTPStatus = 500 (Internal Server Error) and return null
+	 * Trying to insert a modified resource (with a non existing property)
+	 * Expected behavior from API : HTTPStatus = 500 (Internal Server Error) and return null
 	 */
 	@Test
 	public void testPostDcInternalServerError() {
@@ -490,8 +489,8 @@ public class HTTPOperationsTest {
 	 * URL : /dc/
 	 * HTTP Method : POST
 	 * HTTP Return status : 409
-	 * Trying to insert a modified brand (with an updated property and a version > version on server)
-	 * Excepted behavior from API : HTTPStatus = 409 (conflict) and return null
+	 * Trying to insert a modified resource (with an updated property and a version > version on server)
+	 * Expected behavior from API : HTTPStatus = 409 (conflict) and return null
 	 */
 	@Test
 	public void testPostDcConflict() {
@@ -529,7 +528,7 @@ public class HTTPOperationsTest {
 	 * HTTP Method : POST
 	 * HTTP Return status : 404
 	 * Trying to insert a data on an non existing model
-	 * Excepted behavior from API : HTTPStatus = 404 (Not Found) and return null
+	 * Expected behavior from API : HTTPStatus = 404 (Not Found) and return null
 	 */
 	@Test
 	public void testPostDcNotFound() {
@@ -597,7 +596,7 @@ public class HTTPOperationsTest {
 	 * HTTP Method : PUT
 	 * HTTP Return status : 500
 	 * Trying to update a modified motorcycle (with a non existing property)
-	 * Excepted behavior from API : HTTPStatus = 500 (Internal Server Error) and return null
+	 * Expected behavior from API : HTTPStatus = 500 (Internal Server Error) and return null
 	 */
 	@Test
 	public void testPutDcInternalServerError() {
@@ -633,7 +632,7 @@ public class HTTPOperationsTest {
 	 * HTTP Method : PUT
 	 * HTTP Return status : 409
 	 * Trying to insert a modified motorcycle (with an updated property and a version > version on server)
-	 * Excepted behavior from API : HTTPStatus = 409 (conflict) and return null
+	 * Expected behavior from API : HTTPStatus = 409 (conflict) and return null
 	 */
 	@Test
 	public void testPutDcConflict() {
@@ -670,7 +669,7 @@ public class HTTPOperationsTest {
 	 * HTTP Method : PUT
 	 * HTTP Return status : 400
 	 * Trying to update a car with no version
-	 * Excepted behavior from API : HTTPStatus = 400 (bad request) and return null
+	 * Expected behavior from API : HTTPStatus = 400 (bad request) and return null
 	 */
 	@Test
 	public void testPutDcBadRequest() {
@@ -706,7 +705,7 @@ public class HTTPOperationsTest {
 	 * Http method : GET
 	 * HTTP Return status : 200
 	 * Trying to get a list of resources
-	 * Excepted behavior from API : HTTPStatus = 200 (OK) and return the list of motorcycles
+	 * Expected behavior from API : HTTPStatus = 200 (OK) and return the list of motorcycles
 	 */
 	@Test
 	public void testGetDcOK() {
@@ -728,7 +727,7 @@ public class HTTPOperationsTest {
 	 * Http method : GET
 	 * HTTP Return status : 500
 	 * Trying to get a list of motorcycle with a query on fields that don't exist
-	 * Excepted behavior from API : HTTPStatus = 500 (internal server error) and return null
+	 * Expected behavior from API : HTTPStatus = 500 (internal server error) and return null
 	 */
 	@Test
 	public void testGetDcInternalServerError() {
@@ -756,7 +755,7 @@ public class HTTPOperationsTest {
 	 * Http method : GET
 	 * HTTP Return status : 404
 	 * Trying to get a list of concept cars (model don't exist)
-	 * Excepted behavior from API : HTTPStatus = 404 (not found) and return null
+	 * Expected behavior from API : HTTPStatus = 404 (not found) and return null
 	 */
 	@Test
 	public void testGetDcNotFound() {
@@ -812,7 +811,7 @@ public class HTTPOperationsTest {
 	 * HTTP Method : PUT
 	 * HTTP Return status : 500
 	 * Trying to update a modified car (with a non existing property)
-	 * Excepted behavior from API : HTTPStatus = 500 (Internal Server Error) and return null
+	 * Expected behavior from API : HTTPStatus = 500 (Internal Server Error) and return null
 	 */
 	@Test
 	public void testPutDcTypeIriInternalServerError() {
@@ -846,7 +845,7 @@ public class HTTPOperationsTest {
 	 * HTTP Method : PUT
 	 * HTTP Return status : 409
 	 * Trying to insert a modified brand (with an updated property and a version > version on server)
-	 * Excepted behavior from API : HTTPStatus = 409 (conflict) and return null
+	 * Expected behavior from API : HTTPStatus = 409 (conflict) and return null
 	 */
 	@Test
 	public void testPutDcTypeIriConflict() {
@@ -881,7 +880,7 @@ public class HTTPOperationsTest {
 	 * HTTP Method : PUT
 	 * HTTP Return status : 400
 	 * Trying to update a car with no version
-	 * Excepted behavior from API : HTTPStatus = 400 (bad request) and return null
+	 * Expected behavior from API : HTTPStatus = 400 (bad request) and return null
 	 */
 	@Test
 	public void testPutDcTypeIriBadRequest() {
@@ -914,8 +913,8 @@ public class HTTPOperationsTest {
 	 * URL : /dc/type/${type}/${iri}
 	 * Http method : GET
 	 * HTTP Return status : 200
-	 * Trying to get a specific car
-	 * Excepted behavior from API : HTTPStatus = 200 (OK) and a DCResource
+	 * Trying to get a defined car
+	 * Expected behavior from API : HTTPStatus = 200 (OK) and a DCResource
 	 */
 	@Test
 	public void testGetDcTypeIriOK() {
@@ -939,7 +938,7 @@ public class HTTPOperationsTest {
 	 * Http method : GET
 	 * HTTP Return status : 404
 	 * Trying to get a concept car (non existing model)
-	 * Excepted behavior from API : HTTPStatus = 404 (Not Found) and return null
+	 * Expected behavior from API : HTTPStatus = 404 (Not Found) and return null
 	 */
 	@Test
 	public void testGetDcTypeIriNotFound() {
@@ -970,7 +969,7 @@ public class HTTPOperationsTest {
 	 * Http method : GET
 	 * HTTP Return status : 204
 	 * Trying to get a car that does not exist
-	 * Excepted behavior from API : HTTPStatus = 204 (No Content) and return null
+	 * Expected behavior from API : HTTPStatus = 204 (No Content) and return null
 	 */
 	@Test
 	public void testGetDcTypeIriNoContent() {
@@ -1002,7 +1001,7 @@ public class HTTPOperationsTest {
 	 * Http method : DELETE
 	 * HTTP Return status : 204
 	 * Trying to get a car that does not exist
-	 * Excepted behavior from API : HTTPStatus = 204 (No Content) and return null
+	 * Expected behavior from API : HTTPStatus = 204 (No Content) and return null
 	 * Why ignore ? : even if we cache the data we can't delete it (probably a client problem)
 	 * TODO MDU patch
 	 */
