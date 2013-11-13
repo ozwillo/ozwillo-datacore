@@ -257,7 +257,7 @@ public class DatacoreApiImpl implements DatacoreApi {
          try {
             mgo.save(dataEntity, collectionName);
          } catch (OptimisticLockingFailureException olfex) {
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+            throw new WebApplicationException(Response.status(Response.Status.CONFLICT)
                   .entity("Trying to update data resource without up-to-date version but "
                         + dataEntity.getVersion()).type(MediaType.TEXT_PLAIN).build());
          }

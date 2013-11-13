@@ -77,9 +77,6 @@ import com.wordnik.swagger.annotations.ApiResponses;
  * 
  * more HTTP-like :
  * * HTTP OPTIONS returns apidoc ? NO not much used, rather swagger for now http://zacstewart.com/2012/04/14/http-options-method.html
- * * TODO LATER catch persistence (MongoDB) precondition error and prettily return HTTP 412
- * (Precondition Failed). ETag itself is not checked in POST / PUT / PATCH because version
- * is checked anyway at mongo update time.
  * 
  * more RDF-like : 
  * * TODO LATER2 plug jsonld-java on top to provide other JSON-LD representations (compacted, expanded,

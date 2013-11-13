@@ -149,7 +149,7 @@ public class DatacoreApiServerFullTest {
 		} catch (WebApplicationException e) {
 			Assert.assertNull(postedData);
 			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
-			Assert.assertTrue(409 == httpStatus);
+			Assert.assertTrue("Should be 409 status but is " + httpStatus, 409 == httpStatus);
 		}
 		
 	}
@@ -428,6 +428,7 @@ public class DatacoreApiServerFullTest {
 	 * HTTP Return status : 400
 	 * Trying to insert brands into car collection
 	 * Excepted behavior from API : HTTPStatus = 400 (bad request) and return null
+	 * TODO AGI patch comment
 	 */
 	@Test
 	public void testPostDcBadRequest() {
@@ -1003,8 +1004,9 @@ public class DatacoreApiServerFullTest {
 	 * Trying to get a car that does not exist
 	 * Excepted behavior from API : HTTPStatus = 204 (No Content) and return null
 	 * Why ignore ? : even if we cache the data we can't delete it (probably a client problem)
+	 * TODO MDU patch
 	 */
-	@Ignore
+	//@Ignore
 	@Test
 	public void testDeleteDcTypeIri() {
 		 
