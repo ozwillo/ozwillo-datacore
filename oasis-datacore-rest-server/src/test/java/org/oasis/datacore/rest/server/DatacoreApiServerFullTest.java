@@ -8,8 +8,12 @@ import java.util.Map;
 import javax.ws.rs.WebApplicationException;
 
 import org.apache.cxf.common.util.StringUtils;
+import org.apache.cxf.jaxrs.impl.HttpHeadersImpl;
+import org.apache.cxf.jaxrs.impl.RequestImpl;
+import org.apache.cxf.message.MessageImpl;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
@@ -908,19 +912,119 @@ public class DatacoreApiServerFullTest {
 	/**
 	 * URL : /dc/type/${type}/${iri}
 	 * Http method : GET
+	 * HTTP Return status : 200
+	 * Trying to get a specific car
+	 * Excepted behavior from API : HTTPStatus = 200 (OK) and a DCResource
 	 */
 	@Test
-	public void testGetDcTypeIri() {
-//		api.getData(modelType, iri, request);
+	public void testGetDcTypeIriOK() {
+		
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		DCResource updatedResource = null;
+		Assert.assertNull(updatedResource);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.BRAND_MODEL_NAME), BrandCarMotorcycleSample.BRAND_MODEL_NAME);
+		Assert.assertNotNull(postedData);
+		postedData = null;
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.CAR_MODEL_NAME), BrandCarMotorcycleSample.CAR_MODEL_NAME);
+		Assert.assertNotNull(postedData);		
+		DCResource resource = api.getData(BrandCarMotorcycleSample.CAR_MODEL_NAME, "Renault/Megane/1996", new RequestImpl(new MessageImpl()));
+		Assert.assertNotNull(resource);
+		
+	}
+	
+	/**
+	 * URL : /dc/type/${type}/${iri}
+	 * Http method : GET
+	 * HTTP Return status : 404
+	 * Trying to get a concept car (non existing model)
+	 * Excepted behavior from API : HTTPStatus = 404 (Not Found) and return null
+	 */
+	@Test
+	public void testGetDcTypeIriNotFound() {
+		
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		DCResource updatedResource = null;
+		Assert.assertNull(updatedResource);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.BRAND_MODEL_NAME), BrandCarMotorcycleSample.BRAND_MODEL_NAME);
+		Assert.assertNotNull(postedData);
+		postedData = null;
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.CAR_MODEL_NAME), BrandCarMotorcycleSample.CAR_MODEL_NAME);
+		Assert.assertNotNull(postedData);	
+		DCResource resource = null;
+		Assert.assertNull(resource);
+		try {
+			resource = api.getData("conceptcars", "Renault/Megane/1996", new RequestImpl(new MessageImpl()));
+		} catch (WebApplicationException e) {
+			Assert.assertNull(resource);
+			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			Assert.assertTrue(404 == httpStatus);
+		}
+		
+	}
+	
+	/**
+	 * URL : /dc/type/${type}/${iri}
+	 * Http method : GET
+	 * HTTP Return status : 204
+	 * Trying to get a car that does not exist
+	 * Excepted behavior from API : HTTPStatus = 204 (No Content) and return null
+	 */
+	@Test
+	public void testGetDcTypeIriNoContent() {
+		
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		DCResource updatedResource = null;
+		Assert.assertNull(updatedResource);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.BRAND_MODEL_NAME), BrandCarMotorcycleSample.BRAND_MODEL_NAME);
+		Assert.assertNotNull(postedData);
+		postedData = null;
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.CAR_MODEL_NAME), BrandCarMotorcycleSample.CAR_MODEL_NAME);
+		Assert.assertNotNull(postedData);	
+		DCResource resource = null;
+		try {
+			Assert.assertNull(resource);
+			resource = api.getData(BrandCarMotorcycleSample.CAR_MODEL_NAME, "Renault/Megane/2007", new RequestImpl(new MessageImpl()));
+			Assert.assertNull(resource);
+		} catch (WebApplicationException e) {
+			Assert.assertNull(resource);
+			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			Assert.assertTrue(204 == httpStatus);
+		}
+		
 	}
 	
 	/**
 	 * URL : /dc/type/${type}/${iri}
 	 * Http method : DELETE
+	 * HTTP Return status : 204
+	 * Trying to get a car that does not exist
+	 * Excepted behavior from API : HTTPStatus = 204 (No Content) and return null
+	 * Why ignore ? : even if we cache the data we can't delete it (probably a client problem)
 	 */
+	@Ignore
 	@Test
 	public void testDeleteDcTypeIri() {
-//		api.deleteData(modelType, iri, httpHeaders);
+		 
+		Map<String, List<DCResource>> mapData = createDataSample();
+		Assert.assertTrue(mapData != null && !mapData.isEmpty());
+		DCResource updatedResource = null;
+		Assert.assertNull(updatedResource);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.BRAND_MODEL_NAME), BrandCarMotorcycleSample.BRAND_MODEL_NAME);
+		Assert.assertNotNull(postedData);
+		postedData = null;
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleSample.CAR_MODEL_NAME), BrandCarMotorcycleSample.CAR_MODEL_NAME);
+		Assert.assertNotNull(postedData);
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleSample.CAR_MODEL_NAME, "model=Megane&year=1996", 0, 1);
+		Assert.assertNotNull(listCars);
+		Assert.assertTrue(!listCars.isEmpty());
+		try {
+			api.deleteData(BrandCarMotorcycleSample.CAR_MODEL_NAME, "Renault/Megane/1996", new HttpHeadersImpl(new MessageImpl()));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Before
