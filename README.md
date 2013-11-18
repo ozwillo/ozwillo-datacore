@@ -21,6 +21,8 @@ License
 Getting Started
 ---------------
 
+**Server Setup** :
+
 Requirements : [Java JDK 7](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html), [MongoDB](http://docs.mongodb.org/manual/installation/)
 
 Build ([Maven 3](http://maven.apache.org/download.cgi) required) : at root, do : mvn clean install
@@ -35,6 +37,17 @@ Then to have a look at API docs, open a browser at http://localhost:8080/swagger
 
 NB. alternatively, there is an embedded Jetty container deploying at http://localhost:8180 : mvn -Pjetty:run clean install
 
+**Business Configuration** :
+
+Add your own business Models and data : Do it in a new (server-side) init (ex. by annotating it by @Component) class using Spring-injected DataModelServiceImpl and DatacoreApi (or DCEntityService), like it is done in https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-core/src/main/java/org/oasis/datacore/core/sample/CityCountrySample.java .
+
+**Client Use** :
+
+Consume it and use it from a client : use the JSON/HTTP client of your own platform and / or your choice to call the DatacoreApi server using REST JSON/HTTP calls. Here are such clients that might help you :
+* in Java, the oasis-datacore-rest-cxf subproject provides a proxy-like cached client that uses the CXF service engine. Other service engines may be used in similar fashion, though some features (HTTP ETag-based caching, generic query request) require developing interceptors / handlers / filters. Otherwise, the JAXRS web client works well with the DatacoreApi and allows to do everything, though it is a bit more "barebone".
+* you can use [Swagger codegen](https://github.com/wordnik/swagger-codegen) to generate DatacoreApi clients to various languages : php, ruby, python, Objective C, Flash...
+* at worst, you can talk to DatacoreApi server by writing the right JSON/HTTP requests, sending them to it and handling their responses.
+
 
 Documentation
 --------------
@@ -44,7 +57,7 @@ See online API (ask URL to Pole Numerique) and [wiki](https://github.com/pole-nu
 Still missing :
 
 * a more formal description of (the metamodel of) supported data resources : what field types are supported, how to model them, how they behave (especially Map, List and external vs embedded Resource fields types) ; and wider, documentation of the metamodel itself : its fields, Mixin types (soon to be supported)...
-* mmore samples (a single one for now)
+* more samples (a single one for now)
 
 
 Goals :
