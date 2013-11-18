@@ -3,7 +3,6 @@ package org.oasis.datacore.rest.server.sample.data;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
@@ -11,15 +10,17 @@ import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.server.common.DatacoreTestUtils;
 import org.oasis.datacore.rest.server.sample.model.BrandCarMotorcycleModel;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
 @Component
+@DependsOn("brandCarMotorcycleModel")
 public class BrandCarMotorcycleData {
 	
 	private List<DCResource> listBrands;
 	private List<DCResource> listCars;
 	private List<DCResource> listMotorcycle;
-	private Map<String, List<DCResource>> mapData;
+	private HashMap<String, List<DCResource>> mapData;
 	
 	@Value("${datacoreApiClient.containerUrl}")
 	private String containerUrl;
@@ -30,6 +31,8 @@ public class BrandCarMotorcycleData {
 		listCars = new ArrayList<DCResource>();
 		listMotorcycle = new ArrayList<DCResource>();
 		mapData = new HashMap<String, List<DCResource>>();
+		createDataSample();
+		
 	}
 
 	private DCResource buildBrand(String containerUrl, String name) {
@@ -87,7 +90,7 @@ public class BrandCarMotorcycleData {
 		
 	}
 
-	public Map<String, List<DCResource>> getData() {
+	public HashMap<String, List<DCResource>> getData() {
 		return mapData;
 	}
 	

@@ -228,7 +228,7 @@ public class HTTPOperationsTest {
 	 */
 	@Test
 	public void testPutDcTypeInternalServerError() {
-			
+		
 		Map<String, List<DCResource>> mapData = brandCarMotorcycleData.getData();
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
 		List<DCResource> updatedResource = null;
