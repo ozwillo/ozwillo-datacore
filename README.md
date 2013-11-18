@@ -44,9 +44,14 @@ Add your own business Models and data : Do it in a new (server-side) init (ex. b
 **Client Use** :
 
 Consume it and use it from a client : use the JSON/HTTP client of your own platform and / or your choice to call the DatacoreApi server using REST JSON/HTTP calls. Here are such clients that might help you :
-* in Java, the oasis-datacore-rest-cxf subproject provides a proxy-like cached client that uses the CXF service engine. Other service engines may be used in similar fashion, though some features (HTTP ETag-based caching, generic query request) require developing interceptors / handlers / filters. Otherwise, the JAXRS web client works well with the DatacoreApi and allows to do everything, though it is a bit more "barebone".
-* you can use [Swagger codegen](https://github.com/wordnik/swagger-codegen) to generate DatacoreApi clients to various languages : php, ruby, python, Objective C, Flash...
-* at worst, you can talk to DatacoreApi server by writing the right JSON/HTTP requests, sending them to it and handling their responses.
+
+In Java, the oasis-datacore-rest-cxf subproject provides a proxy-like cached client that uses the CXF service engine. Use it by loading its Spring (https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-cxf/src/main/resources/oasis-datacore-rest-client-context.xml) and injecting DatacoreClientApi using ```@Autowired @Qualifier("datacoreApiCachedClient") private DatacoreClientApi datacoreApiClient;``` like done in https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-cxf/src/test/java/org/oasis/datacore/rest/api/client/DatacoreApiCXFClientTest.java .
+
+If it doesn't suit you, other Java service engines (such as Jersey, RESTEasy) may be used in similar fashion, though some features (HTTP ETag-based caching, generic query request) require developing interceptors / handlers / filters. Otherwise, the Java JAXRS web client works well with the DatacoreApi and allows to do everything, though it is a bit more "barebone".
+
+In other languages, you can use [Swagger codegen](https://github.com/wordnik/swagger-codegen) to generate DatacoreApi clients to various languages : php, ruby, python, Objective C, Flash...
+
+At worst, you can talk to DatacoreApi server by writing the right JSON/HTTP requests, sending them to it and handling their responses.
 
 
 Documentation
