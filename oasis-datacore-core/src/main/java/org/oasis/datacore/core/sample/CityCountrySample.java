@@ -48,6 +48,7 @@ public class CityCountrySample {
       cityModel.addField(new DCField("name", "string", true, 100));
       cityModel.addField(new DCField("inCountry", "resource", true, 100)); // TODO , countryModel.getName())));
       cityModel.addField(new DCField("populationCount", "int", false, 50));
+      cityModel.addField(new DCField("founded", "date", false, 0));
       DCMapField name_18nMapField = new DCMapField("name_i18n"); // i18n
       name_18nMapField.addField(new DCField("fr", "string"));
       name_18nMapField.addField(new DCField("en", "string"));

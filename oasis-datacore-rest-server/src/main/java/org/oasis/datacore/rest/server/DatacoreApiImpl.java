@@ -92,7 +92,14 @@ public class DatacoreApiImpl implements DatacoreApi {
    @Autowired
    private DCModelService modelService;
 
-   public ObjectMapper mapper = new ObjectMapper(); // or per-request ?? TODO move it in ResourceParsingService and make it private again
+   /** injecting single application-wide mapper (which is fine because thread-safe, see
+    * http://stackoverflow.com/questions/18611565/how-do-i-correctly-reuse-jackson-objectmapper
+    * NB. otherwise would need to have same configuration ;
+    * pre-request configuration can be done using .writer() and .reader()) */
+   @Autowired
+   @Qualifier("datacoreApiServer.objectMapper")
+   public ObjectMapper mapper = new ObjectMapper(); // TODO move it in ResourceParsingService and make it private again
+   
    private static int typeIndexInType = UriHelper.DC_TYPE_PREFIX.length(); // TODO use Pattern & DC_TYPE_PATH
 
    private static Set<String> resourceNativeJavaFields = new HashSet<String>();
@@ -270,10 +277,9 @@ public class DatacoreApiImpl implements DatacoreApi {
       //dcData.setUri(uri);
       resource.setVersion(dataEntity.getVersion());
       
-      // TODO patch date support by Jackson else Caused by: com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException: Unrecognized field "weekOfWeekyear" (class org.joda.time.DateTime)
-      //resource.setCreated(dataEntity.getCreated()); // NB. if already provided, only if creation
+      resource.setCreated(dataEntity.getCreated()); // NB. if already provided, only if creation
       resource.setCreatedBy(dataEntity.getCreatedBy()); // NB. if already provided, only if creation
-      //resource.setLastModified(dataEntity.getLastModified());
+      resource.setLastModified(dataEntity.getLastModified());
       resource.setLastModifiedBy(dataEntity.getLastModifiedBy());
       
       // TODO setProperties if changed ex. default values ? or copied queriable fields, or on behaviours ???
@@ -862,10 +868,19 @@ public class DatacoreApiImpl implements DatacoreApi {
    }
 
    
+   /**
+    * WARNING Requires ALLOW_NUMERIC_LEADING_ZEROS enabled on JsonParser.Feature.ALLOW_NUMERIC_LEADING_ZEROS
+    * else fails when years serialized with wrong leading zeroes ex. 0300 :
+    * JsonParseException: Invalid numeric value: Leading zeroes not allowed
+    * in ReaderBasedJsonParser._verifyNoLeadingZeroes()
+    * @param stringValue
+    * @return
+    * @throws ResourceParsingException
+    */
    // TODO move to Resource(Primitive)ParsingService
    public DateTime parseDate(String stringValue) throws ResourceParsingException {
       try {
-         return mapper.readValue((String) stringValue, DateTime.class);
+         return mapper.readValue(stringValue, DateTime.class);
       } catch (IOException ioex) {
          throw new ResourceParsingException("IO error while reading ISO 8601 Date-formatted string : "
                + stringValue, ioex);
