@@ -1,8 +1,11 @@
 package org.oasis.datacore.rest.server.sample.data;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -10,30 +13,40 @@ import javax.annotation.PostConstruct;
 
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
+import org.oasis.datacore.rest.client.DatacoreClientApi;
 import org.oasis.datacore.rest.server.sample.model.MarkaInvestModel;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.DependsOn;
+import org.springframework.stereotype.Component;
 
-//@Component
-//@DependsOn("markaInvestModel")
+@Component
+@DependsOn("markaInvestModel")
 public class MarkaInvestData {
 	
-	private Collection<DCResource> listCompany;
-	private Collection<DCResource> listField;
-	private Collection<DCResource> listSector;
-	private Collection<DCResource> listCountry;
-	private Collection<DCResource> listCity;
-	private Collection<DCResource> listUser;
-	private Collection<DCResource> listInvestor;
-	private Collection<DCResource> listInvestorType;
-	private Collection<DCResource> listCost;
-	private Collection<DCResource> listPlannedInvestmentAssistanceRequest;
-	private Collection<DCResource> listCorporateTitle;
-	private Collection<DCResource> listLinkCorporateTitleCompanyUser;
+	private List<DCResource> listCompany;
+	private List<DCResource> listField;
+	private List<DCResource> listSector;
+	private List<DCResource> listCountry;
+	private List<DCResource> listCity;
+	private List<DCResource> listUser;
+	private List<DCResource> listInvestor;
+	private List<DCResource> listInvestorType;
+	private List<DCResource> listCost;
+	private List<DCResource> listPlannedInvestmentAssistanceRequest;
 	
 	private HashMap<String, List<DCResource>> mapData;
 	
 	@Value("${datacoreApiClient.containerUrl}")
 	private String containerUrl;
+	
+	@Value("${datacoreTestServer.enableSampleDataInsertionAtStartup}")
+	private boolean enableSampleDataInsertionAtStartup;
+	
+	@Autowired
+	@Qualifier("datacoreApiClient")
+	protected DatacoreClientApi api;
 	
 	@PostConstruct
 	public void init() {
@@ -48,15 +61,16 @@ public class MarkaInvestData {
 		listInvestorType = new ArrayList<DCResource>();
 		listCost = new ArrayList<DCResource>();
 		listPlannedInvestmentAssistanceRequest = new ArrayList<DCResource>();
-		listCorporateTitle = new ArrayList<DCResource>();
-		listLinkCorporateTitleCompanyUser = new ArrayList<DCResource>();
 	
 		mapData = new HashMap<String, List<DCResource>>();
 		
 		createDataSample();
-		
+		if(enableSampleDataInsertionAtStartup) {
+			insertData();
+		}
+				
 	}
-
+	
 	@SafeVarargs
 	private final DCResource buildResource(String modelType, SimpleEntry<String,?>... entries) {
 		DCResource resource = new DCResource();
@@ -169,38 +183,53 @@ public class MarkaInvestData {
 				new SimpleEntry<>("sectors", sector2));
 		listInvestor.add(investor1);
 		
+		DCResource cost1 = buildResource(MarkaInvestModel.COST_TYPE_MODEL_NAME,
+				new SimpleEntry<>("id", "1"), new SimpleEntry<>("name", "money"));
+		DCResource cost2 = buildResource(MarkaInvestModel.COST_TYPE_MODEL_NAME,
+				new SimpleEntry<>("id", "2"), new SimpleEntry<>("name", "human resources"));
+		listCost.add(cost1);
+		listCost.add(cost2);
 		
-		
-		
-//		DCModel costModel = new DCModel(COST_TYPE_MODEL_NAME);
-//		costModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
-//		costModel.addField(new DCField("name", DCFieldTypeEnum.STRING.getType(), true, 100));
-//		
-//		DCModel plannedInvestmentAssistanceRequestModel = new DCModel(INVESTMENT_ASSISTANCE_REQUEST_MODEL_NAME);
-//		plannedInvestmentAssistanceRequestModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
-//		plannedInvestmentAssistanceRequestModel.addField(new DCField("sectors", DCFieldTypeEnum.LIST.getType()));
-//		plannedInvestmentAssistanceRequestModel.addField(new DCField("company", DCFieldTypeEnum.RESOURCE.getType()));
-//		plannedInvestmentAssistanceRequestModel.addField(new DCField("fundRequired", DCFieldTypeEnum.FLOAT.getType()));
-//		plannedInvestmentAssistanceRequestModel.addField(new DCField("start", DCFieldTypeEnum.DATE.getType()));
-//		plannedInvestmentAssistanceRequestModel.addField(new DCField("end", DCFieldTypeEnum.DATE.getType()));
-//
-//		DCModel corporateTitleModel = new DCModel(CORPORATE_TITLE_MODEL_NAME);
-//		corporateTitleModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
-//		corporateTitleModel.addField(new DCField("code", DCFieldTypeEnum.STRING.getType(), true, 100));
-//		corporateTitleModel.addField(new DCField("description", DCFieldTypeEnum.STRING.getType()));
-//		
-//		DCModel corporateTitleCompanyUserLinkModel = new DCModel(CORPORATE_TITLE_COMPANY_USER_LINK);
-//		corporateTitleCompanyUserLinkModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
-//		corporateTitleCompanyUserLinkModel.addField(new DCField("corporateTitle", DCFieldTypeEnum.RESOURCE.getType(), true, 100));
-//		corporateTitleCompanyUserLinkModel.addField(new DCField("user", DCFieldTypeEnum.RESOURCE.getType(), true, 100));
-//		corporateTitleCompanyUserLinkModel.addField(new DCField("company", DCFieldTypeEnum.RESOURCE.getType(), true, 100));
+		DateFormat formatter = new SimpleDateFormat("dd/MM/yy");
+		Date end = new Date();
+		Date start = new Date();
+		try {
+			end = formatter.parse("04/01/2014");
+			start = formatter.parse("05/10/2013");
+		} catch (ParseException e) {}
+		DCResource plannedInvestmentRequest1 = buildResource(MarkaInvestModel.INVESTMENT_ASSISTANCE_REQUEST_MODEL_NAME,
+				new SimpleEntry<>("id", "1"), new SimpleEntry<>("sectors", listSectorsUser1),
+				new SimpleEntry<>("company", company1), new SimpleEntry<>("fundRequired", 521000d),
+				new SimpleEntry<>("start", start), new SimpleEntry<>("end", end));
+		listPlannedInvestmentAssistanceRequest.add(plannedInvestmentRequest1);
 
-		
-		
-		
-		
-		
+		mapData.put(MarkaInvestModel.COMPANY_MODEL_NAME, listCompany);
+		mapData.put(MarkaInvestModel.FIELD_MODEL_NAME, listField);
+		mapData.put(MarkaInvestModel.SECTOR_MODEL_NAME, listSector);
+		mapData.put(MarkaInvestModel.COUNTRY_MODEL_NAME, listCountry);
+		mapData.put(MarkaInvestModel.CITY_MODEL_NAME, listCity);
+		mapData.put(MarkaInvestModel.USER_MODEL_NAME, listUser);
+		mapData.put(MarkaInvestModel.INVESTOR_MODEL_NAME, listInvestor);
+		mapData.put(MarkaInvestModel.INVESTOR_TYPE_MODEL_NAME, listInvestorType);
+		mapData.put(MarkaInvestModel.COST_TYPE_MODEL_NAME, listCost);
+		mapData.put(MarkaInvestModel.INVESTMENT_ASSISTANCE_REQUEST_MODEL_NAME, listPlannedInvestmentAssistanceRequest);		
 				
+	}
+	
+
+	private void insertData() {
+		
+		api.putAllData(listCity);
+		api.putAllData(listCompany);
+		api.putAllData(listCost);
+		api.putAllData(listCountry);
+		api.putAllData(listField);
+		api.putAllData(listInvestor);
+		api.putAllData(listInvestorType);
+		api.putAllData(listPlannedInvestmentAssistanceRequest);
+		api.putAllData(listSector);
+		api.putAllData(listUser);
+		
 	}
 
 	public HashMap<String, List<DCResource>> getData() {

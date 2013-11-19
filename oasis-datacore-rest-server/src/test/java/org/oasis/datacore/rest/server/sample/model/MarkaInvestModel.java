@@ -1,6 +1,7 @@
 package org.oasis.datacore.rest.server.sample.model;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCField;
@@ -13,7 +14,6 @@ import org.springframework.stereotype.Component;
 /**
  * Marka Investment Model
  * @author agiraudon
- *
  */
 
 @Component
@@ -29,8 +29,6 @@ public class MarkaInvestModel {
 	public static String INVESTOR_TYPE_MODEL_NAME = "investor_type";
 	public static String COST_TYPE_MODEL_NAME = "cost";
 	public static String INVESTMENT_ASSISTANCE_REQUEST_MODEL_NAME = "planned_investment_assistance_request";
-	public static String CORPORATE_TITLE_MODEL_NAME = "corporate_title";
-	public static String CORPORATE_TITLE_COMPANY_USER_LINK = "link_corporate_title_company_user";
 
 	@Autowired
 	private DataModelServiceImpl modelAdminService;
@@ -51,8 +49,6 @@ public class MarkaInvestModel {
 		mongoOperations.dropCollection(INVESTOR_TYPE_MODEL_NAME);
 		mongoOperations.dropCollection(COST_TYPE_MODEL_NAME);
 		mongoOperations.dropCollection(INVESTMENT_ASSISTANCE_REQUEST_MODEL_NAME);
-		mongoOperations.dropCollection(CORPORATE_TITLE_MODEL_NAME);
-		mongoOperations.dropCollection(CORPORATE_TITLE_COMPANY_USER_LINK);
 		
 		DCModel companyModel = new DCModel(COMPANY_MODEL_NAME);
 		companyModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
@@ -124,28 +120,33 @@ public class MarkaInvestModel {
 		plannedInvestmentAssistanceRequestModel.addField(new DCField("start", DCFieldTypeEnum.DATE.getType()));
 		plannedInvestmentAssistanceRequestModel.addField(new DCField("end", DCFieldTypeEnum.DATE.getType()));
 
-		DCModel corporateTitleModel = new DCModel(CORPORATE_TITLE_MODEL_NAME);
-		corporateTitleModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
-		corporateTitleModel.addField(new DCField("code", DCFieldTypeEnum.STRING.getType(), true, 100));
-		corporateTitleModel.addField(new DCField("description", DCFieldTypeEnum.STRING.getType()));
-		
-		DCModel corporateTitleCompanyUserLinkModel = new DCModel(CORPORATE_TITLE_COMPANY_USER_LINK);
-		corporateTitleCompanyUserLinkModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
-		corporateTitleCompanyUserLinkModel.addField(new DCField("corporateTitle", DCFieldTypeEnum.RESOURCE.getType(), true, 100));
-		corporateTitleCompanyUserLinkModel.addField(new DCField("user", DCFieldTypeEnum.RESOURCE.getType(), true, 100));
-		corporateTitleCompanyUserLinkModel.addField(new DCField("company", DCFieldTypeEnum.RESOURCE.getType(), true, 100));
-
 		modelAdminService.addModel(companyModel);
 		modelAdminService.addModel(fieldModel);
+		modelAdminService.addModel(sectorModel);
 		modelAdminService.addModel(countryModel);
 		modelAdminService.addModel(cityModel);
 		modelAdminService.addModel(userModel);
 		modelAdminService.addModel(investorModel);
 		modelAdminService.addModel(investorTypeModel);
+		modelAdminService.addModel(costModel);
 		modelAdminService.addModel(plannedInvestmentAssistanceRequestModel);
-		modelAdminService.addModel(corporateTitleModel);
-		modelAdminService.addModel(corporateTitleCompanyUserLinkModel);
-
+		
+	}
+	
+	@PreDestroy
+	public void destroy() {
+		
+		mongoOperations.dropCollection(COMPANY_MODEL_NAME);
+		mongoOperations.dropCollection(FIELD_MODEL_NAME);
+		mongoOperations.dropCollection(SECTOR_MODEL_NAME);
+		mongoOperations.dropCollection(COUNTRY_MODEL_NAME);
+		mongoOperations.dropCollection(CITY_MODEL_NAME);
+		mongoOperations.dropCollection(USER_MODEL_NAME);
+		mongoOperations.dropCollection(INVESTOR_MODEL_NAME);
+		mongoOperations.dropCollection(INVESTOR_TYPE_MODEL_NAME);
+		mongoOperations.dropCollection(COST_TYPE_MODEL_NAME);
+		mongoOperations.dropCollection(INVESTMENT_ASSISTANCE_REQUEST_MODEL_NAME);
+		
 	}
 	
 	
