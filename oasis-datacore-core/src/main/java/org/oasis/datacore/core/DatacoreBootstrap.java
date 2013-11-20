@@ -24,18 +24,19 @@ public class DatacoreBootstrap implements ApplicationContextAware {
    private DataModelServiceImpl modelAdminService;
    private List<Object> boostrappables;
    private boolean enabled = true;
-   
-   @Override
-   public void setApplicationContext(ApplicationContext applicationContext)
-         throws BeansException {
-      if (modelAdminService.getModelMap().isEmpty() && enabled) {
-         // NB. to rebootstrap, first empty models !
-         
-         for (Object boostrappable : boostrappables) {
-            //boostrappables.init();
-         }
-      }
-      
-   }
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		if (modelAdminService.getModelMap().isEmpty() && enabled) {
+			// NB. to rebootstrap, first empty models !
+
+			if (boostrappables != null) {
+				for (Object boostrappable : boostrappables) {
+					// boostrappables.init();
+				}
+			}
+		}
+
+	}
 
 }
