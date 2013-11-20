@@ -12,7 +12,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
-
 import org.apache.cxf.interceptor.OutInterceptors;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
@@ -25,7 +24,6 @@ import org.springframework.cache.Cache.ValueWrapper;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.stereotype.Component;
 
-
 /**
  * This wrapper adds caching to DatacoreApi client.
  * Putting in cache is done either using Spring Cacheable etc. annotations
@@ -33,10 +31,10 @@ import org.springframework.stereotype.Component;
  * Getting from cache is done in wrapper logic, when receiving HTTP 304
  * (not modified) response after having set If-None-Match header
  * in CXF Out interceptor on GET request.
- * 
+ *
  * NB. Spring Cacheable annotation CAN'T BE USED EVERYWHERE BECAUSE DON'T SUPPORT
- * item lists or generic methods (ex. serveData) 
- * 
+ * item lists or generic methods (ex. serveData)
+ *
  * @author mdutoo
  *
  */
@@ -45,7 +43,7 @@ import org.springframework.stereotype.Component;
 //@InInterceptors(classes={ ETagClientInInterceptor.class }) // not used (this cached impl is
 // required and enough to put data resources in cache)
 public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreApi*/ {
-   
+
    @Autowired
    @Qualifier("datacoreApiClient")
    private /*DatacoreApi*/DatacoreClientApi delegate;
@@ -54,13 +52,12 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
    @Autowired
    @Qualifier("datacore.rest.client.cache.rest.api.DCResource")
    private Cache resourceCache; // EhCache getNativeCache
-   
-   /** to be able to build a full uri to evict cached data */
-   ///@Value("${datacoreApiClient.baseUrl}") 
-   ///private String baseUrl; // useless
-   @Value("${datacoreApiClient.containerUrl}") 
-   private String containerUrl;
 
+   /** to be able to build a full uri to evict cached data */
+   ///@Value("${datacoreApiClient.baseUrl}")
+   ///private String baseUrl; // useless
+   @Value("${datacoreApiClient.containerUrl}") //:http://data-test.oasis-eu.org/
+   private String containerUrl;
 
    /**
     * TODO in helper
@@ -71,8 +68,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
    private String buildUri(String type, String iri) {
       return UriHelper.buildUri(this.containerUrl, type, iri);
    }
-   
-   
+
    /**
     * Always evict (after invocation) and replace by updated data
     * done in wrapper logic (Spring CachePut annotation would use possibly not yet created uri from argument)
@@ -101,7 +97,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
    @Override
    public List<DCResource> postAllDataInType(List<DCResource> resources, String modelType) {
       resources = delegate.postAllDataInType(resources, modelType);
-      
+
       // put in cache :
       for (DCResource resource : resources) {
          resourceCache.put(resource.getUri(), resource); // NB. if no error, resource can't be null
@@ -117,7 +113,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
    @Override
    public List<DCResource> postAllData(List<DCResource> resources) {
       resources = delegate.postAllData(resources);
-      
+
       // put in cache :
       for (DCResource resource : resources) {
          resourceCache.put(resource.getUri(), resource); // NB. if no error, resource can't be null
@@ -143,7 +139,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
    @Override
    public List<DCResource> putAllDataInType(List<DCResource> resources, String modelType) {
       resources = delegate.putAllDataInType(resources, modelType);
-      
+
       // put in cache :
       for (DCResource resource : resources) {
          resourceCache.put(resource.getUri(), resource); // NB. if no error, resource can't be null
@@ -159,7 +155,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
    @Override
    public List<DCResource> putAllData(List<DCResource> resources) {
       resources = delegate.putAllData(resources);
-      
+
       // put in cache :
       for (DCResource resource : resources) {
          resourceCache.put(resource.getUri(), resource); // NB. if no error, resource can't be null
@@ -175,14 +171,14 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
       // NB. request is only for server etag, on client side it is done rather in interceptor
       try {
          DCResource resource = this.delegate.getData(modelType, iri, request);
-         
+
          // put in cache :
          if (resource != null) {
             resourceCache.put(resource.getUri(), resource);
          } // else if server still has null it costs nothing to send it back,
          // so no ETag support in this case (though Spring Cache could cache null)
          return resource;
-         
+
       } catch (RedirectionException rex) {
          if (Status.NOT_MODIFIED.getStatusCode() == rex.getResponse().getStatus()) {
             // HTTP 304 (not modified) : get from cache
@@ -194,11 +190,11 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
                   return cachedData;
                }
             }
-            
+
             throw new RuntimeException("Received HTTP 304 (not modified) but no more data "
                   + "in cache, maybe has just been evicted by DELETE ?", rex); // should not happen
          }
-         
+
          throw rex;
       }
       //Response response = this.delegate.getData(type, iri, method, request);
@@ -216,13 +212,13 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
    @Override
    public void deleteData(String modelType, String iri, HttpHeaders headers) {
       delegate.deleteData(modelType, iri, headers);
-      
+
       // evict from cache :
       String uri = buildUri(modelType, iri);
       resourceCache.evict(uri);
    }
 
-   
+
    @Override
    public List<DCResource> updateDataInTypeWhere(DCResource resourceDiff,
          String modelType, UriInfo uriInfo) {
@@ -232,8 +228,8 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
    public void deleteDataInTypeWhere(String modelType, UriInfo uriInfo) {
       this.delegate.deleteDataInTypeWhere(modelType, uriInfo);
    }
-   
-   
+
+
    /**
     * Does the work of POST ; can't be done using Spring annotations
     */
@@ -241,7 +237,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
    public DCResource postDataInTypeOnGet(@PathParam("type") String modelType, @QueryParam("method") String method,
          @Context UriInfo uriInfo/*, @Context Request request*/) {
       DCResource resource = delegate.postDataInTypeOnGet(modelType, method, uriInfo);
-      
+
       // put in cache :
       resourceCache.put(resource.getUri(), resource); // NB. if no error, resource can't be null
       return resource;
@@ -288,12 +284,12 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
          Integer limit) {
       return delegate.findData(queryParams, start, limit);
    }
-   
+
    @Override
    public List<DCResource> queryDataInType(String modelType, String query, String language) {
       return delegate.queryDataInType(modelType, query, language); // TODO cache ??
    }
-   
+
    @Override
    public List<DCResource> queryData(String query, String language) {
       return delegate.queryData(query, language); // TODO cache ??

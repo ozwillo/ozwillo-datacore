@@ -23,25 +23,30 @@ import org.springframework.cache.Cache.ValueWrapper;
  * Used to set If-None-Match=etag header on GET request
  * NB. not as CXF RequestHandler because can't enrich request (nor maybe work on client side),
  * not as JAXRS 2 RequestFilter because not supported yet (??)
- * 
+ *
  * @author mdutoo
  *
  */
-
 public class ETagClientOutInterceptor extends AbstractPhaseInterceptor<Message> {
    private static final Logger LOG = LogUtils.getLogger(ETagClientOutInterceptor.class);
-   
+
    // TODO static object & list etag method names...
 
    @Autowired
    @Qualifier("datacore.rest.client.cache.rest.api.DCResource")
    private Cache resourceCache; // EhCache getNativeCache
 
-   @Value("${datacoreApiClient.containerUrl}") 
+   @Value("${datacoreApiClient.containerUrl}") //:http://data-test.oasis-eu.org/
    private String containerUrl;
-   
+
    public ETagClientOutInterceptor() {
       super(Phase.SETUP);
+   }
+
+   public ETagClientOutInterceptor(Cache cache, String containerUrl) {
+      super(Phase.SETUP);
+      this.resourceCache = cache;
+      this.containerUrl = containerUrl;
    }
 
    @Override
@@ -51,7 +56,7 @@ public class ETagClientOutInterceptor extends AbstractPhaseInterceptor<Message> 
          // when server out i.e. response
          return;
       }
-      
+
       if ("getData".equals(operationName)) {
          // GET : send If-None-Match=version ETag precondition header
          ////Map<Object,Object> requestContext = getRequestContext(clientOutRequestMessage);
@@ -71,7 +76,7 @@ public class ETagClientOutInterceptor extends AbstractPhaseInterceptor<Message> 
             // to send it back, so no ETag support in this case
          } // else no cache, optimization not possible, don't send etag header
          // then on response, CachedClientProviderImpl (MessageBodyReader) caches returned data
-         
+
       } else if ("deleteData".equals(operationName)
             || ("putPatchDeleteDataOnGet".equals(operationName) && HttpMethod.DELETE.equals(
                   ((String) CxfMessageHelper.getJaxrsParameter(clientOutRequestMessage, "method")).toUpperCase()))) {
@@ -97,7 +102,7 @@ public class ETagClientOutInterceptor extends AbstractPhaseInterceptor<Message> 
                   + "so its version can be send as deletion precondition"),
                   Fault.FAULT_CODE_CLIENT);
          }
-         
+
       }/* else if ("postDataInType".equals(method.getName())) {
          // see AbstractClient.createMessage() (from ClientProxyImpl.doChainedInvocation()) l.921 : m.setContent(List.class, getContentsList(body));
          List<?> contentList = clientOutMessage.getContent(List.class);
@@ -106,14 +111,14 @@ public class ETagClientOutInterceptor extends AbstractPhaseInterceptor<Message> 
          if (etag != null) {
             setETag(clientOutMessage, etag.toString());
          } // else creation (or forgotten, in which case the server will abort TODO THIS IS TOO MUCH !!!!!!!!!!!!!!!!!!!!!)
-         
+
       } else if ("postAllDataInType".equals(method.getName())) {
          // see AbstractClient.createMessage() (from ClientProxyImpl.doChainedInvocation()) l.921 : m.setContent(List.class, getContentsList(body));
          List<?> contentList = clientOutMessage.getContent(List.class);
          StringBuilder sb = new StringBuilder();
          for (Object dcData : contentList) {
             if (dcData != null) {
-               sb.append(((DCData) dcData).getVersion().toString());  
+               sb.append(((DCData) dcData).getVersion().toString());
             } // else creation (or forgotten, see below)
             sb.append(','); // to avoid the possibility of different version numbers producing the same concatenation
          }

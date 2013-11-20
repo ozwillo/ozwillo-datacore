@@ -1,16 +1,16 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" 
+<project xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
 	http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-   
+
   <parent>
    <groupId>org.oasis.datacore</groupId>
    <artifactId>oasis-datacore</artifactId>
     <version>1.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
-  
+
 	<artifactId>oasis-datacore-rest-cxf</artifactId>
 	<name>OASIS Datacore REST Client</name>
    <description>Provides an independent Jackson / CXF client to Datacore REST API.
@@ -18,19 +18,23 @@
 
 
 	<dependencies>
-   
+
       <!-- Datacore REST API -->
       <dependency>
         <groupId>org.oasis.datacore</groupId>
         <artifactId>oasis-datacore-rest-api</artifactId><!-- brings JacksonJsonProvider, to configure in clients -->
       </dependency>
-      
+
       <!-- Jackson annotations -->
       <!-- dependency>
         <groupId>com.fasterxml.jackson.jaxrs</groupId>
         <artifactId>jackson-jaxrs-json-provider</artifactId>
       </dependency --><!-- TODO already in API --><!-- brings JacksonJsonProvider, to configure in clients -->
-      
+      <dependency>
+        <groupId>com.fasterxml.jackson.datatype</groupId>
+        <artifactId>jackson-datatype-joda</artifactId>
+      </dependency>
+
       <!-- Spring framework -->
       <dependency>
          <groupId>org.springframework</groupId>
@@ -45,7 +49,7 @@
          <artifactId>spring-test</artifactId>
          <scope>test</scope>
       </dependency>
-      
+
     <!-- cxf -->
     <dependency>
       <groupId>org.apache.cxf</groupId>
@@ -85,7 +89,7 @@
       <artifactId>batik-ext</artifactId>
       <version>1.7</version>
     </dependency -->
-     
+
       <dependency>
          <groupId>net.sf.ehcache.internal</groupId>
          <artifactId>ehcache-core</artifactId>
@@ -95,7 +99,7 @@
          no more dependencies to ehcache-core etc. (but in 2.9 works again !) ;
          would probably work without type=pom but brings in too much stuff (hibernate, terracotta...) -->
       </dependency>
-      
+
       <!-- for EnumerationUtils, ListUtils... -->
       <dependency>
          <groupId>commons-collections</groupId>
@@ -106,7 +110,7 @@
          <groupId>commons-io</groupId>
          <artifactId>commons-io</artifactId>
       </dependency>
-      
+
 	</dependencies>
- 
+
 </project>
