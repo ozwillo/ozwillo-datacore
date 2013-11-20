@@ -1,4 +1,4 @@
-package org.oasis.datacore.core.sample;
+package org.oasis.datacore.sample;
 
 import javax.annotation.PostConstruct;
 
@@ -21,9 +21,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class CityCountrySample {
    
-   public static String COUNTRY_MODEL_NAME = "country";
-   public static String CITY_MODEL_NAME = "city";
-   public static String POI_MODEL_NAME = "pointOfInterest";
+   public static String COUNTRY_MODEL_NAME = "sample.city.country";
+   public static String CITY_MODEL_NAME = "sample.city.city";
+   public static String POI_MODEL_NAME = "sample.city.pointOfInterest";
 
    /** impl, to be able to modify it
     * TODO LATER extract interface */ 

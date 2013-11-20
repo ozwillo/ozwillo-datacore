@@ -19,9 +19,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class BrandCarMotorcycleModel {
 
-	public static String CAR_MODEL_NAME = "car";
-	public static String MOTORCYCLE_MODEL_NAME = "motorcycle";
-	public static String BRAND_MODEL_NAME = "brand";
+	public static String CAR_MODEL_NAME = "sample.brand.car";
+	public static String MOTORCYCLE_MODEL_NAME = "sample.brand.motorcycle";
+	public static String BRAND_MODEL_NAME = "sample.brand.brand";
 
 	@Autowired
 	private DataModelServiceImpl modelAdminService;

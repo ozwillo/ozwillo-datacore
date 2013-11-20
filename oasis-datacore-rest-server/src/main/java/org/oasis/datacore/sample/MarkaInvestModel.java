@@ -19,16 +19,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class MarkaInvestModel {
 	
-	public static String COMPANY_MODEL_NAME = "company";
-	public static String FIELD_MODEL_NAME = "field";
-	public static String SECTOR_MODEL_NAME = "sector";
-	public static String COUNTRY_MODEL_NAME = "country";
-	public static String CITY_MODEL_NAME = "city";
-	public static String USER_MODEL_NAME = "user";
-	public static String INVESTOR_MODEL_NAME = "investor";
-	public static String INVESTOR_TYPE_MODEL_NAME = "investor_type";
-	public static String COST_TYPE_MODEL_NAME = "cost";
-	public static String INVESTMENT_ASSISTANCE_REQUEST_MODEL_NAME = "planned_investment_assistance_request";
+	public static String COMPANY_MODEL_NAME = "sample.marka.company";
+	public static String FIELD_MODEL_NAME = "sample.marka.field";
+	public static String SECTOR_MODEL_NAME = "sample.marka.sector";
+	public static String COUNTRY_MODEL_NAME = "sample.marka.country";
+	public static String CITY_MODEL_NAME = "sample.marka.city";
+	public static String USER_MODEL_NAME = "sample.marka.user";
+	public static String INVESTOR_MODEL_NAME = "sample.marka.investor";
+	public static String INVESTOR_TYPE_MODEL_NAME = "sample.marka.investor_type";
+	public static String COST_TYPE_MODEL_NAME = "sample.marka.cost";
+	public static String INVESTMENT_ASSISTANCE_REQUEST_MODEL_NAME = "sample.marka.planned_investment_assistance_request";
 
 	@Autowired
 	private DataModelServiceImpl modelAdminService;

@@ -224,7 +224,7 @@ public class MarkaInvestData {
 	}
 	
 
-	private void insertData() {
+	public void insertData() {
 		
 		try {
 			api.postAllDataInType(listField, MarkaInvestModel.FIELD_MODEL_NAME);
