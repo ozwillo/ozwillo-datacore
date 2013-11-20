@@ -3,6 +3,7 @@ package org.oasis.datacore.core.meta.model;
 
 /**
  * TODO readonly : setters only for tests, LATER admin using another (inheriting) model ?!?
+ * don't use this object for List or Maps (use DCListField and DCMapField)
  * @author mdutoo
  *
  */

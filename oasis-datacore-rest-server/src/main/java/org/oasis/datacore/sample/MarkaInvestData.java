@@ -1,4 +1,4 @@
-package org.oasis.datacore.rest.server.sample.data;
+package org.oasis.datacore.sample;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -8,15 +8,15 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.TimeZone;
 
 import javax.annotation.PostConstruct;
+import javax.ws.rs.WebApplicationException;
 
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
-import org.oasis.datacore.rest.client.DatacoreClientApi;
-import org.oasis.datacore.rest.server.sample.model.MarkaInvestModel;
+import org.oasis.datacore.rest.server.DatacoreApiImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
@@ -38,19 +38,18 @@ public class MarkaInvestData {
 	
 	private HashMap<String, List<DCResource>> mapData;
 	
-	@Value("${datacoreApiClient.containerUrl}")
+	@Value("${datacoreApiServer.containerUrl}")
 	private String containerUrl;
 	
-	@Value("${datacoreTestServer.enableSampleDataInsertionAtStartup}")
-	private boolean enableSampleDataInsertionAtStartup;
-	
+	@Value("#{new Boolean('${datacoreApiServer.enableMarkaSampleDataInsertionAtStartup}')}")
+	private Boolean enableMarkaSampleDataInsertionAtStartup;
+
 	@Autowired
-	@Qualifier("datacoreApiClient")
-	protected DatacoreClientApi api;
+	protected DatacoreApiImpl api;
 	
 	@PostConstruct
 	public void init() {
-		
+
 		listCompany = new ArrayList<DCResource>();
 		listField = new ArrayList<DCResource>();
 		listSector = new ArrayList<DCResource>();
@@ -65,7 +64,8 @@ public class MarkaInvestData {
 		mapData = new HashMap<String, List<DCResource>>();
 		
 		createDataSample();
-		if(enableSampleDataInsertionAtStartup) {
+		
+		if(enableMarkaSampleDataInsertionAtStartup) {
 			insertData();
 		}
 				
@@ -90,21 +90,21 @@ public class MarkaInvestData {
 	
 	public void createDataSample() {
 		
-		DCResource field1 = buildResource(MarkaInvestModel.FIELD_MODEL_NAME, new SimpleEntry<>("id", "1"),new SimpleEntry<>("name", "IT Services"));	
-		DCResource field2 = buildResource(MarkaInvestModel.FIELD_MODEL_NAME, new SimpleEntry<>("id", "2"),new SimpleEntry<>("name", "Accounting"));	
-		DCResource field3 = buildResource(MarkaInvestModel.FIELD_MODEL_NAME, new SimpleEntry<>("id", "3"),new SimpleEntry<>("name", "Banking"));	
+		DCResource field1 = buildResource(MarkaInvestModel.FIELD_MODEL_NAME, new SimpleEntry<>("id", 1),new SimpleEntry<>("name", "IT Services"));	
+		DCResource field2 = buildResource(MarkaInvestModel.FIELD_MODEL_NAME, new SimpleEntry<>("id", 2),new SimpleEntry<>("name", "Accounting"));	
+		DCResource field3 = buildResource(MarkaInvestModel.FIELD_MODEL_NAME, new SimpleEntry<>("id", 3),new SimpleEntry<>("name", "Banking"));	
 		listField.add(field1);
 		listField.add(field2);
 		listField.add(field3);
 		
 		DCResource country1 = buildResource(MarkaInvestModel.COUNTRY_MODEL_NAME,
-				new SimpleEntry<>("id", "1"),new SimpleEntry<>("name", "France"),
-				new SimpleEntry<>("lat", 46d), new SimpleEntry<>("long", 2d),
+				new SimpleEntry<>("id", 1),new SimpleEntry<>("name", "France"),
+				new SimpleEntry<>("lat", 46f), new SimpleEntry<>("long", 2f),
 				new SimpleEntry<>("population", 65000000), new SimpleEntry<>("language", "FR_fr"));
 		
 		DCResource country2 = buildResource(MarkaInvestModel.COUNTRY_MODEL_NAME,
-				new SimpleEntry<>("id", "2"),new SimpleEntry<>("name", "Deutschland"),
-				new SimpleEntry<>("lat", 50d), new SimpleEntry<>("long", 15d),
+				new SimpleEntry<>("id", 2),new SimpleEntry<>("name", "Deutschland"),
+				new SimpleEntry<>("lat", 50f), new SimpleEntry<>("long", 15f),
 				new SimpleEntry<>("population", 55000000), new SimpleEntry<>("language", "De_de"));
 		listCountry.add(country1);
 		listCountry.add(country2);
@@ -114,56 +114,56 @@ public class MarkaInvestData {
 		listPostalCodeCity1.add("69002");
 		listPostalCodeCity1.add("69003");
 		DCResource city1 = buildResource(MarkaInvestModel.CITY_MODEL_NAME,
-				new SimpleEntry<>("id", "1"),new SimpleEntry<>("name", "Lyon"),
-				new SimpleEntry<>("population", 2000000), new SimpleEntry<>("postalCode", listPostalCodeCity1),
-				new SimpleEntry<>("lat", 61d), new SimpleEntry<>("long", 12d), new SimpleEntry<>("country", country1));
+				new SimpleEntry<>("id", 1),new SimpleEntry<>("name", "Lyon"),
+				new SimpleEntry<>("population", 2000000), new SimpleEntry<>("postalCodes", listPostalCodeCity1),
+				new SimpleEntry<>("lat", 61f), new SimpleEntry<>("long", 12f), new SimpleEntry<>("country", country1.getUri()));
 		
 		List<String> listPostalCodeCity2 = new ArrayList<>();
-		listPostalCodeCity1.add("10243");
-		listPostalCodeCity1.add("10245");
-		listPostalCodeCity1.add("10247");
+		listPostalCodeCity2.add("10243");
+		listPostalCodeCity2.add("10245");
+		listPostalCodeCity2.add("10247");
 		DCResource city2 = buildResource(MarkaInvestModel.CITY_MODEL_NAME,
-				new SimpleEntry<>("id", "2"),new SimpleEntry<>("name", "Berlin"),
-				new SimpleEntry<>("population", 1000000), new SimpleEntry<>("postalCode", listPostalCodeCity2),
-				new SimpleEntry<>("lat", 75d), new SimpleEntry<>("long", 35d), new SimpleEntry<>("country", country2));
+				new SimpleEntry<>("id", 2),new SimpleEntry<>("name", "Berlin"),
+				new SimpleEntry<>("population", 1000000), new SimpleEntry<>("postalCodes", listPostalCodeCity2),
+				new SimpleEntry<>("lat", 75f), new SimpleEntry<>("long", 35f), new SimpleEntry<>("country", country2.getUri()));
 		listCity.add(city1);
 		listCity.add(city2);
 		
 		DCResource company1 = buildResource(MarkaInvestModel.COMPANY_MODEL_NAME,
-				new SimpleEntry<>("id", "1"), new SimpleEntry<>("name", "Societe Generale"),
-				new SimpleEntry<>("field", field3), new SimpleEntry<>("lastAnnualRevenue", 956210000d),
+				new SimpleEntry<>("id", 1), new SimpleEntry<>("name", "Societe Generale"),
+				new SimpleEntry<>("field", field3.getUri()), new SimpleEntry<>("lastAnnualRevenue", 956210000f),
 				new SimpleEntry<>("employeeNb", 35000), new SimpleEntry<>("incorporationYear", 1975),
-				new SimpleEntry<>("website", "www.societegenerale.fr"), new SimpleEntry<>("country", country1),
-				new SimpleEntry<>("address", "1 rue de la République"), new SimpleEntry<>("city", city1));
+				new SimpleEntry<>("website", "www.societegenerale.fr"), new SimpleEntry<>("country", country1.getUri()),
+				new SimpleEntry<>("address", "1 rue de la République"), new SimpleEntry<>("city", city1.getUri()));
 		
 		DCResource company2 = buildResource(MarkaInvestModel.COMPANY_MODEL_NAME,
-				new SimpleEntry<>("id", "2"), new SimpleEntry<>("name", "Fidaudit GmbH"),
-				new SimpleEntry<>("field", field2), new SimpleEntry<>("lastAnnualRevenue", 1500000d),
+				new SimpleEntry<>("id", 2), new SimpleEntry<>("name", "Fidaudit GmbH"),
+				new SimpleEntry<>("field", field2.getUri()), new SimpleEntry<>("lastAnnualRevenue", 1500000f),
 				new SimpleEntry<>("employeeNb", 200), new SimpleEntry<>("incorporationYear", 2002),
-				new SimpleEntry<>("website", "www.fidaudit.de"), new SimpleEntry<>("country", country2),
-				new SimpleEntry<>("address", "Paderborner Straße 2"), new SimpleEntry<>("city", city2));
+				new SimpleEntry<>("website", "www.fidaudit.de"), new SimpleEntry<>("country", country2.getUri()),
+				new SimpleEntry<>("address", "Paderborner Straße 2"), new SimpleEntry<>("city", city2.getUri()));
 		listCompany.add(company1);
 		listCompany.add(company2);
 		
 		DCResource sector1 = buildResource(MarkaInvestModel.SECTOR_MODEL_NAME,
-				new SimpleEntry<>("id", "1"),new SimpleEntry<>("name", "Financial"));
+				new SimpleEntry<>("id", 1),new SimpleEntry<>("name", "Financial"));
 		DCResource sector2 = buildResource(MarkaInvestModel.SECTOR_MODEL_NAME,
-				new SimpleEntry<>("id", "2"),new SimpleEntry<>("name", "Services"));
+				new SimpleEntry<>("id", 2),new SimpleEntry<>("name", "Services"));
 		listSector.add(sector1);
 		listSector.add(sector2);
 		
-		List<DCResource> listCompanyUser1 = new ArrayList<>();
-		listCompanyUser1.add(company1);
+		List<String> listCompanyUser1 = new ArrayList<>();
+		listCompanyUser1.add(company1.getUri());
 		DCResource user1 = buildResource(MarkaInvestModel.USER_MODEL_NAME,
-				new SimpleEntry<>("id", "1"), new SimpleEntry<>("firstName", "Frédéric"),
+				new SimpleEntry<>("id", 1), new SimpleEntry<>("firstName", "Frédéric"),
 				new SimpleEntry<>("lastName", "Oudéa"), new SimpleEntry<>("companies", listCompanyUser1),
 				new SimpleEntry<>("email", "frederic.oudea@socgen.com"),
 				new SimpleEntry<>("tel", "0142143059"), new SimpleEntry<>("fax", "0142143000"));
-		List<DCResource> listCompanyUser2 = new ArrayList<>();
-		listCompanyUser2.add(company1);
-		listCompanyUser2.add(company2);
+		List<String> listCompanyUser2 = new ArrayList<>();
+		listCompanyUser2.add(company1.getUri());
+		listCompanyUser2.add(company2.getUri());
 		DCResource user2 = buildResource(MarkaInvestModel.USER_MODEL_NAME,
-				new SimpleEntry<>("id", "1"), new SimpleEntry<>("firstName", "Albert"),
+				new SimpleEntry<>("id", 2), new SimpleEntry<>("firstName", "Albert"),
 				new SimpleEntry<>("lastName", "Milte"), new SimpleEntry<>("companies", listCompanyUser2),
 				new SimpleEntry<>("email", "albert.milte@gmail.com"),
 				new SimpleEntry<>("tel", "08445125647"), new SimpleEntry<>("fax", "08445125640"));
@@ -171,36 +171,43 @@ public class MarkaInvestData {
 		listUser.add(user2);
 		
 		DCResource investorType1 = buildResource(MarkaInvestModel.INVESTOR_TYPE_MODEL_NAME,
-				new SimpleEntry<>("id", "1"), new SimpleEntry<>("code", "BA"), new SimpleEntry<>("description", "Business Angel"));
+				new SimpleEntry<>("id", 1), new SimpleEntry<>("code", "BA"), new SimpleEntry<>("description", "Business Angel"));
 		listInvestorType.add(investorType1);
 		
-		List<DCResource> listSectorsUser1 = new ArrayList<>();
-		listSectorsUser1.add(sector1);
-		listSectorsUser1.add(sector2);
+		List<String> listSectorsUser1 = new ArrayList<>();
+		listSectorsUser1.add(sector1.getUri());
+		listSectorsUser1.add(sector2.getUri());
+		List<String> listInvestorTypeUser1 = new ArrayList<>();
+		listInvestorTypeUser1.add(investorType1.getUri());
 		DCResource investor1 = buildResource(MarkaInvestModel.INVESTOR_MODEL_NAME,
-				new SimpleEntry<>("id", "1"), new SimpleEntry<>("user", user1),
-				new SimpleEntry<>("type", listInvestorType), new SimpleEntry<>("fundsAvailable", 1000000d),
-				new SimpleEntry<>("sectors", sector2));
+				new SimpleEntry<>("id", 2), new SimpleEntry<>("user", user1.getUri()),
+				new SimpleEntry<>("types", listInvestorTypeUser1), new SimpleEntry<>("fundsAvailable", 1000000f),
+				new SimpleEntry<>("sectors", listSectorsUser1));
 		listInvestor.add(investor1);
 		
 		DCResource cost1 = buildResource(MarkaInvestModel.COST_TYPE_MODEL_NAME,
-				new SimpleEntry<>("id", "1"), new SimpleEntry<>("name", "money"));
+				new SimpleEntry<>("id", 1), new SimpleEntry<>("name", "money"));
 		DCResource cost2 = buildResource(MarkaInvestModel.COST_TYPE_MODEL_NAME,
-				new SimpleEntry<>("id", "2"), new SimpleEntry<>("name", "human resources"));
+				new SimpleEntry<>("id", 1), new SimpleEntry<>("name", "human resources"));
 		listCost.add(cost1);
 		listCost.add(cost2);
-		
-		DateFormat formatter = new SimpleDateFormat("dd/MM/yy");
-		Date end = new Date();
-		Date start = new Date();
+
+		TimeZone tz = TimeZone.getTimeZone("UTC");
+		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mmZ");
+		df.setTimeZone(tz);
+		DateFormat format = new SimpleDateFormat("dd/MM/yyyy");
+		Date start = null;
+		Date end = null;
 		try {
-			end = formatter.parse("04/01/2014");
-			start = formatter.parse("05/10/2013");
+			start = format.parse("05/10/2013");
+			end = format.parse("04/01/2014");
 		} catch (ParseException e) {}
+		String startIso = df.format(start);
+		String endIso = df.format(end);
 		DCResource plannedInvestmentRequest1 = buildResource(MarkaInvestModel.INVESTMENT_ASSISTANCE_REQUEST_MODEL_NAME,
-				new SimpleEntry<>("id", "1"), new SimpleEntry<>("sectors", listSectorsUser1),
-				new SimpleEntry<>("company", company1), new SimpleEntry<>("fundRequired", 521000d),
-				new SimpleEntry<>("start", start), new SimpleEntry<>("end", end));
+				new SimpleEntry<>("id", 1), new SimpleEntry<>("sectors", listSectorsUser1),
+				new SimpleEntry<>("company", company1.getUri()), new SimpleEntry<>("fundRequired", 521000f),
+				new SimpleEntry<>("start", startIso), new SimpleEntry<>("end", endIso));
 		listPlannedInvestmentAssistanceRequest.add(plannedInvestmentRequest1);
 
 		mapData.put(MarkaInvestModel.COMPANY_MODEL_NAME, listCompany);
@@ -219,17 +226,37 @@ public class MarkaInvestData {
 
 	private void insertData() {
 		
-		api.putAllData(listCity);
-		api.putAllData(listCompany);
-		api.putAllData(listCost);
-		api.putAllData(listCountry);
-		api.putAllData(listField);
-		api.putAllData(listInvestor);
-		api.putAllData(listInvestorType);
-		api.putAllData(listPlannedInvestmentAssistanceRequest);
-		api.putAllData(listSector);
-		api.putAllData(listUser);
-		
+		try {
+			api.postAllDataInType(listField, MarkaInvestModel.FIELD_MODEL_NAME);
+		} catch (WebApplicationException e) {}
+		try {
+			api.postAllDataInType(listCountry, MarkaInvestModel.COUNTRY_MODEL_NAME);
+		} catch (WebApplicationException e) {}
+		try {
+			api.postAllDataInType(listCity, MarkaInvestModel.CITY_MODEL_NAME);
+		} catch (WebApplicationException e) {}
+		try {
+			api.postAllDataInType(listCompany, MarkaInvestModel.COMPANY_MODEL_NAME);
+		} catch (WebApplicationException e) {}
+		try {
+			api.postAllDataInType(listSector, MarkaInvestModel.SECTOR_MODEL_NAME);
+		} catch (WebApplicationException e) {}
+		try {
+			api.postAllDataInType(listUser, MarkaInvestModel.USER_MODEL_NAME);
+		} catch (WebApplicationException e) {}
+		try {
+			api.postAllDataInType(listInvestorType, MarkaInvestModel.INVESTOR_TYPE_MODEL_NAME);
+		} catch (WebApplicationException e) {}
+		try {
+			api.postAllDataInType(listInvestor, MarkaInvestModel.INVESTOR_MODEL_NAME);
+		} catch (WebApplicationException e) {}
+		try {
+			api.postAllDataInType(listCost, MarkaInvestModel.COST_TYPE_MODEL_NAME);
+		} catch (WebApplicationException e) {}
+		try {
+			api.postAllDataInType(listPlannedInvestmentAssistanceRequest, MarkaInvestModel.INVESTMENT_ASSISTANCE_REQUEST_MODEL_NAME);
+		} catch (WebApplicationException e) {}
+	
 	}
 
 	public HashMap<String, List<DCResource>> getData() {

@@ -1,4 +1,4 @@
-package org.oasis.datacore.rest.server.common;
+package org.oasis.datacore.rest.api.util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,7 +7,6 @@ import javax.ws.rs.WebApplicationException;
 
 import org.apache.commons.lang.StringUtils;
 import org.oasis.datacore.rest.api.DCResource;
-import org.oasis.datacore.rest.api.util.UriHelper;
 
 /**
  * Methods helping writing unit tests
@@ -15,7 +14,7 @@ import org.oasis.datacore.rest.api.util.UriHelper;
  *
  */
 
-public class DatacoreTestUtils {
+public class UnitTestHelper {
 
 	public static DCResource buildResource(String containerUrl, String modelType, String iri) {
 		DCResource resource = new DCResource();

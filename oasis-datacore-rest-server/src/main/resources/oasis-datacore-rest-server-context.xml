@@ -77,6 +77,7 @@
 
 
    <context:component-scan base-package="org.oasis.datacore.rest.api" /><!-- for caching & context -->
+   <context:component-scan base-package="org.oasis.datacore.sample" />
    <context:annotation-config /><!-- actually auto enabled by previous line -->
 
    <cxf:bus>

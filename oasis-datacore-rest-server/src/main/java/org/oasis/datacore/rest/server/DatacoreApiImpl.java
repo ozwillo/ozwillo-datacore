@@ -382,7 +382,7 @@ public class DatacoreApiImpl implements DatacoreApi {
             Object entityItem;
             try {
                resourceParsingContext.enter(listElementField, listElementField);
-               entityItem = resourceToEntityValue(resourceValue, listElementField, resourceParsingContext);
+               entityItem = resourceToEntityValue(resourceItem, listElementField, resourceParsingContext);
             } catch (ResourceParsingException rpex) {
                resourceParsingContext.addError("Error while parsing list element Field value " + resourceItem
                      + " of JSON type " + ((resourceItem == null) ? "null" : resourceItem.getClass())

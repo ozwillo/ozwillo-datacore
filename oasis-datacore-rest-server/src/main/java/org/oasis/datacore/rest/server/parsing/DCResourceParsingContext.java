@@ -43,7 +43,8 @@ public class DCResourceParsingContext {
       } else {
          DCResourceValue previousResourceValue = this.resourceValueStack.peek();
          fullValuedPath = previousResourceValue.getFullValuedPath() + "/"
-               + ((value != null) ? value : field.getName()); 
+               + ((value != null) ? value : field.getName()); // TODO better fullValuedPath,
+         // also xpath-like in addition to being a value path (which is particularly ugly in list case)
       }
       this.resourceValueStack.add(new DCResourceValue(fullValuedPath, field,  value));
    }

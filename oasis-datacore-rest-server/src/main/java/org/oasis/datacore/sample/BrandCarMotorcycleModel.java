@@ -1,4 +1,4 @@
-package org.oasis.datacore.rest.server.sample.model;
+package org.oasis.datacore.sample;
 
 import javax.annotation.PostConstruct;
 

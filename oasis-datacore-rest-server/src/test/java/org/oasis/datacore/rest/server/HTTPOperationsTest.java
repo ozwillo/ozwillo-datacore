@@ -17,10 +17,10 @@ import org.junit.runner.RunWith;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.rest.api.DCResource;
+import org.oasis.datacore.rest.api.util.UnitTestHelper;
 import org.oasis.datacore.rest.client.DatacoreClientApi;
-import org.oasis.datacore.rest.server.common.DatacoreTestUtils;
-import org.oasis.datacore.rest.server.sample.data.BrandCarMotorcycleData;
-import org.oasis.datacore.rest.server.sample.model.BrandCarMotorcycleModel;
+import org.oasis.datacore.sample.BrandCarMotorcycleData;
+import org.oasis.datacore.sample.BrandCarMotorcycleModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -88,7 +88,7 @@ public class HTTPOperationsTest {
 			postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(postedData);
-			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
 			Assert.assertTrue("HTTP status should be 400 but is " + httpStatus, 400 == httpStatus);
 		}
 		
@@ -118,7 +118,7 @@ public class HTTPOperationsTest {
 			postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(postedData);
-			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
 			Assert.assertTrue("HTTP status should be 500 but is " + httpStatus, 500 == httpStatus);
 		}
 		
@@ -150,7 +150,7 @@ public class HTTPOperationsTest {
 			postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(postedData);
-			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
 			Assert.assertTrue("HTTP status should be 409 but is " + httpStatus, 409 == httpStatus);
 		}
 		
@@ -178,7 +178,7 @@ public class HTTPOperationsTest {
 			postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), "nonexistingmodel");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(postedData);
-			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
 			Assert.assertTrue("HTTP status should be 404 but is " + httpStatus, 404 == httpStatus);
 		}
 		
@@ -249,7 +249,7 @@ public class HTTPOperationsTest {
 			updatedResource = api.putAllDataInType(listDataToUpdate, BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(updatedResource);
-			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
 			Assert.assertTrue("HTTP status should be 500 but is " + httpStatus, 500 == httpStatus);
 		}
 		
@@ -286,7 +286,7 @@ public class HTTPOperationsTest {
 			updatedResource = api.putAllDataInType(listDataToUpdate, BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(updatedResource);
-			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
 			Assert.assertTrue("HTTP status should be 409 but is " + httpStatus, 409 == httpStatus);
 		}
 		
@@ -322,7 +322,7 @@ public class HTTPOperationsTest {
 			updatedResource = api.putAllDataInType(listDataToUpdate, BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(updatedResource);
-			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
 			Assert.assertTrue("HTTP status should be 400 but is " + httpStatus, 400 == httpStatus);
 		}
 		
@@ -372,7 +372,7 @@ public class HTTPOperationsTest {
 			listMotorcycles = api.findDataInType(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, "test=true&noquery=0", 0, 10);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(listMotorcycles);
-			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
 			Assert.assertTrue("HTTP status should be 500 but is " + httpStatus, 500 == httpStatus);
 		}
 		
@@ -395,7 +395,7 @@ public class HTTPOperationsTest {
 			listConceptCars = api.findDataInType("ConceptCars", "", 0, 10);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(listConceptCars);
-			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
 			Assert.assertTrue("HTTP status should be 404 but is " + httpStatus, 404 == httpStatus);
 		}
 		
@@ -449,7 +449,7 @@ public class HTTPOperationsTest {
 			postedData = api.postAllData(listData);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(postedData);
-			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
 			Assert.assertTrue("HTTP status should be 400 but is " + httpStatus, 400 == httpStatus);
 		}
 		
@@ -481,7 +481,7 @@ public class HTTPOperationsTest {
 			postedData = api.postAllData(listData);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(postedData);
-			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
 			Assert.assertTrue("HTTP status should be 500 but is " + httpStatus, 500 == httpStatus);
 		}
 		
@@ -519,7 +519,7 @@ public class HTTPOperationsTest {
 			postedData = api.postAllData(newData);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(postedData);
-			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
 			Assert.assertTrue("HTTP status should be 409 but is " + httpStatus, 409 == httpStatus);
 		}
 		
@@ -552,7 +552,7 @@ public class HTTPOperationsTest {
 			postedData = api.postAllData(listData);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(postedData);
-			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
 			Assert.assertTrue("HTTP status should be 404 but is " + httpStatus, 404 == httpStatus);
 		}
 		
@@ -623,7 +623,7 @@ public class HTTPOperationsTest {
 			updatedResource = api.putAllData(listDataToUpdate);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(updatedResource);
-			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
 			Assert.assertTrue("HTTP status should be 500 but is " + httpStatus, 500 == httpStatus);
 		}
 		
@@ -660,7 +660,7 @@ public class HTTPOperationsTest {
 			updatedResource = api.putAllData(listDataToUpdate);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(updatedResource);
-			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
 			Assert.assertTrue("HTTP status should be 409 but is " + httpStatus, 409 == httpStatus);
 		}
 		
@@ -696,7 +696,7 @@ public class HTTPOperationsTest {
 			updatedResource = api.putAllData(listDataToUpdate);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(updatedResource);
-			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
 			Assert.assertTrue("HTTP status should be 400 but is " + httpStatus, 400 == httpStatus);
 		}
 		
@@ -746,7 +746,7 @@ public class HTTPOperationsTest {
 			listMotorcycles = api.findData("test=true&noquery=0", 0, 10);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(listMotorcycles);
-			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
 			Assert.assertTrue("HTTP status should be 500 but is " + httpStatus, 500 == httpStatus);
 		}
 		
@@ -769,7 +769,7 @@ public class HTTPOperationsTest {
 			listConceptCars = api.findData("model=conceptcars", 0, 10);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(listConceptCars);
-			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
 			Assert.assertTrue("HTTP status should be 404 but is " + httpStatus, 404 == httpStatus);
 		}
 		
@@ -836,7 +836,7 @@ public class HTTPOperationsTest {
 			updatedResource = api.putDataInType(car, BrandCarMotorcycleModel.CAR_MODEL_NAME, car.getUri());
 		} catch (WebApplicationException e) {
 			Assert.assertNull(updatedResource);
-			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
 			Assert.assertTrue("HTTP status should be 500 but is " + httpStatus, 500 == httpStatus);
 		}
 		
@@ -871,7 +871,7 @@ public class HTTPOperationsTest {
 			updatedResource = api.putDataInType(car, BrandCarMotorcycleModel.CAR_MODEL_NAME, car.getUri());
 		} catch (WebApplicationException e) {
 			Assert.assertNull(updatedResource);
-			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
 			Assert.assertTrue("HTTP status should be 409 but is " + httpStatus, 409 == httpStatus);
 		}
 		
@@ -905,7 +905,7 @@ public class HTTPOperationsTest {
 			updatedResource = api.putDataInType(car, BrandCarMotorcycleModel.CAR_MODEL_NAME, car.getUri());
 		} catch (WebApplicationException e) {
 			Assert.assertNull(updatedResource);
-			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
 			Assert.assertTrue("HTTP status should be 400 but is " + httpStatus, 400 == httpStatus);
 		}
 		
@@ -960,7 +960,7 @@ public class HTTPOperationsTest {
 			resource = api.getData("conceptcars", "Renault/Megane/1996", new RequestImpl(new MessageImpl()));
 		} catch (WebApplicationException e) {
 			Assert.assertNull(resource);
-			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
 			Assert.assertTrue("HTTP status should be 404 but is " + httpStatus, 404 == httpStatus);
 		}
 		
@@ -992,7 +992,7 @@ public class HTTPOperationsTest {
 			Assert.assertNull(resource);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(resource);
-			int httpStatus = DatacoreTestUtils.getHttpStatusFromWAE(e);
+			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
 			Assert.assertTrue("HTTP status should be 204 but is " + httpStatus, 204 == httpStatus);
 		}
 		
