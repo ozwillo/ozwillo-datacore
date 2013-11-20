@@ -105,7 +105,7 @@ Contact : http://www.oasis-eu.org/ oasis-eu-datacore-dev@googlegroups.com
       <!-- spring data on mongodb -->
       <spring-data-mongodb.version>1.2.3.RELEASE</spring-data-mongodb.version><!-- WARNING depends on spring 3.1.4.RELEASE -->
       <mongodb.version>2.11.2</mongodb.version>
-      <joda-time.version>2.2</joda-time.version>
+      <joda-time.version>2.1</joda-time.version><!-- from Jackson -->
       
       <!-- spring data on neo4j (TODO for Social Graph mock ?!?) -->
       <spring-data-neo4j.version>2.2.2.RELEASE</spring-data-neo4j.version>
@@ -285,7 +285,7 @@ Contact : http://www.oasis-eu.org/ oasis-eu-datacore-dev@googlegroups.com
          <artifactId>spring-data-mongodb</artifactId>
          <version>${spring-data-mongodb.version}</version>
       </dependency>
-      <!-- for date (including in spring data auditing) -->
+      <!-- Spring data mongodb - date using Joda's DateTime (including in spring data auditing) -->
       <dependency>
           <groupId>joda-time</groupId>
           <artifactId>joda-time</artifactId>
@@ -298,6 +298,14 @@ Contact : http://www.oasis-eu.org/ oasis-eu-datacore-dev@googlegroups.com
         <groupId>com.fasterxml.jackson.jaxrs</groupId>
         <artifactId>jackson-jaxrs-json-provider</artifactId><!-- brings JacksonJsonProvider, to configure in clients -->
         <version>${jackson.version}</version>
+      </dependency>
+      <!-- dates in jackson REST using Joda's DateTime :
+      (not required to compile but DCResource can't be parsed without it)
+      (WARNING requires also module conf) -->
+      <dependency>
+         <groupId>com.fasterxml.jackson.datatype</groupId>
+         <artifactId>jackson-datatype-joda</artifactId>
+         <version>${jackson.version}</version>
       </dependency>
       <!-- NB. other Jackson deps : ex. for mere (JSONLD) parsing only core & databind -->
       <!-- JAXRS API -->

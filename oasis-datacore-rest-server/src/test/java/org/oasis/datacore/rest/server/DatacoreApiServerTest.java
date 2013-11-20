@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
 
+import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
@@ -75,6 +76,9 @@ public class DatacoreApiServerTest {
       ///cityCountrySample.init(); // auto called
    }
    
+   /**
+    * Cleans up data of all Models
+    */
    @Test // rather than @BeforeClass, else static and spring can't inject
    //@BeforeClass
    public /*static */void init2cleanupDbFirst() {
@@ -155,19 +159,19 @@ public class DatacoreApiServerTest {
       Assert.assertNotNull(postedUkCountryData);
       
       String iri = country + '/' + city;
-      DCResource londonCityData = datacoreApiClient.getData("city", iri, null);
-      Assert.assertNull(londonCityData);
+      DCResource cityData = datacoreApiClient.getData("city", iri, null);
+      Assert.assertNull(cityData);
 
-      londonCityData = buildCityData(city, country, false);
-      DCResource postedLondonCityData = datacoreApiClient.postDataInType(londonCityData, "city");
+      cityData = buildCityData(city, country, false);
+      DCResource postedLondonCityData = datacoreApiClient.postDataInType(cityData, "city");
       Assert.assertNotNull(postedLondonCityData);
-      Assert.assertEquals(londonCityData.getProperties().get("description"),
+      Assert.assertEquals(cityData.getProperties().get("description"),
             postedUkCountryData.getProperties().get("description"));
       DCResource gottenLondonCityData = datacoreApiClient.getData("city", iri, null);
       Assert.assertNotNull(gottenLondonCityData);
-      Assert.assertEquals(londonCityData.getProperties().get("description"),
+      Assert.assertEquals(cityData.getProperties().get("description"),
             postedUkCountryData.getProperties().get("description"));
-      return londonCityData;
+      return cityData;
    }
 
    ///@Test
@@ -267,6 +271,40 @@ public class DatacoreApiServerTest {
       resourceCache.evict(bordeauxCityResource.getUri()); /// ... and clean cache
       DCResource putBordeauxCityResource = datacoreApiClient.putDataInType(bordeauxCityResource, "city", "France/Bordeaux");
       bordeauxCityResource = checkCachedBordeauxCityDataAndDelete(putBordeauxCityResource);
+   }
+   
+   /**
+    * For now, client doesn't know when to parse String as Date
+    * but we can still check if this String is OK
+    * (would require (cached) Models for that)
+    * @throws Exception
+    */
+   @Test
+   public void test3propDateString() throws Exception {
+      DCResource bordeauxCityResource = buildCityData("Bordeaux", "France", false);
+      DateTime bordeauxFoundedDate = new DateTime(300, 4, 1, 0, 0);
+      bordeauxCityResource.setProperty("founded", bordeauxFoundedDate); // testing date field
+      DCResource putBordeauxCityResource = datacoreApiClient.postDataInType(bordeauxCityResource, "city");
+      bordeauxCityResource = checkCachedBordeauxCityDataAndDelete(putBordeauxCityResource);
+      Assert.assertTrue("returned date field should mean the same date as the one put",
+            putBordeauxCityResource.getProperties().get("founded").toString().contains("300"));
+   }
+
+   /**
+    * For now, client doesn't know when to parse String as Date
+    * (would require (cached) Models for that)
+    * @throws Exception
+    */
+   @Test
+   @Ignore // LATER
+   public void test3propDateJoda() throws Exception {
+      DCResource bordeauxCityResource = buildCityData("Bordeaux", "France", false);
+      DateTime bordeauxFoundedDate = new DateTime(300, 4, 1, 0, 0);
+      bordeauxCityResource.setProperty("founded", bordeauxFoundedDate); // testing date field
+      DCResource putBordeauxCityResource = datacoreApiClient.postDataInType(bordeauxCityResource, "city");
+      bordeauxCityResource = checkCachedBordeauxCityDataAndDelete(putBordeauxCityResource);
+      Assert.assertEquals("returned date field should be the Joda one put", bordeauxFoundedDate,
+            putBordeauxCityResource.getProperties().get("founded"));
    }
 
    /**
