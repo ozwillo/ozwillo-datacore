@@ -103,23 +103,15 @@ public class CitizenKinData {
 
         mapData.put(CitizenKinModel.USER_MODEL_NAME, listUser);
         mapData.put(CitizenKinModel.PROCEDURE_MODEL_NAME, listProcedure);
-
     }
 
 	public void insertData() {
-
 		try {
 			api.postAllDataInType(listUser, CitizenKinModel.USER_MODEL_NAME);
-		} catch (WebApplicationException ex) {
-            System.out.println(ex);
-            System.out.println(ex.getCause());
-        }
+		} catch (WebApplicationException ex) {}
 		try {
 			api.postAllDataInType(listProcedure, CitizenKinModel.PROCEDURE_MODEL_NAME);
-		} catch (WebApplicationException ex) {
-            System.out.println(ex);
-            System.out.println(ex.getCause());
-        }
+		} catch (WebApplicationException ex) {}
 	}
 
 	public HashMap<String, List<DCResource>> getData() {
