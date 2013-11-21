@@ -1,4 +1,4 @@
-package org.oasis.datacore.rest.server.parsing;
+package org.oasis.datacore.rest.server.parsing.model;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package org.oasis.datacore.rest.server.parsing;
+package org.oasis.datacore.rest.server.parsing.exception;
 
 public class ResourceParsingException extends Exception {
    private static final long serialVersionUID = -8317559306115477791L;
