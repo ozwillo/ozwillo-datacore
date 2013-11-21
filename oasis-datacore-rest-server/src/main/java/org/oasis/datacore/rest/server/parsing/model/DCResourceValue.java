@@ -1,4 +1,4 @@
-package org.oasis.datacore.rest.server.parsing;
+package org.oasis.datacore.rest.server.parsing.model;
 
 import org.oasis.datacore.core.meta.model.DCField;
 

@@ -15,7 +15,7 @@ import org.oasis.datacore.core.entity.query.sparql.EntityQueryEngineBase;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.rest.server.DatacoreApiImpl;
-import org.oasis.datacore.rest.server.parsing.ResourceParsingException;
+import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
