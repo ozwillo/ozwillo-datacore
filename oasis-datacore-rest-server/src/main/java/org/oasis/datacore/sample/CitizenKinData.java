@@ -15,11 +15,11 @@ import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
 /**
- *
+ * Citizen Kin data
  * @author jguillemotte
  */
 @Component
-@DependsOn("CitizenkinModel")
+@DependsOn("citizenKinModel")
 public class CitizenKinData {
 
 	private List<DCResource> listUser;
@@ -39,10 +39,9 @@ public class CitizenKinData {
 	@PostConstruct
 	public void init() {
 
-		listUser = new ArrayList<DCResource>();
-		listProcedure = new ArrayList<DCResource>();
-
-		mapData = new HashMap<String, List<DCResource>>();
+		listUser = new ArrayList<>();
+		listProcedure = new ArrayList<>();
+		mapData = new HashMap<>();
 
 		createDataSample();
 
@@ -64,17 +63,17 @@ public class CitizenKinData {
 			new AbstractMap.SimpleEntry<>("lastName", "Dumont"));
 
 		DCResource user3 = buildResource(CitizenKinModel.USER_MODEL_NAME,
-			new AbstractMap.SimpleEntry<>("id", 1),
+			new AbstractMap.SimpleEntry<>("id", 3),
             new AbstractMap.SimpleEntry<>("firstName", "Jim"),
 			new AbstractMap.SimpleEntry<>("lastName", "Van den boss"));
 
 		DCResource user4 = buildResource(CitizenKinModel.USER_MODEL_NAME,
-			new AbstractMap.SimpleEntry<>("id", 1),
+			new AbstractMap.SimpleEntry<>("id", 4),
             new AbstractMap.SimpleEntry<>("firstName", "Robert"),
 			new AbstractMap.SimpleEntry<>("lastName", "Dillingen"));
 
 		DCResource user5 = buildResource(CitizenKinModel.USER_MODEL_NAME,
-			new AbstractMap.SimpleEntry<>("id", 1),
+			new AbstractMap.SimpleEntry<>("id", 5),
             new AbstractMap.SimpleEntry<>("firstName", "Céline"),
 			new AbstractMap.SimpleEntry<>("lastName", "Arboldi"));
 
