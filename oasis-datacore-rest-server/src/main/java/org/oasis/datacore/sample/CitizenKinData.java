@@ -87,15 +87,15 @@ public class CitizenKinData {
         agentsList1.add(user2.getUri());
         agentsList1.add(user5.getUri());
 		DCResource procedure1 = buildResource(CitizenKinModel.PROCEDURE_MODEL_NAME,
-            new SimpleEntry<>("id", 1),
-            new SimpleEntry<>("name", "election"),
+            //new SimpleEntry<>("id", 1),
+            new SimpleEntry<>("id", "election"),
             new SimpleEntry<>("agents", agentsList1));
 
         List<String> agentsList2 = new ArrayList<>();
-        agentsList1.add(user1.getUri());
+        agentsList2.add(user1.getUri());
 		DCResource procedure2 = buildResource(CitizenKinModel.PROCEDURE_MODEL_NAME,
-			new SimpleEntry<>("id", 2),
-            new SimpleEntry<>("name", "simpleForm"),
+			//new SimpleEntry<>("id", 2),
+            new SimpleEntry<>("id", "simpleForm"),
             new SimpleEntry<>("agents", agentsList2));
 
         listProcedure.add(procedure1);
