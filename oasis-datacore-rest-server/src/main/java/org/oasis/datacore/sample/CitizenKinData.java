@@ -1,6 +1,6 @@
 package org.oasis.datacore.sample;
 
-import java.util.AbstractMap;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,29 +53,29 @@ public class CitizenKinData {
     public void createDataSample() {
 
 		DCResource user1 = buildResource(CitizenKinModel.USER_MODEL_NAME,
-			new AbstractMap.SimpleEntry<>("id", 1),
-            new AbstractMap.SimpleEntry<>("firstName", "Eric"),
-			new AbstractMap.SimpleEntry<>("lastName", "Arbos"));
+			new SimpleEntry<>("id", 1),
+            new SimpleEntry<>("firstName", "Eric"),
+			new SimpleEntry<>("lastName", "Arbos"));
 
 		DCResource user2 = buildResource(CitizenKinModel.USER_MODEL_NAME,
-			new AbstractMap.SimpleEntry<>("id", 2),
-            new AbstractMap.SimpleEntry<>("firstName", "Marie"),
-			new AbstractMap.SimpleEntry<>("lastName", "Dumont"));
+			new SimpleEntry<>("id", 2),
+            new SimpleEntry<>("firstName", "Marie"),
+			new SimpleEntry<>("lastName", "Dumont"));
 
 		DCResource user3 = buildResource(CitizenKinModel.USER_MODEL_NAME,
-			new AbstractMap.SimpleEntry<>("id", 3),
-            new AbstractMap.SimpleEntry<>("firstName", "Jim"),
-			new AbstractMap.SimpleEntry<>("lastName", "Van den boss"));
+			new SimpleEntry<>("id", 3),
+            new SimpleEntry<>("firstName", "Jim"),
+			new SimpleEntry<>("lastName", "Van den boss"));
 
 		DCResource user4 = buildResource(CitizenKinModel.USER_MODEL_NAME,
-			new AbstractMap.SimpleEntry<>("id", 4),
-            new AbstractMap.SimpleEntry<>("firstName", "Robert"),
-			new AbstractMap.SimpleEntry<>("lastName", "Dillingen"));
+			new SimpleEntry<>("id", 4),
+            new SimpleEntry<>("firstName", "Robert"),
+			new SimpleEntry<>("lastName", "Dillingen"));
 
 		DCResource user5 = buildResource(CitizenKinModel.USER_MODEL_NAME,
-			new AbstractMap.SimpleEntry<>("id", 5),
-            new AbstractMap.SimpleEntry<>("firstName", "Céline"),
-			new AbstractMap.SimpleEntry<>("lastName", "Arboldi"));
+			new SimpleEntry<>("id", 5),
+            new SimpleEntry<>("firstName", "Céline"),
+			new SimpleEntry<>("lastName", "Arboldi"));
 
 		listUser.add(user1);
         listUser.add(user2);
@@ -83,11 +83,20 @@ public class CitizenKinData {
         listUser.add(user4);
         listUser.add(user5);
 
+        List<String> agentsList1 = new ArrayList<>();
+        agentsList1.add(user2.getUri());
+        agentsList1.add(user5.getUri());
 		DCResource procedure1 = buildResource(CitizenKinModel.PROCEDURE_MODEL_NAME,
-            new AbstractMap.SimpleEntry<>("name", "election"));
+            new SimpleEntry<>("id", 1),
+            new SimpleEntry<>("name", "election"),
+            new SimpleEntry<>("agents", agentsList1));
 
+        List<String> agentsList2 = new ArrayList<>();
+        agentsList1.add(user1.getUri());
 		DCResource procedure2 = buildResource(CitizenKinModel.PROCEDURE_MODEL_NAME,
-			new AbstractMap.SimpleEntry<>("name", "simpleForm"));
+			new SimpleEntry<>("id", 2),
+            new SimpleEntry<>("name", "simpleForm"),
+            new SimpleEntry<>("agents", agentsList2));
 
         listProcedure.add(procedure1);
         listProcedure.add(procedure2);
@@ -101,10 +110,16 @@ public class CitizenKinData {
 
 		try {
 			api.postAllDataInType(listUser, CitizenKinModel.USER_MODEL_NAME);
-		} catch (WebApplicationException e) {}
+		} catch (WebApplicationException ex) {
+            System.out.println(ex);
+            System.out.println(ex.getCause());
+        }
 		try {
 			api.postAllDataInType(listProcedure, CitizenKinModel.PROCEDURE_MODEL_NAME);
-		} catch (WebApplicationException e) {}
+		} catch (WebApplicationException ex) {
+            System.out.println(ex);
+            System.out.println(ex.getCause());
+        }
 	}
 
 	public HashMap<String, List<DCResource>> getData() {
@@ -112,12 +127,12 @@ public class CitizenKinData {
 	}
 
 	@SafeVarargs
-	private final DCResource buildResource(String modelType, AbstractMap.SimpleEntry<String,?>... entries) {
+	private final DCResource buildResource(String modelType, SimpleEntry<String,?>... entries) {
 		DCResource resource = new DCResource();
 		List<String> types = new ArrayList<>();
 		types.add(modelType);
 		resource.setTypes(types);
-		for(AbstractMap.SimpleEntry<String, ?> entry : entries) {
+		for(SimpleEntry<String, ?> entry : entries) {
 			if(entry != null) {
 				if("id".equals(entry.getKey())) {
 					resource.setUri(UriHelper.buildUri(containerUrl, modelType, String.valueOf(entry.getValue())));
