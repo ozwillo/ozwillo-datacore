@@ -92,14 +92,6 @@ public class DatacoreApiImpl implements DatacoreApi {
    @Autowired
    private DCModelService modelService;
 
-   /** injecting single application-wide mapper (which is fine because thread-safe, see
-    * http://stackoverflow.com/questions/18611565/how-do-i-correctly-reuse-jackson-objectmapper
-    * NB. otherwise would need to have same configuration ;
-    * pre-request configuration can be done using .writer() and .reader()) */
-   @Autowired
-   @Qualifier("datacoreApiServer.objectMapper")
-   public ObjectMapper mapper = new ObjectMapper(); // TODO move it in ResourceParsingService and make it private again
-   
    private static int typeIndexInType = UriHelper.DC_TYPE_PREFIX.length(); // TODO use Pattern & DC_TYPE_PATH
 
    private static Set<String> resourceNativeJavaFields = new HashSet<String>();
