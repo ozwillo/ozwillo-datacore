@@ -95,7 +95,7 @@ public class CitizenKinData {
         agentsList2.add(user1.getUri());
 		DCResource procedure2 = buildResource(CitizenKinModel.PROCEDURE_MODEL_NAME,
 			//new SimpleEntry<>("id", 2),
-            new SimpleEntry<>("id", "simpleForm"),
+            new SimpleEntry<>("id", "simpleform"),
             new SimpleEntry<>("agents", agentsList2));
 
         listProcedure.add(procedure1);
