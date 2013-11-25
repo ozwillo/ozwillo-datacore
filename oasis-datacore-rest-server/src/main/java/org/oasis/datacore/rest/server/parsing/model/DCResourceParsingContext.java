@@ -8,6 +8,14 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCModel;
 
+
+/**
+ * Keeps the state of parsing (path in model instance) in order to be able
+ * to display error messages that pinpoint to error location.
+ * 
+ * @author mdutoo
+ *
+ */
 public class DCResourceParsingContext {
    
    private Stack<DCResourceValue> resourceValueStack = new Stack<DCResourceValue>(); // TODO or of String only ??
