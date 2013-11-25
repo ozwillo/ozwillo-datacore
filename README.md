@@ -18,38 +18,48 @@ License
    * LGPL
 
 
-Getting Started
----------------
-
-**Server Setup** :
+Getting Started with the server
+-------------------------------
 
 Requirements : [Java JDK 7](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html), [MongoDB](http://docs.mongodb.org/manual/installation/)
 
 Build ([Maven 3](http://maven.apache.org/download.cgi) required) : at root, do : mvn clean install
 
-Deployment ([Tomcat 7](http://tomcat.apache.org/download-70.cgi) required) : put the war contents in a tomcat 7 root and start it :
+Deployment : go in the oasis-datacore-web subproject and do : mvn jetty:run
+
+Then go have a look at API docs at http://localhost:8080/swagger-ui/index.html . To try it out, for instance do a GET /dc/type/city to see what cities are available. For more, see the [wiki](https://github.com/pole-numerique/oasis-datacore/wiki).
+
+Alternatively, to deploy it in production ([Tomcat 7](http://tomcat.apache.org/download-70.cgi) required) : put the war contents in a tomcat 7 root and start it :
 
     cd tomcat7/bin
     cp -rf ../../workspace/oasis-datacore/oasis-datacore-web/target/datacore/* ../webapps/ROOT/
     ./catalina.sh start
 
-Then to have a look at API docs, open a browser at http://localhost:8080/swagger-ui/index.html , specify http://localhost:8080/api-docs and click "explore". To try it out, for instance do a GET /dc/type/city to see what cities are available. For more, see the [wiki]().
 
-NB. alternatively, there is an embedded Jetty container deploying at http://localhost:8180 : mvn -Pjetty:run clean install
+Adding Business Configuration
+-----------------------------
 
-**Business Configuration** :
+To use Datacore for your own collaborative data use case, you must define the appropriate business-specific Models.
 
-Add your own business Models and data : Do it in a new (server-side) init (ex. by annotating it by @Component) class using Spring-injected DataModelServiceImpl and DatacoreApi (or DCEntityService), like it is done in https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-core/src/main/java/org/oasis/datacore/core/sample/CityCountrySample.java .
+There will be soon a Model REST API allowing to do it in JSON / HTTP.
 
-**Client Use** :
+For now this can only be done in Java. Do it in a new class on the model of [MarkaInvestModel](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-core/src/main/java/org/oasis/datacore/core/sample/MarkaInvestModel.java) or [CityCountrySample](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-core/src/main/java/org/oasis/datacore/core/sample/CityCountrySample.java) (meaning a server-side class, auto initialized by annotating it by @Component, using Spring-injected DataModelServiceImpl and DatacoreApi or DCEntityService, or if they are not enough yet MongoOperations).
 
-Consume it and use it from a client : use the JSON/HTTP client of your own platform and / or your choice to call the DatacoreApi server using REST JSON/HTTP calls. Here are such clients that might help you :
+Sample data for these models can be added using the Datacore REST API obviously, or again using Java n a new class on the model of [MarkaInvestData](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-core/src/main/java/org/oasis/datacore/core/sample/MarkaInvestData.java).
 
-A **Java proxy-like cached client built on the CXF service engine** is provided by the oasis-datacore-rest-cxf subproject. Use it by loading its Spring (https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-cxf/src/main/resources/oasis-datacore-rest-client-context.xml) and injecting DatacoreClientApi using ```@Autowired @Qualifier("datacoreApiCachedClient") private DatacoreClientApi datacoreApiClient;``` like done in https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-cxf/src/test/java/org/oasis/datacore/rest/api/client/DatacoreApiCXFClientTest.java .
+For more samples and Model reference documentation, have a look at the [wiki](https://github.com/pole-numerique/oasis-datacore/wiki).
 
-If it doesn't suit you, **other Java service engines** (such as Jersey, RESTEasy) may be used in similar fashion, though some features (HTTP ETag-based caching, generic query request) require developing interceptors / handlers / filters. Otherwise, the **Java JAXRS web client** works well with the DatacoreApi and allows to do everything, though it is a bit more "barebone".
 
-In other languages, you can use [Swagger codegen](https://github.com/wordnik/swagger-codegen) to generate DatacoreApi clients to various languages : **php, ruby, python, Objective C, Flash...**
+Using it from a client business application
+-------------------------------------------
+
+Use the JSON/HTTP client of your own business application's platform and / or of your choice to call the DatacoreApi server using REST JSON/HTTP calls. Here are such clients that might help you :
+
+- A **Java proxy-like cached client built on the CXF service engine** is provided by the oasis-datacore-rest-cxf subproject. Use it by loading its Spring (https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-cxf/src/main/resources/oasis-datacore-rest-client-context.xml) and injecting DatacoreClientApi using ```@Autowired @Qualifier("datacoreApiCachedClient") private DatacoreClientApi datacoreApiClient;``` like done in https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-cxf/src/test/java/org/oasis/datacore/rest/api/client/DatacoreApiCXFClientTest.java .
+
+- If it doesn't suit you, **other Java service engines** (such as Jersey, RESTEasy) may be used in similar fashion, though some features (HTTP ETag-based caching, generic query request) require developing interceptors / handlers / filters. Otherwise, the **Java JAXRS web client** works well with the DatacoreApi and allows to do everything, though it is a bit more "barebone".
+
+- In other languages, you can use [Swagger codegen](https://github.com/wordnik/swagger-codegen) to generate DatacoreApi clients to various languages : **php, ruby, python, Objective C, Flash...**
 
 At worst, you can talk to DatacoreApi server by writing the right JSON/HTTP requests, sending them to it and handling their responses.
 
