@@ -3,9 +3,10 @@ package org.oasis.datacore.core.meta.model;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
+import org.joda.time.DateTime;
 
 public enum DCFieldTypeEnum {
 
@@ -15,7 +16,7 @@ public enum DCFieldTypeEnum {
 	FLOAT("float", Float.class),
 	LONG("long", Long.class),
 	DOUBLE("double", Double.class),
-	DATE("date", Date.class),
+	DATE("date", DateTime.class),
 	MAP("map", Map.class),
 	LIST("list", List.class),
 	RESOURCE("resource", DCField.class),
@@ -53,33 +54,37 @@ public enum DCFieldTypeEnum {
 	}
 	
 	public static Collection<DCFieldTypeEnum> everyTypes() {
-		return Arrays.asList(values());
+		Collection<DCFieldTypeEnum> listAllTypes = new ArrayList<>();
+		for(DCFieldTypeEnum dcFieldTypeEnum : DCFieldTypeEnum.values()) {
+			listAllTypes.add(dcFieldTypeEnum);
+		}
+		return listAllTypes;
 	}
 	
 	public static Collection<DCFieldTypeEnum> onlyList() {
 		Collection<DCFieldTypeEnum> listDcFieldTypeEnums = new ArrayList<>();
-		listDcFieldTypeEnums.add(LIST);
+		listDcFieldTypeEnums.add(DCFieldTypeEnum.LIST);
 		return listDcFieldTypeEnums;
 	}
 		
 	public static Collection<DCFieldTypeEnum> onlyString() {
 		Collection<DCFieldTypeEnum> listDcFieldTypeEnums = new ArrayList<>();
-		listDcFieldTypeEnums.add(STRING);
+		listDcFieldTypeEnums.add(DCFieldTypeEnum.STRING);
 		return listDcFieldTypeEnums;
 	}
 	
 	public static Collection<DCFieldTypeEnum> everyTypesWithoutMapListAndResource() {
-		Collection<DCFieldTypeEnum> listDcFieldTypeEnums = Arrays.asList(values());
-		listDcFieldTypeEnums.remove(MAP);
-		listDcFieldTypeEnums.remove(LIST);
-		listDcFieldTypeEnums.remove(RESOURCE);
+		Collection<DCFieldTypeEnum> listDcFieldTypeEnums = everyTypes();
+		listDcFieldTypeEnums.remove(DCFieldTypeEnum.MAP);
+		listDcFieldTypeEnums.remove(DCFieldTypeEnum.LIST);
+		listDcFieldTypeEnums.remove(DCFieldTypeEnum.RESOURCE);
 		return listDcFieldTypeEnums;
 	}
 	
 	public static Collection<DCFieldTypeEnum> everyTypesWithoutMapAndList() {
-		Collection<DCFieldTypeEnum> listDcFieldTypeEnums = Arrays.asList(values());
-		listDcFieldTypeEnums.remove(MAP);
-		listDcFieldTypeEnums.remove(LIST);
+		Collection<DCFieldTypeEnum> listDcFieldTypeEnums = everyTypes();
+		listDcFieldTypeEnums.remove(DCFieldTypeEnum.MAP);
+		listDcFieldTypeEnums.remove(DCFieldTypeEnum.LIST);
 		return listDcFieldTypeEnums;
 	}
 	

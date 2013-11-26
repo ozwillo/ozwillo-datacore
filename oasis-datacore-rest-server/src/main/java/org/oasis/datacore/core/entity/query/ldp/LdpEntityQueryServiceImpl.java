@@ -1,6 +1,5 @@
 package org.oasis.datacore.core.entity.query.ldp;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -13,10 +12,9 @@ import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCModel;
-import org.oasis.datacore.rest.server.DatacoreApiImpl;
-import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
 import org.oasis.datacore.rest.server.parsing.model.DCQueryParsingContext;
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
+import org.oasis.datacore.rest.server.parsing.service.QueryParsingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -43,13 +41,11 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       findConfParams.add("limit");
    }
 
-   //@Autowired
-   //private DCDataEntityRepository dataRepo; // NO rather for (meta)model, for data can't be used because can't specify collection
    @Autowired
    private MongoOperations mgo; // TODO remove it by hiding it in services
    
    @Autowired
-   private DatacoreApiImpl datacoreApiImpl; // temporary, to call stuff to be moved elesewhere
+   private QueryParsingService queryParsingService;
 
    @Override
    public List<DCEntity> findDataInType(DCModel dcModel, Map<String, List<String>> params,
@@ -84,14 +80,14 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          
          // finding the leaf field
          
-         // finding the latest higher list field :
-         DCListField dcListField = null;
-         if ("list".equals(dcField.getType())) {
-            dcListField = (DCListField) dcField;
-            do {
-               dcField = ((DCListField) dcField).getListElementField();
-            } while ("list".equals(dcField.getType()));
-         }
+//         // finding the latest higher list field :
+//         DCListField dcListField = null;
+//         if ("list".equals(dcField.getType())) {
+//            dcListField = (DCListField) dcField;
+//            do {
+////               dcField = ((DCListField) dcField).getListElementField();
+//            } while ("list".equals(dcField.getType()));
+//         }
          
          // loop on path elements for finding the leaf field :
          for (int i = 1; i < fieldPathElements.length; i++) {
@@ -116,16 +112,16 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
                continue parameterLoop; // TODO boum
             }
 
-            if ("list".equals(dcField.getType())) {
-               // finding the latest higher list field :
-               dcListField = (DCListField) dcField;
-               do {
-                  dcField = ((DCListField) dcField).getListElementField();
-                  // TODO TODO check that indexed (or set low limit) ??
-               } while ("list".equals(dcField.getType()));
-            } else {
-               dcListField = null;
-            }
+//            if ("list".equals(dcField.getType())) {
+//               // finding the latest higher list field :
+//               dcListField = (DCListField) dcField;
+//               do {
+////                  dcField = ((DCListField) dcField).getListElementField();
+//                  // TODO TODO check that indexed (or set low limit) ??
+//               } while ("list".equals(dcField.getType()));
+//            } else {
+//               dcListField = null;
+//            }
          }
          
          List<String> values = params.get(fieldPath);
@@ -145,8 +141,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          // and fills Spring Criteria with them
          
          try {
-            parseCriteriaFromQueryParameter(fieldPath, operatorAndValue,
-                  dcField, dcListField, queryParsingContext);
+        	 queryParsingService.parseCriteriaFromQueryParameter(fieldPath, operatorAndValue, dcField, queryParsingContext);
          } catch (Exception ex) {
             queryParsingContext.addError("Error while parsing query criteria " + fieldPath
                   + operatorAndValue, ex);

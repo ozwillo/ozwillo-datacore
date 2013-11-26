@@ -1,6 +1,5 @@
 package org.oasis.datacore.rest.server;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -32,6 +31,7 @@ import org.oasis.datacore.core.entity.model.DCURI;
 import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
 import org.oasis.datacore.core.meta.model.DCField;
+import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCModel;
@@ -41,6 +41,7 @@ import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
+import org.oasis.datacore.rest.server.parsing.service.QueryParsingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,8 +49,6 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 /**
@@ -91,6 +90,9 @@ public class DatacoreApiImpl implements DatacoreApi {
    private MongoOperations mgo; // TODO remove it by hiding it in services
    @Autowired
    private DCModelService modelService;
+   
+   @Autowired
+   private QueryParsingService queryParsingService;
 
    private static int typeIndexInType = UriHelper.DC_TYPE_PREFIX.length(); // TODO use Pattern & DC_TYPE_PATH
 
@@ -326,15 +328,7 @@ public class DatacoreApiImpl implements DatacoreApi {
          if (!(resourceValue instanceof String)) {
             throw new ResourceParsingException("long Field value is not a string : " + resourceValue);
          }
-         try {
-            entityValue = mapper.readValue((String) resourceValue, Long.class);
-         } catch (IOException ioex) {
-            throw new ResourceParsingException("IO error while reading long-formatted string : "
-                  + resourceValue, ioex);
-         } catch (Exception ex) {
-            throw new ResourceParsingException("long Field value is not a long-formatted string : "
-                  + resourceValue, ex);
-         }
+         entityValue = queryParsingService.parseValue(DCFieldTypeEnum.LONG, (String)resourceValue);
          
       } else if ("double".equals(dcField.getType())) {
          if (!(resourceValue instanceof Double)) {
@@ -872,10 +866,7 @@ public class DatacoreApiImpl implements DatacoreApi {
    // TODO move to Resource(Primitive)ParsingService
    public DateTime parseDate(String stringValue) throws ResourceParsingException {
       try {
-         return mapper.readValue(stringValue, DateTime.class);
-      } catch (IOException ioex) {
-         throw new ResourceParsingException("IO error while reading ISO 8601 Date-formatted string : "
-               + stringValue, ioex);
+         return (DateTime)queryParsingService.parseValue(DCFieldTypeEnum.DATE, stringValue);
       } catch (Exception e) {
          throw new ResourceParsingException("date Field value is not "
                + "an ISO 8601 Date-formatted string : " + stringValue, e);
@@ -885,10 +876,7 @@ public class DatacoreApiImpl implements DatacoreApi {
    // TODO move to Resource(Primitive)(Query)ParsingService ; used only by query
    public Boolean parseBoolean(String stringBoolean) throws ResourceParsingException {
       try {
-         return mapper.readValue(stringBoolean, Boolean.class);
-      } catch (IOException e) {
-         throw new ResourceParsingException("IO error while reading boolean-formatted string : "
-               + stringBoolean, e);
+          return (Boolean)queryParsingService.parseValue(DCFieldTypeEnum.BOOLEAN, stringBoolean);
       } catch (Exception e) {
          throw new ResourceParsingException("Not a boolean-formatted string : "
                + stringBoolean, e);
@@ -898,10 +886,7 @@ public class DatacoreApiImpl implements DatacoreApi {
    // TODO move to Resource(Primitive)(Query)ParsingService ; used only by query
    public Integer parseInteger(String stringInteger) throws ResourceParsingException {
       try {
-         return mapper.readValue(stringInteger, Integer.class);
-      } catch (IOException e) {
-         throw new ResourceParsingException("IO error while reading integer-formatted string : "
-               + stringInteger, e);
+          return (Integer)queryParsingService.parseValue(DCFieldTypeEnum.INTEGER, stringInteger);
       } catch (Exception e) {
          throw new ResourceParsingException("Not an integer-formatted string : "
                + stringInteger, e);

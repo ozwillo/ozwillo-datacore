@@ -9,8 +9,8 @@ import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 public enum QueryOperatorsEnum {
 
 	EQUALS(DCFieldTypeEnum.everyTypesWithoutMapAndList(),"=","=="),
-	SORT_DESC(DCFieldTypeEnum.everyTypesWithoutMapListAndResource() ,"+"),
-	SORT_ASC(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), "-"),
+	SORT_DESC(DCFieldTypeEnum.everyTypesWithoutMapListAndResource() ,"-"),
+	SORT_ASC(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), "+"),
 	GREATER_THAN(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), ">","&gt;","$gt"),
 	LOWER_THAN(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), "<","&lt;","$lt"),
 	GREATER_OR_EQUAL(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), ">=","&gt;=","$gte"),

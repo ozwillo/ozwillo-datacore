@@ -101,6 +101,7 @@
    <bean id="datacoreApiImpl" class="org.oasis.datacore.rest.server.DatacoreApiImpl"/>
    <bean id="datacore.model.apiImpl" class="org.oasis.datacore.model.rest.server.DataModelApiImpl"/>
    
+   <bean id="queryParsingService" class="org.oasis.datacore.rest.server.parsing.service.impl.QueryParsingServiceImpl" />
    
    <!-- mapper taken out to configure it (allow to inject it in ArrayServerInInterceptor, register modules) -->
    <bean id="datacoreApiServer.objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper"/>
