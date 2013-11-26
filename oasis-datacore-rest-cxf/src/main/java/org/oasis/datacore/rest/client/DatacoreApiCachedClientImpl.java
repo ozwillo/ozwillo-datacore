@@ -12,6 +12,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
+
 import org.apache.cxf.interceptor.OutInterceptors;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
@@ -275,12 +276,12 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
    }
 
    @Override
-   public List<DCResource> findDataInType(String modelType, String queryParams,
+   public List<DCResource> findDataInType(String modelType, QueryParameters queryParams,
          Integer start, Integer limit) {
       return delegate.findDataInType(modelType, queryParams, start, limit);
    }
    @Override
-   public List<DCResource> findData(String queryParams, Integer start,
+   public List<DCResource> findData(QueryParameters queryParams, Integer start,
          Integer limit) {
       return delegate.findData(queryParams, start, limit);
    }

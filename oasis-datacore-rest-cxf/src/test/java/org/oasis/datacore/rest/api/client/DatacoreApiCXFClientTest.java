@@ -1,9 +1,11 @@
 package org.oasis.datacore.rest.api.client;
 
+import java.net.URLEncoder;
 import java.util.Map;
 
 import javax.ws.rs.core.Request;
 
+import org.apache.cxf.jaxrs.utils.HttpUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,6 +44,13 @@ public class DatacoreApiCXFClientTest {
    @Value("${datacoreApiClient.containerUrl}") 
    private String containerUrl;
 
+   public void testEncodingLibs() throws Exception {
+      String value = "\"Bordeaux&= +.;#~_\"";
+      String cxfEncodedValue = "name=" + HttpUtils.encodePartiallyEncoded(value, true);
+      String jdkEncodedValue = "name=" + URLEncoder.encode(value, "UTF-8");
+      Assert.assertEquals("JDK and CXF should do same URL encoding", jdkEncodedValue, cxfEncodedValue);
+   }
+   
    /**
     * Tests the CXF client with the DatacoreApi service
     * @throws Exception If a problem occurs

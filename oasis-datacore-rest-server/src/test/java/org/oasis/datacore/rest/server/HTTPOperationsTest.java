@@ -19,6 +19,7 @@ import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UnitTestHelper;
 import org.oasis.datacore.rest.client.DatacoreClientApi;
+import org.oasis.datacore.rest.client.QueryParameters;
 import org.oasis.datacore.sample.BrandCarMotorcycleData;
 import org.oasis.datacore.sample.BrandCarMotorcycleModel;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -206,7 +207,7 @@ public class HTTPOperationsTest {
 		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
 		
-		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, "", 0, 1);
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, new QueryParameters(), 0, 1);
 		Assert.assertNotNull(listCars);
 		DCResource car = listCars.get(0);
 		car.setProperty("model", "Espace");
@@ -238,7 +239,7 @@ public class HTTPOperationsTest {
 		postedData = null;
 		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
-		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, "", 0, 1);
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, new QueryParameters(), 0, 1);
 		
 		try {
 			Assert.assertNotNull(listCars);		
@@ -274,7 +275,7 @@ public class HTTPOperationsTest {
 		postedData = null;
 		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
-		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, "", 0, 1);
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, new QueryParameters(), 0, 1);
 		
 		try {
 			Assert.assertNotNull(listCars);		
@@ -311,7 +312,7 @@ public class HTTPOperationsTest {
 		postedData = null;
 		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
-		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, "", 0, 1);
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, new QueryParameters(), 0, 1);
 		
 		try {
 			Assert.assertNotNull(listCars);		
@@ -345,7 +346,7 @@ public class HTTPOperationsTest {
 		postedData = null;
 		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME), BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
-		List<DCResource> listMotorcycles = api.findDataInType(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, "", 0, 10);
+		List<DCResource> listMotorcycles = api.findDataInType(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, new QueryParameters(), 0, 10);
 		Assert.assertNotNull(listMotorcycles);
 		
 	}
@@ -369,7 +370,8 @@ public class HTTPOperationsTest {
 		Assert.assertNotNull(postedData);		
 		List<DCResource> listMotorcycles = null;
 		try {
-			listMotorcycles = api.findDataInType(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, "test=true&noquery=0", 0, 10);
+			listMotorcycles = api.findDataInType(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME,
+			      new QueryParameters().add("test", "true").add("noquery", "0"), 0, 10);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(listMotorcycles);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -392,7 +394,7 @@ public class HTTPOperationsTest {
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
 		List<DCResource> listConceptCars = null;
 		try {
-			listConceptCars = api.findDataInType("ConceptCars", "", 0, 10);
+			listConceptCars = api.findDataInType("ConceptCars", new QueryParameters(), 0, 10);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(listConceptCars);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -580,7 +582,7 @@ public class HTTPOperationsTest {
 		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME), BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
 		
-		List<DCResource> listMotorcycles = api.findDataInType(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, "", 0, 1);
+		List<DCResource> listMotorcycles = api.findDataInType(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, new QueryParameters(), 0, 1);
 		Assert.assertNotNull(listMotorcycles);
 		DCResource motorcycle = listMotorcycles.get(0);
 		motorcycle.setProperty("hp", new Integer(200));
@@ -612,7 +614,7 @@ public class HTTPOperationsTest {
 		postedData = null;
 		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME), BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
-		List<DCResource> listMotorcycles = api.findDataInType(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, "", 0, 1);
+		List<DCResource> listMotorcycles = api.findDataInType(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, new QueryParameters(), 0, 1);
 		
 		try {
 			Assert.assertNotNull(listMotorcycles);		
@@ -648,7 +650,7 @@ public class HTTPOperationsTest {
 		postedData = null;
 		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME), BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
-		List<DCResource> listMotorcycles = api.findDataInType(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, "", 0, 1);
+		List<DCResource> listMotorcycles = api.findDataInType(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, new QueryParameters(), 0, 1);
 		
 		try {
 			Assert.assertNotNull(listMotorcycles);		
@@ -685,7 +687,7 @@ public class HTTPOperationsTest {
 		postedData = null;
 		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME), BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
-		List<DCResource> listMotorcycles = api.findDataInType(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, "", 0, 1);
+		List<DCResource> listMotorcycles = api.findDataInType(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, new QueryParameters(), 0, 1);
 		
 		try {
 			Assert.assertNotNull(listMotorcycles);		
@@ -719,7 +721,7 @@ public class HTTPOperationsTest {
 		postedData = null;
 		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME), BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
-		List<DCResource> listMotorcycles = api.findData("year=2014", 0, 10);
+		List<DCResource> listMotorcycles = api.findData(new QueryParameters().add("year", "2014"), 0, 10);
 		Assert.assertNotNull(listMotorcycles);
 		
 	}
@@ -743,7 +745,7 @@ public class HTTPOperationsTest {
 		Assert.assertNotNull(postedData);		
 		List<DCResource> listMotorcycles = null;
 		try {
-			listMotorcycles = api.findData("test=true&noquery=0", 0, 10);
+			listMotorcycles = api.findData(new QueryParameters().add("test", "true").add("noquery", "0"), 0, 10);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(listMotorcycles);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -766,7 +768,7 @@ public class HTTPOperationsTest {
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
 		List<DCResource> listConceptCars = null;
 		try {
-			listConceptCars = api.findData("model=conceptcars", 0, 10);
+			listConceptCars = api.findData(new QueryParameters().add("model", "conceptcars"), 0, 10);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(listConceptCars);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -797,7 +799,7 @@ public class HTTPOperationsTest {
 		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
 		
-		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, "", 0, 1);
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, new QueryParameters(), 0, 1);
 		Assert.assertNotNull(listCars);
 		DCResource car = listCars.get(0);
 		car.setProperty("model", "Espace");
@@ -827,7 +829,7 @@ public class HTTPOperationsTest {
 		postedData = null;
 		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
-		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, "", 0, 1);
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, new QueryParameters(), 0, 1);
 		
 		try {
 			Assert.assertNotNull(listCars);		
@@ -861,7 +863,7 @@ public class HTTPOperationsTest {
 		postedData = null;
 		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
-		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, "", 0, 1);
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, new QueryParameters(), 0, 1);
 		
 		try {
 			Assert.assertNotNull(listCars);		
@@ -896,7 +898,7 @@ public class HTTPOperationsTest {
 		postedData = null;
 		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
-		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, "", 0, 1);
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, new QueryParameters(), 0, 1);
 		
 		try {
 			Assert.assertNotNull(listCars);		
@@ -1020,7 +1022,7 @@ public class HTTPOperationsTest {
 		postedData = null;
 		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		Assert.assertNotNull(postedData);
-		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, "model=Megane&year=1996", 0, 1);
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, new QueryParameters().add("model", "Megane").add("year", "1996"), 0, 1);
 		Assert.assertNotNull(listCars);
 		Assert.assertTrue(!listCars.isEmpty());
 		try {

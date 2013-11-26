@@ -69,7 +69,10 @@ public interface DatacoreClientApi extends DatacoreApi {
    /**
     * See findDataInType(UriInfo)
     * @param type
-    * @param queryParams finder criteria in the form firstname=John&lastname=Doe .
+    * @param queryParams finder criteria : field names, and for each a string containing its
+    * operator, value and optional sort criteria. Simple unquoted string value is accepted,
+    * but ideally and formally value should be JSON (i.e. int, quoted string, array, map / Object...).
+    * QueryParameters will then format them to the encoded form firstname=John&lastname=Doe.
     * NB. it is annotated as a JAXRS @HeaderParam but it is a hack to make it
     * visible from CXF interceptors.
     * @param start
@@ -80,13 +83,16 @@ public interface DatacoreClientApi extends DatacoreApi {
    @Path("/type/{type}")
    @GET
    List<DCResource> findDataInType(@PathParam("type") String type,
-         @HeaderParam(QUERY_PARAMETERS) String queryParams, // XXX HACK TODO better OrderedMap ?!
+         @HeaderParam(QUERY_PARAMETERS) QueryParameters queryParams, // XXX HACK TODO better OrderedMap ?!
          @DefaultValue("0") @QueryParam("start") Integer start,
          @DefaultValue("10") @QueryParam("limit") Integer limit);
    
    /**
     * See findData(UriInfo)
-    * @param queryParams finder criteria in the form firstname=John&lastname=Doe .
+    * @param queryParams finder criteria : field names, and for each a string containing its
+    * operator, value and optional sort criteria. Simple unquoted string value is accepted,
+    * but ideally and formally value should be JSON (i.e. int, quoted string, array, map / Object...).
+    * QueryParameters will then format them to the encoded form firstname=John&lastname=Doe.
     * NB. it is annotated as a JAXRS @HeaderParam but it is a hack to make it
     * visible from CXF interceptors.
     * @param start
@@ -97,7 +103,7 @@ public interface DatacoreClientApi extends DatacoreApi {
    @Path("/")
    @GET
    List<DCResource> findData(
-         @HeaderParam(QUERY_PARAMETERS) String queryParams, // XXX HACK TODO better OrderedMap ?! 
+         @HeaderParam(QUERY_PARAMETERS) QueryParameters queryParams, // XXX HACK TODO better OrderedMap ?! 
          @DefaultValue("0") @QueryParam("start") Integer start,
          @DefaultValue("10") @QueryParam("limit") Integer limit);
    

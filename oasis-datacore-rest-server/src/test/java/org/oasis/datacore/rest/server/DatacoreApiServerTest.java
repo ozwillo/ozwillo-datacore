@@ -1,9 +1,12 @@
 package org.oasis.datacore.rest.server;
 
+import java.net.URLEncoder;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
 
+import org.apache.cxf.jaxrs.utils.HttpUtils;
 import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -18,6 +21,7 @@ import org.oasis.datacore.core.security.OasisAuthAuditor;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.DatacoreClientApi;
+import org.oasis.datacore.rest.client.QueryParameters;
 import org.oasis.datacore.sample.CityCountrySample;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -360,39 +364,46 @@ public class DatacoreApiServerTest {
 
    @Test
    public void test3find() throws Exception {
-      List<DCResource> resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME, "", null, null);
+      List<DCResource> resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters(), null, null);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(this.containerUrl + "dc/type/" + CityCountrySample.CITY_MODEL_NAME + "/UK/London", resources.get(0).getUri()); // http://localhost:8180/
       
       DCResource bordeauxCityData = buildCityData("Bordeaux", "France", true);
       DCResource postedBordeauxCityData = datacoreApiClient.postDataInType(bordeauxCityData, CityCountrySample.CITY_MODEL_NAME);
 
-      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME, "", null, null);
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters(), null, null);
       Assert.assertEquals(2, resources.size());
       
       // unquoted regex
-      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME, "name=$regex.*Bord.*", null, 10);
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("name", "$regex.*Bord.*"), null, 10);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(postedBordeauxCityData.getUri(), resources.get(0).getUri());
       
       // unquoted equals (empty)
-      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME, "name=Bordeaux", null, 10);
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("name", "Bordeaux"), null, 10);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(postedBordeauxCityData.getUri(), resources.get(0).getUri());
 
       // unquoted equals (SQL)
-      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME, "name==Bordeaux", null, 10);
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("name", "=Bordeaux"), null, 10);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(postedBordeauxCityData.getUri(), resources.get(0).getUri());
 
       // unquoted equals (java)
-      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME, "name===Bordeaux", null, 10);
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("name", "==Bordeaux"), null, 10);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(postedBordeauxCityData.getUri(), resources.get(0).getUri());
 
       // JSON (quoted) equals (empty)
-      /*resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME, "name=\"Bordeaux\"", null, 10);
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("name", "\"Bordeaux\""), null, 10);
       Assert.assertEquals(1, resources.size());
-      Assert.assertEquals(postedBordeauxCityData.getUri(), resources.get(0).getUri());*/
+      Assert.assertEquals(postedBordeauxCityData.getUri(), resources.get(0).getUri());
    }
 }
