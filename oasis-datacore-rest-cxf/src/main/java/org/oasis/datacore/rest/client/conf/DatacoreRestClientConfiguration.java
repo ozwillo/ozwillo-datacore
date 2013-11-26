@@ -6,14 +6,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.cxf.Bus;
 import org.apache.cxf.BusFactory;
 import org.apache.cxf.bus.spring.SpringBusFactory;
 import org.apache.cxf.jaxrs.client.ClientConfiguration;
 import org.apache.cxf.jaxrs.client.JAXRSClientFactory;
 import org.apache.cxf.jaxrs.client.WebClient;
+import org.oasis.datacore.rest.api.binding.DatacoreObjectMapper;
 import org.oasis.datacore.rest.client.DatacoreClientApi;
 import org.oasis.datacore.rest.client.cxf.ETagClientOutInterceptor;
 import org.oasis.datacore.rest.client.cxf.QueryParametersClientOutInterceptor;
@@ -97,10 +100,7 @@ public class DatacoreRestClientConfiguration {
 
     @Bean(name="datacoreApiClient.objectMapper")
     public static ObjectMapper datacoreApiClientObjectMapper(){
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JodaModule());
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        mapper.configure(JsonParser.Feature.ALLOW_NUMERIC_LEADING_ZEROS, true);
+        ObjectMapper mapper = new DatacoreObjectMapper();
         return mapper;
     }
 

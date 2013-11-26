@@ -45,7 +45,7 @@ There will be soon a Model REST API allowing to do it in JSON / HTTP.
 
 For now this can only be done in Java. Do it in a new class on the model of [MarkaInvestModel](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-core/src/main/java/org/oasis/datacore/core/sample/MarkaInvestModel.java) or [CityCountrySample](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-core/src/main/java/org/oasis/datacore/core/sample/CityCountrySample.java) (meaning a server-side class, auto initialized by annotating it by @Component, using Spring-injected DataModelServiceImpl and DatacoreApi or DCEntityService, or if they are not enough yet MongoOperations).
 
-Sample data for these models can be added using the Datacore REST API obviously, or again using Java n a new class on the model of [MarkaInvestData](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-core/src/main/java/org/oasis/datacore/core/sample/MarkaInvestData.java).
+Sample data for these models can be added using the Datacore REST API obviously, or again using Java in a new class on the model of [MarkaInvestData](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-core/src/main/java/org/oasis/datacore/core/sample/MarkaInvestData.java).
 
 For more samples and Model reference documentation, have a look at the [wiki](https://github.com/pole-numerique/oasis-datacore/wiki).
 

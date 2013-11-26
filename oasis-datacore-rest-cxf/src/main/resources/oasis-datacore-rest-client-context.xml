@@ -54,24 +54,6 @@
    </http-conf:conduit -->
 
    
-   <!-- mapper taken out to configure it (register modules) -->
-   <bean id="datacoreApiClient.objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper"/>
-   <!-- mapper configuration for date using Joda's DateTime,
-   else com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException: Unrecognized field "weekOfWeekyear" (class org.joda.time.DateTime)
-   see http://stackoverflow.com/questions/13700853/jackson2-json-iso-8601-date-from-jodatime-in-spring-3-2rc1 -->
-   <bean factory-bean="datacoreApiClient.objectMapper" factory-method="registerModule">
-      <constructor-arg><bean class="com.fasterxml.jackson.datatype.joda.JodaModule"/></constructor-arg>
-   </bean>
-   <bean factory-bean="datacoreApiClient.objectMapper" factory-method="disable">
-      <constructor-arg value="WRITE_DATES_AS_TIMESTAMPS"/><!-- and not WRITE_DATE_KEYS_AS_TIMESTAMPS
-      see http://www.lorrin.org/blog/2013/06/28/custom-joda-time-dateformatter-in-jackson/ -->
-   </bean>
-   <bean factory-bean="datacoreApiClient.objectMapper" factory-method="configure">
-      <constructor-arg value="ALLOW_NUMERIC_LEADING_ZEROS"/><!-- else fails on date with years serialized with wrong leading zeroes ex. 0300 :
-      JsonParseException: Invalid numeric value: Leading zeroes not allowed, in ReaderBasedJsonParser._verifyNoLeadingZeroes() -->
-      <constructor-arg value="true"/><!-- NOT USED -->
-   </bean>
-   
    <!-- Spring configuration for Datacore API CXF client -->
    <!-- Change the port to 8080 to use this test with real server-->
    <!-- serviceClass="org.oasis.datacore.rest.api.DatacoreApi" -->
@@ -81,7 +63,7 @@
       <jaxrs:providers>
          <!-- JSON provider (Jackson's) : -->
          <bean class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider">
-            <constructor-arg><ref bean="datacoreApiClient.objectMapper"/></constructor-arg>
+            <constructor-arg><bean class="org.oasis.datacore.rest.api.binding.DatacoreObjectMapper"/></constructor-arg>
          </bean>
          <!-- alt JSON provider, wrapping Jackson's by caching logic ON RESPONSE WITH BODY TO ACCESS UNMARSHALLED -->
          <!-- bean class="org.oasis.datacore.rest.client.CachedClientProviderImpl">
