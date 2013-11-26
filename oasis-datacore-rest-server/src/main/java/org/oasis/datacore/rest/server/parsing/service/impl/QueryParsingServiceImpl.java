@@ -35,9 +35,6 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 		// QueryOperatorEnum = operator name
 		// Integer = operator size
 		SimpleEntry<QueryOperatorsEnum, Integer> operatorEntry = QueryOperatorsEnum.getEnumFromOperator(operatorAndValue);
-		if(QueryOperatorsEnum.NOT_FOUND.name().equals(operatorEntry.getKey().name())) {
-			throw new ResourceParsingException("Query operator extracted from '" + operatorAndValue + "' is not recognisable");
-		}
 		QueryOperatorsEnum operatorEnum = operatorEntry.getKey();
 		int operatorSize = operatorEntry.getValue();
 		// We check if the selected operator is suitable for the type of DCField
@@ -52,7 +49,7 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 		// Then we parse the data
 		Object parsedData = parseValue(dcFieldTypeEnum, queryValue);
 		if(parsedData == null) {
-			throw new ResourceParsingException("Field " + dcField.getName() + " cannot be parse in " + dcFieldTypeEnum.getType() + " format");
+			throw new ResourceParsingException("Field " + dcField.getName() + " cannot be parsed in " + dcFieldTypeEnum.getType() + " format");
 		}
 		switch(operatorEnum) {
 		
@@ -139,9 +136,6 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 				queryParsingContext.getCriteria().and(entityFieldPath).ne(parsedData);
 				break;
 				
-			case NOT_FOUND:
-				break;
-				
 			case NOT_IN:
 				// TODO check that not date ???
 			    // TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
@@ -225,7 +219,6 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 		
 	}
 	
-	@SuppressWarnings("unchecked")
 	public Object parseValue(DCFieldTypeEnum dcFieldTypeEnum, String queryValue) throws ResourceParsingException {
 		
 		if(queryValue != null && !"".equals(queryValue)) {
@@ -236,7 +229,7 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 					
 				} catch (IOException ioex) {
 				   // not JSON !
-				   // so first attempt to still make something of the value :
+				   // so first attempt to still make something of the value as a string :
 				   switch (dcFieldTypeEnum) {
    				   case STRING :
                   case RESOURCE : // TODO different if embedded ??

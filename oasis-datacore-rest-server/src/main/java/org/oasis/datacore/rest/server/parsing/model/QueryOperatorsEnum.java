@@ -8,7 +8,7 @@ import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 
 public enum QueryOperatorsEnum {
 
-	EQUALS(DCFieldTypeEnum.everyTypesWithoutMapAndList(),"=","=="),
+	EQUALS(DCFieldTypeEnum.everyTypesWithoutMapAndList(),"=","==", ""),
 	SORT_DESC(DCFieldTypeEnum.everyTypesWithoutMapListAndResource() ,"-"),
 	SORT_ASC(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), "+"),
 	GREATER_THAN(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), ">","&gt;","$gt"),
@@ -22,9 +22,7 @@ public enum QueryOperatorsEnum {
 	EXISTS(DCFieldTypeEnum.everyTypes(), "$exists"),
 	ALL(DCFieldTypeEnum.onlyList(), "$all"),
 	ELEM_MATCH(DCFieldTypeEnum.onlyList(), "$elemMatch"),
-	SIZE(DCFieldTypeEnum.onlyList(), "$size"),
-	NOT_FOUND(new ArrayList<DCFieldTypeEnum>());
-	;
+	SIZE(DCFieldTypeEnum.onlyList(), "$size");
 		
 	private Collection<String> listOperators;
 	private Collection<DCFieldTypeEnum> listCompatibleTypes;
@@ -65,7 +63,7 @@ public enum QueryOperatorsEnum {
 			}
 		}
 		
-		return new SimpleEntry<>(QueryOperatorsEnum.NOT_FOUND, 0);
+		return new SimpleEntry<>(QueryOperatorsEnum.EQUALS, 0);
 		
 	}
 	
