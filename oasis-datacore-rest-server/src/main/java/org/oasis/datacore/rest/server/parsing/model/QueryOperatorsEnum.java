@@ -53,8 +53,12 @@ public enum QueryOperatorsEnum {
 			for (QueryOperatorsEnum queryOperatorsEnum : QueryOperatorsEnum.values()) {
 				if (queryOperatorsEnum != null && queryOperatorsEnum.getListOperators() != null) {
 					for (String tmpOperator : queryOperatorsEnum.getListOperators()) {
-						if (tmpOperator != null && !"".equals(tmpOperator) && operator.startsWith(tmpOperator)) {
-							return new SimpleEntry<>(queryOperatorsEnum, tmpOperator.length());
+						if (tmpOperator != null && !"".equals(tmpOperator)) {
+							if(tmpOperator.length() <= operator.length()) {
+								if(tmpOperator.equals(operator.substring(0, tmpOperator.length())) && Character.isLetterOrDigit(operator.replace("\"", "").charAt(tmpOperator.length()))) {
+									return new SimpleEntry<>(queryOperatorsEnum, tmpOperator.length());
+								}
+							}
 						}
 					}
 				}

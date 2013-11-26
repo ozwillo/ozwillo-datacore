@@ -17,6 +17,7 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
 
 @Service
 public class QueryParsingServiceImpl implements QueryParsingService {
@@ -30,11 +31,13 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 												throws ResourceParsingException {
 		// TODO (mongo)operator for error & in parse ?
 		String entityFieldPath = "_p." + fieldPath;
-				
-		QueryOperatorsEnum q = QueryOperatorsEnum.LOWER_OR_EQUAL;
+		
 		// QueryOperatorEnum = operator name
 		// Integer = operator size
 		SimpleEntry<QueryOperatorsEnum, Integer> operatorEntry = QueryOperatorsEnum.getEnumFromOperator(operatorAndValue);
+		if(QueryOperatorsEnum.NOT_FOUND.name().equals(operatorEntry.getKey().name())) {
+			throw new ResourceParsingException("Query operator extracted from '" + operatorAndValue + "' is not recognisable");
+		}
 		QueryOperatorsEnum operatorEnum = operatorEntry.getKey();
 		int operatorSize = operatorEntry.getValue();
 		// We check if the selected operator is suitable for the type of DCField
@@ -228,7 +231,8 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 		if(queryValue != null && !"".equals(queryValue)) {
 			if(dcFieldTypeEnum != null) {
 				try {
-					return mapper.readValue(queryValue, dcFieldTypeEnum.getToClass());
+					ObjectReader reader = mapper.reader(dcFieldTypeEnum.getToClass());
+					return reader.readValue(queryValue);
 				} catch (IOException ioex) {
 					throw new ResourceParsingException("IO error while reading " + dcFieldTypeEnum.getType() + "-formatted string : " + queryValue, ioex);
 				} catch (Exception ex) {
