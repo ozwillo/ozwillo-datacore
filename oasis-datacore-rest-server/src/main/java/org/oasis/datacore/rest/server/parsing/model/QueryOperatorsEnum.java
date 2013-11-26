@@ -6,15 +6,27 @@ import java.util.Collection;
 
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 
+
+/**
+ * Operator enums and their sub operators must be declared in the order
+ * in which they will be attempted to be parsed (save for empty "" equals),
+ * ex. "==" before "=" and ">=" before "=" otherwise they will never be recognized.
+ * 
+ * NB. to specify an equality on a string value starting with =, use the == operator
+ * or provide the value as JSON (i.e. quote the string).
+ * 
+ * @author agiraudon
+ *
+ */
 public enum QueryOperatorsEnum {
 
-	EQUALS(DCFieldTypeEnum.everyTypesWithoutMapAndList(),"=","==", ""),
-	SORT_DESC(DCFieldTypeEnum.everyTypesWithoutMapListAndResource() ,"-"),
+	EQUALS(DCFieldTypeEnum.everyTypesWithoutMapAndList(), "==", "=", ""),
+	SORT_DESC(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(),"-"),
 	SORT_ASC(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), "+"),
+   GREATER_OR_EQUAL(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), ">=","&gt;=","$gte"),
+   LOWER_OR_EQUAL(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), "<=","&lt;=","$lte"),
 	GREATER_THAN(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), ">","&gt;","$gt"),
 	LOWER_THAN(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), "<","&lt;","$lt"),
-	GREATER_OR_EQUAL(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), ">=","&gt;=","$gte"),
-	LOWER_OR_EQUAL(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), "<=","&lt;=","$lte"),
 	NOT_EQUALS(DCFieldTypeEnum.everyTypesWithoutMapAndList(), "<>","&lt;&gt;","$ne","!="),
 	IN(DCFieldTypeEnum.everyTypesWithoutMapAndList(), "$in"),
 	NOT_IN(DCFieldTypeEnum.everyTypesWithoutMapAndList(), "$nin"),
@@ -53,7 +65,7 @@ public enum QueryOperatorsEnum {
 					for (String tmpOperator : queryOperatorsEnum.getListOperators()) {
 						if (tmpOperator != null && !"".equals(tmpOperator)) {
 							if(tmpOperator.length() <= operator.length()) {
-								if(tmpOperator.equals(operator.substring(0, tmpOperator.length())) && Character.isLetterOrDigit(operator.replace("\"", "").charAt(tmpOperator.length()))) {
+								if(tmpOperator.equals(operator.substring(0, tmpOperator.length()))) {
 									return new SimpleEntry<>(queryOperatorsEnum, tmpOperator.length());
 								}
 							}

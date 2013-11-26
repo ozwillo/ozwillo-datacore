@@ -370,20 +370,29 @@ public class DatacoreApiServerTest {
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME, "", null, null);
       Assert.assertEquals(2, resources.size());
       
-      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME, "name=$regexBord.*", null, 10);
+      // unquoted regex
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME, "name=$regex.*Bord.*", null, 10);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(postedBordeauxCityData.getUri(), resources.get(0).getUri());
       
+      // unquoted equals (empty)
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME, "name=Bordeaux", null, 10);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(postedBordeauxCityData.getUri(), resources.get(0).getUri());
-      
+
+      // unquoted equals (SQL)
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME, "name==Bordeaux", null, 10);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(postedBordeauxCityData.getUri(), resources.get(0).getUri());
-      
+
+      // unquoted equals (java)
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME, "name===Bordeaux", null, 10);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(postedBordeauxCityData.getUri(), resources.get(0).getUri());
+
+      // JSON (quoted) equals (empty)
+      /*resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME, "name=\"Bordeaux\"", null, 10);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(postedBordeauxCityData.getUri(), resources.get(0).getUri());*/
    }
 }
