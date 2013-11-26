@@ -233,8 +233,19 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 				try {
 					ObjectReader reader = mapper.reader(dcFieldTypeEnum.getToClass());
 					return reader.readValue(queryValue);
+					
 				} catch (IOException ioex) {
+				   // not JSON !
+				   // so first attempt to still make something of the value :
+				   switch (dcFieldTypeEnum) {
+   				   case STRING :
+                  case RESOURCE : // TODO different if embedded ??
+   				      return queryValue;
+				      default :
+				   }
+				   // else error
 					throw new ResourceParsingException("IO error while reading " + dcFieldTypeEnum.getType() + "-formatted string : " + queryValue, ioex);
+					
 				} catch (Exception ex) {
 					throw new ResourceParsingException("Field value is not a " + dcFieldTypeEnum.getType() + "-formatted string : " + queryValue, ex);
 				}
