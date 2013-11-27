@@ -24,16 +24,20 @@
         <groupId>org.oasis.datacore</groupId>
         <artifactId>oasis-datacore-rest-api</artifactId><!-- brings JacksonJsonProvider, to configure in clients -->
       </dependency>
-
-      <!-- Jackson annotations -->
+      <!-- Stuff ALREADY IN API : -->
+      <!-- Jackson annotations
+      brings JacksonJsonProvider, to configure in clients -->
       <!-- dependency>
         <groupId>com.fasterxml.jackson.jaxrs</groupId>
         <artifactId>jackson-jaxrs-json-provider</artifactId>
-      </dependency --><!-- TODO already in API --><!-- brings JacksonJsonProvider, to configure in clients -->
-      <dependency>
+      </dependency -->
+      <!-- dates in jackson REST using Joda's DateTime :
+      (WARNING requires also module conf) -->
+      <!-- dependency>
         <groupId>com.fasterxml.jackson.datatype</groupId>
         <artifactId>jackson-datatype-joda</artifactId>
-      </dependency>
+      </dependency -->
+      <!-- and JAXRS, Servlet 3, Swagger -->
 
       <!-- Spring framework -->
       <dependency>
