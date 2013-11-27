@@ -90,6 +90,7 @@ public class MarkaInvestData {
 	
 	public void createDataSample() {
 		
+		listField.clear();		
 		DCResource field1 = buildResource(MarkaInvestModel.FIELD_MODEL_NAME, new SimpleEntry<>("id", 1),new SimpleEntry<>("name", "IT Services"));	
 		DCResource field2 = buildResource(MarkaInvestModel.FIELD_MODEL_NAME, new SimpleEntry<>("id", 2),new SimpleEntry<>("name", "Accounting"));	
 		DCResource field3 = buildResource(MarkaInvestModel.FIELD_MODEL_NAME, new SimpleEntry<>("id", 3),new SimpleEntry<>("name", "Banking"));	
@@ -97,6 +98,7 @@ public class MarkaInvestData {
 		listField.add(field2);
 		listField.add(field3);
 		
+		listCountry.clear();
 		DCResource country1 = buildResource(MarkaInvestModel.COUNTRY_MODEL_NAME,
 				new SimpleEntry<>("id", 1),new SimpleEntry<>("name", "France"),
 				new SimpleEntry<>("lat", 46f), new SimpleEntry<>("long", 2f),
@@ -109,6 +111,7 @@ public class MarkaInvestData {
 		listCountry.add(country1);
 		listCountry.add(country2);
 		
+		listCity.clear();
 		List<String> listPostalCodeCity1 = new ArrayList<>();
 		listPostalCodeCity1.add("69001");
 		listPostalCodeCity1.add("69002");
@@ -129,6 +132,7 @@ public class MarkaInvestData {
 		listCity.add(city1);
 		listCity.add(city2);
 		
+		listCompany.clear();
 		DCResource company1 = buildResource(MarkaInvestModel.COMPANY_MODEL_NAME,
 				new SimpleEntry<>("id", 1), new SimpleEntry<>("name", "Societe Generale"),
 				new SimpleEntry<>("field", field3.getUri()), new SimpleEntry<>("lastAnnualRevenue", 956210000f),
@@ -145,6 +149,7 @@ public class MarkaInvestData {
 		listCompany.add(company1);
 		listCompany.add(company2);
 		
+		listSector.clear();
 		DCResource sector1 = buildResource(MarkaInvestModel.SECTOR_MODEL_NAME,
 				new SimpleEntry<>("id", 1),new SimpleEntry<>("name", "Financial"));
 		DCResource sector2 = buildResource(MarkaInvestModel.SECTOR_MODEL_NAME,
@@ -152,6 +157,7 @@ public class MarkaInvestData {
 		listSector.add(sector1);
 		listSector.add(sector2);
 		
+		listUser.clear();
 		List<String> listCompanyUser1 = new ArrayList<>();
 		listCompanyUser1.add(company1.getUri());
 		DCResource user1 = buildResource(MarkaInvestModel.USER_MODEL_NAME,
@@ -170,10 +176,12 @@ public class MarkaInvestData {
 		listUser.add(user1);
 		listUser.add(user2);
 		
+		listInvestorType.clear();
 		DCResource investorType1 = buildResource(MarkaInvestModel.INVESTOR_TYPE_MODEL_NAME,
 				new SimpleEntry<>("id", 1), new SimpleEntry<>("code", "BA"), new SimpleEntry<>("description", "Business Angel"));
 		listInvestorType.add(investorType1);
 		
+		listInvestor.clear();
 		List<String> listSectorsUser1 = new ArrayList<>();
 		listSectorsUser1.add(sector1.getUri());
 		listSectorsUser1.add(sector2.getUri());
@@ -185,6 +193,7 @@ public class MarkaInvestData {
 				new SimpleEntry<>("sectors", listSectorsUser1));
 		listInvestor.add(investor1);
 		
+		listCost.clear();
 		DCResource cost1 = buildResource(MarkaInvestModel.COST_TYPE_MODEL_NAME,
 				new SimpleEntry<>("id", 1), new SimpleEntry<>("name", "money"));
 		DCResource cost2 = buildResource(MarkaInvestModel.COST_TYPE_MODEL_NAME,
@@ -192,6 +201,7 @@ public class MarkaInvestData {
 		listCost.add(cost1);
 		listCost.add(cost2);
 
+		listPlannedInvestmentAssistanceRequest.clear();
 		TimeZone tz = TimeZone.getTimeZone("UTC");
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mmZ");
 		df.setTimeZone(tz);
@@ -210,6 +220,7 @@ public class MarkaInvestData {
 				new SimpleEntry<>("start", startIso), new SimpleEntry<>("end", endIso));
 		listPlannedInvestmentAssistanceRequest.add(plannedInvestmentRequest1);
 
+		mapData.clear();
 		mapData.put(MarkaInvestModel.COMPANY_MODEL_NAME, listCompany);
 		mapData.put(MarkaInvestModel.FIELD_MODEL_NAME, listField);
 		mapData.put(MarkaInvestModel.SECTOR_MODEL_NAME, listSector);

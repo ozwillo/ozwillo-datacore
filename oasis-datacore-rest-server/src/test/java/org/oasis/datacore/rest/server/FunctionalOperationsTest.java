@@ -1,11 +1,18 @@
 package org.oasis.datacore.rest.server;
 
+import java.util.List;
+import java.util.AbstractMap.SimpleEntry;
+
 import org.apache.cxf.common.util.StringUtils;
+import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.client.DatacoreClientApi;
+import org.oasis.datacore.rest.client.QueryParameters;
 import org.oasis.datacore.sample.MarkaInvestData;
 import org.oasis.datacore.sample.MarkaInvestModel;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +57,51 @@ public class FunctionalOperationsTest {
 		truncateModel(MarkaInvestModel.USER_MODEL_NAME);
 		markaInvestData.createDataSample();
 		markaInvestData.insertData();
+	}
+	
+	@Test
+	public void testEquals() {
+		
+		QueryParameters queryParameters = null;
+		List<DCResource> listResource = null;
+		
+		// Simple equals
+		queryParameters = new QueryParameters();
+		queryParameters.add("name", "=Societe Generale");
+		listResource = api.findDataInType(MarkaInvestModel.COMPANY_MODEL_NAME, queryParameters, 0, 10);
+		Assert.assertNotNull(listResource);
+		Assert.assertTrue(!listResource.isEmpty());
+		
+		queryParameters = null;
+		listResource = null;
+		Assert.assertNull(queryParameters);
+		Assert.assertNull(listResource);
+		
+		// Double equals
+		queryParameters = new QueryParameters();
+		queryParameters.add("lastAnnualRevenue", "==956210000");
+		listResource = api.findDataInType(MarkaInvestModel.COMPANY_MODEL_NAME, queryParameters, 0, 10);
+		Assert.assertNotNull(listResource);
+		Assert.assertTrue(!listResource.isEmpty());
+		
+	}
+	
+	@Test
+	public void testSortDesc() {
+//		
+//		DCResource field1 = buildResource(MarkaInvestModel.FIELD_MODEL_NAME, new SimpleEntry<>("id", 1),new SimpleEntry<>("name", "IT Services"));	
+//		DCResource field2 = buildResource(MarkaInvestModel.FIELD_MODEL_NAME, new SimpleEntry<>("id", 2),new SimpleEntry<>("name", "Accounting"));	
+//		DCResource field3 = buildResource(MarkaInvestModel.FIELD_MODEL_NAME, new SimpleEntry<>("id", 3),new SimpleEntry<>("name", "Banking"));	
+		
+		QueryParameters queryParameters = null;
+		List<DCResource> listResource = null;
+		
+		queryParameters = new QueryParameters();
+		queryParameters.add("name", "<>test-");
+		listResource = api.findDataInType(MarkaInvestModel.COMPANY_MODEL_NAME, queryParameters, 0, 10);
+		Assert.assertNotNull(listResource);
+		Assert.assertTrue(!listResource.isEmpty());
+		
 	}
 	
 	private void truncateModel(String type) {

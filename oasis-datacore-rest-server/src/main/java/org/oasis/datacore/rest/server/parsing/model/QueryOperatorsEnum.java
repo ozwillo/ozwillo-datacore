@@ -20,14 +20,14 @@ import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
  */
 public enum QueryOperatorsEnum {
 
-	EQUALS(DCFieldTypeEnum.everyTypesWithoutMapAndList(), "==", "=", ""),
-	SORT_DESC(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(),"-"),
-	SORT_ASC(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), "+"),
+	NOT_EQUALS(DCFieldTypeEnum.everyTypesWithoutMapAndList(), "<>","&lt;&gt;","$ne","!="),
 	GREATER_OR_EQUAL(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), ">=","&gt;=","$gte"),
 	LOWER_OR_EQUAL(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), "<=","&lt;=","$lte"),
+	EQUALS(DCFieldTypeEnum.everyTypesWithoutMapAndList(), "==", "=", ""),
 	GREATER_THAN(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), ">","&gt;","$gt"),
 	LOWER_THAN(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), "<","&lt;","$lt"),
-	NOT_EQUALS(DCFieldTypeEnum.everyTypesWithoutMapAndList(), "<>","&lt;&gt;","$ne","!="),
+	SORT_DESC(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(),"-"),
+	SORT_ASC(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), "+"),
 	IN(DCFieldTypeEnum.everyTypesWithoutMapAndList(), "$in"),
 	NOT_IN(DCFieldTypeEnum.everyTypesWithoutMapAndList(), "$nin"),
 	REGEX(DCFieldTypeEnum.onlyString(), "$regex"),
