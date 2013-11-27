@@ -55,8 +55,14 @@ import org.springframework.data.mongodb.core.query.Query;
  * Returned HTTP status : follows recommended standards, see
  * http://stackoverflow.com/questions/2342579/http-status-code-for-update-and-delete/18981344#18981344
  * 
+ * Specific HTTP Status (and custom response content) are returned by throwing
+ * WebApplicationException subclasses, rather than having ugly Response-typed returns in
+ * all operations. Only drawback is more logs, which is mitigated by custom CXF
+ * Datacore FaultListener. An alternative would have been to inject HttpServletResponse
+ * and set its status : response.setStatus(Response.Status.CREATED.getStatusCode()).
+ * 
  * TODOs :
- * * error messages as constants ?
+ * * error messages as constants ? or i18n'd ???
  * 
  * @author mdutoo
  *
@@ -243,7 +249,7 @@ public class DatacoreApiImpl implements DatacoreApi {
       
       if (resourceParsingContext.hasErrors()) {
          String msg = DCResourceParsingContext.formatParsingErrorsMessage(resourceParsingContext, detailedErrorsMode);
-         throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
                .entity(msg).type(MediaType.TEXT_PLAIN).build());
       } // else TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
       
@@ -667,7 +673,7 @@ public class DatacoreApiImpl implements DatacoreApi {
                   normalizeUrlMode, replaceBaseUrlMode);
          } catch (ResourceParsingException rpex) {
             // TODO LATER rather context & for multi post
-            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
                   .entity(resource.getUri() + " should be an uri but " + rpex.getMessage())
                   .type(MediaType.TEXT_PLAIN).build());
          }
@@ -795,7 +801,7 @@ public class DatacoreApiImpl implements DatacoreApi {
          // TODO impl like find
          return this.postDataInType(resource, modelType);
       } else {
-         throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
                .entity("method query parameter should be POST but is "
                      + method).type(MediaType.TEXT_PLAIN).build());
       }
@@ -812,7 +818,7 @@ public class DatacoreApiImpl implements DatacoreApi {
          this.deleteData(modelType, iri, httpHeaders);
          return null;
       } else {
-         throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
                .entity("method query parameter should be PUT, PATCH, DELETE but is "
                      + method).type(MediaType.TEXT_PLAIN).build());
       }
@@ -842,7 +848,7 @@ public class DatacoreApiImpl implements DatacoreApi {
       try {
          foundEntities = ldpEntityQueryService.findDataInType(dcModel, params, start, limit);
       } catch (QueryException qex) {
-         throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
                .entity(qex.getMessage()).type(MediaType.TEXT_PLAIN).build());
          // TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
          // TODO better support for query parsing errors / warnings / detailedMode & additional
@@ -906,7 +912,7 @@ public class DatacoreApiImpl implements DatacoreApi {
       try {
          entities = this.entityQueryService.queryInType(modelType, query, language);
       } catch (QueryException qex) {
-         throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
                .entity(qex.getMessage()).type(MediaType.TEXT_PLAIN).build());
          // TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
          // TODO better support for query parsing errors / warnings / detailedMode & additional
@@ -920,7 +926,7 @@ public class DatacoreApiImpl implements DatacoreApi {
       try {
          entities = this.entityQueryService.query(query, language);
       } catch (QueryException qex) {
-         throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
                .entity(qex.getMessage()).type(MediaType.TEXT_PLAIN).build());
          // TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
          // TODO better support for query parsing errors / warnings / detailedMode & additional

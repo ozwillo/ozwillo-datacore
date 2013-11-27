@@ -78,7 +78,7 @@ public class HTTPOperationsTest {
 	 * Expected behavior from API : HTTPStatus = 400 (bad request) and return null
 	 */
 	@Test
-	public void testPostDcTypeBadRequest() {
+	public void testPostDcTypeBadRequestBadModelType() {
 		
 		Map<String, List<DCResource>> mapData = brandCarMotorcycleData.getData();
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
@@ -98,12 +98,12 @@ public class HTTPOperationsTest {
 	/**
 	 * URL : /dc/type/${type}
 	 * HTTP Method : POST
-	 * HTTP Return status : 500
+	 * HTTP Return status : 400
 	 * Trying to insert a modified brand (with a non existing property)
-	 * Expected behavior from API : HTTPStatus = 500 (Internal Server Error) and return null
+	 * Expected behavior from API : HTTPStatus = 400 (bad request) and return null
 	 */
 	@Test
-	public void testPostDcTypeInternalServerError() {
+	public void testPostDcTypeBadRequest() {
 		
 		Map<String, List<DCResource>> mapData = brandCarMotorcycleData.getData();
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
@@ -120,7 +120,7 @@ public class HTTPOperationsTest {
 		} catch (WebApplicationException e) {
 			Assert.assertNull(postedData);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
-			Assert.assertTrue("HTTP status should be 500 but is " + httpStatus, 500 == httpStatus);
+			Assert.assertTrue("HTTP status should be 400 but is " + httpStatus, 400 == httpStatus);
 		}
 		
 	}
@@ -223,12 +223,12 @@ public class HTTPOperationsTest {
 	/**
 	 * URL : /dc/type/${type}
 	 * HTTP Method : PUT
-	 * HTTP Return status : 500
+	 * HTTP Return status : 400
 	 * Trying to update a modified car (with a non existing property)
-	 * Expected behavior from API : HTTPStatus = 500 (Internal Server Error) and return null
+	 * Expected behavior from API : HTTPStatus = 400 (bad request) and return null
 	 */
 	@Test
-	public void testPutDcTypeInternalServerError() {
+	public void testPutDcTypeBadRequest() {
 		
 		Map<String, List<DCResource>> mapData = brandCarMotorcycleData.getData();
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
@@ -251,7 +251,7 @@ public class HTTPOperationsTest {
 		} catch (WebApplicationException e) {
 			Assert.assertNull(updatedResource);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
-			Assert.assertTrue("HTTP status should be 500 but is " + httpStatus, 500 == httpStatus);
+			Assert.assertTrue("HTTP status should be 400 but is " + httpStatus, 400 == httpStatus);
 		}
 		
 	}
@@ -301,7 +301,7 @@ public class HTTPOperationsTest {
 	 * Expected behavior from API : HTTPStatus = 400 (bad request) and return null
 	 */
 	@Test
-	public void testPutDcTypeBadRequest() {
+	public void testPutDcTypeBadRequestNoVersion() {
 			
 		Map<String, List<DCResource>> mapData = brandCarMotorcycleData.getData();
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
@@ -354,12 +354,12 @@ public class HTTPOperationsTest {
 	/**
 	 * URL : /dc/type/${type}
 	 * Http method : GET
-	 * HTTP Return status : 500
+	 * HTTP Return status : 400
 	 * Trying to get a list of motorcycle with a query on fields that don't exist
-	 * Expected behavior from API : HTTPStatus = 500 (internal server error) and return null
+	 * Expected behavior from API : HTTPStatus = 400 (bad request) and return null
 	 */
 	@Test
-	public void testGetDcTypeInternalServerError() {
+	public void testGetDcTypeBadRequest() {
 		
 		Map<String, List<DCResource>> mapData = brandCarMotorcycleData.getData();
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
@@ -375,7 +375,7 @@ public class HTTPOperationsTest {
 		} catch (WebApplicationException e) {
 			Assert.assertNull(listMotorcycles);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
-			Assert.assertTrue("HTTP status should be 500 but is " + httpStatus, 500 == httpStatus);
+			Assert.assertTrue("HTTP status should be 400 but is " + httpStatus, 400 == httpStatus);
 		}
 		
 	}
@@ -434,7 +434,7 @@ public class HTTPOperationsTest {
 	 * Expected behavior from API : HTTPStatus = 400 (bad request) and return null
 	 */
 	@Test
-	public void testPostDcBadRequest() {
+	public void testPostDcBadRequestBadURI() {
 		
 		Map<String, List<DCResource>> mapData = brandCarMotorcycleData.getData();
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
@@ -460,12 +460,12 @@ public class HTTPOperationsTest {
 	/**
 	 * URL : /dc/
 	 * HTTP Method : POST
-	 * HTTP Return status : 500
+	 * HTTP Return status : 400
 	 * Trying to insert a modified resource (with a non existing property)
-	 * Expected behavior from API : HTTPStatus = 500 (Internal Server Error) and return null
+	 * Expected behavior from API : HTTPStatus = 400 (bad request) and return null
 	 */
 	@Test
-	public void testPostDcInternalServerError() {
+	public void testPostDcBadRequest() {
 		
 		Map<String, List<DCResource>> mapData = brandCarMotorcycleData.getData();
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
@@ -484,7 +484,7 @@ public class HTTPOperationsTest {
 		} catch (WebApplicationException e) {
 			Assert.assertNull(postedData);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
-			Assert.assertTrue("HTTP status should be 500 but is " + httpStatus, 500 == httpStatus);
+			Assert.assertTrue("HTTP status should be 400 but is " + httpStatus, 400 == httpStatus);
 		}
 		
 	}
@@ -598,12 +598,12 @@ public class HTTPOperationsTest {
 	/**
 	 * URL : /dc/
 	 * HTTP Method : PUT
-	 * HTTP Return status : 500
+	 * HTTP Return status : 400
 	 * Trying to update a modified motorcycle (with a non existing property)
-	 * Expected behavior from API : HTTPStatus = 500 (Internal Server Error) and return null
+	 * Expected behavior from API : HTTPStatus = 400 (Bad Request) and return null
 	 */
 	@Test
-	public void testPutDcInternalServerError() {
+	public void testPutDcBadRequest() {
 			
 		Map<String, List<DCResource>> mapData = brandCarMotorcycleData.getData();
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
@@ -626,7 +626,7 @@ public class HTTPOperationsTest {
 		} catch (WebApplicationException e) {
 			Assert.assertNull(updatedResource);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
-			Assert.assertTrue("HTTP status should be 500 but is " + httpStatus, 500 == httpStatus);
+			Assert.assertTrue("HTTP status should be 400 but is " + httpStatus, 400 == httpStatus);
 		}
 		
 	}
@@ -676,7 +676,7 @@ public class HTTPOperationsTest {
 	 * Expected behavior from API : HTTPStatus = 400 (bad request) and return null
 	 */
 	@Test
-	public void testPutDcBadRequest() {
+	public void testPutDcBadRequestNoVersion() {
 			
 		Map<String, List<DCResource>> mapData = brandCarMotorcycleData.getData();
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
@@ -729,12 +729,12 @@ public class HTTPOperationsTest {
 	/**
 	 * URL : /dc/
 	 * Http method : GET
-	 * HTTP Return status : 500
+	 * HTTP Return status : 400
 	 * Trying to get a list of motorcycle with a query on fields that don't exist
-	 * Expected behavior from API : HTTPStatus = 500 (internal server error) and return null
+	 * Expected behavior from API : HTTPStatus = 400 (bad request) and return null
 	 */
 	@Test
-	public void testGetDcInternalServerError() {
+	public void testGetDcBadRequest() {
 		
 		Map<String, List<DCResource>> mapData = brandCarMotorcycleData.getData();
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
@@ -749,7 +749,7 @@ public class HTTPOperationsTest {
 		} catch (WebApplicationException e) {
 			Assert.assertNull(listMotorcycles);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
-			Assert.assertTrue("HTTP status should be 500 but is " + httpStatus, 500 == httpStatus);
+			Assert.assertTrue("HTTP status should be 400 but is " + httpStatus, 400 == httpStatus);
 		}
 		
 	}
@@ -813,12 +813,12 @@ public class HTTPOperationsTest {
 	/**
 	 * URL : /dc/type/${type}/${iri}
 	 * HTTP Method : PUT
-	 * HTTP Return status : 500
+	 * HTTP Return status : 400
 	 * Trying to update a modified car (with a non existing property)
-	 * Expected behavior from API : HTTPStatus = 500 (Internal Server Error) and return null
+	 * Expected behavior from API : HTTPStatus = 400 (bad request) and return null
 	 */
 	@Test
-	public void testPutDcTypeIriInternalServerError() {
+	public void testPutDcTypeIriBadRequest() {
 			
 		Map<String, List<DCResource>> mapData = brandCarMotorcycleData.getData();
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
@@ -839,7 +839,7 @@ public class HTTPOperationsTest {
 		} catch (WebApplicationException e) {
 			Assert.assertNull(updatedResource);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
-			Assert.assertTrue("HTTP status should be 500 but is " + httpStatus, 500 == httpStatus);
+			Assert.assertTrue("HTTP status should be 400 but is " + httpStatus, 400 == httpStatus);
 		}
 		
 	}
@@ -887,7 +887,7 @@ public class HTTPOperationsTest {
 	 * Expected behavior from API : HTTPStatus = 400 (bad request) and return null
 	 */
 	@Test
-	public void testPutDcTypeIriBadRequest() {
+	public void testPutDcTypeIriBadRequestNoVersion() {
 			
 		Map<String, List<DCResource>> mapData = brandCarMotorcycleData.getData();
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());

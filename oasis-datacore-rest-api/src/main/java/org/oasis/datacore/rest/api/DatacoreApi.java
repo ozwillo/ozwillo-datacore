@@ -122,13 +122,14 @@ public interface DatacoreApi {
             + "(which first requires that strict POST mode is not enabled)",
             response = DCResource.class)
    @ApiResponses(value = {
-      @ApiResponse(code = 500, message = "Field parsing errors (format, consistency...)"),
+      @ApiResponse(code = 500, message = "Internal server error"),
       @ApiResponse(code = 409, message = "Conflict : while trying to update existing "
             + "resource (in non-strict POST mode only), optimistic locking error "
             + "(provided resource version is not up-to-date with the server's latest)"),
+      @ApiResponse(code = 404, message = "Type model not found"),
       @ApiResponse(code = 400, message = "Bad request : missing content, missing or invalid URI, "
-            + "(if enabled) strict POST mode not respected (version provided or resource already exists)"),
-      @ApiResponse(code = 404, message = "Type model not found") 
+            + "(if enabled) strict POST mode not respected (version provided or resource already exists), "
+            + "field parsing errors (format, consistency with Model & Mixin types...)")
    })
    DCResource postDataInType(
          @ApiParam(value = "Data Resource to create", required = true) DCResource dcData,
@@ -154,13 +155,14 @@ public interface DatacoreApi {
             + "supported.",
             response = DCResource.class, responseContainer="List", position = 0) // fix jdk7 random order in UI
    @ApiResponses(value = {
-      @ApiResponse(code = 500, message = "Field parsing errors (format, consistency...)"),
+      @ApiResponse(code = 500, message = "Internal server error"),
       @ApiResponse(code = 409, message = "Conflict : while trying to update existing "
             + "resource (in non-strict POST mode only), optimistic locking error "
             + "(provided resource version is not up-to-date with the server's latest)"),
+      @ApiResponse(code = 404, message = "Type model not found"),
       @ApiResponse(code = 400, message = "Bad request : missing content, missing or invalid URIs, "
-            + "(if enabled) strict POST mode not respected (version provided or resource already exists)"),
-      @ApiResponse(code = 404, message = "Type model not found") 
+            + "(if enabled) strict POST mode not respected (version provided or resource already exists), "
+            + "field parsing errors (format, consistency with Model & Mixin types...)")
    })
    List<DCResource> postAllDataInType(
          @ApiParam(value = "Data Resources to create", required = true) List<DCResource> dcDatas,
@@ -183,13 +185,14 @@ public interface DatacoreApi {
             + "existing resources (which first requires that strict POST mode is not enabled)",
             response = DCResource.class, responseContainer="List", position = 1)
    @ApiResponses(value = {
-      @ApiResponse(code = 500, message = "Field parsing errors (format, consistency...)"),
+      @ApiResponse(code = 500, message = "Internal server error"),
       @ApiResponse(code = 409, message = "Conflict : while trying to update existing "
             + "resource (in non-strict POST mode only), optimistic locking error "
             + "(provided resource version is not up-to-date with the server's latest)"),
+      @ApiResponse(code = 404, message = "Type model not found"),
       @ApiResponse(code = 400, message = "Bad request : missing content, missing or invalid URIs, "
-            + "(if enabled) strict POST mode not respected (version provided or resource already exists)"),
-      @ApiResponse(code = 404, message = "Type model not found") 
+            + "(if enabled) strict POST mode not respected (version provided or resource already exists), "
+            + "field parsing errors (format, consistency with Model & Mixin types...)")
    })
    List<DCResource> postAllData(
          @ApiParam(value = "Data Resources to create", required = true) List<DCResource> dcDatas
@@ -213,13 +216,14 @@ public interface DatacoreApi {
             + "TODO all fields must be provided OR PATCH behaviour differ from PUT's",
             response = DCResource.class, position = 2)
    @ApiResponses(value = {
-      @ApiResponse(code = 500, message = "Field parsing errors (format, consistency...)"),
+      @ApiResponse(code = 500, message = "Internal server error"),
       @ApiResponse(code = 409, message = "Conflict : while trying to update existing resource, "
             + "optimistic locking error "
             + "(provided resource version is not up-to-date with the server's latest)"),
+      @ApiResponse(code = 404, message = "Type model not found"),
       @ApiResponse(code = 400, message = "Bad request : missing content or version, "
-            + "missing or invalid URI, non existing resource"),
-      @ApiResponse(code = 404, message = "Type model not found") 
+            + "missing or invalid URI, non existing resource, "
+            + "field parsing errors (format, consistency with Model & Mixin types...)")
    })
    DCResource putDataInType(
          @ApiParam(value = "Data Resource to update", required = true) DCResource dcData,
@@ -244,13 +248,14 @@ public interface DatacoreApi {
             + "TODO all fields must be provided OR PATCH behaviour differ from PUT's",
             response = DCResource.class, responseContainer="List", position = 3)
    @ApiResponses(value = {
-      @ApiResponse(code = 500, message = "Field parsing errors (format, consistency...)"),
+      @ApiResponse(code = 500, message = "Internal server error"),
       @ApiResponse(code = 409, message = "Conflict : while trying to update existing resource, "
             + "optimistic locking error "
             + "(provided resource version is not up-to-date with the server's latest)"),
+      @ApiResponse(code = 404, message = "Type model not found"),
       @ApiResponse(code = 400, message = "Bad request : missing content or version, "
-            + "missing or invalid URI, non existing resource"),
-      @ApiResponse(code = 404, message = "Type model not found") 
+            + "missing or invalid URI, non existing resource, "
+            + "field parsing errors (format, consistency with Model & Mixin types...)")
    })
    List<DCResource> putAllDataInType(
          @ApiParam(value = "Data Resources to update", required = true) List<DCResource> dcDatas,
@@ -273,13 +278,14 @@ public interface DatacoreApi {
             + "TODO all fields must be provided OR PATCH behaviour differ from PUT's",
             response = DCResource.class, responseContainer="List", position = 4)
    @ApiResponses(value = {
-      @ApiResponse(code = 500, message = "Field parsing errors (format, consistency...)"),
+      @ApiResponse(code = 500, message = "Internal server error"),
       @ApiResponse(code = 409, message = "Conflict : while trying to update existing resource, "
             + "optimistic locking error "
             + "(provided resource version is not up-to-date with the server's latest)"),
+      @ApiResponse(code = 404, message = "Type model not found"),
       @ApiResponse(code = 400, message = "Bad request : missing content or version, "
-            + "missing or invalid URI, non existing resource"),
-      @ApiResponse(code = 404, message = "Type model not found") 
+            + "missing or invalid URI, non existing resource, "
+            + "field parsing errors (format, consistency with Model & Mixin types...)")
    })
    List<DCResource> putAllData(
          @ApiParam(value = "Data Resources to update", required = true) List<DCResource> dcDatas
@@ -412,13 +418,14 @@ public interface DatacoreApi {
             + "(which first requires that strict POST mode is not enabled)",
             response = DCResource.class, position = 7)
    @ApiResponses(value = {
-      @ApiResponse(code = 500, message = "Field parsing errors (format, consistency...)"),
+      @ApiResponse(code = 500, message = "Internal server error"),
       @ApiResponse(code = 409, message = "Conflict : while trying to update existing "
             + "resource (in non-strict POST mode only), optimistic locking error "
             + "(provided resource version is not up-to-date with the server's latest)"),
+      @ApiResponse(code = 404, message = "Type model not found"),
       @ApiResponse(code = 400, message = "Bad request : missing content, missing or invalid URI, "
-            + "(if enabled) strict POST mode not respected (version provided or resource already exists)"),
-      @ApiResponse(code = 404, message = "Type model not found") 
+            + "(if enabled) strict POST mode not respected (version provided or resource already exists), "
+            + "field parsing errors (format, consistency with Model & Mixin types...)")
    })
    DCResource postDataInTypeOnGet(
          @ApiParam(value = "Model type to create (or update) it in", required = true) @PathParam("type") String modelType,
@@ -451,13 +458,14 @@ public interface DatacoreApi {
                + "TODO all fields must be provided OR PATCH behaviour differ from PUT's",
                response = DCResource.class, position = 8)
       @ApiResponses(value = {
-         @ApiResponse(code = 500, message = "Field parsing errors (format, consistency...)"),
+         @ApiResponse(code = 500, message = "Internal server error"),
          @ApiResponse(code = 409, message = "Conflict : while trying to update existing "
                + "resource (in non-strict POST mode only), optimistic locking error "
                + "(provided resource version is not up-to-date with the server's latest)"),
+         @ApiResponse(code = 404, message = "Type model not found"),
          @ApiResponse(code = 400, message = "Bad request : missing content, missing or invalid URI, "
-               + "(if enabled) strict POST mode not respected (version provided or resource already exists)"),
-         @ApiResponse(code = 404, message = "Type model not found") 
+               + "(if enabled) strict POST mode not respected (version provided or resource already exists), "
+               + "field parsing errors (format, consistency with Model & Mixin types...)")
       })
    DCResource putPatchDeleteDataOnGet(
          @ApiParam(value = "Model type to update it in", required = true) @PathParam("type") String modelType,
@@ -534,8 +542,10 @@ public interface DatacoreApi {
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
-      @ApiResponse(code = 500, message = "Field parsing errors (format, consistency...)"),
-      @ApiResponse(code = 404, message = "Type model not found")
+      @ApiResponse(code = 500, message = "Internal server error"),
+      @ApiResponse(code = 404, message = "Type model not found"),
+      @ApiResponse(code = 400, message = "Bad request : field parsing errors (format, "
+            + "consistency with Model & Mixin types...)")
    })
    List<DCResource> findDataInType(@PathParam("type") String modelType, @Context UriInfo uriInfo,
          @ApiParam(value="Pagination start") @DefaultValue("0") @QueryParam("start") Integer start,
@@ -602,8 +612,10 @@ public interface DatacoreApi {
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
-      @ApiResponse(code = 500, message = "Field parsing errors (format, consistency...)"),
-      @ApiResponse(code = 404, message = "Type model not found")
+      @ApiResponse(code = 500, message = "Internal server error"),
+      @ApiResponse(code = 404, message = "Type model not found"),
+      @ApiResponse(code = 400, message = "Bad request : field parsing errors (format, "
+            + "consistency with Model & Mixin types...)")
    })
    List<DCResource> findData(@Context UriInfo uriInfo,
          @ApiParam(value="Pagination start") @DefaultValue("0") @QueryParam("start") Integer start,
@@ -673,8 +685,10 @@ public interface DatacoreApi {
             + "LIMIT, OFFSET, ORDER BY",
             response = DCResource.class, responseContainer="List", position = 10)
    @ApiResponses(value = {
-      @ApiResponse(code = 500, message = "Field parsing errors (format, consistency...)"),
-      @ApiResponse(code = 404, message = "Type model not found")
+      @ApiResponse(code = 500, message = "Internal server error"),
+      @ApiResponse(code = 404, message = "Type model not found"),
+      @ApiResponse(code = 400, message = "Bad request : field parsing errors (format, "
+            + "consistency with Model & Mixin types...)")
    })
    List<DCResource> queryDataInType(@PathParam("type") String modelType,
          @QueryParam("query") String query,
@@ -732,8 +746,10 @@ public interface DatacoreApi {
             + "LIMIT, OFFSET, ORDER BY",
             response = DCResource.class, responseContainer="List", position = 11)
    @ApiResponses(value = {
-      @ApiResponse(code = 500, message = "Field parsing errors (format, consistency...)"),
-      @ApiResponse(code = 404, message = "Type model not found")
+      @ApiResponse(code = 500, message = "Internal server error"),
+      @ApiResponse(code = 404, message = "Type model not found"),
+      @ApiResponse(code = 400, message = "Bad request : field parsing errors (format, "
+            + "consistency with Model & Mixin types...)")
    })
    List<DCResource> queryData(@QueryParam("query") String query,
          @DefaultValue("SPARQL") @QueryParam("language") String language);
