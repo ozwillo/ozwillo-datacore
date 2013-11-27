@@ -24,7 +24,7 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 
 	@Autowired
 	@Qualifier("datacoreApiServer.objectMapper")
-	public ObjectMapper mapper = new ObjectMapper();
+	public ObjectMapper mapper;
 	
 	public void parseCriteriaFromQueryParameter(String fieldPath, String operatorAndValue, 
 												DCField dcField, DCQueryParsingContext queryParsingContext) 
