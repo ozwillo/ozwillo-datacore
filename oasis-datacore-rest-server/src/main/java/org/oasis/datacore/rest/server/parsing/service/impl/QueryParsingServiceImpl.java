@@ -39,17 +39,34 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 		int operatorSize = operatorEntry.getValue();
 		// We check if the selected operator is suitable for the type of DCField
 		isQueryOperatorSuitableForField(dcField, operatorEnum);
-		// We get the value of the selected operator
-		String queryValue = operatorAndValue.substring(operatorSize);
-		// We get the DCFieldType enum according to the type of the field
-		DCFieldTypeEnum dcFieldTypeEnum = DCFieldTypeEnum.getEnumFromStringType(dcField.getType());
-		if(dcFieldTypeEnum == null) {
-			throw new ResourceParsingException("can't find the type of " + dcField.getName());
-		}
-		// Then we parse the data
-		Object parsedData = parseValue(dcFieldTypeEnum, queryValue);
-		if(parsedData == null) {
-			throw new ResourceParsingException("Field " + dcField.getName() + " cannot be parsed in " + dcFieldTypeEnum.getType() + " format");
+		// If the operator is a sort (e.g. name=-) there is no value !
+		// So we don't need to substring to remove the operator from the value as there is no value
+		String queryValue = null;
+		QueryOperatorsEnum sortEnum = null;
+		Object parsedData = null;
+		if (operatorEnum != null) {
+			if (!QueryOperatorsEnum.SORT_ASC.name().equals(operatorEnum.name()) && !QueryOperatorsEnum.SORT_DESC.name().equals(operatorEnum.name())) {
+				// We get the value of the selected operator
+				queryValue = operatorAndValue.substring(operatorSize);
+				// We need to know if we need to sort the value
+				sortEnum = isSortNeeded(queryValue);
+				// If field is sorted we need to remove the last char (+ or -)
+				if(sortEnum != null) {
+					queryValue = queryValue.substring(0, queryValue.length()-1);
+				}
+				// We get the DCFieldType enum according to the type of the field
+				DCFieldTypeEnum dcFieldTypeEnum = DCFieldTypeEnum.getEnumFromStringType(dcField.getType());
+				if(dcFieldTypeEnum == null) {
+					throw new ResourceParsingException("can't find the type of " + dcField.getName());
+				}
+				// Then we parse the data
+				parsedData = parseValue(dcFieldTypeEnum, queryValue);
+				if(parsedData == null) {
+					throw new ResourceParsingException("Field " + dcField.getName() + " cannot be parsed in " + dcFieldTypeEnum.getType() + " format");
+				}
+			}
+		} else {
+			throw new ResourceParsingException("Query operator wasn't identified for query parameter " + operatorAndValue);
 		}
 		switch(operatorEnum) {
 		
@@ -93,7 +110,7 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 				// TODO LATER allow (joined) resource and order per its default order field ??
 				// TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
 				// TODO check that indexed (or set low limit) ??
-				addSort(entityFieldPath, operatorAndValue, queryParsingContext);
+				addSort(entityFieldPath, sortEnum, queryParsingContext);
 				queryParsingContext.getCriteria().and(entityFieldPath).gte(parsedData);
 				break;
 			
@@ -101,7 +118,7 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 				// TODO LATER allow (joined) resource and order per its default order field ??
 				// TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
 				// TODO check that indexed (or set low limit) ??
-				addSort(entityFieldPath, operatorAndValue, queryParsingContext);
+				addSort(entityFieldPath, sortEnum, queryParsingContext);
 				queryParsingContext.getCriteria().and(entityFieldPath).gt(parsedData); // TODO same fieldPath for mongodb ??
 				break;
 			
@@ -109,7 +126,7 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 				// TODO check that not date ???
 				// TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
 				// TODO check that indexed (or set low limit) ??
-				addSort(entityFieldPath, operatorAndValue, queryParsingContext);
+				addSort(entityFieldPath, sortEnum, queryParsingContext);
 				queryParsingContext.getCriteria().and(entityFieldPath).in(parsedData); // TODO same fieldPath for mongodb ??
 				break;
 		
@@ -117,7 +134,7 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 				// TODO LATER allow (joined) resource and order per its default order field ??
 				// TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
 				// TODO check that indexed (or set low limit) ??
-				addSort(entityFieldPath, operatorAndValue, queryParsingContext);
+				addSort(entityFieldPath, sortEnum, queryParsingContext);
 				queryParsingContext.getCriteria().and(entityFieldPath).lte(parsedData); // TODO same fieldPath for mongodb ??
 				break;
 				
@@ -125,14 +142,14 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 				// TODO LATER allow (joined) resource and order per its default order field ??
 				// TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
 				// TODO check that indexed (or set low limit) ??
-				addSort(entityFieldPath, operatorAndValue, queryParsingContext);
+				addSort(entityFieldPath, sortEnum, queryParsingContext);
 				queryParsingContext.getCriteria().and(entityFieldPath).lt(parsedData); // TODO same fieldPath for mongodb ??
 				break;
 				
 			case NOT_EQUALS:
 				// TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
 				// TODO check that indexed (or set low limit) ??
-				addSort(entityFieldPath, operatorAndValue, queryParsingContext);
+				addSort(entityFieldPath, sortEnum, queryParsingContext);
 				queryParsingContext.getCriteria().and(entityFieldPath).ne(parsedData);
 				break;
 				
@@ -140,7 +157,7 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 				// TODO check that not date ???
 			    // TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
 			    // TODO check that indexed (or set low limit) ??
-				addSort(entityFieldPath, operatorAndValue, queryParsingContext);
+				addSort(entityFieldPath, sortEnum, queryParsingContext);
 			    queryParsingContext.getCriteria().and(entityFieldPath).nin(parsedData);
 				break;
 				
@@ -179,7 +196,7 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 				// TODO LATER allow (joined) resource and order per its default order field ??
 				// TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
 				// TODO check that indexed (or set low limit) ?!??
-				queryParsingContext.addSort(new Sort(Direction.ASC, entityFieldPath));
+				queryParsingContext.addSort(new Sort(Direction.DESC, entityFieldPath));
 				break;
 				
 			default:
@@ -250,18 +267,34 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 	}
 	
 	
-	public void addSort(String fieldPath, String operatorAndValue, DCQueryParsingContext queryParsingContext) {
-
-		char lastChar = operatorAndValue.charAt(operatorAndValue.length() - 1);
-		switch (lastChar) {
-			case '+' :
+	public void addSort(String fieldPath, QueryOperatorsEnum sortEnum, DCQueryParsingContext queryParsingContext) {
+		
+		if (sortEnum != null) {
+			switch (sortEnum) {
+			case SORT_ASC:
 				queryParsingContext.addSort(new Sort(Direction.ASC, fieldPath));
 				break;
-			case '-' :
+			case SORT_DESC:
 				queryParsingContext.addSort(new Sort(Direction.DESC, fieldPath));
 				break;
+			default:
+				break;
+			}
 		}
 		
+	}
+	
+	private QueryOperatorsEnum isSortNeeded(String queryValue) {
+		
+		char lastChar = queryValue.charAt(queryValue.length() - 1);
+		switch (lastChar) {
+			case '+' :
+				return QueryOperatorsEnum.SORT_ASC;
+			case '-' :
+				return QueryOperatorsEnum.SORT_DESC;
+		}
+		
+		return null;
 	}
 
 }

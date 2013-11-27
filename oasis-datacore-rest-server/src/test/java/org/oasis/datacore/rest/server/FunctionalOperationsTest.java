@@ -1,7 +1,6 @@
 package org.oasis.datacore.rest.server;
 
 import java.util.List;
-import java.util.AbstractMap.SimpleEntry;
 
 import org.apache.cxf.common.util.StringUtils;
 import org.junit.Assert;
@@ -97,8 +96,8 @@ public class FunctionalOperationsTest {
 		List<DCResource> listResource = null;
 		
 		queryParameters = new QueryParameters();
-		queryParameters.add("name", "<>test-");
-		listResource = api.findDataInType(MarkaInvestModel.COMPANY_MODEL_NAME, queryParameters, 0, 10);
+		queryParameters.add("name", "-");
+		listResource = api.findDataInType(MarkaInvestModel.FIELD_MODEL_NAME, queryParameters, 0, 10);
 		Assert.assertNotNull(listResource);
 		Assert.assertTrue(!listResource.isEmpty());
 		
