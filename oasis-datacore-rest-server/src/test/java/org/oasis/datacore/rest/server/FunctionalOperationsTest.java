@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.cxf.common.util.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
@@ -59,6 +60,7 @@ public class FunctionalOperationsTest {
 	}
 	
 	@Test
+	@Ignore
 	public void testEquals() {
 		
 		QueryParameters queryParameters = null;
@@ -86,6 +88,7 @@ public class FunctionalOperationsTest {
 	}
 	
 	@Test
+	@Ignore
 	public void testSortDesc() {
 //		
 //		DCResource field1 = buildResource(MarkaInvestModel.FIELD_MODEL_NAME, new SimpleEntry<>("id", 1),new SimpleEntry<>("name", "IT Services"));	
@@ -96,7 +99,7 @@ public class FunctionalOperationsTest {
 		List<DCResource> listResource = null;
 		
 		queryParameters = new QueryParameters();
-		queryParameters.add("name", "-");
+		queryParameters.add("name", "%2B");
 		listResource = api.findDataInType(MarkaInvestModel.FIELD_MODEL_NAME, queryParameters, 0, 10);
 		Assert.assertNotNull(listResource);
 		Assert.assertTrue(!listResource.isEmpty());
