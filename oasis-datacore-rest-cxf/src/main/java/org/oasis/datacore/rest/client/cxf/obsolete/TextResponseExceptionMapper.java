@@ -1,4 +1,4 @@
-package org.oasis.datacore.rest.client.cxf;
+package org.oasis.datacore.rest.client.cxf.obsolete;
 
 import java.lang.reflect.Constructor;
 
@@ -13,8 +13,10 @@ import org.oasis.datacore.rest.client.TextWebApplicationException;
  * Improves exception logging output & readability :
  * if HTTP response is text, fills exception message with it.
  * 
- * TODO or only of (jaxrs 2-only) InternalServerErrorException ?
  * @author mdutoo
+ * 
+ * @obsolete doesn't bring anything, unduly (<400) HTTP error logs are rather
+ * removed on server by DatacoreFaultListener
  *
  */
 public class TextResponseExceptionMapper
@@ -22,17 +24,22 @@ public class TextResponseExceptionMapper
 
    @Override
    public WebApplicationException fromResponse(Response r) {
-      // TODO Auto-generated method stub
-      //r.getEntity() + ""
-      if (r != null && (r.getMediaType() != null && r.getMediaType().isCompatible(MediaType.TEXT_PLAIN_TYPE))) {
+      if (r.getStatus() < 400) {
+         // ex. 200, 201 Created, 304 Not Modified...
+         //return null; // no error
+      
+      } else if (r != null && (r.getMediaType() == null || r.getMediaType().isCompatible(MediaType.TEXT_PLAIN_TYPE))) {
          String message = String.valueOf(r.getEntity());
          return new TextWebApplicationException(message, r); // TODO or (jaxrs 2-only) InternalServerErrorException ?
       }
-      throw convertToWebApplicationException(r); 
+      
+      throw convertToWebApplicationException(r);
    }
 
    /**
     * inspired from CXF JAXRS AbstractClient.convertToWebApplicationException()
+    * 400 => ClientErrorException
+    * 500 => ServerErrorException
     * @param r
     * @return
     */

@@ -34,10 +34,7 @@
 
 
 
-
-
-
-
+   <!-- NB. war-less webapp deployment on Jetty could be configured here -->
    <!-- import resource="classpath:META-INF/cxf/cxf-servlet.xml" />
 
    <httpj:engine-factory id="cxf-engine" bus="cxf">
@@ -72,20 +69,20 @@
 
 
 
-
-
-
-
    <context:component-scan base-package="org.oasis.datacore.rest.api" /><!-- for caching & context -->
    <context:component-scan base-package="org.oasis.datacore.sample" />
    <context:annotation-config /><!-- actually auto enabled by previous line -->
 
+   <!-- server CXF Bus
+   All conf (features, properties, interceptors) is rather done on endpoints
+   to avoid them being overriden by another Bus imported from another project or in test. 
+   But if it is required, make sure it overrides the -client's if used together,
+   by importing it after the client's -->
    <cxf:bus>
       <cxf:features>
-         <cxf:logging/>
       </cxf:features>
-      <!-- NB. interceptors specific to a given service (server) are rather configured on it
-      using annotations -->
+      <cxf:properties>
+      </cxf:properties>
    </cxf:bus>
    
    
@@ -150,6 +147,12 @@
       <jaxrs:features>
          <cxf:logging/>
       </jaxrs:features>
+      <jaxrs:properties>
+         <!-- Prevents logging WebApplicationException not HTTP 400 or 500 -->
+         <entry key="org.apache.cxf.logging.FaultListener">
+            <bean class="org.oasis.datacore.rest.server.cxf.ClientServerErrorFaultListener"/>
+         </entry>
+      </jaxrs:properties>
    </jaxrs:server>
    
    

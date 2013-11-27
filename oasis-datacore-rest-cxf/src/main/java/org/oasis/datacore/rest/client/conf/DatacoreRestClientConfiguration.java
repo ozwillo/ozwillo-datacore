@@ -13,7 +13,6 @@ import org.oasis.datacore.rest.api.binding.DatacoreObjectMapper;
 import org.oasis.datacore.rest.client.DatacoreClientApi;
 import org.oasis.datacore.rest.client.cxf.ETagClientOutInterceptor;
 import org.oasis.datacore.rest.client.cxf.QueryParametersClientOutInterceptor;
-import org.oasis.datacore.rest.client.cxf.TextResponseExceptionMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.annotation.EnableCaching;
@@ -84,7 +83,6 @@ public class DatacoreRestClientConfiguration {
         // Set providers and dreate the client
         List<Object> providers = new ArrayList<>();
         providers.add(new JacksonJsonProvider(datacoreApiClientObjectMapper()));
-        providers.add(new TextResponseExceptionMapper());
         DatacoreClientApi proxy = JAXRSClientFactory.create(baseAddress, DatacoreClientApi.class, providers);
         // Set interceptors
         ClientConfiguration config = WebClient.getConfig(proxy);
