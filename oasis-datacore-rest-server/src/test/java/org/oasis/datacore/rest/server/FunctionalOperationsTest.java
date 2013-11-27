@@ -18,7 +18,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:oasis-datacore-rest-server-test-context.xml" })
-public class FunctionalOperations {
+public class FunctionalOperationsTest {
 	
 	@Autowired
 	@Qualifier("datacoreApiClient")
