@@ -55,9 +55,21 @@ Using it from a client business application
 
 Use the JSON/HTTP client of your own business application's platform and / or of your choice to call the DatacoreApi server using REST JSON/HTTP calls. Here are such clients that might help you :
 
-- A **Java proxy-like cached client built on the CXF service engine** is provided by the oasis-datacore-rest-cxf subproject. Use it by loading its Spring (https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-cxf/src/main/resources/oasis-datacore-rest-client-context.xml) and injecting DatacoreClientApi using ```@Autowired @Qualifier("datacoreApiCachedClient") private DatacoreClientApi datacoreApiClient;``` like done in https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-cxf/src/test/java/org/oasis/datacore/rest/api/client/DatacoreApiCXFClientTest.java .
+- A **Java proxy-like cached client built on the CXF service engine** is provided by the oasis-datacore-rest-cxf subproject. Use it by [loading its Spring](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-cxf/src/main/resources/oasis-datacore-rest-client-context.xml) and injecting DatacoreClientApi using ```@Autowired @Qualifier("datacoreApiCachedClient") private DatacoreClientApi datacoreApiClient;``` like done in [this test](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-cxf/src/test/java/org/oasis/datacore/rest/api/client/DatacoreApiCXFClientTest.java).
 
 - If it doesn't suit you, **other Java service engines** (such as Jersey, RESTEasy) may be used in similar fashion, though some features (HTTP ETag-based caching, generic query request) require developing interceptors / handlers / filters. Otherwise, the **Java JAXRS web client** works well with the DatacoreApi and allows to do everything, though it is a bit more "barebone".
+
+- in Javascript, you can use either the [swagger.js library](https://github.com/wordnik/swagger-js) (works also in node.js) :
+
+    window.datacoreSwaggerApi = new SwaggerApi({url: "http://localhost:8080/api-docs"});
+    datacoreSwaggerApi.build();
+    successCallback = function(data) { alert("received " + data.content.data); }
+    ...
+    datacoreSwaggerApi.apis.city.findDataInType({type:"sample.city.city", name:"London"},  successCallback);
+
+or jQuery [like Citizen Kin does](https://github.com/pole-numerique/oasis-gru/blob/master/oasis-gru-parent/oasis-gru-webapps/oasis-gru-webapps-back/src/main/webapp/WEB-INF/jsp/permissions.jsp) :
+
+    $.get(datacoreRestClientBaseurl + "dc/type/sample.citizenkin.user" + "?lastName=" + encodeURIComponent("Smith"), callback))
 
 - In other languages, you can use [Swagger codegen](https://github.com/wordnik/swagger-codegen) to generate DatacoreApi clients to various languages : **php, ruby, python, Objective C, Flash...**
 
