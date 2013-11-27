@@ -20,10 +20,10 @@ public class UriHelper {
 
    public static String DC_TYPE_PREFIX = DatacoreApi.DC_TYPE_PATH + "/"; // TODO better from JAXRS annotations using reflection ?
    
-   /** to detect whether relative (rather than absolute) uri */
-   ///private static Pattern absoluteUriStartProtocolPattern = Pattern.compile("^http[s]?");
-   // or absoluteUrlProtocolHostPattern ?
-   private static Pattern anyBaseUrlPattern = Pattern.compile("^http[s]?://[^/]+/"); // TODO or "^http[s]?://data\\.oasis-eu\\.org/" ?
+   /** to detect whether relative (rather than absolute) uri
+    groups are delimited by () see http://stackoverflow.com/questions/6865377/java-regex-capture-group
+    URI scheme : see http://stackoverflow.com/questions/3641722/valid-characters-for-uri-schemes */
+   private static Pattern anyBaseUrlPattern = Pattern.compile("^([a-zA-Z][a-zA-Z0-9\\.\\-\\+]*)://[^/]+/"); // TODO or "^http[s]?://data\\.oasis-eu\\.org/" ?
    private static Pattern multiSlashPattern = Pattern.compile("/+");
    
 
@@ -62,10 +62,16 @@ public class UriHelper {
    }
    
    /**
-    * @param stringUriValue
+    * If normalizeUrlMode, checks it is an URI and if absolute checks it is an URL
+    * with http or https protocol
+    * Else if matchBaseUrlMode, uses pattern matching to split and normalize and if
+    * absolute checks it has an http or https protocol
+    * @param stringUriValue ex.http://data.oasis-eu.org/dc//type/sample.marka.field//1
     * @param normalizeUrlMode
     * @param matchBaseUrlMode
-    * @return the given Datacore URI's base URL and URL Path without slash  
+    * @return the given Datacore URI's container URL (i.e. base URL, null if URI is relative)
+    * and URL Path without slash
+    * ex. [ "http://data.oasis-eu.org/", "dc/type/sample.marka.field/1" ]
     * @throws ResourceParsingException
     */
    public static String[] getUriNormalizedContainerAndPathWithoutSlash(String stringUriValue,
@@ -74,25 +80,55 @@ public class UriHelper {
       String uriBaseUrl = null;
       String urlPathWithoutSlash = null;
 
-      if (matchBaseUrlMode) {
-         Matcher replaceBaseUrlMatcher = anyBaseUrlPattern.matcher(stringUriValue);
-         urlPathWithoutSlash = replaceBaseUrlMatcher.replaceFirst("");
-         urlPathWithoutSlash = multiSlashPattern.matcher(urlPathWithoutSlash).replaceAll("/");
-         if (!replaceBaseUrlMatcher.hitEnd()) {
-            int uriBaseUrlWithSlashLength = replaceBaseUrlMatcher.end();
-            uriBaseUrl = stringUriValue.substring(0, uriBaseUrlWithSlashLength); // includes end slash
-         } // else no (null) uriBaseUrl
-         
-      } else if (normalizeUrlMode) {
+      if (normalizeUrlMode) {
          // NB. Datacore URIs should ALSO be URLs
          URI uriValue = new URI(stringUriValue).normalize(); // from ex. http://localhost:8180//dc/type//country/UK
-         urlPathWithoutSlash = uriValue.getPath().substring(1); // ex. dc/type/country/UK
+         urlPathWithoutSlash = uriValue.getPath();
+         if (urlPathWithoutSlash.length() != 0 && urlPathWithoutSlash.charAt(0) == '/') {
+            urlPathWithoutSlash = urlPathWithoutSlash.substring(1); // ex. dc/type/country/UK
+         }
          if (uriValue.isAbsolute()) {
             URL urlValue = uriValue.toURL(); // also checks protocol
+            if (!isHttpOrS(urlValue.getProtocol())) {
+               throw new MalformedURLException("Datacore URIs should be HTTP(S)");
+            }
             stringUriValue = urlValue.toString(); // ex. http://localhost:8180/dc/type/country/UK
             uriBaseUrl = stringUriValue.substring(0, stringUriValue.length()
                   - urlPathWithoutSlash.length()); // includes end slash
-         } // else no (null) uriBaseUrl
+         } // else no (null) uriBaseUrl (so possibly no leading slash)
+         
+      } else if (matchBaseUrlMode) {
+         // checking that URI is an HTTP(S) one
+         Matcher replaceBaseUrlMatcher = anyBaseUrlPattern.matcher(stringUriValue); // ex. http://data.oasis-eu.org/dc//type/sample.marka.field//1
+         if (!replaceBaseUrlMatcher.find()) {
+            // maybe a relative URI
+            /*if (normalizeUrlMode) {
+               URI uriValue = new URI(stringUriValue).normalize(); // from ex. http://localhost:8180//dc/type//country/UK
+               if (uriValue.isAbsolute()) {
+                  throw new MalformedURLException("Datacore URIs should be HTTP(S) (i.e. respect pattern "
+                        + anyBaseUrlPattern.pattern());
+               }
+            }*/
+            urlPathWithoutSlash = multiSlashPattern.matcher(stringUriValue).replaceAll("/"); // ex. dc/type/sample.marka.field/1
+            // no (null) uriBaseUrl
+            
+         } else {
+            // building uriBaseUrl & checking protocol
+            String protocol = replaceBaseUrlMatcher.group(1); // group is delimited by ()
+            if (!isHttpOrS(protocol)) {
+               throw new MalformedURLException("Datacore URIs should be HTTP(S)");
+            }
+            uriBaseUrl = replaceBaseUrlMatcher.group(0); // full match, includes end slash, ex. http://data.oasis-eu.org/
+            
+            // building urlPathWithoutSlash, see http://www.tutorialspoint.com/java/java_string_replacefirst.htm
+            StringBuffer sbuf = new StringBuffer();
+            replaceBaseUrlMatcher.appendReplacement(sbuf, "");
+            replaceBaseUrlMatcher.appendTail(sbuf);
+            urlPathWithoutSlash = sbuf.toString(); // ex. dc//type/sample.marka.field//1
+            
+            // replacing multi slash (i.e. normalizing)
+            urlPathWithoutSlash = multiSlashPattern.matcher(urlPathWithoutSlash).replaceAll("/"); // ex. dc/type/sample.marka.field/1
+         }
          
       } else {
          // default mode : fastest, assume that URI starts exactly with containerUrl
@@ -101,6 +137,12 @@ public class UriHelper {
          uriBaseUrl = containerUrl;
       }
       return new String[] {uriBaseUrl, urlPathWithoutSlash };
+   }
+   
+   private static boolean isHttpOrS(String protocol) {
+      protocol = protocol.toLowerCase();
+      return protocol != null && protocol.startsWith("http")
+            && (protocol.length() == 4 || protocol.length() == 5 && protocol.charAt(4) == 's');
    }
    
 }

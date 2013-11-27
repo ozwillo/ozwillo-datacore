@@ -3,15 +3,11 @@ package org.oasis.datacore.rest.api.client;
 import java.net.URLEncoder;
 import java.util.Map;
 
-import javax.ws.rs.core.Request;
-
 import org.apache.cxf.jaxrs.utils.HttpUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.oasis.datacore.rest.api.DCResource;
-import org.oasis.datacore.rest.api.DatacoreApi;
-import org.oasis.datacore.rest.client.DatacoreApiCachedClientImpl;
 import org.oasis.datacore.rest.client.DatacoreClientApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -44,6 +40,7 @@ public class DatacoreApiCXFClientTest {
    @Value("${datacoreApiClient.containerUrl}") 
    private String containerUrl;
 
+   @Test
    public void testEncodingLibs() throws Exception {
       String value = "\"Bordeaux&= +.;#~_\"";
       String cxfEncodedValue = "name=" + HttpUtils.encodePartiallyEncoded(value, true);
