@@ -5,6 +5,7 @@ import java.util.Map;
 import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.oasis.datacore.core.entity.DCEntityService;
@@ -29,6 +30,7 @@ public class DatacoreEntityTest {
    
 
    @Test
+   @Ignore
    public void testSampleData() {
       DCEntity sampleEntity = dcEntityService.getSampleData();
       Map<String, Object> props = sampleEntity.getProperties();
