@@ -9,16 +9,26 @@ package org.oasis.datacore.core.meta.model;
  */
 public class DCField {
 
-   private String name;
+   private String name; // TODO also longName / displayName (i18n'd ??), description (/ help), sampleValues list ?
    /** string, boolean, int, float, long, double, date, map, list, resource, i18n ? geoloc ???
     * default is string */
-   private String type = "string"; // TODO enum ?!?
+   private String type = "string"; // TODO enum ?!? "text" ?
    /** Is a non-null value required ? defaults to false */
    private boolean required = false;
    /** size of results allowed when querying on this field
     * if > 0, field will be indexed (sparse if !required)
     * defaults to 0 */
    private int queryLimit = 0;
+   
+   // TODO also :
+   // * default rights for Model ?! (or even Mixin ? Field ???)
+   // * storedName (or auto minified ?)
+   // * alias, for which use ??
+   // * defaultOrder (asc or descs)
+   // * allowedValuesModel : name of Model whose (primitive !?) values are the only allowed one for the field ESPECIALLY FOR RESOURCE
+   // * validation (restricted to allowedValuesModel, regexp or script)
+   // * on change event / action ??
+   // * backoffice / admin UI conf ???
 
    public DCField() {
       
