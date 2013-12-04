@@ -25,20 +25,20 @@ public class DatacoreApiUtilTest {
       // test normalizeUrlMode
       String[] res = UriHelper.getUriNormalizedContainerAndPathWithoutSlash(
             containerUrl + testRelativeUri , containerUrl, true, false);
-      Assert.assertEquals(res[0], containerUrl);
-      Assert.assertEquals(res[1], "dc/type/sample.marka.field/1");
+      Assert.assertEquals(containerUrl, res[0]);
+      Assert.assertEquals("dc/type/sample.marka.field/1", res[1]);
       
       // test normalizeUrlMode HTTPS
       res = UriHelper.getUriNormalizedContainerAndPathWithoutSlash(
             "https://data.oasis-eu.org/" + testRelativeUri, containerUrl, true, false);
-      Assert.assertEquals(res[0], "https://data.oasis-eu.org/");
-      Assert.assertEquals(res[1], "dc/type/sample.marka.field/1");
+      Assert.assertEquals("https://data.oasis-eu.org/", res[0]);
+      Assert.assertEquals("dc/type/sample.marka.field/1", res[1]);
 
       // test normalizeUrlMode relative URI
       res = UriHelper.getUriNormalizedContainerAndPathWithoutSlash(
             testRelativeUri, containerUrl, true, false);
-      Assert.assertEquals(res[0], null);
-      Assert.assertEquals(res[1], "dc/type/sample.marka.field/1");
+      Assert.assertEquals(containerUrl, res[0]);
+      Assert.assertEquals("dc/type/sample.marka.field/1", res[1]);
 
       // test normalizeUrlMode fails on bad URI chars
       // see URI spec & http://stackoverflow.com/questions/1547899/which-characters-make-a-url-invalid
@@ -71,14 +71,14 @@ public class DatacoreApiUtilTest {
       // test matchBaseUrlMode BEWARE DOESN'T CHECK URI OR URL CHARS
       res = UriHelper.getUriNormalizedContainerAndPathWithoutSlash(
             containerUrl + testRelativeUri, containerUrl, false, true);
-      Assert.assertEquals(res[0], containerUrl);
-      Assert.assertEquals(res[1], "dc/type/sample.marka.field/1");
+      Assert.assertEquals(containerUrl, res[0]);
+      Assert.assertEquals("dc/type/sample.marka.field/1", res[1]);
       
       // test matchBaseUrlMode HTTPS BEWARE DOESN'T CHECK URI OR URL CHARS
       res = UriHelper.getUriNormalizedContainerAndPathWithoutSlash(
             "https://data.oasis-eu.org/dc//type/sample.marka.field//1", containerUrl, false, true);
-      Assert.assertEquals(res[0], "https://data.oasis-eu.org/");
-      Assert.assertEquals(res[1], "dc/type/sample.marka.field/1");
+      Assert.assertEquals("https://data.oasis-eu.org/", res[0]);
+      Assert.assertEquals("dc/type/sample.marka.field/1", res[1]);
 
       // test matchBaseUrlMode absolute URL fails on non HTTP(S) URL BEWARE DOESN'T CHECK URI OR URL CHARS
       try {
@@ -92,7 +92,7 @@ public class DatacoreApiUtilTest {
       // test bare replace mode BEWARE NO CHECKS AND EXPECTS CONTAINER URL
       res = UriHelper.getUriNormalizedContainerAndPathWithoutSlash(
             containerUrl + testRelativeUri, containerUrl, false, false);
-      Assert.assertEquals(res[0], containerUrl);
-      Assert.assertEquals(res[1], testRelativeUri);
+      Assert.assertEquals(containerUrl, res[0]);
+      Assert.assertEquals(testRelativeUri, res[1]);
    }
 }

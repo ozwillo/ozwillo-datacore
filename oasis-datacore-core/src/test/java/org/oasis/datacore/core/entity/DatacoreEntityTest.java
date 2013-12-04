@@ -11,8 +11,11 @@ import org.junit.runner.RunWith;
 import org.oasis.datacore.core.entity.DCEntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.mongodb.WriteConcern;
 
 
 /**
@@ -27,7 +30,9 @@ public class DatacoreEntityTest {
    
    @Autowired
    private DCEntityService dcEntityService;
-   
+
+   @Autowired
+   private MongoTemplate mt; // to check mongo conf, last operation result...
 
    @Test
    @Ignore
@@ -42,4 +47,10 @@ public class DatacoreEntityTest {
       System.out.println("sample data:\n" + sampleEntity);
    }
 
+   @Test
+   public void testMongoConf() {
+      Assert.assertEquals(WriteConcern.ACKNOWLEDGED, mt.getDb().getWriteConcern());
+      // TODO LATER for prod, check & test REPLICA_ACKNOWLEDGED (and not / also FSYNCED or JOURNALED ??)
+      // TODO LATER for prod, test mongo auth
+   }
 }

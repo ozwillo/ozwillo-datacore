@@ -15,7 +15,7 @@ import org.apache.cxf.message.Message;
  * & JARSUtils.convertFaultToResponse().
  * To use it, configure it on CXF Bus with key org.apache.cxf.logging.FaultListener.
  * 
- * BEWARE returns true won't log, and false will WHICH IS THE OPPOSITE OF THE DOC
+ * WARNING returns true won't log, and false will WHICH IS THE OPPOSITE OF THE DOC
  * 
  * @author mdutoo
  *
@@ -30,10 +30,10 @@ public class ClientServerErrorFaultListener implements FaultListener {
          Response r = waex.getResponse();
          if (r != null && r.getStatus() < 400) {
             // ex. 200, 201 Created, 304 Not Modified...
-            return true; // no error, don't log
+            return true; // is a regular Fault but no error, don't log
          }
       }
-      return false; // error, log it
+      return false; // not a regular Fault but an error, log it
    }
 
 }

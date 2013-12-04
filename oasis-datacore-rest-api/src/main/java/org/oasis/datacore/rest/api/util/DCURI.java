@@ -1,35 +1,37 @@
-package org.oasis.datacore.core.entity.model;
+package org.oasis.datacore.rest.api.util;
+
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+
+import org.oasis.datacore.rest.api.DatacoreApi;
 
 
 /**
- * WARNING there's a another (copied) DCURI in -api, TODO merge them if possible ?!?
+ * Helper to build URIs (with UriHelper), but does not belong to model.
+ * NB. beware, there's another different DCURI in -core's entity package. TODO merge them ??
+ * TODO (type-relative) id or iri (but does not contain type) ? 
  * 
  * Datacore Resource URI, for now also works as Social Graph Resource URI.
- * TODO LATER refactor SCURI out of it for Social Graph.
+ * TODO LATER refactor SCURI out of it for Social Graph ?
  * 
- * TODO direct persistence in DCEntity props (using Converter) ??? as string OR { uri, type } like DBRef ???
- * 
- * TODO not thread safe (save if rendered at init)
+ * WARNING not thread safe (save if rendered at init)
  * 
  * @author mdutoo
  *
  */
 public class DCURI {
-   
-   /** NB. no front slash because in baseUrl */
-   public static final String API_ROOT_PATH = "dc/type/";
 
    /** Container base URL ex. http://data.oasis-eu.org/ . Protocol is assumed to be HTTP
     * (if HTTPS, there must be a redirection) */
    private String container;
-   /** Base type ex. city. Corresponds to a type of use and a data governance configuration.
+   /** Base Model type ex. "city.sample.city".
+    * Corresponds to a type of use and a data governance configuration.
     * For Social Graph ex. user (account), organization */
    // TODO alternate extending type SCURI with ex. "account" instead
    private String type;
-   /** IRI ex. Lyon, London, Torino. Can't change (save by data migration operations).
+   /** ID / IRI ex. Lyon, London, Torino. Can't change (save by data migration operations).
     * For Social Graph ex. email */
    private String id;
-   // TODO model & entity cache ?!?
 
    private String cachedStringUri = null;
    
@@ -43,6 +45,9 @@ public class DCURI {
       this.type = type;
       this.id = id;
    }
+   public static DCURI fromUri(String uri) throws MalformedURLException, URISyntaxException {
+      return UriHelper.parseURI(uri);
+   }
    
    /**
     * @return [container]dc/type/[type]/id
@@ -53,11 +58,12 @@ public class DCURI {
          return cachedStringUri;
       }
       StringBuilder sb = new StringBuilder(/*"http://"*/);
-      sb.append(container);
-      sb.append(API_ROOT_PATH);
-      sb.append(type);
+      sb.append(container); // ex. http://data.oasis-eu.org/
+      sb.append(DatacoreApi.DC_TYPE_PATH); // NB. no front slash because in baseUrl
       sb.append('/');
-      sb.append(id);
+      sb.append(type); // ex. "city.sample.city"
+      sb.append('/');
+      sb.append(id); // ex. "London", "Lyon"...
       cachedStringUri = sb.toString();
       return cachedStringUri;
    }

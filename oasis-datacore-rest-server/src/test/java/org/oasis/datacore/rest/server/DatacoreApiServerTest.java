@@ -1,12 +1,10 @@
 package org.oasis.datacore.rest.server;
 
-import java.net.URLEncoder;
-import java.util.HashMap;
 import java.util.List;
 
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 
-import org.apache.cxf.jaxrs.utils.HttpUtils;
 import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -94,13 +92,11 @@ public class DatacoreApiServerTest {
       }
    }
 
-   @Ignore
    @Test
    public void test1CreateFailInStrictModeWithVersion() {
-      DCResource londonCityData = null;//datacoreApiClient.getData(CityCountrySample.CITY_MODEL_NAME, "UK/London", null);
-      Assert.assertNull(londonCityData);
+      checkNoResource(CityCountrySample.CITY_MODEL_NAME, "UK/London");
 
-      londonCityData = buildCityData("London", "UK", true);
+      DCResource londonCityData = buildCityData("London", "UK", true);
       londonCityData.setVersion(0l);
       boolean oldStrictPostMode = datacoreApiImpl.isStrictPostMode();
       datacoreApiImpl.setStrictPostMode(true);
@@ -118,13 +114,11 @@ public class DatacoreApiServerTest {
    
    // TODO test uri : replaceBaseUrlMode, normalizeUrlMode
 
-   @Ignore
    @Test
    public void test1CreateFailWithoutReferencedData() {
-      DCResource londonCityData = null;//datacoreApiClient.getData(CityCountrySample.CITY_MODEL_NAME, "UK/London", null);
-      Assert.assertNull(londonCityData);
+      checkNoResource(CityCountrySample.CITY_MODEL_NAME, "UK/London");
 
-      londonCityData = buildCityData("London", "UK", false);
+      DCResource londonCityData = buildCityData("London", "UK", false);
       try {
          datacoreApiClient.postDataInType(londonCityData, CityCountrySample.CITY_MODEL_NAME);
          Assert.fail("Creation should fail when referenced data doesn't exist");
@@ -145,10 +139,9 @@ public class DatacoreApiServerTest {
    // TODO LATER
    //@Test
    public void test2CreateWithReferencedDataInGraph() {
-      DCResource londonCityData = null;//datacoreApiClient.getData(CityCountrySample.CITY_MODEL_NAME, "UK/London", null);
-      Assert.assertNull(londonCityData);
+      checkNoResource(CityCountrySample.CITY_MODEL_NAME, "UK/London");
 
-      londonCityData = buildCityData("London", "UK", false);
+      DCResource londonCityData = buildCityData("London", "UK", false);
       DCResource postedLondonCityData = datacoreApiClient.postDataInType(londonCityData, CityCountrySample.CITY_MODEL_NAME);
    }
    
@@ -159,9 +152,8 @@ public class DatacoreApiServerTest {
     * @return
     */
    public DCResource test2Create(String country, String city) {
-      DCResource ukCountryData = datacoreApiClient.getData(CityCountrySample.COUNTRY_MODEL_NAME, country, null);
-      Assert.assertNull(ukCountryData);
-      ukCountryData = buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, country);
+      checkNoResource(CityCountrySample.COUNTRY_MODEL_NAME, country);
+      DCResource ukCountryData = buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, country);
       DCResource postedUkCountryData = datacoreApiClient.postDataInType(ukCountryData, CityCountrySample.COUNTRY_MODEL_NAME);
       ///List<DCResource> countryDatas = new ArrayList<DCResource>();
       ///countryDatas.add(ukCountryData);
@@ -169,10 +161,9 @@ public class DatacoreApiServerTest {
       Assert.assertNotNull(postedUkCountryData);
       
       String iri = country + '/' + city;
-      DCResource cityData = datacoreApiClient.getData(CityCountrySample.CITY_MODEL_NAME, iri, null);
-      Assert.assertNull(cityData);
+      checkNoResource(CityCountrySample.CITY_MODEL_NAME, iri);
 
-      cityData = buildCityData(city, country, false);
+      DCResource cityData = buildCityData(city, country, false);
       DCResource postedLondonCityData = datacoreApiClient.postDataInType(cityData, CityCountrySample.CITY_MODEL_NAME);
       Assert.assertNotNull(postedLondonCityData);
       Assert.assertEquals(cityData.getProperties().get("description"),
@@ -184,12 +175,20 @@ public class DatacoreApiServerTest {
       return cityData;
    }
 
+   private void checkNoResource(String modelType, String id) {
+      try {
+         datacoreApiClient.getData(modelType, id, null);
+         Assert.fail("There shouldn't be any " + modelType + " with id " + id + " yet");
+      } catch (NotFoundException e) {
+         Assert.assertTrue(true);
+      }
+   }
+
    ///@Test
    public void test2CreateEmbedded() {
-      DCResource bordeauxCityData = datacoreApiClient.getData(CityCountrySample.CITY_MODEL_NAME, "France/Bordeaux", null);
-      Assert.assertNull(bordeauxCityData);
+      checkNoResource(CityCountrySample.CITY_MODEL_NAME, "France/Bordeaux");
 
-      bordeauxCityData = buildCityData("Bordeaux", "France", true);
+      DCResource bordeauxCityData = buildCityData("Bordeaux", "France", true);
       DCResource postedBordeauxCityData = datacoreApiClient.postDataInType(bordeauxCityData, CityCountrySample.CITY_MODEL_NAME);
       Assert.assertNotNull(postedBordeauxCityData);
    }
@@ -355,8 +354,7 @@ public class DatacoreApiServerTest {
       datacoreApiClient.deleteData(CityCountrySample.CITY_MODEL_NAME, "France/Bordeaux", null);
       Assert.assertNull(resourceCache.get(cachedBordeauxCityResource.getUri())); // check that cache has been cleaned
       
-      DCResource renewBordeauxCityResource = datacoreApiClient.getData(CityCountrySample.CITY_MODEL_NAME, "France/Bordeaux", null);
-      Assert.assertFalse("Should not be cached object anymore", expectedCachedBordeauxCityResource == renewBordeauxCityResource);
+      checkNoResource(CityCountrySample.CITY_MODEL_NAME, "France/Bordeaux");
 
       cachedBordeauxCityResource.setVersion(null); // else mongo optimistic locking exception
       return cachedBordeauxCityResource;

@@ -26,7 +26,7 @@ public class CityCountrySample {
    public static String POI_MODEL_NAME = "sample.city.pointOfInterest";
 
    /** impl, to be able to modify it
-    * TODO LATER extract interface */ 
+    * TODO LATER extract interface */
    @Autowired
    private DataModelServiceImpl modelAdminService;
    

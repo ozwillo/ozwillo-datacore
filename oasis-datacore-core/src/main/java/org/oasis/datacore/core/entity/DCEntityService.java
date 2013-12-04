@@ -31,6 +31,7 @@ public class DCEntityService {
    //private DCDataEntityRepository dataRepo; // NO rather for (meta)model, for data can't be used because can't specify collection
    @Autowired
    private MongoOperations mgo;
+   // NB. MongoTemplate would be required to check last operation result, but we rather use WriteConcerns
    @Autowired
    private DCModelService dcModelService; // ???
 

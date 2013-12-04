@@ -22,7 +22,8 @@
 
 
 
-   <!-- Default bean name is 'mongo' -->
+   <!-- Default mongo bean name is 'mongo'
+   TODO externalize conf, change it in tests & prod -->
    <mongo:mongo host="${oasis.datacore.mongodb.host}" port="${oasis.datacore.mongodb.port}">
       <!-- mongo:options
             write-number="1"
@@ -37,7 +38,7 @@
             socket-keep-alive="true"
             socket-timeout="1500"
             slave-ok="true"
-            write-fsync="true" -->
+            write-fsync="true" --><!-- FSYNCED -->
    </mongo:mongo>
    <!-- mongo:mongo id="replicaSetMongo" replica-set="127.0.0.1:27017,localhost:27018"/ -->
   
@@ -74,11 +75,17 @@
    <!-- mongo:auditing / -->
    <mongo:auditing auditor-aware-ref="auditor" />
    <bean id="auditor" class="org.oasis.datacore.core.security.OasisAuthAuditor"/>
-      <mongo:db-factory id="mongoDbFactory" dbname="datacore"/>
-      <!-- TODO write-concern="..." -->
-      <!-- TODO in prod, auth :
+   
+   <mongo:db-factory id="mongoDbFactory" dbname="datacore"
+      write-concern="#{T(com.mongodb.WriteConcern).ACKNOWLEDGED}"/><!-- which differs from string "ACKNOWEDLGED" WriteConcern
+      see http://stackoverflow.com/questions/17865270/error-handling-with-spring-data-and-mongo-java-driver -->
+      <!-- TODO in prod (& test it),
+      auth :
       username="${oasis.datacore.mongodb.username}"
-      password="${oasis.datacore.mongodb.password}" -->
+      password="${oasis.datacore.mongodb.password}"
+      write-concern :
+      REPLICA_ACKNOWLEDGED (and not FSYNCED or JOURNALED)
+      -->
 
    <!-- Mongo Template.
    Referenced components (mappingConverter...) have to be specified if they are custom

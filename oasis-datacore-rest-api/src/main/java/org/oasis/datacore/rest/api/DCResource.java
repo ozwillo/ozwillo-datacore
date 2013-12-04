@@ -1,16 +1,22 @@
 package org.oasis.datacore.rest.api;
 
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.joda.time.DateTime;
+import org.oasis.datacore.rest.api.util.DCURI;
+import org.oasis.datacore.rest.api.util.UriHelper;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wordnik.swagger.annotations.ApiModel;
@@ -64,22 +70,55 @@ public class DCResource {
    
    public DCResource() {
       this.properties = new HashMap<String,Object>();
+      this.types = new ArrayList<String>();
    }
    public DCResource(Map<String,Object> properties) {
       this.properties = properties;
+      this.types = new ArrayList<String>();
+   }
+   
+   /** helper method to build new DCResources */
+   public static DCResource create(String containerUrl, String modelType, String iri) {
+      DCResource resource = new DCResource();
+      resource.types.add(modelType);
+      resource.setUri(UriHelper.buildUri(containerUrl, modelType, iri));
+      return resource;
+   }
+   /** helper method to build new DCResources 
+    * @throws URISyntaxException 
+    * @throws MalformedURLException */
+   public static DCResource create(String uri) throws MalformedURLException, URISyntaxException {
+      DCResource resource = new DCResource();
+      DCURI dcUri = DCURI.fromUri(uri);
+      String modelType = dcUri.getType();
+      resource.getTypes().add(modelType);
+      resource.setUri(UriHelper.buildUri(dcUri.getContainer(), modelType, dcUri.getId()));
+      return resource;
+   }
+   /** helper method to build new DCResources */
+   public DCResource addType(String mixinType) {
+      this.types.add(mixinType);
+      return this;
+   }
+   /** helper method to build new DCResources */
+   public DCResource set(String fieldName, String fieldValue) {
+      this.properties.put(fieldName, fieldValue);
+      return this;
    }
 
    // TODO to unmarshall embedded resources as DC(Sub)Resource rather than HashMaps
    // (and if possible same for embedded maps ???) BUT can't know when is embedded resource or map
-   ///@JsonSubTypes({ @JsonSubTypes.Type(String.class), @JsonSubTypes.Type(Boolean.class),
-   ///   @JsonSubTypes.Type(Double.class),
+   @JsonSubTypes({ @JsonSubTypes.Type(String.class), @JsonSubTypes.Type(Boolean.class),
+      @JsonSubTypes.Type(Double.class), @JsonSubTypes.Type(DateTime.class),
+      @JsonSubTypes.Type(Map.class), @JsonSubTypes.Type(List.class) })
    ///   @JsonSubTypes.Type(DCSubResource(Map).class), @JsonSubTypes.Type(DCList.class) })
    @JsonAnyGetter
    public Map<String, Object> getProperties() {
       return this.properties;
    }
-   ///@JsonSubTypes({ @JsonSubTypes.Type(String.class), @JsonSubTypes.Type(Boolean.class),
-   ///   @JsonSubTypes.Type(Double.class),
+   @JsonSubTypes({ @JsonSubTypes.Type(String.class), @JsonSubTypes.Type(Boolean.class),
+      @JsonSubTypes.Type(Double.class), @JsonSubTypes.Type(DateTime.class),
+      @JsonSubTypes.Type(Map.class), @JsonSubTypes.Type(List.class) })
    ///   @JsonSubTypes.Type(DCSubResource(Map).class), @JsonSubTypes.Type(DCList.class) })
    @JsonAnySetter
    public void setProperty(String name, Object value) {
@@ -141,6 +180,10 @@ public class DCResource {
       this.lastModifiedBy = lastModifiedBy;
    }
 
+   /**
+    * TODO refactor to ResourceService, in order to rather
+    * use the "right" ObjectMapper instance
+    */
    public String toString() {
       try {
          return new ObjectMapper().writeValueAsString(this);
@@ -148,4 +191,5 @@ public class DCResource {
          return "DCResource[" + this.uri + " , bad json]";
       }
    }
+   
 }

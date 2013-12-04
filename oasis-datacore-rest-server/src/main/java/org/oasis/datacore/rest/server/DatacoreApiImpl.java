@@ -10,7 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -21,13 +25,13 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.DateTime;
 import org.oasis.datacore.core.entity.DCEntityService;
 import org.oasis.datacore.core.entity.EntityQueryService;
 import org.oasis.datacore.core.entity.model.DCEntity;
-import org.oasis.datacore.core.entity.model.DCURI;
 import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
 import org.oasis.datacore.core.meta.model.DCField;
@@ -38,6 +42,7 @@ import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
+import org.oasis.datacore.rest.api.util.DCURI;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
@@ -94,13 +99,12 @@ public class DatacoreApiImpl implements DatacoreApi {
    //private DCDataEntityRepository dataRepo; // NO rather for (meta)model, for data can't be used because can't specify collection
    @Autowired
    private MongoOperations mgo; // TODO remove it by hiding it in services
+   // NB. MongoTemplate would be required to check last operation result, but we rather use WriteConcerns
    @Autowired
    private DCModelService modelService;
    
    @Autowired
    private QueryParsingService queryParsingService;
-
-   private static int typeIndexInType = UriHelper.DC_TYPE_PREFIX.length(); // TODO use Pattern & DC_TYPE_PATH
 
    private static Set<String> resourceNativeJavaFields = new HashSet<String>();
    static {
@@ -120,7 +124,8 @@ public class DatacoreApiImpl implements DatacoreApi {
       //return dcData; // rather 201 Created with ETag header :
       String httpEntity = postedResource.getVersion().toString(); // no need of additional uri because only for THIS resource
       EntityTag eTag = new EntityTag(httpEntity);
-      throw new WebApplicationException(Response.status(Response.Status.CREATED)
+      Status status = (postedResource.getVersion() == 0) ? Response.Status.CREATED : Response.Status.OK;
+      throw new WebApplicationException(Response.status(status)
             .tag(eTag) // .lastModified(dataEntity.getLastModified().toDate())
             .entity(postedResource)
             .type(MediaType.APPLICATION_JSON).build());
@@ -149,28 +154,28 @@ public class DatacoreApiImpl implements DatacoreApi {
       boolean isCreation = true;
 
       if (resource == null) {
-         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
              .entity("No data").type(MediaType.TEXT_PLAIN).build());
       }
       
       Long version = resource.getVersion();
       if (version != null && version >= 0) {
          if (!canUpdate) {
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+            throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
                   .entity("Version is forbidden in POSTed data resource to create in strict POST mode")
                   .type(MediaType.TEXT_PLAIN).build());
          } else {
             isCreation = false;
          }
       } else if (!canCreate) {
-         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
                .entity("Version of data resource to update is required in PUT")
                .type(MediaType.TEXT_PLAIN).build());
       }
       
       DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
       if (dcModel == null) {
-         throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+         throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
              .entity("Unknown Model type " + modelType).type(MediaType.TEXT_PLAIN).build());
       }
       modelType = dcModel.getName(); // normalize ; TODO useful ?
@@ -182,7 +187,7 @@ public class DatacoreApiImpl implements DatacoreApi {
          stringUri = uri.toString();
       } catch (ResourceParsingException rpex) {
          // TODO LATER rather context & for multi post
-         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
                .entity("Error while parsing root URI '" + stringUri + "' : " + rpex.getMessage())
                .type(MediaType.TEXT_PLAIN).build());
       }
@@ -190,7 +195,7 @@ public class DatacoreApiImpl implements DatacoreApi {
       // TODO extract to checkContainer()
       if (!containerUrl.equals(uri.getContainer())) {
          if (!brokerMode) {
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+            throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
                   .entity("In non-broker mode, can only serve data from own container "
                         + containerUrl + " but URI container is " + uri.getContainer())
                   .type(MediaType.TEXT_PLAIN).build());
@@ -204,7 +209,7 @@ public class DatacoreApiImpl implements DatacoreApi {
          if (dataEntity != null) {
             if (!canUpdate) {
                // already exists, but only allow creation
-               throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+               throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
                      .entity("Already exists at uri (forbidden in strict POST mode) :\n"
                            + dataEntity.toString()).type(MediaType.TEXT_PLAIN).build());
             }/* else {
@@ -222,7 +227,7 @@ public class DatacoreApiImpl implements DatacoreApi {
             }*/
          } else {
             if (!canCreate) {
-               throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+               throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
                      .entity("Data resource doesn't exist (forbidden in PUT)")
                      .type(MediaType.TEXT_PLAIN).build());
             }
@@ -249,7 +254,7 @@ public class DatacoreApiImpl implements DatacoreApi {
       
       if (resourceParsingContext.hasErrors()) {
          String msg = DCResourceParsingContext.formatParsingErrorsMessage(resourceParsingContext, detailedErrorsMode);
-         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
                .entity(msg).type(MediaType.TEXT_PLAIN).build());
       } // else TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
       
@@ -264,7 +269,7 @@ public class DatacoreApiImpl implements DatacoreApi {
          try {
             mgo.save(dataEntity, collectionName);
          } catch (OptimisticLockingFailureException olfex) {
-            throw new WebApplicationException(Response.status(Response.Status.CONFLICT)
+            throw new ClientErrorException(Response.status(Response.Status.CONFLICT)
                   .entity("Trying to update data resource without up-to-date version but "
                         + dataEntity.getVersion()).type(MediaType.TEXT_PLAIN).build());
          }
@@ -574,8 +579,9 @@ public class DatacoreApiImpl implements DatacoreApi {
       ///return stringUri;
 
       // check URI model type : against provided one if any, otherwise against known ones
-      int iriSlashIndex = urlPathWithoutSlash .indexOf('/', typeIndexInType); // TODO use Pattern & DC_TYPE_PATH
-      String uriType = urlPathWithoutSlash.substring(typeIndexInType, iriSlashIndex);
+      DCURI dcUri = UriHelper.parseURI(
+            urlContainer, urlPathWithoutSlash/*, refModel*/); // TODO LATER cached model ref ?! what for ?
+      String uriType = dcUri.getType();
       if (modelType != null) {
          if (!modelType.equals(uriType)) {
             throw new ResourceParsingException("URI resource model type " + uriType
@@ -587,8 +593,7 @@ public class DatacoreApiImpl implements DatacoreApi {
             throw new ResourceParsingException("Can't find resource model type " + uriType);
          }
       }
-      String iri = urlPathWithoutSlash.substring(iriSlashIndex + 1); // TODO useful ??
-      return new DCURI(this.containerUrl, uriType, iri/*, refModel*/); // TODO LATER cached model ref
+      return dcUri;
    }
 
    // TODO extract to ResourceBuilder static helper using in ResourceServiceImpl
@@ -636,10 +641,18 @@ public class DatacoreApiImpl implements DatacoreApi {
    }
    
    public List<DCResource> postAllDataInType(List<DCResource> resources, String modelType/*, Request request*/) {
-      return this.internalPostAllDataInType(resources, modelType, true, !this.strictPostMode);
+      List<DCResource> res = this.internalPostAllDataInType(resources, modelType, true, !this.strictPostMode);
+      throw new WebApplicationException(Response.status(Response.Status.CREATED)
+            ///.tag(new EntityTag(httpEntity)) // .lastModified(dataEntity.getLastModified().toDate())
+            .entity(res)
+            .type(MediaType.APPLICATION_JSON).build());
    }
    public List<DCResource> internalPostAllDataInType(List<DCResource> resources, String modelType,
          boolean canCreate, boolean canUpdate) {
+      if (resources == null || resources.isEmpty()) {
+         throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
+               .type(MediaType.APPLICATION_JSON).build());
+      }
       ArrayList<DCResource> res = new ArrayList<DCResource>(resources.size());
       for (DCResource resource : resources) {
          res.add(internalPostDataInType(resource, modelType, canCreate, canUpdate));
@@ -653,15 +666,21 @@ public class DatacoreApiImpl implements DatacoreApi {
          // outMessage.getContent(List.class), see ServiceInvokerInterceptor.handleMessage() l.78
          // and also put complex code to handle concatenated ETag on client side))
       }
+      return res;
+   }
+   public List<DCResource> postAllData(List<DCResource> resources/*, Request request*/) {
+      List<DCResource> res = this.internalPostAllData(resources, true, !this.strictPostMode);
       throw new WebApplicationException(Response.status(Response.Status.CREATED)
             ///.tag(new EntityTag(httpEntity)) // .lastModified(dataEntity.getLastModified().toDate())
             .entity(res)
             .type(MediaType.APPLICATION_JSON).build());
    }
-   public List<DCResource> postAllData(List<DCResource> resources/*, Request request*/) {
-      return this.internalPostAllData(resources, true, !this.strictPostMode);
-   }
    public List<DCResource> internalPostAllData(List<DCResource> resources, boolean canCreate, boolean canUpdate) {
+      if (resources == null || resources.isEmpty()) {
+         throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
+               .type(MediaType.APPLICATION_JSON).build());
+      }
+      
       boolean replaceBaseUrlMode = true;
       boolean normalizeUrlMode = true;
       
@@ -673,17 +692,14 @@ public class DatacoreApiImpl implements DatacoreApi {
                   normalizeUrlMode, replaceBaseUrlMode);
          } catch (ResourceParsingException rpex) {
             // TODO LATER rather context & for multi post
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+            throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
                   .entity(resource.getUri() + " should be an uri but " + rpex.getMessage())
                   .type(MediaType.TEXT_PLAIN).build());
          }
          res.add(internalPostDataInType(resource, uri.getType(), canCreate, canUpdate));
          // NB. no ETag validation support, see discussion in internalPostAllDataInType()
       }
-      throw new WebApplicationException(Response.status(Response.Status.CREATED)
-            ///.tag(new EntityTag(httpEntity)) // .lastModified(dataEntity.getLastModified().toDate())
-            .entity(res)
-            .type(MediaType.APPLICATION_JSON).build());
+      return res;
    }
    
    public DCResource putDataInType(DCResource resource, String modelType, String iri/*, Request request*/) {
@@ -704,7 +720,7 @@ public class DatacoreApiImpl implements DatacoreApi {
 
       DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
       if (dcModel == null) {
-         throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+         throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
              .entity("Unknown Model type " + modelType).type(MediaType.TEXT_PLAIN).build());
       }
       modelType = dcModel.getName(); // normalize ; TODO useful ?
@@ -713,9 +729,9 @@ public class DatacoreApiImpl implements DatacoreApi {
       
       if (entity == null) {
          //return Response.noContent().build();
-         throw new WebApplicationException(Response.Status.NO_CONTENT); // TODO or :
-         //throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-         //      .entity("No data at uri " + uri).type(MediaType.TEXT_PLAIN).build());
+         throw new NotFoundException();
+         // rather than NO_CONTENT ; like Atol ex. deleteApplication in
+         // https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/apps/ApplicationDirectoryResource.java
       }
 
       // TODO ETag jaxrs caching :
@@ -753,21 +769,21 @@ public class DatacoreApiImpl implements DatacoreApi {
       
       String etag = httpHeaders.getHeaderString(HttpHeaders.IF_MATCH);
       if (etag == null) {
-         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
                .entity("Missing If-Match=version header to delete " + uri).type(MediaType.TEXT_PLAIN).build());
       }
       Long version;
       try {
          version = Long.parseLong(etag);
       } catch (NumberFormatException e) {
-         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
                .entity("If-Match header should be a long to delete " + uri
                      + " but is " + etag).type(MediaType.TEXT_PLAIN).build());
       }
 
       DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
       if (dcModel == null) {
-         throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+         throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
              .entity("Unknown Model type " + modelType).type(MediaType.TEXT_PLAIN).build());
       }
       modelType = dcModel.getName(); // normalize ; TODO useful ?
@@ -775,7 +791,21 @@ public class DatacoreApiImpl implements DatacoreApi {
 
       Query query = new Query(Criteria.where("_uri").is(uri).and("_v").is(version));
       mgo.remove(query, collectionName);
-      // TODO get operation result (using native executeCommand instead ?) and if failed throw error status
+      // NB. obviously won't conflict / throw MongoDataIntegrityViolationException
+      // alt : first get it by _uri and check version, but in Mongo & REST spirit it's enough to
+      // merely ensure that it doesn't exist at the end
+      
+      // NB. for proper error handling, we use WriteConcerns that ensures that errors are raised,
+      // rather than barebone MongoTemplate.getDb().getLastError() (which they do),
+      // see http://hackingdistributed.com/2013/01/29/mongo-ft/
+      // However if we did it, it would be :
+      // get operation result (using spring WriteResultChecking or native mt.getDb().getLastError())
+      // then handle it / if failed throw error status :
+      //if (notfound) {
+      //   throw new WebApplicationException(Response.Status.NOT_FOUND);
+      //   // rather than NO_CONTENT ; like Atol ex. deleteApplication in
+      //   // https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/apps/ApplicationDirectoryResource.java
+      //}
 
       throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT).build());
    }
@@ -784,13 +814,13 @@ public class DatacoreApiImpl implements DatacoreApi {
    @Override
    public List<DCResource> updateDataInTypeWhere(DCResource dcDataDiff,
          String modelType, UriInfo uriInfo) {
-      throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+      throw new InternalServerErrorException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
             .entity("Feature not implemented").type(MediaType.TEXT_PLAIN).build());
    }
 
    @Override
    public void deleteDataInTypeWhere(String modelType, UriInfo uriInfo) {
-      throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+      throw new InternalServerErrorException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
             .entity("Feature not implemented").type(MediaType.TEXT_PLAIN).build());
    }
    
@@ -801,7 +831,7 @@ public class DatacoreApiImpl implements DatacoreApi {
          // TODO impl like find
          return this.postDataInType(resource, modelType);
       } else {
-         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
                .entity("method query parameter should be POST but is "
                      + method).type(MediaType.TEXT_PLAIN).build());
       }
@@ -815,10 +845,10 @@ public class DatacoreApiImpl implements DatacoreApi {
          // TODO impl like find
          return this.putDataInType(resource, modelType, iri);
       } else if ("DELETE".equalsIgnoreCase(method)) {
-         this.deleteData(modelType, iri, httpHeaders);
-         return null;
+         this.deleteData(modelType, iri, httpHeaders); // will throw an exception to return the result code
+         return null; // so will never go there
       } else {
-         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
                .entity("method query parameter should be PUT, PATCH, DELETE but is "
                      + method).type(MediaType.TEXT_PLAIN).build());
       }
@@ -831,7 +861,7 @@ public class DatacoreApiImpl implements DatacoreApi {
       
       DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
       if (dcModel == null) {
-         throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND)
+         throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
              .entity("Unknown model type " + modelType).type(MediaType.TEXT_PLAIN).build());
       }
       
@@ -848,7 +878,7 @@ public class DatacoreApiImpl implements DatacoreApi {
       try {
          foundEntities = ldpEntityQueryService.findDataInType(dcModel, params, start, limit);
       } catch (QueryException qex) {
-         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
                .entity(qex.getMessage()).type(MediaType.TEXT_PLAIN).build());
          // TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
          // TODO better support for query parsing errors / warnings / detailedMode & additional
@@ -912,7 +942,7 @@ public class DatacoreApiImpl implements DatacoreApi {
       try {
          entities = this.entityQueryService.queryInType(modelType, query, language);
       } catch (QueryException qex) {
-         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
                .entity(qex.getMessage()).type(MediaType.TEXT_PLAIN).build());
          // TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
          // TODO better support for query parsing errors / warnings / detailedMode & additional
@@ -926,7 +956,7 @@ public class DatacoreApiImpl implements DatacoreApi {
       try {
          entities = this.entityQueryService.query(query, language);
       } catch (QueryException qex) {
-         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
                .entity(qex.getMessage()).type(MediaType.TEXT_PLAIN).build());
          // TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
          // TODO better support for query parsing errors / warnings / detailedMode & additional

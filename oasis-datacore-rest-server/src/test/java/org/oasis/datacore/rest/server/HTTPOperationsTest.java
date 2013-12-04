@@ -945,7 +945,7 @@ public class HTTPOperationsTest {
 	 * Expected behavior from API : HTTPStatus = 404 (Not Found) and return null
 	 */
 	@Test
-	public void testGetDcTypeIriNotFound() {
+	public void testGetDcTypeIriModelNotFound() {
 		
 		Map<String, List<DCResource>> mapData = brandCarMotorcycleData.getData();
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
@@ -971,12 +971,12 @@ public class HTTPOperationsTest {
 	/**
 	 * URL : /dc/type/${type}/${iri}
 	 * Http method : GET
-	 * HTTP Return status : 204
+	 * HTTP Return status : 404
 	 * Trying to get a car that does not exist
-	 * Expected behavior from API : HTTPStatus = 204 (No Content) and return null
+	 * Expected behavior from API : HTTPStatus = 404 (Not Found) and return null
 	 */
 	@Test
-	public void testGetDcTypeIriNoContent() {
+	public void testGetDcTypeIriResourceNotFound() {
 		
 		Map<String, List<DCResource>> mapData = brandCarMotorcycleData.getData();
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
@@ -995,7 +995,7 @@ public class HTTPOperationsTest {
 		} catch (WebApplicationException e) {
 			Assert.assertNull(resource);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
-			Assert.assertTrue("HTTP status should be 204 but is " + httpStatus, 204 == httpStatus);
+			Assert.assertTrue("HTTP status should be 404 but is " + httpStatus, 404 == httpStatus);
 		}
 		
 	}

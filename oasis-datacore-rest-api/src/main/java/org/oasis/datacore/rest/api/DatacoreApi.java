@@ -21,10 +21,13 @@ package org.oasis.datacore.rest.api;
 
 import java.util.List;
 
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -62,6 +65,13 @@ import com.wordnik.swagger.annotations.ApiResponses;
  * else swagger UI playground doesn't work (they're missing their middle slash
  * ex. /dctype/city...).
  * 
+ * About return codes :
+ * * when a resource (or its Model type) doesn't exist, 404 Not Found,
+ * see http://stackoverflow.com/questions/11746894/what-is-the-proper-rest-response-code-for-a-valid-request-but-an-empty-data
+ * and http://benramsey.com/blog/2008/05/http-status-204-no-content-and-205-reset-content/
+ * * when parsing errors, 400 Bad Request
+ * * see also http://www.infoq.com/articles/designing-restful-http-apps-roth
+ * 
  * TODO rename ex. to DataResourceApi ??
  * TODO DatacoreNativeApi with only "native" methods ? AT LEAST NOT FOR CLIENT CACHING
  * 
@@ -96,7 +106,7 @@ import com.wordnik.swagger.annotations.ApiResponses;
 public interface DatacoreApi {
    
    public static final String QUERY_PARAMETERS = "#queryParameters";
-   public static final String DC_TYPE_PATH = "dc/type";
+   public static final String DC_TYPE_PATH = "dc/type"; // TODO better from JAXRS annotations using reflection ?
    
    /*
     * TODO NO conflicts with postAllDataInType, rather client helper only ? or in interceptors ???
@@ -129,12 +139,14 @@ public interface DatacoreApi {
       @ApiResponse(code = 404, message = "Type model not found"),
       @ApiResponse(code = 400, message = "Bad request : missing content, missing or invalid URI, "
             + "(if enabled) strict POST mode not respected (version provided or resource already exists), "
-            + "field parsing errors (format, consistency with Model & Mixin types...)")
+            + "field parsing errors (format, consistency with Model & Mixin types...)"),
+      @ApiResponse(code = 201, message = "Created : the resource has been created"),
+      @ApiResponse(code = 200, message = "OK : the resource has been updated (if not strict POST mode)")
    })
    DCResource postDataInType(
          @ApiParam(value = "Data Resource to create", required = true) DCResource dcData,
          @ApiParam(value = "Model type to create (or update) it in", required = true) @PathParam("type") String modelType
-         *//*, @Context Request request*//*);*/
+         *//*, @Context Request request*//*) throws BadRequestException, NotFoundException, ClientErrorException;*/
    
    /**
     * "mass" update in type
@@ -162,12 +174,13 @@ public interface DatacoreApi {
       @ApiResponse(code = 404, message = "Type model not found"),
       @ApiResponse(code = 400, message = "Bad request : missing content, missing or invalid URIs, "
             + "(if enabled) strict POST mode not respected (version provided or resource already exists), "
-            + "field parsing errors (format, consistency with Model & Mixin types...)")
+            + "field parsing errors (format, consistency with Model & Mixin types...)"),
+      @ApiResponse(code = 201, message = "Created : resources have been created")
    })
    List<DCResource> postAllDataInType(
          @ApiParam(value = "Data Resources to create", required = true) List<DCResource> dcDatas,
          @ApiParam(value = "Model type to create them in", required = true) @PathParam("type") String modelType
-         /*, @Context Request request*/);
+         /*, @Context Request request*/) throws BadRequestException, NotFoundException, ClientErrorException;
    
    /**
     * "mass" update, types must be provided
@@ -192,11 +205,12 @@ public interface DatacoreApi {
       @ApiResponse(code = 404, message = "Type model not found"),
       @ApiResponse(code = 400, message = "Bad request : missing content, missing or invalid URIs, "
             + "(if enabled) strict POST mode not respected (version provided or resource already exists), "
-            + "field parsing errors (format, consistency with Model & Mixin types...)")
+            + "field parsing errors (format, consistency with Model & Mixin types...)"),
+      @ApiResponse(code = 201, message = "Created : resources have been created")
    })
    List<DCResource> postAllData(
          @ApiParam(value = "Data Resources to create", required = true) List<DCResource> dcDatas
-         /*, @Context Request request*/);
+         /*, @Context Request request*/) throws BadRequestException, NotFoundException, ClientErrorException;
    
    /**
     * Not required, only for REST compliance ; PATCH version allows to only provide diff
@@ -220,16 +234,17 @@ public interface DatacoreApi {
       @ApiResponse(code = 409, message = "Conflict : while trying to update existing resource, "
             + "optimistic locking error "
             + "(provided resource version is not up-to-date with the server's latest)"),
-      @ApiResponse(code = 404, message = "Type model not found"),
+      @ApiResponse(code = 404, message = "Resource does not exist, or type model not found"),
       @ApiResponse(code = 400, message = "Bad request : missing content or version, "
             + "missing or invalid URI, non existing resource, "
-            + "field parsing errors (format, consistency with Model & Mixin types...)")
+            + "field parsing errors (format, consistency with Model & Mixin types...)"),
+      @ApiResponse(code = 200, message = "OK : the resource has been updated")
    })
    DCResource putDataInType(
          @ApiParam(value = "Data Resource to update", required = true) DCResource dcData,
          @ApiParam(value = "Model type to update it in", required = true) @PathParam("type") String modelType,
          @ApiParam(value = "Type-relative resource id", required = true) @PathParam("iri") String iri
-         /*, @Context Request request*/);
+         /*, @Context Request request*/) throws BadRequestException, NotFoundException, ClientErrorException;
    
    /**
     * Not required, only for REST compliance ; PATCH version allows to only provide diff
@@ -252,15 +267,16 @@ public interface DatacoreApi {
       @ApiResponse(code = 409, message = "Conflict : while trying to update existing resource, "
             + "optimistic locking error "
             + "(provided resource version is not up-to-date with the server's latest)"),
-      @ApiResponse(code = 404, message = "Type model not found"),
+      @ApiResponse(code = 404, message = "Resource does not exist, or type model not found"),
       @ApiResponse(code = 400, message = "Bad request : missing content or version, "
             + "missing or invalid URI, non existing resource, "
-            + "field parsing errors (format, consistency with Model & Mixin types...)")
+            + "field parsing errors (format, consistency with Model & Mixin types...)"),
+      @ApiResponse(code = 200, message = "OK : resources have been updated")
    })
    List<DCResource> putAllDataInType(
          @ApiParam(value = "Data Resources to update", required = true) List<DCResource> dcDatas,
          @ApiParam(value = "Model type to update them in", required = true) @PathParam("type") String modelType
-         /*, @Context Request request*/);
+         /*, @Context Request request*/) throws BadRequestException, NotFoundException, ClientErrorException;
    
    /**
     * Not required, only for REST compliance ; PATCH version allows to only provide diff
@@ -282,14 +298,15 @@ public interface DatacoreApi {
       @ApiResponse(code = 409, message = "Conflict : while trying to update existing resource, "
             + "optimistic locking error "
             + "(provided resource version is not up-to-date with the server's latest)"),
-      @ApiResponse(code = 404, message = "Type model not found"),
+      @ApiResponse(code = 404, message = "Resource does not exist, or type model not found"),
       @ApiResponse(code = 400, message = "Bad request : missing content or version, "
             + "missing or invalid URI, non existing resource, "
-            + "field parsing errors (format, consistency with Model & Mixin types...)")
+            + "field parsing errors (format, consistency with Model & Mixin types...)"),
+      @ApiResponse(code = 200, message = "OK : resources have been updated")
    })
    List<DCResource> putAllData(
          @ApiParam(value = "Data Resources to update", required = true) List<DCResource> dcDatas
-         /*, @Context Request request*/);
+         /*, @Context Request request*/) throws BadRequestException, NotFoundException, ClientErrorException;
    
    /**
     * Returns data resource at http://[this container]/dc/[type]/[iri].
@@ -315,14 +332,14 @@ public interface DatacoreApi {
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
-      @ApiResponse(code = 404, message = "Type model not found"),
+      @ApiResponse(code = 404, message = "Resource does not exist, or type model not found"),
       @ApiResponse(code = 304, message = "Resource not modified (client can reuse its cache's)"),
-      @ApiResponse(code = 204, message = "Resource doesn't exist")
+      @ApiResponse(code = 200, message = "OK : resource found and returned")
    })
    DCResource getData(
          @ApiParam(value = "Model type to look up in", required = true) @PathParam("type") String modelType,
          @ApiParam(value = "Type-relative resource id", required = true) @PathParam("iri") String iri,
-         @Context Request request);
+         @Context Request request) throws NotFoundException;
    
    /**
     * Deletes the given Data.
@@ -335,7 +352,8 @@ public interface DatacoreApi {
    @DELETE
    @ApiOperation(value = "Deletes an existing data Resource.",
       notes = "Resource Model type and IRI (Internal Resource Identifier) are required, "
-            + "but also up-to-date version sent as an ETag in an If-Match=version precondition.",
+            + "but also up-to-date version sent as an ETag in an If-Match=version precondition. "
+            + "Doesn't check whether said data Resource exists beforehands.",
             response = DCResource.class, position = 6)
    @ApiImplicitParams({
       @ApiImplicitParam(name=HttpHeaders.IF_MATCH, paramType="header", dataType="string",
@@ -346,14 +364,14 @@ public interface DatacoreApi {
       @ApiResponse(code = 409, message = "Conflict : while trying to delete existing resource, "
             + "optimistic locking error "
             + "(provided resource version is not up-to-date with the server's latest)"),
-      @ApiResponse(code = 404, message = "Type model not found"),
+      @ApiResponse(code = 404, message = "Resource does not exist, or type model not found"),
       @ApiResponse(code = 400, message = "Bad request : version ETag is missing or not a long integer"),
-      @ApiResponse(code = 204, message = "Delete succeeded, or resource not found")
+      @ApiResponse(code = 204, message = "Delete succeeded")
    })
    void deleteData(
          @ApiParam(value = "Model type to look up in", required = true) @PathParam("type") String modelType,
          @ApiParam(value = "Type-relative resource id", required = true) @PathParam("iri") String iri,
-         @Context HttpHeaders httpHeaders);
+         @Context HttpHeaders httpHeaders) throws BadRequestException, NotFoundException, ClientErrorException;
 
    
    
@@ -425,13 +443,16 @@ public interface DatacoreApi {
       @ApiResponse(code = 404, message = "Type model not found"),
       @ApiResponse(code = 400, message = "Bad request : missing content, missing or invalid URI, "
             + "(if enabled) strict POST mode not respected (version provided or resource already exists), "
-            + "field parsing errors (format, consistency with Model & Mixin types...)")
+            + "field parsing errors (format, consistency with Model & Mixin types...)"),
+      @ApiResponse(code = 201, message = "Created : the resource has been created"),
+      @ApiResponse(code = 200, message = "OK : the resource has been updated (if not strict POST mode)")
    })
    DCResource postDataInTypeOnGet(
          @ApiParam(value = "Model type to create (or update) it in", required = true) @PathParam("type") String modelType,
          @ApiParam(value = "HTTP method to tunnel over", required = true,
          allowableValues="POST") @QueryParam("method") String method,
-         @Context UriInfo uriInfo/*, @Context Request request*/);
+         @Context UriInfo uriInfo/*, @Context Request request*/)
+               throws BadRequestException, NotFoundException, ClientErrorException;
    
    /**
     * WARNING commented for now because conflicts with getData(),
@@ -455,24 +476,28 @@ public interface DatacoreApi {
                + "\n<br/><br/>\n"
                + "Resource URI (Model type and IRI i.e. Internal Resource Identifier) are required "
                + "but also up-to-date version sent as an ETag in an If-Match=version precondition, "
-               + "TODO all fields must be provided OR PATCH behaviour differ from PUT's",
+               + "TODO all fields must be provided OR PATCH behaviour differ from PUT's. "
+               + "Delete doesn't check whether said data Resource exists beforehands.",
                response = DCResource.class, position = 8)
       @ApiResponses(value = {
          @ApiResponse(code = 500, message = "Internal server error"),
          @ApiResponse(code = 409, message = "Conflict : while trying to update existing "
                + "resource (in non-strict POST mode only), optimistic locking error "
                + "(provided resource version is not up-to-date with the server's latest)"),
-         @ApiResponse(code = 404, message = "Type model not found"),
+         @ApiResponse(code = 404, message = "Resource does not exist, or type model not found"),
          @ApiResponse(code = 400, message = "Bad request : missing content, missing or invalid URI, "
                + "(if enabled) strict POST mode not respected (version provided or resource already exists), "
-               + "field parsing errors (format, consistency with Model & Mixin types...)")
+               + "field parsing errors (format, consistency with Model & Mixin types...)"),
+         @ApiResponse(code = 204, message = "Delete succeeded"),
+         @ApiResponse(code = 200, message = "OK : the resource has been updated")
       })
    DCResource putPatchDeleteDataOnGet(
          @ApiParam(value = "Model type to update it in", required = true) @PathParam("type") String modelType,
          @PathParam("iri") String iri,
          @ApiParam(value = "HTTP method to tunnel over", required = true,
          allowableValues="POST") @QueryParam("method") String method,
-         @Context UriInfo uriInfo, @Context HttpHeaders httpHeaders);
+         @Context UriInfo uriInfo, @Context HttpHeaders httpHeaders)
+               throws BadRequestException, NotFoundException;
 
 
    
@@ -542,14 +567,15 @@ public interface DatacoreApi {
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
-      @ApiResponse(code = 500, message = "Internal server error"),
       @ApiResponse(code = 404, message = "Type model not found"),
       @ApiResponse(code = 400, message = "Bad request : field parsing errors (format, "
-            + "consistency with Model & Mixin types...)")
+            + "consistency with Model & Mixin types...)"),
+      @ApiResponse(code = 200, message = "OK : resources found and returned")
    })
    List<DCResource> findDataInType(@PathParam("type") String modelType, @Context UriInfo uriInfo,
          @ApiParam(value="Pagination start") @DefaultValue("0") @QueryParam("start") Integer start,
-         @ApiParam(value="Pagination limit") @DefaultValue("10") @QueryParam("limit") Integer limit);
+         @ApiParam(value="Pagination limit") @DefaultValue("10") @QueryParam("limit") Integer limit)
+               throws BadRequestException, NotFoundException;
 
 
    /**
@@ -612,14 +638,15 @@ public interface DatacoreApi {
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
-      @ApiResponse(code = 500, message = "Internal server error"),
       @ApiResponse(code = 404, message = "Type model not found"),
       @ApiResponse(code = 400, message = "Bad request : field parsing errors (format, "
-            + "consistency with Model & Mixin types...)")
+            + "consistency with Model & Mixin types...)"),
+      @ApiResponse(code = 200, message = "OK : resources found and returned")
    })
    List<DCResource> findData(@Context UriInfo uriInfo,
          @ApiParam(value="Pagination start") @DefaultValue("0") @QueryParam("start") Integer start,
-         @ApiParam(value="Pagination limit") @DefaultValue("10") @QueryParam("limit") Integer limit);
+         @ApiParam(value="Pagination limit") @DefaultValue("10") @QueryParam("limit") Integer limit)
+               throws BadRequestException, NotFoundException;
 
    /**
     * Returns all Datacore data of the given type that are found by the given query
@@ -685,14 +712,15 @@ public interface DatacoreApi {
             + "LIMIT, OFFSET, ORDER BY",
             response = DCResource.class, responseContainer="List", position = 10)
    @ApiResponses(value = {
-      @ApiResponse(code = 500, message = "Internal server error"),
       @ApiResponse(code = 404, message = "Type model not found"),
       @ApiResponse(code = 400, message = "Bad request : field parsing errors (format, "
-            + "consistency with Model & Mixin types...)")
+            + "consistency with Model & Mixin types...)"),
+      @ApiResponse(code = 200, message = "OK : resources found and returned")
    })
    List<DCResource> queryDataInType(@PathParam("type") String modelType,
          @QueryParam("query") String query,
-         @DefaultValue("SPARQL") @QueryParam("language") String language);
+         @DefaultValue("SPARQL") @QueryParam("language") String language)
+               throws BadRequestException, NotFoundException;
 
 
    /**
@@ -746,12 +774,13 @@ public interface DatacoreApi {
             + "LIMIT, OFFSET, ORDER BY",
             response = DCResource.class, responseContainer="List", position = 11)
    @ApiResponses(value = {
-      @ApiResponse(code = 500, message = "Internal server error"),
       @ApiResponse(code = 404, message = "Type model not found"),
       @ApiResponse(code = 400, message = "Bad request : field parsing errors (format, "
-            + "consistency with Model & Mixin types...)")
+            + "consistency with Model & Mixin types...)"),
+      @ApiResponse(code = 200, message = "OK : resources found and returned")
    })
    List<DCResource> queryData(@QueryParam("query") String query,
-         @DefaultValue("SPARQL") @QueryParam("language") String language);
+         @DefaultValue("SPARQL") @QueryParam("language") String language)
+               throws BadRequestException, NotFoundException;
    
 }
