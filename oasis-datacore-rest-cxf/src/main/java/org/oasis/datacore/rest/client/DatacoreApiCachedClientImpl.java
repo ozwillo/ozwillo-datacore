@@ -70,6 +70,16 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
       return UriHelper.buildUri(this.containerUrl, type, iri);
    }
 
+   @Override
+   public DCResource postDataInType(DCResource resource) {
+      List<String> types = resource.getTypes();
+      String modelType = null;
+      if (types != null && types.isEmpty()) {
+         modelType =  types.get(0); // TODO or parse it from uri ??
+      } // else lets server explode
+      return this.postDataInType(resource, modelType);
+   }
+   
    /**
     * Always evict (after invocation) and replace by updated data
     * done in wrapper logic (Spring CachePut annotation would use possibly not yet created uri from argument)
@@ -130,6 +140,16 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
    @Override
    public DCResource putDataInType(DCResource resource, String modelType, String iri) {
       return delegate.putDataInType(resource, modelType, iri);
+   }
+
+   @Override
+   public DCResource putDataInType(DCResource resource) {
+      List<String> types = resource.getTypes();
+      String modelType = null;
+      if (types != null && types.isEmpty()) {
+         modelType =  types.get(0);
+      } // else lets server explode
+      return this.putDataInType(resource, modelType, resource.getId()); // TODO or parse id from uri ??
    }
 
    /**

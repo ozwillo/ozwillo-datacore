@@ -1,7 +1,5 @@
 package org.oasis.datacore.rest.server;
 
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -43,13 +41,12 @@ import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.util.DCURI;
-import org.oasis.datacore.rest.api.util.UriHelper;
+import org.oasis.datacore.rest.server.event.EventService;
 import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
 import org.oasis.datacore.rest.server.parsing.service.QueryParsingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -78,16 +75,10 @@ import org.springframework.data.mongodb.core.query.Query;
 ///@Component("datacoreApiServer") // else can't autowire Qualified ; TODO @Service ?
 public class DatacoreApiImpl implements DatacoreApi {
 
-   /** Base URL of this endpoint. If broker mode enabled, used to detect when to use it.. */
-   @Value("${datacoreApiServer.baseUrl}") 
-   private String baseUrl; // "http://" + "data-lyon-1.oasis-eu.org" + "/"
-   /** Unique per container, defines it. To be able to build a full uri
-    * (for GET, DELETE, possibly to build missing or custom / relative URI...) */
-   @Value("${datacoreApiServer.containerUrl}") 
-   private String containerUrl; // "http://" + "data.oasis-eu.org" + "/"
-
    private boolean strictPostMode = false;
    
+   @Autowired
+   private ResourceService resourceService;
    @Autowired
    private DCEntityService entityService;
    @Autowired
@@ -98,7 +89,9 @@ public class DatacoreApiImpl implements DatacoreApi {
    //@Autowired
    //private DCDataEntityRepository dataRepo; // NO rather for (meta)model, for data can't be used because can't specify collection
    @Autowired
-   private MongoOperations mgo; // TODO remove it by hiding it in services
+   private MongoOperations mgo; // TODO remove it by hiding it in (entity) services
+   @Autowired
+   private EventService eventService; // TODO remove it by hiding it in (entity, resource ?) services
    // NB. MongoTemplate would be required to check last operation result, but we rather use WriteConcerns
    @Autowired
    private DCModelService modelService;
@@ -183,7 +176,7 @@ public class DatacoreApiImpl implements DatacoreApi {
       String stringUri = resource.getUri();
       DCURI uri;
       try {
-         uri = normalizeAdaptCheckTypeOfUri(stringUri, modelType, normalizeUrlMode, matchBaseUrlMode);
+         uri = resourceService.normalizeAdaptCheckTypeOfUri(stringUri, modelType, normalizeUrlMode, matchBaseUrlMode);
          stringUri = uri.toString();
       } catch (ResourceParsingException rpex) {
          // TODO LATER rather context & for multi post
@@ -193,11 +186,12 @@ public class DatacoreApiImpl implements DatacoreApi {
       }
       
       // TODO extract to checkContainer()
-      if (!containerUrl.equals(uri.getContainer())) {
+      if (!resourceService.getContainerUrl().equals(uri.getContainer())) {
          if (!brokerMode) {
             throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
                   .entity("In non-broker mode, can only serve data from own container "
-                        + containerUrl + " but URI container is " + uri.getContainer())
+                        + resourceService.getContainerUrl() + " but URI container is "
+                        + uri.getContainer())
                   .type(MediaType.TEXT_PLAIN).build());
          }
          // else TODO LATER OPT broker mode
@@ -407,7 +401,7 @@ public class DatacoreApiImpl implements DatacoreApi {
             // normalize, adapt & check TODO in DCURI :
             boolean normalizeUrlMode = true;
             boolean replaceBaseUrlMode = true;
-            DCURI dcUri = normalizeAdaptCheckTypeOfUri(stringUriValue, null,
+            DCURI dcUri = resourceService.normalizeAdaptCheckTypeOfUri(stringUriValue, null,
                   normalizeUrlMode, replaceBaseUrlMode);
             DCModel refModel = modelService.getModel(dcUri.getType()); // TODO LATER from cached model ref in DCURI
             
@@ -447,7 +441,7 @@ public class DatacoreApiImpl implements DatacoreApi {
                      + " (" + entityValueUri.getClass() + ")");
             }
             // check uri, type & get entity (as above) :
-            DCURI dcUri = normalizeAdaptCheckTypeOfUri((String) entityValueUri, null,
+            DCURI dcUri = resourceService.normalizeAdaptCheckTypeOfUri((String) entityValueUri, null,
                   normalizeUrlMode, replaceBaseUrlMode);
             // TODO LATER OPT if not (partial) copy, check container vs brokerMode
             DCModel valueModel = modelService.getModel(dcUri.getType()); // TODO LATER from cached model ref in DCURI
@@ -533,68 +527,6 @@ public class DatacoreApiImpl implements DatacoreApi {
       return entityValue;
    }
 
-   /**
-    * TODO extract to UriService
-    * Used
-    * * by internalPostDataInType on root posted URI (where type is known and that can be relative)
-    * * to check referenced URIs and URIs post/put/patch where type is not known (and are never relative)
-    * @param stringUriValue
-    * @param modelType if any should already have been checked and should be same as uri's,
-    * else uri's will be checked
-    * @param normalizeUrlMode
-    * @param replaceBaseUrlMode
-    * @return
-    * @throws ResourceParsingException
-    */
-   private DCURI normalizeAdaptCheckTypeOfUri(String stringUri, String modelType,
-         boolean normalizeUrlMode, boolean matchBaseUrlMode)
-               throws ResourceParsingException {
-      if (stringUri == null || stringUri.length() == 0) {
-         // TODO LATER2 accept empty uri and build it according to model type (governance)
-         // for now, don't support it :
-         throw new ResourceParsingException("Missing uri");
-      }
-      String[] containerAndPathWithoutSlash;
-      try {
-         containerAndPathWithoutSlash = UriHelper.getUriNormalizedContainerAndPathWithoutSlash(
-            stringUri, this.containerUrl, normalizeUrlMode, matchBaseUrlMode);
-      } catch (URISyntaxException usex) {
-         throw new ResourceParsingException("Bad URI syntax", usex);
-      } catch (MalformedURLException muex) {
-         throw new ResourceParsingException("Malformed URL", muex);
-      }
-      String urlContainer = containerAndPathWithoutSlash[0];
-      if (urlContainer == null) {
-         // accept local type-relative uri (type-less iri) :
-         if (modelType == null) {
-            throw new ResourceParsingException("URI can't be relative when no target model type is provided");
-         }
-         return new DCURI(this.containerUrl, modelType, stringUri);
-         // TODO LATER accept also iri including type
-      }
-      
-      // otherwise absolute uri :
-      String urlPathWithoutSlash = containerAndPathWithoutSlash[1];
-      ///stringUri = this.containerUrl + urlPathWithoutSlash; // useless
-      ///return stringUri;
-
-      // check URI model type : against provided one if any, otherwise against known ones
-      DCURI dcUri = UriHelper.parseURI(
-            urlContainer, urlPathWithoutSlash/*, refModel*/); // TODO LATER cached model ref ?! what for ?
-      String uriType = dcUri.getType();
-      if (modelType != null) {
-         if (!modelType.equals(uriType)) {
-            throw new ResourceParsingException("URI resource model type " + uriType
-                  + " does not match provided target one " + modelType);
-         }
-      } else {
-         DCModel uriModel = modelService.getModel(uriType);
-         if (uriModel == null) {
-            throw new ResourceParsingException("Can't find resource model type " + uriType);
-         }
-      }
-      return dcUri;
-   }
 
    // TODO extract to ResourceBuilder static helper using in ResourceServiceImpl
    private void resourceToEntityFields(Map<String, Object> resourceMap,
@@ -688,7 +620,7 @@ public class DatacoreApiImpl implements DatacoreApi {
       for (DCResource resource : resources) {
          DCURI uri;
          try {
-            uri = normalizeAdaptCheckTypeOfUri(resource.getUri(), null, 
+            uri = resourceService.normalizeAdaptCheckTypeOfUri(resource.getUri(), null, 
                   normalizeUrlMode, replaceBaseUrlMode);
          } catch (ResourceParsingException rpex) {
             // TODO LATER rather context & for multi post
@@ -716,7 +648,7 @@ public class DatacoreApiImpl implements DatacoreApi {
    }
    
    public DCResource getData(String modelType, String iri, Request request) {
-      String uri = new DCURI(this.containerUrl, modelType, iri).toString();
+      String uri = resourceService.buildUri(modelType, iri);
 
       DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
       if (dcModel == null) {
@@ -765,7 +697,7 @@ public class DatacoreApiImpl implements DatacoreApi {
    }
    
    public void deleteData(String modelType, String iri, HttpHeaders httpHeaders) {
-      String uri = new DCURI(this.containerUrl, modelType, iri).toString();
+      String uri = resourceService.buildUri(modelType, iri);
       
       String etag = httpHeaders.getHeaderString(HttpHeaders.IF_MATCH);
       if (etag == null) {

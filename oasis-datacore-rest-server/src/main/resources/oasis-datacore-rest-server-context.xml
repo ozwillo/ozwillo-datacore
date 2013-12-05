@@ -68,8 +68,11 @@
    </bean -->
 
 
-
-   <context:component-scan base-package="org.oasis.datacore.rest.api" /><!-- for caching & context -->
+   <!-- for caching & context -->
+   <!-- context:component-scan base-package="org.oasis.datacore.rest.api" />
+   <context:component-scan base-package="org.oasis.datacore.rest.client" / -->
+   <context:component-scan base-package="org.oasis.datacore.rest.server" />
+   <context:component-scan base-package="org.oasis.datacore.model.rest.server" />
    <context:component-scan base-package="org.oasis.datacore.sample" />
    <context:annotation-config /><!-- actually auto enabled by previous line -->
 

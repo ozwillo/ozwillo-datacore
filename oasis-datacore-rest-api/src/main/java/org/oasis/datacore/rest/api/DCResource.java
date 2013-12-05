@@ -24,6 +24,11 @@ import com.wordnik.swagger.annotations.ApiModelProperty;
 
 
 /**
+ * To easily create new Resources FOR TESTING, do :
+ * <p/>
+ * new DCResource(containerUrl, "my.app.type", "aName").set("name", "aName").set("count", 3);
+ * <p/>
+ * 
  * A Datacore data Resource.
  * This class is the Java support for producing JSON-LD-like JSON out of Datacore data.
  * 
@@ -39,18 +44,19 @@ public class DCResource {
    @ApiModelProperty(value = "URI", position=0, required=true)
    @JsonProperty
    private String uri;
-   /*@JsonProperty
-   private String iri; // TODO in addition to uri ?? test conflict !
-   @JsonProperty
-   private String type; // TODO types ??? in addition to uri ? or model ?!? test conflict !*/
    @ApiModelProperty(value = "version", position=1, notes="The server's up-to-date version must "
          + "be provided (save when creating it), otherwise it will fail due to optimistic locking.")
    @JsonProperty
    private Long version;
 
-   /** types : model plus type mixins */
+   /** types : model (first one) plus type mixins */
    @JsonProperty
    private List<String> types;
+   //@JsonProperty
+   //private String type; // or this ? in addition to uri ? or model ?!? test conflict !
+   /** type-relative id ; only available after (ResourceService) inits it or parses it from uri */
+   //@JsonProperty
+   private transient String id; // TODO or iri ? transient not required... ? in addition to uri ?? test conflict !
 
    // creation / last modified date, author ? (readonly !)
    @JsonProperty
@@ -77,14 +83,17 @@ public class DCResource {
       this.types = new ArrayList<String>();
    }
    
-   /** helper method to build new DCResources */
-   public static DCResource create(String containerUrl, String modelType, String iri) {
+   /** helper method to build new DCResources FOR TESTING
+    * TODO or in builder instance ? */
+   public static DCResource create(String containerUrl, String modelType, String id) {
       DCResource resource = new DCResource();
+      resource.setUri(UriHelper.buildUri(containerUrl, modelType, id));
       resource.types.add(modelType);
-      resource.setUri(UriHelper.buildUri(containerUrl, modelType, iri));
+      resource.setId(id);
       return resource;
    }
-   /** helper method to build new DCResources 
+   /** helper method to build new DCResources FOR TESTING
+    * TODO or in builder instance ?
     * @throws URISyntaxException 
     * @throws MalformedURLException */
    public static DCResource create(String uri) throws MalformedURLException, URISyntaxException {
@@ -95,15 +104,21 @@ public class DCResource {
       resource.setUri(UriHelper.buildUri(dcUri.getContainer(), modelType, dcUri.getId()));
       return resource;
    }
-   /** helper method to build new DCResources */
+   /** helper method to build new DCResources FOR TESTING
+    * TODO or in builder instance ? */
    public DCResource addType(String mixinType) {
       this.types.add(mixinType);
       return this;
    }
-   /** helper method to build new DCResources */
-   public DCResource set(String fieldName, String fieldValue) {
+   /** helper method to build new DCResources FOR TESTING
+    * TODO or in builder instance ? */
+   public DCResource set(String fieldName, Object fieldValue) {
       this.properties.put(fieldName, fieldValue);
       return this;
+   }
+   /** shortcut to getProperties().get() */
+   public Object get(String fieldName) {
+      return this.properties.get(fieldName);
    }
 
    // TODO to unmarshall embedded resources as DC(Sub)Resource rather than HashMaps
@@ -131,13 +146,13 @@ public class DCResource {
    public void setUri(String uri) {
       this.uri = uri;
    }
-   /*public String getIri() {
-      return iri;
+   public String getId() {
+      return id;
    }
-   public void setIri(String iri) {
-      this.iri = iri;
+   public void setId(String id) {
+      this.id = id;
    }
-   public String getType() {
+   /*public String getType() {
       return type;
    }
    public void setType(String type) {

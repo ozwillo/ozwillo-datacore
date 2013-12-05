@@ -106,5 +106,25 @@ public interface DatacoreClientApi extends DatacoreApi {
          @HeaderParam(QUERY_PARAMETERS) QueryParameters queryParams, // XXX HACK TODO better OrderedMap ?! 
          @DefaultValue("0") @QueryParam("start") Integer start,
          @DefaultValue("10") @QueryParam("limit") Integer limit);
+
+   
+   ///////////////////////////////////////////////
+   // Non-JAXRS client helper methods
+
+   /**
+    * Shortcut to postDataInType using resource's first type
+    * (does not parse uri for that ; if none, lets server explode)
+    * @param resource
+    * @return
+    */
+   public DCResource postDataInType(DCResource resource);
+
+   /**
+    * Shortcut to putDataInType using resource's first type & id
+    * (does not parse uri for that ; if none, lets server explode)
+    * @param resource
+    * @return
+    */
+   public DCResource putDataInType(DCResource resource);
    
 }

@@ -36,6 +36,8 @@
    </bean>
 
    <context:component-scan base-package="org.oasis.datacore.rest.api" /><!-- for caching & context -->
+   <!-- context:component-scan base-package="org.oasis.datacore.rest.client" / -->
+   <!-- else can't autowire client delegate because not yet created from xml -->
    <context:annotation-config /><!-- actually auto enabled by previous line -->
 
    <!-- Client sample CXF Bus
