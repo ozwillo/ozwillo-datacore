@@ -256,6 +256,8 @@ public class DatacoreApiImpl implements DatacoreApi {
       // TODO LATER 2nd pass : pre save hooks
 
       String collectionName = dcModel.getCollectionName(); // or mere type ?
+      ///dataEntity.setId(stringUri); // NOO "invalid Object Id" TODO better
+      dataEntity.setTypes(resource.getTypes()); // TODO or no modelType, or remove modelName ??
       if (isCreation) {
          // will fail if exists
          mgo.insert(dataEntity, collectionName); // TODO does it enforce version if exists ??
@@ -684,7 +686,8 @@ public class DatacoreApiImpl implements DatacoreApi {
       String httpEntity = entity.getVersion().toString(); // no need of additional uri because only for THIS resource
       EntityTag eTag = new EntityTag(httpEntity);
       //ResponseBuilder builder = request.evaluatePreconditions(dataEntity.getUpdated(), eTag);
-      ResponseBuilder builder = request.evaluatePreconditions(eTag);
+      ResponseBuilder builder = (request != null) ?
+            request.evaluatePreconditions(eTag) : null; // else not deployed as jaxrs
       
       if (builder == null) {
          // (if provided) If-None-Match precondition OK (resource did change), so serve updated content
@@ -925,11 +928,20 @@ public class DatacoreApiImpl implements DatacoreApi {
       }
       DCResource resource = new DCResource(resourceProps);
       resource.setUri(entity.getUri());
-      //resource.setIri(entity.getIri()); // TODO ??
-      //resource.setType(entity.getModelName()); // TODO ??
+      //resource.setId(entity.getIri()); // TODO ??
+      /*ArrayList<String> types = new ArrayList<String>(entity.getTypes().size() + 1);
+      types.add(entity.getModelName()); // TODO ??
+      types.addAll(entity.getTypes());
+      resource.setTypes(types);*/
+      resource.setTypes(entity.getTypes());
+      
       resource.setVersion(entity.getVersion());
-      /*resource.setModelName(entity.getModelName());
-      resource.setTypes(entity.getTypes());*/ //TODO !!
+      
+      resource.setCreated(entity.getCreated()); // NB. if already provided, only if creation
+      resource.setCreatedBy(entity.getCreatedBy()); // NB. if already provided, only if creation
+      resource.setLastModified(entity.getLastModified());
+      resource.setLastModifiedBy(entity.getLastModifiedBy());
+      
       return resource;
    }
    

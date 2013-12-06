@@ -1,12 +1,16 @@
 package org.oasis.datacore.sample;
 
+import javax.ws.rs.WebApplicationException;
+
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.rest.api.DCResource;
+import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.DatacoreClientApi;
+import org.oasis.datacore.rest.server.DatacoreApiImpl;
 import org.oasis.datacore.rest.server.ResourceService;
 import org.oasis.datacore.rest.server.event.DCInitIdEventListener;
 import org.oasis.datacore.rest.server.event.EventService;
@@ -15,7 +19,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
 
 
@@ -42,9 +45,12 @@ public class AltTourismPlaceAddressSample implements ApplicationListener<Context
    @Autowired
    private DataModelServiceImpl modelAdminService;
 
-   @Autowired
+   //@Autowired
    @Qualifier("datacoreApiCachedClient")
    private /*DatacoreApi*/DatacoreClientApi datacoreApiClient;
+   /** for tests */
+   @Autowired
+   private DatacoreApiImpl datacoreApiImpl;
    
    @Autowired
    private ResourceService resourceService;
@@ -105,7 +111,7 @@ public class AltTourismPlaceAddressSample implements ApplicationListener<Context
       
       DCResource myAppPlace1 = resourceService.create(MY_APP_PLACE, "my_place_1").set("name", "my_place_1");
       
-      DCResource myAppPlace1Posted = datacoreApiClient.postDataInType(myAppPlace1);
+      DCResource myAppPlace1Posted = /*datacoreApiClient.*/postDataInType(myAppPlace1);
       
       // check that field without mixin fails, at update : 
       myAppPlace1Posted.set("zipCode", "69100");
@@ -119,30 +125,30 @@ public class AltTourismPlaceAddressSample implements ApplicationListener<Context
       ///modelAdminService.addModel(myAppPlaceAddress); // LATER re-add...
 
       // check, at update :
-      DCResource myAppPlace1Put = datacoreApiClient.putDataInType(myAppPlace1Posted);
+      DCResource myAppPlace1Put = /*datacoreApiClient.*/putDataInType(myAppPlace1Posted);
 
       // check, same but already at creation :
-      DCResource myAppPlace2Posted = datacoreApiClient.postDataInType(myAppPlace2);
+      DCResource myAppPlace2Posted = /*datacoreApiClient.*/postDataInType(myAppPlace2);
       
       
       // Mixin for shared fields - use 2
       //ALTTOURISM_PLACEKIND
 
       DCResource altTourismHotelKind = resourceService.create(ALTTOURISM_PLACEKIND, "hotel").set("name", "hotel");
-      altTourismHotelKind = datacoreApiClient.postDataInType(altTourismHotelKind);
+      altTourismHotelKind = /*datacoreApiClient.*/postDataInType(altTourismHotelKind);
 
       DCResource altTourismWineryKind = resourceService.create(ALTTOURISM_PLACEKIND, "winery").set("name", "winery");
-      altTourismWineryKind = datacoreApiClient.postDataInType(altTourismWineryKind);
+      altTourismWineryKind = /*datacoreApiClient.*/postDataInType(altTourismWineryKind);
       DCResource altTourismPlaceJoWinery = resourceService.create(ALTTOURISM_PLACE, "Jo_Winery")
             .set("name", "Jo_Winery").set("kind", altTourismWineryKind.getUri());
-      DCResource altTourismPlaceJoWineryPosted = datacoreApiClient.postDataInType(altTourismPlaceJoWinery);
+      DCResource altTourismPlaceJoWineryPosted = /*datacoreApiClient.*/postDataInType(altTourismPlaceJoWinery);
 
       // check that field without mixin fails, at update : 
       altTourismPlaceJoWineryPosted.set("zipCode", "1000");
 
       // check that field without mixin fails, same but already at creation :
       DCResource altTourismMonasteryKind = resourceService.create(ALTTOURISM_PLACEKIND, "monastery").set("name", "monastery");
-      altTourismMonasteryKind = datacoreApiClient.postDataInType(altTourismMonasteryKind);
+      altTourismMonasteryKind = /*datacoreApiClient.*/postDataInType(altTourismMonasteryKind);
       DCResource altTourismPlaceSofiaMonastery = resourceService.create(ALTTOURISM_PLACE, "Sofia_Monastery")
             .set("name", "Sofia_Monastery").set("kind", altTourismMonasteryKind.getUri())
             .set("zipCode", "1000");
@@ -152,10 +158,35 @@ public class AltTourismPlaceAddressSample implements ApplicationListener<Context
       ///modelAdminService.addModel(altTourismPlace); // LATER re-add...
 
       // check, at update :
-      DCResource altTourismPlaceJoWineryPut = datacoreApiClient.putDataInType(altTourismPlaceJoWineryPosted);
+      DCResource altTourismPlaceJoWineryPut = /*datacoreApiClient.*/putDataInType(altTourismPlaceJoWineryPosted);
 
       // check, same but already at creation :
-      DCResource altTourismPlaceSofiaMonasteryPosted = datacoreApiClient.postDataInType(altTourismPlaceSofiaMonastery);
+      DCResource altTourismPlaceSofiaMonasteryPosted = /*datacoreApiClient.*/postDataInType(altTourismPlaceSofiaMonastery);
+   }
+
+   private DCResource putDataInType(DCResource resource) {
+      try {
+         return datacoreApiImpl.putDataInType(resource, resource.getTypes().get(0),
+               UriHelper.parseURI(resource.getUri()).getId());
+      } catch (WebApplicationException e) {
+         if (e.getResponse().getStatus() / 100 != 2) {
+            throw e;
+         }
+         return (DCResource) e.getResponse().getEntity();
+      } catch (Exception e) {
+         throw new RuntimeException(e);
+      }
+   }
+
+   private DCResource postDataInType(DCResource resource) {
+      try {
+         return datacoreApiImpl.postDataInType(resource, resource.getTypes().get(0));
+      } catch (WebApplicationException e) {
+         if (e.getResponse().getStatus() / 100 != 2) {
+            throw e;
+         }
+         return (DCResource) e.getResponse().getEntity();
+      }
    }
    
 }

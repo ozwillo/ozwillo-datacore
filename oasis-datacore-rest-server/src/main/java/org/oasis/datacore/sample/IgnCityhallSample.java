@@ -1,12 +1,16 @@
 package org.oasis.datacore.sample;
 
+import javax.ws.rs.WebApplicationException;
+
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.rest.api.DCResource;
+import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.DatacoreClientApi;
+import org.oasis.datacore.rest.server.DatacoreApiImpl;
 import org.oasis.datacore.rest.server.ResourceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -42,9 +46,12 @@ public class IgnCityhallSample implements ApplicationListener<ContextRefreshedEv
    @Autowired
    private DataModelServiceImpl modelAdminService;
 
-   @Autowired
+   //@Autowired
    @Qualifier("datacoreApiCachedClient")
    private /*DatacoreApi*/DatacoreClientApi datacoreApiClient;
+   /** for tests */
+   @Autowired
+   private DatacoreApiImpl datacoreApiImpl;
    
    @Autowired
    private ResourceService resourceService;
@@ -127,9 +134,10 @@ public class IgnCityhallSample implements ApplicationListener<ContextRefreshedEv
             .set("departementCode", 01).set("departement", departement01.getUri())
             .set("statutAdministratif", 6).set("population", 20).set("surface", 2601)
             .set("longitudeDMS", +55535).set("latitudeDMS", 461124);
-      departement01 = datacoreApiClient.postDataInType(departement01);
-      communeLaiz = datacoreApiClient.postDataInType(communeLaiz);
-      communePeron = datacoreApiClient.postDataInType(communePeron);
+      
+      departement01 = /*datacoreApiClient.*/postDataInType(departement01);
+      communeLaiz = /*datacoreApiClient.*/postDataInType(communeLaiz);
+      communePeron = /*datacoreApiClient.*/postDataInType(communePeron);
       
       // IGN patched by cityhalls - v1 (using Mixin, so in same collection)
       DCMixin cityhallIgnParcelleMixin = new DCMixin(CITYHALL_IGN_PARCELLE); // bdparcellaire.
@@ -150,6 +158,31 @@ public class IgnCityhallSample implements ApplicationListener<ContextRefreshedEv
       cityhallIgnParcelleModel.addField(new DCField("numeroParcelle", "int", true, 100)); // alt2 override (of def ?? or only of value, or auto ?)
       ///modelAdminService.addModel(cityhallIgnParcelleModel); // LATER re-add...
       */
+   }
+
+   private DCResource putDataInType(DCResource resource) {
+      try {
+         return datacoreApiImpl.putDataInType(resource, resource.getTypes().get(0),
+               UriHelper.parseURI(resource.getUri()).getId());
+      } catch (WebApplicationException e) {
+         if (e.getResponse().getStatus() / 100 != 2) {
+            throw e;
+         }
+         return (DCResource) e.getResponse().getEntity();
+      } catch (Exception e) {
+         throw new RuntimeException(e);
+      }
+   }
+
+   private DCResource postDataInType(DCResource resource) {
+      try {
+         return datacoreApiImpl.postDataInType(resource, resource.getTypes().get(0));
+      } catch (WebApplicationException e) {
+         if (e.getResponse().getStatus() / 100 != 2) {
+            throw e;
+         }
+         return (DCResource) e.getResponse().getEntity();
+      }
    }
    
 }
