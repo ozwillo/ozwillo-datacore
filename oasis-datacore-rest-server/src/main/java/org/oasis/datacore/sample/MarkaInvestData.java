@@ -197,7 +197,7 @@ public class MarkaInvestData {
 		DCResource cost1 = buildResource(MarkaInvestModel.COST_TYPE_MODEL_NAME,
 				new SimpleEntry<>("id", 1), new SimpleEntry<>("name", "money"));
 		DCResource cost2 = buildResource(MarkaInvestModel.COST_TYPE_MODEL_NAME,
-				new SimpleEntry<>("id", 1), new SimpleEntry<>("name", "human resources"));
+				new SimpleEntry<>("id", 2), new SimpleEntry<>("name", "human resources"));
 		listCost.add(cost1);
 		listCost.add(cost2);
 

@@ -18,6 +18,8 @@ import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.DatacoreClientApi;
 import org.oasis.datacore.rest.server.event.DCInitIdEventListener;
 import org.oasis.datacore.rest.server.event.EventService;
+import org.oasis.datacore.sample.AltTourismPlaceAddressSample;
+import org.oasis.datacore.sample.IgnCityhallSample;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -71,126 +73,51 @@ public class DatacoreApiServerMixinTest {
 
    @Autowired
    private DataModelServiceImpl modelAdminService; // TODO rm refactor
-   
-   // .bdparcellaire
-   public static final String IGN_COMMUNE = "ign.commune";
-   public static final String IGN_DEPARTEMENT = "ign.departement";
-   public static final String IGN_CANTON = "ign.canton";
-   public static final String IGN_ARRONDISSEMENT = "ign.arrondissement";
-   public static final String IGN_DIVISION = "ign.division"; // Cadastrale
-   public static final String IGN_LOCALISANT = "ign.localisant"; // Parcellaire
-   public static final String IGN_PARCELLE = "ign.parcelle";
-   
-   public static final String CITYHALL_IGN_PARCELLE = "cityhall.ign.parcelle";
 
-   public static final String OASIS_ADDRESS = "oasis.address";
+   @Autowired
+   private IgnCityhallSample ignCityhallSample;
+   @Autowired
+   private AltTourismPlaceAddressSample altTourismPlaceAddressSample;
    
-   public static final String MY_APP_PLACE = "my.app.place";
 
-   public static final String ALTTOURISM_PLACEKIND = "altTourism.placeKind";
-   public static final String ALTTOURISM_PLACE = "altTourism.place";
+
+   /**
+    * Cleans up data of all Models
+    */
+   @Test // rather than @BeforeClass, else static and spring can't inject
+   //@BeforeClass
+   public /*static */void init1cleanupData() {
+      for (DCModel model : modelServiceImpl.getModelMap().values()) {
+         mgo.remove(new Query(), model.getCollectionName());
+         Assert.assertEquals(0,  mgo.findAll(DCEntity.class, model.getCollectionName()).size());
+      }
+   }
+   /**
+    * Cleans up models
+    */
+   @Test // rather than @BeforeClass, else static and spring can't inject
+   //@BeforeClass
+   public /*static */void init1cleanupModel() {
+      modelAdminService.getModelMap().clear();
+   }
    
    @Test // rather than @BeforeClass, else static and spring can't inject
    //@BeforeClass
    public /*static */void init1setupModels() {
-      ///cityCountrySample.init(); // auto called
       
-      // because IGN Model governance say so (but this could be forbidden by OASIS) :
-      // field names are in French 
-      // all fields are required
-      
-      DCModel ignCommuneModel = new DCModel(IGN_COMMUNE); // rgc., pdp.
-      /*ignCommuneModel.setDocumentation("{ \"uri\": \"http://localhost:8180/dc/type/country/France\", "
-            + "\"name\": \"France\" }");*/
-      ///ignCommuneModel.addField(new DCField("name", "string", true, 100)); // TODO cityCountry's ??!!
-      ignCommuneModel.addField(new DCField("departementCode", "int", true, 100)); // DEP
-      ignCommuneModel.addField(new DCField("departement", "resource", true, 100));
-      ignCommuneModel.addField(new DCField("communeCode", "int", true, 100)); // COM ; code, commune ?
-      ignCommuneModel.addField(new DCField("arrondissementCode", "int", true, 100)); // ARRD
-      ignCommuneModel.addField(new DCField("cantonCode", "int", true, 100)); // CANT
-      ignCommuneModel.addField(new DCField("statutAdministratif", "int", true, 100)); // ADMI
-      ignCommuneModel.addField(new DCField("population", "int", true, 0)); // POPU ; query ?
-      ignCommuneModel.addField(new DCField("surface", "int", true, 0)); // SURFACE ; query ?
-      ignCommuneModel.addField(new DCField("nom", "string", true, 100)); // NOM ; com.nom ? ; majuscules ; cityCountry's ??
-      ignCommuneModel.addField(new DCField("longitudeDMS", "int", true, 100)); // LONGI_DMS
-      ignCommuneModel.addField(new DCField("latitudeDMS", "int", true, 100)); // LATI_DMS
+      ignCityhallSample.init(); // TODO finer
 
-      DCModel ignDepartementModel = new DCModel(IGN_DEPARTEMENT); // rgc., pdp.
-      ignDepartementModel.addField(new DCField("nom", "string", true, 100)); // DEP ; dep.nom ?
-      ignDepartementModel.addField(new DCField("departementCode", "int", true, 100)); // DEP
-
-      DCModel ignCantonModel = new DCModel(IGN_CANTON); // rgc.
-      ignCantonModel.addField(new DCField("nom", "string", true, 100)); // ?? ; dep.nom ?
-      ignCantonModel.addField(new DCField("departementCode", "int", true, 100)); // DEP
-      ignCantonModel.addField(new DCField("arrondissementCode", "int", true, 100)); // ARRD
-      ignCantonModel.addField(new DCField("cantonCode", "int", true, 100)); // CANT
-
-      DCModel ignArrondissementModel = new DCModel(IGN_ARRONDISSEMENT); // rgc., bdparcellaire.
-      ignArrondissementModel.addField(new DCField("commune", "resource", true, 100));
-      ignArrondissementModel.addField(new DCField("departementCode", "int", true, 100)); // DEP
-      ignArrondissementModel.addField(new DCField("arrondissementCode", "int", true, 100)); // ARRD
-      ignArrondissementModel.addField(new DCField("absorbeeCode", "int", true, 100)); // commune
+      altTourismPlaceAddressSample.initModel(); // TODO finer
       
-      DCModel ignDivisionModel = new DCModel(IGN_DIVISION); // bdparcellaire. ; cadastrale
-      ignDivisionModel.addField(new DCField("sectionCadastrale", "string", true, 100)); // section
-      ignDivisionModel.addField(new DCField("feuilleCadastrale", "int", true, 100)); // feuille
-      
-      DCModel ignLocalisantModel = new DCModel(IGN_LOCALISANT); // bdparcellaire. ; parcellaire
-      ignLocalisantModel.addField(new DCField("sectionCadastrale", "string", true, 100)); // section
-      ignLocalisantModel.addField(new DCField("feuilleCadastrale", "int", true, 100)); // feuille
-      ignLocalisantModel.addField(new DCField("numeroParcelle", "int", true, 100)); // numero
-
-      DCModel ignParcelleModel = new DCModel(IGN_PARCELLE); // bdparcellaire.
-      ignParcelleModel.addField(new DCField("sectionCadastrale", "string", true, 100)); // section
-      ignParcelleModel.addField(new DCField("feuilleCadastrale", "int", true, 100)); // feuille
-      ignLocalisantModel.addField(new DCField("numeroParcelle", "int", true, 100)); // numero
-      
-      modelAdminService.addModel(ignCommuneModel);
-      modelAdminService.addModel(ignDepartementModel);
-      modelAdminService.addModel(ignArrondissementModel);
-      modelAdminService.addModel(ignCantonModel);
-      modelAdminService.addModel(ignParcelleModel);
-      modelAdminService.addModel(ignDivisionModel);
-      modelAdminService.addModel(ignLocalisantModel);
-      
-      // IGN patched by cityhalls - v1 (using Mixin, so in same collection)
-      DCMixin cityhallIgnParcelleMixin = new DCMixin(CITYHALL_IGN_PARCELLE); // bdparcellaire.
-      cityhallIgnParcelleMixin.addField(new DCField("cityhall.numeroParcelle", "int", true, 100));
-      ///modelAdminService.addMixin(cityhallIgnParcelleMixin); // LATER ?
-            // numeroParcelle ?? => TODO PREFIXES !!!! OR prefix using declaring Model / Mixin ?!
-      ignParcelleModel.addMixin(cityhallIgnParcelleMixin); // NB. doesn't change the Model version ?!?!?!
-      ///modelAdminService.addModel(ignParcelleModel); // LATER re-add...
-      
-      // IGN patched by cityhalls - v2 (using inheritance, so in separate collection)
-      ///DCModel cityhallIgnParcelleModel = new DCModel("cityhall.ign.parcelle", ignParcelleModel.getName()); // bdparcellaire.
-      DCModel cityhallIgnParcelleModel = new DCModel(CITYHALL_IGN_PARCELLE);
-      cityhallIgnParcelleModel.addMixin(ignParcelleModel); // inheritance = parent model (copy) as mixin NOO OPPOSITE OVERRIDE
-      ///modelAdminService.addMixin(ignParcelleModel); // LATER ??
-      cityhallIgnParcelleModel.addField(new DCField("cityhall.numeroParcelle", "int", true, 100)); // alt1 new field along the existing one
-      cityhallIgnParcelleModel.addField(new DCField("numeroParcelle", "int", true, 100)); // alt2 override (of def ?? or only of value, or auto ?)
-      ///modelAdminService.addModel(cityhallIgnParcelleModel); // LATER re-add...
-
-      // Mixin for shared fields
-      DCMixin oasisAddress = new DCMixin(OASIS_ADDRESS);
-      oasisAddress.addField(new DCField("streetAndNumber", "string", false, 100)); // my.app.place.address.streetAndNumber ?!
-      oasisAddress.addField(new DCField("zipCode", "string", true, 100)); // "string" for cedex / po box
-      oasisAddress.addField(new DCField("cityName", "string", false, 100)); // OR only resource ??
-      oasisAddress.addField(new DCField("city", "resource", false, 100));
-      oasisAddress.addField(new DCField("countryName", "string", false, 100)); // OR only resource ??
-      oasisAddress.addField(new DCField("country", "resource", false, 100));
-      ///modelAdminService.addMixin(oasisAddress); // LATER ?
-
       
       // Mixin for shared fields - use 1
-      DCModel myAppPlaceAddress = new DCModel(MY_APP_PLACE);
-      myAppPlaceAddress.addField(new DCField("name", "string", true, 100)); // my.app.place.name ?!
-      modelAdminService.addModel(myAppPlaceAddress);
+      // MY_APP_PLACE
       
-      DCResource myAppPlace1 = resourceService.create(MY_APP_PLACE, "my_place_1").set("name", "my_place_1");
+      DCResource myAppPlace1 = resourceService.create(AltTourismPlaceAddressSample.MY_APP_PLACE, "my_place_1").set("name", "my_place_1");
       Assert.assertNotNull(myAppPlace1);
       //Assert.assertEquals("...", myAppPlace1.getUri());
       Assert.assertEquals(1, myAppPlace1.getTypes().size());
-      Assert.assertEquals(MY_APP_PLACE, myAppPlace1.getTypes().get(0));
+      Assert.assertEquals(AltTourismPlaceAddressSample.MY_APP_PLACE, myAppPlace1.getTypes().get(0));
       Assert.assertEquals("my_place_1", myAppPlace1.getId());
       Assert.assertEquals(1, myAppPlace1.getProperties().size());
       Assert.assertEquals("my_place_1", myAppPlace1.get("name"));
@@ -211,7 +138,7 @@ public class DatacoreApiServerMixinTest {
       }
 
       // check that field without mixin fails, same but already at creation :
-      DCResource myAppPlace2 = resourceService.create(MY_APP_PLACE, "my_place_2").set("name", "my_place_2")
+      DCResource myAppPlace2 = resourceService.create(AltTourismPlaceAddressSample.MY_APP_PLACE, "my_place_2").set("name", "my_place_2")
             .set("zipCode", "69100");
       Assert.assertEquals("my_place_2", myAppPlace2.get("name"));
       try {
@@ -222,7 +149,8 @@ public class DatacoreApiServerMixinTest {
       }
       
       // step 2 - now adding mixin
-      myAppPlaceAddress.addMixin(oasisAddress);
+      modelAdminService.getModel(AltTourismPlaceAddressSample.MY_APP_PLACE)
+         .addMixin(modelAdminService.getMixin(AltTourismPlaceAddressSample.OASIS_ADDRESS));
       ///modelAdminService.addModel(myAppPlaceAddress); // LATER re-add...
 
       // check, at update :
@@ -239,33 +167,26 @@ public class DatacoreApiServerMixinTest {
       
       
       // Mixin for shared fields - use 2
-      DCModel altTourismPlaceKind = new DCModel(ALTTOURISM_PLACEKIND);
-      altTourismPlaceKind.addField(new DCField("name", "string", true, 100));
-      altTourismPlaceKind.addListener(eventService.initialize(new DCInitIdEventListener(ALTTOURISM_PLACEKIND, "name"))); // TODO null
-      DCModel altTourismPlace = new DCModel(ALTTOURISM_PLACE);
-      altTourismPlace.addField(new DCField("name", "string", true, 100));
-      altTourismPlace.addField(new DCResourceField("kind", ALTTOURISM_PLACEKIND, true, 100)); // hotel... ; alternativeTourismPlaceKind
-      modelAdminService.addModel(altTourismPlaceKind);
-      modelAdminService.addModel(altTourismPlace);
+      // ALTTOURISM_PLACEKIND
 
-      DCResource altTourismHotelKind = resourceService.create(ALTTOURISM_PLACEKIND, "hotel").set("name", "hotel");
+      DCResource altTourismHotelKind = resourceService.create(AltTourismPlaceAddressSample.ALTTOURISM_PLACEKIND, "hotel").set("name", "hotel");
       altTourismHotelKind = datacoreApiClient.postDataInType(altTourismHotelKind);
 
       // check that only ALTTOURISM_PLACEKIND is accepted as kind :
       // TODO LATER should explode already here
-      DCResource altTourismPlaceJoWineryBad = resourceService.create(ALTTOURISM_PLACE, "Jo_Winery")
+      DCResource altTourismPlaceJoWineryBad = resourceService.create(AltTourismPlaceAddressSample.ALTTOURISM_PLACE, "Jo_Winery")
             .set("name", "Jo_Winery")
             .set("kind", myAppPlace2Posted.getUri()); // not a kind
       try {
          datacoreApiClient.postDataInType(altTourismPlaceJoWineryBad);
-         Assert.fail("Only " + ALTTOURISM_PLACEKIND + " should be accepted as referenced type");
+         Assert.fail("Only " + AltTourismPlaceAddressSample.ALTTOURISM_PLACEKIND + " should be accepted as referenced type");
       } catch (BadRequestException brex) {
          Assert.assertTrue(true);
       }
 
-      DCResource altTourismWineryKind = resourceService.create(ALTTOURISM_PLACEKIND, "winery").set("name", "winery");
+      DCResource altTourismWineryKind = resourceService.create(AltTourismPlaceAddressSample.ALTTOURISM_PLACEKIND, "winery").set("name", "winery");
       altTourismWineryKind = datacoreApiClient.postDataInType(altTourismWineryKind);
-      DCResource altTourismPlaceJoWinery = resourceService.create(ALTTOURISM_PLACE, "Jo_Winery")
+      DCResource altTourismPlaceJoWinery = resourceService.create(AltTourismPlaceAddressSample.ALTTOURISM_PLACE, "Jo_Winery")
             .set("name", "Jo_Winery").set("kind", altTourismWineryKind.getUri());
       DCResource altTourismPlaceJoWineryPosted = datacoreApiClient.postDataInType(altTourismPlaceJoWinery);
 
@@ -279,9 +200,9 @@ public class DatacoreApiServerMixinTest {
       }
 
       // check that field without mixin fails, same but already at creation :
-      DCResource altTourismMonasteryKind = resourceService.create(ALTTOURISM_PLACEKIND, "monastery").set("name", "monastery");
+      DCResource altTourismMonasteryKind = resourceService.create(AltTourismPlaceAddressSample.ALTTOURISM_PLACEKIND, "monastery").set("name", "monastery");
       altTourismMonasteryKind = datacoreApiClient.postDataInType(altTourismMonasteryKind);
-      DCResource altTourismPlaceSofiaMonastery = resourceService.create(ALTTOURISM_PLACE, "Sofia_Monastery")
+      DCResource altTourismPlaceSofiaMonastery = resourceService.create(AltTourismPlaceAddressSample.ALTTOURISM_PLACE, "Sofia_Monastery")
             .set("name", "Sofia_Monastery").set("kind", altTourismMonasteryKind.getUri())
             .set("zipCode", "1000");
       Assert.assertEquals("Sofia_Monastery", altTourismPlaceSofiaMonastery.get("name")); // TODO _ else space bad url !!!!!!!!!!!!!!!!
@@ -293,7 +214,8 @@ public class DatacoreApiServerMixinTest {
       }
          
       // step 2 - now adding mixin
-      altTourismPlace.addMixin(oasisAddress);
+      modelAdminService.getModel(AltTourismPlaceAddressSample.ALTTOURISM_PLACE)
+         .addMixin(modelAdminService.getMixin(AltTourismPlaceAddressSample.OASIS_ADDRESS));
       ///modelAdminService.addModel(altTourismPlace); // LATER re-add...
 
       // check, at update :
@@ -309,32 +231,20 @@ public class DatacoreApiServerMixinTest {
       Assert.assertEquals("1000", altTourismPlaceSofiaMonasteryPosted.get("zipCode")); // now address field
    }
    
-   /**
-    * Cleans up data of all Models
-    */
-   @Test // rather than @BeforeClass, else static and spring can't inject
-   //@BeforeClass
-   public /*static */void init2cleanupDbFirst() {
-      for (DCModel model : modelServiceImpl.getModelMap().values()) {
-         mgo.remove(new Query(), model.getCollectionName());
-         Assert.assertEquals(0,  mgo.findAll(DCEntity.class, model.getCollectionName()).size());
-      }
-   }
-   
    @Test
    public void test() {
       
    }
 
    public DCResource buildAltTourismPlaceKind(String kind) {
-      return resourceService.create(ALTTOURISM_PLACEKIND, kind).set("name", kind);
+      return resourceService.create(AltTourismPlaceAddressSample.ALTTOURISM_PLACEKIND, kind).set("name", kind);
       // TODO iri ??
       //resource.setVersion(-1l);
    }
    
    public DCResource buildAltTourismPlaceKindObsolete(String kind) {
       DCResource resource = new DCResource();
-      String type = ALTTOURISM_PLACEKIND;
+      String type = AltTourismPlaceAddressSample.ALTTOURISM_PLACEKIND;
       String iri = kind;
       resource.setUri(UriHelper.buildUri(containerUrl, type, iri));
       //resource.setVersion(-1l);

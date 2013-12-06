@@ -1,9 +1,11 @@
 package org.oasis.datacore.core.meta;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.oasis.datacore.core.meta.model.DCField;
+import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.springframework.stereotype.Component;
@@ -18,10 +20,15 @@ import org.springframework.stereotype.Component;
 public class DataModelServiceImpl implements DCModelService {
    
    private Map<String,DCModel> modelMap = new HashMap<String, DCModel>();
+   private Map<String,DCMixin> mixinMap = new HashMap<String, DCMixin>();
 
    @Override
    public DCModel getModel(String type) {
       return modelMap.get(type);
+   }
+   @Override
+   public DCMixin getMixin(String type) {
+      return mixinMap.get(type);
    }
 
    @Override
@@ -30,6 +37,16 @@ public class DataModelServiceImpl implements DCModelService {
       throw new UnsupportedOperationException();
    }
 
+   @Override
+   public Collection<DCModel> getModels() {
+      return this.modelMap.values();
+   }
+
+   @Override
+   public Collection<DCMixin> getMixins() {
+      return this.mixinMap.values();
+   }
+   
    
    ///////////////////////////////////////
    // admin / update methods
@@ -44,6 +61,18 @@ public class DataModelServiceImpl implements DCModelService {
 
    public void setModelMap(Map<String, DCModel> modelMap) {
       this.modelMap = modelMap;
+   }
+
+   public void addMixin(DCMixin mixin) {
+      mixinMap.put(mixin.getName(), mixin);
+   }
+   
+   public Map<String, DCMixin> getMixinMap() {
+      return this.mixinMap;
+   }
+
+   public void setMixinMap(Map<String, DCMixin> mixinMap) {
+      this.mixinMap = mixinMap;
    }
 
 }
