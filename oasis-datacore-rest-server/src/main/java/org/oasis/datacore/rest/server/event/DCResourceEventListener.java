@@ -1,13 +1,14 @@
 package org.oasis.datacore.rest.server.event;
 
 
+
 /**
  * Only to provide typing when used from ex. DCModelBase
  * @author mdutoo
  *
  */
 public abstract class DCResourceEventListener extends DCEventListenerBase {
-
+   
    public DCResourceEventListener() {
       super();
    }

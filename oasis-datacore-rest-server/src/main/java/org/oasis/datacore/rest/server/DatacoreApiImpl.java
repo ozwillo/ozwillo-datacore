@@ -38,6 +38,7 @@ import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelService;
+import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.util.DCURI;
@@ -243,7 +244,7 @@ public class DatacoreApiImpl implements DatacoreApi {
       DCResourceParsingContext resourceParsingContext = new DCResourceParsingContext(dcModel, stringUri);
       //List<DCEntity> embeddedEntitiesToAlsoUpdate = new ArrayList<DCEntity>(); // TODO embeddedEntitiesToAlsoUpdate ??
       //resourceParsingContext.setEmbeddedEntitiesToAlsoUpdate(embeddedEntitiesToAlsoUpdate);
-      resourceToEntityFields(dataProps, dataEntity.getProperties(), dcModel.getFieldMap(),
+      resourceToEntityFields(dataProps, dataEntity.getProperties(), dcModel.getGlobalFieldMap(),
             resourceParsingContext); // TODO dcModel.getFieldNames(), abstract DCModel-DCMapField ??
       
       if (resourceParsingContext.hasErrors()) {
@@ -413,10 +414,15 @@ public class DatacoreApiImpl implements DatacoreApi {
             }
             // check type :
             // TODO mixins / aspects / type constraints
-            /*if (!dcModelService.hasType(refEntity, ((DCResourceField) dcField).getTypeConstraints())) {
+            //if (!(dcField instanceof DCResourceField)) { // never happens, TODO rather check it at model creation / change
+            //   throw new ModelConfigurationException("Fields of type resource should be DCResourceFields instance");
+            //}
+            if (!dcUri.getType().equals(((DCResourceField) dcField).getResourceType())) {
+            //if (!modelService.hasType(refEntity, ((DCResourceField) dcField).getTypeConstraints())) {
                throw new ResourceParsingException("Target resource referenced by resource Field of URI value "
-                     + dcUri + " does not match type constraints TODO");
-            }*/
+                     + dcUri + " is not of required type " + ((DCResourceField) dcField).getResourceType());
+               // does not match type constraints TODO
+            }
             
             // TODO TODO provide refEntity in model (ex. DCResourceValue) OR IN GRAPH,
             // ex. for 2nd pass or in case of expanded + embedded return ?!?
@@ -467,11 +473,15 @@ public class DatacoreApiImpl implements DatacoreApi {
                // reuse existing entity as base : PATCH-like behaviour
                // check type :
                // TODO mixins / aspects / type constraints
-               /*if (!dcModelService.hasType(entityEntityValue, ((DCResourceField) dcField).getTypeConstraints())) {
-                  throw new ResourceParsingException("Target resource " + dcUri.getType()
-                        + " referenced by resource Field of Object value with URI property " + dcUri
-                        + " does not match type constraints TODO");
-               }*/
+               //if (!(dcField instanceof DCResourceField)) { // never happens, TODO rather check it at model creation / change
+               //   throw new ModelConfigurationException("Fields of type resource should be DCResourceFields instance");
+               //}
+               if (!dcUri.getType().equals(((DCResourceField) dcField).getResourceType())) {
+               //if (!modelService.hasType(refEntity, ((DCResourceField) dcField).getTypeConstraints())) {
+                  throw new ResourceParsingException("Target resource referenced by resource Field of URI value "
+                        + dcUri + " is not of required type " + ((DCResourceField) dcField).getResourceType());
+                  // does not match type constraints TODO
+               }
             }
             
             // get version if any, may be used for transaction :
@@ -503,7 +513,7 @@ public class DatacoreApiImpl implements DatacoreApi {
                dataMap.remove(resourceNativeJavaField);
             }
             resourceToEntityFields(dataMap, entityEntityValue.getProperties(),
-                  valueModel.getFieldMap(), resourceParsingContext);
+                  valueModel.getGlobalFieldMap(), resourceParsingContext);
             // TODO TODO add entityEntityValue to graph ?! again, for what use :
             // multiple update or even creation (rather flattened ?) ??
             //embeddedEntitiesToAlsoUpdate.add(entityEntityValue);

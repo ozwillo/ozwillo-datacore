@@ -1,11 +1,13 @@
 package org.oasis.datacore.sample;
 
 import javax.annotation.PostConstruct;
+
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.stereotype.Component;
@@ -40,7 +42,7 @@ public class CitizenKinModel {
         DCModel procedureModel = new DCModel(PROCEDURE_MODEL_NAME);
         procedureModel.addField(new DCField("id", DCFieldTypeEnum.STRING.getType(), true, 100));
         //procedureModel.addField(new DCField("name", DCFieldTypeEnum.STRING.getType(), true, 100));
-        procedureModel.addField(new DCListField("agents", new DCField("agent", DCFieldTypeEnum.RESOURCE.getType())));
+        procedureModel.addField(new DCListField("agents", new DCResourceField("agent", USER_MODEL_NAME)));
 
         modelAdminService.addModel(userModel);
         modelAdminService.addModel(procedureModel);

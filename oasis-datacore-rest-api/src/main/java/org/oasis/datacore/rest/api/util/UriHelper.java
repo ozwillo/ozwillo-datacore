@@ -42,7 +42,7 @@ public class UriHelper {
          // TODO reuse getUriNormalizedContainerAndPathWithoutSlash's code...
          return new URL(uri).toURI().normalize().toString();
       } catch (MalformedURLException | URISyntaxException e) {
-         throw new RuntimeException("Bad URL : " + uri);
+         throw new RuntimeException("Bad URL : " + uri, e);
       }
    }
    

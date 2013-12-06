@@ -5,6 +5,7 @@ import javax.annotation.PostConstruct;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.stereotype.Component;
@@ -40,12 +41,12 @@ public class BrandCarMotorcycleModel {
 		brandModel.addField(new DCField("name", "string", true, 100));
 
 		DCModel carModel = new DCModel(CAR_MODEL_NAME);
-		carModel.addField(new DCField("brand", "resource", true, 100));
+		carModel.addField(new DCResourceField("brand", BRAND_MODEL_NAME, true, 100));
 		carModel.addField(new DCField("model", "string", true, 100));
 		carModel.addField(new DCField("year", "int"));
 
 		DCModel motorcycleModel = new DCModel(MOTORCYCLE_MODEL_NAME);
-		motorcycleModel.addField(new DCField("brand", "resource", true, 100));
+		motorcycleModel.addField(new DCResourceField("brand", BRAND_MODEL_NAME, true, 100));
 		motorcycleModel.addField(new DCField("model", "string", true, 100));
 		motorcycleModel.addField(new DCField("year", "int"));
 		motorcycleModel.addField(new DCField("hp", "int"));

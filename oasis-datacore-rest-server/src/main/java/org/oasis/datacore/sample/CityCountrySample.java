@@ -7,6 +7,7 @@ import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -46,7 +47,7 @@ public class CityCountrySample {
       
       DCModel cityModel = new DCModel(CITY_MODEL_NAME);
       cityModel.addField(new DCField("name", "string", true, 100));
-      cityModel.addField(new DCField("inCountry", "resource", true, 100)); // TODO , countryModel.getName())));
+      cityModel.addField(new DCResourceField("inCountry", COUNTRY_MODEL_NAME, true, 100));
       cityModel.addField(new DCField("populationCount", "int", false, 50));
       cityModel.addField(new DCField("founded", "date", false, 0));
       DCMapField name_18nMapField = new DCMapField("name_i18n"); // i18n

@@ -7,6 +7,7 @@ import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.stereotype.Component;
@@ -53,14 +54,14 @@ public class MarkaInvestModel {
 		DCModel companyModel = new DCModel(COMPANY_MODEL_NAME);
 		companyModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
 		companyModel.addField(new DCField("name", DCFieldTypeEnum.STRING.getType(), true, 100));
-		companyModel.addField(new DCField("field", DCFieldTypeEnum.RESOURCE.getType()));
+		companyModel.addField(new DCResourceField("field", FIELD_MODEL_NAME));
 		companyModel.addField(new DCField("lastAnnualRevenue", DCFieldTypeEnum.FLOAT.getType()));
 		companyModel.addField(new DCField("employeeNb", DCFieldTypeEnum.INTEGER.getType()));
 		companyModel.addField(new DCField("incorporationYear", DCFieldTypeEnum.INTEGER.getType()));
 		companyModel.addField(new DCField("website", DCFieldTypeEnum.STRING.getType()));
-		companyModel.addField(new DCField("country", DCFieldTypeEnum.RESOURCE.getType()));
+		companyModel.addField(new DCResourceField("country", COUNTRY_MODEL_NAME));
 		companyModel.addField(new DCField("address", DCFieldTypeEnum.STRING.getType()));
-		companyModel.addField(new DCField("city", DCFieldTypeEnum.RESOURCE.getType()));
+		companyModel.addField(new DCResourceField("city", CITY_MODEL_NAME));
 
 		DCModel fieldModel = new DCModel(FIELD_MODEL_NAME);
 		fieldModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
@@ -85,23 +86,23 @@ public class MarkaInvestModel {
 		cityModel.addField(new DCListField("postalCodes", new DCField("postalCode", DCFieldTypeEnum.STRING.getType())));
 		cityModel.addField(new DCField("lat", DCFieldTypeEnum.FLOAT.getType()));
 		cityModel.addField(new DCField("long", DCFieldTypeEnum.FLOAT.getType()));
-		cityModel.addField(new DCField("country", DCFieldTypeEnum.RESOURCE.getType()));
+		cityModel.addField(new DCResourceField("country", COUNTRY_MODEL_NAME));
 		
 		DCModel userModel = new DCModel(USER_MODEL_NAME);
 		userModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
 		userModel.addField(new DCField("firstName", DCFieldTypeEnum.STRING.getType(), true, 100));
 		userModel.addField(new DCField("lastName", DCFieldTypeEnum.STRING.getType(), true, 100));
-		userModel.addField(new DCListField("companies", new DCField("company", DCFieldTypeEnum.RESOURCE.getType())));
+		userModel.addField(new DCListField("companies", new DCResourceField("company", COMPANY_MODEL_NAME)));
 		userModel.addField(new DCField("email", DCFieldTypeEnum.STRING.getType()));
 		userModel.addField(new DCField("tel", DCFieldTypeEnum.STRING.getType()));
 		userModel.addField(new DCField("fax", DCFieldTypeEnum.STRING.getType()));
 		
 		DCModel investorModel = new DCModel(INVESTOR_MODEL_NAME);
 		investorModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
-		investorModel.addField(new DCField("user", DCFieldTypeEnum.RESOURCE.getType(), true, 100));
-		investorModel.addField(new DCListField("types", new DCField("type", DCFieldTypeEnum.RESOURCE.getType())));
+		investorModel.addField(new DCResourceField("user", USER_MODEL_NAME, true, 100));
+		investorModel.addField(new DCListField("types", new DCResourceField("type", INVESTOR_TYPE_MODEL_NAME)));
 		investorModel.addField(new DCField("fundsAvailable", DCFieldTypeEnum.FLOAT.getType()));
-		investorModel.addField(new DCListField("sectors", new DCField("sector", DCFieldTypeEnum.RESOURCE.getType())));
+		investorModel.addField(new DCListField("sectors", new DCResourceField("sector", SECTOR_MODEL_NAME)));
 		
 		DCModel investorTypeModel = new DCModel(INVESTOR_TYPE_MODEL_NAME);
 		investorTypeModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
@@ -114,8 +115,8 @@ public class MarkaInvestModel {
 		
 		DCModel plannedInvestmentAssistanceRequestModel = new DCModel(INVESTMENT_ASSISTANCE_REQUEST_MODEL_NAME);
 		plannedInvestmentAssistanceRequestModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
-		plannedInvestmentAssistanceRequestModel.addField(new DCListField("sectors", new DCField("sector", DCFieldTypeEnum.RESOURCE.getType())));
-		plannedInvestmentAssistanceRequestModel.addField(new DCField("company", DCFieldTypeEnum.RESOURCE.getType()));
+		plannedInvestmentAssistanceRequestModel.addField(new DCListField("sectors", new DCResourceField("sector", SECTOR_MODEL_NAME)));
+		plannedInvestmentAssistanceRequestModel.addField(new DCResourceField("company", COMPANY_MODEL_NAME));
 		plannedInvestmentAssistanceRequestModel.addField(new DCField("fundRequired", DCFieldTypeEnum.FLOAT.getType()));
 		plannedInvestmentAssistanceRequestModel.addField(new DCField("start", DCFieldTypeEnum.DATE.getType()));
 		plannedInvestmentAssistanceRequestModel.addField(new DCField("end", DCFieldTypeEnum.DATE.getType()));

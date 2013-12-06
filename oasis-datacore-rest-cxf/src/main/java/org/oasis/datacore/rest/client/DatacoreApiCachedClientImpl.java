@@ -1,5 +1,7 @@
 package org.oasis.datacore.rest.client;
 
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import javax.ws.rs.HttpMethod;
@@ -74,7 +76,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
    public DCResource postDataInType(DCResource resource) {
       List<String> types = resource.getTypes();
       String modelType = null;
-      if (types != null && types.isEmpty()) {
+      if (types != null && !types.isEmpty()) {
          modelType =  types.get(0); // TODO or parse it from uri ??
       } // else lets server explode
       return this.postDataInType(resource, modelType);
@@ -146,10 +148,20 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
    public DCResource putDataInType(DCResource resource) {
       List<String> types = resource.getTypes();
       String modelType = null;
-      if (types != null && types.isEmpty()) {
+      if (types != null && !types.isEmpty()) {
          modelType =  types.get(0);
       } // else lets server explode
-      return this.putDataInType(resource, modelType, resource.getId()); // TODO or parse id from uri ??
+      String id = resource.getId();
+      if (id == null) {
+         // init id to make it easier to reuse POSTed & returned resources :
+         // TODO rather make id transient ? or auto set id on unmarshall ??
+         try { 
+            id = UriHelper.parseURI(resource.getUri()).getId();
+         } catch (Exception e) {
+            throw new RuntimeException(e);
+         }
+      }
+      return this.putDataInType(resource, modelType, id); // TODO or parse id from uri ??
    }
 
    /**

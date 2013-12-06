@@ -1,5 +1,7 @@
 package org.oasis.datacore.rest.server;
 
+import javax.ws.rs.BadRequestException;
+
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -10,10 +12,12 @@ import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.DatacoreClientApi;
-import org.oasis.datacore.rest.server.event.DCInitIriEventListener;
+import org.oasis.datacore.rest.server.event.DCInitIdEventListener;
+import org.oasis.datacore.rest.server.event.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,6 +43,8 @@ public class DatacoreApiServerMixinTest {
    
    @Autowired
    private ResourceService resourceService;
+   @Autowired
+   private EventService eventService;
    
    /** to init models */
    @Autowired
@@ -146,33 +152,39 @@ public class DatacoreApiServerMixinTest {
       modelAdminService.addModel(ignParcelleModel);
       modelAdminService.addModel(ignDivisionModel);
       modelAdminService.addModel(ignLocalisantModel);
-      /*
+      
       // IGN patched by cityhalls - v1 (using Mixin, so in same collection)
       DCMixin cityhallIgnParcelleMixin = new DCMixin(CITYHALL_IGN_PARCELLE); // bdparcellaire.
       cityhallIgnParcelleMixin.addField(new DCField("cityhall.numeroParcelle", "int", true, 100));
+      ///modelAdminService.addMixin(cityhallIgnParcelleMixin); // LATER ?
             // numeroParcelle ?? => TODO PREFIXES !!!! OR prefix using declaring Model / Mixin ?!
       ignParcelleModel.addMixin(cityhallIgnParcelleMixin); // NB. doesn't change the Model version ?!?!?!
+      ///modelAdminService.addModel(ignParcelleModel); // LATER re-add...
       
       // IGN patched by cityhalls - v2 (using inheritance, so in separate collection)
       ///DCModel cityhallIgnParcelleModel = new DCModel("cityhall.ign.parcelle", ignParcelleModel.getName()); // bdparcellaire.
       DCModel cityhallIgnParcelleModel = new DCModel(CITYHALL_IGN_PARCELLE);
-      cityhallIgnParcelleModel.addMixin(ignParcelleModel); // inheritance = parent model (copy) as mixin
-      cityhallIgnParcelleMixin.addField(new DCField("cityhall.numeroParcelle", "int", true, 100)); // alt1 new field along the existing one
-      cityhallIgnParcelleMixin.addField(new DCField("numeroParcelle", "int", true, 100)); // alt2 override (of def ?? or only of value, or auto ?)
+      cityhallIgnParcelleModel.addMixin(ignParcelleModel); // inheritance = parent model (copy) as mixin NOO OPPOSITE OVERRIDE
+      ///modelAdminService.addMixin(ignParcelleModel); // LATER ??
+      cityhallIgnParcelleModel.addField(new DCField("cityhall.numeroParcelle", "int", true, 100)); // alt1 new field along the existing one
+      cityhallIgnParcelleModel.addField(new DCField("numeroParcelle", "int", true, 100)); // alt2 override (of def ?? or only of value, or auto ?)
+      ///modelAdminService.addModel(cityhallIgnParcelleModel); // LATER re-add...
 
       // Mixin for shared fields
       DCMixin oasisAddress = new DCMixin(OASIS_ADDRESS);
-      oasisAddress.addField(new DCField("streetAndNumber", "string", true, 100)); // my.app.place.address.streetAndNumber ?!
+      oasisAddress.addField(new DCField("streetAndNumber", "string", false, 100)); // my.app.place.address.streetAndNumber ?!
       oasisAddress.addField(new DCField("zipCode", "string", true, 100)); // "string" for cedex / po box
-      oasisAddress.addField(new DCField("cityName", "string", true, 100)); // OR only resource ??
-      oasisAddress.addField(new DCField("city", "resource", true, 100));
-      oasisAddress.addField(new DCField("countryName", "string", true, 100)); // OR only resource ??
-      oasisAddress.addField(new DCField("country", "resource", true, 100));
+      oasisAddress.addField(new DCField("cityName", "string", false, 100)); // OR only resource ??
+      oasisAddress.addField(new DCField("city", "resource", false, 100));
+      oasisAddress.addField(new DCField("countryName", "string", false, 100)); // OR only resource ??
+      oasisAddress.addField(new DCField("country", "resource", false, 100));
+      ///modelAdminService.addMixin(oasisAddress); // LATER ?
 
       
       // Mixin for shared fields - use 1
       DCModel myAppPlaceAddress = new DCModel(MY_APP_PLACE);
       myAppPlaceAddress.addField(new DCField("name", "string", true, 100)); // my.app.place.name ?!
+      modelAdminService.addModel(myAppPlaceAddress);
       
       DCResource myAppPlace1 = resourceService.create(MY_APP_PLACE, "my_place_1").set("name", "my_place_1");
       Assert.assertNotNull(myAppPlace1);
@@ -193,9 +205,9 @@ public class DatacoreApiServerMixinTest {
       myAppPlace1Posted.set("zipCode", "69100");
       try {
          datacoreApiClient.putDataInType(myAppPlace1Posted);
-      } catch (Exception e) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
+         Assert.fail("Field without mixin should fail at update");
+      } catch (BadRequestException brex) {
+         Assert.assertTrue(true);
       }
 
       // check that field without mixin fails, same but already at creation :
@@ -204,13 +216,14 @@ public class DatacoreApiServerMixinTest {
       Assert.assertEquals("my_place_2", myAppPlace2.get("name"));
       try {
          datacoreApiClient.postDataInType(myAppPlace2);
-      } catch (Exception e) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
+         Assert.fail("Field without mixin should fail at creation");
+      } catch (BadRequestException brex) {
+         Assert.assertTrue(true);
       }
       
       // step 2 - now adding mixin
       myAppPlaceAddress.addMixin(oasisAddress);
+      ///modelAdminService.addModel(myAppPlaceAddress); // LATER re-add...
 
       // check, at update :
       DCResource myAppPlace1Put = datacoreApiClient.putDataInType(myAppPlace1Posted);
@@ -225,57 +238,75 @@ public class DatacoreApiServerMixinTest {
       Assert.assertEquals("69100", myAppPlace2Posted.get("zipCode")); // now address field
       
       
-      
       // Mixin for shared fields - use 2
       DCModel altTourismPlaceKind = new DCModel(ALTTOURISM_PLACEKIND);
       altTourismPlaceKind.addField(new DCField("name", "string", true, 100));
-      altTourismPlaceKind.addListener(new DCInitIriEventListener(ALTTOURISM_PLACEKIND, "name")); // TODO null
+      altTourismPlaceKind.addListener(eventService.initialize(new DCInitIdEventListener(ALTTOURISM_PLACEKIND, "name"))); // TODO null
       DCModel altTourismPlace = new DCModel(ALTTOURISM_PLACE);
       altTourismPlace.addField(new DCField("name", "string", true, 100));
-      altTourismPlace.addField(new DCField("kind", "resource", true, 100)); // hotel... ; alternativeTourismPlaceKind
+      altTourismPlace.addField(new DCResourceField("kind", ALTTOURISM_PLACEKIND, true, 100)); // hotel... ; alternativeTourismPlaceKind
+      modelAdminService.addModel(altTourismPlaceKind);
+      modelAdminService.addModel(altTourismPlace);
 
-      DCResource altTourismHotelKind = resourceService.create(ALTTOURISM_PLACEKIND, "hotel").set("kind", "hotel");
+      DCResource altTourismHotelKind = resourceService.create(ALTTOURISM_PLACEKIND, "hotel").set("name", "hotel");
       altTourismHotelKind = datacoreApiClient.postDataInType(altTourismHotelKind);
-      
-      DCResource altTourismPlaceJoWinery = resourceService.create(ALTTOURISM_PLACE, "name").set("name", "Jo Winery")
-            .set("kind", altTourismHotelKind.getUri());
+
+      // check that only ALTTOURISM_PLACEKIND is accepted as kind :
+      // TODO LATER should explode already here
+      DCResource altTourismPlaceJoWineryBad = resourceService.create(ALTTOURISM_PLACE, "Jo_Winery")
+            .set("name", "Jo_Winery")
+            .set("kind", myAppPlace2Posted.getUri()); // not a kind
+      try {
+         datacoreApiClient.postDataInType(altTourismPlaceJoWineryBad);
+         Assert.fail("Only " + ALTTOURISM_PLACEKIND + " should be accepted as referenced type");
+      } catch (BadRequestException brex) {
+         Assert.assertTrue(true);
+      }
+
+      DCResource altTourismWineryKind = resourceService.create(ALTTOURISM_PLACEKIND, "winery").set("name", "winery");
+      altTourismWineryKind = datacoreApiClient.postDataInType(altTourismWineryKind);
+      DCResource altTourismPlaceJoWinery = resourceService.create(ALTTOURISM_PLACE, "Jo_Winery")
+            .set("name", "Jo_Winery").set("kind", altTourismWineryKind.getUri());
       DCResource altTourismPlaceJoWineryPosted = datacoreApiClient.postDataInType(altTourismPlaceJoWinery);
 
       // check that field without mixin fails, at update : 
       altTourismPlaceJoWineryPosted.set("zipCode", "1000");
       try {
-         datacoreApiClient.putDataInType(altTourismPlaceJoWineryPosted);
-      } catch (Exception e) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
+         datacoreApiClient.postDataInType(altTourismPlaceJoWineryPosted);
+         Assert.fail("Field without mixin should fail at update");
+      } catch (BadRequestException brex) {
+         Assert.assertTrue(true);
       }
 
       // check that field without mixin fails, same but already at creation :
-      DCResource altTourismPlaceSofiaMonastery = resourceService.create(ALTTOURISM_PLACE, "Sofia Monastery").set("name", "Sofia Monastery")
+      DCResource altTourismMonasteryKind = resourceService.create(ALTTOURISM_PLACEKIND, "monastery").set("name", "monastery");
+      altTourismMonasteryKind = datacoreApiClient.postDataInType(altTourismMonasteryKind);
+      DCResource altTourismPlaceSofiaMonastery = resourceService.create(ALTTOURISM_PLACE, "Sofia_Monastery")
+            .set("name", "Sofia_Monastery").set("kind", altTourismMonasteryKind.getUri())
             .set("zipCode", "1000");
-      Assert.assertEquals("Sofia Monastery", altTourismPlaceSofiaMonastery.get("name"));
+      Assert.assertEquals("Sofia_Monastery", altTourismPlaceSofiaMonastery.get("name")); // TODO _ else space bad url !!!!!!!!!!!!!!!!
       try {
          datacoreApiClient.postDataInType(altTourismPlaceSofiaMonastery);
-      } catch (Exception e) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
+         Assert.fail("Field without mixin should fail at creation");
+      } catch (BadRequestException brex) {
+         Assert.assertTrue(true);
       }
          
       // step 2 - now adding mixin
       altTourismPlace.addMixin(oasisAddress);
+      ///modelAdminService.addModel(altTourismPlace); // LATER re-add...
 
       // check, at update :
       DCResource altTourismPlaceJoWineryPut = datacoreApiClient.putDataInType(altTourismPlaceJoWineryPosted);
       Assert.assertNotNull(altTourismPlaceJoWineryPut);
-      Assert.assertEquals(altTourismPlaceJoWineryPut.get("name"), "Jo Winery");
+      Assert.assertEquals(altTourismPlaceJoWineryPut.get("name"), "Jo_Winery"); // TODO _ else space bad url !!!!!!!!!!!!!!!!
       Assert.assertEquals("1000", altTourismPlaceJoWineryPut.get("zipCode")); // now address field
 
       // check, same but already at creation :
       DCResource altTourismPlaceSofiaMonasteryPosted = datacoreApiClient.postDataInType(altTourismPlaceSofiaMonastery);
       Assert.assertNotNull(altTourismPlaceSofiaMonasteryPosted);
-      Assert.assertEquals(altTourismPlaceSofiaMonasteryPosted.get("name"), "Sofia Monastery");
+      Assert.assertEquals(altTourismPlaceSofiaMonasteryPosted.get("name"), "Sofia_Monastery"); // TODO _ else space bad url !!!!!!!!!!!!!!!!
       Assert.assertEquals("1000", altTourismPlaceSofiaMonasteryPosted.get("zipCode")); // now address field
-      */
    }
    
    /**
@@ -296,7 +327,7 @@ public class DatacoreApiServerMixinTest {
    }
 
    public DCResource buildAltTourismPlaceKind(String kind) {
-      return resourceService.create(ALTTOURISM_PLACEKIND, kind).set("kind", kind);
+      return resourceService.create(ALTTOURISM_PLACEKIND, kind).set("name", kind);
       // TODO iri ??
       //resource.setVersion(-1l);
    }
@@ -309,7 +340,7 @@ public class DatacoreApiServerMixinTest {
       //resource.setVersion(-1l);
       resource.setProperty("type", type);
       resource.setProperty("iri", iri);
-      resource.setProperty("kind", kind);
+      resource.setProperty("name", kind);
       return resource;
    }
 

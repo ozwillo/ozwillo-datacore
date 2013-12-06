@@ -18,9 +18,9 @@ public abstract class DCEventListenerBase implements DCEventListener {
    private String topic = null;
    
    @Autowired
-   protected ResourceService resourceService;
-   @Autowired
    protected EventService eventService;
+   @Autowired
+   protected ResourceService resourceService;
    
    public DCEventListenerBase() {
       
@@ -42,6 +42,14 @@ public abstract class DCEventListenerBase implements DCEventListener {
 
    public void setTopic(String topic) {
       this.topic = topic;
+   }
+
+   public void setEventService(EventService eventService) {
+      this.eventService = eventService;
+   }
+
+   public void setResourceService(ResourceService resourceService) {
+      this.resourceService = resourceService;
    }
 
 }

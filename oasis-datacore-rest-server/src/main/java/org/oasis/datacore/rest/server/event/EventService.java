@@ -5,16 +5,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.oasis.datacore.rest.server.ResourceService;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component // TODO @Service ??
 public class EventService {
    
    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(EventService.class);
-         
+
+   /** only for initing listenerBases with it if asked */
+   @Autowired
+   private ResourceService resourceService;
+   
    private Map<String,List<DCEventListener>> topic2EventListenerMap = new HashMap<String,List<DCEventListener>>();
 
+   
    /**
     * Dispatches the given event to the registered listeners.
     * @param event
@@ -27,6 +34,7 @@ public class EventService {
       }
       this.triggerEvent(event, listeners);
    }
+   
    
    /**
     * Dispatches the given event to the given listeners,
@@ -47,6 +55,14 @@ public class EventService {
       }
    }
 
+   /** helper to init
+    * TODO replace it by in DCModelBase.register*/
+   public DCEventListenerBase initialize(DCEventListenerBase listener) {
+      listener.setEventService(this);
+      listener.setResourceService(resourceService);
+      return listener;
+   }
+   
    /**
     * not thread safe, but not a problem if only called at init
     * @param dcInitIriEventListener 
@@ -60,6 +76,7 @@ public class EventService {
       }
       listeners.add(eventListener);
    }
+   
    public void register(DCEventListener eventListener, String ... eventTypeNames) {
       for (String eventTypeName : eventTypeNames) {
          this.register(eventListener, eventTypeName);

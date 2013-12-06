@@ -9,7 +9,6 @@ import java.util.Set;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.meta.model.DCField;
-import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.rest.server.parsing.model.DCQueryParsingContext;
@@ -70,7 +69,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          if (fieldPathElements.length == 0) {
             continue; // should not happen
          }
-         DCField dcField = dcModel.getField(fieldPathElements[0]);
+         DCField dcField = dcModel.getGlobalField(fieldPathElements[0]);
          if (dcField == null) {
             queryParsingContext.addError("In type " + modelType + ", can't find field with path elements "
                   + Arrays.asList(fieldPathElements) + " : can't find field for first path element "

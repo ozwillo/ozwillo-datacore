@@ -30,6 +30,7 @@ public class DCField {
    // * on change event / action ??
    // * backoffice / admin UI conf ???
 
+   /** for unmarshalling only */
    public DCField() {
       
    }

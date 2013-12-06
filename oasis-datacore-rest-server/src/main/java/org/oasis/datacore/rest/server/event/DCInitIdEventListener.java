@@ -13,11 +13,11 @@ import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException
  * @author mdutoo
  *
  */
-public class DCInitIriEventListener extends DCResourceEventListener implements DCEventListener {
+public class DCInitIdEventListener extends DCResourceEventListener implements DCEventListener {
 
    private String idFieldName = "id";
    
-   public DCInitIriEventListener() {
+   public DCInitIdEventListener() {
       
    }
 
@@ -27,12 +27,10 @@ public class DCInitIriEventListener extends DCResourceEventListener implements D
     * (that's auto done when doin model/mixin.addListener(resourceListener)
     * @param idFieldName
     */
-   public DCInitIriEventListener(String modelType, String idFieldName) {
+   public DCInitIdEventListener(String modelType, String idFieldName) {
       super(modelType);
       this.setIdFieldName(idFieldName);
-      if (modelType != null) {
-         this.init();
-      } // else must be set and inited afterwards, ex. done in DCModelBase.addListener()
+      // and must be set and inited afterwards, ex. done in DCModelBase.addListener()
    }
 
    @Override
