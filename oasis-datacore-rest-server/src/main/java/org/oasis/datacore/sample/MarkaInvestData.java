@@ -13,6 +13,9 @@ import java.util.TimeZone;
 import javax.annotation.PostConstruct;
 import javax.ws.rs.WebApplicationException;
 
+import org.apache.commons.lang.time.DateUtils;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.server.DatacoreApiImpl;
@@ -202,18 +205,10 @@ public class MarkaInvestData {
 		listCost.add(cost2);
 
 		listPlannedInvestmentAssistanceRequest.clear();
-		TimeZone tz = TimeZone.getTimeZone("UTC");
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mmZ");
-		df.setTimeZone(tz);
-		DateFormat format = new SimpleDateFormat("dd/MM/yyyy");
-		Date start = null;
-		Date end = null;
-		try {
-			start = format.parse("05/10/2013");
-			end = format.parse("04/01/2014");
-		} catch (ParseException e) {}
-		String startIso = df.format(start);
-		String endIso = df.format(end);
+
+		String startIso = "2013-07-31T13:42:43.040+0000";
+		String endIso = "2013-07-31T13:42:43.040+0000";
+				
 		DCResource plannedInvestmentRequest1 = buildResource(MarkaInvestModel.INVESTMENT_ASSISTANCE_REQUEST_MODEL_NAME,
 				new SimpleEntry<>("id", 1), new SimpleEntry<>("sectors", listSectorsUser1),
 				new SimpleEntry<>("company", company1.getUri()), new SimpleEntry<>("fundRequired", 521000f),
