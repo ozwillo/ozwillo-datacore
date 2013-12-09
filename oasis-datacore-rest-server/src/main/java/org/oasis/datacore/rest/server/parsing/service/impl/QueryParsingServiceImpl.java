@@ -2,6 +2,8 @@ package org.oasis.datacore.rest.server.parsing.service.impl;
 
 import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
+import java.util.Collection;
 
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
@@ -12,6 +14,7 @@ import org.oasis.datacore.rest.server.parsing.model.QueryOperatorsEnum;
 import org.oasis.datacore.rest.server.parsing.service.QueryParsingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.QueryTimeoutException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
@@ -45,7 +48,9 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 		QueryOperatorsEnum sortEnum = null;
 		Object parsedData = null;
 		if (operatorEnum != null) {
-			if (!QueryOperatorsEnum.SORT_ASC.name().equals(operatorEnum.name()) && !QueryOperatorsEnum.SORT_DESC.name().equals(operatorEnum.name())) {
+			if (!QueryOperatorsEnum.SORT_ASC.name().equals(operatorEnum.name()) 
+			&& !QueryOperatorsEnum.SORT_DESC.name().equals(operatorEnum.name())
+			&& !QueryOperatorsEnum.EXISTS.name().equals(operatorEnum.name())) {
 				// We get the value of the selected operator
 				queryValue = operatorAndValue.substring(operatorSize);
 				// We need to know if we need to sort the value
@@ -58,6 +63,9 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 				DCFieldTypeEnum dcFieldTypeEnum = DCFieldTypeEnum.getEnumFromStringType(dcField.getType());
 				if(dcFieldTypeEnum == null) {
 					throw new ResourceParsingException("can't find the type of " + dcField.getName());
+				}
+				if(QueryOperatorsEnum.SIZE.name().equals(operatorEnum.name())) {
+					dcFieldTypeEnum = DCFieldTypeEnum.INTEGER;
 				}
 				// Then we parse the data
 				parsedData = parseValue(dcFieldTypeEnum, queryValue);
@@ -73,7 +81,9 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 			case ALL: 
 				// TODO LATER $all with $elemMatch
 				// TODO same fieldPath for mongodb ??
-				queryParsingContext.getCriteria().and(entityFieldPath).all(parsedData);
+				if(parsedData instanceof ArrayList<?>) {
+					queryParsingContext.getCriteria().and(entityFieldPath).all((Collection<?>)parsedData);
+				}
 				break;
 				
 			case ELEM_MATCH:
@@ -103,7 +113,7 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 				// TODO AND / OR field value == null
 				// TODO sparse index ?????????
 				// TODO TODO can't return false because already failed to find field
-				queryParsingContext.getCriteria().and(entityFieldPath).exists((boolean)parsedData); // TODO same fieldPath for mongodb ??
+				queryParsingContext.getCriteria().and(entityFieldPath).exists(true); // TODO same fieldPath for mongodb ??
 				break;
 			
 			case GREATER_OR_EQUAL:
