@@ -260,6 +260,195 @@ public class FunctionalOperationsTest {
 						
 	}
 		
+	@Test
+	public void testLowerOrEquals() {
+		
+		QueryParameters queryParameters = null;
+		List<DCResource> listResource = null;
+				
+		// Lower or equal operator : <=
+		queryParameters = new QueryParameters();
+		queryParameters.add("lat", "<=70");
+		listResource = api.findDataInType(MarkaInvestModel.CITY_MODEL_NAME, queryParameters, 0, 10);
+		Assert.assertNotNull(listResource);
+		Assert.assertFalse("Resource list should not be empty", listResource.isEmpty());
+		Assert.assertTrue(listResource.size()==Integer.valueOf(1));
+		
+		queryParameters = null;
+		listResource = null;
+		Assert.assertNull(queryParameters);
+		Assert.assertNull(listResource);
+		
+		// Lower or equal operator : &lt;=
+		queryParameters = new QueryParameters();
+		queryParameters.add("lat", "&lt;=70");
+		listResource = api.findDataInType(MarkaInvestModel.CITY_MODEL_NAME, queryParameters, 0, 10);
+		Assert.assertNotNull(listResource);
+		Assert.assertFalse("Resource list should not be empty", listResource.isEmpty());
+		Assert.assertTrue(listResource.size()==Integer.valueOf(1));
+		
+		queryParameters = null;
+		listResource = null;
+		Assert.assertNull(queryParameters);
+		Assert.assertNull(listResource);
+		
+		// Lower or equal operator : $lte
+		queryParameters = new QueryParameters();
+		queryParameters.add("lat", "$lte70");
+		listResource = api.findDataInType(MarkaInvestModel.CITY_MODEL_NAME, queryParameters, 0, 10);
+		Assert.assertNotNull(listResource);
+		Assert.assertFalse("Resource list should not be empty", listResource.isEmpty());
+		Assert.assertTrue(listResource.size()==Integer.valueOf(1));
+						
+	}
+	
+	@Test
+	public void testLowerThan() {
+		
+		QueryParameters queryParameters = null;
+		List<DCResource> listResource = null;
+				
+		// Lower or equal operator : <
+		queryParameters = new QueryParameters();
+		queryParameters.add("lat", "<100");
+		listResource = api.findDataInType(MarkaInvestModel.CITY_MODEL_NAME, queryParameters, 0, 10);
+		Assert.assertNotNull(listResource);
+		Assert.assertFalse("Resource list should not be empty", listResource.isEmpty());
+		Assert.assertTrue(listResource.size()==Integer.valueOf(2));
+		
+		queryParameters = null;
+		listResource = null;
+		Assert.assertNull(queryParameters);
+		Assert.assertNull(listResource);
+		
+		// Lower or equal operator : &lt;
+		queryParameters = new QueryParameters();
+		queryParameters.add("lat", "&lt;100");
+		listResource = api.findDataInType(MarkaInvestModel.CITY_MODEL_NAME, queryParameters, 0, 10);
+		Assert.assertNotNull(listResource);
+		Assert.assertFalse("Resource list should not be empty", listResource.isEmpty());
+		Assert.assertTrue(listResource.size()==Integer.valueOf(2));
+		
+		queryParameters = null;
+		listResource = null;
+		Assert.assertNull(queryParameters);
+		Assert.assertNull(listResource);
+		
+		// Lower or equal operator : $lt
+		queryParameters = new QueryParameters();
+		queryParameters.add("lat", "$lt50");
+		listResource = api.findDataInType(MarkaInvestModel.CITY_MODEL_NAME, queryParameters, 0, 10);
+		Assert.assertNotNull(listResource);
+		Assert.assertTrue("Resource list should be empty", listResource.isEmpty());
+		Assert.assertTrue(listResource.size()==Integer.valueOf(0));
+						
+	}
+	
+	@Test
+	public void testIn() {
+		
+		QueryParameters queryParameters = null;
+		List<DCResource> listResource = null;
+				
+		queryParameters = new QueryParameters();
+		queryParameters.add("tel", "$in0");
+		listResource = api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, queryParameters, 0, 10);
+		Assert.assertNotNull(listResource);
+		Assert.assertFalse("Resource list should not be empty", listResource.isEmpty());
+		Assert.assertTrue(listResource.size()==Integer.valueOf(2));
+						
+	}
+	
+	@Test
+	public void testNotIn() {
+		
+		QueryParameters queryParameters = null;
+		List<DCResource> listResource = null;
+				
+		queryParameters = new QueryParameters();
+		queryParameters.add("firstName", "$ninTEST");
+		listResource = api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, queryParameters, 0, 10);
+		Assert.assertNotNull(listResource);
+		Assert.assertTrue("Resource list should be empty", listResource.isEmpty());
+						
+	}
+	
+	@Test
+	public void testRegex() {
+		
+		QueryParameters queryParameters = null;
+		List<DCResource> listResource = null;
+				
+		queryParameters = new QueryParameters();
+		queryParameters.add("email", "$regex.*@gmail.com");
+		listResource = api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, queryParameters, 0, 10);
+		Assert.assertNotNull(listResource);
+		Assert.assertFalse("Resource list should not be empty", listResource.isEmpty());
+		Assert.assertTrue(listResource.size()==Integer.valueOf(1));
+						
+	}
+
+	@Test
+	public void testExists() {
+		
+		QueryParameters queryParameters = null;
+		List<DCResource> listResource = null;
+				
+		// Exist operator : $exists
+		queryParameters = new QueryParameters();
+		queryParameters.add("email", "$exists");
+		listResource = api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, queryParameters, 0, 10);
+		Assert.assertNotNull(listResource);
+		Assert.assertFalse("Resource list should not be empty", listResource.isEmpty());
+		Assert.assertTrue(listResource.size()==Integer.valueOf(1));
+						
+	}
+	
+	@Test
+	public void testAll() {
+		
+		QueryParameters queryParameters = null;
+		List<DCResource> listResource = null;
+				
+		queryParameters = new QueryParameters();
+		queryParameters.add("companies", "$all[\"http://data-test.oasis-eu.org/dc/type/sample.marka.company/2\"]");
+		listResource = api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, queryParameters, 0, 10);
+		Assert.assertNotNull(listResource);
+		Assert.assertFalse("Resource list should not be empty", listResource.isEmpty());
+		Assert.assertTrue(listResource.size()==Integer.valueOf(1));
+						
+	}
+	
+	@Test
+	public void testElemMatch() {
+		
+		QueryParameters queryParameters = null;
+		List<DCResource> listResource = null;
+				
+		queryParameters = new QueryParameters();
+		queryParameters.add("companies", "$elemMatch[\"http://data-test.oasis-eu.org/dc/type/sample.marka.company/1\"]");
+		listResource = api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, queryParameters, 0, 10);
+		Assert.assertNotNull(listResource);
+		Assert.assertFalse("Resource list should not be empty", listResource.isEmpty());
+		Assert.assertTrue(listResource.size()==Integer.valueOf(2));
+						
+	}
+	
+	@Test
+	public void testSize() {
+		
+		QueryParameters queryParameters = null;
+		List<DCResource> listResource = null;
+				
+		queryParameters = new QueryParameters();
+		queryParameters.add("companies", "$size1");
+		listResource = api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, queryParameters, 0, 10);
+		Assert.assertNotNull(listResource);
+		Assert.assertFalse("Resource list should not be empty", listResource.isEmpty());
+		Assert.assertTrue(listResource.size()==Integer.valueOf(1));
+						
+	}
+	
 	private void truncateModel(String type) {
 		if (type != null && !StringUtils.isEmpty(type)) {
 			DCModel dcModel = modelAdminService.getModel(type);

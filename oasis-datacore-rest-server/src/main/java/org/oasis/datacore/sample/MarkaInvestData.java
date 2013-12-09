@@ -1,21 +1,13 @@
 package org.oasis.datacore.sample;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.TimeZone;
 
 import javax.annotation.PostConstruct;
 import javax.ws.rs.WebApplicationException;
 
-import org.apache.commons.lang.time.DateUtils;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.ISODateTimeFormat;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.server.DatacoreApiImpl;
