@@ -12,9 +12,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
-import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
-import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.security.OasisAuthAuditor;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
@@ -26,7 +24,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -73,24 +70,28 @@ public class DatacoreApiServerTest {
    @Autowired
    @Qualifier("datacoreApiImpl") 
    private DatacoreApiImpl datacoreApiImpl;
+
+   @Autowired
+   private CityCountrySample cityCountrySample;
+   
    
    @Test // rather than @BeforeClass, else static and spring can't inject
    //@BeforeClass
    public /*static */void init1setupModels() {
-      ///cityCountrySample.init(); // auto called
+      cityCountrySample.cleanDataOfCreatedModels(); // (was already called but this first cleans up data)
    }
    
    /**
     * Cleans up data of all Models
     */
-   @Test // rather than @BeforeClass, else static and spring can't inject
+   /*@Test // rather than @BeforeClass, else static and spring can't inject
    //@BeforeClass
-   public /*static */void init2cleanupDbFirst() {
+   public void init2cleanupDbFirst() {
       for (DCModel model : modelServiceImpl.getModelMap().values()) {
          mgo.remove(new Query(), model.getCollectionName());
          Assert.assertEquals(0,  mgo.findAll(DCEntity.class, model.getCollectionName()).size());
       }
-   }
+   }*/
 
    @Test
    public void test1CreateFailInStrictModeWithVersion() {

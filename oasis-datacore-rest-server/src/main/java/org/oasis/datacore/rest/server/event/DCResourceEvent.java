@@ -15,13 +15,22 @@ import org.oasis.datacore.rest.api.DCResource;
  */
 public class DCResourceEvent extends DCPropertiesEvent {
 
-   enum Types{
+   public enum Types{
+      /** resourceService.build(resource) */
+      ABOUT_TO_BUILD(RESOURCE_PREFIX + "aboutToBuild"),
+      /** about to POST */
       ABOUT_TO_CREATE(RESOURCE_PREFIX + "aboutToCreate"),
+      /** POSTed */
       CREATED(RESOURCE_PREFIX + "created"),
-      READ(RESOURCE_PREFIX + "created"), // ???
+      /** GET */
+      READ(RESOURCE_PREFIX + "read"), // ???
+      /** about to PUT */
       ABOUT_TO_UPDATE(RESOURCE_PREFIX + "aboutToUpdate"),
-      UPDATED(RESOURCE_PREFIX + "created"),
+      /** PUT */
+      UPDATED(RESOURCE_PREFIX + "updated"),
+      /** about to DELETE */
       ABOUT_TO_DELETE(RESOURCE_PREFIX + "aboutToDelete"),
+      /** DELETEd */
       DELETED(RESOURCE_PREFIX + "deleted"); // ??
       String name;
       Types(String s) { name = s; }
@@ -36,19 +45,27 @@ public class DCResourceEvent extends DCPropertiesEvent {
    /**
     * 
     * @param type
-    * @param topic
+    * @param resourceType
     * @param resource
     * @param properties try to keep it null for better performances
     */
-   public DCResourceEvent(Types type, String topic,
+   public DCResourceEvent(Types type, String resourceType,
          DCResource resource, DCResource previousResource, Map<String,Object> properties) {
-      super(type.name, topic, properties);
+      super(type.name, resourceType, properties);
       this.resource = resource;
       this.previousResource = previousResource;
    }
 
-   public DCResourceEvent(Types type, String topic, DCResource resource, DCResource previousResource) {
-      this(type, topic, resource, previousResource, null);
+   /**
+    * Creates a new ResourceEvent of the given ResourceEvent type targeting the
+    * given resource's model type, with the given current and previous resource
+    * and no event properties.
+    * @param type
+    * @param resource
+    * @param previousResource
+    */
+   public DCResourceEvent(Types type, DCResource resource, DCResource previousResource) {
+      this(type, resource.getModelType(), resource, previousResource, null);
    }
 
    public DCResourceEvent(Types type, String topic, DCResource resource) {

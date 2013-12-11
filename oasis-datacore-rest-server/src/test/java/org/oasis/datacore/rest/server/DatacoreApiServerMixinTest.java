@@ -12,12 +12,14 @@ import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.DatacoreClientApi;
 import org.oasis.datacore.rest.server.event.DCInitIdEventListener;
 import org.oasis.datacore.rest.server.event.EventService;
+import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.sample.AltTourismPlaceAddressSample;
 import org.oasis.datacore.sample.IgnCityhallSample;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,30 +86,53 @@ public class DatacoreApiServerMixinTest {
    /**
     * Cleans up data of all Models
     */
-   @Test // rather than @BeforeClass, else static and spring can't inject
+   /*@Test // rather than @BeforeClass, else static and spring can't inject
    //@BeforeClass
-   public /*static */void init1cleanupData() {
+   public void init1cleanupData() {
       for (DCModel model : modelServiceImpl.getModelMap().values()) {
          mgo.remove(new Query(), model.getCollectionName());
          Assert.assertEquals(0,  mgo.findAll(DCEntity.class, model.getCollectionName()).size());
       }
-   }
+   }*/
    /**
     * Cleans up models
     */
-   @Test // rather than @BeforeClass, else static and spring can't inject
+   /*@Test // rather than @BeforeClass, else static and spring can't inject
    //@BeforeClass
-   public /*static */void init1cleanupModel() {
+   public void init1cleanupModel() {
       modelAdminService.getModelMap().clear();
-   }
+   }*/
    
    @Test // rather than @BeforeClass, else static and spring can't inject
    //@BeforeClass
    public /*static */void init1setupModels() {
       
-      ignCityhallSample.init(); // TODO finer
+   }
 
-      altTourismPlaceAddressSample.initModel(); // TODO finer
+   @Test
+   public void testIgn() {
+      ignCityhallSample.initIgn();
+
+      DCModelBase ignParcelleModel = modelAdminService.getModel(IgnCityhallSample.IGN_PARCELLE);
+      Assert.assertEquals("numeroParcelle field should be original one",
+            100, ignParcelleModel.getGlobalField("numeroParcelle").getQueryLimit());
+      
+      ignCityhallSample.initCityhallIgnV1Mixin();
+
+      ignParcelleModel = modelAdminService.getModel(IgnCityhallSample.IGN_PARCELLE);
+      Assert.assertEquals("numeroParcelle field should be overriding Cityhall Mixin's",
+            101, ignParcelleModel.getGlobalField("numeroParcelle").getQueryLimit());
+      
+      ignCityhallSample.initCityhallIgnV2Inheritance();
+
+      DCModelBase cityhallIgnParcelleModel = modelAdminService.getModel(IgnCityhallSample.CITYHALL_IGN_PARCELLE);
+      Assert.assertEquals("numeroParcelle field should be Cityhall Mixin's overriding original one copied / inherited using Mixin",
+            102, cityhallIgnParcelleModel .getGlobalField("numeroParcelle").getQueryLimit());
+   }
+   
+   @Test
+   public void testAddress() {
+      altTourismPlaceAddressSample.initModel();
       
       
       // Mixin for shared fields - use 1
@@ -117,7 +142,7 @@ public class DatacoreApiServerMixinTest {
       Assert.assertNotNull(myAppPlace1);
       //Assert.assertEquals("...", myAppPlace1.getUri());
       Assert.assertEquals(1, myAppPlace1.getTypes().size());
-      Assert.assertEquals(AltTourismPlaceAddressSample.MY_APP_PLACE, myAppPlace1.getTypes().get(0));
+      Assert.assertEquals(AltTourismPlaceAddressSample.MY_APP_PLACE, myAppPlace1.getModelType());
       Assert.assertEquals("my_place_1", myAppPlace1.getId());
       Assert.assertEquals(1, myAppPlace1.getProperties().size());
       Assert.assertEquals("my_place_1", myAppPlace1.get("name"));
@@ -155,12 +180,14 @@ public class DatacoreApiServerMixinTest {
 
       // check, at update :
       DCResource myAppPlace1Put = datacoreApiClient.putDataInType(myAppPlace1Posted);
+      Assert.assertEquals("types should include mixin", 2, myAppPlace1Put.getTypes().size());
       Assert.assertNotNull(myAppPlace1Put);
       Assert.assertEquals(myAppPlace1Put.get("name"),  "my_place_1");
       Assert.assertEquals("69100", myAppPlace1Put.get("zipCode")); // now address field
 
       // check, same but already at creation :
       DCResource myAppPlace2Posted = datacoreApiClient.postDataInType(myAppPlace2);
+      Assert.assertEquals("types should include mixin", 2, myAppPlace2Posted.getTypes().size());
       Assert.assertNotNull(myAppPlace2Posted);
       Assert.assertEquals(myAppPlace2Posted.get("name"),  "my_place_2");
       Assert.assertEquals("69100", myAppPlace2Posted.get("zipCode")); // now address field
@@ -220,12 +247,14 @@ public class DatacoreApiServerMixinTest {
 
       // check, at update :
       DCResource altTourismPlaceJoWineryPut = datacoreApiClient.putDataInType(altTourismPlaceJoWineryPosted);
+      Assert.assertEquals("types should include mixin", 2, altTourismPlaceJoWineryPut.getTypes().size());
       Assert.assertNotNull(altTourismPlaceJoWineryPut);
       Assert.assertEquals(altTourismPlaceJoWineryPut.get("name"), "Jo_Winery"); // TODO _ else space bad url !!!!!!!!!!!!!!!!
       Assert.assertEquals("1000", altTourismPlaceJoWineryPut.get("zipCode")); // now address field
 
       // check, same but already at creation :
       DCResource altTourismPlaceSofiaMonasteryPosted = datacoreApiClient.postDataInType(altTourismPlaceSofiaMonastery);
+      Assert.assertEquals("types should include mixin", 2, altTourismPlaceSofiaMonasteryPosted.getTypes().size());
       Assert.assertNotNull(altTourismPlaceSofiaMonasteryPosted);
       Assert.assertEquals(altTourismPlaceSofiaMonasteryPosted.get("name"), "Sofia_Monastery"); // TODO _ else space bad url !!!!!!!!!!!!!!!!
       Assert.assertEquals("1000", altTourismPlaceSofiaMonasteryPosted.get("zipCode")); // now address field

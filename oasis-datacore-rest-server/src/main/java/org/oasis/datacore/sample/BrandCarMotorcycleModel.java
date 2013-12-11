@@ -1,13 +1,8 @@
 package org.oasis.datacore.sample;
 
-import javax.annotation.PostConstruct;
-
-import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCResourceField;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.stereotype.Component;
 
 /**
@@ -18,24 +13,18 @@ import org.springframework.stereotype.Component;
  */
 
 @Component
-public class BrandCarMotorcycleModel {
+public class BrandCarMotorcycleModel extends DatacoreSampleBase {
 
 	public static String CAR_MODEL_NAME = "sample.brand.car";
 	public static String MOTORCYCLE_MODEL_NAME = "sample.brand.motorcycle";
 	public static String BRAND_MODEL_NAME = "sample.brand.brand";
 
-	@Autowired
-	private DataModelServiceImpl modelAdminService;
-
-	@Autowired
-	private MongoOperations mongoOperations;
 	
-	@PostConstruct
 	public void init() {
 		
-		mongoOperations.dropCollection(BRAND_MODEL_NAME);
-		mongoOperations.dropCollection(CAR_MODEL_NAME);
-		mongoOperations.dropCollection(MOTORCYCLE_MODEL_NAME);
+		mgo.dropCollection(BRAND_MODEL_NAME);
+		mgo.dropCollection(CAR_MODEL_NAME);
+		mgo.dropCollection(MOTORCYCLE_MODEL_NAME);
 
 		DCModel brandModel = new DCModel(BRAND_MODEL_NAME);
 		brandModel.addField(new DCField("name", "string", true, 100));

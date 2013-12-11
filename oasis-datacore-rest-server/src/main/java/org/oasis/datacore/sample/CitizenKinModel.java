@@ -1,15 +1,10 @@
 package org.oasis.datacore.sample;
 
-import javax.annotation.PostConstruct;
-
-import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCResourceField;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.stereotype.Component;
 
 /**
@@ -17,22 +12,17 @@ import org.springframework.stereotype.Component;
  * @author jguillemotte
  */
 @Component
-public class CitizenKinModel {
+public class CitizenKinModel extends DatacoreSampleBase {
 
-    public static String USER_MODEL_NAME = "sample.citizenkin.user";
-    public static String PROCEDURE_MODEL_NAME = "sample.citizenkin.procedure";
+   public static String USER_MODEL_NAME = "sample.citizenkin.user";
+   public static String PROCEDURE_MODEL_NAME = "sample.citizenkin.procedure";
 
-	@Autowired
-	private DataModelServiceImpl modelAdminService;
-
-	@Autowired
-	private MongoOperations mongoOperations;
-
-	@PostConstruct
+	
+	@Override
 	public void init() {
 
-		mongoOperations.dropCollection(USER_MODEL_NAME);
-		mongoOperations.dropCollection(PROCEDURE_MODEL_NAME);
+		mgo.dropCollection(USER_MODEL_NAME);
+		mgo.dropCollection(PROCEDURE_MODEL_NAME);
 
         DCModel userModel = new DCModel(USER_MODEL_NAME);
         userModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));

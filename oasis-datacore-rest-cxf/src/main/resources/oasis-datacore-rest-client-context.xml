@@ -28,8 +28,8 @@
    <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager" 
         p:cacheManager-ref="ehcache"/>
    <bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean" 
-        p:configLocation="ehcache.xml"  
-        p:shared="true"/>
+        p:configLocation="classpath:ehcache.xml" p:shared="true"/><!-- if not classpath:
+        fails with Could not open ServletContext resource [/ehcache.xml] -->
    <!-- making the DCResource cache available for auto injection in cached client wrapper -->
    <bean id="datacore.rest.client.cache.rest.api.DCResource" factory-bean="cacheManager" factory-method="getCache">
       <constructor-arg><value>org.oasis.datacore.rest.api.DCResource</value></constructor-arg>

@@ -351,11 +351,10 @@ public class FunctionalOperationsTest {
 		List<DCResource> listResource = null;
 				
 		queryParameters = new QueryParameters();
-		queryParameters.add("tel", "$in0");
+		queryParameters.add("tel", "$in\"0142143059\""); // NB. if not quoted, parsed as int and misses front 0
 		listResource = api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, queryParameters, 0, 10);
 		Assert.assertNotNull(listResource);
-		Assert.assertFalse("Resource list should not be empty", listResource.isEmpty());
-		Assert.assertTrue(listResource.size()==Integer.valueOf(2));
+		Assert.assertEquals("Resource list should have 1 entry", 1, listResource.size());
 						
 	}
 	
@@ -366,10 +365,10 @@ public class FunctionalOperationsTest {
 		List<DCResource> listResource = null;
 				
 		queryParameters = new QueryParameters();
-		queryParameters.add("firstName", "$ninTEST");
+		queryParameters.add("firstName", "$ninFrédéric");
 		listResource = api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, queryParameters, 0, 10);
 		Assert.assertNotNull(listResource);
-		Assert.assertTrue("Resource list should be empty", listResource.isEmpty());
+		Assert.assertEquals("Resource list should have one entry", 1, listResource.size());
 						
 	}
 	
@@ -399,8 +398,7 @@ public class FunctionalOperationsTest {
 		queryParameters.add("email", "$exists");
 		listResource = api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, queryParameters, 0, 10);
 		Assert.assertNotNull(listResource);
-		Assert.assertFalse("Resource list should not be empty", listResource.isEmpty());
-		Assert.assertTrue(listResource.size()==Integer.valueOf(1));
+		Assert.assertEquals("Resource list should have 2 entries", 2, listResource.size());
 						
 	}
 	

@@ -12,6 +12,20 @@ package org.oasis.datacore.rest.server.event;
 public class AbortOperationEventException extends Exception {
    private static final long serialVersionUID = -8536958346614113087L;
 
+   /**
+    * Allows to provide the "real" exception (if not null) to be unwrapped
+    * once EventService has aborted 
+    * @param cause
+    */
+   public AbortOperationEventException(Throwable cause) {
+      super(cause);
+   }
+   /**
+    * IF NULL MESSAGE allows to provide the "real" exception (if not null) to be unwrapped
+    * once EventService has aborted
+    * @param message
+    * @param cause
+    */
    public AbortOperationEventException(String message, Throwable cause) {
       super(message, cause);
    }

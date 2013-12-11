@@ -1,7 +1,5 @@
 package org.oasis.datacore.rest.client;
 
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.util.List;
 
 import javax.ws.rs.HttpMethod;
@@ -74,11 +72,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
 
    @Override
    public DCResource postDataInType(DCResource resource) {
-      List<String> types = resource.getTypes();
-      String modelType = null;
-      if (types != null && !types.isEmpty()) {
-         modelType =  types.get(0); // TODO or parse it from uri ??
-      } // else lets server explode
+      String modelType = resource.getModelType(); // NB. if null lets server explode
       return this.postDataInType(resource, modelType);
    }
    
@@ -146,11 +140,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
 
    @Override
    public DCResource putDataInType(DCResource resource) {
-      List<String> types = resource.getTypes();
-      String modelType = null;
-      if (types != null && !types.isEmpty()) {
-         modelType =  types.get(0);
-      } // else lets server explode
+      String modelType = resource.getModelType(); // NB. if null lets server explode
       String id = resource.getId();
       if (id == null) {
          // init id to make it easier to reuse POSTed & returned resources :

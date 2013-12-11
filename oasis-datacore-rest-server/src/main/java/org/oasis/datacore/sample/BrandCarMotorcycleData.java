@@ -4,20 +4,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
 import javax.ws.rs.WebApplicationException;
 
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UnitTestHelper;
-import org.oasis.datacore.rest.server.DatacoreApiImpl;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
 @Component
 @DependsOn("brandCarMotorcycleModel")
-public class BrandCarMotorcycleData {
+public class BrandCarMotorcycleData extends DatacoreSampleBase {
 	
 	private List<DCResource> listBrands;
 	private List<DCResource> listCars;
@@ -30,10 +27,8 @@ public class BrandCarMotorcycleData {
 	@Value("#{new Boolean('${datacoreApiServer.enableBrandSampleDataInsertionAtStartup}')}")
 	private Boolean enableBrandSampleDataInsertionAtStartup;
 	
-	@Autowired
-	protected DatacoreApiImpl api;
 	
-	@PostConstruct
+	@Override
 	public void init() {
 		
 		listBrands = new ArrayList<DCResource>();
@@ -109,13 +104,13 @@ public class BrandCarMotorcycleData {
 	private void insertData() {
 		
 		try {
-			api.postAllDataInType(listBrands, BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+			datacoreApiImpl.postAllDataInType(listBrands, BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		} catch (WebApplicationException e) {}
 		try {
-			api.postAllDataInType(listCars, BrandCarMotorcycleModel.CAR_MODEL_NAME);
+		   datacoreApiImpl.postAllDataInType(listCars, BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		} catch (WebApplicationException e) {}
 		try {
-			api.postAllDataInType(listMotorcycle, BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
+		   datacoreApiImpl.postAllDataInType(listMotorcycle, BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
 		} catch (WebApplicationException e) {}
 	
 	}

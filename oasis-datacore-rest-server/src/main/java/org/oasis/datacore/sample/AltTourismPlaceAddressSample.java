@@ -1,37 +1,21 @@
 package org.oasis.datacore.sample;
 
-import javax.ws.rs.WebApplicationException;
-
-import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.rest.api.DCResource;
-import org.oasis.datacore.rest.api.util.UriHelper;
-import org.oasis.datacore.rest.client.DatacoreClientApi;
-import org.oasis.datacore.rest.server.DatacoreApiImpl;
-import org.oasis.datacore.rest.server.ResourceService;
 import org.oasis.datacore.rest.server.event.DCInitIdEventListener;
-import org.oasis.datacore.rest.server.event.EventService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.stereotype.Component;
 
 
 /**
  * Used by tests & demo.
- * TODO better : rather use Bootstrappable, or ??
- * TODO only if fillWithSamples global boolean prop
  * @author mdutoo
  *
  */
 @Component
-//@DependsOn({"datacoreApiImpl", "datacoreApiServer"}) // else ConnectException NOO deadlock, & same for ApplicationContextAware
-public class AltTourismPlaceAddressSample implements ApplicationListener<ContextRefreshedEvent> {
+public class AltTourismPlaceAddressSample extends DatacoreSampleBase {
 
    public static final String OASIS_ADDRESS = "oasis.address";
    
@@ -39,54 +23,27 @@ public class AltTourismPlaceAddressSample implements ApplicationListener<Context
 
    public static final String ALTTOURISM_PLACEKIND = "altTourism.placeKind";
    public static final String ALTTOURISM_PLACE = "altTourism.place";
-
-   /** impl, to be able to modify it
-    * TODO LATER extract interface */
-   @Autowired
-   private DataModelServiceImpl modelAdminService;
-
-   //@Autowired
-   @Qualifier("datacoreApiCachedClient")
-   private /*DatacoreApi*/DatacoreClientApi datacoreApiClient;
-   /** for tests */
-   @Autowired
-   private DatacoreApiImpl datacoreApiImpl;
-   
-   @Autowired
-   private ResourceService resourceService;
-
-   @Autowired
-   private EventService eventService;
-   
-   /** to cleanup db
-    * TODO LATER rather in service */
-   @Autowired
-   private /*static */MongoOperations mgo;
    
 
    @Override
-   public void onApplicationEvent(ContextRefreshedEvent event) {
+   public void init() {
       this.initModel();
       this.initData();
    }
    
-   //@PostConstruct // NOO deadlock, & same for ApplicationContextAware
    public void initModel() {
-
       // Mixin for shared fields - use 1
       DCModel myAppPlaceAddress = new DCModel(MY_APP_PLACE);
       myAppPlaceAddress.addField(new DCField("name", "string", true, 100)); // my.app.place.name ?!
-      modelAdminService.addModel(myAppPlaceAddress);
 
       // Mixin for shared fields - use 2
       DCModel altTourismPlaceKind = new DCModel(AltTourismPlaceAddressSample.ALTTOURISM_PLACEKIND);
       altTourismPlaceKind.addField(new DCField("name", "string", true, 100));
-      altTourismPlaceKind.addListener(eventService.initialize(new DCInitIdEventListener(AltTourismPlaceAddressSample.ALTTOURISM_PLACEKIND, "name"))); // TODO null
+      ///altTourismPlaceKind.addListener(eventService.init(new DCInitIdEventListener(AltTourismPlaceAddressSample.ALTTOURISM_PLACEKIND, "name"))); // TODO null
       DCModel altTourismPlace = new DCModel(AltTourismPlaceAddressSample.ALTTOURISM_PLACE);
       altTourismPlace.addField(new DCField("name", "string", true, 100));
       altTourismPlace.addField(new DCResourceField("kind", AltTourismPlaceAddressSample.ALTTOURISM_PLACEKIND, true, 100)); // hotel... ; alternativeTourismPlaceKind
-      modelAdminService.addModel(altTourismPlaceKind);
-      modelAdminService.addModel(altTourismPlace);
+      eventService.init(new DCInitIdEventListener(AltTourismPlaceAddressSample.ALTTOURISM_PLACEKIND, "name"));
       
       // Mixin for shared fields
       DCMixin oasisAddress = new DCMixin(OASIS_ADDRESS);
@@ -96,15 +53,13 @@ public class AltTourismPlaceAddressSample implements ApplicationListener<Context
       oasisAddress.addField(new DCField("city", "resource", false, 100));
       oasisAddress.addField(new DCField("countryName", "string", false, 100)); // OR only resource ??
       oasisAddress.addField(new DCField("country", "resource", false, 100));
-      modelAdminService.addMixin(oasisAddress);
 
+      createModelsAndCleanTheirData(myAppPlaceAddress, altTourismPlaceKind, altTourismPlace, oasisAddress);
    }
    
    public void initData() {
       // cleaning data first (else Conflict ?!)
-      mgo.dropCollection(MY_APP_PLACE);
-      mgo.dropCollection(ALTTOURISM_PLACEKIND);
-      mgo.dropCollection(ALTTOURISM_PLACE);
+      cleanDataOfCreatedModels();
       
       // Mixin for shared fields - use 1
       //MY_APP_PLACE
@@ -162,31 +117,10 @@ public class AltTourismPlaceAddressSample implements ApplicationListener<Context
 
       // check, same but already at creation :
       DCResource altTourismPlaceSofiaMonasteryPosted = /*datacoreApiClient.*/postDataInType(altTourismPlaceSofiaMonastery);
-   }
-
-   private DCResource putDataInType(DCResource resource) {
-      try {
-         return datacoreApiImpl.putDataInType(resource, resource.getTypes().get(0),
-               UriHelper.parseURI(resource.getUri()).getId());
-      } catch (WebApplicationException e) {
-         if (e.getResponse().getStatus() / 100 != 2) {
-            throw e;
-         }
-         return (DCResource) e.getResponse().getEntity();
-      } catch (Exception e) {
-         throw new RuntimeException(e);
-      }
-   }
-
-   private DCResource postDataInType(DCResource resource) {
-      try {
-         return datacoreApiImpl.postDataInType(resource, resource.getTypes().get(0));
-      } catch (WebApplicationException e) {
-         if (e.getResponse().getStatus() / 100 != 2) {
-            throw e;
-         }
-         return (DCResource) e.getResponse().getEntity();
-      }
+      
+      
+      
+      //datacoreApiClient.postDataInType(altTourismPlaceSofiaMonasteryPosted);/// NOO works SAVE on appserver (tomcat)
    }
    
 }

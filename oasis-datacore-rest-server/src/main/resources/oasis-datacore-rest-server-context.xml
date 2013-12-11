@@ -27,6 +27,9 @@
       order="-1" ignore-unresolvable="true"/><!-- so defaults to importing PropertyPlaceholder/*Resolver -->
    
    <import resource="classpath:oasis-datacore-core-context.xml" />
+   <!-- reusing client for init of samples : -->
+   <import resource="classpath:oasis-datacore-rest-client-context.xml" />
+
 
    <import resource="classpath:META-INF/cxf/cxf.xml" />
    <!-- import resource="classpath:META-INF/cxf/cxf-extension-http-jetty.xml"/ -->

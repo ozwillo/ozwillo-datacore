@@ -5,20 +5,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
 import javax.ws.rs.WebApplicationException;
 
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
-import org.oasis.datacore.rest.server.DatacoreApiImpl;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
 @Component
 @DependsOn("markaInvestModel")
-public class MarkaInvestData {
+public class MarkaInvestData extends DatacoreSampleBase {
 	
 	private List<DCResource> listCompany;
 	private List<DCResource> listField;
@@ -38,11 +35,9 @@ public class MarkaInvestData {
 	
 	@Value("#{new Boolean('${datacoreApiServer.enableMarkaSampleDataInsertionAtStartup}')}")
 	private Boolean enableMarkaSampleDataInsertionAtStartup;
-
-	@Autowired
-	protected DatacoreApiImpl api;
 	
-	@PostConstruct
+	
+	@Override
 	public void init() {
 
 		listCompany = new ArrayList<DCResource>();
@@ -225,34 +220,34 @@ public class MarkaInvestData {
 	public void insertData() {
 		
 		try {
-			api.postAllDataInType(listField, MarkaInvestModel.FIELD_MODEL_NAME);
+			datacoreApiImpl.postAllDataInType(listField, MarkaInvestModel.FIELD_MODEL_NAME);
 		} catch (WebApplicationException e) {}
 		try {
-			api.postAllDataInType(listCountry, MarkaInvestModel.COUNTRY_MODEL_NAME);
+			datacoreApiImpl.postAllDataInType(listCountry, MarkaInvestModel.COUNTRY_MODEL_NAME);
 		} catch (WebApplicationException e) {}
 		try {
-			api.postAllDataInType(listCity, MarkaInvestModel.CITY_MODEL_NAME);
+			datacoreApiImpl.postAllDataInType(listCity, MarkaInvestModel.CITY_MODEL_NAME);
 		} catch (WebApplicationException e) {}
 		try {
-			api.postAllDataInType(listCompany, MarkaInvestModel.COMPANY_MODEL_NAME);
+			datacoreApiImpl.postAllDataInType(listCompany, MarkaInvestModel.COMPANY_MODEL_NAME);
 		} catch (WebApplicationException e) {}
 		try {
-			api.postAllDataInType(listSector, MarkaInvestModel.SECTOR_MODEL_NAME);
+			datacoreApiImpl.postAllDataInType(listSector, MarkaInvestModel.SECTOR_MODEL_NAME);
 		} catch (WebApplicationException e) {}
 		try {
-			api.postAllDataInType(listUser, MarkaInvestModel.USER_MODEL_NAME);
+			datacoreApiImpl.postAllDataInType(listUser, MarkaInvestModel.USER_MODEL_NAME);
 		} catch (WebApplicationException e) {}
 		try {
-			api.postAllDataInType(listInvestorType, MarkaInvestModel.INVESTOR_TYPE_MODEL_NAME);
+			datacoreApiImpl.postAllDataInType(listInvestorType, MarkaInvestModel.INVESTOR_TYPE_MODEL_NAME);
 		} catch (WebApplicationException e) {}
 		try {
-			api.postAllDataInType(listInvestor, MarkaInvestModel.INVESTOR_MODEL_NAME);
+			datacoreApiImpl.postAllDataInType(listInvestor, MarkaInvestModel.INVESTOR_MODEL_NAME);
 		} catch (WebApplicationException e) {}
 		try {
-			api.postAllDataInType(listCost, MarkaInvestModel.COST_TYPE_MODEL_NAME);
+			datacoreApiImpl.postAllDataInType(listCost, MarkaInvestModel.COST_TYPE_MODEL_NAME);
 		} catch (WebApplicationException e) {}
 		try {
-			api.postAllDataInType(listPlannedInvestmentAssistanceRequest, MarkaInvestModel.INVESTMENT_ASSISTANCE_REQUEST_MODEL_NAME);
+			datacoreApiImpl.postAllDataInType(listPlannedInvestmentAssistanceRequest, MarkaInvestModel.INVESTMENT_ASSISTANCE_REQUEST_MODEL_NAME);
 		} catch (WebApplicationException e) {}
 	
 	}

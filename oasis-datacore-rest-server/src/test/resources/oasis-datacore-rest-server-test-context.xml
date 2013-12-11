@@ -17,8 +17,9 @@
    <context:property-placeholder location="classpath:oasis-datacore-rest-server-test.properties"
       order="-2" ignore-unresolvable="true"/><!-- so defaults to importing PropertyPlaceholder/*Resolver -->
    
-   <!-- reusing client for test -->
-   <import resource="classpath:oasis-datacore-rest-client-context.xml" />
+   <!-- reusing client for test
+   NO ALREADY REUSED FOR INIT OF SAMPLES -->
+   <!-- import resource="classpath:oasis-datacore-rest-client-context.xml" / -->
    
    <!-- server definition (AFTER client to override ex. its bus !) -->
    <import resource="classpath:oasis-datacore-rest-server-context.xml" />

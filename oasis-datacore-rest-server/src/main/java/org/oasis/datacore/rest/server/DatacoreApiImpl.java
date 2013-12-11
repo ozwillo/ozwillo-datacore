@@ -26,6 +26,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.cxf.jaxrs.model.ResourceTypes;
 import org.joda.time.DateTime;
 import org.oasis.datacore.core.entity.DCEntityService;
 import org.oasis.datacore.core.entity.EntityQueryService;
@@ -42,10 +43,17 @@ import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.util.DCURI;
+import org.oasis.datacore.rest.server.event.DCResourceEvent;
+import org.oasis.datacore.rest.server.event.DCResourceEvent.Types;
 import org.oasis.datacore.rest.server.event.EventService;
 import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
 import org.oasis.datacore.rest.server.parsing.service.QueryParsingService;
+import org.oasis.datacore.rest.server.resource.ResourceException;
+import org.oasis.datacore.rest.server.resource.ResourceNotFoundException;
+import org.oasis.datacore.rest.server.resource.ResourceObsoleteException;
+import org.oasis.datacore.rest.server.resource.ResourceService;
+import org.oasis.datacore.rest.server.resource.ResourceTypeNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -124,16 +132,62 @@ public class DatacoreApiImpl implements DatacoreApi {
             .entity(postedResource)
             .type(MediaType.APPLICATION_JSON).build());
    }
-   
+
    /**
     * Does the actual work of postDataInType except returning status & etag,
     * so it can also be used in post/putAllData(InType)
     * @param resource
     * @param modelType
+    * @param canCreate
+    * @param canUpdate
     * @return
     */
    public DCResource internalPostDataInType(DCResource resource, String modelType,
          boolean canCreate, boolean canUpdate) {
+      try {
+         return createOrUpdate(resource, modelType, canCreate, canUpdate);
+         
+      } catch (ResourceTypeNotFoundException rtnfex) {
+         throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
+               .entity(rtnfex.getMessage()).type(MediaType.TEXT_PLAIN).build());
+         
+      } catch (ResourceNotFoundException rnfex) {
+         throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
+               .entity(rnfex.getMessage()).type(MediaType.TEXT_PLAIN).build());
+         
+      } catch (ResourceObsoleteException roex) {
+         throw new ClientErrorException(Response.status(Response.Status.CONFLICT)
+               .entity(roex.getMessage()).type(MediaType.TEXT_PLAIN).build());
+         
+      } catch (BadUriException buex) {
+         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
+               .entity("Error while parsing root URI '" + buex.getUri() + "' : " + buex.getOwnMessage())
+               .type(MediaType.TEXT_PLAIN).build());
+         
+      } catch (ResourceException rex) {
+         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
+               .entity(rex.getMessage()).type(MediaType.TEXT_PLAIN).build());
+      }
+   }
+   
+   /**
+    * @param resource
+    * @param modelType
+    * @param canCreate
+    * @param canUpdate
+    * @return
+    * @throws ResourceTypeNotFoundException if unknown model type
+    * @throws ResourceNotFoundException
+    * @throws BadUriException if missing (null), malformed, syntax,
+    * relative without type, uri's and given modelType don't match
+    * @throws ResourceParsingException
+    * @throws ResourceObsoleteException
+    * @throws ResourceException if no data (null resource), forbidden version in strict POST mode,
+    * missing required version in PUT mode,
+    */
+   public DCResource createOrUpdate(DCResource resource, String modelType,
+         boolean canCreate, boolean canUpdate) throws ResourceTypeNotFoundException,
+         ResourceNotFoundException, BadUriException, ResourceObsoleteException, ResourceException {
       // TODO pass request to validate ETag,
       // or rather in a CXF ResponseHandler (or interceptor but closer to JAXRS 2) see http://cxf.apache.org/docs/jax-rs-filters.html
       // by getting result with outMessage.getContent(Object.class), see ServiceInvokerInterceptor.handleMessage() l.78
@@ -148,52 +202,50 @@ public class DatacoreApiImpl implements DatacoreApi {
       boolean isCreation = true;
 
       if (resource == null) {
-         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
-             .entity("No data").type(MediaType.TEXT_PLAIN).build());
+         throw new ResourceException("No data (modelType = " + modelType + ")", null);
       }
       
       Long version = resource.getVersion();
       if (version != null && version >= 0) {
          if (!canUpdate) {
-            throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
-                  .entity("Version is forbidden in POSTed data resource to create in strict POST mode")
-                  .type(MediaType.TEXT_PLAIN).build());
+            throw new ResourceException("Version is forbidden in POSTed data resource "
+                  + "to create in strict POST mode", resource);
          } else {
             isCreation = false;
          }
       } else if (!canCreate) {
-         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
-               .entity("Version of data resource to update is required in PUT")
-               .type(MediaType.TEXT_PLAIN).build());
+         throw new ResourceException("Version of data resource to update is required in PUT", resource);
       }
       
       DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
       if (dcModel == null) {
-         throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
-             .entity("Unknown Model type " + modelType).type(MediaType.TEXT_PLAIN).build());
+         throw new ResourceTypeNotFoundException(modelType, null, null, resource);
       }
       modelType = dcModel.getName(); // normalize ; TODO useful ?
       
+      
+      // TODO in resourceService.build() :
+      List<String> resourceTypes = resource.getTypes(); // TODO use it to know what decorating sub mixin to write only... 
+      resourceTypes.clear(); /// TODO else re-added
+      if (/*resourceTypes.isEmpty()*/true) { // NB. can't be null ; TODO or always ?? because in DCResource.create()...
+         resourceTypes.add(modelType);
+         resourceTypes.addAll(dcModel.getGlobalMixinNameSet());
+      } // else TODO better add missing ones, or allow them if optional...
+      // pre parse hooks (before parsing, to give them a chance to still patch resource ex. auto set uri & id / iri)
+      // TODO better as 2nd pass / within parsing ?? or rather on entity ????
+      eventService.triggerResourceEvent(DCResourceEvent.Types.ABOUT_TO_BUILD, resource);
+      
+      
       String stringUri = resource.getUri();
-      DCURI uri;
-      try {
-         uri = resourceService.normalizeAdaptCheckTypeOfUri(stringUri, modelType, normalizeUrlMode, matchBaseUrlMode);
-         stringUri = uri.toString();
-      } catch (ResourceParsingException rpex) {
-         // TODO LATER rather context & for multi post
-         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
-               .entity("Error while parsing root URI '" + stringUri + "' : " + rpex.getMessage())
-               .type(MediaType.TEXT_PLAIN).build());
-      }
+      DCURI uri = resourceService.normalizeAdaptCheckTypeOfUri(stringUri, modelType, normalizeUrlMode, matchBaseUrlMode);
+      stringUri = uri.toString();
       
       // TODO extract to checkContainer()
       if (!resourceService.getContainerUrl().equals(uri.getContainer())) {
          if (!brokerMode) {
-            throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
-                  .entity("In non-broker mode, can only serve data from own container "
+            throw new ResourceException("In non-broker mode, can only serve data from own container "
                         + resourceService.getContainerUrl() + " but URI container is "
-                        + uri.getContainer())
-                  .type(MediaType.TEXT_PLAIN).build());
+                        + uri.getContainer(), resource);
          }
          // else TODO LATER OPT broker mode
       }
@@ -204,9 +256,8 @@ public class DatacoreApiImpl implements DatacoreApi {
          if (dataEntity != null) {
             if (!canUpdate) {
                // already exists, but only allow creation
-               throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
-                     .entity("Already exists at uri (forbidden in strict POST mode) :\n"
-                           + dataEntity.toString()).type(MediaType.TEXT_PLAIN).build());
+               throw new ResourceException("Already exists at uri (forbidden in strict POST mode) :\n"
+                           + dataEntity.toString(), resource); // TODO TODO security check access first !!!
             }/* else {
                // HTTP ETag checking (provided in an If-Match header) :
                // NB. DISABLED FOR NOW because will be checked at db save time anyway
@@ -222,18 +273,17 @@ public class DatacoreApiImpl implements DatacoreApi {
             }*/
          } else {
             if (!canCreate) {
-               throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
-                     .entity("Data resource doesn't exist (forbidden in PUT)")
-                     .type(MediaType.TEXT_PLAIN).build());
+               throw new ResourceNotFoundException("Data resource doesn't exist (forbidden in PUT)", resource);
             }
          }
       }
+      
+      /**/
       
       if (dataEntity == null) {
          dataEntity = new DCEntity();
          dataEntity.setUri(stringUri);
       }
-      dataEntity.setVersion(version);
 
       Map<String, Object> dataProps = resource.getProperties();
       
@@ -249,12 +299,14 @@ public class DatacoreApiImpl implements DatacoreApi {
       
       if (resourceParsingContext.hasErrors()) {
          String msg = DCResourceParsingContext.formatParsingErrorsMessage(resourceParsingContext, detailedErrorsMode);
-         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
-               .entity(msg).type(MediaType.TEXT_PLAIN).build());
+         throw new ResourceException(msg, resource);
       } // else TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
-      
-      // TODO LATER 2nd pass : pre save hooks
 
+      // pre save hooks
+      // TODO better as 2nd pass / within parsing ?? or rather on entity ????
+      Types aboutToEventType = isCreation ? DCResourceEvent.Types.ABOUT_TO_CREATE : DCResourceEvent.Types.ABOUT_TO_UPDATE;
+      eventService.triggerResourceEvent(aboutToEventType, resource);
+      
       String collectionName = dcModel.getCollectionName(); // or mere type ?
       ///dataEntity.setId(stringUri); // NOO "invalid Object Id" TODO better
       dataEntity.setTypes(resource.getTypes()); // TODO or no modelType, or remove modelName ??
@@ -266,13 +318,10 @@ public class DatacoreApiImpl implements DatacoreApi {
          try {
             mgo.save(dataEntity, collectionName);
          } catch (OptimisticLockingFailureException olfex) {
-            throw new ClientErrorException(Response.status(Response.Status.CONFLICT)
-                  .entity("Trying to update data resource without up-to-date version but "
-                        + dataEntity.getVersion()).type(MediaType.TEXT_PLAIN).build());
+            throw new ResourceObsoleteException("Trying to update data resource "
+                  + "without up-to-date version but " + dataEntity.getVersion(), resource);
          }
       }
-
-      // TODO LATER 2nd pass : post save hooks
 
       //Map<String, Object> dcDataProps = new HashMap<String,Object>(dataEntity.getProperties());
       //DCData dcData = new DCData(dcDataProps);
@@ -286,6 +335,11 @@ public class DatacoreApiImpl implements DatacoreApi {
       
       // TODO setProperties if changed ex. default values ? or copied queriable fields, or on behaviours ???
       // ex. for model.getDefaultValues() { dcData.setProperty(name, defaultValue);
+
+      // 2nd pass : post save hooks
+      // TODO better
+      Types doneEventType = isCreation ? DCResourceEvent.Types.CREATED : DCResourceEvent.Types.UPDATED;
+      eventService.triggerResourceEvent(doneEventType, resource);
       
       return resource;
    }
@@ -404,8 +458,13 @@ public class DatacoreApiImpl implements DatacoreApi {
             // normalize, adapt & check TODO in DCURI :
             boolean normalizeUrlMode = true;
             boolean replaceBaseUrlMode = true;
-            DCURI dcUri = resourceService.normalizeAdaptCheckTypeOfUri(stringUriValue, null,
-                  normalizeUrlMode, replaceBaseUrlMode);
+            DCURI dcUri;
+            try {
+               dcUri = resourceService.normalizeAdaptCheckTypeOfUri(stringUriValue, null,
+                     normalizeUrlMode, replaceBaseUrlMode);
+            } catch (BadUriException buex) {
+               throw new ResourceParsingException(buex.getMessage(), buex.getCause());
+            }
             DCModel refModel = modelService.getModel(dcUri.getType()); // TODO LATER from cached model ref in DCURI
             
             // checking that it exists :
@@ -449,8 +508,13 @@ public class DatacoreApiImpl implements DatacoreApi {
                      + " (" + entityValueUri.getClass() + ")");
             }
             // check uri, type & get entity (as above) :
-            DCURI dcUri = resourceService.normalizeAdaptCheckTypeOfUri((String) entityValueUri, null,
-                  normalizeUrlMode, replaceBaseUrlMode);
+            DCURI dcUri;
+            try {
+               dcUri = resourceService.normalizeAdaptCheckTypeOfUri((String) entityValueUri, null,
+                     normalizeUrlMode, replaceBaseUrlMode);
+            } catch (BadUriException buex) {
+               throw new ResourceParsingException(buex.getMessage(), buex.getCause());
+            }
             // TODO LATER OPT if not (partial) copy, check container vs brokerMode
             DCModel valueModel = modelService.getModel(dcUri.getType()); // TODO LATER from cached model ref in DCURI
 
@@ -599,6 +663,7 @@ public class DatacoreApiImpl implements DatacoreApi {
       }
       ArrayList<DCResource> res = new ArrayList<DCResource>(resources.size());
       for (DCResource resource : resources) {
+         // TODO LATER rather put exceptions in context to allow always checking multiple POSTed resources
          res.add(internalPostDataInType(resource, modelType, canCreate, canUpdate));
          // NB. ETag validation is not supported because will be checked at db save time anyway
          // (and to support multiple POSTs, would have to be complex or use
@@ -634,11 +699,10 @@ public class DatacoreApiImpl implements DatacoreApi {
          try {
             uri = resourceService.normalizeAdaptCheckTypeOfUri(resource.getUri(), null, 
                   normalizeUrlMode, replaceBaseUrlMode);
-         } catch (ResourceParsingException rpex) {
+         } catch (BadUriException rpex) {
             // TODO LATER rather context & for multi post
             throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
-                  .entity(resource.getUri() + " should be an uri but " + rpex.getMessage())
-                  .type(MediaType.TEXT_PLAIN).build());
+                  .entity(rpex.getMessage()).type(MediaType.TEXT_PLAIN).build());
          }
          res.add(internalPostDataInType(resource, uri.getType(), canCreate, canUpdate));
          // NB. no ETag validation support, see discussion in internalPostAllDataInType()
@@ -933,7 +997,7 @@ public class DatacoreApiImpl implements DatacoreApi {
       types.add(entity.getModelName()); // TODO ??
       types.addAll(entity.getTypes());
       resource.setTypes(types);*/
-      resource.setTypes(entity.getTypes());
+      resource.setTypes(entity.getTypes()); // TODO or as above, or from model ?
       
       resource.setVersion(entity.getVersion());
       

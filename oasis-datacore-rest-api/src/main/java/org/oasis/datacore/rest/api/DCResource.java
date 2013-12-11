@@ -88,8 +88,16 @@ public class DCResource {
    public static DCResource create(String containerUrl, String modelType, String id) {
       DCResource resource = new DCResource();
       resource.setUri(UriHelper.buildUri(containerUrl, modelType, id));
-      resource.types.add(modelType);
+      resource.types.add(modelType); // TODO add mixins !?!
       resource.setId(id);
+      return resource;
+   }
+   /** helper method to build new DCResources FOR TESTING
+    * requires id (and uri) to be set later or by event listener in build or POST
+    * TODO or in builder instance ? */
+   public static DCResource create(String containerUrl, String modelType) {
+      DCResource resource = new DCResource();
+      resource.types.add(modelType); // TODO add mixins !?!
       return resource;
    }
    /** helper method to build new DCResources FOR TESTING
@@ -120,7 +128,32 @@ public class DCResource {
    public Object get(String fieldName) {
       return this.properties.get(fieldName);
    }
+   /***
+    * helper method to build new DCResources FOR TESTING ; 
+    * copies the given Resource's field that are among the given modelOrMixins
+    * (or all if modelOrMixins is null or empty) to this Resource
+    * @param source
+    * @param modelOrMixins
+    * @return
+    */
+   public DCResource copy(DCResource source, Object ... modelOrMixins) {
+      // TODO copy it from IGN sample
+      return this;
+   }
 
+   /**
+    * shortcut method
+    * @return the first of types if any, or null
+    */
+   public String getModelType() {
+      if (this.types != null && !this.types.isEmpty()) {
+         String modelType = this.types.get(0);
+         return modelType;
+      }
+      return null;
+   }
+
+   
    // TODO to unmarshall embedded resources as DC(Sub)Resource rather than HashMaps
    // (and if possible same for embedded maps ???) BUT can't know when is embedded resource or map
    @JsonSubTypes({ @JsonSubTypes.Type(String.class), @JsonSubTypes.Type(Boolean.class),

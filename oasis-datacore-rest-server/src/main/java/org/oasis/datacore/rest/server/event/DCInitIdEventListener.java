@@ -2,7 +2,7 @@ package org.oasis.datacore.rest.server.event;
 
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.DCURI;
-import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
+import org.oasis.datacore.rest.server.BadUriException;
 
 
 /**
@@ -25,7 +25,7 @@ public class DCInitIdEventListener extends DCResourceEventListener implements DC
     * helper to create it programmatically (in tests...)
     * @param modelType if not null, inited ; else must be set and inited afterwards
     * (that's auto done when doin model/mixin.addListener(resourceListener)
-    * @param idFieldName
+    * @param idFieldName TODO prevent null
     */
    public DCInitIdEventListener(String modelType, String idFieldName) {
       super(modelType);
@@ -33,27 +33,39 @@ public class DCInitIdEventListener extends DCResourceEventListener implements DC
       // and must be set and inited afterwards, ex. done in DCModelBase.addListener()
    }
 
+   /**
+    * Same, but to allow setting modelType afterwards (by model type itself)
+    */
+   public DCInitIdEventListener(String idFieldName) {
+      super();
+      this.setIdFieldName(idFieldName);
+      // and must be set and inited afterwards, ex. done in DCModelBase.addListener()
+   }
+
    @Override
    public void handleEvent(DCEvent event) throws AbortOperationEventException {
-      if (DCResourceEvent.Types.ABOUT_TO_CREATE.name.equals(event.getType())) {
+      if (DCResourceEvent.Types.ABOUT_TO_BUILD.name.equals(event.getType())) { // TODO ABOUT_TO_CREATE ??
          DCResourceEvent re = (DCResourceEvent) event;
          DCResource r = re.getResource();
-         Object id = r.getProperties().get(this.idFieldName);
+         Object id = r.get(this.idFieldName);
+         
          if (r.getUri() == null) {
-            // TODO SHOULD NOT HAPPEN...
+            // TODO can't happen when called in postData (but in test shortcuts or build()
+            // after create(String containerUrl, String modelType), yes)
             if (id == null) {
                throw new AbortOperationEventException("Missing id field " + idFieldName
                      + " in resource with null uri of types " + r.getTypes());
             }
-            r.setUri(resourceService.buildUri(r.getTypes().get(0), id.toString()));
+            r.setUri(resourceService.buildUri(r.getModelType(), id.toString()));
+            
          } else if (id == null) {
             String uri = r.getUri();
             try {
                DCURI dcUri = resourceService.parseUri(uri);
                r.set(this.idFieldName, dcUri.getId());
-            } catch (ResourceParsingException e) {
+            } catch (BadUriException e) {
                // should not happen
-               throw new AbortOperationEventException("Error parsing uri before creation", e);
+               throw new AbortOperationEventException("Error parsing existing uri before creation", e);
             }
          }
       }

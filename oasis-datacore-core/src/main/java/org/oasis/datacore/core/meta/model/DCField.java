@@ -60,6 +60,13 @@ public class DCField {
    public int getQueryLimit() {
       return queryLimit;
    }
+   
+   /**
+    * TODO ObjectMapper
+    */
+   public String toString() {
+      return name;
+   }
 
    
    ///////////////////////////////////////

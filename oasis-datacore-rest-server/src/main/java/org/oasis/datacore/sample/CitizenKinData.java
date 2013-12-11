@@ -4,8 +4,9 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import javax.annotation.PostConstruct;
+
 import javax.ws.rs.WebApplicationException;
+
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.server.DatacoreApiImpl;
@@ -20,7 +21,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @DependsOn("citizenKinModel")
-public class CitizenKinData {
+public class CitizenKinData extends DatacoreSampleBase {
 
 	private List<DCResource> listUser;
 	private List<DCResource> listProcedure;
@@ -36,7 +37,8 @@ public class CitizenKinData {
 	@Autowired
 	protected DatacoreApiImpl api;
 
-	@PostConstruct
+	
+	@Override
 	public void init() {
 
 		listUser = new ArrayList<>();

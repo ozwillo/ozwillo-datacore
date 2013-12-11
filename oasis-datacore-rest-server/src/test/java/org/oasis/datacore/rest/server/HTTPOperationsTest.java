@@ -547,10 +547,6 @@ public class HTTPOperationsTest {
 			listData.addAll(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME));
 			listData.addAll(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME));
 			Assert.assertNotNull(listData);
-			DCResource resource = listData.get(0);
-			Assert.assertNotNull(resource);
-			resource.getTypes().clear();
-			resource.getTypes().add("TestModel");
 			postedData = api.postAllData(listData);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(postedData);

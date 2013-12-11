@@ -2,12 +2,16 @@ package org.oasis.datacore.rest.server.event;
 
 import javax.annotation.PostConstruct;
 
-import org.oasis.datacore.rest.server.ResourceService;
+import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 
 /**
  * TODO TODO or store in Model event listener impls' confs, possibly shared & serializable ?!? YES
+ * 
+ * * Extend it and impl it
+ * * either instantiate it using @PostConstruct
+ * * or manually but then init it (to register it) : init()
  * 
  * @author mdutoo
  *
@@ -31,6 +35,9 @@ public abstract class DCEventListenerBase implements DCEventListener {
       this.setTopic(topic);
    }
 
+   /**
+    * Don't call it manually (it requires being autowired), rather call init(eventService)
+    */
    @PostConstruct
    public void init() {
       eventService.register(this, this.getTopic());
@@ -50,6 +57,11 @@ public abstract class DCEventListenerBase implements DCEventListener {
 
    public void setResourceService(ResourceService resourceService) {
       this.resourceService = resourceService;
+   }
+
+   /** to check if already autowired */
+   public EventService getEventService() {
+      return eventService;
    }
 
 }

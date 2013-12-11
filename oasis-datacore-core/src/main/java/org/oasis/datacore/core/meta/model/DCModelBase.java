@@ -2,8 +2,10 @@ package org.oasis.datacore.core.meta.model;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public abstract class DCModelBase {
 
@@ -23,6 +25,9 @@ public abstract class DCModelBase {
    /** Resource type event listeners (that use this DCModelBase's name as topic) */
    private List<Object> listeners = new ArrayList<Object>(); // TODO DC(Model/ResourceType)EventListener
 
+   /** same as globalFieldMap */
+   private Map<String,DCModelBase> globalMixinMap = null;
+   private Set<String> globalMixinNameSet = null;
    /** cache, to be invalidated each type the model (or its mixins) change
     * (including when backward compatible).
     * TODO not thread-safe, handle it the REST way
@@ -44,35 +49,65 @@ public abstract class DCModelBase {
    public DCField getField(String name) {
       return fieldMap.get(name);
    }
-   
-   /** TODO LATER compute them, cache them, handle Model version (upgrade) */
+
+   /** computed cache ; TODO LATER trigger reset, handle Model version (upgrade) */
+   public Map<String,DCModelBase> getGlobalMixinMap() {
+      checkGlobalCaches();
+      return globalMixinMap;
+   }
+   /** computed cache ; TODO LATER trigger reset, handle Model version (upgrade) */
+   public Set<String> getGlobalMixinNameSet() {
+      checkGlobalCaches();
+      return globalMixinNameSet;
+   }
+   /** computed cache ; TODO LATER trigger reset, handle Model version (upgrade) */
+   public Map<String, DCField> getGlobalFieldMap() {
+      checkGlobalCaches();
+      return globalFieldMap;
+   }
+
+   /** works on computed cache ; TODO LATER trigger reset, handle Model version (upgrade) */
+   public boolean hasMixin(String name) {
+      return this.getGlobalMixinNameSet().contains(name);
+   }
+   /** works on computed cache ; TODO LATER trigger reset, handle Model version (upgrade) */
    public DCField getGlobalField(String name) {
       return getGlobalFieldMap().get(name);
    }
 
+   public void resetGlobalCaches() {
+      this.globalMixinMap = null;
+      this.globalMixinNameSet = null;
+      this.globalFieldMap = null;
+   }
    /**
     * Builds the map of all fields including of mixins, in the order in which they were added
-    * @return
+    * & same for mixins
     */
-   public Map<String, DCField> getGlobalFieldMap() {
+   private void checkGlobalCaches() {
       if (this.globalFieldMap == null) {
          HashMap<String, DCField> newGlobalFieldMap = new HashMap<String,DCField>();
-         fillGlobalFieldMap(newGlobalFieldMap);
+         HashMap<String, DCModelBase> newGlobalMixinMap = new HashMap<String,DCModelBase>();
+         Set<String> newGlobalMixinNameSet = new HashSet<String>();
+         fillGlobalFieldMap(newGlobalMixinMap, newGlobalMixinNameSet, newGlobalFieldMap);
          // NB. not required to be synchronized, because there's no problem if it's
          // done twice at the same time
+         this.globalMixinMap = newGlobalMixinMap;
+         this.globalMixinNameSet = newGlobalMixinNameSet;
          this.globalFieldMap = newGlobalFieldMap;
       }
-      return globalFieldMap;
    }
-   
-   private void fillGlobalFieldMap(Map<String,DCField> globalFieldMap) {
+   private void fillGlobalFieldMap(Map<String,DCModelBase> globalMixinMap, Set<String> globalMixinNameSet,
+         Map<String,DCField> globalFieldMap) {
       for (Object fieldOrMixin : this.fieldAndMixins) {
          if (fieldOrMixin instanceof DCField) {
             DCField field = (DCField) fieldOrMixin;
             globalFieldMap.put(field.getName(), field);
          } else { // if (fieldOrMixin instanceof DCModelBase) {
             DCModelBase mixin = (DCModelBase) fieldOrMixin;
-            mixin.fillGlobalFieldMap(globalFieldMap);
+            globalMixinMap.put(mixin.getName(), mixin);
+            globalMixinNameSet.add(mixin.getName());
+            mixin.fillGlobalFieldMap(globalMixinMap, globalMixinNameSet, globalFieldMap);
          }
       }
    }

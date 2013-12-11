@@ -1,7 +1,5 @@
 package org.oasis.datacore.sample;
 
-import javax.annotation.PostConstruct;
-
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
@@ -9,7 +7,6 @@ import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.stereotype.Component;
 
 /**
@@ -18,7 +15,7 @@ import org.springframework.stereotype.Component;
  */
 
 @Component
-public class MarkaInvestModel {
+public class MarkaInvestModel extends DatacoreSampleBase {
 	
 	public static String COMPANY_MODEL_NAME = "sample.marka.company";
 	public static String FIELD_MODEL_NAME = "sample.marka.field";
@@ -33,23 +30,21 @@ public class MarkaInvestModel {
 
 	@Autowired
 	private DataModelServiceImpl modelAdminService;
-
-	@Autowired
-	private MongoOperations mongoOperations;
 	
-	@PostConstruct
+	
+	@Override
 	public void init() {
 		
-		mongoOperations.dropCollection(COMPANY_MODEL_NAME);
-		mongoOperations.dropCollection(FIELD_MODEL_NAME);
-		mongoOperations.dropCollection(SECTOR_MODEL_NAME);
-		mongoOperations.dropCollection(COUNTRY_MODEL_NAME);
-		mongoOperations.dropCollection(CITY_MODEL_NAME);
-		mongoOperations.dropCollection(USER_MODEL_NAME);
-		mongoOperations.dropCollection(INVESTOR_MODEL_NAME);
-		mongoOperations.dropCollection(INVESTOR_TYPE_MODEL_NAME);
-		mongoOperations.dropCollection(COST_TYPE_MODEL_NAME);
-		mongoOperations.dropCollection(INVESTMENT_ASSISTANCE_REQUEST_MODEL_NAME);
+		mgo.dropCollection(COMPANY_MODEL_NAME);
+		mgo.dropCollection(FIELD_MODEL_NAME);
+		mgo.dropCollection(SECTOR_MODEL_NAME);
+		mgo.dropCollection(COUNTRY_MODEL_NAME);
+		mgo.dropCollection(CITY_MODEL_NAME);
+		mgo.dropCollection(USER_MODEL_NAME);
+		mgo.dropCollection(INVESTOR_MODEL_NAME);
+		mgo.dropCollection(INVESTOR_TYPE_MODEL_NAME);
+		mgo.dropCollection(COST_TYPE_MODEL_NAME);
+		mgo.dropCollection(INVESTMENT_ASSISTANCE_REQUEST_MODEL_NAME);
 		
 		DCModel companyModel = new DCModel(COMPANY_MODEL_NAME);
 		companyModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
