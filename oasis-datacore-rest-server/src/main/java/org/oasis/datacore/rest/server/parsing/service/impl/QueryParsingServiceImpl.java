@@ -245,6 +245,15 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 		
 	}
 	
+	/**
+	 * Parses value according to given field type.
+	 * 
+	 * WARNING for dates : Requires ALLOW_NUMERIC_LEADING_ZEROS enabled
+	 * on JsonParser.Feature.ALLOW_NUMERIC_LEADING_ZEROS
+    * else fails when years serialized with wrong leading zeroes ex. 0300 :
+    * JsonParseException: Invalid numeric value: Leading zeroes not allowed
+    * in ReaderBasedJsonParser._verifyNoLeadingZeroes()
+	 */
 	public Object parseValue(DCFieldTypeEnum dcFieldTypeEnum, String queryValue) throws ResourceParsingException {
 		
 		if(queryValue != null && !"".equals(queryValue)) {

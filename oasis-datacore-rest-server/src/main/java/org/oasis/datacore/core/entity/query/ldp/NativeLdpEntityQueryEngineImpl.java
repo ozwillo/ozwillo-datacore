@@ -12,10 +12,11 @@ import org.oasis.datacore.core.entity.EntityQueryService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.entity.query.sparql.EntityQueryEngineBase;
+import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelService;
-import org.oasis.datacore.rest.server.DatacoreApiImpl;
 import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
+import org.oasis.datacore.rest.server.parsing.service.QueryParsingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -37,7 +38,7 @@ public class NativeLdpEntityQueryEngineImpl extends EntityQueryEngineBase {
    @Autowired
    private DCModelService modelService;
    @Autowired
-   private DatacoreApiImpl datacoreApiImpl;
+   private QueryParsingService queryParsingService;
 
    public NativeLdpEntityQueryEngineImpl() {
       super(EntityQueryService.LANGUAGE_LDPQL);
@@ -78,7 +79,7 @@ public class NativeLdpEntityQueryEngineImpl extends EntityQueryEngineBase {
       if (startList != null && !startList.isEmpty()) {
          String startString = startList.get(0);
          try {
-            return datacoreApiImpl.parseInteger(startString);
+            return (Integer) queryParsingService.parseValue(DCFieldTypeEnum.INTEGER, startString);
          } catch (ResourceParsingException e) {
             throw new QueryException("Error parsing query parameter " + name + " : " + e.getMessage());
          }

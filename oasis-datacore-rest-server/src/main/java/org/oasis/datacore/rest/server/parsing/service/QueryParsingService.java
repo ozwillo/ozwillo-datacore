@@ -18,6 +18,13 @@ public interface QueryParsingService {
 
 	public void addSort(String fieldPath, QueryOperatorsEnum sortEnum, DCQueryParsingContext queryParsingContext);
 	
+	/**
+    * Parses value according to given field type.
+	 * @param dcFieldTypeEnum
+	 * @param queryValue
+	 * @return
+	 * @throws ResourceParsingException
+	 */
 	public Object parseValue(DCFieldTypeEnum dcFieldTypeEnum, String queryValue) throws ResourceParsingException;
 		
 }
