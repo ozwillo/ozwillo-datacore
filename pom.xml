@@ -161,9 +161,76 @@ Contact : http://www.oasis-eu.org/ oasis-eu-datacore-dev@googlegroups.com
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>cobertura-maven-plugin</artifactId>
             <version>2.6</version>
-          </plugin> 
+            <configuration>
+              <check>
+                <branchRate>85</branchRate>
+                <lineRate>85</lineRate>
+                <haltOnFailure>true</haltOnFailure>
+                <totalBranchRate>85</totalBranchRate>
+                <totalLineRate>85</totalLineRate>
+                <packageLineRate>85</packageLineRate>
+                <packageBranchRate>85</packageBranchRate>
+              </check>
+            </configuration>
+            <!-- see http://stackoverflow.com/questions/6931360/what-is-the-proper-way-to-use-cobertura-with-maven-3-0-2 -->
+            <executions>
+              <execution>
+                <id>clean</id>
+                <phase>clean</phase>
+                <goals>
+                  <goal>clean</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>instrument</id>
+                <phase>process-classes</phase>
+                <goals>
+                  <goal>instrument</goal>
+                </goals>
+              </execution>
+              <!-- execution>
+                <id>check</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+              </execution --><!-- else Unable to prepare instrumentation directory. source and destination are the same directory. -->
+              <!-- NB. instrument and check must never be in the same execution
+              because one depends on the other see http://blog.bielu.com/2012/01/errata-to-maven2-maven3-migration.html -->
+              <!-- execution>
+                <id>cobertura</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>cobertura</goal>
+                </goals>
+              </execution -->
+            </executions>
+          </plugin>
         </plugins>
       </build>
+      
+      <reporting>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>cobertura-maven-plugin</artifactId>
+            <configuration>
+              <formats>
+                <format>html</format>
+                <format>xml</format>
+              </formats>
+            </configuration>
+            <reportSets>
+              <reportSet>
+                <reports>
+                  <report>report-only</report>
+                </reports>
+              </reportSet>
+            </reportSets>
+          </plugin>
+        </plugins>
+      </reporting>
+         
     </profile>
   </profiles>
   
