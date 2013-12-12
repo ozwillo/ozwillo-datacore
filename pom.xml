@@ -24,6 +24,7 @@ Contact : http://www.oasis-eu.org/ oasis-eu-datacore-dev@googlegroups.com
   <groupId>org.oasis.datacore</groupId>
   <artifactId>oasis-datacore</artifactId>
   <name>OASIS Datacore</name>
+  <description>OASIS Datacore is a collaborative Open Linked Data Cloud platform.</description>
   <version>1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
@@ -45,8 +46,8 @@ Contact : http://www.oasis-eu.org/ oasis-eu-datacore-dev@googlegroups.com
   <url>http://www.oasis-eu.org/</url>
   <scm>
     <connection>scm:git:git://github.com/pole-numerique/oasis-datacore.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com:pole-numerique/oasis-datacore.git</developerConnection>
-    <url>https://github.com/oasis-datacore/oasis-datacorehttps://github.com/pole-numerique/oasis-datacore</url>
+    <developerConnection>scm:git:git@github.com:pole-numerique/oasis-datacore.git</developerConnection>
+    <url>https://github.com/pole-numerique/oasis-datacore</url>
   </scm>
 
   <mailingLists>
@@ -57,7 +58,8 @@ Contact : http://www.oasis-eu.org/ oasis-eu-datacore-dev@googlegroups.com
     </mailingList>
   </mailingLists>
   <issueManagement>
-    <!-- Missing -->
+    <url>https://github.com/pole-numerique/oasis-datacoree/issues</url>
+    <system>GitHub Issues</system>
   </issueManagement>
   <ciManagement>
     <!-- Missing -->
@@ -150,6 +152,19 @@ Contact : http://www.oasis-eu.org/ oasis-eu-datacore-dev@googlegroups.com
   <!-- ============ -->
   <profiles>
     <!-- TODO mocks, samples profiles ? -->
+    <!-- TODO release profile ? -->
+    <profile>
+      <id>sonar</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>cobertura-maven-plugin</artifactId>
+            <version>2.6</version>
+          </plugin> 
+        </plugins>
+      </build>
+    </profile>
   </profiles>
   
 
@@ -425,6 +440,13 @@ Contact : http://www.oasis-eu.org/ oasis-eu-datacore-dev@googlegroups.com
               <target>${java.version}</target>
           </configuration>
       </plugin>
+      <!-- plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.2.1</version>
+      </plugin -->
+      
+      <!-- TODO or in release profile ? -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
@@ -493,6 +515,5 @@ Contact : http://www.oasis-eu.org/ oasis-eu-datacore-dev@googlegroups.com
   <pluginRepositories>
   </pluginRepositories>
 
-  <description>OASIS Datacore is a collaborative Open Data platform.</description>
 </project>
 
