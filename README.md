@@ -8,6 +8,8 @@ Copyright (c) 2013 Open Wide SA
 About OASIS Datacore
 --------------------
 
+OASIS Datacore's business is collaboration on linked data.
+
 Features
    * 
 
@@ -89,18 +91,35 @@ Still missing :
 
 Goals :
 
-* une API compatible RDF
- - grâce à une représentation "presque" JSON-LD qui est nativement compatible RDF,
- - des requêtes d'interrogation de type W3C LDP. Par exemple pour toutes les viles de france triées par nom et de population supérieure à 500000 (avec par défaut un maximum de 50 résultats) :
+* RDF compatible
+to allow optimal data modeling flexibility (i.e. be able to model any business and support any change), data compatibility (i.e. data homogenization)
+
+ - thanks to an “almost” JSON-LD representation which is natively RDF-compatible,
+
+ - W3C LDP-like REST query filters. For instance, to get all cities of France sorted by name with a population of more than 500000 (with a default maximum of 50 results) :
+
 http://data.oasis-eu.org/city?inCountry=http://data.oasis-eu.org/country/France&name=+&population=>500000
- - mais aussi un mini-SPARQL bâti sur ces dernières)
-* qui permette les exemples des cas d'usage des slides du workshop de Valence.
 
-Cependant, elle est orientée pour tenir compte des différences suivantes par rapport à une implémentation native de RDF :
+ - but also a “mini-SPARQL” built on these last ones
 
-* toutes les données ne sont pas égales : le "type" de données (rdf:type des ressources JSON-LD) devient "citoyen de première class", correspondant à un usage mais aussi à un choix de gouvernance (et en effet il ne faut surtout pas mélanger des données qui diffèrent sur ces points)
-* la granularité du triplet RDF est trop fine pour être performante, aisément manipulable et modélisable, et compréhensible par les providers => granularité de type "aspect" / "mixin", correspondant à un namespace de prédicat RDF
-* permettre des propriétés complexes (listes et maps)
+
+* But at the same time, to optimally support the collaborative linked data business, it has to handle the following differences from a native RDF implementation :
+
+ - all data are not equal : each data Resource has a “primary”, “Model”, “collaboration” type (the first “rdf:type” of JSON-LD resources) which corresponds to its collaborative data business use. Such a “Model” type is born each time a community of service providers agrees on collaborating together on a given kind of data, and will follow the specific governance rules decided by this community. If a new service provider wants to contribute to the same kind of data, either it subscribes to the existing community and rules, possibly even only partly (such as its contributions having to undergo approval before being accepted), or manages to get the community to change them, or it has to do it all separately, which OASIS discourages though. 
+
+ - granularity of the RDF triple is too fine to be efficient, easily handled, modeled or understood by service providers. Therefore an intermediate “Mixin” / aspect-like granularity is promoted, which roughly corresponds to a an RDF predicate's namespace.
+
+ - allow complex properties (lists and maps)
+
+
+* In order to allow use cases shown at the Valence workshop :
+
+ - URI as id
+ - predicate attribute / property values of the required types : string / text (including textual format such as Well-Known Text (WKT) for geolocalization info), boolean, int, float, long, double, date, map (allowing internationalized text), list, resource / reference (including cross container ; allowing classification in categories...)
+ - multiple typing, shared types (ex. address), data layers (ex. Cityhalls patching INSEE / IGN data) (allowing having different sources providing different values)
+ - per Resource-authorization : each having its own readers, writers, owners Access Control Lists (ACLs) (allowing for personal / confidential data, and granting rights management right)
+ - data quality...
+
 
 Samples :
 
