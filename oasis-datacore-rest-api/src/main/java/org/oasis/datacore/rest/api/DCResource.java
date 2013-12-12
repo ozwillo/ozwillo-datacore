@@ -50,7 +50,7 @@ public class DCResource {
    private Long version;
 
    /** types : model (first one) plus type mixins */
-   @JsonProperty
+   @JsonProperty("rdf:type")
    private List<String> types;
    //@JsonProperty
    //private String type; // or this ? in addition to uri ? or model ?!? test conflict !

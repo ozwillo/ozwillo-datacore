@@ -368,7 +368,7 @@ public class DatacoreApiServerTest {
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(this.containerUrl + "dc/type/" + CityCountrySample.CITY_MODEL_NAME + "/UK/London", resources.get(0).getUri()); // http://localhost:8180/
       
-      DCResource bordeauxCityData = buildCityData("Bordeaux", "France", true);
+      DCResource bordeauxCityData = buildCityData("Bordeaux", "France", false);
       DCResource postedBordeauxCityData = datacoreApiClient.postDataInType(bordeauxCityData, CityCountrySample.CITY_MODEL_NAME);
 
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
