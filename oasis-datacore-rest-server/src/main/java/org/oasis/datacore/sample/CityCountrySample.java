@@ -49,6 +49,7 @@ public class CityCountrySample extends DatacoreSampleBase {
       DCMapField name_18nMapField = new DCMapField("name_i18n"); // i18n
       name_18nMapField.addField(new DCField("fr", "string"));
       name_18nMapField.addField(new DCField("en", "string"));
+      name_18nMapField.addField(new DCField("it", "string"));
       cityModel.addField(name_18nMapField);
       cityModel.addField(new DCListField("pointsOfInterest",
             //new DCResourceField("zzz", "resource", poiModel.getName()))); // TODO
@@ -76,12 +77,12 @@ public class CityCountrySample extends DatacoreSampleBase {
             .set("populationCount", 500000);
       DCResource londonCity = resourceService.create(CITY_MODEL_NAME, "UK/London")
             .set("name", "London").set("inCountry", ukCountry.getUri())
-            .set("populationCount", 10000000)/*.set("name_i18n",
-                  resourceService.propertiesBuilder().put("en", "London").put("fr", "Londres").build())*/;
+            .set("populationCount", 10000000).set("name_i18n",
+                  resourceService.propertiesBuilder().put("en", "London").put("fr", "Londres").build());
       DCResource torinoCity = resourceService.create(CITY_MODEL_NAME, "Italia/Torino")
             .set("name", "Torino").set("inCountry", italiaCountry.getUri())
-            .set("populationCount", 900000)/*.set("name_i18n",
-                  resourceService.propertiesBuilder().put("it", "Torino").put("fr", "Turin").build())*/;
+            .set("populationCount", 900000).set("name_i18n",
+                  resourceService.propertiesBuilder().put("it", "Torino").put("fr", "Turin").build());
       lyonCity = postDataInType(lyonCity);
       londonCity = postDataInType(londonCity);
       torinoCity = postDataInType(torinoCity);
