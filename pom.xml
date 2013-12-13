@@ -161,7 +161,7 @@ Contact : http://www.oasis-eu.org/ oasis-eu-datacore-dev@googlegroups.com
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>cobertura-maven-plugin</artifactId>
             <version>2.6</version>
-            <configuration>
+            <!-- configuration>
               <check>
                 <branchRate>85</branchRate>
                 <lineRate>85</lineRate>
@@ -171,9 +171,9 @@ Contact : http://www.oasis-eu.org/ oasis-eu-datacore-dev@googlegroups.com
                 <packageLineRate>85</packageLineRate>
                 <packageBranchRate>85</packageBranchRate>
               </check>
-            </configuration>
+            </configuration -->
             <!-- see http://stackoverflow.com/questions/6931360/what-is-the-proper-way-to-use-cobertura-with-maven-3-0-2 -->
-            <executions>
+            <!-- executions>
               <execution>
                 <id>clean</id>
                 <phase>clean</phase>
@@ -187,24 +187,13 @@ Contact : http://www.oasis-eu.org/ oasis-eu-datacore-dev@googlegroups.com
                 <goals>
                   <goal>instrument</goal>
                 </goals>
-              </execution>
-              <!-- execution>
-                <id>check</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>check</goal>
-                </goals>
-              </execution --><!-- else Unable to prepare instrumentation directory. source and destination are the same directory. -->
+              </execution -->
+              <!-- No "check" in verify phase, else error :
+              Unable to prepare instrumentation directory. source and destination are the same directory. -->
               <!-- NB. instrument and check must never be in the same execution
               because one depends on the other see http://blog.bielu.com/2012/01/errata-to-maven2-maven3-migration.html -->
-              <!-- execution>
-                <id>cobertura</id>
-                <phase>package</phase>
-                <goals>
-                  <goal>cobertura</goal>
-                </goals>
-              </execution -->
-            </executions>
+              <!-- No "cobertura" in package phase, because it must be done in reporting element instead -->
+            <!-- /executions -->
           </plugin>
         </plugins>
       </build>
@@ -214,6 +203,7 @@ Contact : http://www.oasis-eu.org/ oasis-eu-datacore-dev@googlegroups.com
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>cobertura-maven-plugin</artifactId>
+            <version>2.6</version>
             <configuration>
               <formats>
                 <format>html</format>
