@@ -53,6 +53,12 @@
          <artifactId>spring-test</artifactId>
          <scope>test</scope>
       </dependency>
+      
+    <!-- MITRE OpenId Connect Client library, for client & test -->
+    <dependency>
+      <groupId>org.mitre</groupId>
+      <artifactId>openid-connect-client</artifactId>
+    </dependency>
 
     <!-- cxf -->
     <dependency>

@@ -127,13 +127,19 @@
 			?? -->
 
 		<swagger.version>1.3.0</swagger.version><!-- for apidoc -->
-
-		<spring.security.oauth2.version>1.0.5.RELEASE</spring.security.oauth2.version>
-		<spring.security.core.version>3.1.4.RELEASE</spring.security.core.version>
-		<spring.security.web.version>3.1.4.RELEASE</spring.security.web.version>
-		<spring.security.config.version>3.1.4.RELEASE</spring.security.config.version>
-		<openid.connect.client.version>1.1.0</openid.connect.client.version>
-		<google.oauth.client.java6.version>1.17.0-rc</google.oauth.client.java6.version>
+      
+      <!-- spring security & al : BEWARE,
+      * security core 3.1.4 depends on aop, beans, expression 3.0.7 (others are 3.1.4)
+      * security config 3.1.4 depends on aop, beans 3.0.7 (others are 3.1.4)
+      * security oauth2 3.1.4 depends on beans, webmvc 3.1.2 security web 3.1.3 (others are 3.1.4)
+      * security web 3.1.4 on core, context, beans, expression, aop, web, jdbc 3.0.7 (though not used)
+      so version of aop, beans, expression, webmvc, security web must be forced to 3.1.4
+      in dependencyManagement even if not used !!
+      see http://www.baeldung.com/spring-security-with-maven -->
+		<spring.security.version>3.1.4.RELEASE</spring.security.version>
+      <spring.security.oauth2.version>1.0.5.RELEASE</spring.security.oauth2.version>
+		<mitre-openid-client.version>1.1.0</mitre-openid-client.version><!-- for client & test -->
+		<google.oauth.client.java6.version>1.17.0-rc</google.oauth.client.java6.version><!-- for tests -->
 
 	</properties>
 
@@ -319,12 +325,69 @@
 				<artifactId>spring-test</artifactId>
 				<version>${spring.version}</version>
 			</dependency>
-			<!-- to support @Configuration see http://www.mkyong.com/spring3/cglib-is-required-to-process-configuration-classes/ -->
+			<!-- to support spring @Configuration
+         see http://www.mkyong.com/spring3/cglib-is-required-to-process-configuration-classes/ -->
 			<dependency>
 				<groupId>cglib</groupId>
 				<artifactId>cglib</artifactId>
 				<version>${cglib.version}</version>
 			</dependency>
+
+         <!-- Spring security -->
+         <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-core</artifactId>
+            <version>${spring.security.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-config</artifactId>
+            <version>${spring.security.version}</version>
+         </dependency>
+         <!-- Spring security OAuth 2.0 dependencies -->
+         <dependency>
+            <groupId>org.springframework.security.oauth</groupId>
+            <artifactId>spring-security-oauth2</artifactId>
+            <version>${spring.security.oauth2.version}</version>
+         </dependency>
+         <!-- Spring security - forcing conflicted deps version even if not used
+         see http://www.baeldung.com/spring-security-with-maven -->
+         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-beans</artifactId>
+            <version>${spring.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-aop</artifactId>
+            <version>${spring.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-expression</artifactId>
+            <version>${spring.version}</version>
+         </dependency>
+         <dependency><!-- not used (for now) -->
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+            <version>${spring.version}</version>
+         </dependency>
+         <dependency><!-- not used (for now) -->
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-web</artifactId>
+            <version>${spring.security.version}</version>
+         </dependency>
+         <dependency><!-- not used -->
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <version>${spring.version}</version><!-- 3.2.5 -->
+         </dependency>
+         <!-- MITRE OpenId Connect Client library, for client & test -->
+         <dependency>
+            <groupId>org.mitre</groupId>
+            <artifactId>openid-connect-client</artifactId>
+            <version>${mitre-openid-client.version}</version>
+         </dependency>
 
 			<!-- mongodb java driver -->
 			<dependency>
@@ -454,25 +517,6 @@
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-web</artifactId>
 				<version>${spring.version}</version>
-			</dependency>
-
-			<!-- Spring Security -->
-			<dependency>
-				<groupId>org.springframework.security</groupId>
-				<artifactId>spring-security-core</artifactId>
-				<version>${spring.security.core.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.springframework.security</groupId>
-				<artifactId>spring-security-config</artifactId>
-				<version>${spring.security.config.version}</version>
-			</dependency>
-
-			<!-- Spring security OAuth 2.0 dependencies -->
-			<dependency>
-				<groupId>org.springframework.security.oauth</groupId>
-				<artifactId>spring-security-oauth2</artifactId>
-				<version>${spring.security.oauth2.version}</version>
 			</dependency>
 
 		</dependencies>

@@ -23,6 +23,21 @@
 				to configure in clients -->
 		</dependency>
 
+      <!-- Spring security & OAuth 2 -->
+      <dependency>
+         <groupId>org.springframework.security</groupId>
+         <artifactId>spring-security-core</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework.security</groupId>
+         <artifactId>spring-security-config</artifactId>
+      </dependency>
+      <!-- Spring security OAuth 2.0 dependencies  -->
+      <dependency>
+         <groupId>org.springframework.security.oauth</groupId>
+         <artifactId>spring-security-oauth2</artifactId>
+      </dependency>
+
 		<!-- Datacore REST Client (brings API, Jackson and CXF) -->
 		<dependency>
 			<groupId>org.oasis.datacore</groupId>
@@ -53,22 +68,6 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-web</artifactId>
-		</dependency>
-
-		<!--Spring Security -->
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-config</artifactId>
-		</dependency>
-
-		<!-- Spring security OAuth 2.0 dependencies  -->
-		<dependency>
-			<groupId>org.springframework.security.oauth</groupId>
-			<artifactId>spring-security-oauth2</artifactId>
 		</dependency>
 
 	</dependencies>
