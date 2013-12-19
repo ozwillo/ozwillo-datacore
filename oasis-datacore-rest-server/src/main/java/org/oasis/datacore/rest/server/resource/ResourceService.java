@@ -19,6 +19,8 @@ import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.model.DCResourceField;
+import org.oasis.datacore.historization.exception.HistorizationException;
+import org.oasis.datacore.historization.service.HistorizationService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.DCURI;
 import org.oasis.datacore.rest.api.util.UriHelper;
@@ -83,6 +85,9 @@ public class ResourceService {
 
    @Autowired
    private QueryParsingService queryParsingService;
+   
+   @Autowired
+   private HistorizationService historizationService;
    
    
    public String getBaseUrl() {
@@ -357,10 +362,20 @@ public class ResourceService {
       if (isCreation) {
          // will fail if exists
          mgo.insert(dataEntity, collectionName); // TODO does it enforce version if exists ??
+         try {
+			historizationService.historize(dataEntity, dcModel);
+         } catch (HistorizationException e) {
+			e.printStackTrace();
+         }
          
       } else {
          try {
             mgo.save(dataEntity, collectionName);
+            try {
+    			historizationService.historize(dataEntity, dcModel);
+             } catch (HistorizationException e) {
+    			e.printStackTrace();
+             }
          } catch (OptimisticLockingFailureException olfex) {
             throw new ResourceObsoleteException("Trying to update data resource "
                   + "without up-to-date version but " + dataEntity.getVersion(), resource);

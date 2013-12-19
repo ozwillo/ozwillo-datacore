@@ -783,4 +783,27 @@ public interface DatacoreApi {
          @DefaultValue("SPARQL") @QueryParam("language") String language)
                throws BadRequestException, NotFoundException;
    
+   
+   @Path("/h/{type}/{iri}/{version}")
+   @GET
+   @ApiOperation(value = "Return a matching resource of the given iri and version.",
+      			 notes = "Resources of a model can be historized by defining the isHistorizable field to true."
+      					 + "If a resource is historized it can be retrieved with this operation."
+      					 + "The resource is identified by an IRI and a version of resources."
+      					 + "e.g. if resource URI = http://data-test.oasis-eu.org/dc/type/sample.marka.company/1 and you want version = 0,"
+      					 + "the parameters would be : "
+      					 + " - type : sample.marka.company"
+      					 + " - iri : 1 (the URI is made like this : /dc/type/{type}/{IRI})"
+      					 + " - version : 0 (or whatever version you need)",
+      			 response = DCResource.class, position = 12)
+   @ApiResponses(value = {
+      @ApiResponse(code = 404, message = "Resource not found with this IRI and version"),
+      @ApiResponse(code = 400, message = "Bad request : non-existent model"),
+      @ApiResponse(code = 200, message = "OK : resource found and returned")
+   })
+   DCResource findHistorizedResource(@ApiParam(value = "Resource's model type", required = true) @PathParam("type") String modelType,
+		   							 @ApiParam(value = "Type-relative resource id", required = true) @PathParam("iri") String iri,
+		   							 @ApiParam(value = "Resource version", required = true) @PathParam("version") Integer version,
+		   							 @Context Request request)throws BadRequestException, NotFoundException;
+      
 }

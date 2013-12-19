@@ -27,6 +27,7 @@
       order="-1" ignore-unresolvable="true"/><!-- so defaults to importing PropertyPlaceholder/*Resolver -->
    
    <import resource="classpath:oasis-datacore-core-context.xml" />
+   <!-- <import resource="classpath:security-context.xml" /> -->
    <!-- reusing client for init of samples : -->
    <import resource="classpath:oasis-datacore-rest-client-context.xml" />
 
@@ -105,6 +106,7 @@
    <bean id="datacore.model.apiImpl" class="org.oasis.datacore.model.rest.server.DataModelApiImpl"/>
    
    <bean id="queryParsingService" class="org.oasis.datacore.rest.server.parsing.service.impl.QueryParsingServiceImpl" />
+   <bean id="historizationService" class="org.oasis.datacore.historization.service.impl.HistorizationServiceImpl"/>
    
    <!-- mapper taken out to configure it (allow to inject it in ArrayServerInInterceptor, register modules) -->
    <bean id="datacoreApiServer.objectMapper" class="org.oasis.datacore.rest.api.binding.DatacoreObjectMapper"/>

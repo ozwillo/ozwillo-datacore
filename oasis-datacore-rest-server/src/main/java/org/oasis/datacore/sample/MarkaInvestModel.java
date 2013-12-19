@@ -6,6 +6,7 @@ import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCResourceField;
+import org.oasis.datacore.historization.service.HistorizationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -31,6 +32,8 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 	@Autowired
 	private DataModelServiceImpl modelAdminService;
 	
+	@Autowired
+	private HistorizationService historizationService;
 	
 	@Override
 	public void init() {
@@ -45,7 +48,7 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		mgo.dropCollection(INVESTOR_TYPE_MODEL_NAME);
 		mgo.dropCollection(COST_TYPE_MODEL_NAME);
 		mgo.dropCollection(INVESTMENT_ASSISTANCE_REQUEST_MODEL_NAME);
-		
+				
 		DCModel companyModel = new DCModel(COMPANY_MODEL_NAME);
 		companyModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
 		companyModel.addField(new DCField("name", DCFieldTypeEnum.STRING.getType(), true, 100));
@@ -57,6 +60,7 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		companyModel.addField(new DCResourceField("country", COUNTRY_MODEL_NAME));
 		companyModel.addField(new DCField("address", DCFieldTypeEnum.STRING.getType()));
 		companyModel.addField(new DCResourceField("city", CITY_MODEL_NAME));
+		companyModel.setHistorizable(true);
 
 		DCModel fieldModel = new DCModel(FIELD_MODEL_NAME);
 		fieldModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));

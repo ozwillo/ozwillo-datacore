@@ -46,7 +46,7 @@ public class FunctionalOperationsTest {
 	
 	@Autowired
 	private MarkaInvestData markaInvestData;
-		
+			
 	@Before
 	public void flushData() {
 		truncateModel(MarkaInvestModel.CITY_MODEL_NAME);

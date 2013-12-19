@@ -34,6 +34,8 @@ public abstract class DCModelBase {
     * TODO minorVersion ??? */
    private Map<String,DCField> globalFieldMap = null;
    
+   private boolean isHistorizable;
+   
    /** for unmarshalling only */
    public DCModelBase() {
       
@@ -199,5 +201,11 @@ public abstract class DCModelBase {
    public void setListeners(List<Object> listeners) {
       this.listeners = listeners;
    }
+public boolean isHistorizable() {
+	return isHistorizable;
+}
+public void setHistorizable(boolean isHistorizable) {
+	this.isHistorizable = isHistorizable;
+}
    
 }

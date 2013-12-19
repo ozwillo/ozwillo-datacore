@@ -3,6 +3,8 @@ package org.oasis.datacore.rest.api.client;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.EntityTag;
@@ -184,5 +186,12 @@ public class DatacoreApiMockServerImpl implements DatacoreApi {
       // TODO Auto-generated method stub
       return null;
    }
+
+	@Override
+	public DCResource findHistorizedResource(String modelType, String iri, Integer version, Request request) throws BadRequestException, NotFoundException {
+
+		return null;
+
+	}
 
 }

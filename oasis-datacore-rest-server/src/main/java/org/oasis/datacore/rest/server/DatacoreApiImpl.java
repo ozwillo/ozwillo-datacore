@@ -32,6 +32,8 @@ import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelService;
+import org.oasis.datacore.historization.exception.HistorizationException;
+import org.oasis.datacore.historization.service.HistorizationService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.util.DCURI;
@@ -93,6 +95,9 @@ public class DatacoreApiImpl implements DatacoreApi {
    
    @Autowired
    private DCModelService modelService;
+   
+   @Autowired
+   private HistorizationService historizationService;
 
    
    public DCResource postDataInType(DCResource resource, String modelType/*, Request request*/) {
@@ -484,5 +489,33 @@ public class DatacoreApiImpl implements DatacoreApi {
    public void setStrictPostMode(boolean strictPostMode) {
       this.strictPostMode = strictPostMode;
    }
+
+   	@Override
+	public DCResource findHistorizedResource(String modelType, String iri, Integer version, Request request) throws BadRequestException, NotFoundException {
+
+		String uri = resourceService.buildUri(modelType, iri);
+
+		DCModel dcModel = modelService.getModel(modelType);
+		if (dcModel == null) {
+			throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST).entity("Unknown Model type " + modelType).type(MediaType.TEXT_PLAIN).build());
+		}
+		modelType = dcModel.getName();
+		DCEntity historizedEntity = null;
+		try {
+			historizedEntity = historizationService.getHistorizedEntity(uri, version, dcModel);
+		} catch (HistorizationException e) {
+			throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).type(MediaType.TEXT_PLAIN).build());
+		}
+		if (historizedEntity == null) {
+			throw new NotFoundException(Response.status(Response.Status.NOT_FOUND).entity("Entity with URI : " + uri + " and version : " + version + "was not found").type(MediaType.TEXT_PLAIN)
+					.build());
+		}
+
+		DCResource resource = entityToResource(historizedEntity);
+		ResponseBuilder responseBuilder = Response.ok(resource);
+
+		throw new WebApplicationException(responseBuilder.build());
+
+	}
    
 }

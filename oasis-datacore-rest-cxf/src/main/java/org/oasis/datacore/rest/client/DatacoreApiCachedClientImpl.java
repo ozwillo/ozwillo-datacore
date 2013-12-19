@@ -2,7 +2,9 @@ package org.oasis.datacore.rest.client;
 
 import java.util.List;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.HttpMethod;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.RedirectionException;
@@ -284,6 +286,12 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
       }
       return resource;
    }
+   
+  	@Override
+	public DCResource findHistorizedResource(String modelType, String iri, Integer version, Request request) throws BadRequestException, NotFoundException {
+		DCResource resource = this.delegate.findHistorizedResource(modelType, iri, version, request);
+		return resource;
+	}
 
    @Override
    public List<DCResource> findDataInType(String modelType, UriInfo uriInfo, Integer start, Integer limit) {
@@ -333,6 +341,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
    public void setCache(Cache cache) {
       this.resourceCache = cache;
    }
+
 
    /*public String getBaseUrl() {
       return baseUrl;
