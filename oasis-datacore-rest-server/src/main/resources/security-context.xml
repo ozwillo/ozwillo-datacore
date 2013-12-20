@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
+	xsi:schemaLocation="
+      http://www.springframework.org/schema/beans
+      http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+      http://www.springframework.org/schema/context
+      http://www.springframework.org/schema/context/spring-context-3.1.xsd
+      http://www.springframework.org/schema/security
+      http://www.springframework.org/schema/security/spring-security.xsd
+      http://www.springframework.org/schema/security/oauth2
+      http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
+
+	<oauth:resource-server id="oauth2ProviderFilter"
+		resource-id="oasis-datacore" token-services-ref="tokenServices" />
+
+	<security:http pattern="/dc/**" entry-point-ref="clientAuthenticationEntryPoint" authentication-manager-ref="authenticationManager">
+		<security:intercept-url pattern="/**" access="ROLE_WRITE" />
+		<security:custom-filter ref="oauth2ProviderFilter" before="PRE_AUTH_FILTER" />
+		<security:access-denied-handler ref="oauthAccessDeniedHandler" />
+	</security:http>
+
+	<!-- service for resolving our users. -->
+	<security:authentication-manager id="authenticationManager">
+		<security:authentication-provider user-service-ref="clientDetailsUserService" />
+	</security:authentication-manager>
+
+	<oauth:client-details-service id="clientDetailsService">
+		<oauth:client client-id="e64425f0-3b0a-44ab-b5bc-1f1c52b099f8"
+			authorized-grant-types="client_credentials,password,implicit"
+			authorities="ROLE_WRITE" secret="secret" />
+	</oauth:client-details-service>
+
+	<bean id="clientDetailsUserService"
+		class="org.springframework.security.oauth2.provider.client.ClientDetailsUserDetailsService">
+		<constructor-arg ref="clientDetailsService" />
+	</bean>
+
+	<bean id="clientAuthenticationEntryPoint"
+		class="org.springframework.security.oauth2.provider.error.OAuth2AuthenticationEntryPoint">
+		<property name="realmName" value="myRealm" />
+	</bean>
+
+	<bean id="oauthAccessDeniedHandler"
+		class="org.springframework.security.oauth2.provider.error.OAuth2AccessDeniedHandler" />
+
+	<!-- Managing Tokens -->
+<!-- 	<bean id="tokenServices"
+		class="org.springframework.security.oauth2.provider.token.DefaultTokenServices">
+		<property name="tokenStore" ref="tokenStore" />
+		<property name="supportRefreshToken" value="true" />
+		<property name="clientDetailsService" ref="clientDetailsService" />
+		<property name="accessTokenValiditySeconds" value="${security.token.validitySeconds:43200}" />
+	</bean> -->
+	
+	<bean id="tokenServices" class="org.oasis.datacore.oauth.RemoteTokenServices">
+    	<property name="checkTokenEndpointUrl" value="https://oasis-demo.atolcd.com/a/token" />
+        <property name="clientId" value="8274888e-ecd6-42bc-8393-e62dba7212c4" />
+        <property name="clientSecret" value="appclientsecret" />
+    </bean>
+	
+	<bean id="tokenStore"
+		class="org.springframework.security.oauth2.provider.token.InMemoryTokenStore">
+	</bean>
+
+</beans>
