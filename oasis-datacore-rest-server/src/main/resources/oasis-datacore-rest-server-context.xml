@@ -27,7 +27,7 @@
       order="-1" ignore-unresolvable="true"/><!-- so defaults to importing PropertyPlaceholder/*Resolver -->
    
    <import resource="classpath:oasis-datacore-core-context.xml" />
-   <!-- <import resource="classpath:security-context.xml" />  -->
+   <!-- <import resource="classpath:oasis-datacore-security-context.xml" />  -->
    <!-- reusing client for init of samples : -->
    <import resource="classpath:oasis-datacore-rest-client-context.xml" />
 
