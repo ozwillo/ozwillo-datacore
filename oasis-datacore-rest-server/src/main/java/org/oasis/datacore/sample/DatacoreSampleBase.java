@@ -107,7 +107,8 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
    }
 
 
-   protected DCResource putDataInType(DCResource resource) {
+   /** TODO share for tests, ex. of security */
+   public DCResource putDataInType(DCResource resource) {
       try {
          return datacoreApiImpl.putDataInType(resource, resource.getModelType(),
                UriHelper.parseURI(resource.getUri()).getId());
@@ -121,7 +122,8 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
       }
    }
 
-   protected DCResource postDataInType(DCResource resource) {
+   /** TODO share for tests, ex. of security */
+   public DCResource postDataInType(DCResource resource) {
       try {
          return datacoreApiImpl.postDataInType(resource, resource.getModelType());
       } catch (WebApplicationException e) {

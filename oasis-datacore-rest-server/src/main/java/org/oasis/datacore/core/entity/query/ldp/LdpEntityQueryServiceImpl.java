@@ -1,6 +1,7 @@
 package org.oasis.datacore.core.entity.query.ldp;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCSecurity;
 import org.oasis.datacore.rest.server.parsing.model.DCQueryParsingContext;
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
 import org.oasis.datacore.rest.server.parsing.service.QueryParsingService;
@@ -19,6 +21,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 
@@ -154,6 +159,26 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       } // else TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
       
       
+      // adding security :
+      // TODO Q how to make all tests still work : null case ? other prop ? disable it ??
+      // TODO better : in SecurityQueryEnricher ? rather in (Query)ParsingContext ?!?
+      // TODO (LATER ?) on all sub Resources !!
+      // TODO LATER in findDataInAllTypes(), on all root Resources
+      DCSecurity modelSecurity = dcModel.getSecurity();
+      if (!modelSecurity.isPublicRead()) {
+         // TODO Q or (b) also GUEST OK when empty ACL ?
+         // NO maybe dangerous because *adding* a group / role to ACL would *remove* GUEST from it
+         // so solution would be : API (i.e. Social Graph) as (a) but storage translates it to (b), allows to store less characters
+         // requires adding an $or criteria : _w $size 0 $or _w $in currentUserRoles
+         // which is more complex and might be (TODO test) worse performance-wise
+         // => OPT LATER
+         // (in any way, there'll always be a balance to find between performance and storage)
+         
+         ///if (!datacoreSecurity.isAdmin(currentUser) && !modelSecurity.isAdmin()) {
+         queryParsingContext.getCriteria().and("_r").in(getCurrentUserRoles());
+         ///} // else (datacore global or model-scoped) admin, so no security check
+      } // else public, so no security check
+      
       // adding paging & sorting :
       if (start > 500) {
          start = 500; // max (conf'ble in model ?), else prefer ranged query ; TODO or error message ?
@@ -176,5 +201,31 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       return foundEntities;
    }
 
+   
+   public static Set<String> getCurrentUserRoles() {
+      Authentication currentUserAuth = SecurityContextHolder.getContext().getAuthentication();
+      HashSet<String> currentUserRoles;
+      if (currentUserAuth == null) {
+         // assume guest
+         currentUserRoles = new HashSet<String>(1);
+         currentUserRoles.add("GUEST"); // modeled as (Datacore-wide) default group
+      } else {
+         // TODO refactor to getRoles AND / OR cache it in UserDatacoreImpl
+         Collection<? extends GrantedAuthority> grantedAuthorities = currentUserAuth.getAuthorities();
+         currentUserRoles = new HashSet<String>(grantedAuthorities.size() + 1);
+         currentUserRoles.add("GUEST"); // modeled as (Datacore-wide) default group
+         for (GrantedAuthority grantedAuthority : grantedAuthorities) {
+            currentUserRoles.add(grantedAuthority.getAuthority());
+         }
+      }
+      // TODO Q or (b) also GUEST OK when empty ACL ?
+      // NO maybe dangerous because *adding* a group / role to ACL would *remove* GUEST from it
+      // so solution would be : API (i.e. Social Graph) as (a) but storage translates it to (b), allows to store less characters
+      // requires adding an $or criteria : _w $size 0 $or _w $in currentUserRoles
+      // which is more complex and might be (TODO test) worse performance-wise
+      // => OPT LATER
+      // (in any way, there'll always be a balance to find between performance and storage)
+      return currentUserRoles;
+   }
   
 }

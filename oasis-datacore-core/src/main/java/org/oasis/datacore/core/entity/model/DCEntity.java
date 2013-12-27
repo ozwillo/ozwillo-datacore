@@ -92,9 +92,11 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    private String lastModifiedBy;
    
    /** TODO Q rather store properties at root (using lifecycle event) ?
-    * not really required for storage efficiency if renamed "_p", TODO Q maybe index size ?? */
+    * not really required for storage efficiency if renamed "_p", TODO Q maybe index size ??
+    * TODO dates are loaded as Date and not Joda DateTime */
    @Field("_p")
    private Map<String,Object> properties;
+   //private Map<String,DCEntityValueBase> properties;
    //private ArrayList<HashMap<String,Object>> propertiesList; // TODO OPT alternate value properties ?
 
    // TODO also spring mongo :
@@ -112,6 +114,15 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
 
    // TODO for datacore : _container_id/uri
 
+   /** required to check query rights (which is read mass operation) in a single step */
+   @Field("_r")
+   private List<String> readers;
+   /** ONLY REQUIRED IF MASS W & O OPERATIONS but otherwise still need to be stored somewhere */
+   @Field("_w")
+   private List<String> writers;
+   /** ONLY REQUIRED IF MASS W & O OPERATIONS but otherwise still need to be stored somewhere */
+   @Field("_o")
+   private List<String> owners;
    
    public DCEntity() {
       
@@ -132,6 +143,7 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
       this.setCreatedBy(dcEntity.getCreatedBy());
       this.setLastModifiedBy(dcEntity.getLastModifiedBy());
       this.properties = new HashMap<String, Object>(dcEntity.properties.size());
+      //this.properties = new HashMap<String, DCEntityValueBase>(dcEntity.properties.size());
       for (String key : dcEntity.properties.keySet()) {
          Object value = dcEntity.properties.get(key);
          if (value instanceof DCEntity) {
@@ -141,7 +153,7 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
          } else if (value instanceof Map<?,?>) {
             value = new HashMap<String,Object>((Map<? extends String,?>) value);
          }
-         this.properties.put(key, value);
+         this.properties.put(key, value/*DCEntityValueBase.newValue(value)*/);
       }
    }
 
@@ -285,6 +297,30 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
 
    public void setProperties(Map<String,Object> properties) {
       this.properties = properties;
+   }
+
+   public List<String> getReaders() {
+      return readers;
+   }
+
+   public void setReaders(List<String> readers) {
+      this.readers = readers;
+   }
+
+   public List<String> getWriters() {
+      return writers;
+   }
+
+   public void setWriters(List<String> writers) {
+      this.writers = writers;
+   }
+
+   public List<String> getOwners() {
+      return owners;
+   }
+
+   public void setOwners(List<String> owners) {
+      this.owners = owners;
    }
 
 }

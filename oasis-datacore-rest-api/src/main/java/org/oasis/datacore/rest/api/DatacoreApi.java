@@ -72,6 +72,8 @@ import com.wordnik.swagger.annotations.ApiResponses;
  * * when parsing errors, 400 Bad Request
  * * see also http://www.infoq.com/articles/designing-restful-http-apps-roth
  * 
+ * TODO break it up : at least additional features (history...) vs core API,
+ * or maybe one API per feature and CRUD API vs finders API
  * TODO rename ex. to DataResourceApi ??
  * TODO DatacoreNativeApi with only "native" methods ? AT LEAST NOT FOR CLIENT CACHING
  * 
@@ -344,6 +346,7 @@ public interface DatacoreApi {
    /**
     * Deletes the given Data.
     * If-Match header has to be be provided with the up-to-date version of the Data to delete.
+    * TODO LATER also add a "deleted" flag that can be set in POST ?!?
     * @param type
     * @param iri
     * @param httpHeaders to look for If-Match header

@@ -1,5 +1,9 @@
 package org.oasis.datacore.rest.server;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 import javax.ws.rs.BadRequestException;
 
 import org.junit.Assert;
@@ -7,17 +11,17 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
+import org.oasis.datacore.core.entity.DCEntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
+import org.oasis.datacore.core.entity.query.QueryException;
+import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
-import org.oasis.datacore.core.meta.model.DCField;
-import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
-import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.DatacoreClientApi;
-import org.oasis.datacore.rest.server.event.DCInitIdEventListener;
+import org.oasis.datacore.rest.client.QueryParameters;
 import org.oasis.datacore.rest.server.event.EventService;
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.sample.AltTourismPlaceAddressSample;
@@ -26,7 +30,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -60,6 +68,9 @@ public class DatacoreApiServerMixinTest {
     * TODO LATER rather in service */
    @Autowired
    private /*static */MongoOperations mgo;
+   /** to setup security tests */
+   @Autowired
+   private DCEntityService entityService;
    
    /** to be able to build a full uri, to check in tests
     * TODO rather client-side DCURI or rewrite uri in server */
@@ -68,10 +79,13 @@ public class DatacoreApiServerMixinTest {
    @Value("${datacoreApiClient.containerUrl}") 
    private String containerUrl;
 
-   /** for testing purpose */
+   /** for testing purpose, including of security */
    @Autowired
    @Qualifier("datacoreApiImpl") 
    private DatacoreApiImpl datacoreApiImpl;
+   /** for security testing purpose */
+   @Autowired
+   private LdpEntityQueryService ldpEntityQueryService;
 
    @Autowired
    private DataModelServiceImpl modelAdminService; // TODO rm refactor
@@ -131,7 +145,7 @@ public class DatacoreApiServerMixinTest {
    }
    
    @Test
-   public void testAddress() {
+   public void testAddress() throws QueryException {
       altTourismPlaceAddressSample.initModel();
       
       
@@ -258,6 +272,44 @@ public class DatacoreApiServerMixinTest {
       Assert.assertNotNull(altTourismPlaceSofiaMonasteryPosted);
       Assert.assertEquals(altTourismPlaceSofiaMonasteryPosted.get("name"), "Sofia_Monastery"); // TODO _ else space bad url !!!!!!!!!!!!!!!!
       Assert.assertEquals("1000", altTourismPlaceSofiaMonasteryPosted.get("zipCode")); // now address field
+      
+      
+      // security :
+      // BEWARE don't use client (datacoreApiClient) else SecurityContextHolder won't work (different thread)
+      DCModel altTourismPlaceModel = modelServiceImpl.getModel(AltTourismPlaceAddressSample.ALTTOURISM_PLACE);
+      
+      // make model secured
+      altTourismPlaceModel.getSecurity().setPublicRead(false);
+
+      // check that not found anymore as GUEST
+      List<DCEntity> forbiddenMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel,
+            new HashMap<String,List<String>>() {{ put("name", new ArrayList<String>() {{ add("Sofia_Monastery"); }}); }}, 0, 10);
+      Assert.assertTrue("query filtering should have forbidden non public model",
+            forbiddenMonasteryRes == null || forbiddenMonasteryRes.isEmpty());
+      
+      // set rights
+      DCEntity altTourismPlaceSofiaMonasteryEntity = entityService.getByUriId(altTourismPlaceSofiaMonastery.getUri(), altTourismPlaceModel);
+      altTourismPlaceSofiaMonasteryEntity.setReaders(new ArrayList<String>() {{ add("group"); }});
+      entityService.update(altTourismPlaceSofiaMonasteryEntity, altTourismPlaceModel);
+      altTourismPlaceSofiaMonastery = datacoreApiClient.postDataInType(altTourismPlaceSofiaMonastery);
+      
+      // check that not found (because not in group)
+      forbiddenMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel,
+            new HashMap<String,List<String>>() {{ put("name", new ArrayList<String>() {{ add("Sofia_Monastery"); }}); }}, 0, 10);
+      Assert.assertTrue("query filtering should have forbidden it because not in group",
+            forbiddenMonasteryRes == null || forbiddenMonasteryRes.isEmpty());
+      
+      // check that found when using rights
+      SecurityContext sc = new SecurityContextImpl();
+      Authentication authentication = new TestingAuthenticationToken("John", "pass", "group");
+      sc.setAuthentication(authentication);
+      SecurityContextHolder.setContext(sc);
+      List<DCEntity> allowedMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel,
+            new HashMap<String,List<String>>() {{ put("name", new ArrayList<String>() {{ add("Sofia_Monastery"); }}); }}, 0, 10);
+      Assert.assertTrue("query filtering should have allowed it", allowedMonasteryRes != null && allowedMonasteryRes.size() == 1);
+      
+      // revert model to default (public)
+      altTourismPlaceModel.getSecurity().setPublicRead(true);
    }
    
    @Test

@@ -14,6 +14,11 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
+
+/**
+ * Provides resource history features
+ *
+ */
 @Service
 public class HistorizationServiceImpl implements HistorizationService {
 
@@ -28,6 +33,12 @@ public class HistorizationServiceImpl implements HistorizationService {
 	
 	private final static String HISTORIZATION_COLLECTION_PREFIX = "h.";
 	
+	
+	/**
+	 * Must be called BEFORE actual resource update so that it historizes PREVIOUS version
+	 * and not called at resource update, otherwise failures may not leave a consistent state.
+	 * TODO LATER could be on DCResource than DCEntity IF DCResource.cachedEntity
+	 */
 	@Override
 	public void historize(DCEntity entity, DCModel model) throws HistorizationException {
 		

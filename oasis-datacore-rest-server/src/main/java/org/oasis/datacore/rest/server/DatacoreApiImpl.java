@@ -30,6 +30,7 @@ import org.oasis.datacore.core.entity.EntityQueryService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
+import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.historization.exception.HistorizationException;
@@ -80,8 +81,6 @@ public class DatacoreApiImpl implements DatacoreApi {
    private DCEntityService entityService;
    //@Autowired
    //private DCDataEntityRepository dataRepo; // NO rather for (meta)model, for data can't be used because can't specify collection
-   @Autowired
-   private MongoOperations mgo; // TODO remove it by hiding it in (entity) services
    
    @Autowired
    private EventService eventService; // TODO remove it by hiding it in (entity, resource ?) services
@@ -237,6 +236,15 @@ public class DatacoreApiImpl implements DatacoreApi {
 
       DCEntity entity = entityService.getByUriId(uri, dcModel);
       
+      /*if (!dcModel.getSecurity().isPublicRead()) {
+         List<String> w = entity.getWriters();
+         // NB. Set.retainAll also does changes so not appropriate
+         boolean 
+         if (w != null && !LdpEntityQueryServiceImpl.getCurrentUserRoles().retainAll(w)) {
+            
+         }  
+      }*/
+      
       if (entity == null) {
          //return Response.noContent().build();
          throw new NotFoundException();
@@ -276,6 +284,7 @@ public class DatacoreApiImpl implements DatacoreApi {
    }
    
    public void deleteData(String modelType, String iri, HttpHeaders httpHeaders) {
+      // TODO LATER also add a "deleted" flag that can be set in POST ?!?
       String uri = resourceService.buildUri(modelType, iri);
       
       String etag = httpHeaders.getHeaderString(HttpHeaders.IF_MATCH);
@@ -298,25 +307,8 @@ public class DatacoreApiImpl implements DatacoreApi {
              .entity("Unknown Model type " + modelType).type(MediaType.TEXT_PLAIN).build());
       }
       modelType = dcModel.getName(); // normalize ; TODO useful ?
-      String collectionName = modelType; // TODO or = dcModel.getCollectionName(); for weird type names ??
 
-      Query query = new Query(Criteria.where("_uri").is(uri).and("_v").is(version));
-      mgo.remove(query, collectionName);
-      // NB. obviously won't conflict / throw MongoDataIntegrityViolationException
-      // alt : first get it by _uri and check version, but in Mongo & REST spirit it's enough to
-      // merely ensure that it doesn't exist at the end
-      
-      // NB. for proper error handling, we use WriteConcerns that ensures that errors are raised,
-      // rather than barebone MongoTemplate.getDb().getLastError() (which they do),
-      // see http://hackingdistributed.com/2013/01/29/mongo-ft/
-      // However if we did it, it would be :
-      // get operation result (using spring WriteResultChecking or native mt.getDb().getLastError())
-      // then handle it / if failed throw error status :
-      //if (notfound) {
-      //   throw new WebApplicationException(Response.Status.NOT_FOUND);
-      //   // rather than NO_CONTENT ; like Atol ex. deleteApplication in
-      //   // https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/apps/ApplicationDirectoryResource.java
-      //}
+      entityService.deleteByUriId(uri, version, dcModel);
 
       throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT).build());
    }

@@ -356,26 +356,25 @@ public class ResourceService {
       Types aboutToEventType = isCreation ? DCResourceEvent.Types.ABOUT_TO_CREATE : DCResourceEvent.Types.ABOUT_TO_UPDATE;
       eventService.triggerResourceEvent(aboutToEventType, resource);
       
-      String collectionName = dcModel.getCollectionName(); // or mere type ?
       ///dataEntity.setId(stringUri); // NOO "invalid Object Id" TODO better
       dataEntity.setTypes(resource.getTypes()); // TODO or no modelType, or remove modelName ??
       if (isCreation) {
-         // will fail if exists
-         mgo.insert(dataEntity, collectionName); // TODO does it enforce version if exists ??
-         try {
-			historizationService.historize(dataEntity, dcModel);
-         } catch (HistorizationException e) {
-			e.printStackTrace();
-         }
+         // TODO maintain uri unicity : index (but not sharded so also handle duplicates a posteriori)
+         // and catch conflict ?!?
+         entityService.create(dataEntity, dcModel);
+         // NB. no PREVIOUS version to historize (*relief*, handling consistently its failures would be hard)
          
       } else {
          try {
-            mgo.save(dataEntity, collectionName);
             try {
-    			historizationService.historize(dataEntity, dcModel);
-             } catch (HistorizationException e) {
-    			e.printStackTrace();
+               // NB. called first so (it saves PREVIOUS version) and if it fails it's still OK
+               historizationService.historize(dataEntity, dcModel);
+             } catch (HistorizationException hex) {
+                throw new ResourceException("Error while historizing", hex, resource);
+             } catch (Exception ex) {
+                throw new ResourceException("Unknown error while historizing", ex, resource);
              }
+            entityService.update(dataEntity, dcModel);
          } catch (OptimisticLockingFailureException olfex) {
             throw new ResourceObsoleteException("Trying to update data resource "
                   + "without up-to-date version but " + dataEntity.getVersion(), resource);

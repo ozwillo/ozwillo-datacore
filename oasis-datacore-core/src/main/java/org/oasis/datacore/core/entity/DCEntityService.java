@@ -11,6 +11,7 @@ import org.oasis.datacore.core.entity.model.DCURI;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -18,6 +19,9 @@ import org.springframework.stereotype.Component;
 
 
 /**
+ * TODO or model cached : in custom context implementing "get" reused in both hasPermission & here ??
+ * as transient param of resource ?? in EHCache (but beware of Resource obsolescence) ??
+ * 
  * NB. doesn't use Spring MongoRepository (though it can be used for (meta)model),
  * because can't specify collection
  * 
@@ -35,13 +39,72 @@ public class DCEntityService {
    @Autowired
    private DCModelService dcModelService; // ???
 
+
+   public void create(DCEntity dataEntity, DCModel dcModel) {
+      String collectionName = dcModel.getCollectionName(); // TODO for view Models or weird type names ?!?
+      
+      // security : checking type default rights
+      // TODO using annotated hasPermission
+      /*if (dcModel.getDefaultWriters/Creators().intersect(currentUserRoles).isEmpty()) {
+         throw new ForbiddenException();
+      }*/
+      
+      // if exists, will fail (no need to enforce any version) 
+      mgo.insert(dataEntity, collectionName);
+   }
+   
+   /**
+    * TODO or model cached : in custom context implementing "get" reused in both hasPermission & here ??
+    * as transient param of resource ?? in EHCache (but beware of Resource obsolescence) ??
+    * @param uri
+    * @param dcModel
+    * @return
+    */
    public DCEntity getByUriId(String uri, DCModel dcModel) {
-      String collectionName = dcModel.getCollectionName(); // TODO getType() or getCollectionName() for weird type names ?!?
+      String collectionName = dcModel.getCollectionName(); // TODO for view Models or weird type names ?!?
       //entityService.findById(uri, type/collectionName); // TODO
       //dataEntity = dataRepo.findOne(uri); // NO can't be used because can't specify collection
       //dataEntity = mgo.findById(uri, DCEntity.class, collectionName);
       DCEntity dataEntity = mgo.findOne(new Query(new Criteria("_uri").is(uri)), DCEntity.class, collectionName);
       return dataEntity;
+   }
+
+   public void update(DCEntity dataEntity, DCModel dcModel) throws OptimisticLockingFailureException {
+      String collectionName = dcModel.getCollectionName(); // TODO for view Models or weird type names ?!?
+      
+      // security : checking rights
+      /*if (dataEntity.getWriters().intersect(currentUserRoles).isEmpty() || (getOwners())) {
+         throw new ForbiddenException();
+      }*/
+      // TODO better using annotated hasPermission ?
+      // TODO or only as operation criteria ?? ($and _w $in currentUserRoles)
+      
+      mgo.save(dataEntity, collectionName);
+   }
+   
+   public void deleteByUriId(String uri, long version, DCModel dcModel) {
+      String collectionName = dcModel.getCollectionName(); // TODO for view Models or weird type names ?!?
+      
+      // NB. could first check 1. that uri exists & has version and 2. user has write rights
+      // and fail if not, but in Mongo & REST spirit it's enough to merely ensure that
+      // it doesn't exist at the end
+      
+      Query query = new Query(Criteria.where("_uri").is(uri).and("_v").is(version)
+            /*.and("_w").in(currentUserRoles)*/);
+      mgo.remove(query, collectionName);
+      // NB. obviously won't conflict / throw MongoDataIntegrityViolationException
+      
+      // NB. for proper error handling, we use WriteConcerns that ensures that errors are raised,
+      // rather than barebone MongoTemplate.getDb().getLastError() (which they do),
+      // see http://hackingdistributed.com/2013/01/29/mongo-ft/
+      // However if we did it, it would be :
+      // get operation result (using spring WriteResultChecking or native mt.getDb().getLastError())
+      // then handle it / if failed throw error status :
+      //if (notfound) {
+      //   throw new WebApplicationException(Response.Status.NOT_FOUND);
+      //   // rather than NO_CONTENT ; like Atol ex. deleteApplication in
+      //   // https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/apps/ApplicationDirectoryResource.java
+      //}
    }
    
 
@@ -97,6 +160,5 @@ public class DCEntityService {
       
       return getSampleData();
    }
-   
    
 }
