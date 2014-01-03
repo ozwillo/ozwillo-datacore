@@ -5,7 +5,7 @@ import org.oasis.datacore.sample.DatacoreSampleBase;
 import org.springframework.stereotype.Component;
 
 /**
- * Electoral roll registration request. To be valid, the resource MUST include CKEnvelope mixin.
+ * Electoral roll registration request. To be valid, the resource MUST have BOTH an envelope and a procedure
  *
  * NOTE: this models the specifically French procedure. This has very
  * little applicability to other countries; therefore for clarity the
