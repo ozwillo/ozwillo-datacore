@@ -1,10 +1,7 @@
 package org.oasis.datacore.rest.server;
 
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
@@ -24,13 +21,10 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import org.joda.time.DateTime;
-import org.oasis.datacore.core.entity.DCEntityService;
 import org.oasis.datacore.core.entity.EntityQueryService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
-import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.historization.exception.HistorizationException;
@@ -38,7 +32,8 @@ import org.oasis.datacore.historization.service.HistorizationService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.util.DCURI;
-import org.oasis.datacore.rest.server.event.EventService;
+import org.oasis.datacore.rest.server.cxf.JaxrsServerBase;
+import org.oasis.datacore.rest.server.resource.ResourceEntityMapperService;
 import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.oasis.datacore.rest.server.resource.ResourceNotFoundException;
 import org.oasis.datacore.rest.server.resource.ResourceObsoleteException;
@@ -46,9 +41,6 @@ import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.rest.server.resource.ResourceTypeNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 
 
 /**
@@ -71,20 +63,14 @@ import org.springframework.data.mongodb.core.query.Query;
 @Consumes(MediaType.APPLICATION_JSON) // TODO finer media type ex. +oasis-datacore ??
 @Produces(MediaType.APPLICATION_JSON)
 ///@Component("datacoreApiServer") // else can't autowire Qualified ; TODO @Service ?
-public class DatacoreApiImpl implements DatacoreApi {
+public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
 
    private boolean strictPostMode = false;
    
    @Autowired
    private ResourceService resourceService;
    @Autowired
-   private DCEntityService entityService;
-   //@Autowired
-   //private DCDataEntityRepository dataRepo; // NO rather for (meta)model, for data can't be used because can't specify collection
-   
-   @Autowired
-   private EventService eventService; // TODO remove it by hiding it in (entity, resource ?) services
-   // NB. MongoTemplate would be required to check last operation result, but we rather use WriteConcerns
+   private ResourceEntityMapperService resourceEntityMapperService;
    
    @Autowired
    private LdpEntityQueryService ldpEntityQueryService;
@@ -99,7 +85,7 @@ public class DatacoreApiImpl implements DatacoreApi {
    private HistorizationService historizationService;
 
    
-   public DCResource postDataInType(DCResource resource, String modelType/*, Request request*/) {
+   public DCResource postDataInType(DCResource resource, String modelType) {
       DCResource postedResource = this.internalPostDataInType(resource, modelType, true, !this.strictPostMode);
       
       //return dcData; // rather 201 Created with ETag header :
@@ -149,7 +135,7 @@ public class DatacoreApiImpl implements DatacoreApi {
       }
    }
    
-   public List<DCResource> postAllDataInType(List<DCResource> resources, String modelType/*, Request request*/) {
+   public List<DCResource> postAllDataInType(List<DCResource> resources, String modelType) {
       List<DCResource> res = this.internalPostAllDataInType(resources, modelType, true, !this.strictPostMode);
       throw new WebApplicationException(Response.status(Response.Status.CREATED)
             ///.tag(new EntityTag(httpEntity)) // .lastModified(dataEntity.getLastModified().toDate())
@@ -178,7 +164,7 @@ public class DatacoreApiImpl implements DatacoreApi {
       }
       return res;
    }
-   public List<DCResource> postAllData(List<DCResource> resources/*, Request request*/) {
+   public List<DCResource> postAllData(List<DCResource> resources) {
       List<DCResource> res = this.internalPostAllData(resources, true, !this.strictPostMode);
       throw new WebApplicationException(Response.status(Response.Status.CREATED)
             ///.tag(new EntityTag(httpEntity)) // .lastModified(dataEntity.getLastModified().toDate())
@@ -211,66 +197,73 @@ public class DatacoreApiImpl implements DatacoreApi {
       return res;
    }
    
-   public DCResource putDataInType(DCResource resource, String modelType, String iri/*, Request request*/) {
+   public DCResource putDataInType(DCResource resource, String modelType, String iri) {
       // NB. no ETag validation support (same as POST), see discussion in internalPostAllDataInType()
       return internalPostDataInType(resource, modelType, false, true);
    }
-   public List<DCResource> putAllDataInType(List<DCResource> resources, String modelType/*, Request request*/) {
+   public List<DCResource> putAllDataInType(List<DCResource> resources, String modelType) {
       // NB. no ETag validation support (same as POST), see discussion in internalPostAllDataInType()
       return internalPostAllDataInType(resources, modelType, false, true);
    }
-   public List<DCResource> putAllData(List<DCResource> resources/*, Request request*/) {
+   public List<DCResource> putAllData(List<DCResource> resources) {
       // NB. no ETag validation support (same as POST), see discussion in internalPostAllDataInType()
       return internalPostAllData(resources, false, true);
    }
    
-   public DCResource getData(String modelType, String iri, Request request) {
+   public DCResource getData(String modelType, String iri, Long version) {
       String uri = resourceService.buildUri(modelType, iri);
 
-      DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
-      if (dcModel == null) {
-         throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
-             .entity("Unknown Model type " + modelType).type(MediaType.TEXT_PLAIN).build());
-      }
-      modelType = dcModel.getName(); // normalize ; TODO useful ?
+      ///Long version = getVersionFromHeader(HttpHeaders.IF_NONE_MATCH, uri);
 
-      DCEntity entity = entityService.getByUriId(uri, dcModel);
-      
-      /*if (!dcModel.getSecurity().isPublicRead()) {
-         List<String> w = entity.getWriters();
-         // NB. Set.retainAll also does changes so not appropriate
-         boolean 
-         if (w != null && !LdpEntityQueryServiceImpl.getCurrentUserRoles().retainAll(w)) {
-            
-         }  
-      }*/
-      
-      if (entity == null) {
+      DCResource resource;
+      boolean versionIsUpToDate;
+      String httpEntityTag;
+      try {
+         resource = resourceService.getIfVersionDiffers(uri, modelType, version);
+         versionIsUpToDate = resource == null;
+         httpEntityTag = versionIsUpToDate ? String.valueOf(version) :
+            resource.getVersion().toString(); // no need of additional uri because only for THIS resource
+         
+      } catch (ResourceTypeNotFoundException e) {
+         throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
+             .entity("Unknown Model type " + e.getModelType()).type(MediaType.TEXT_PLAIN).build());
+         
+      } catch (ResourceNotFoundException e) {
          //return Response.noContent().build();
          throw new NotFoundException();
          // rather than NO_CONTENT ; like Atol ex. deleteApplication in
          // https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/apps/ApplicationDirectoryResource.java
       }
 
-      // TODO ETag jaxrs caching :
+      // ETag caching :
       // on GET, If-None-Match precondition else return 304 Not Modified http://stackoverflow.com/questions/2021882/is-my-implementation-of-http-conditional-get-answers-in-php-is-ok/2049723#2049723
       // see for jaxrs https://devcenter.heroku.com/articles/jax-rs-http-caching#conditional-cache-headers
       // and for http http://odino.org/don-t-rape-http-if-none-match-the-412-http-status-code/
       // also http://stackoverflow.com/questions/2085411/how-to-use-cxf-jax-rs-and-http-caching
-      String httpEntity = entity.getVersion().toString(); // no need of additional uri because only for THIS resource
-      EntityTag eTag = new EntityTag(httpEntity);
-      //ResponseBuilder builder = request.evaluatePreconditions(dataEntity.getUpdated(), eTag);
-      ResponseBuilder builder = (request != null) ?
-            request.evaluatePreconditions(eTag) : null; // else not deployed as jaxrs
       
-      if (builder == null) {
+      // Doing it manually :
+      ResponseBuilder builder;
+      if (versionIsUpToDate) {
+         builder = Response.notModified(httpEntityTag);
+      } else {
          // (if provided) If-None-Match precondition OK (resource did change), so serve updated content
-         DCResource resource = entityToResource(entity);
-         builder = Response.ok(resource).tag(eTag); // .lastModified(dataEntity.getLastModified().toDate())
+         builder = Response.ok(resource).tag(httpEntityTag); // .lastModified(dataEntity.getLastModified().toDate())
       }
-
-      // else provided If-None-Match precondition KO (resource didn't change),
-      // so return 304 Not Modified (and don't send the dcData back)
+      
+      /*
+      // (alternative) Doing it using JAXRS helper :
+      EntityTag eTag = new EntityTag(httpEntityTag);
+      //ResponseBuilder builder = request.evaluatePreconditions(dataEntity.getUpdated(), eTag);
+      builder = (request != null) ?
+            request.evaluatePreconditions(eTag) : null; // else not deployed as jaxrs
+      versionIsUpToDate = (builder != null);
+      
+      if (!versionIsUpToDate) {
+         // (if provided) If-None-Match precondition OK (resource did change), so serve updated content
+         ////DCResource resource = entityToResource(entity);
+         builder = Response.ok(resource).tag(eTag); // .lastModified(dataEntity.getLastModified().toDate())
+      } // else provided If-None-Match precondition KO (resource didn't change),
+      // so return 304 Not Modified, prepared by JAXRS Request helper (and don't send the dcData back)
       
       // NB. no cache control max age, else HTTP clients won't even send new requests until period ends !
       //CacheControl cc = new CacheControl();
@@ -279,40 +272,55 @@ public class DatacoreApiImpl implements DatacoreApi {
       
       // NB. lastModified would be pretty but not used at HTTP level
       //builder.lastModified(person.getUpdated());
+       */
       
       throw new WebApplicationException(builder.build());
    }
    
-   public void deleteData(String modelType, String iri, HttpHeaders httpHeaders) {
+   public void deleteData(String modelType, String iri, Long version) {
       // TODO LATER also add a "deleted" flag that can be set in POST ?!?
       String uri = resourceService.buildUri(modelType, iri);
+
+      ///Long version = getVersionFromHeader(HttpHeaders.IF_MATCH, uri);
+      if (version == null) {
+         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
+               .entity("Missing " + HttpHeaders.IF_MATCH + "=version header to delete "
+         + uri).type(MediaType.TEXT_PLAIN).build());
+      }
       
-      String etag = httpHeaders.getHeaderString(HttpHeaders.IF_MATCH);
-      if (etag == null) {
-         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
-               .entity("Missing If-Match=version header to delete " + uri).type(MediaType.TEXT_PLAIN).build());
-      }
-      Long version;
       try {
-         version = Long.parseLong(etag);
-      } catch (NumberFormatException e) {
-         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
-               .entity("If-Match header should be a long to delete " + uri
-                     + " but is " + etag).type(MediaType.TEXT_PLAIN).build());
-      }
-
-      DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
-      if (dcModel == null) {
+         resourceService.delete(uri, modelType, version);
+      } catch (ResourceTypeNotFoundException e) {
          throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
-             .entity("Unknown Model type " + modelType).type(MediaType.TEXT_PLAIN).build());
+               .entity("Unknown Model type " + e.getModelType()).type(MediaType.TEXT_PLAIN).build());
       }
-      modelType = dcModel.getName(); // normalize ; TODO useful ?
-
-      entityService.deleteByUriId(uri, version, dcModel);
 
       throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT).build());
    }
 
+
+   /**
+    * 
+    * @param httpHeaders
+    * @param etagHeader ex. If-Match or If-None-Match
+    * @param uri for logging purpose
+    * @return null if none
+    * @throws BadRequestException if not a Long
+    */
+   private Long getVersionFromHeader(String etagHeader, String uri) {
+      String versionEtag = httpHeaders.getHeaderString(etagHeader);
+      if (versionEtag == null) {
+         return null;
+      }
+      
+      try {
+         return Long.parseLong(versionEtag);
+      } catch (NumberFormatException e) {
+         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
+               .entity(etagHeader + " header should be a long to delete " + uri
+                     + " but is " + versionEtag).type(MediaType.TEXT_PLAIN).build());
+      }
+   }
 
    @Override
    public List<DCResource> updateDataInTypeWhere(DCResource dcDataDiff,
@@ -328,7 +336,7 @@ public class DatacoreApiImpl implements DatacoreApi {
    }
    
    
-   public DCResource postDataInTypeOnGet(String modelType, String method, UriInfo uriInfo/*, Request request*/) {
+   public DCResource postDataInTypeOnGet(String modelType, String method, UriInfo uriInfo) {
       if ("POST".equalsIgnoreCase(method)) {
          DCResource resource = null;
          // TODO impl like find
@@ -341,14 +349,14 @@ public class DatacoreApiImpl implements DatacoreApi {
    }
    
    public DCResource putPatchDeleteDataOnGet(String modelType, String iri,
-         String method, UriInfo uriInfo, HttpHeaders httpHeaders) {
+         String method, Long version, UriInfo uriInfo) {
       if ("PUT".equalsIgnoreCase(method)
             || "PATCH".equalsIgnoreCase(method)) {
          DCResource resource = new DCResource();
          // TODO impl like find
          return this.putDataInType(resource, modelType, iri);
       } else if ("DELETE".equalsIgnoreCase(method)) {
-         this.deleteData(modelType, iri, httpHeaders); // will throw an exception to return the result code
+         this.deleteData(modelType, iri, version); // will throw an exception to return the result code
          return null; // so will never go there
       } else {
          throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
@@ -388,7 +396,7 @@ public class DatacoreApiImpl implements DatacoreApi {
          // non-error behaviours of query engines like "explain" switch
       }
       
-      List<DCResource> foundDatas = entitiesToResources(foundEntities);
+      List<DCResource> foundDatas = resourceEntityMapperService.entitiesToResources(foundEntities);
       return foundDatas;
    }
 
@@ -412,7 +420,7 @@ public class DatacoreApiImpl implements DatacoreApi {
          // TODO better support for query parsing errors / warnings / detailedMode & additional
          // non-error behaviours of query engines like "explain" switch
       }
-      return entitiesToResources(entities);
+      return resourceEntityMapperService.entitiesToResources(entities);
    }
    @Override
    public List<DCResource> queryData(String query, String language) {
@@ -426,51 +434,7 @@ public class DatacoreApiImpl implements DatacoreApi {
          // TODO better support for query parsing errors / warnings / detailedMode & additional
          // non-error behaviours of query engines like "explain" switch
       }
-      return entitiesToResources(entities);
-   }
-
-   
-   private DCResource entityToResource(DCEntity entity) {
-      Map<String, Object> resourceProps = new HashMap<String,Object>(entity.getProperties().size());
-      // TODO better for properties (especially aspects ?!!)
-      Map<String, Object> entityProps = entity.getProperties();
-      for (String entityPropName : entity.getProperties().keySet()) { // or iterate on fields ?
-         Object resourcePropValue = entityProps.get(entityPropName);
-         /*if (resourcePropValue instanceof DCEntity) {
-            
-         } else */if (resourcePropValue instanceof Date) {
-            if (!(resourcePropValue instanceof DateTime)) {
-               resourcePropValue = new DateTime((Date) resourcePropValue); // TODO better in mongo persistence
-            }
-         }
-         resourceProps.put(entityPropName, resourcePropValue);
-      }
-      DCResource resource = new DCResource(resourceProps);
-      resource.setUri(entity.getUri());
-      //resource.setId(entity.getIri()); // TODO ??
-      /*ArrayList<String> types = new ArrayList<String>(entity.getTypes().size() + 1);
-      types.add(entity.getModelName()); // TODO ??
-      types.addAll(entity.getTypes());
-      resource.setTypes(types);*/
-      resource.setTypes(entity.getTypes()); // TODO or as above, or from model ?
-      
-      resource.setVersion(entity.getVersion());
-      
-      resource.setCreated(entity.getCreated()); // NB. if already provided, only if creation
-      resource.setCreatedBy(entity.getCreatedBy()); // NB. if already provided, only if creation
-      resource.setLastModified(entity.getLastModified());
-      resource.setLastModifiedBy(entity.getLastModifiedBy());
-      
-      return resource;
-   }
-   
-   private List<DCResource> entitiesToResources(List<DCEntity> entities) {
-      ArrayList<DCResource> datas = new ArrayList<DCResource>(entities.size());
-      for (DCEntity entity : entities) {
-         DCResource resource = entityToResource(entity);
-         datas.add(resource);
-      }
-      return datas;
+      return resourceEntityMapperService.entitiesToResources(entities);
    }
 
    
@@ -503,7 +467,7 @@ public class DatacoreApiImpl implements DatacoreApi {
 					.build());
 		}
 
-		DCResource resource = entityToResource(historizedEntity);
+		DCResource resource = resourceEntityMapperService.entityToResource(historizedEntity);
 		ResponseBuilder responseBuilder = Response.ok(resource);
 
 		throw new WebApplicationException(responseBuilder.build());

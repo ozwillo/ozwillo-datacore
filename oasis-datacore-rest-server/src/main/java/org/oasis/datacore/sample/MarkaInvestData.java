@@ -38,7 +38,7 @@ public class MarkaInvestData extends DatacoreSampleBase {
 	
 	
 	@Override
-	public void init() {
+	public void doInit() {
 
 		listCompany = new ArrayList<DCResource>();
 		listField = new ArrayList<DCResource>();

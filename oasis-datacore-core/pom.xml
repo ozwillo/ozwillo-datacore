@@ -42,10 +42,17 @@
          <groupId>org.springframework</groupId>
          <artifactId>spring-context</artifactId>
       </dependency>
+      <!-- to support @Configuration see
+      http://www.mkyong.com/spring3/cglib-is-required-to-process-configuration-classes/ -->
       <dependency>
-         <groupId>org.springframework</groupId>
-         <artifactId>spring-test</artifactId>
-         <scope>test</scope>
+         <groupId>cglib</groupId>
+         <artifactId>cglib</artifactId>
+      </dependency>
+      
+      <!-- Spring security (required for annotations) -->
+      <dependency>
+         <groupId>org.springframework.security</groupId>
+         <artifactId>spring-security-core</artifactId>
       </dependency>
  
 		<!-- mongodb java driver -->
@@ -53,20 +60,11 @@
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongo-java-driver</artifactId>
 		</dependency>
- 
 		<!-- Spring data mongodb -->
 		<dependency>
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-mongodb</artifactId>
 		</dependency>
- 
- 		<!-- to support @Configuration see
-      http://www.mkyong.com/spring3/cglib-is-required-to-process-configuration-classes/ -->
-		<dependency>
-			<groupId>cglib</groupId>
-			<artifactId>cglib</artifactId>
-		</dependency>
-		 
  		<!-- for spring data auditing and more -->
 		<dependency>
 		    <groupId>joda-time</groupId>
@@ -108,6 +106,13 @@
          <groupId>org.hibernate</groupId>
          <artifactId>hibernate-validator</artifactId>
          <version>4.2.0.Final</version>
+      </dependency>
+      
+      <!-- tests -->
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-test</artifactId>
+         <scope>test</scope>
       </dependency>
       
 	</dependencies>

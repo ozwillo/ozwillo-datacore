@@ -26,7 +26,7 @@ public class AltTourismPlaceAddressSample extends DatacoreSampleBase {
    
 
    @Override
-   public void init() {
+   public void doInit() {
       this.initModel();
       this.initData();
    }

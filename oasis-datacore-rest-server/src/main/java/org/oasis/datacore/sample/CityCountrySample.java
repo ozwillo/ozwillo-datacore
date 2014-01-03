@@ -23,7 +23,7 @@ public class CityCountrySample extends DatacoreSampleBase {
    public static String POI_MODEL_NAME = "sample.city.pointOfInterest";
 
    @Override
-   public void init() {
+   public void doInit() {
       initModel();
       initData();
    }

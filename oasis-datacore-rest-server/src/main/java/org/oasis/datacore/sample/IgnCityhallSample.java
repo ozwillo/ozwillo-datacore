@@ -40,7 +40,7 @@ public class IgnCityhallSample extends DatacoreSampleBase {
 
 
    @Override
-   public void init() {
+   public void doInit() {
       this.initIgn();
       this.initCityhallIgnV1Mixin();
       this.initCityhallIgnV2Inheritance();

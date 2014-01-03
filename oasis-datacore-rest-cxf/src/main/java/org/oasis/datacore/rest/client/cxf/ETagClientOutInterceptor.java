@@ -40,11 +40,11 @@ public class ETagClientOutInterceptor extends AbstractPhaseInterceptor<Message> 
    private String containerUrl;
 
    public ETagClientOutInterceptor() {
-      super(Phase.SETUP);
+      super(Phase.SETUP); // TODO orig SETUP ; PREPARE_SEND_ENDING NOOOOOOOOOO
    }
 
    public ETagClientOutInterceptor(Cache cache, String containerUrl) {
-      super(Phase.SETUP);
+      this();
       this.resourceCache = cache;
       this.containerUrl = containerUrl;
    }
@@ -58,50 +58,54 @@ public class ETagClientOutInterceptor extends AbstractPhaseInterceptor<Message> 
       }
 
       if ("getData".equals(operationName)) {
-         // GET : send If-None-Match=version ETag precondition header
-         ////Map<Object,Object> requestContext = getRequestContext(clientOutRequestMessage);
-         String endpointUri = CxfMessageHelper.getUri(clientOutRequestMessage);
-         String uri = toContainerUrl(endpointUri);
-         //DCData cachedData = cache.get(uri);
-         ValueWrapper cachedResourceWrapper = resourceCache.get(uri); // NB. ValueWrapper wraps cached null
-         if (cachedResourceWrapper != null) {
-            DCResource cachedResource = (DCResource) cachedResourceWrapper.get();
-            if (cachedResource != null) {
-               String etag = cachedResource.getVersion().toString();
-               if (cachedResource != null
-                     && cachedResource.getVersion() != null) { // TODO should not happen
-                  CxfMessageHelper.setHeader(clientOutRequestMessage, HttpHeaders.IF_NONE_MATCH, etag);
-               }
-            } // else cached null, but if server still has null it costs nothing
-            // to send it back, so no ETag support in this case
-         } // else no cache, optimization not possible, don't send etag header
-         // then on response, CachedClientProviderImpl (MessageBodyReader) caches returned data
+         if (CxfMessageHelper.getHeaderString(clientOutRequestMessage, HttpHeaders.IF_NONE_MATCH) == null) {
+            // GET : send If-None-Match=version ETag precondition header if none yet
+            ////Map<Object,Object> requestContext = getRequestContext(clientOutRequestMessage);
+            String endpointUri = CxfMessageHelper.getUri(clientOutRequestMessage);
+            String uri = toContainerUrl(endpointUri);
+            //DCData cachedData = cache.get(uri);
+            ValueWrapper cachedResourceWrapper = resourceCache.get(uri); // NB. ValueWrapper wraps cached null
+            if (cachedResourceWrapper != null) {
+               DCResource cachedResource = (DCResource) cachedResourceWrapper.get();
+               if (cachedResource != null) {
+                  String etag = cachedResource.getVersion().toString();
+                  if (cachedResource != null
+                        && cachedResource.getVersion() != null) { // TODO should not happen
+                     CxfMessageHelper.setHeader(clientOutRequestMessage, HttpHeaders.IF_NONE_MATCH, etag);
+                  }
+               } // else cached null, but if server still has null it costs nothing
+               // to send it back, so no ETag support in this case
+            } // else no cache, optimization not possible, don't send etag header
+            // then on response, CachedClientProviderImpl (MessageBodyReader) caches returned data
+         } // else don't override explicitly set version ETag header
 
       } else if ("deleteData".equals(operationName)
             || ("putPatchDeleteDataOnGet".equals(operationName) && HttpMethod.DELETE.equals(
                   ((String) CxfMessageHelper.getJaxrsParameter(clientOutRequestMessage, "method")).toUpperCase()))) {
-         // DELETE : send If-Match=version ETag precondition header
-         ///Map<Object,Object> requestContext = getRequestContext(clientOutRequestMessage);
-         String endpointUri = CxfMessageHelper.getUri(clientOutRequestMessage);
-         String uri = toContainerUrl(endpointUri);
-         //DCData cachedData = cache.get(uri);
-         ValueWrapper cachedResourceWrapper = resourceCache.get(uri); // NB. ValueWrapper wraps cached null
-         if (cachedResourceWrapper != null) {
-            DCResource cachedResource = (DCResource) cachedResourceWrapper.get();
-            String etag = cachedResource.getVersion().toString();
-            if (cachedResource != null
-                  && cachedResource.getVersion() != null) { // TODO should not happen
-               CxfMessageHelper.setHeader(clientOutRequestMessage, HttpHeaders.IF_MATCH, etag);
+         if (CxfMessageHelper.getHeaderString(clientOutRequestMessage, HttpHeaders.IF_MATCH) == null) {
+            // DELETE : send If-Match=version ETag precondition header if none yet
+            ///Map<Object,Object> requestContext = getRequestContext(clientOutRequestMessage);
+            String endpointUri = CxfMessageHelper.getUri(clientOutRequestMessage);
+            String uri = toContainerUrl(endpointUri);
+            //DCData cachedData = cache.get(uri);
+            ValueWrapper cachedResourceWrapper = resourceCache.get(uri); // NB. ValueWrapper wraps cached null
+            if (cachedResourceWrapper != null) {
+               DCResource cachedResource = (DCResource) cachedResourceWrapper.get();
+               String etag = cachedResource.getVersion().toString();
+               if (cachedResource != null
+                     && cachedResource.getVersion() != null) { // TODO should not happen
+                  CxfMessageHelper.setHeader(clientOutRequestMessage, HttpHeaders.IF_MATCH, etag);
+               }
+            } else {
+               throw new Fault(
+                     new ClientException( // or any non-Fault exception, else blocks in
+                     // abstractClient.checkClientException() (waits for missing response code)
+                     // see http://stackoverflow.com/questions/8316354/cxf-ws-interceptor-stop-processing-respond-with-fault
+                     "Can't delete a Data without having (gotten) and cached it first, "
+                     + "so its version can be send as deletion precondition"),
+                     Fault.FAULT_CODE_CLIENT);
             }
-         } else {
-            throw new Fault(
-                  new ClientException( // or any non-Fault exception, else blocks in
-                  // abstractClient.checkClientException() (waits for missing response code)
-                  // see http://stackoverflow.com/questions/8316354/cxf-ws-interceptor-stop-processing-respond-with-fault
-                  "Can't delete a Data without having (gotten) and cached it first, "
-                  + "so its version can be send as deletion precondition"),
-                  Fault.FAULT_CODE_CLIENT);
-         }
+         } // else don't override explicitly set version ETag header
 
       }/* else if ("postDataInType".equals(method.getName())) {
          // see AbstractClient.createMessage() (from ClientProxyImpl.doChainedInvocation()) l.921 : m.setContent(List.class, getContentsList(body));

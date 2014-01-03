@@ -25,7 +25,7 @@ public class CitizenKinElectionModelInitializer extends DatacoreSampleBase {
     public static final String DATE_TYPE = DCFieldTypeEnum.DATE.getType();
 
     @Override
-    public void init() {
+    public void doInit() {
 
         DCMixin envelope = new DCMixin(CITIZENKIN_ENVELOPE_MIXIN);
         envelope.addField(new DCField("definition_uuid", STRING_TYPE, true, 10));

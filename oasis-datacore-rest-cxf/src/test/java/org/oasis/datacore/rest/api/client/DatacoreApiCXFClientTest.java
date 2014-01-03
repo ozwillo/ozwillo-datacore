@@ -8,7 +8,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.oasis.datacore.rest.api.DCResource;
-import org.oasis.datacore.rest.client.DatacoreClientApi;
+import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,7 +31,7 @@ public class DatacoreApiCXFClientTest {
    //private /DatacoreApi/DatacoreClientApi datacoreApiClient;
    @Autowired // injection brings control (?)
    @Qualifier("datacoreApiCachedClient") // rather than...
-   private DatacoreClientApi datacoreApiClient; // NOT DatacoreApiCachedClientImpl ; Datacore(Client)Api ??
+   private DatacoreCachedClient datacoreApiClient; // NOT DatacoreApiCachedClientImpl ; Datacore(Client)Api ??
    
    /** to be able to build a full uri, to check in tests
     * TODO rather client-side DCURI or rewrite uri in server */
@@ -54,10 +54,10 @@ public class DatacoreApiCXFClientTest {
     */
    @Test
    public void getPostVersionTest() throws Exception {
-      DCResource resource = datacoreApiClient.getData("city", "UK/London", null);
+      DCResource resource = datacoreApiClient.getData("city", "UK/London");
       Assert.assertNotNull(resource);
       Assert.assertTrue("should be different object, because in mock HTTP 308 (which triggers cache) is disabled save for Bordeaux",
-            resource != datacoreApiClient.getData("city", "UK/London", null));
+            resource != datacoreApiClient.getData("city", "UK/London"));
       Assert.assertNotNull(resource.getVersion());
       long version = resource.getVersion();
       Assert.assertEquals(this.containerUrl + "dc/type/city/UK/London", resource.getUri());
@@ -78,7 +78,7 @@ public class DatacoreApiCXFClientTest {
    @Test
    public void clientCacheTest() throws Exception {
       try {
-         datacoreApiClient.deleteData("city", "France/Bordeaux", null);
+         datacoreApiClient.deleteData("city", "France/Bordeaux");
          Assert.fail("Should not be able to delete without (having cache allowing) "
                + "sending cuttent version as ETag");
       } catch (Exception e) {
@@ -87,7 +87,7 @@ public class DatacoreApiCXFClientTest {
       
       // GET
       // first call, sends ETag which should put result in cache :
-      DCResource bordeauxCityResource = datacoreApiClient.getData("city", "France/Bordeaux", null);
+      DCResource bordeauxCityResource = datacoreApiClient.getData("city", "France/Bordeaux");
       checkCachedBordeauxCityResource(bordeauxCityResource);
 
       // post
@@ -100,10 +100,10 @@ public class DatacoreApiCXFClientTest {
 
    private void checkCachedBordeauxCityResource(DCResource expectedCachedBordeauxCityResource) {
       // second call, should return 308
-      DCResource cachedBordeauxCityResource = datacoreApiClient.getData("city", "France/Bordeaux", null);
+      DCResource cachedBordeauxCityResource = datacoreApiClient.getData("city", "France/Bordeaux");
       Assert.assertTrue("Should be same (cached) object", expectedCachedBordeauxCityResource == cachedBordeauxCityResource);
       datacoreApiClient.deleteData("city", "France/Bordeaux", null);
-      DCResource renewBordeauxCityData = datacoreApiClient.getData("city", "France/Bordeaux", null);
+      DCResource renewBordeauxCityData = datacoreApiClient.getData("city", "France/Bordeaux");
       Assert.assertFalse("Should not be cached object anymore", expectedCachedBordeauxCityResource == renewBordeauxCityData);
    }
 }

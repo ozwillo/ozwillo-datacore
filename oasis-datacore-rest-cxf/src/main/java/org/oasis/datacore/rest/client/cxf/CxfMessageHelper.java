@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import javax.ws.rs.core.HttpHeaders;
-
 import org.apache.cxf.message.Message;
 
 
@@ -56,16 +54,16 @@ public class CxfMessageHelper {
    
    /**
     * Returns a single header, such as :
-    * * ETag ; An ETag header can only contain one ETag, see An ETag header can only contain one GET
+    * * ETag (HttpHeaders.ETAG), If-Match, If-None-Match ; An ETag header can only contain one ETag value
     * (see http://tools.ietf.org/html/draft-ietf-httpbis-p4-conditional-14#section-2.2 )
     * @param clientInResponseMessage
-    * @param etag
+    * @param header ex. HttpHeaders.ETAG
     * @return
     */
-   public static String getSingleHeader(Message clientInResponseMessage, String etag) {
+   public static String getHeaderString(Message clientInResponseMessage, String header) {
       Map<?,?> httpHeaders = (Map<?, ?>) clientInResponseMessage.get("org.apache.cxf.message.Message.PROTOCOL_HEADERS");
       @SuppressWarnings("unchecked")
-      List<String> httpHeaderList = (List<String>) httpHeaders.get(HttpHeaders.ETAG);
+      List<String> httpHeaderList = (List<String>) httpHeaders.get(header);
       if (httpHeaderList != null && httpHeaderList.size() != 0) {
          return httpHeaderList.get(0);
       }

@@ -5,12 +5,8 @@ import java.util.List;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.NotFoundException;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.RedirectionException;
 import javax.ws.rs.client.ClientException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
@@ -45,7 +41,7 @@ import org.springframework.stereotype.Component;
 @OutInterceptors(classes={ ETagClientOutInterceptor.class })
 //@InInterceptors(classes={ ETagClientInInterceptor.class }) // not used (this cached impl is
 // required and enough to put data resources in cache)
-public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreApi*/ {
+public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*DatacoreApi*/ {
 
    @Autowired
    @Qualifier("datacoreApiClient")
@@ -188,14 +184,53 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
       return resources;
    }
 
+   /**
+    * Same as TODO but with header version ETag
+    * coming from cache
+    */
+   @Override
+   public DCResource getData(String modelType, String iri) {
+      // NB. request is only for server etag, on client side it is done rather in interceptor
+      try {
+         DCResource resource = delegate.getData(modelType, iri);
+
+         // put in cache :
+         if (resource != null) {
+            resourceCache.put(resource.getUri(), resource);
+         } // else if server still has null it costs nothing to send it back,
+         // so no ETag support in this case (though Spring Cache could cache null)
+         return resource;
+
+      } catch (RedirectionException rex) {
+         if (Status.NOT_MODIFIED.getStatusCode() == rex.getResponse().getStatus()) {
+            // HTTP 304 (not modified) : get from cache
+            String uri = buildUri(modelType, iri);
+            ValueWrapper cachedDataWrapper = resourceCache.get(uri); // NB. ValueWrapper wraps cached null
+            if (cachedDataWrapper != null) {
+               DCResource cachedData = (DCResource) cachedDataWrapper.get();
+               if (cachedData != null) {
+                  return cachedData;
+               }
+            }
+
+            throw new RuntimeException("Received HTTP 304 (not modified) but no more data "
+                  + "in cache, maybe has just been evicted by DELETE ?", rex); // should not happen
+         }
+
+         throw rex;
+      }
+      //Response response = this.delegate.getData(type, iri, method, request);
+      //DCResource resource = (DCResource) response.getEntity();
+      //return resource;
+   }
    //@CachePut(value={"org.oasis.datacore.rest.api.DCResource"}, key="resource.uri") // NO key not fully known
    //@Cacheable(value={"org.oasis.datacore.rest.api.DCResource"}, key="resource.uri")
    // NOT Cacheable because returning from cache is triggered from HTTP 304 reponse
    @Override
-   public DCResource getData(String modelType, String iri, Request request) {
+   public DCResource getData(String modelType, String iri, Long version) {
       // NB. request is only for server etag, on client side it is done rather in interceptor
       try {
-         DCResource resource = this.delegate.getData(modelType, iri, request);
+         DCResource resource = this.delegate.getData(modelType, iri, version);
 
          // put in cache :
          if (resource != null) {
@@ -228,6 +263,18 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
    }
 
    /**
+    * Same as deleteData(modelType, iri, version) but with header version ETag
+    * coming from cache
+    */
+   @Override
+   public void deleteData(String modelType, String iri) {
+      delegate.deleteData(modelType, iri);
+
+      // evict from cache :
+      String uri = buildUri(modelType, iri);
+      resourceCache.evict(uri);
+   }
+   /**
     * Always evict (after invocation) and replace by updated data, using Spring CacheEvict annotation
     * done in wrapper logic (Spring CacheEvict needs full uri)
     * done in wrapper logic (Spring CachePut annotation doesn't support item lists)
@@ -235,8 +282,8 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
     */
    //@CacheEvict(value={"org.oasis.datacore.rest.api.DCResource"}, key="resource.uri") // NO key not fully known
    @Override
-   public void deleteData(String modelType, String iri, HttpHeaders headers) {
-      delegate.deleteData(modelType, iri, headers);
+   public void deleteData(String modelType, String iri, Long version) {
+      delegate.deleteData(modelType, iri, version);
 
       // evict from cache :
       String uri = buildUri(modelType, iri);
@@ -259,8 +306,8 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
     * Does the work of POST ; can't be done using Spring annotations
     */
    @Override
-   public DCResource postDataInTypeOnGet(@PathParam("type") String modelType, @QueryParam("method") String method,
-         @Context UriInfo uriInfo/*, @Context Request request*/) {
+   public DCResource postDataInTypeOnGet(String modelType, String method,
+         UriInfo uriInfo/*, @Context Request request*/) {
       DCResource resource = delegate.postDataInTypeOnGet(modelType, method, uriInfo);
 
       // put in cache :
@@ -269,12 +316,30 @@ public class DatacoreApiCachedClientImpl implements DatacoreClientApi/*DatacoreA
    }
 
    /**
+    * Same as TODO but with header version ETag
+    * coming from cache
+    */
+   @Override
+   public DCResource putPatchDeleteDataOnGet(String modelType, String iri, String method, UriInfo uriInfo) {
+      DCResource resource = delegate.putPatchDeleteDataOnGet(modelType, iri, method, uriInfo);
+
+      if (HttpMethod.DELETE.equals(method)) {
+         // evict from cache :
+         String uri = buildUri(modelType, iri);
+         resourceCache.evict(uri);
+      } else { // PUT, PATCH
+         // put in cache :
+         resourceCache.put(resource.getUri(), resource); // NB. if no error, resource can't be null
+      }
+      return resource;
+   }
+   /**
     * Does the work of PUT, PATCH, DELETE ; can't be done using Spring annotations
     */
    @Override
-   public DCResource putPatchDeleteDataOnGet(@PathParam("type") String modelType, @PathParam("iri") String iri,
-         @QueryParam("method") String method, @Context UriInfo uriInfo, @Context HttpHeaders httpHeaders) {
-      DCResource resource = delegate.putPatchDeleteDataOnGet(modelType, iri, method, uriInfo, httpHeaders);
+   public DCResource putPatchDeleteDataOnGet(String modelType, String iri,
+         String method, Long version, UriInfo uriInfo) {
+      DCResource resource = delegate.putPatchDeleteDataOnGet(modelType, iri, method, version, uriInfo);
 
       if (HttpMethod.DELETE.equals(method)) {
          // evict from cache :

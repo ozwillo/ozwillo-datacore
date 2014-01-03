@@ -6,9 +6,7 @@ import java.util.List;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.EntityTag;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -17,6 +15,7 @@ import javax.ws.rs.core.UriInfo;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.util.UriHelper;
+import org.oasis.datacore.rest.server.cxf.JaxrsServerBase;
 import org.springframework.beans.factory.annotation.Value;
 
 
@@ -28,7 +27,7 @@ import org.springframework.beans.factory.annotation.Value;
  * @author mdutoo
  *
  */
-public class DatacoreApiMockServerImpl implements DatacoreApi {
+public class DatacoreApiMockServerImpl extends JaxrsServerBase implements DatacoreApi {
 
    /** to be able to build a full uri */
    ///@Value("${datacoreApiClient.baseUrl}") 
@@ -85,7 +84,7 @@ public class DatacoreApiMockServerImpl implements DatacoreApi {
    }
 
    @Override
-   public DCResource getData(String modelType, String iri, Request request) {
+   public DCResource getData(String modelType, String iri, Long version) {
       DCResource resource = new DCResource();
       resource.setUri(UriHelper.buildUri(containerUrl, modelType, iri));
       resource.setVersion(0l);
@@ -106,24 +105,32 @@ public class DatacoreApiMockServerImpl implements DatacoreApi {
       if ("France/Bordeaux".equals(iri)) {
          resource.setVersion(franceBordeauxCityVersion);
 
-         // TODO ETag jaxrs caching :
+
+         // ETag caching :
+         // on GET, If-None-Match precondition else return 304 Not Modified http://stackoverflow.com/questions/2021882/is-my-implementation-of-http-conditional-get-answers-in-php-is-ok/2049723#2049723
+         // see for jaxrs https://devcenter.heroku.com/articles/jax-rs-http-caching#conditional-cache-headers
+         // and for http http://odino.org/don-t-rape-http-if-none-match-the-412-http-status-code/
+         // also http://stackoverflow.com/questions/2085411/how-to-use-cxf-jax-rs-and-http-caching
          String httpEntity = resource.getVersion().toString(); // no need of additional uri because only for THIS resource
          EntityTag eTag = new EntityTag(httpEntity);
          //ResponseBuilder builder = request.evaluatePreconditions(dataEntity.getUpdated(), eTag);
-         ResponseBuilder builder = request.evaluatePreconditions(eTag);
+         ResponseBuilder builder = jaxrsRequest.evaluatePreconditions(eTag);
          
          if (builder == null) {
             // (if provided) If-None-Match precondition OK (resource did change), so serve updated content
             builder = Response.ok(resource).tag(eTag); // .lastModified(dataEntity.getLastModified().toDate())
-         }
-
-         // else provided If-None-Match precondition KO (resource didn't change),
+         } // else provided If-None-Match precondition KO (resource didn't change),
          // so return 304 Not Modified (and don't send the dcData back)
+
+         // NB. no cache control max age, else HTTP clients won't even send new requests until period ends !
+         //CacheControl cc = new CacheControl();
+         //cc.setMaxAge(600);
+         //builder.cacheControl(cc);
          
-         CacheControl cc = new CacheControl();
-         cc.setMaxAge(600); // TODO ??!!
-         //return builder.cacheControl(cc).lastModified(person.getUpdated()).build(); // NB. lastModified would be pretty but not used at HTTP level
-         throw new WebApplicationException(builder.cacheControl(cc).build());
+         // NB. lastModified would be pretty but not used at HTTP level
+         //builder.lastModified(person.getUpdated());
+         
+         throw new WebApplicationException(builder.build());
       }
       
       return resource;
@@ -144,7 +151,7 @@ public class DatacoreApiMockServerImpl implements DatacoreApi {
    
 
    @Override
-   public void deleteData(String modelType, String iri, HttpHeaders htHeaders) {
+   public void deleteData(String modelType, String iri, Long version) {
       // TODO Auto-generated method stub
    }
 
@@ -156,7 +163,7 @@ public class DatacoreApiMockServerImpl implements DatacoreApi {
 
    @Override
    public DCResource putPatchDeleteDataOnGet(String modelType, String iri,
-         String method, UriInfo uriInfo, HttpHeaders httpHeaders) {
+         String method, Long version, UriInfo uriInfo) {
       // TODO Auto-generated method stub
       return null;
    }

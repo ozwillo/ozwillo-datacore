@@ -13,6 +13,7 @@ import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
+import org.oasis.datacore.core.security.mock.MockAuthenticationService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.DatacoreClientApi;
@@ -43,6 +44,9 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
 
    @Autowired
    private InitService initService;
+
+   @Autowired
+   private MockAuthenticationService mockAuthenticationService;
 
    /** impl, to be able to modify it
     * TODO LATER extract interface */
@@ -75,7 +79,16 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
    }*/
    //@PostConstruct // NOO deadlock, & same for ApplicationContextAware
    @Override
-   public abstract void init();
+   public void init() {
+      mockAuthenticationService.login("admin");
+      try {
+         doInit();
+      } finally {
+         mockAuthenticationService.logout();
+      }
+   }
+   
+   public abstract void doInit();
 
    @PostConstruct
    public void register() {

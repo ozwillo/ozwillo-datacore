@@ -7,9 +7,6 @@ import java.util.Map;
 import javax.ws.rs.WebApplicationException;
 
 import org.apache.cxf.common.util.StringUtils;
-import org.apache.cxf.jaxrs.impl.HttpHeadersImpl;
-import org.apache.cxf.jaxrs.impl.RequestImpl;
-import org.apache.cxf.message.MessageImpl;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,7 +15,7 @@ import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UnitTestHelper;
-import org.oasis.datacore.rest.client.DatacoreClientApi;
+import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.client.QueryParameters;
 import org.oasis.datacore.sample.BrandCarMotorcycleData;
 import org.oasis.datacore.sample.BrandCarMotorcycleModel;
@@ -35,8 +32,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class HTTPOperationsTest {
 	
 	@Autowired
-	@Qualifier("datacoreApiClient")
-	protected DatacoreClientApi api;
+	@Qualifier("datacoreApiCachedClient")
+	protected DatacoreCachedClient api;
 
 	@Value("${datacoreApiClient.containerUrl}")
 	private String containerUrl;
@@ -928,7 +925,7 @@ public class HTTPOperationsTest {
 		postedData = null;
 		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
-		DCResource resource = api.getData(BrandCarMotorcycleModel.CAR_MODEL_NAME, "Renault/Megane/1996", new RequestImpl(new MessageImpl()));
+		DCResource resource = api.getData(BrandCarMotorcycleModel.CAR_MODEL_NAME, "Renault/Megane/1996");
 		Assert.assertNotNull(resource);
 		
 	}
@@ -955,7 +952,7 @@ public class HTTPOperationsTest {
 		DCResource resource = null;
 		Assert.assertNull(resource);
 		try {
-			resource = api.getData("conceptcars", "Renault/Megane/1996", new RequestImpl(new MessageImpl()));
+			resource = api.getData("conceptcars", "Renault/Megane/1996");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(resource);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -986,7 +983,7 @@ public class HTTPOperationsTest {
 		DCResource resource = null;
 		try {
 			Assert.assertNull(resource);
-			resource = api.getData(BrandCarMotorcycleModel.CAR_MODEL_NAME, "Renault/Megane/2007", new RequestImpl(new MessageImpl()));
+			resource = api.getData(BrandCarMotorcycleModel.CAR_MODEL_NAME, "Renault/Megane/2007");
 			Assert.assertNull(resource);
 		} catch (WebApplicationException e) {
 			Assert.assertNull(resource);
@@ -1022,7 +1019,7 @@ public class HTTPOperationsTest {
 		Assert.assertNotNull(listCars);
 		Assert.assertTrue(!listCars.isEmpty());
 		try {
-			api.deleteData(BrandCarMotorcycleModel.CAR_MODEL_NAME, "Renault/Megane/1996", new HttpHeadersImpl(new MessageImpl()));
+			api.deleteData(BrandCarMotorcycleModel.CAR_MODEL_NAME, "Renault/Megane/1996");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

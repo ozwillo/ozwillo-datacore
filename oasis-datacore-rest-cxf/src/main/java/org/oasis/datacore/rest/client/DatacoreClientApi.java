@@ -2,13 +2,19 @@ package org.oasis.datacore.rest.client;
 
 import java.util.List;
 
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
@@ -107,24 +113,113 @@ public interface DatacoreClientApi extends DatacoreApi {
          @DefaultValue("0") @QueryParam("start") Integer start,
          @DefaultValue("10") @QueryParam("limit") Integer limit);
 
-   
-   ///////////////////////////////////////////////
-   // Non-JAXRS client helper methods
 
    /**
-    * Shortcut to postDataInType using resource's first type
-    * (does not parse uri for that ; if none, lets server explode)
-    * @param resource
+    * Shortcut to getData(modelType, iri, null, null) i.e. without version
+    * which uses client local cache to get version if there is any cached value.
+    * 
+    * Returns data resource at http://[this container]/dc/[type]/[iri].
+    * Supports HTTP ETag (If-Match ; but no If-Modified-Since).
+    * @param type
+    * @param iri
     * @return
     */
-   public DCResource postDataInType(DCResource resource);
+   @Path("/type/{type}/{iri:.+}") // :.+ to accept even /
+   @GET
+   @ApiOperation(value = "Get an existing data Resource.",
+      notes = "Resource Model type and IRI (Internal Resource Identifier) are required. "
+            + "\n<br/><br/>\n"
+            + "Allows web-style client-side caching : if client sends its current cached "
+            + "resource's version as an ETag in an If-None-Match=version precondition, "
+            + "the Resource is returned only if this precondition is matched on the server, "
+            + "otherwise (if the client's version is not up-to-date with the server's), "
+            + "it returns 304 Not Modified, allowing the client to get the Resource from its cache.",
+            response = DCResource.class, position = 5)
+   @ApiResponses(value = {
+      @ApiResponse(code = 404, message = "Resource does not exist, or type model not found"),
+      @ApiResponse(code = 304, message = "Resource not modified (client can reuse its cache's)"),
+      @ApiResponse(code = 200, message = "OK : resource found and returned")
+   })
+   DCResource getData(
+         @ApiParam(value = "Model type to look up in", required = true) @PathParam("type") String modelType,
+         @ApiParam(value = "Type-relative resource id", required = true) @PathParam("iri") String iri)
+         throws NotFoundException;
 
    /**
-    * Shortcut to putDataInType using resource's first type & id
-    * (does not parse uri for that ; if none, lets server explode)
-    * @param resource
+    * Shortcut to deleteData(modelType, iri, null)
+    * which uses client local cache to get version if there is any cached value
+    * 
+    * Deletes the given Data.
+    * If-Match header has to be be provided with the up-to-date version of the Data to delete.
+    * TODO LATER also add a "deleted" flag that can be set in POST ?!?
+    * @param type
+    * @param iri
+    */
+   @Path("/type/{type}/{iri:.+}") // :.+ to accept even /
+   @DELETE
+   @ApiOperation(value = "Deletes an existing data Resource.",
+      notes = "Resource Model type and IRI (Internal Resource Identifier) are required, "
+            + "but also up-to-date version sent as an ETag in an If-Match=version precondition. "
+            + "Doesn't check whether said data Resource exists beforehands.",
+            response = DCResource.class, position = 6)
+   @ApiResponses(value = {
+      @ApiResponse(code = 409, message = "Conflict : while trying to delete existing resource, "
+            + "optimistic locking error "
+            + "(provided resource version is not up-to-date with the server's latest)"),
+      @ApiResponse(code = 404, message = "Resource does not exist, or type model not found"),
+      @ApiResponse(code = 400, message = "Bad request : version ETag is missing or not a long integer"),
+      @ApiResponse(code = 204, message = "Delete succeeded")
+   })
+   void deleteData(
+         @ApiParam(value = "Model type to look up in", required = true) @PathParam("type") String modelType,
+         @ApiParam(value = "Type-relative resource id", required = true) @PathParam("iri") String iri)
+         throws BadRequestException, NotFoundException, ClientErrorException;
+
+   /**
+    * Shortcut to putPatchDeleteDataOnGet(modelType, iri, method, null, null)
+    * which in case of DELETE uses client local cache to get version if there is any cached value
+    * 
+    * WARNING commented for now because conflicts with getData(),
+    * TODO write interceptor doing the routing making it work  (or client only helper ??)
+    * 
+    * Provides POST, PUT, PATCH, DELETE methods on GET for easier testing.
+    * @param type
+    * @param iri
+    * @param method PUT, PATCH, DELETE
+    * @param uriInfo to take DCData fields from HTTP request parameters
     * @return
     */
-   public DCResource putDataInType(DCResource resource);
+   //@Path("/type/{type}/{iri:.+}") // NB. :.+ to accept even / // TODO rather than :
+   @Path("/change/type/{type}/{iri:.+}")
+   @GET
+   @ApiOperation(value = "NOT IMPLEMENTED YET, (Testing only) udpates or deletes "
+            + "an existing data Resource in the given type.",
+         notes = "This is a tunneled version of the PUT / PATCH and DELETE operations over GET "
+               + "to ease up testing (e.g. on web browsers), prefer PUT / PATCH or DELETE if possible. "
+               + "\n<br/><br/>\n"
+               + "Resource URI (Model type and IRI i.e. Internal Resource Identifier) are required "
+               + "but also up-to-date version sent as an ETag in an If-Match=version precondition, "
+               + "TODO all fields must be provided OR PATCH behaviour differ from PUT's. "
+               + "Delete doesn't check whether said data Resource exists beforehands.",
+               response = DCResource.class, position = 8)
+      @ApiResponses(value = {
+         @ApiResponse(code = 500, message = "Internal server error"),
+         @ApiResponse(code = 409, message = "Conflict : while trying to update existing "
+               + "resource (in non-strict POST mode only), optimistic locking error "
+               + "(provided resource version is not up-to-date with the server's latest)"),
+         @ApiResponse(code = 404, message = "Resource does not exist, or type model not found"),
+         @ApiResponse(code = 400, message = "Bad request : missing content, missing or invalid URI, "
+               + "(if enabled) strict POST mode not respected (version provided or resource already exists), "
+               + "field parsing errors (format, consistency with Model & Mixin types...)"),
+         @ApiResponse(code = 204, message = "Delete succeeded"),
+         @ApiResponse(code = 200, message = "OK : the resource has been updated")
+      })
+   DCResource putPatchDeleteDataOnGet(
+         @ApiParam(value = "Model type to update it in", required = true) @PathParam("type") String modelType,
+         @ApiParam(value = "Type-relative resource id", required = true) @PathParam("iri") String iri,
+         @ApiParam(value = "HTTP method to tunnel over", required = true,
+         allowableValues="POST") @QueryParam("method") String method,
+         @Context UriInfo uriInfo)
+               throws BadRequestException, NotFoundException;
    
 }

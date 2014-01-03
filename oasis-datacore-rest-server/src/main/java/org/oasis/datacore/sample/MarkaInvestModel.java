@@ -36,7 +36,7 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 	private HistorizationService historizationService;
 	
 	@Override
-	public void init() {
+	public void doInit() {
 		
 		mgo.dropCollection(COMPANY_MODEL_NAME);
 		mgo.dropCollection(FIELD_MODEL_NAME);

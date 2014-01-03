@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.joda.time.DateTime;
+import org.oasis.datacore.core.meta.model.DCModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.CreatedBy;
@@ -14,6 +15,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -123,6 +125,10 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    /** ONLY REQUIRED IF MASS W & O OPERATIONS but otherwise still need to be stored somewhere */
    @Field("_o")
    private List<String> owners;
+   
+   /** request-scoped cache built in resourceToEntity or else getEntity */
+   @Transient
+   private transient DCModel cachedModel;
    
    public DCEntity() {
       
@@ -321,6 +327,14 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
 
    public void setOwners(List<String> owners) {
       this.owners = owners;
+   }
+
+   public DCModel getCachedModel() {
+      return cachedModel;
+   }
+
+   public void setCachedModel(DCModel cachedModel) {
+      this.cachedModel = cachedModel;
    }
 
 }

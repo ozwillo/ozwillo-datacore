@@ -16,7 +16,7 @@ import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.security.OasisAuthAuditor;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
-import org.oasis.datacore.rest.client.DatacoreClientApi;
+import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.client.QueryParameters;
 import org.oasis.datacore.sample.CityCountrySample;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +41,7 @@ public class DatacoreApiServerTest {
    
    @Autowired
    @Qualifier("datacoreApiCachedClient")
-   private /*DatacoreApi*/DatacoreClientApi datacoreApiClient;
+   private /*DatacoreApi*/DatacoreCachedClient datacoreApiClient;
    
    /** to init models */
    @Autowired
@@ -169,7 +169,7 @@ public class DatacoreApiServerTest {
       Assert.assertNotNull(postedLondonCityData);
       Assert.assertEquals(cityData.getProperties().get("description"),
             postedUkCountryData.getProperties().get("description"));
-      DCResource gottenLondonCityData = datacoreApiClient.getData(CityCountrySample.CITY_MODEL_NAME, iri, null);
+      DCResource gottenLondonCityData = datacoreApiClient.getData(CityCountrySample.CITY_MODEL_NAME, iri);
       Assert.assertNotNull(gottenLondonCityData);
       Assert.assertEquals(cityData.getProperties().get("description"),
             postedUkCountryData.getProperties().get("description"));
@@ -178,7 +178,7 @@ public class DatacoreApiServerTest {
 
    private void checkNoResource(String modelType, String id) {
       try {
-         datacoreApiClient.getData(modelType, id, null);
+         datacoreApiClient.getData(modelType, id);
          Assert.fail("There shouldn't be any " + modelType + " with id " + id + " yet");
       } catch (NotFoundException e) {
          Assert.assertTrue(true);
@@ -232,7 +232,7 @@ public class DatacoreApiServerTest {
     */
    @Test
    public void test2GetUpdateVersion() throws Exception {
-      DCResource data = datacoreApiClient.getData(CityCountrySample.CITY_MODEL_NAME, "UK/London", null);
+      DCResource data = datacoreApiClient.getData(CityCountrySample.CITY_MODEL_NAME, "UK/London");
       Assert.assertNotNull(data);
       Assert.assertNotNull(data.getVersion());
       long version = data.getVersion();
@@ -257,7 +257,7 @@ public class DatacoreApiServerTest {
       resourceCache.evict(bordeauxUriToEvict); // create with country but clean cache
 
       try {
-         datacoreApiClient.deleteData(CityCountrySample.CITY_MODEL_NAME, "France/Bordeaux", null);
+         datacoreApiClient.deleteData(CityCountrySample.CITY_MODEL_NAME, "France/Bordeaux");
          Assert.fail("Should not be able to delete without (having cache allowing) "
                + "sending cuttent version as ETag");
       } catch (Exception e) {
@@ -266,7 +266,7 @@ public class DatacoreApiServerTest {
       
       // GET
       // first call, sends ETag which should put result in cache :
-      DCResource bordeauxCityResource = datacoreApiClient.getData(CityCountrySample.CITY_MODEL_NAME, "France/Bordeaux", null);
+      DCResource bordeauxCityResource = datacoreApiClient.getData(CityCountrySample.CITY_MODEL_NAME, "France/Bordeaux");
       bordeauxCityResource = checkCachedBordeauxCityDataAndDelete(bordeauxCityResource);
 
       // post with bad version
@@ -348,11 +348,11 @@ public class DatacoreApiServerTest {
     */
    private DCResource checkCachedBordeauxCityDataAndDelete(DCResource expectedCachedBordeauxCityResource) {
       // second call, should return 308
-      DCResource cachedBordeauxCityResource = datacoreApiClient.getData(CityCountrySample.CITY_MODEL_NAME, "France/Bordeaux", null);
+      DCResource cachedBordeauxCityResource = datacoreApiClient.getData(CityCountrySample.CITY_MODEL_NAME, "France/Bordeaux");
       Assert.assertTrue("Should be same (cached) object", expectedCachedBordeauxCityResource == cachedBordeauxCityResource);
       
       // deleting, will send ETag which must be current version :
-      datacoreApiClient.deleteData(CityCountrySample.CITY_MODEL_NAME, "France/Bordeaux", null);
+      datacoreApiClient.deleteData(CityCountrySample.CITY_MODEL_NAME, "France/Bordeaux");
       Assert.assertNull(resourceCache.get(cachedBordeauxCityResource.getUri())); // check that cache has been cleaned
       
       checkNoResource(CityCountrySample.CITY_MODEL_NAME, "France/Bordeaux");

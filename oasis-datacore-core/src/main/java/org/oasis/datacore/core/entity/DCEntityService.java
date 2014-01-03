@@ -15,6 +15,8 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 
@@ -40,6 +42,35 @@ public class DCEntityService {
    private DCModelService dcModelService; // ???
 
 
+   /**
+    * Helper using entity cached transient model (mainainted over the course
+    * of a request only) if possible
+    * @param dataEntity
+    * @return
+    */
+   public DCModel getModel(DCEntity dataEntity) {
+      DCModel cachedModel = dataEntity.getCachedModel();
+      if (cachedModel != null) {
+         return cachedModel;
+      }
+      cachedModel = dcModelService.getModel(this.getModelName(dataEntity));
+      dataEntity.setCachedModel(cachedModel);
+      return cachedModel;
+   }
+   public String getModelName(DCEntity dataEntity) {
+      List<String> types = dataEntity.getTypes();
+      if (types != null && !types.isEmpty()) {
+         return types.get(0);
+      }
+      return null;
+   }
+
+
+   /**
+    * TODO cachedModel
+    * @param dataEntity
+    * @param dcModel
+    */
    public void create(DCEntity dataEntity, DCModel dcModel) {
       String collectionName = dcModel.getCollectionName(); // TODO for view Models or weird type names ?!?
       
@@ -56,19 +87,62 @@ public class DCEntityService {
    /**
     * TODO or model cached : in custom context implementing "get" reused in both hasPermission & here ??
     * as transient param of resource ?? in EHCache (but beware of Resource obsolescence) ??
+    * This method does not change state (else @PostAuthorize would not work)
     * @param uri
     * @param dcModel
     * @return
     */
+   @PostAuthorize("hasPermission(returnObject, 'read')")
    public DCEntity getByUriId(String uri, DCModel dcModel) {
       String collectionName = dcModel.getCollectionName(); // TODO for view Models or weird type names ?!?
       //entityService.findById(uri, type/collectionName); // TODO
       //dataEntity = dataRepo.findOne(uri); // NO can't be used because can't specify collection
       //dataEntity = mgo.findById(uri, DCEntity.class, collectionName);
       DCEntity dataEntity = mgo.findOne(new Query(new Criteria("_uri").is(uri)), DCEntity.class, collectionName);
+      if (dataEntity != null) {
+         dataEntity.setCachedModel(dcModel);
+      }
       return dataEntity;
    }
+   /**
+    * Used for more efficient If-None-Match=versionETag conditional GET :
+    * allows not to load entity (nor resource) if same version.
+    * BEWARE no rights check, so must ALWAYS be followed by ex. getByUriId
+    * to check them.
+    * @param uri
+    * @param dcModel
+    * @param version
+    * @return null if given version matches
+    */
+   public boolean isUpToDate(String uri, DCModel dcModel, Long version) {
+      if (version == null) {
+         return false;
+      }
+      
+      String collectionName = dcModel.getCollectionName(); // TODO for view Models or weird type names ?!?
+      //entityService.findById(uri, type/collectionName); // TODO
+      //dataEntity = dataRepo.findOne(uri); // NO can't be used because can't specify collection
+      //dataEntity = mgo.findById(uri, DCEntity.class, collectionName);
+      Criteria criteria = new Criteria("_uri").is(uri).and("_v").is(version); // TODO or parse Long ??
+      long count = mgo.count(new Query(criteria), collectionName);
+      // NB. efficient because should not be more than 1 ; or TODO LATER or better execute ?
+      return count != 0;
+   }
 
+   /**
+    * TODO cachedModel
+    * @param dataEntity must exist and its ACLs be in sync with saved ones
+    * @param dcModel
+    * @throws OptimisticLockingFailureException
+    */
+   @PreAuthorize("hasPermission(#dataEntity, 'write')")
+   // NB. authorize before works because calling resourceService has loaded existing ACLs in dataEntity
+   //@PreAuthorize("hasRole('admin') or hasRole('t_' + #dcModel.getName() + '_admin') or hasPermission(#dataEntity, 'write')")
+   // NB. (model type) admin role check is done in hasPermission so it's never forgotten
+   // (but could be done explicitly if no call to hasPermission is done)
+   // NB. methods available in security el are (Method)SecurityExpressionRoot's
+   // TODO on interface ; with default annot @PreAuthorize(“hasRole(‘ROLE_EXCLUDE_ALL’)”)
+   // see http://www.disasterarea.co.uk/blog/protecting-service-methods-with-spring-security-annotations/
    public void update(DCEntity dataEntity, DCModel dcModel) throws OptimisticLockingFailureException {
       String collectionName = dcModel.getCollectionName(); // TODO for view Models or weird type names ?!?
       
@@ -82,6 +156,7 @@ public class DCEntityService {
       mgo.save(dataEntity, collectionName);
    }
    
+   //@PreAuthorize("hasPermission(#dataEntity, 'write')")
    public void deleteByUriId(String uri, long version, DCModel dcModel) {
       String collectionName = dcModel.getCollectionName(); // TODO for view Models or weird type names ?!?
       

@@ -29,7 +29,7 @@ public class BrandCarMotorcycleData extends DatacoreSampleBase {
 	
 	
 	@Override
-	public void init() {
+	public void doInit() {
 		
 		listBrands = new ArrayList<DCResource>();
 		listCars = new ArrayList<DCResource>();
