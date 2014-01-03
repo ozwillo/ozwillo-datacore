@@ -30,9 +30,13 @@ import org.springframework.data.mongodb.core.MongoOperations;
  * If your sample class depends on other sample classes (ex. data one on its model one),
  * tell Spring about it ex. add @DependsOn("citizenKinModel").
  * 
- * To call Datacore, use datacoreApiImpl (server side) and the helper methods here.
+ * To work with Datacore Resources, use resourceService, or server side datacoreApiImpl
+ * and the helper methods here
+ * (both requiring to have logged in, which is done within init() as admin by default).
+ * 
  * Calling it using datacoreApiCachedClient (DatacoreClientApi) works SAVE from appserver
- * (tomcat) and therefore can only be used in tests (or if deploying CXF on jetty within tomcat).
+ * (tomcat) and therefore can only be used in tests (or if deploying CXF on jetty within tomcat)
+ * but NOT in samples init.
  * 
  * See why InitService (and not mere @PostConstruct or independent ApplicationListeners)
  * in InitService comments.
@@ -120,7 +124,10 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
    }
 
 
-   /** TODO share for tests, ex. of security */
+   /**
+    * @obsolete use rather resourceService
+    * Requires to have logged in first
+    */
    public DCResource putDataInType(DCResource resource) {
       try {
          return datacoreApiImpl.putDataInType(resource, resource.getModelType(),
@@ -135,7 +142,10 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
       }
    }
 
-   /** TODO share for tests, ex. of security */
+   /**
+    * @obsolete use rather resourceService
+    * Requires to have logged in first
+    */
    public DCResource postDataInType(DCResource resource) {
       try {
          return datacoreApiImpl.postDataInType(resource, resource.getModelType());

@@ -18,12 +18,19 @@ import org.springframework.security.core.userdetails.User;
 public class DCUserImpl extends User {
    private static final long serialVersionUID = -1360057839096106512L;
 
+   /** guest login & group */
+   public final static String GUEST = "guest";
    public final static String ADMIN_GROUP = "admin";
 
-   private boolean isAdmin;
-   private Set<String> adminOfModelTypes = new HashSet<String>();
-   private Set<String> entityGroups = new HashSet<String>();
    private Set<String> roles = new HashSet<String>();
+   private boolean isGuest;
+   private boolean isAdmin;
+   private Set<String> entityGroups = new HashSet<String>();
+   private Set<String> resourceAdminForModelTypes = new HashSet<String>();
+   private Set<String> resourceCreatorForModelTypes = new HashSet<String>();
+   private Set<String> resourceWriterForModelTypes = new HashSet<String>();
+   private Set<String> resourceReaderForModelTypes = new HashSet<String>();
+   private Set<String> adminOfModelTypes = new HashSet<String>();
    
    public DCUserImpl(User user) {
       super(user.getUsername(), user.getPassword(),
@@ -35,17 +42,31 @@ public class DCUserImpl extends User {
    }
 
    private void initGroups() {
+      if (this.getUsername().equals(GUEST)) {
+         this.isGuest = true;
+         this.roles.add(GUEST);
+         this.entityGroups.add(GUEST);
+         return;
+      }
+         
       for (GrantedAuthority authority : this.getAuthorities()) {
          String role = authority.getAuthority();
          this.roles.add(role); // NB. or AuthorityUtils.authorityListToSet(user.getAuthorities());
          
-         if (!this.isAdmin && role.equals(ADMIN_GROUP)) {
+         if (!this.isAdmin && role.equals(ADMIN_GROUP)) { // TODO or dc_r_admin
             this.isAdmin = true;
             
-         } else if (role.startsWith("t_admin_")) { // TODO regex
+         } else if (role.startsWith("admin_r_")) { // TODO regex ; dc_r_t_admin
             String modelTypeName = role.substring("t_admin_".length(), role.length());
-            this.adminOfModelTypes.add(modelTypeName);
+            this.resourceAdminForModelTypes.add(modelTypeName);
             // TODO also type readers & writers ?
+            
+         } else if (role.startsWith("admin_m_")) { // TODO regex ; dc_m_t_admin ; NOO = thisModelEntity.owners.add(user)
+            // TODO Q manage model rights using groups (required if stored in datacore) or model conf ??
+            String modelTypeName = role.substring("m_admin_".length(), role.length());
+            this.adminOfModelTypes.add(modelTypeName);
+            
+            // TODO also type readers, writers, creators !!
             
             // else if not datacore related, skip
             
@@ -61,20 +82,41 @@ public class DCUserImpl extends User {
       return Collections.unmodifiableSet(new HashSet<GrantedAuthority>(authorities));
    }
 
-   public boolean isAdmin() {
-      return isAdmin;
+   public Set<String> getRoles() {
+      return roles;
    }
 
-   public Set<String> getAdminOfModelTypes() {
-      return adminOfModelTypes;
+   /** TODO or isAuthentified ? */
+   public boolean isGuest() {
+      return isGuest;
+   }
+
+   public boolean isAdmin() {
+      return isAdmin;
    }
 
    public Set<String> getEntityGroups() {
       return entityGroups;
    }
 
-   public Set<String> getRoles() {
-      return roles;
+   public boolean isModelTypeResourceAdmin(String modelType) {
+      return resourceAdminForModelTypes.contains(modelType);
+   }
+
+   public boolean isModelTypeResourceCreator(String modelType) {
+      return resourceCreatorForModelTypes.contains(modelType);
+   }
+
+   public boolean isModelTypeResourceWriter(String modelType) {
+      return resourceWriterForModelTypes.contains(modelType);
+   }
+
+   public boolean isModelTypeResourceReader(String modelType) {
+      return resourceReaderForModelTypes.contains(modelType);
+   }
+
+   public Set<String> getAdminOfModelTypes() {
+      return adminOfModelTypes;
    }
    
 }

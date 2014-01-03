@@ -39,8 +39,8 @@
    <security:user-service id="datacore.userDetailsService">
      <security:user name="guest" password="" authorities="guest" /><!-- or is guest group fictive ??? -->
      <security:user name="admin" password="" authorities="admin" /><!-- guest is superfluous -->
-     <security:user name="john" password="" authorities="u_john,tutor_jim,group,guest" /><!-- ROLE_USER, ROLE_ADMIN -->
-     <security:user name="jim" password="" authorities="group,guest" />
+     <security:user name="john" password="" authorities="u_john,tutor_jim,altTourism.Place.SofiaMonastery_readers,guest" /><!-- ROLE_USER, ROLE_ADMIN -->
+     <security:user name="jim" password="" authorities="altTourism.Place.SofiaMonastery_writers,guest" /><!-- most useful ones first... -->
    </security:user-service>
    <!-- security:user-service id="datacore.userDetailsService" properties="oasis-datacore-mockusers.properties"/ -->
 

@@ -58,6 +58,7 @@ public class MockLoginServerInInterceptor extends AbstractPhaseInterceptor<Messa
       if (username == null) {
          // log as guest, using the "guest" user :
          username = "guest";
+         username = "admin"; // TODO TODO rm when mock login OK on client side
          // TODO rather for now do nothing, to preserve existing behaviour ??
          
       }

@@ -11,7 +11,7 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
-import org.oasis.datacore.core.entity.DCEntityService;
+import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
@@ -65,7 +65,7 @@ public class DatacoreApiServerMixinTest {
    private /*static */MongoOperations mgo;
    /** to setup security tests */
    @Autowired
-   private DCEntityService entityService;
+   private EntityService entityService;
    @Autowired
    private MockAuthenticationService mockAuthenticationService;
    
@@ -122,6 +122,8 @@ public class DatacoreApiServerMixinTest {
 
    @Test
    public void testIgn() {
+      mockAuthenticationService.login("admin"); // else ign resources not writable
+      
       ignCityhallSample.initIgn();
 
       DCModelBase ignParcelleModel = modelAdminService.getModel(IgnCityhallSample.IGN_PARCELLE);
@@ -139,6 +141,8 @@ public class DatacoreApiServerMixinTest {
       DCModelBase cityhallIgnParcelleModel = modelAdminService.getModel(IgnCityhallSample.CITYHALL_IGN_PARCELLE);
       Assert.assertEquals("numeroParcelle field should be Cityhall Mixin's overriding original one copied / inherited using Mixin",
             102, cityhallIgnParcelleModel .getGlobalField("numeroParcelle").getQueryLimit());
+      
+      mockAuthenticationService.logout(); // NB. not required since followed by login
    }
    
    @Test
@@ -274,58 +278,233 @@ public class DatacoreApiServerMixinTest {
       // security :
       // BEWARE don't use client (datacoreApiClient) else SecurityContextHolder won't work (different thread)
       // OR specify user in HTTP
+      
+      // check model defaults
+      DCModel altTourismPlaceModel = modelServiceImpl.getModel(AltTourismPlaceAddressSample.ALTTOURISM_PLACE);
+      Assert.assertTrue(altTourismPlaceModel.getSecurity().isGuestReadable());
+      Assert.assertTrue(altTourismPlaceModel.getSecurity().isAuthentifiedReadable());
+      Assert.assertTrue(altTourismPlaceModel.getSecurity().isAuthentifiedWriteable());
+      
+      // logging in as guest
+      mockAuthenticationService.login("guest");
 
-      // check that GET allowed as guest
-      //resourceService.get();
+      // check that read (in addition to find) allowed as guest
+      try {
+         resourceService.get(altTourismPlaceSofiaMonasteryPosted.getUri(),
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE);
+         Assert.assertTrue(true);
+      } catch (Exception e) {
+         Assert.fail("Resource in guest type should be readable as guest");
+      }
       
       // check that write not allowed as guest
-      //resourceService.createOrUpdate(resource, modelType, canCreate, canUpdate)
+      try {
+         resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true);
+         Assert.fail("Resource in guest type should not be writable as guest");
+      } catch (Exception e) {
+         Assert.assertTrue(true);
+      }
       
-      // make model secured
-      DCModel altTourismPlaceModel = modelServiceImpl.getModel(AltTourismPlaceAddressSample.ALTTOURISM_PLACE);
-      altTourismPlaceModel.getSecurity().setPublicRead(false);
+      // logging in as user with rights
+      mockAuthenticationService.logout(); // NB. not required since followed by login
+      mockAuthenticationService.login("john");
 
-      // check that not found anymore as GUEST
+      // check that read (in addition to find) allowed as user as well
+      try {
+         resourceService.get(altTourismPlaceSofiaMonasteryPosted.getUri(),
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE);
+         Assert.assertTrue(true);
+      } catch (Exception e) {
+         Assert.fail("Resource in guest type should be readable as user");
+      }
+      
+      // check that writeable by authentified user
+      try {
+         resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true);
+         Assert.assertTrue(true);
+      } catch (Exception e) {
+         Assert.fail("Resource in authentified writeable type should be writeable as user");
+      }
+      
+      // make model secured (still authentified readable)
+      altTourismPlaceModel.getSecurity().setGuestReadable(false);
+      altTourismPlaceModel.getSecurity().setAuthentifiedWriteable(false);
+      
+      // logging in as guest
+      mockAuthenticationService.logout(); // NB. not required since followed by login
+      mockAuthenticationService.login("guest");
+
+      // check that read not allowed anymore as guest
+      try {
+         resourceService.get(altTourismPlaceSofiaMonasteryPosted.getUri(),
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE);
+         Assert.fail("Resource in authentified type should not be readable as guest");
+      } catch (Exception e) {
+         Assert.assertTrue(true);
+      }
+      
+      // check that write still not allowed as guest
+      try {
+         resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true);
+         Assert.fail("Resource in authentified type should not be writable as guest");
+      } catch (Exception e) {
+         Assert.assertTrue(true);
+      }
+      
+      // check that not found anymore as guest
       mockAuthenticationService.login("guest");
       List<DCEntity> forbiddenMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel,
             new HashMap<String,List<String>>() {{ put("name", new ArrayList<String>() {{ add("Sofia_Monastery"); }}); }}, 0, 10);
-      mockAuthenticationService.logout();
-      Assert.assertTrue("query filtering should have forbidden non public model",
+      mockAuthenticationService.logout(); // NB. not required since followed by login
+      Assert.assertTrue("query filtering should have forbidden authentified model",
             forbiddenMonasteryRes == null || forbiddenMonasteryRes.isEmpty());
+
+      // logging in as user with not yet set rights
+      mockAuthenticationService.logout(); // NB. not required since followed by login
+      mockAuthenticationService.login("john");
+
+      // check that found because authentified
+      List<DCEntity> allowedMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel,
+            new HashMap<String,List<String>>() {{ put("name", new ArrayList<String>() {{ add("Sofia_Monastery"); }}); }}, 0, 10);
+      Assert.assertTrue("query filtering should have allowed it because authentified",
+            allowedMonasteryRes != null && allowedMonasteryRes.size() == 1);
+
+      // check that readable because authentified
+      try {
+         resourceService.get(altTourismPlaceSofiaMonasteryPosted.getUri(),
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE);
+         Assert.assertTrue(true);
+      } catch (Exception e) {
+         Assert.fail("Resource in authentified type should be readable because authentified");
+      }
       
-      // set rights
-      DCEntity altTourismPlaceSofiaMonasteryEntity = entityService.getByUriId(altTourismPlaceSofiaMonastery.getUri(), altTourismPlaceModel);
-      altTourismPlaceSofiaMonasteryEntity.setReaders(new ArrayList<String>() {{ add("group"); }});
-      entityService.update(altTourismPlaceSofiaMonasteryEntity, altTourismPlaceModel);
-      altTourismPlaceSofiaMonastery = datacoreApiClient.postDataInType(altTourismPlaceSofiaMonastery);
+      // check that not writable because not in writer group
+      try {
+         resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true);
+         Assert.fail("Resource in authentified type should not be writable because not yet in writer group");
+      } catch (Exception e) {
+         Assert.assertTrue(true);
+      }
       
-      // check that not found (because not in group)
-      mockAuthenticationService.login("guest");
+      // make model more secured (not authentified readable)
+      altTourismPlaceModel.getSecurity().setAuthentifiedReadable(false);
+      
+      // check that not found because in not yet set reader group
       forbiddenMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel,
             new HashMap<String,List<String>>() {{ put("name", new ArrayList<String>() {{ add("Sofia_Monastery"); }}); }}, 0, 10);
-      mockAuthenticationService.logout();
-      Assert.assertTrue("query filtering should have forbidden it because not in group",
+      Assert.assertTrue("query filtering should have forbidden it because in not yet set reader group",
             forbiddenMonasteryRes == null || forbiddenMonasteryRes.isEmpty());
+
+      // check that not readable because in not yet set reader group
+      try {
+         resourceService.get(altTourismPlaceSofiaMonasteryPosted.getUri(),
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE);
+         Assert.fail("Resource in private type should not be readable as GUEST");
+      } catch (Exception e) {
+         Assert.assertTrue(true);
+      }
       
-      // check that found when using rights
+      // check that not writable because still not in writer group
+      try {
+         resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true);
+         Assert.fail("Resource in private type should not be writable as GUEST");
+      } catch (Exception e) {
+         Assert.assertTrue(true);
+      }
+      
+      mockAuthenticationService.logout(); // NB. not required since followed by login
+      
+      // set reader rights
+      mockAuthenticationService.login("admin");
+      DCEntity altTourismPlaceSofiaMonasteryEntity = entityService.getByUri(altTourismPlaceSofiaMonastery.getUri(), altTourismPlaceModel);
+      altTourismPlaceSofiaMonasteryEntity.setReaders(new ArrayList<String>() {{ add("altTourism.Place.SofiaMonastery_readers"); }});
+      entityService.update(altTourismPlaceSofiaMonasteryEntity);
+      mockAuthenticationService.logout(); // NB. not required since followed by login
+      ///altTourismPlaceSofiaMonastery = datacoreApiClient.postDataInType(altTourismPlaceSofiaMonastery);
+
+      // logging in as user with rights
+      mockAuthenticationService.login("john");
+      
+      // check that found by user in group
       /*SecurityContext sc = new SecurityContextImpl();
       Authentication authentication = new TestingAuthenticationToken("john", "pass", "group");
       sc.setAuthentication(authentication);
       SecurityContextHolder.setContext(sc);*/
-      mockAuthenticationService.login("john");
-      List<DCEntity> allowedMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel,
+      allowedMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel,
             new HashMap<String,List<String>>() {{ put("name", new ArrayList<String>() {{ add("Sofia_Monastery"); }}); }}, 0, 10);
+      Assert.assertTrue("query filtering should have allowed it because in reader group",
+            allowedMonasteryRes != null && allowedMonasteryRes.size() == 1);
+
+      // check that readable by user in reader group
+      try {
+         resourceService.get(altTourismPlaceSofiaMonasteryPosted.getUri(),
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE);
+         Assert.assertTrue(true);
+      } catch (Exception e) {
+         Assert.fail("Resource in private type should be readable by user in reader group");
+      }
+      
+      // check that not writable by user not in writer group
+      try {
+         resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true);
+         Assert.fail("Resource in private type should not be writable by user not in writer group");
+      } catch (Exception e) {
+         Assert.assertTrue(true);
+      }
+      
+      mockAuthenticationService.logout(); // NB. not required since followed by login
+
+      // logging in as user with rights
+      mockAuthenticationService.login("jim");
+      
+      // check that not writable by user in not yet set writer group
+      try {
+         resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true);
+         Assert.fail("Resource in private type should not be writable by user in not yet set writer group");
+      } catch (Exception e) {
+         Assert.assertTrue(true);
+      }
+      
+      mockAuthenticationService.logout(); // NB. not required since followed by login
+      
+      // set writer rights
+      mockAuthenticationService.login("admin");
+      altTourismPlaceSofiaMonasteryEntity.setWriters(new ArrayList<String>() {{ add("altTourism.Place.SofiaMonastery_writers"); }});
+      entityService.update(altTourismPlaceSofiaMonasteryEntity);
+      mockAuthenticationService.logout(); // NB. not required since followed by login
+      ///altTourismPlaceSofiaMonastery = datacoreApiClient.postDataInType(altTourismPlaceSofiaMonastery); // TODO also test
+
+      // logging in as user with rights
+      mockAuthenticationService.login("jim");
+      
+      // check that writable by user in writer group
+      try {
+         resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true);
+         Assert.fail("Resource in private type should be writable by user in writer group");
+      } catch (Exception e) {
+         Assert.assertTrue(true);
+      }
+      
+      // logging out
       mockAuthenticationService.logout();
-      Assert.assertTrue("query filtering should have allowed it", allowedMonasteryRes != null && allowedMonasteryRes.size() == 1);
       
       // revert model to default (public)
-      altTourismPlaceModel.getSecurity().setPublicRead(true);
+      altTourismPlaceModel.getSecurity().setGuestReadable(true);
    }
    
-   @Test
-   public void test() {
-      
-   }
+   /*public void doAs(String login, Callback callback) {
+      mockAuthenticationService.login("john");
+      callback.execute();
+      mockAuthenticationService.logout();
+   }*/
 
    public DCResource buildAltTourismPlaceKind(String kind) {
       return resourceService.create(AltTourismPlaceAddressSample.ALTTOURISM_PLACEKIND, kind).set("name", kind);

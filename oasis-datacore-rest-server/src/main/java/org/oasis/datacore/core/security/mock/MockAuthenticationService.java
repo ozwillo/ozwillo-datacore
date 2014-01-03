@@ -1,7 +1,6 @@
 package org.oasis.datacore.core.security.mock;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.oasis.datacore.core.security.DCUserImpl;
@@ -9,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextImpl;
@@ -46,7 +44,7 @@ public class MockAuthenticationService {
          throw new RuntimeException("Unknown user " + username);
       }
       
-      DCUserImpl user = new DCUserImpl((User) userDetails);
+      DCUserImpl user = new DCUserImpl((User) userDetails); // NB. also precomputes its permissions 
       
       Authentication authentication = new TestingAuthenticationToken(user, "",
             new ArrayList<GrantedAuthority>(userDetails.getAuthorities()));
@@ -61,13 +59,24 @@ public class MockAuthenticationService {
    }
 
 
+   /** TODO in service interface or at least util */
+   public static DCUserImpl getCurrentUser() {
+      Authentication currentUserAuth = SecurityContextHolder.getContext().getAuthentication();
+      if (currentUserAuth == null) {
+         throw new RuntimeException("No authentication in security context");  
+      }
+      return (DCUserImpl) currentUserAuth.getPrincipal();
+   }
+
    /**
-    * TODO to helper ?
+    * @obsolete use rather getCurrentUser().getEntityGroups()
+    * (permissions should be precomputed rather than added at getGroups time)
+    * TODO move comment contents once actual impl done
     * @return
     */
    public static Set<String> getCurrentUserEntityGroups() {
       Authentication currentUserAuth = SecurityContextHolder.getContext().getAuthentication();
-      HashSet<String> currentUserRoles;
+      ///HashSet<String> currentUserRoles;
       if (currentUserAuth == null) {
          throw new RuntimeException("No authentication in security context");   
          /*// should not happen if security is enabled

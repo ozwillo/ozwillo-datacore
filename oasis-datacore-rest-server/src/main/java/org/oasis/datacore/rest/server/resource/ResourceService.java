@@ -5,7 +5,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 
-import org.oasis.datacore.core.entity.DCEntityService;
+import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelService;
@@ -50,7 +50,7 @@ public class ResourceService {
    @Autowired
    private ResourceEntityMapperService resourceEntityMapperService;
    @Autowired
-   private DCEntityService entityService;
+   private EntityService entityService;
    
    @Autowired
    private EventService eventService;
@@ -276,7 +276,7 @@ public class ResourceService {
 
       DCEntity dataEntity = null;
       if (!canUpdate || !isCreation) {
-         dataEntity = entityService.getByUriId(stringUri, dcModel);
+         dataEntity = entityService.getByUri(stringUri, dcModel); // TODO could use unsecured service
          if (dataEntity != null) {
             if (!canUpdate) {
                // already exists, but only allow creation
@@ -337,7 +337,7 @@ public class ResourceService {
       if (isCreation) {
          // TODO maintain uri unicity : index (but not sharded so also handle duplicates a posteriori)
          // and catch conflict ?!?
-         entityService.create(dataEntity, dcModel);
+         entityService.create(dataEntity);
          // NB. no PREVIOUS version to historize (*relief*, handling consistently its failures would be hard)
          
       } else {
@@ -350,7 +350,7 @@ public class ResourceService {
              } catch (Exception ex) {
                 throw new ResourceException("Unknown error while historizing", ex, resource);
              }
-            entityService.update(dataEntity, dcModel);
+            entityService.update(dataEntity);
          } catch (OptimisticLockingFailureException olfex) {
             throw new ResourceObsoleteException("Trying to update data resource "
                   + "without up-to-date version but " + dataEntity.getVersion(), resource);
@@ -395,7 +395,7 @@ public class ResourceService {
          return null;
       }
       
-      entity = entityService.getByUriId(uri, dcModel);
+      entity = entityService.getByUri(uri, dcModel);
       if (entity == null) {
          //return Response.noContent().build();
          throw new ResourceNotFoundException("No resource with uri " + uri, null);
@@ -414,7 +414,7 @@ public class ResourceService {
       }
       modelType = dcModel.getName(); // normalize ; TODO useful ?
       
-      DCEntity entity = entityService.getByUriId(uri, dcModel);
+      DCEntity entity = entityService.getByUri(uri, dcModel);
       if (entity == null) {
          //return Response.noContent().build();
          throw new ResourceNotFoundException("No resource with uri " + uri, null);

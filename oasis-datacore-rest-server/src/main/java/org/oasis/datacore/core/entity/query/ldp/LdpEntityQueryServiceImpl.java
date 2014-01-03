@@ -1,5 +1,6 @@
 package org.oasis.datacore.core.entity.query.ldp;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -12,6 +13,7 @@ import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCSecurity;
+import org.oasis.datacore.core.security.DCUserImpl;
 import org.oasis.datacore.core.security.mock.MockAuthenticationService;
 import org.oasis.datacore.rest.server.parsing.model.DCQueryParsingContext;
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
@@ -162,7 +164,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       // TODO (LATER ?) on all sub Resources !!
       // TODO LATER in findDataInAllTypes(), on all root Resources
       DCSecurity modelSecurity = dcModel.getSecurity();
-      if (!modelSecurity.isPublicRead()) {
+      if (!modelSecurity.isGuestReadable()) {
          // TODO Q or (b) also GUEST OK when empty ACL ?
          // NO maybe dangerous because *adding* a group / role to ACL would *remove* GUEST from it
          // so solution would be : API (i.e. Social Graph) as (a) but storage translates it to (b), allows to store less characters
@@ -171,9 +173,17 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          // => OPT LATER
          // (in any way, there'll always be a balance to find between performance and storage)
          
-         ///if (!datacoreSecurity.isAdmin(currentUser) && !modelSecurity.isAdmin()) {
-         queryParsingContext.getCriteria().and("_r").in(MockAuthenticationService.getCurrentUserEntityGroups());
-         ///} // else (datacore global or model-scoped) admin, so no security check
+         DCUserImpl user = MockAuthenticationService.getCurrentUser();
+         if (user.isGuest()) {
+            return new ArrayList<DCEntity>(0); // TODO or exception ??
+         }
+         
+         if (!user.isAdmin()
+               && !modelSecurity.isAuthentifiedReadable() // NB. not guest
+               && !user.isModelTypeResourceAdmin(modelType)
+               && !user.isModelTypeResourceReader(modelType)) {
+            queryParsingContext.getCriteria().and("_r").in(user.getEntityGroups());
+         } // else (datacore global or model-scoped) admin, so no security check
       } // else public, so no security check
       
       // adding paging & sorting :

@@ -300,7 +300,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
 
 
    /**
-    * 
+    * NOW USELESS, AT LEAST TODO MOVE
     * @param httpHeaders
     * @param etagHeader ex. If-Match or If-None-Match
     * @param uri for logging purpose

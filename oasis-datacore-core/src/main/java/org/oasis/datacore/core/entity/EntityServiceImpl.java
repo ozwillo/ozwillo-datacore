@@ -9,14 +9,11 @@ import org.joda.time.DateTime;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.model.DCURI;
 import org.oasis.datacore.core.meta.model.DCModel;
-import org.oasis.datacore.core.meta.model.DCModelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.security.access.prepost.PostAuthorize;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 
@@ -31,7 +28,7 @@ import org.springframework.stereotype.Component;
  *
  */
 @Component
-public class DCEntityService {
+public class EntityServiceImpl implements EntityService {
    
    //@Autowired
    //private DCDataEntityRepository dataRepo; // NO rather for (meta)model, for data can't be used because can't specify collection
@@ -39,40 +36,19 @@ public class DCEntityService {
    private MongoOperations mgo;
    // NB. MongoTemplate would be required to check last operation result, but we rather use WriteConcerns
    @Autowired
-   private DCModelService dcModelService; // ???
+   private EntityModelService entityModelService;
 
 
-   /**
-    * Helper using entity cached transient model (mainainted over the course
-    * of a request only) if possible
-    * @param dataEntity
-    * @return
-    */
-   public DCModel getModel(DCEntity dataEntity) {
-      DCModel cachedModel = dataEntity.getCachedModel();
-      if (cachedModel != null) {
-         return cachedModel;
-      }
-      cachedModel = dcModelService.getModel(this.getModelName(dataEntity));
-      dataEntity.setCachedModel(cachedModel);
-      return cachedModel;
+   private DCModel getModel(DCEntity dataEntity) {
+      return entityModelService.getModel(dataEntity);
    }
-   public String getModelName(DCEntity dataEntity) {
-      List<String> types = dataEntity.getTypes();
-      if (types != null && !types.isEmpty()) {
-         return types.get(0);
-      }
-      return null;
-   }
-
-
-   /**
-    * TODO cachedModel
-    * @param dataEntity
-    * @param dcModel
+   
+   /* (non-Javadoc)
+    * @see org.oasis.datacore.core.entity.DCEntityService#create(org.oasis.datacore.core.entity.model.DCEntity)
     */
-   public void create(DCEntity dataEntity, DCModel dcModel) {
-      String collectionName = dcModel.getCollectionName(); // TODO for view Models or weird type names ?!?
+   @Override
+   public void create(DCEntity dataEntity) {
+      String collectionName = getModel(dataEntity).getCollectionName(); // TODO for view Models or weird type names ?!?
       
       // security : checking type default rights
       // TODO using annotated hasPermission
@@ -84,16 +60,11 @@ public class DCEntityService {
       mgo.insert(dataEntity, collectionName);
    }
    
-   /**
-    * TODO or model cached : in custom context implementing "get" reused in both hasPermission & here ??
-    * as transient param of resource ?? in EHCache (but beware of Resource obsolescence) ??
-    * This method does not change state (else @PostAuthorize would not work)
-    * @param uri
-    * @param dcModel
-    * @return
+   /* (non-Javadoc)
+    * @see org.oasis.datacore.core.entity.DCEntityService#getByUri(java.lang.String, org.oasis.datacore.core.meta.model.DCModel)
     */
-   @PostAuthorize("hasPermission(returnObject, 'read')")
-   public DCEntity getByUriId(String uri, DCModel dcModel) {
+   @Override
+   public DCEntity getByUri(String uri, DCModel dcModel) {
       String collectionName = dcModel.getCollectionName(); // TODO for view Models or weird type names ?!?
       //entityService.findById(uri, type/collectionName); // TODO
       //dataEntity = dataRepo.findOne(uri); // NO can't be used because can't specify collection
@@ -104,16 +75,10 @@ public class DCEntityService {
       }
       return dataEntity;
    }
-   /**
-    * Used for more efficient If-None-Match=versionETag conditional GET :
-    * allows not to load entity (nor resource) if same version.
-    * BEWARE no rights check, so must ALWAYS be followed by ex. getByUriId
-    * to check them.
-    * @param uri
-    * @param dcModel
-    * @param version
-    * @return null if given version matches
+   /* (non-Javadoc)
+    * @see org.oasis.datacore.core.entity.DCEntityService#isUpToDate(java.lang.String, org.oasis.datacore.core.meta.model.DCModel, java.lang.Long)
     */
+   @Override
    public boolean isUpToDate(String uri, DCModel dcModel, Long version) {
       if (version == null) {
          return false;
@@ -129,22 +94,12 @@ public class DCEntityService {
       return count != 0;
    }
 
-   /**
-    * TODO cachedModel
-    * @param dataEntity must exist and its ACLs be in sync with saved ones
-    * @param dcModel
-    * @throws OptimisticLockingFailureException
+   /* (non-Javadoc)
+    * @see org.oasis.datacore.core.entity.DCEntityService#update(org.oasis.datacore.core.entity.model.DCEntity)
     */
-   @PreAuthorize("hasPermission(#dataEntity, 'write')")
-   // NB. authorize before works because calling resourceService has loaded existing ACLs in dataEntity
-   //@PreAuthorize("hasRole('admin') or hasRole('t_' + #dcModel.getName() + '_admin') or hasPermission(#dataEntity, 'write')")
-   // NB. (model type) admin role check is done in hasPermission so it's never forgotten
-   // (but could be done explicitly if no call to hasPermission is done)
-   // NB. methods available in security el are (Method)SecurityExpressionRoot's
-   // TODO on interface ; with default annot @PreAuthorize(“hasRole(‘ROLE_EXCLUDE_ALL’)”)
-   // see http://www.disasterarea.co.uk/blog/protecting-service-methods-with-spring-security-annotations/
-   public void update(DCEntity dataEntity, DCModel dcModel) throws OptimisticLockingFailureException {
-      String collectionName = dcModel.getCollectionName(); // TODO for view Models or weird type names ?!?
+   @Override
+   public void update(DCEntity dataEntity) throws OptimisticLockingFailureException {
+      String collectionName = getModel(dataEntity).getCollectionName(); // TODO for view Models or weird type names ?!?
       
       // security : checking rights
       /*if (dataEntity.getWriters().intersect(currentUserRoles).isEmpty() || (getOwners())) {
@@ -156,7 +111,10 @@ public class DCEntityService {
       mgo.save(dataEntity, collectionName);
    }
    
-   //@PreAuthorize("hasPermission(#dataEntity, 'write')")
+   /* (non-Javadoc)
+    * @see org.oasis.datacore.core.entity.DCEntityService#deleteByUriId(java.lang.String, long, org.oasis.datacore.core.meta.model.DCModel)
+    */
+   @Override
    public void deleteByUriId(String uri, long version, DCModel dcModel) {
       String collectionName = dcModel.getCollectionName(); // TODO for view Models or weird type names ?!?
       
@@ -183,6 +141,10 @@ public class DCEntityService {
    }
    
 
+   /* (non-Javadoc)
+    * @see org.oasis.datacore.core.entity.DCEntityService#getSampleData()
+    */
+   @Override
    public DCEntity getSampleData() {
       String sampleCollectionName = "sample";
       

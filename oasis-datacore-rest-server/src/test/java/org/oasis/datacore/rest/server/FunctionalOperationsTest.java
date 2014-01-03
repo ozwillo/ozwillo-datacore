@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.security.mock.MockAuthenticationService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.client.DatacoreClientApi;
 import org.oasis.datacore.rest.client.QueryParameters;
@@ -44,6 +45,10 @@ public class FunctionalOperationsTest {
 	@Autowired
 	private MongoOperations mongoOperations;
 	
+	/** TODO actual */
+	@Autowired
+	private MockAuthenticationService mockAuthenticationService;
+	
 	@Autowired
 	private MarkaInvestData markaInvestData;
 			
@@ -59,8 +64,11 @@ public class FunctionalOperationsTest {
 		truncateModel(MarkaInvestModel.INVESTOR_TYPE_MODEL_NAME);
 		truncateModel(MarkaInvestModel.SECTOR_MODEL_NAME);
 		truncateModel(MarkaInvestModel.USER_MODEL_NAME);
+
+      mockAuthenticationService.login("admin"); // else marka resources not writable
 		markaInvestData.createDataSample();
 		markaInvestData.insertData();
+      mockAuthenticationService.logout();
 	}
 	
 	@Test

@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.joda.time.DateTime;
-import org.oasis.datacore.core.entity.DCEntityService;
+import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
@@ -48,7 +48,7 @@ public class ResourceEntityMapperService {
 
    /** TODO replace by resourceService to check rights on refs */
    @Autowired
-   private DCEntityService entityService;
+   private EntityService entityService;
    
    @Autowired
    private DCModelService modelService;
@@ -192,7 +192,7 @@ public class ResourceEntityMapperService {
             DCModel refModel = modelService.getModel(dcUri.getType()); // TODO LATER from cached model ref in DCURI
             
             // checking that it exists :
-            DCEntity refEntity = entityService.getByUriId(dcUri.toString(), refModel);
+            DCEntity refEntity = entityService.getByUri(dcUri.toString(), refModel);
             if (refEntity == null) {
                throw new ResourceParsingException("Can't find data of resource type " + refModel.getName()
                      + " referenced by resource Field of URI value " + dcUri.toString());
@@ -243,7 +243,7 @@ public class ResourceEntityMapperService {
             DCModel valueModel = modelService.getModel(dcUri.getType()); // TODO LATER from cached model ref in DCURI
 
             // checking that it exists :
-            DCEntity entityEntityValue = entityService.getByUriId(dcUri.toString(), valueModel);
+            DCEntity entityEntityValue = entityService.getByUri(dcUri.toString(), valueModel);
             
             // TODO TODO provide refEntity in model (ex. DCResourceValue) OR IN GRAPH,
             // ex. for 2nd pass or in case of expanded + embedded return ?!?

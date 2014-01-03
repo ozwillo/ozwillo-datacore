@@ -8,7 +8,6 @@ import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.oasis.datacore.core.entity.DCEntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -29,7 +28,7 @@ import com.mongodb.WriteConcern;
 public class DatacoreEntityTest {
    
    @Autowired
-   private DCEntityService dcEntityService;
+   private EntityService dcEntityService;
 
    @Autowired
    private MongoTemplate mt; // to check mongo conf, last operation result...
