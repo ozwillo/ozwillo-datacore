@@ -18,29 +18,34 @@ import org.springframework.stereotype.Component;
 public class CitizenKinElectionModelInitializer extends DatacoreSampleBase {
 
 
-    public static final String CITIZENKIN_ENVELOPE_MIXIN = "citizenkin.envelope";
+    public static final String CITIZENKIN_PROCEDURE_ENVELOPE = "citizenkin.procedure.envelope";
     public static final String CITIZENKIN_PROCEDURE_ELECTORAL_ROLL_REGISTRATION = "citizenkin.procedure.electoral_roll_registration";
 
     public static final String STRING_TYPE = DCFieldTypeEnum.STRING.getType();
     public static final String DATE_TYPE = DCFieldTypeEnum.DATE.getType();
+    public static final String LONG_TYPE = DCFieldTypeEnum.LONG.getType();
+
 
     @Override
     public void init() {
 
-        DCMixin envelope = new DCMixin(CITIZENKIN_ENVELOPE_MIXIN);
-        envelope.addField(new DCField("definition_uuid", STRING_TYPE, true, 10));
+        DCModel envelope = new DCModel(CITIZENKIN_PROCEDURE_ENVELOPE);
         envelope.addField(new DCField("definition_name", STRING_TYPE, true, 10));
-        envelope.addField(new DCField("initiator", STRING_TYPE, true, 10));
+        envelope.addField(new DCField("initiator", STRING_TYPE, true, 100));
         envelope.addField(new DCField("recipient", STRING_TYPE, false, 10));
         envelope.addField(new DCField("state", STRING_TYPE, true, 10));
         envelope.addField(new DCField("start_date", DATE_TYPE, true, 0));
         envelope.addField(new DCField("modify_date", DATE_TYPE, false, 0));
-        envelope.addField(new DCField("administration_id", STRING_TYPE, true, 10));
+        envelope.addField(new DCField("administration_id", LONG_TYPE, true, 100));
+        envelope.addField(new DCField("comments", STRING_TYPE, false, 0));
 
-        modelAdminService.addMixin(envelope);
+        modelAdminService.addModel(envelope);
 
 
         DCModel model = new DCModel(CITIZENKIN_PROCEDURE_ELECTORAL_ROLL_REGISTRATION);
+
+        model.addField(new DCResourceField("envelope", CITIZENKIN_PROCEDURE_ENVELOPE, true, 10));
+
         model.addField(new DCField("nom_de_famille", STRING_TYPE, true, 0));
         model.addField(new DCField("nom_d_usage", STRING_TYPE, false, 0));
         model.addField(new DCField("prenom", STRING_TYPE, true, 0));
@@ -79,8 +84,6 @@ public class CitizenKinElectionModelInitializer extends DatacoreSampleBase {
         model.addField(new DCField("justificatif_identite", STRING_TYPE, true, 0));
         model.addField(new DCListField("justificatifs_domicile", new DCField("justificatif_domicile", STRING_TYPE, true, 0)));
 
-
-        model.addMixin(modelAdminService.getMixin(CITIZENKIN_ENVELOPE_MIXIN));
 
         modelAdminService.addModel(model);
     }
