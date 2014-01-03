@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
+	xsi:schemaLocation="
+      http://www.springframework.org/schema/beans
+      http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+      http://www.springframework.org/schema/context
+      http://www.springframework.org/schema/context/spring-context-3.1.xsd
+      http://www.springframework.org/schema/security
+      http://www.springframework.org/schema/security/spring-security.xsd
+      http://www.springframework.org/schema/security/oauth2
+      http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
+
+	<!-- security:http pattern="/dc/**" authentication-manager-ref="authenticationManager"><!- entry-point-ref="clientAuthenticationEntryPoint" ->
+	  <security:intercept-url pattern="/dc/model/**" access="ROLE_ADMIN" /><!- TODO for model admin ->
+	  <security:custom-filter ref="authenticationFilter" before="PRE_AUTH_FILTER" /><!- ref="oauth2ProviderFilter" ->
+     <!- NB.  In Spring Security, the responsibility for storing the SecurityContext between requests
+     falls to the SecurityContextPersistenceFilter, which by default stores the context as an HttpSession
+     attribute between HTTP requests
+     http://docs.spring.io/spring-security/site/docs/3.0.x/reference/technical-overview.html
+     ->
+	  <security:access-denied-handler error-page="404"/><!- ref="oauthAccessDeniedHandler"
+     see http://www.mkyong.com/spring-security/customize-http-403-access-denied-page-in-spring-security/ ->
+	</security:http>
+   
+   <bean id="authenticationFilter"
+       class="org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter">
+     <property name="authenticationManager" ref="org.springframework.security.authenticationManager"/>
+     <!- property name="filterProcessesUrl" value="/j_spring_security_check"/ ->
+   </bean -->
+
+	<security:authentication-manager><!-- i.e. id="org.springframework.security.authenticationManager" -->
+	  <security:authentication-provider user-service-ref="datacore.userDetailsService" /><!-- clientDetailsUserService -->
+	</security:authentication-manager>
+   
+   <!-- bean id="datacore.userDetailsService" class="org.oasis.datacore.core.security.MockUserDetailsServiceImpl"/ -->
+   <security:user-service id="datacore.userDetailsService">
+     <security:user name="guest" password="" authorities="guest" /><!-- or is guest group fictive ??? -->
+     <security:user name="admin" password="" authorities="admin" /><!-- guest is superfluous -->
+     <security:user name="john" password="" authorities="u_john,tutor_jim,group,guest" /><!-- ROLE_USER, ROLE_ADMIN -->
+     <security:user name="jim" password="" authorities="group,guest" />
+   </security:user-service>
+   <!-- security:user-service id="datacore.userDetailsService" properties="oasis-datacore-mockusers.properties"/ -->
+
+	<!-- oauth:client-details-service id="clientDetailsService">
+		<oauth:client client-id="e64425f0-3b0a-44ab-b5bc-1f1c52b099f8"
+			authorized-grant-types="client_credentials,password,implicit"
+			authorities="ROLE_WRITE" secret="secret" />
+	</oauth:client-details-service>
+
+	<bean id="clientDetailsUserService"
+		class="org.springframework.security.oauth2.provider.client.ClientDetailsUserDetailsService">
+		<constructor-arg ref="clientDetailsService" />
+	</bean -->
+   
+   <security:global-method-security pre-post-annotations="enabled">
+      <security:expression-handler ref="datacore.entityExpressionHandler"/>
+   </security:global-method-security>
+   <!-- see :
+   http://www.disasterarea.co.uk/blog/protecting-service-methods-with-spring-security-annotations/
+   http://java.dzone.com/articles/writing-your-spring-security -->
+   <bean id="datacore.entityExpressionHandler" class="org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler">
+      <property name="permissionEvaluator" ref="datacore.entityPermissionEvaluator"/>
+   </bean>
+   <bean id="datacore.entityPermissionEvaluator" class="org.oasis.datacore.core.security.EntityPermissionEvaluator"/>
+
+</beans>

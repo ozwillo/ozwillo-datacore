@@ -27,7 +27,7 @@ public class CitizenKinElectionModelInitializer extends DatacoreSampleBase {
 
 
     @Override
-    public void init() {
+    public void doInit() {
 
         DCModel envelope = new DCModel(CITIZENKIN_PROCEDURE_ENVELOPE);
         envelope.addField(new DCField("definition_name", STRING_TYPE, true, 10));

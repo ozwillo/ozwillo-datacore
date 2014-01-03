@@ -27,6 +27,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -147,8 +148,8 @@ public interface DatacoreApi {
    })
    DCResource postDataInType(
          @ApiParam(value = "Data Resource to create", required = true) DCResource dcData,
-         @ApiParam(value = "Model type to create (or update) it in", required = true) @PathParam("type") String modelType
-         *//*, @Context Request request*//*) throws BadRequestException, NotFoundException, ClientErrorException;*/
+         @ApiParam(value = "Model type to create (or update) it in", required = true) @PathParam("type") String modelType)
+         throws BadRequestException, NotFoundException, ClientErrorException;*/
    
    /**
     * "mass" update in type
@@ -181,8 +182,8 @@ public interface DatacoreApi {
    })
    List<DCResource> postAllDataInType(
          @ApiParam(value = "Data Resources to create", required = true) List<DCResource> dcDatas,
-         @ApiParam(value = "Model type to create them in", required = true) @PathParam("type") String modelType
-         /*, @Context Request request*/) throws BadRequestException, NotFoundException, ClientErrorException;
+         @ApiParam(value = "Model type to create them in", required = true) @PathParam("type") String modelType)
+         throws BadRequestException, NotFoundException, ClientErrorException;
    
    /**
     * "mass" update, types must be provided
@@ -211,8 +212,8 @@ public interface DatacoreApi {
       @ApiResponse(code = 201, message = "Created : resources have been created")
    })
    List<DCResource> postAllData(
-         @ApiParam(value = "Data Resources to create", required = true) List<DCResource> dcDatas
-         /*, @Context Request request*/) throws BadRequestException, NotFoundException, ClientErrorException;
+         @ApiParam(value = "Data Resources to create", required = true) List<DCResource> dcDatas)
+         throws BadRequestException, NotFoundException, ClientErrorException;
    
    /**
     * Not required, only for REST compliance ; PATCH version allows to only provide diff
@@ -245,8 +246,8 @@ public interface DatacoreApi {
    DCResource putDataInType(
          @ApiParam(value = "Data Resource to update", required = true) DCResource dcData,
          @ApiParam(value = "Model type to update it in", required = true) @PathParam("type") String modelType,
-         @ApiParam(value = "Type-relative resource id", required = true) @PathParam("iri") String iri
-         /*, @Context Request request*/) throws BadRequestException, NotFoundException, ClientErrorException;
+         @ApiParam(value = "Type-relative resource id", required = true) @PathParam("iri") String iri)
+         throws BadRequestException, NotFoundException, ClientErrorException;
    
    /**
     * Not required, only for REST compliance ; PATCH version allows to only provide diff
@@ -277,8 +278,8 @@ public interface DatacoreApi {
    })
    List<DCResource> putAllDataInType(
          @ApiParam(value = "Data Resources to update", required = true) List<DCResource> dcDatas,
-         @ApiParam(value = "Model type to update them in", required = true) @PathParam("type") String modelType
-         /*, @Context Request request*/) throws BadRequestException, NotFoundException, ClientErrorException;
+         @ApiParam(value = "Model type to update them in", required = true) @PathParam("type") String modelType)
+         throws BadRequestException, NotFoundException, ClientErrorException;
    
    /**
     * Not required, only for REST compliance ; PATCH version allows to only provide diff
@@ -307,14 +308,15 @@ public interface DatacoreApi {
       @ApiResponse(code = 200, message = "OK : resources have been updated")
    })
    List<DCResource> putAllData(
-         @ApiParam(value = "Data Resources to update", required = true) List<DCResource> dcDatas
-         /*, @Context Request request*/) throws BadRequestException, NotFoundException, ClientErrorException;
+         @ApiParam(value = "Data Resources to update", required = true) List<DCResource> dcDatas)
+         throws BadRequestException, NotFoundException, ClientErrorException;
    
    /**
     * Returns data resource at http://[this container]/dc/[type]/[iri].
     * Supports HTTP ETag (If-Match ; but no If-Modified-Since).
     * @param type
     * @param iri
+    * @param versionETag resource version provided as If-None-Match header
     * @return
     */
    @Path("/type/{type}/{iri:.+}") // :.+ to accept even /
@@ -341,7 +343,8 @@ public interface DatacoreApi {
    DCResource getData(
          @ApiParam(value = "Model type to look up in", required = true) @PathParam("type") String modelType,
          @ApiParam(value = "Type-relative resource id", required = true) @PathParam("iri") String iri,
-         @Context Request request) throws NotFoundException;
+         @ApiParam(value = "Resource version", required = false) @HeaderParam(HttpHeaders.IF_NONE_MATCH) Long version)
+         throws NotFoundException;
    
    /**
     * Deletes the given Data.
@@ -349,7 +352,7 @@ public interface DatacoreApi {
     * TODO LATER also add a "deleted" flag that can be set in POST ?!?
     * @param type
     * @param iri
-    * @param httpHeaders to look for If-Match header
+    * @param versionETag resource version provided as If-Match header
     */
    @Path("/type/{type}/{iri:.+}") // :.+ to accept even /
    @DELETE
@@ -374,7 +377,8 @@ public interface DatacoreApi {
    void deleteData(
          @ApiParam(value = "Model type to look up in", required = true) @PathParam("type") String modelType,
          @ApiParam(value = "Type-relative resource id", required = true) @PathParam("iri") String iri,
-         @Context HttpHeaders httpHeaders) throws BadRequestException, NotFoundException, ClientErrorException;
+         @ApiParam(value = "Resource version", required = false) @HeaderParam(HttpHeaders.IF_MATCH) Long version)
+         throws BadRequestException, NotFoundException, ClientErrorException;
 
    
    
@@ -454,8 +458,8 @@ public interface DatacoreApi {
          @ApiParam(value = "Model type to create (or update) it in", required = true) @PathParam("type") String modelType,
          @ApiParam(value = "HTTP method to tunnel over", required = true,
          allowableValues="POST") @QueryParam("method") String method,
-         @Context UriInfo uriInfo/*, @Context Request request*/)
-               throws BadRequestException, NotFoundException, ClientErrorException;
+         @Context UriInfo uriInfo)
+         throws BadRequestException, NotFoundException, ClientErrorException;
    
    /**
     * WARNING commented for now because conflicts with getData(),
@@ -465,8 +469,8 @@ public interface DatacoreApi {
     * @param type
     * @param iri
     * @param method PUT, PATCH, DELETE
+    * @param versionETag resource version provided as If-Match header in case of DELETE (see deleteData())
     * @param uriInfo to take DCData fields from HTTP request parameters
-    * @param httpHeaders to look for If-Match header in case of DELETE (see deleteData())
     * @return
     */
    //@Path("/type/{type}/{iri:.+}") // NB. :.+ to accept even / // TODO rather than :
@@ -496,11 +500,12 @@ public interface DatacoreApi {
       })
    DCResource putPatchDeleteDataOnGet(
          @ApiParam(value = "Model type to update it in", required = true) @PathParam("type") String modelType,
-         @PathParam("iri") String iri,
+         @ApiParam(value = "Type-relative resource id", required = true) @PathParam("iri") String iri,
          @ApiParam(value = "HTTP method to tunnel over", required = true,
          allowableValues="POST") @QueryParam("method") String method,
-         @Context UriInfo uriInfo, @Context HttpHeaders httpHeaders)
-               throws BadRequestException, NotFoundException;
+         @ApiParam(value = "Resource version", required = false) @PathParam(HttpHeaders.IF_MATCH) Long versionETag,
+         @Context UriInfo uriInfo)
+         throws BadRequestException, NotFoundException;
 
 
    
@@ -578,7 +583,7 @@ public interface DatacoreApi {
    List<DCResource> findDataInType(@PathParam("type") String modelType, @Context UriInfo uriInfo,
          @ApiParam(value="Pagination start") @DefaultValue("0") @QueryParam("start") Integer start,
          @ApiParam(value="Pagination limit") @DefaultValue("10") @QueryParam("limit") Integer limit)
-               throws BadRequestException, NotFoundException;
+         throws BadRequestException, NotFoundException;
 
 
    /**
@@ -649,7 +654,7 @@ public interface DatacoreApi {
    List<DCResource> findData(@Context UriInfo uriInfo,
          @ApiParam(value="Pagination start") @DefaultValue("0") @QueryParam("start") Integer start,
          @ApiParam(value="Pagination limit") @DefaultValue("10") @QueryParam("limit") Integer limit)
-               throws BadRequestException, NotFoundException;
+         throws BadRequestException, NotFoundException;
 
    /**
     * Returns all Datacore data of the given type that are found by the given query
@@ -723,7 +728,7 @@ public interface DatacoreApi {
    List<DCResource> queryDataInType(@PathParam("type") String modelType,
          @QueryParam("query") String query,
          @DefaultValue("SPARQL") @QueryParam("language") String language)
-               throws BadRequestException, NotFoundException;
+         throws BadRequestException, NotFoundException;
 
 
    /**
@@ -784,7 +789,7 @@ public interface DatacoreApi {
    })
    List<DCResource> queryData(@QueryParam("query") String query,
          @DefaultValue("SPARQL") @QueryParam("language") String language)
-               throws BadRequestException, NotFoundException;
+         throws BadRequestException, NotFoundException;
    
    
    @Path("/h/{type}/{iri}/{version}")

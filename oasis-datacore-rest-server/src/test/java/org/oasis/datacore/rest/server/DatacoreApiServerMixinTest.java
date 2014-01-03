@@ -18,10 +18,10 @@ import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
+import org.oasis.datacore.core.security.mock.MockAuthenticationService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
-import org.oasis.datacore.rest.client.DatacoreClientApi;
-import org.oasis.datacore.rest.client.QueryParameters;
+import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.server.event.EventService;
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.sample.AltTourismPlaceAddressSample;
@@ -30,11 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.security.authentication.TestingAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -51,7 +46,7 @@ public class DatacoreApiServerMixinTest {
    
    @Autowired
    @Qualifier("datacoreApiCachedClient")
-   private /*DatacoreApi*/DatacoreClientApi datacoreApiClient;
+   private /*DatacoreApi*/DatacoreCachedClient datacoreApiClient;
    
    @Autowired
    private ResourceService resourceService;
@@ -71,6 +66,8 @@ public class DatacoreApiServerMixinTest {
    /** to setup security tests */
    @Autowired
    private DCEntityService entityService;
+   @Autowired
+   private MockAuthenticationService mockAuthenticationService;
    
    /** to be able to build a full uri, to check in tests
     * TODO rather client-side DCURI or rewrite uri in server */
@@ -276,14 +273,23 @@ public class DatacoreApiServerMixinTest {
       
       // security :
       // BEWARE don't use client (datacoreApiClient) else SecurityContextHolder won't work (different thread)
-      DCModel altTourismPlaceModel = modelServiceImpl.getModel(AltTourismPlaceAddressSample.ALTTOURISM_PLACE);
+      // OR specify user in HTTP
+
+      // check that GET allowed as guest
+      //resourceService.get();
+      
+      // check that write not allowed as guest
+      //resourceService.createOrUpdate(resource, modelType, canCreate, canUpdate)
       
       // make model secured
+      DCModel altTourismPlaceModel = modelServiceImpl.getModel(AltTourismPlaceAddressSample.ALTTOURISM_PLACE);
       altTourismPlaceModel.getSecurity().setPublicRead(false);
 
       // check that not found anymore as GUEST
+      mockAuthenticationService.login("guest");
       List<DCEntity> forbiddenMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel,
             new HashMap<String,List<String>>() {{ put("name", new ArrayList<String>() {{ add("Sofia_Monastery"); }}); }}, 0, 10);
+      mockAuthenticationService.logout();
       Assert.assertTrue("query filtering should have forbidden non public model",
             forbiddenMonasteryRes == null || forbiddenMonasteryRes.isEmpty());
       
@@ -294,18 +300,22 @@ public class DatacoreApiServerMixinTest {
       altTourismPlaceSofiaMonastery = datacoreApiClient.postDataInType(altTourismPlaceSofiaMonastery);
       
       // check that not found (because not in group)
+      mockAuthenticationService.login("guest");
       forbiddenMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel,
             new HashMap<String,List<String>>() {{ put("name", new ArrayList<String>() {{ add("Sofia_Monastery"); }}); }}, 0, 10);
+      mockAuthenticationService.logout();
       Assert.assertTrue("query filtering should have forbidden it because not in group",
             forbiddenMonasteryRes == null || forbiddenMonasteryRes.isEmpty());
       
       // check that found when using rights
-      SecurityContext sc = new SecurityContextImpl();
-      Authentication authentication = new TestingAuthenticationToken("John", "pass", "group");
+      /*SecurityContext sc = new SecurityContextImpl();
+      Authentication authentication = new TestingAuthenticationToken("john", "pass", "group");
       sc.setAuthentication(authentication);
-      SecurityContextHolder.setContext(sc);
+      SecurityContextHolder.setContext(sc);*/
+      mockAuthenticationService.login("john");
       List<DCEntity> allowedMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel,
             new HashMap<String,List<String>>() {{ put("name", new ArrayList<String>() {{ add("Sofia_Monastery"); }}); }}, 0, 10);
+      mockAuthenticationService.logout();
       Assert.assertTrue("query filtering should have allowed it", allowedMonasteryRes != null && allowedMonasteryRes.size() == 1);
       
       // revert model to default (public)

@@ -20,7 +20,7 @@ public class BrandCarMotorcycleModel extends DatacoreSampleBase {
 	public static String BRAND_MODEL_NAME = "sample.brand.brand";
 
 	
-	public void init() {
+	public void doInit() {
 		
 		mgo.dropCollection(BRAND_MODEL_NAME);
 		mgo.dropCollection(CAR_MODEL_NAME);
