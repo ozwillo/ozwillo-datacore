@@ -358,7 +358,7 @@ public class ResourceEntityMapperService {
       // handling each value :
       for (String key : resourceMap.keySet()) {
          if (!mapFields.containsKey(key)) {
-            resourceParsingContext.addError("Unkown field " + key);
+            resourceParsingContext.addError("Unknown field " + key);
             continue;
          }
          
