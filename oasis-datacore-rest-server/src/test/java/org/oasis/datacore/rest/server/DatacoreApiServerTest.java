@@ -404,5 +404,21 @@ public class DatacoreApiServerTest {
             new QueryParameters().add("name", "\"Bordeaux\""), null, 10);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(postedBordeauxCityData.getUri(), resources.get(0).getUri());
+
+      // JSON $in
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("name", "$in[\"Bordeaux\"]"), null, 10);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(postedBordeauxCityData.getUri(), resources.get(0).getUri());
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("name", "$in[]"), null, 10);
+      Assert.assertEquals(0, resources.size());
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("name", "$in[\"Bordeaux\",\"NotThere\"]"), null, 10);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(postedBordeauxCityData.getUri(), resources.get(0).getUri());
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("name", "$in[\"Bordeaux\",\"London\"]"), null, 10);
+      Assert.assertEquals(2, resources.size());
    }
 }

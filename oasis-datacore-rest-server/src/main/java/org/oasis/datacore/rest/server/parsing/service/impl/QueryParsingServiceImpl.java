@@ -1,6 +1,5 @@
 package org.oasis.datacore.rest.server.parsing.service.impl;
 
-import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,21 +11,17 @@ import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException
 import org.oasis.datacore.rest.server.parsing.model.DCQueryParsingContext;
 import org.oasis.datacore.rest.server.parsing.model.QueryOperatorsEnum;
 import org.oasis.datacore.rest.server.parsing.service.QueryParsingService;
+import org.oasis.datacore.rest.server.resource.ValueParsingService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
 
 @Service
 public class QueryParsingServiceImpl implements QueryParsingService {
 
 	@Autowired
-	@Qualifier("datacoreApiServer.objectMapper")
-	public ObjectMapper mapper;
+	public ValueParsingService valueParsingService;
 	
 	public void parseCriteriaFromQueryParameter(String fieldPath, String operatorAndValue, 
 												DCField dcField, DCQueryParsingContext queryParsingContext) 
@@ -38,43 +33,32 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 		// Integer = operator size
 		SimpleEntry<QueryOperatorsEnum, Integer> operatorEntry = QueryOperatorsEnum.getEnumFromOperator(operatorAndValue);
 		QueryOperatorsEnum operatorEnum = operatorEntry.getKey();
-		int operatorSize = operatorEntry.getValue();
+      if (operatorEnum == null) {
+         throw new ResourceParsingException("Query operator wasn't identified for query parameter " + operatorAndValue);
+      }
+      
 		// We check if the selected operator is suitable for the type of DCField
 		isQueryOperatorSuitableForField(dcField, operatorEnum);
+		
 		// If the operator is a sort (e.g. name=-) there is no value !
 		// So we don't need to substring to remove the operator from the value as there is no value
 		String queryValue = null;
 		QueryOperatorsEnum sortEnum = null;
 		Object parsedData = null;
-		if (operatorEnum != null) {
-			if (!QueryOperatorsEnum.SORT_ASC.name().equals(operatorEnum.name()) 
-			&& !QueryOperatorsEnum.SORT_DESC.name().equals(operatorEnum.name())
-			&& !QueryOperatorsEnum.EXISTS.name().equals(operatorEnum.name())) {
-				// We get the value of the selected operator
-				queryValue = operatorAndValue.substring(operatorSize);
-				// We need to know if we need to sort the value
-				sortEnum = isSortNeeded(queryValue);
-				// If field is sorted we need to remove the last char (+ or -)
-				if(sortEnum != null) {
-					queryValue = queryValue.substring(0, queryValue.length()-1);
-				}
-				// We get the DCFieldType enum according to the type of the field
-				DCFieldTypeEnum dcFieldTypeEnum = DCFieldTypeEnum.getEnumFromStringType(dcField.getType());
-				if(dcFieldTypeEnum == null) {
-					throw new ResourceParsingException("can't find the type of " + dcField.getName());
-				}
-				if(QueryOperatorsEnum.SIZE.name().equals(operatorEnum.name())) {
-					dcFieldTypeEnum = DCFieldTypeEnum.INTEGER;
-				}
-				// Then we parse the data
-				parsedData = parseValue(dcFieldTypeEnum, queryValue);
-				if(parsedData == null) {
-					throw new ResourceParsingException("Field " + dcField.getName() + " cannot be parsed in " + dcFieldTypeEnum.getType() + " format");
-				}
+      int operatorSize = operatorEntry.getValue();
+		if (!QueryOperatorsEnum.noValueOperators.contains(operatorEnum)) {
+			// We get the value of the selected operator
+			queryValue = operatorAndValue.substring(operatorSize);
+			// We need to know if we need to sort the value
+			sortEnum = isSortNeeded(queryValue);
+			// If field is sorted we need to remove the last char (+ or -)
+			if(sortEnum != null) {
+				queryValue = queryValue.substring(0, queryValue.length()-1);
 			}
-		} else {
-			throw new ResourceParsingException("Query operator wasn't identified for query parameter " + operatorAndValue);
+			// Then we parse the data
+			parsedData = parseQueryValue(operatorEnum, dcField, queryValue);
 		}
+		
 		switch(operatorEnum) {
 		
 			case ALL: 
@@ -104,11 +88,13 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 				break;
 				
 			case EQUALS:
+            // TODO if null parsedData, AND / OR !$exists
 				queryParsingContext.getCriteria().and(entityFieldPath).is(parsedData);
 				break;
 			
 			case EXISTS:
-				// TODO TODO rather hasAspect / mixin / type !!!!!!!!!!!!!!!
+				// NB. checks existance of value AND NOT of field in model / mixin type
+			   // (which has rather to be done using )
 				// TODO AND / OR field value == null
 				// TODO sparse index ?????????
 				// TODO TODO can't return false because already failed to find field
@@ -136,7 +122,8 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 				// TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
 				// TODO check that indexed (or set low limit) ??
 				addSort(entityFieldPath, sortEnum, queryParsingContext);
-				queryParsingContext.getCriteria().and(entityFieldPath).in(parsedData); // TODO same fieldPath for mongodb ??
+				queryParsingContext.getCriteria().and(entityFieldPath) // TODO same fieldPath for mongodb ??
+				   .in((Collection<?>) parsedData); // BEWARE else taken as an object (array of array)
 				break;
 		
 			case LOWER_OR_EQUAL:
@@ -167,7 +154,8 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 			    // TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
 			    // TODO check that indexed (or set low limit) ??
 				addSort(entityFieldPath, sortEnum, queryParsingContext);
-			    queryParsingContext.getCriteria().and(entityFieldPath).nin(parsedData);
+			    queryParsingContext.getCriteria().and(entityFieldPath) // TODO same fieldPath for mongodb ??
+			       .nin((Collection<?>) parsedData); // BEWARE else taken as an object (array of array)
 				break;
 				
 			case REGEX:
@@ -244,45 +232,35 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 		}
 		
 	}
+
 	
-	/**
-	 * Parses value according to given field type.
-	 * 
-	 * WARNING for dates : Requires ALLOW_NUMERIC_LEADING_ZEROS enabled
-	 * on JsonParser.Feature.ALLOW_NUMERIC_LEADING_ZEROS
-    * else fails when years serialized with wrong leading zeroes ex. 0300 :
-    * JsonParseException: Invalid numeric value: Leading zeroes not allowed
-    * in ReaderBasedJsonParser._verifyNoLeadingZeroes()
-	 */
-	public Object parseValue(DCFieldTypeEnum dcFieldTypeEnum, String queryValue) throws ResourceParsingException {
-		
-		if(queryValue != null && !"".equals(queryValue)) {
-			if(dcFieldTypeEnum != null) {
-				try {
-					ObjectReader reader = mapper.reader(dcFieldTypeEnum.getToClass());
-					return reader.readValue(queryValue);
-					
-				} catch (IOException ioex) {
-				   // not JSON !
-				   // so first attempt to still make something of the value as a string :
-				   switch (dcFieldTypeEnum) {
-   				   case STRING :
-                  case RESOURCE : // TODO different if embedded ??
-   				      return queryValue;
-				      default :
-				   }
-				   // else error
-					throw new ResourceParsingException("IO error while reading " + dcFieldTypeEnum.getType() + "-formatted string : " + queryValue, ioex);
-					
-				} catch (Exception ex) {
-					throw new ResourceParsingException("Field value is not a " + dcFieldTypeEnum.getType() + "-formatted string : " + queryValue, ex);
-				}
-			}
-		}
-		
-		return null;
-		
-	}
+   public Object parseQueryValue(QueryOperatorsEnum operatorEnum, DCField dcField,
+         String value) throws ResourceParsingException {
+      DCFieldTypeEnum parsingTypeEnum = operatorEnum.getParsingType();
+      if (parsingTypeEnum == null) {
+         // We get the DCFieldType enum according to the type of the field
+         parsingTypeEnum = DCFieldTypeEnum.getEnumFromStringType(dcField.getType());
+         if (parsingTypeEnum == null) {
+            throw new ResourceParsingException("Can't find the type of field " + dcField.getName());
+         }
+      }
+      
+      // special list case
+      /*switch(operatorEnum) {
+      case IN:
+      case NOT_IN:
+         // TODO if non-JSON, unquoted string, attempt to parse it as dcField.type and wrap it in collection
+      default:
+      }*/
+      
+      // other cases
+      Object parsedValue = valueParsingService.parseValue(parsingTypeEnum, value);
+      /*if (parsedValue == null) {
+         throw new ResourceParsingException("Field " + dcField.getName() + " cannot be parsed in "
+               + parsingTypeEnum.getType() + " format");
+      }*/
+      return parsedValue;
+   }
 	
 	
 	public void addSort(String fieldPath, QueryOperatorsEnum sortEnum, DCQueryParsingContext queryParsingContext) {

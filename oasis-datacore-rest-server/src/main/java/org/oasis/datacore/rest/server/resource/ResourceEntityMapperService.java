@@ -23,7 +23,6 @@ import org.oasis.datacore.rest.api.util.DCURI;
 import org.oasis.datacore.rest.server.BadUriException;
 import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
-import org.oasis.datacore.rest.server.parsing.service.QueryParsingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -41,7 +40,7 @@ public class ResourceEntityMapperService {
       resourceNativeJavaFields.add("createdBy");
       resourceNativeJavaFields.add("lastModifiedBy");
    }
-   
+
 
    @Autowired
    private ResourceService resourceService;
@@ -54,7 +53,7 @@ public class ResourceEntityMapperService {
    private DCModelService modelService;
    
    @Autowired
-   private QueryParsingService queryParsingService;
+   private ValueParsingService valueParsingService;
    
    /**
     * Does 3 things :
@@ -114,7 +113,7 @@ public class ResourceEntityMapperService {
          if (!(resourceValue instanceof String)) {
             throw new ResourceParsingException("long Field value is not a string : " + resourceValue);
          }
-         entityValue = queryParsingService.parseValue(DCFieldTypeEnum.LONG, (String)resourceValue);
+         entityValue = valueParsingService.parseValue(DCFieldTypeEnum.LONG, (String)resourceValue);
          
       } else if ("double".equals(dcField.getType())) {
          if (!(resourceValue instanceof Double)) {
@@ -126,7 +125,7 @@ public class ResourceEntityMapperService {
          if (!(resourceValue instanceof String)) {
             throw new ResourceParsingException("date Field value is not a string : " + resourceValue);
          }
-         entityValue = (DateTime) queryParsingService.parseValue(DCFieldTypeEnum.DATE, (String) resourceValue);
+         entityValue = (DateTime) valueParsingService.parseValue(DCFieldTypeEnum.DATE, (String) resourceValue);
          
       /*} else if ("i18n".equals(dcField.getType())) { // TODO i18n better
          entityValue = (HashMap<?,?>) resourceValue; // TODO NOOOO _i18n

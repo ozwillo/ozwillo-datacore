@@ -65,7 +65,7 @@ public class FunctionalOperationsTest {
 		truncateModel(MarkaInvestModel.SECTOR_MODEL_NAME);
 		truncateModel(MarkaInvestModel.USER_MODEL_NAME);
 
-      mockAuthenticationService.login("admin"); // else marka resources not writable
+      mockAuthenticationService.loginAs("admin"); // else marka resources not writable
 		markaInvestData.createDataSample();
 		markaInvestData.insertData();
       mockAuthenticationService.logout();
@@ -358,12 +358,26 @@ public class FunctionalOperationsTest {
 		QueryParameters queryParameters = null;
 		List<DCResource> listResource = null;
 				
-		queryParameters = new QueryParameters();
-		queryParameters.add("tel", "$in\"0142143059\""); // NB. if not quoted, parsed as int and misses front 0
+		queryParameters = new QueryParameters()
+		   .add("tel", "$in\"0142143059\""); // NB. if not quoted, parsed as int and misses front 0
 		listResource = api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, queryParameters, 0, 10);
 		Assert.assertNotNull(listResource);
 		Assert.assertEquals("Resource list should have 1 entry", 1, listResource.size());
-						
+
+      queryParameters = new QueryParameters().add("tel", "$in[\"0142143059\"]");
+      listResource = api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, queryParameters, 0, 10);
+      Assert.assertNotNull(listResource);
+      Assert.assertEquals("Resource list should have 1 entry", 1, listResource.size());
+
+      queryParameters = new QueryParameters().add("tel", "$in[\"0142143059\",\"014214305X\"]");
+      listResource = api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, queryParameters, 0, 10);
+      Assert.assertNotNull(listResource);
+      Assert.assertEquals("Resource list should have 1 entry", 1, listResource.size());
+
+      queryParameters = new QueryParameters().add("tel", "$in[\"0142143059\",\"08445125647\"]");
+      listResource = api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, queryParameters, 0, 10);
+      Assert.assertNotNull(listResource);
+      Assert.assertEquals("Resource list should have 2 entries", 2, listResource.size());
 	}
 	
 	@Test
@@ -372,11 +386,25 @@ public class FunctionalOperationsTest {
 		QueryParameters queryParameters = null;
 		List<DCResource> listResource = null;
 				
-		queryParameters = new QueryParameters();
-		queryParameters.add("firstName", "$ninFrédéric");
+		queryParameters = new QueryParameters().add("firstName", "$nin\"Frédéric\"");
 		listResource = api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, queryParameters, 0, 10);
 		Assert.assertNotNull(listResource);
 		Assert.assertEquals("Resource list should have one entry", 1, listResource.size());
+
+      queryParameters = new QueryParameters().add("firstName", "$nin[\"Frédéric\"]");
+      listResource = api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, queryParameters, 0, 10);
+      Assert.assertNotNull(listResource);
+      Assert.assertEquals("Resource list should have one entry", 1, listResource.size());
+
+      queryParameters = new QueryParameters().add("firstName", "$nin[\"Frédéric\",\"X\"]");
+      listResource = api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, queryParameters, 0, 10);
+      Assert.assertNotNull(listResource);
+      Assert.assertEquals("Resource list should have one entry", 1, listResource.size());
+
+      queryParameters = new QueryParameters().add("firstName", "$nin[\"Frédéric\",\"Albert\"]");
+      listResource = api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, queryParameters, 0, 10);
+      Assert.assertNotNull(listResource);
+      Assert.assertEquals("Resource list should have no entry", 0, listResource.size());
 						
 	}
 	

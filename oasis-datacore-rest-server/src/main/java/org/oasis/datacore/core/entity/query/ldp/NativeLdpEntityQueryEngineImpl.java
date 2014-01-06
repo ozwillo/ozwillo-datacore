@@ -16,7 +16,7 @@ import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
-import org.oasis.datacore.rest.server.parsing.service.QueryParsingService;
+import org.oasis.datacore.rest.server.resource.ValueParsingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -38,7 +38,7 @@ public class NativeLdpEntityQueryEngineImpl extends EntityQueryEngineBase {
    @Autowired
    private DCModelService modelService;
    @Autowired
-   private QueryParsingService queryParsingService;
+   private ValueParsingService valueParsingService;
 
    public NativeLdpEntityQueryEngineImpl() {
       super(EntityQueryService.LANGUAGE_LDPQL);
@@ -79,7 +79,10 @@ public class NativeLdpEntityQueryEngineImpl extends EntityQueryEngineBase {
       if (startList != null && !startList.isEmpty()) {
          String startString = startList.get(0);
          try {
-            return (Integer) queryParsingService.parseValue(DCFieldTypeEnum.INTEGER, startString);
+            Object found = valueParsingService.parseValue(DCFieldTypeEnum.INTEGER, startString);
+            if (found != null) {
+               return (Integer) found;
+            }
          } catch (ResourceParsingException e) {
             throw new QueryException("Error parsing query parameter " + name + " : " + e.getMessage());
          }

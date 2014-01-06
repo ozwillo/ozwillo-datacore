@@ -1,11 +1,16 @@
 package org.oasis.datacore.core.meta.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.joda.time.DateTime;
+
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 public enum DCFieldTypeEnum {
 
@@ -18,14 +23,34 @@ public enum DCFieldTypeEnum {
 	DATE("date", DateTime.class),
 	MAP("map", Map.class),
 	LIST("list", List.class),
-	RESOURCE("resource", DCField.class),
+	RESOURCE("resource", Map.class), // or String (if not root or embedded Resource case)
 	NOT_FOUND("", null)
 	;
 	
 	private String type;
-	private Class toClass;
+	private Class<?> toClass;
+   public static final Set<DCFieldTypeEnum> everyTypes = Sets.immutableEnumSet(new ImmutableSet
+         .Builder<DCFieldTypeEnum>().addAll(Arrays.asList(DCFieldTypeEnum.values())).build());
+   public static final Set<DCFieldTypeEnum> onlyList = Sets.immutableEnumSet(new ImmutableSet
+         .Builder<DCFieldTypeEnum>().add(DCFieldTypeEnum.LIST).build());
+   public static final Set<DCFieldTypeEnum> onlyString = Sets.immutableEnumSet(new ImmutableSet
+         .Builder<DCFieldTypeEnum>().add(DCFieldTypeEnum.STRING).build());
+   public static Set<DCFieldTypeEnum> everyTypesWithoutMapListAndResource = Sets.immutableEnumSet(new ImmutableSet
+         .Builder<DCFieldTypeEnum>().add(DCFieldTypeEnum.STRING).add(DCFieldTypeEnum.BOOLEAN).
+         add(DCFieldTypeEnum.INTEGER).add(DCFieldTypeEnum.FLOAT).add(DCFieldTypeEnum.LONG).
+         add(DCFieldTypeEnum.DOUBLE).add(DCFieldTypeEnum.DATE).build());
+   public static Set<DCFieldTypeEnum> everyTypesWithoutMapAndList = Sets.immutableEnumSet(new ImmutableSet
+         .Builder<DCFieldTypeEnum>().addAll(everyTypesWithoutMapListAndResource)
+         .add(DCFieldTypeEnum.RESOURCE).build());
 	
-	private DCFieldTypeEnum(String type, Class toClass) {
+	static {
+      Collection<DCFieldTypeEnum> everyTypesWithoutMapListAndResource = new ArrayList<DCFieldTypeEnum>(everyTypes);
+      everyTypesWithoutMapListAndResource.remove(DCFieldTypeEnum.MAP);
+      everyTypesWithoutMapListAndResource.remove(DCFieldTypeEnum.LIST);
+      everyTypesWithoutMapListAndResource.remove(DCFieldTypeEnum.RESOURCE);
+	}
+	
+	private DCFieldTypeEnum(String type, Class<?> toClass) {
 		this.type = type;
 		this.toClass = toClass;
 	}
@@ -34,7 +59,7 @@ public enum DCFieldTypeEnum {
 		return this.type;
 	}
 	
-	public Class getToClass() {
+	public Class<?> getToClass() {
 		return this.toClass;
 	}
 	
@@ -50,41 +75,6 @@ public enum DCFieldTypeEnum {
 		
 		return NOT_FOUND;
 		
-	}
-	
-	public static Collection<DCFieldTypeEnum> everyTypes() {
-		Collection<DCFieldTypeEnum> listAllTypes = new ArrayList<>();
-		for(DCFieldTypeEnum dcFieldTypeEnum : DCFieldTypeEnum.values()) {
-			listAllTypes.add(dcFieldTypeEnum);
-		}
-		return listAllTypes;
-	}
-	
-	public static Collection<DCFieldTypeEnum> onlyList() {
-		Collection<DCFieldTypeEnum> listDcFieldTypeEnums = new ArrayList<>();
-		listDcFieldTypeEnums.add(DCFieldTypeEnum.LIST);
-		return listDcFieldTypeEnums;
-	}
-		
-	public static Collection<DCFieldTypeEnum> onlyString() {
-		Collection<DCFieldTypeEnum> listDcFieldTypeEnums = new ArrayList<>();
-		listDcFieldTypeEnums.add(DCFieldTypeEnum.STRING);
-		return listDcFieldTypeEnums;
-	}
-	
-	public static Collection<DCFieldTypeEnum> everyTypesWithoutMapListAndResource() {
-		Collection<DCFieldTypeEnum> listDcFieldTypeEnums = everyTypes();
-		listDcFieldTypeEnums.remove(DCFieldTypeEnum.MAP);
-		listDcFieldTypeEnums.remove(DCFieldTypeEnum.LIST);
-		listDcFieldTypeEnums.remove(DCFieldTypeEnum.RESOURCE);
-		return listDcFieldTypeEnums;
-	}
-	
-	public static Collection<DCFieldTypeEnum> everyTypesWithoutMapAndList() {
-		Collection<DCFieldTypeEnum> listDcFieldTypeEnums = everyTypes();
-		listDcFieldTypeEnums.remove(DCFieldTypeEnum.MAP);
-		listDcFieldTypeEnums.remove(DCFieldTypeEnum.LIST);
-		return listDcFieldTypeEnums;
 	}
 	
 }

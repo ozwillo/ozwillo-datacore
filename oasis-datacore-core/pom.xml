@@ -108,6 +108,12 @@
          <version>4.2.0.Final</version>
       </dependency>
       
+      <!-- for ImmutableMap/List(.Builder), also used by MITRE OpenIdConnect & Swagger -->
+      <dependency>
+         <groupId>com.google.guava</groupId>
+         <artifactId>guava</artifactId>
+      </dependency>
+      
       <!-- tests -->
       <dependency>
          <groupId>org.springframework</groupId>

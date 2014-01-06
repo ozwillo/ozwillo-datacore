@@ -119,7 +119,9 @@
 			else ClassNotFoundException: javax.ws.rs.client.ClientException -->
 
 		<ehcache.version>2.7.4</ehcache.version><!-- for client-side cache -->
-
+      
+      <guava.version>14.0.1</guava.version><!-- for ImmutableMap/List(.Builder),
+      also used by MITRE OpenIdConnect & Swagger (in 13.0.1, 11.0.2) -->
 		<commons-collections.version>3.2.1</commons-collections.version><!-- for 
 			ListUtils -->
 		<commons-lang.version>2.6</commons-lang.version><!-- for ExceptionUtils -->
@@ -486,6 +488,12 @@
 					type=pom but brings in too much stuff (hibernate, terracotta...) -->
 			</dependency>
 
+         <!-- for ImmutableMap/List(.Builder), also used by MITRE OpenIdConnect & Swagger -->
+         <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
+         </dependency>
 			<!-- for EnumerationUtils, ListUtils... -->
 			<dependency>
 				<groupId>commons-collections</groupId>

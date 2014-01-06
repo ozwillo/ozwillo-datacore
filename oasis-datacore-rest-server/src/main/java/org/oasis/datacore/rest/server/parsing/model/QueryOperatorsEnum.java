@@ -3,8 +3,12 @@ package org.oasis.datacore.rest.server.parsing.model;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Set;
 
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
+
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 
 /**
@@ -20,34 +24,46 @@ import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
  */
 public enum QueryOperatorsEnum {
 
-	NOT_EQUALS(DCFieldTypeEnum.everyTypesWithoutMapAndList(), "<>","&lt;&gt;","$ne","!="),
-	GREATER_OR_EQUAL(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), ">=","&gt;=","$gte"),
-	LOWER_OR_EQUAL(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), "<=","&lt;=","$lte"),
-	EQUALS(DCFieldTypeEnum.everyTypesWithoutMapAndList(), "==", "=", ""),
-	GREATER_THAN(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), ">","&gt;","$gt"),
-	LOWER_THAN(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), "<","&lt;","$lt"),
-	SORT_DESC(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(),"-"),
-	SORT_ASC(DCFieldTypeEnum.everyTypesWithoutMapListAndResource(), "+"),
-	IN(DCFieldTypeEnum.everyTypesWithoutMapAndList(), "$in"),
-	NOT_IN(DCFieldTypeEnum.everyTypesWithoutMapAndList(), "$nin"),
-	REGEX(DCFieldTypeEnum.onlyString(), "$regex"),
-	EXISTS(DCFieldTypeEnum.everyTypes(), "$exists"),
-	ALL(DCFieldTypeEnum.onlyList(), "$all"),
-	ELEM_MATCH(DCFieldTypeEnum.onlyList(), "$elemMatch"),
-	SIZE(DCFieldTypeEnum.onlyList(), "$size");
-		
+	NOT_EQUALS(DCFieldTypeEnum.everyTypesWithoutMapAndList, "<>","&lt;&gt;","$ne","!="), // LATER2 also Map & List ???
+	GREATER_OR_EQUAL(DCFieldTypeEnum.everyTypesWithoutMapListAndResource, ">=","&gt;=","$gte"),
+	LOWER_OR_EQUAL(DCFieldTypeEnum.everyTypesWithoutMapListAndResource, "<=","&lt;=","$lte"),
+	EQUALS(DCFieldTypeEnum.everyTypesWithoutMapAndList, "==", "=", ""),
+	GREATER_THAN(DCFieldTypeEnum.everyTypesWithoutMapListAndResource, ">","&gt;","$gt"),
+	LOWER_THAN(DCFieldTypeEnum.everyTypesWithoutMapListAndResource, "<","&lt;","$lt"),
+	SORT_DESC(DCFieldTypeEnum.everyTypesWithoutMapListAndResource,"-"),
+	SORT_ASC(DCFieldTypeEnum.everyTypesWithoutMapListAndResource, "+"),
+	IN(DCFieldTypeEnum.everyTypesWithoutMapAndList, DCFieldTypeEnum.LIST, "$in"),
+	NOT_IN(DCFieldTypeEnum.everyTypesWithoutMapAndList, DCFieldTypeEnum.LIST, "$nin"),
+	REGEX(DCFieldTypeEnum.onlyString, "$regex"),
+	EXISTS(DCFieldTypeEnum.everyTypes, "$exists"),
+	ALL(DCFieldTypeEnum.onlyList, DCFieldTypeEnum.LIST, "$all"),
+	ELEM_MATCH(DCFieldTypeEnum.onlyList, DCFieldTypeEnum.LIST, "$elemMatch"),
+	SIZE(DCFieldTypeEnum.onlyList, DCFieldTypeEnum.INTEGER, "$size");
+
+   public static final Set<QueryOperatorsEnum> noValueOperators = Sets.immutableEnumSet(new ImmutableSet
+         .Builder<QueryOperatorsEnum>().add(QueryOperatorsEnum.SORT_ASC)
+         .add(QueryOperatorsEnum.SORT_DESC).add(QueryOperatorsEnum.EXISTS).build()); // uses EnumSet
+   
 	private Collection<String> listOperators;
 	private Collection<DCFieldTypeEnum> listCompatibleTypes;
+	/** field type to parse criteria value as if differs from criteria field's */
+   private DCFieldTypeEnum parsingType;
 	
-	private QueryOperatorsEnum(Collection<DCFieldTypeEnum> compatibleTypes, String... operators) {
+	private QueryOperatorsEnum(Collection<DCFieldTypeEnum> compatibleTypes,
+	      DCFieldTypeEnum parsingType, String... operators) {
 		this.listOperators = new ArrayList<String>();
 		if(operators != null) {
 			for(String operator : operators) {
 				this.listOperators.add(operator);
 			}
 		}
-		this.listCompatibleTypes = compatibleTypes;
+      this.listCompatibleTypes = compatibleTypes;
+      this.parsingType = parsingType;
 	}
+	
+   private QueryOperatorsEnum(Collection<DCFieldTypeEnum> compatibleTypes, String... operators) {
+      this(compatibleTypes, null, operators);
+   }
 	
 	public Collection<String> getListOperators() {
 		return this.listOperators;
@@ -56,6 +72,10 @@ public enum QueryOperatorsEnum {
 	public Collection<DCFieldTypeEnum> getListCompatibleTypes() {
 		return this.listCompatibleTypes;
 	}
+   
+   public DCFieldTypeEnum getParsingType() {
+      return parsingType;
+   }
 
 	public static SimpleEntry<QueryOperatorsEnum, Integer> getEnumFromOperator(String operator) {
 
