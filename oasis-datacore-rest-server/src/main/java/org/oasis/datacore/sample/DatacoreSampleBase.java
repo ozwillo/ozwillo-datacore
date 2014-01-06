@@ -84,7 +84,7 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
    //@PostConstruct // NOO deadlock, & same for ApplicationContextAware
    @Override
    public void init() {
-      mockAuthenticationService.login("admin");
+      mockAuthenticationService.loginAs("admin");
       try {
          doInit();
       } finally {

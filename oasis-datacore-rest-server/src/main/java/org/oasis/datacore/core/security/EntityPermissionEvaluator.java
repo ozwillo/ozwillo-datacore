@@ -23,7 +23,10 @@ import org.springframework.security.core.Authentication;
  *
  */
 public class EntityPermissionEvaluator implements PermissionEvaluator {
-   
+
+   /** TODO mock */
+   @Autowired
+   private MockAuthenticationService authenticationService;
    @Autowired
    private EntityModelService entityModelService;
 
@@ -57,7 +60,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       // because this way it's not copied and never forgotten)
       
       //if (hasRole("admin") || hasRole("t_" + model.getName() + "_admin")) {
-      DCUserImpl user = MockAuthenticationService.getCurrentUser();
+      DCUserImpl user = authenticationService.getCurrentUser();
       if (user.isAdmin()) {
          return true;
       }

@@ -14,6 +14,7 @@ import org.apache.cxf.jaxrs.utils.JAXRSUtils;
 import org.apache.cxf.message.Message;
 import org.apache.cxf.phase.AbstractPhaseInterceptor;
 import org.apache.cxf.phase.Phase;
+import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.client.cxf.CxfMessageHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -40,7 +41,9 @@ public class MockLoginServerInInterceptor extends AbstractPhaseInterceptor<Messa
       String username = null;
       
       Map<String, List<String>> headers = CxfMessageHelper.getRequestHeaders(serverInRequestMessage);
-      List<String> authHeader = headers.get("Authorization");
+      List<String> authHeader = headers.get(DatacoreApi.TEST_USER);
+      // TODO LATER rather do it using Basic Auth ? (some more work on client sides)
+      //List<String> authHeader = headers.get("Authorization"); // "Basic " + base64(username:password)
       if (authHeader != null && !authHeader.isEmpty()) {
          username = authHeader.get(0);
       }
@@ -56,15 +59,13 @@ public class MockLoginServerInInterceptor extends AbstractPhaseInterceptor<Messa
       }
       
       if (username == null) {
-         // log as guest, using the "guest" user :
-         username = "guest";
-         username = "admin"; // TODO TODO rm when mock login OK on client side
-         // TODO rather for now do nothing, to preserve existing behaviour ??
-         
+         // log as admin, using the "admin" user :
+         username = "admin";
+         // TODO in production (& integration), rather log as guest, using the "guest" user !
       }
 
       try {
-         mockAuthenticationService.login(username); // NB. username can't be null
+         mockAuthenticationService.loginAs(username); // NB. username can't be null
       } catch (RuntimeException rex) {
          throw new Fault(
                new ClientException( // or any non-Fault exception, else blocks in

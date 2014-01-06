@@ -81,11 +81,11 @@
       <jaxrs:outInterceptors>
          <bean class="org.oasis.datacore.rest.client.cxf.QueryParametersClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.ETagClientOutInterceptor"/>
+         <bean class="org.oasis.datacore.rest.client.cxf.mock.MockLoginClientOutInterceptor"/><!-- TODO mock -->
       </jaxrs:outInterceptors>
       <!-- jaxrs:inInterceptors>
          <bean class="org.oasis.datacore.rest.client.cxf.obsolete.ETagClientInInterceptor"/>
       </jaxrs:inInterceptors -->
-      <!-- TODO also autn -->
       <jaxrs:features>
          <cxf:logging/>
       </jaxrs:features>

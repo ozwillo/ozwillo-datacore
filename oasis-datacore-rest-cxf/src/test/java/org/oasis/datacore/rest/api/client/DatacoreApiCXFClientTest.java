@@ -1,6 +1,7 @@
 package org.oasis.datacore.rest.api.client;
 
 import java.net.URLEncoder;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.cxf.jaxrs.utils.HttpUtils;
@@ -8,7 +9,10 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.oasis.datacore.rest.api.DCResource;
+import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
+import org.oasis.datacore.rest.client.QueryParameters;
+import org.oasis.datacore.rest.client.cxf.mock.MockClientAuthenticationHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,6 +29,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:oasis-datacore-rest-client-test-context.xml" })
 public class DatacoreApiCXFClientTest {
+
+   public static final String TEST_USER_JOHN = "john";
    
    //@Autowired
    //@Qualifier("datacoreApiClient")
@@ -105,5 +111,18 @@ public class DatacoreApiCXFClientTest {
       datacoreApiClient.deleteData("city", "France/Bordeaux", null);
       DCResource renewBordeauxCityData = datacoreApiClient.getData("city", "France/Bordeaux");
       Assert.assertFalse("Should not be cached object anymore", expectedCachedBordeauxCityResource == renewBordeauxCityData);
+   }
+   
+   @Test
+   public void testMockAuthenticationTestUser() {
+      MockClientAuthenticationHelper.loginAs(TEST_USER_JOHN);
+      try {
+         List<DCResource> res = datacoreApiClient.findDataInType(DatacoreApiMockServerImpl.TEST_USER_MODEL_TYPE_QUERY_TRIGGER,
+               new QueryParameters(), 0, 0);
+         Assert.assertTrue("Test user login should have been found in testUser header",
+               res != null && !res.isEmpty() && TEST_USER_JOHN.equals(res.get(0).get(DatacoreApi.TEST_USER)));
+      } finally {
+         MockClientAuthenticationHelper.logout();
+      }
    }
 }

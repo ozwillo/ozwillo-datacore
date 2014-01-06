@@ -10,9 +10,10 @@ import org.apache.cxf.phase.Phase;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
- * Clears security context.
+ * Clears security context. Has to be called at the end of ALL requests received
+ * by Datacore. 
  * Done as CXF interceptor because login is done as one.
- * 
+ * NB. CXF calls it even if a Fault has happened (even though CXF has FaultOutInterceptor).
  * 
  * @author mdutoo
  *

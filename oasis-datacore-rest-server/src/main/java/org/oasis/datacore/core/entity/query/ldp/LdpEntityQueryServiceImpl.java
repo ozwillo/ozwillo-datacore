@@ -43,6 +43,10 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       findConfParams.add("start");
       findConfParams.add("limit");
    }
+   
+   /** TODO mock */
+   @Autowired
+   private MockAuthenticationService authenticationService;
 
    @Autowired
    private MongoOperations mgo; // TODO remove it by hiding it in services
@@ -173,7 +177,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          // => OPT LATER
          // (in any way, there'll always be a balance to find between performance and storage)
          
-         DCUserImpl user = MockAuthenticationService.getCurrentUser();
+         DCUserImpl user = authenticationService.getCurrentUser();
          if (user.isGuest()) {
             return new ArrayList<DCEntity>(0); // TODO or exception ??
          }

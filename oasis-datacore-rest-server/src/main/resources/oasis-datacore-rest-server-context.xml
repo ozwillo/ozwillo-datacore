@@ -100,10 +100,10 @@
    
    <!-- SWAGGER -->
    <!-- Swagger API listing resource -->
-   <bean id="swaggerResourceJSON" class="com.wordnik.swagger.jaxrs.listing.ApiListingResourceJSON" />
+   <bean id="swagger.resourceJSON" class="com.wordnik.swagger.jaxrs.listing.ApiListingResourceJSON" />
    <!-- Swagger writers -->
-   <bean id="resourceWriter" class="com.wordnik.swagger.jaxrs.listing.ResourceListingProvider" />
-   <bean id="apiWriter" class="com.wordnik.swagger.jaxrs.listing.ApiDeclarationProvider" />
+   <bean id="swagger.resourceWriter" class="com.wordnik.swagger.jaxrs.listing.ResourceListingProvider" />
+   <bean id="swagger.apiWriter" class="com.wordnik.swagger.jaxrs.listing.ApiDeclarationProvider" />
    
    
    <!-- apiImpls taken out to allow injection in test -->
@@ -132,7 +132,7 @@
       <jaxrs:serviceBeans>
          <ref bean="datacoreApiImpl"/>
          <ref bean="datacore.model.apiImpl"/>
-         <ref bean="swaggerResourceJSON" />
+         <ref bean="swagger.resourceJSON" />
          <bean class="org.oasis.datacore.rest.server.RootRedirectResource">
             <property name="targetUri" value="/swagger-ui/index.html"/>
          </bean>
@@ -144,8 +144,9 @@
          <!-- bean class="org.apache.cxf.jaxrs.impl.WebApplicationExceptionMapper">
             <property name="addMessageToResponse" value="true"/>
          </bean -->
-         <ref bean="resourceWriter" />
-         <ref bean="apiWriter" />
+         <bean class="org.oasis.datacore.core.security.AccessDeniedExceptionMapper"/><!-- to HTTP 403 -->
+         <ref bean="swagger.resourceWriter" />
+         <ref bean="swagger.apiWriter" />
       </jaxrs:providers>
       <!-- Single value array POST handling interceptors (rather than whole bus) : -->
       <jaxrs:inInterceptors>

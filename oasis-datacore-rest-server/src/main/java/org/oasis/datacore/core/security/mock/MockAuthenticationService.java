@@ -17,16 +17,16 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 /**
- * Uses default hardcoded user conf.
+ * Mock local auth service using default hardcoded user conf.
  * 
- * TODO migrate to custom AuthenticationProvider (?) that returns well-filled
+ * TODO migrate / merge to custom AuthenticationProvider (?) that returns well-filled
  * OIDCAuthenticationToken
  * http://aykutakin.wordpress.com/2013/07/08/spring-security-spring-custom-authentication-provider/
  * 
  * ALL AUTHENTICATION SERVICES / PROVIDER should provide users :
- * - guest with guest authority (modeled as (Datacore-wide) default group)
- * - all other users with additional guest authority
- * - admin user
+ * - guest with guest authority (modeled as (Datacore-wide) default group) TODO OR use AnonymousAuthenticationToken ?
+ * - all other users with additional guest authority (add it on load if not yet there)
+ * - "admin" user ; TODO users are made admin by conf (hardcoded and LATER REST API)
  * 
  * @author mdutoo
  *
@@ -37,7 +37,7 @@ public class MockAuthenticationService {
    @Autowired
    private UserDetailsService mockUserDetailsService;
    
-   public void login(String username) {
+   public void loginAs(String username) {
       UserDetails userDetails = mockUserDetailsService.loadUserByUsername(username);
       if (userDetails == null) {
          SecurityContextHolder.clearContext();
@@ -48,7 +48,13 @@ public class MockAuthenticationService {
       
       Authentication authentication = new TestingAuthenticationToken(user, "",
             new ArrayList<GrantedAuthority>(userDetails.getAuthorities()));
+      // TODO rather than PreAuthenticatedAuthenticationToken because mock 
+      
       authentication.setAuthenticated(true); // else in MethodSecurityInterceptor tries to reauth...
+      // TODO but don't do it for guest ??
+      
+      // TODO guest rather using AnonymousAuthenticationToken ?!
+      
       SecurityContext sc = new SecurityContextImpl();
       sc.setAuthentication(authentication);
       SecurityContextHolder.setContext(sc);
@@ -60,7 +66,7 @@ public class MockAuthenticationService {
 
 
    /** TODO in service interface or at least util */
-   public static DCUserImpl getCurrentUser() {
+   public DCUserImpl getCurrentUser() {
       Authentication currentUserAuth = SecurityContextHolder.getContext().getAuthentication();
       if (currentUserAuth == null) {
          throw new RuntimeException("No authentication in security context");  
@@ -74,7 +80,7 @@ public class MockAuthenticationService {
     * TODO move comment contents once actual impl done
     * @return
     */
-   public static Set<String> getCurrentUserEntityGroups() {
+   public Set<String> getCurrentUserEntityGroups() {
       Authentication currentUserAuth = SecurityContextHolder.getContext().getAuthentication();
       ///HashSet<String> currentUserRoles;
       if (currentUserAuth == null) {

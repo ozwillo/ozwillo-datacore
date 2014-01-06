@@ -110,6 +110,7 @@ public interface DatacoreApi {
    
    public static final String QUERY_PARAMETERS = "#queryParameters";
    public static final String DC_TYPE_PATH = "dc/type"; // TODO better from JAXRS annotations using reflection ?
+   public static final String TEST_USER = "testUser";
    
    /*
     * TODO NO conflicts with postAllDataInType, rather client helper only ? or in interceptors ???
@@ -134,6 +135,11 @@ public interface DatacoreApi {
             + "up-to-date version is required to update an existing resource "
             + "(which first requires that strict POST mode is not enabled)",
             response = DCResource.class)
+   @ApiImplicitParams({
+      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
+            value="DEV MODE ONLY test user login")
+      // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
+   })
    @ApiResponses(value = {
       @ApiResponse(code = 500, message = "Internal server error"),
       @ApiResponse(code = 409, message = "Conflict : while trying to update existing "
@@ -169,6 +175,11 @@ public interface DatacoreApi {
             + "enabled). POST of a single data resource (instead of an array with a single item) is "
             + "supported.",
             response = DCResource.class, responseContainer="List", position = 0) // fix jdk7 random order in UI
+   @ApiImplicitParams({
+      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
+            value="DEV MODE ONLY test user login")
+      // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
+   })
    @ApiResponses(value = {
       @ApiResponse(code = 500, message = "Internal server error"),
       @ApiResponse(code = 409, message = "Conflict : while trying to update existing "
@@ -200,6 +211,11 @@ public interface DatacoreApi {
             + "Resource URI must be provided, up-to-date versions are required to update "
             + "existing resources (which first requires that strict POST mode is not enabled)",
             response = DCResource.class, responseContainer="List", position = 1)
+   @ApiImplicitParams({
+      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
+            value="DEV MODE ONLY test user login")
+      // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
+   })
    @ApiResponses(value = {
       @ApiResponse(code = 500, message = "Internal server error"),
       @ApiResponse(code = 409, message = "Conflict : while trying to update existing "
@@ -232,6 +248,11 @@ public interface DatacoreApi {
             + "but also up-to-date version sent as an ETag in an If-Match=version precondition, "
             + "TODO all fields must be provided OR PATCH behaviour differ from PUT's",
             response = DCResource.class, position = 2)
+   @ApiImplicitParams({
+      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
+            value="DEV MODE ONLY test user login")
+      // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
+   })
    @ApiResponses(value = {
       @ApiResponse(code = 500, message = "Internal server error"),
       @ApiResponse(code = 409, message = "Conflict : while trying to update existing resource, "
@@ -265,6 +286,11 @@ public interface DatacoreApi {
             + "TODO but also up-to-date version sent as an ETag in an If-Match=version precondition, "
             + "TODO all fields must be provided OR PATCH behaviour differ from PUT's",
             response = DCResource.class, responseContainer="List", position = 3)
+   @ApiImplicitParams({
+      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
+            value="DEV MODE ONLY test user login")
+      // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
+   })
    @ApiResponses(value = {
       @ApiResponse(code = 500, message = "Internal server error"),
       @ApiResponse(code = 409, message = "Conflict : while trying to update existing resource, "
@@ -296,6 +322,11 @@ public interface DatacoreApi {
             + "TODO but also up-to-date version sent as an ETag in an If-Match=version precondition, "
             + "TODO all fields must be provided OR PATCH behaviour differ from PUT's",
             response = DCResource.class, responseContainer="List", position = 4)
+   @ApiImplicitParams({
+      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
+            value="DEV MODE ONLY test user login")
+      // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
+   })
    @ApiResponses(value = {
       @ApiResponse(code = 500, message = "Internal server error"),
       @ApiResponse(code = 409, message = "Conflict : while trying to update existing resource, "
@@ -331,8 +362,10 @@ public interface DatacoreApi {
             + "it returns 304 Not Modified, allowing the client to get the Resource from its cache.",
             response = DCResource.class, position = 5)
    @ApiImplicitParams({
-      @ApiImplicitParam(name=HttpHeaders.IF_NONE_MATCH, paramType="header", dataType="string",
-            value="version (if matched, returns 304 instead)")
+      /*@ApiImplicitParam(name=HttpHeaders.IF_NONE_MATCH, paramType="header", dataType="string",
+            value="version (if matched, returns 304 instead)")*/
+      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
+            value="DEV MODE ONLY test user login")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
@@ -362,8 +395,10 @@ public interface DatacoreApi {
             + "Doesn't check whether said data Resource exists beforehands.",
             response = DCResource.class, position = 6)
    @ApiImplicitParams({
-      @ApiImplicitParam(name=HttpHeaders.IF_MATCH, paramType="header", dataType="string",
-            required=true, value="version to match")
+      /*@ApiImplicitParam(name=HttpHeaders.IF_MATCH, paramType="header", dataType="string",
+            required=true, value="version to match")*/
+      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
+            value="DEV MODE ONLY test user login")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
@@ -442,6 +477,11 @@ public interface DatacoreApi {
             + "up-to-date version is required to update an existing resource "
             + "(which first requires that strict POST mode is not enabled)",
             response = DCResource.class, position = 7)
+   @ApiImplicitParams({
+      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
+            value="DEV MODE ONLY test user login")
+      // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
+   })
    @ApiResponses(value = {
       @ApiResponse(code = 500, message = "Internal server error"),
       @ApiResponse(code = 409, message = "Conflict : while trying to update existing "
@@ -486,18 +526,23 @@ public interface DatacoreApi {
                + "TODO all fields must be provided OR PATCH behaviour differ from PUT's. "
                + "Delete doesn't check whether said data Resource exists beforehands.",
                response = DCResource.class, position = 8)
-      @ApiResponses(value = {
-         @ApiResponse(code = 500, message = "Internal server error"),
-         @ApiResponse(code = 409, message = "Conflict : while trying to update existing "
-               + "resource (in non-strict POST mode only), optimistic locking error "
-               + "(provided resource version is not up-to-date with the server's latest)"),
-         @ApiResponse(code = 404, message = "Resource does not exist, or type model not found"),
-         @ApiResponse(code = 400, message = "Bad request : missing content, missing or invalid URI, "
-               + "(if enabled) strict POST mode not respected (version provided or resource already exists), "
-               + "field parsing errors (format, consistency with Model & Mixin types...)"),
-         @ApiResponse(code = 204, message = "Delete succeeded"),
-         @ApiResponse(code = 200, message = "OK : the resource has been updated")
-      })
+   @ApiImplicitParams({
+      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
+            value="DEV MODE ONLY test user login")
+      // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
+   })
+   @ApiResponses(value = {
+      @ApiResponse(code = 500, message = "Internal server error"),
+      @ApiResponse(code = 409, message = "Conflict : while trying to update existing "
+            + "resource (in non-strict POST mode only), optimistic locking error "
+            + "(provided resource version is not up-to-date with the server's latest)"),
+      @ApiResponse(code = 404, message = "Resource does not exist, or type model not found"),
+      @ApiResponse(code = 400, message = "Bad request : missing content, missing or invalid URI, "
+            + "(if enabled) strict POST mode not respected (version provided or resource already exists), "
+            + "field parsing errors (format, consistency with Model & Mixin types...)"),
+      @ApiResponse(code = 204, message = "Delete succeeded"),
+      @ApiResponse(code = 200, message = "OK : the resource has been updated")
+   })
    DCResource putPatchDeleteDataOnGet(
          @ApiParam(value = "Model type to update it in", required = true) @PathParam("type") String modelType,
          @ApiParam(value = "Type-relative resource id", required = true) @PathParam("iri") String iri,
@@ -571,7 +616,9 @@ public interface DatacoreApi {
       @ApiImplicitParam(name=QUERY_PARAMETERS, paramType="query", dataType="string", allowMultiple=true,
             value="Each other HTTP query parameter (in Swagger UI, enter them "
                   + "as a single URL query string, ex. name=London&population=>100000) "
-                  + "is a Datacore query criteria")
+                  + "is a Datacore query criteria"),
+      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
+            value="DEV MODE ONLY test user login")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
@@ -642,7 +689,9 @@ public interface DatacoreApi {
       @ApiImplicitParam(name=QUERY_PARAMETERS, paramType="query", dataType="string", allowMultiple=true,
             value="Each other HTTP query parameter (in Swagger UI, enter them "
                   + "as a single URL query string, ex. name=London&population=>100000) "
-                  + "is a Datacore query criteria.")
+                  + "is a Datacore query criteria."),
+      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
+            value="DEV MODE ONLY test user login")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
@@ -719,6 +768,11 @@ public interface DatacoreApi {
             + "\n<br/>\n"
             + "LIMIT, OFFSET, ORDER BY",
             response = DCResource.class, responseContainer="List", position = 10)
+   @ApiImplicitParams({
+      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
+            value="DEV MODE ONLY test user login")
+      // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
+   })
    @ApiResponses(value = {
       @ApiResponse(code = 404, message = "Type model not found"),
       @ApiResponse(code = 400, message = "Bad request : field parsing errors (format, "
@@ -781,6 +835,11 @@ public interface DatacoreApi {
             + "\n<br/>\n"
             + "LIMIT, OFFSET, ORDER BY",
             response = DCResource.class, responseContainer="List", position = 11)
+   @ApiImplicitParams({
+      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
+            value="DEV MODE ONLY test user login")
+      // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
+   })
    @ApiResponses(value = {
       @ApiResponse(code = 404, message = "Type model not found"),
       @ApiResponse(code = 400, message = "Bad request : field parsing errors (format, "
@@ -804,6 +863,11 @@ public interface DatacoreApi {
       					 + " - iri : 1 (the URI is made like this : /dc/type/{type}/{IRI})"
       					 + " - version : 0 (or whatever version you need)",
       			 response = DCResource.class, position = 12)
+   @ApiImplicitParams({
+      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
+            value="DEV MODE ONLY test user login")
+      // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
+   })
    @ApiResponses(value = {
       @ApiResponse(code = 404, message = "Resource not found with this IRI and version"),
       @ApiResponse(code = 400, message = "Bad request : non-existent model"),

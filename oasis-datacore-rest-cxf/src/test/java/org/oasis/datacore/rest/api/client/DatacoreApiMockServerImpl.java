@@ -28,6 +28,8 @@ import org.springframework.beans.factory.annotation.Value;
  *
  */
 public class DatacoreApiMockServerImpl extends JaxrsServerBase implements DatacoreApi {
+   
+   public static final String TEST_USER_MODEL_TYPE_QUERY_TRIGGER = "testUserJohnModelTypeQueryTrigger";
 
    /** to be able to build a full uri */
    ///@Value("${datacoreApiClient.baseUrl}") 
@@ -171,7 +173,14 @@ public class DatacoreApiMockServerImpl extends JaxrsServerBase implements Dataco
 
    @Override
    public List<DCResource> findDataInType(String modelType, UriInfo uriInfo, Integer start, Integer limit) {
-      // TODO Auto-generated method stub
+      if (TEST_USER_MODEL_TYPE_QUERY_TRIGGER.equals(modelType)) {
+         ArrayList<DCResource> res = new ArrayList<DCResource>();
+         DCResource responseResource = new DCResource();
+         responseResource.setUri(UriHelper.buildUri(containerUrl, modelType, DatacoreApi.TEST_USER));
+         responseResource.set(DatacoreApi.TEST_USER, httpHeaders.getHeaderString(DatacoreApi.TEST_USER));
+         res.add(responseResource);
+         return res;
+      }
       return null;
    }
 
