@@ -31,6 +31,9 @@ public class DatacoreObjectMapper extends ObjectMapper {
       // see http://www.lorrin.org/blog/2013/06/28/custom-joda-time-dateformatter-in-jackson
       this.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
       
+      // NO joda is used instead anyway (which parses using new DateTime(string, UTC))
+      //this.setDateFormat(StdDateFormat.getBlueprintISO8601Format());
+      
       // allow leading zeroes
       // else fails on date with years serialized with wrong leading zeroes ex. 0300 :
       // JsonParseException: Invalid numeric value: Leading zeroes not allowed, in ReaderBasedJsonParser._verifyNoLeadingZeroes()

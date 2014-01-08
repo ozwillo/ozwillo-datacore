@@ -93,7 +93,7 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 				break;
 			
 			case EXISTS:
-				// NB. checks existance of value AND NOT of field in model / mixin type
+				// NB. checks existence of value AND NOT of field in model / mixin type
 			   // (which has rather to be done using )
 				// TODO AND / OR field value == null
 				// TODO sparse index ?????????
@@ -118,7 +118,6 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 				break;
 			
 			case IN:
-				// TODO check that not date ???
 				// TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
 				// TODO check that indexed (or set low limit) ??
 				addSort(entityFieldPath, sortEnum, queryParsingContext);
@@ -150,7 +149,6 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 				break;
 				
 			case NOT_IN:
-				// TODO check that not date ???
 			    // TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
 			    // TODO check that indexed (or set low limit) ??
 				addSort(entityFieldPath, sortEnum, queryParsingContext);
@@ -254,7 +252,7 @@ public class QueryParsingServiceImpl implements QueryParsingService {
       }*/
       
       // other cases
-      Object parsedValue = valueParsingService.parseValue(parsingTypeEnum, value);
+      Object parsedValue = valueParsingService.parseValueFromJSONOrString(parsingTypeEnum, value);
       /*if (parsedValue == null) {
          throw new ResourceParsingException("Field " + dcField.getName() + " cannot be parsed in "
                + parsingTypeEnum.getType() + " format");

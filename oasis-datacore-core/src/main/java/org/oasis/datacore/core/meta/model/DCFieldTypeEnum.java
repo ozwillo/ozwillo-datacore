@@ -42,6 +42,13 @@ public enum DCFieldTypeEnum {
    public static Set<DCFieldTypeEnum> everyTypesWithoutMapAndList = Sets.immutableEnumSet(new ImmutableSet
          .Builder<DCFieldTypeEnum>().addAll(everyTypesWithoutMapListAndResource)
          .add(DCFieldTypeEnum.RESOURCE).build());
+   public static final Set<DCFieldTypeEnum> stringPrimitiveTypes = Sets.immutableEnumSet(new ImmutableSet
+         .Builder<DCFieldTypeEnum>().add(DCFieldTypeEnum.STRING).add(DCFieldTypeEnum.RESOURCE).build());
+   public static final Set<DCFieldTypeEnum> stringSerializedPrimitiveTypes = Sets.immutableEnumSet(new ImmutableSet
+         .Builder<DCFieldTypeEnum>().add(DCFieldTypeEnum.DATE).add(DCFieldTypeEnum.LONG).build());
+   //public static final Set<DCFieldTypeEnum> stringSerializedPrimitiveTypes = Sets.immutableEnumSet(new ImmutableSet
+   //      .Builder<DCFieldTypeEnum>().add(DCFieldTypeEnum.STRING).add(DCFieldTypeEnum.DATE)
+   //      .add(DCFieldTypeEnum.LONG).add(DCFieldTypeEnum.RESOURCE).build());
 	
 	static {
       Collection<DCFieldTypeEnum> everyTypesWithoutMapListAndResource = new ArrayList<DCFieldTypeEnum>(everyTypes);

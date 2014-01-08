@@ -79,7 +79,7 @@ public class NativeLdpEntityQueryEngineImpl extends EntityQueryEngineBase {
       if (startList != null && !startList.isEmpty()) {
          String startString = startList.get(0);
          try {
-            Object found = valueParsingService.parseValue(DCFieldTypeEnum.INTEGER, startString);
+            Object found = valueParsingService.parseValueFromString(DCFieldTypeEnum.INTEGER, startString);
             if (found != null) {
                return (Integer) found;
             }

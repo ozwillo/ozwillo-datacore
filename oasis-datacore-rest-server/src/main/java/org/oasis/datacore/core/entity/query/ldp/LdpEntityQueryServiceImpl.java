@@ -28,6 +28,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Provides W3C LDP (Linked Data Platform)-like query on top of Datacore MongoDB storage.
+ * 
  * TODO LATER move to -core : by removing parsing (& dependency to queryParsingContext)
  * & temporary dependency to DatacoreApiImpl, or by making -core depend on -server...
  * 

@@ -12,7 +12,6 @@ import org.joda.time.DateTime;
 import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.model.DCField;
-import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCModel;
@@ -113,7 +112,7 @@ public class ResourceEntityMapperService {
          if (!(resourceValue instanceof String)) {
             throw new ResourceParsingException("long Field value is not a string : " + resourceValue);
          }
-         entityValue = valueParsingService.parseValue(DCFieldTypeEnum.LONG, (String)resourceValue);
+         entityValue = valueParsingService.parseLongFromString((String)resourceValue);
          
       } else if ("double".equals(dcField.getType())) {
          if (!(resourceValue instanceof Double)) {
@@ -125,7 +124,7 @@ public class ResourceEntityMapperService {
          if (!(resourceValue instanceof String)) {
             throw new ResourceParsingException("date Field value is not a string : " + resourceValue);
          }
-         entityValue = (DateTime) valueParsingService.parseValue(DCFieldTypeEnum.DATE, (String) resourceValue);
+         entityValue = (DateTime) valueParsingService.parseDateFromString((String) resourceValue);
          
       /*} else if ("i18n".equals(dcField.getType())) { // TODO i18n better
          entityValue = (HashMap<?,?>) resourceValue; // TODO NOOOO _i18n

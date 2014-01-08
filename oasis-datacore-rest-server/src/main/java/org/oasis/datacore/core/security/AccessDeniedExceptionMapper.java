@@ -1,6 +1,5 @@
 package org.oasis.datacore.core.security;
 
-import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;

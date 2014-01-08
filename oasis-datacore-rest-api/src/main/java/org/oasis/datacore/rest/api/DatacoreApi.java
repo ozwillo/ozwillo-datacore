@@ -596,12 +596,16 @@ public interface DatacoreApi {
             + "simple unquoted value is accepted but ideally and formally value "
             + "should be JSON (i.e. int, quoted string, array, map / Object...), "
             + "and 'sort' is an optional + (resp. -) suffix for ascending (resp. descending) order. "
-            + "Note that they (operatorValueSort) must be rightly encoded as an HTTP query parameter "
+            + "\n<br/>\n"
+            + "They (operatorValueSort) must be rightly encoded as an HTTP query parameter "
             + "value (meaning in Java using URLEncoder.encode(\"UTF-8\") and Javascript using "
-            + "encodeURIComponent() see http://xkr.us/articles/javascript/encode-compare/)."
+            + "encodeURIComponent(), <a href=\"http://xkr.us/articles/javascript/encode-compare/\">"
+            + "see difference</a>)."
             + "Sorting according to a field not already specified in a criteria is done by providing "
             + "an HTTP query parameter in the form field=sort where 'sort' is + (resp. -) "
             + "for ascending (resp. descending) order. "
+            + "A given field can be specified twice (even if it's not perfect HTTP), for instance "
+            + "to define \"between\" queries using &gt and < operators."
             + "\n<br/><br/>\n"
             + "Accepted operators, in their logical/XML/MongoDB/Java forms if any (else -), are : "
             + "=/-/-/==, >/&gt/$gt/- (ex. 3), </&lt;/$lt/-, >=/&gt;=/$gte/-, <=/&lt;=/$lte/-, "
@@ -669,12 +673,16 @@ public interface DatacoreApi {
             + "simple unquoted value is accepted but ideally and formally value "
             + "should be JSON (i.e. int, quoted string, array, map / Object...), "
             + "and 'sort' is an optional + (resp. -) suffix for ascending (resp. descending) order. "
-            + "Note that they (operatorValueSort) must be rightly encoded as an HTTP query parameter "
+            + "\n<br/>\n"
+            + "They (operatorValueSort) must be rightly encoded as an HTTP query parameter "
             + "value (meaning in Java using URLEncoder.encode(\"UTF-8\") and Javascript using "
-            + "encodeURIComponent() see http://xkr.us/articles/javascript/encode-compare/)."
+            + "encodeURIComponent(), <a href=\"http://xkr.us/articles/javascript/encode-compare/\">"
+            + "see difference</a>)."
             + "Sorting according to a field not already specified in a criteria is done by providing "
             + "an HTTP query parameter in the form field=sort where 'sort' is + (resp. -) "
             + "for ascending (resp. descending) order. "
+            + "A given field can be specified twice (even if it's not perfect HTTP), for instance "
+            + "to define \"between\" queries using &gt and < operators."
             + "\n<br/><br/>\n"
             + "Accepted operators, in their logical/XML/MongoDB/Java forms if any (else -), are : "
             + "=/-/-/==, >/&gt/$gt/- (ex. 3), </&lt;/$lt/-, >=/&gt;=/$gte/-, <=/&lt;=/$lte/-, "
@@ -714,6 +722,8 @@ public interface DatacoreApi {
     * 
     * Supported query languages are :
     * 
+    * * LDPQL
+    * 
     * * SPARQL :
     * this is a limited form of SPARQL's SELECT statement. By default, the first
     * variable receives an rdf:type predicate to the given type.
@@ -734,16 +744,23 @@ public interface DatacoreApi {
     */
    @Path("/query/type/{type}")
    @GET
-   @ApiOperation(value = "NOT IMPLEMENTED YET, Executes the query in the given Model type and returns found resources.",
+   @ApiOperation(value = "Executes the query in the given Model type and returns found resources.",
       notes = "Returns all Datacore data of the given type that are found "
             + "by the given query written in the given language. "
             + "It is a non-'native', limited query in that it is implemented by several MongoDB queries "
             + "whose criteria on non-data (URI) fields are limited as defined in their model. Therefore "
             + "it is advised to rather do several findDataInType queries. "
             + "\n<br/><br/>\n"
-            + "Supported query languages could be : "
+            + "Supported query languages : "
             + "\n<br/><br/>\n"
-            + "<strong>1. SPARQL :</strong>"
+            + "<strong>LDPQL :</strong>"
+            + "\n<br/>\n"
+            + "an LDPQL query is merely the HTTP query part of a GET /(type/${type}/) operation, "
+            + "for instance : \"name=John&age=>10&age=<20\"."
+            + "\n<br/><br/>\n"
+            + "Possible future query languages : "
+            + "\n<br/><br/>\n"
+            + "<strong>SPARQL :</strong>"
             + "\n<br/>\n"
             + "this is a limited form of SPARQL's SELECT statement. By default, the first variable "
             + "receives an rdf:type predicate to the given model type. All other resource variables "
@@ -810,7 +827,12 @@ public interface DatacoreApi {
             + "\n<br/><br/>\n"
             + "Supported query languages could be : "
             + "\n<br/><br/>\n"
-            + "<strong>1. SPARQL :</strong>"
+            + "<strong>LDPQL :</strong>"
+            + "\n<br/>\n"
+            + "an LDPQL query is merely the HTTP query part of a GET /(type/${type}/) operation, "
+            + "for instance : \"name=John&age=>10&age=<20\"."
+            + "\n<br/><br/>\n"
+            + "<strong>SPARQL :</strong>"
             + "\n<br/>\n"
             + "this is a limited form of SPARQL's SELECT statement. When not referenced from within "
             + "another root resource variable whose model type is specified (even indirectly), "
