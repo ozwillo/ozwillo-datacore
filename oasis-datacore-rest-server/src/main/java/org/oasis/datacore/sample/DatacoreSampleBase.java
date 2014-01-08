@@ -1,5 +1,6 @@
 package org.oasis.datacore.sample;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 
@@ -10,6 +11,9 @@ import org.oasis.datacore.core.init.InitService;
 import org.oasis.datacore.core.init.Initable;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCField;
+import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
+import org.oasis.datacore.core.meta.model.DCListField;
+import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
@@ -23,6 +27,9 @@ import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.mongodb.core.MongoOperations;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
 
 
 /**
@@ -109,6 +116,8 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
             // cleaning data
             mgo.dropCollection(model.getCollectionName());
             
+            createCollectionAndGenerateIndices(model);
+            
          } else { // mixin
             DCMixin mixin = (DCMixin) modelOrMixin;
             modelAdminService.addMixin(mixin);
@@ -116,10 +125,48 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
       }
    }
 
+   private void createCollectionAndGenerateIndices(DCModel model) {
+      DBCollection coll = mgo.createCollection(model.getCollectionName());
+      
+      // generating static index
+      coll.ensureIndex(new BasicDBObject("_uri", 1), null, true);
+      
+      // generating field indices
+      generateFieldIndices(coll, "_p.", model.getGlobalFieldMap().values());
+   }
+
+   private void generateFieldIndices(DBCollection coll, String prefix, Collection<DCField> globalFields) {
+      for (DCField globalField : globalFields) {
+         generateFieldIndices(coll, prefix, globalField);
+      }
+   }
+
+   private void generateFieldIndices(DBCollection coll, String prefix, DCField globalField) {
+      String prefixedGlobalFieldName = prefix + globalField.getName();
+      if (globalField.getQueryLimit() > 0) {
+         coll.ensureIndex(prefixedGlobalFieldName);
+      }
+      switch (DCFieldTypeEnum.getEnumFromStringType(globalField.getType())) {
+      case LIST:
+         DCField listField = ((DCListField) globalField).getListElementField();
+         generateFieldIndices(coll, prefixedGlobalFieldName + ".", listField);
+         break;
+      case MAP:
+         Map<String, DCField> mapFields = ((DCMapField) globalField).getMapFields();
+         // TODO WARNING : single map field can't be indexed !!!
+         generateFieldIndices(coll, prefixedGlobalFieldName + ".", mapFields.values());
+         break;
+      default:
+         break;
+      }
+      // TODO LATER embedded resources
+   }
+
    public void cleanDataOfCreatedModels() {
       for (DCModel model : this.models) {
          // cleaning data
          mgo.dropCollection(model.getCollectionName());
+         createCollectionAndGenerateIndices(model);
       }
    }
 

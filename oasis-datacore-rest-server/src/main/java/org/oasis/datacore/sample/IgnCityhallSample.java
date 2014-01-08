@@ -139,7 +139,7 @@ public class IgnCityhallSample extends DatacoreSampleBase {
             .set("departementCode", 01).set("departement", departement01.getUri())
             .set("statutAdministratif", 6).set("population", 11).set("surface", 1031)
             .set("longitudeDMS", +45320).set("latitudeDMS", 461454);
-      DCResource communePeron = resourceService.create(IGN_COMMUNE, "203")
+      DCResource communePeron = resourceService.create(IGN_COMMUNE, "288")
             .set("communeNom", "PERON").set("arrondissementCode", 3).set("communeCode", 288).set("cantonCode", 12)
             .set("departementCode", 01).set("departement", departement01.getUri())
             .set("statutAdministratif", 6).set("population", 20).set("surface", 2601)

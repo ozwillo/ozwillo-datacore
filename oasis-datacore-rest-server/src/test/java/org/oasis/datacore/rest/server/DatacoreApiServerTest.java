@@ -186,12 +186,12 @@ public class DatacoreApiServerTest {
       Assert.assertEquals(cityData.getProperties().get("description"),
             postedUkCountryData.getProperties().get("description"));
       
-      /*try {
+      try {
          datacoreApiClient.postDataInType(cityData, CityCountrySample.CITY_MODEL_NAME);
          Assert.fail("Should not be able to recreate / rePOST a Resource even without a version (unicity)");
       } catch (Exception e) {
          Assert.assertTrue(true);
-      }*/
+      }
       
       return cityData;
    }
@@ -336,14 +336,15 @@ public class DatacoreApiServerTest {
    @Test
    public void test3propDateString() throws Exception {
       cityCountrySample.cleanDataOfCreatedModels(); // first clean up data
-      
-      DCResource bordeauxCityResource = test2Create("France", "Bordeaux");
+
+      datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "France"));
+      DCResource bordeauxCityData = buildCityData("Bordeaux", "France", false);
       DateTime bordeauxFoundedDate = new DateTime(300, 4, 1, 0, 0, DateTimeZone.UTC);
       // NB. if created without timezone, adds 9h21min timezone : "0300-04-01T00:00:00.000+00:09:21" ??!!
-      bordeauxCityResource.setProperty("founded", bordeauxFoundedDate); // testing date field
-      DCResource putBordeauxCityResource = datacoreApiClient.postDataInType(bordeauxCityResource, CityCountrySample.CITY_MODEL_NAME);
-      bordeauxCityResource = checkCachedBordeauxCityDataAndDelete(putBordeauxCityResource);
-      String bordeauxFoundedDateGetString = (String) putBordeauxCityResource.getProperties().get("founded");
+      bordeauxCityData.setProperty("founded", bordeauxFoundedDate); // testing date field
+      DCResource postedBordeauxCityResource = datacoreApiClient.postDataInType(bordeauxCityData, CityCountrySample.CITY_MODEL_NAME);
+      checkCachedBordeauxCityDataAndDelete(postedBordeauxCityResource);
+      String bordeauxFoundedDateGetString = (String) postedBordeauxCityResource.getProperties().get("founded");
       DateTime bordeauxFoundedDateGetStringParsed = ResourceParsingHelper.parseDate(bordeauxFoundedDateGetString);
       Assert.assertEquals("returned date field should mean the same date as the one put",
             bordeauxFoundedDateGetStringParsed, bordeauxFoundedDate);

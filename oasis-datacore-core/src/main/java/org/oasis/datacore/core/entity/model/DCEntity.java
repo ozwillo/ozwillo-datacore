@@ -41,13 +41,15 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    protected static final int COMPARE_GREATER = 1;
 
    /** TODO replace it by URI (unique save across versions / approvable / diffs) */
-   @Id // _id
+   @Id // _id ; BEWARE this field must be removed before the uri field can be annotated
+   // by @Id, because Spring has an inclination towards using any existing id field first !!
    private String id; // TODO or ObjectId ??
    /** for optimistic locking */
    @Version
    @Field("_v")
    private Long version;
    @Indexed(unique = true)
+   //@Id
    @Field("_uri")
    private String uri; // TODO Q not obligatory if embedded ? or then only sub-uri ??
    // TODO Q also rdf:type, because collection = use case != rdf:type ? or even several types ???
