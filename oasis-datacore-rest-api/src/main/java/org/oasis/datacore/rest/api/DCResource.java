@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.joda.time.DateTime;
+import org.oasis.datacore.rest.api.binding.DatacoreObjectMapper;
 import org.oasis.datacore.rest.api.util.DCURI;
 import org.oasis.datacore.rest.api.util.UriHelper;
 
@@ -228,13 +229,10 @@ public class DCResource {
       this.lastModifiedBy = lastModifiedBy;
    }
 
-   /**
-    * TODO refactor to ResourceService, in order to rather
-    * use the "right" ObjectMapper instance
-    */
+   private static ObjectMapper resourceObjectMapper = new DatacoreObjectMapper();
    public String toString() {
       try {
-         return new ObjectMapper().writeValueAsString(this);
+         return resourceObjectMapper.writeValueAsString(this);
       } catch (JsonProcessingException e) {
          return "DCResource[" + this.uri + " , bad json]";
       }
