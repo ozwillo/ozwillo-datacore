@@ -285,6 +285,9 @@ public class DatacoreApiServerMixinTest {
       Assert.assertTrue(altTourismPlaceModel.getSecurity().isGuestReadable());
       Assert.assertTrue(altTourismPlaceModel.getSecurity().isAuthentifiedReadable());
       Assert.assertTrue(altTourismPlaceModel.getSecurity().isAuthentifiedWritable());
+      Assert.assertTrue(altTourismPlaceModel.getSecurity().isAuthentifiedCreatable());
+      
+      // TODO TODO test model type resource reader / writer / creator (& impl) !!!
       
       // preparing creation tests
       int i = 0;
@@ -401,6 +404,7 @@ public class DatacoreApiServerMixinTest {
       // make model secured (still authentified readable)
       altTourismPlaceModel.getSecurity().setGuestReadable(false);
       altTourismPlaceModel.getSecurity().setAuthentifiedWritable(false);
+      altTourismPlaceModel.getSecurity().setAuthentifiedCreatable(false);
       
       // logging in as guest
       authenticationService.logout(); // NB. not required since followed by login
@@ -749,6 +753,9 @@ public class DatacoreApiServerMixinTest {
       
       // revert model to default (public)
       altTourismPlaceModel.getSecurity().setGuestReadable(true);
+      altTourismPlaceModel.getSecurity().setAuthentifiedReadable(true);
+      altTourismPlaceModel.getSecurity().setAuthentifiedWritable(true);
+      altTourismPlaceModel.getSecurity().setAuthentifiedCreatable(true);
    }
    
    private DCResource buildSofiaMonastery(int i) {

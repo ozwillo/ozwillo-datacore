@@ -94,11 +94,13 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
                || user.isModelTypeResourceWriter(model.getName())
                || hasAnyEntityAclGroup(user, dataEntity.getWriters())
                || hasAnyEntityAclGroup(user, dataEntity.getOwners());
+         
       case "create" :
          // to be used in @PreAuthorize on update ????
          ///return entityService.getModel(dataEntity).getSecurity().hasCreator(user); /// TODO or this ?
-         return model.getSecurity().isAuthentifiedWritable() && !user.isGuest()
+         return model.getSecurity().isAuthentifiedCreatable() && !user.isGuest()
                || user.isModelTypeResourceCreator(model.getName());
+         
       case "changeRights" :
          // to be used in @PostAuthorize on GET
          // NB. readers have to contain ALSO writers & owners (i.e. be precomputed)

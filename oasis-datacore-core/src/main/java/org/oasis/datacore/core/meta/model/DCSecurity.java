@@ -8,7 +8,10 @@ public class DCSecurity {
    private boolean isAuthentifiedReadable = true;
    /** default is true
     * NB. writers can't be anonymous, should at least have a named account, like on wikipedia */
-   private boolean isAuthentifiedWriteable = true;
+   private boolean isAuthentifiedWritable = true;
+   /** default is true
+    * NB. creators can't be anonymous, should at least have a named account, like on wikipedia */
+   private boolean isAuthentifiedCreatable = true;
 
    public boolean isGuestReadable() {
       return isGuestReadable;
@@ -27,11 +30,19 @@ public class DCSecurity {
    }
 
    public boolean isAuthentifiedWritable() {
-      return isAuthentifiedWriteable;
+      return isAuthentifiedWritable;
    }
 
    public void setAuthentifiedWritable(boolean isAuthentifiedWriteable) {
-      this.isAuthentifiedWriteable = isAuthentifiedWriteable;
+      this.isAuthentifiedWritable = isAuthentifiedWriteable;
+   }
+
+   public boolean isAuthentifiedCreatable() {
+      return isAuthentifiedCreatable;
+   }
+
+   public void setAuthentifiedCreatable(boolean isAuthentifiedCreatable) {
+      this.isAuthentifiedCreatable = isAuthentifiedCreatable;
    }
 
 }
