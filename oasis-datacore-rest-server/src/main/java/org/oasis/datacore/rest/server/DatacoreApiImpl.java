@@ -41,6 +41,7 @@ import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.rest.server.resource.ResourceTypeNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DuplicateKeyException;
 
 
 /**
@@ -132,6 +133,9 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       } catch (ResourceException rex) {
          throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
                .entity(rex.getMessage()).type(MediaType.TEXT_PLAIN).build());
+      } catch (DuplicateKeyException dkex) {
+         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
+               .entity(dkex.getMessage()).type(MediaType.TEXT_PLAIN).build());
       }
    }
    

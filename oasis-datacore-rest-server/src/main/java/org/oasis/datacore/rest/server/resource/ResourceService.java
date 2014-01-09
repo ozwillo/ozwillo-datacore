@@ -23,6 +23,8 @@ import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
 import org.oasis.datacore.rest.server.parsing.service.QueryParsingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
 
@@ -337,7 +339,15 @@ public class ResourceService {
       if (isCreation) {
          // TODO maintain uri unicity : index (but not sharded so also handle duplicates a posteriori)
          // and catch conflict ?!?
-         entityService.create(dataEntity);
+         try {
+            entityService.create(dataEntity);
+         } catch (DuplicateKeyException dkex) {
+            throw new ResourceAlreadyExistsException("Trying to create already existing "
+                  + "data resource." , resource);
+         } catch (NonTransientDataAccessException ntdaex) {
+            // unexpected, so rethrowing runtime ex (will be wrapped in 500 server error)
+            throw ntdaex;
+         }
          // NB. no PREVIOUS version to historize (*relief*, handling consistently its failures would be hard)
          
       } else {
@@ -354,6 +364,9 @@ public class ResourceService {
          } catch (OptimisticLockingFailureException olfex) {
             throw new ResourceObsoleteException("Trying to update data resource "
                   + "without up-to-date version but " + dataEntity.getVersion(), resource);
+         } catch (NonTransientDataAccessException ntdaex) {
+            // unexpected, so rethrowing runtime ex (will be wrapped in 500 server error)
+            throw ntdaex;
          }
       }
 
@@ -425,6 +438,13 @@ public class ResourceService {
       return resource;
    }
 
+   /**
+    * NB. deleting a non-existing resource does silently nothing.
+    * @param uri
+    * @param modelType
+    * @param version
+    * @throws ResourceTypeNotFoundException
+    */
    public void delete(String uri, String modelType, Long version) throws ResourceTypeNotFoundException {
       DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
       if (dcModel == null) {

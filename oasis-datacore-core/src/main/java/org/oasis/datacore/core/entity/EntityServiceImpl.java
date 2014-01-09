@@ -10,6 +10,8 @@ import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.model.DCURI;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -47,7 +49,7 @@ public class EntityServiceImpl implements EntityService {
     * @see org.oasis.datacore.core.entity.DCEntityService#create(org.oasis.datacore.core.entity.model.DCEntity)
     */
    @Override
-   public void create(DCEntity dataEntity) {
+   public void create(DCEntity dataEntity) throws DuplicateKeyException, NonTransientDataAccessException {
       String collectionName = getModel(dataEntity).getCollectionName(); // TODO for view Models or weird type names ?!?
       
       // security : checking type default rights
@@ -64,7 +66,7 @@ public class EntityServiceImpl implements EntityService {
     * @see org.oasis.datacore.core.entity.DCEntityService#getByUri(java.lang.String, org.oasis.datacore.core.meta.model.DCModel)
     */
    @Override
-   public DCEntity getByUri(String uri, DCModel dcModel) {
+   public DCEntity getByUri(String uri, DCModel dcModel) throws NonTransientDataAccessException {
       String collectionName = dcModel.getCollectionName(); // TODO for view Models or weird type names ?!?
       //entityService.findById(uri, type/collectionName); // TODO
       //dataEntity = dataRepo.findOne(uri); // NO can't be used because can't specify collection
@@ -79,7 +81,8 @@ public class EntityServiceImpl implements EntityService {
     * @see org.oasis.datacore.core.entity.DCEntityService#isUpToDate(java.lang.String, org.oasis.datacore.core.meta.model.DCModel, java.lang.Long)
     */
    @Override
-   public boolean isUpToDate(String uri, DCModel dcModel, Long version) {
+   public boolean isUpToDate(String uri, DCModel dcModel, Long version)
+         throws NonTransientDataAccessException {
       if (version == null) {
          return false;
       }
@@ -98,7 +101,8 @@ public class EntityServiceImpl implements EntityService {
     * @see org.oasis.datacore.core.entity.DCEntityService#update(org.oasis.datacore.core.entity.model.DCEntity)
     */
    @Override
-   public void update(DCEntity dataEntity) throws OptimisticLockingFailureException {
+   public void update(DCEntity dataEntity) throws OptimisticLockingFailureException,
+         NonTransientDataAccessException {
       String collectionName = getModel(dataEntity).getCollectionName(); // TODO for view Models or weird type names ?!?
       
       // security : checking rights
@@ -115,7 +119,8 @@ public class EntityServiceImpl implements EntityService {
     * @see org.oasis.datacore.core.entity.DCEntityService#deleteByUriId(java.lang.String, long, org.oasis.datacore.core.meta.model.DCModel)
     */
    @Override
-   public void deleteByUriId(String uri, long version, DCModel dcModel) {
+   public void deleteByUriId(String uri, long version, DCModel dcModel)
+         throws NonTransientDataAccessException {
       String collectionName = dcModel.getCollectionName(); // TODO for view Models or weird type names ?!?
       
       // NB. could first check 1. that uri exists & has version and 2. user has write rights

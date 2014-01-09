@@ -2,6 +2,7 @@ package org.oasis.datacore.rest.server;
 
 import java.util.List;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 
@@ -163,8 +164,10 @@ public class DatacoreApiServerTest {
       try {
          datacoreApiClient.putDataInType(ukCountryData, CityCountrySample.COUNTRY_MODEL_NAME, "UK");
          Assert.fail("Should not be able to update / PUT a non existing Resource");
-      } catch (Exception e) {
+      } catch (BadRequestException e) {
          Assert.assertTrue(true);
+      } catch (Exception e) {
+         Assert.fail("Bad exception");
       }
       
       DCResource postedUkCountryData = datacoreApiClient.postDataInType(ukCountryData, CityCountrySample.COUNTRY_MODEL_NAME);
@@ -189,8 +192,10 @@ public class DatacoreApiServerTest {
       try {
          datacoreApiClient.postDataInType(cityData, CityCountrySample.CITY_MODEL_NAME);
          Assert.fail("Should not be able to recreate / rePOST a Resource even without a version (unicity)");
-      } catch (Exception e) {
+      } catch (BadRequestException e) {
          Assert.assertTrue(true);
+      } catch (Exception e) {
+         Assert.fail("Bad exception");
       }
       
       return cityData;
@@ -202,6 +207,8 @@ public class DatacoreApiServerTest {
          Assert.fail("There shouldn't be any " + modelType + " with id " + id + " yet");
       } catch (NotFoundException e) {
          Assert.assertTrue(true);
+      } catch (Exception e) {
+         Assert.fail("Bad exception");
       }
    }
 
@@ -279,7 +286,7 @@ public class DatacoreApiServerTest {
       try {
          datacoreApiClient.deleteData(CityCountrySample.CITY_MODEL_NAME, "France/Bordeaux");
          Assert.fail("Should not be able to delete without (having cache allowing) "
-               + "sending cuttent version as ETag");
+               + "sending content version as ETag");
       } catch (Exception e) {
          Assert.assertTrue(true);
       }
