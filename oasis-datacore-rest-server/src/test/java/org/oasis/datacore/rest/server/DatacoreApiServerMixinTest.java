@@ -284,7 +284,10 @@ public class DatacoreApiServerMixinTest {
       DCModel altTourismPlaceModel = modelServiceImpl.getModel(AltTourismPlaceAddressSample.ALTTOURISM_PLACE);
       Assert.assertTrue(altTourismPlaceModel.getSecurity().isGuestReadable());
       Assert.assertTrue(altTourismPlaceModel.getSecurity().isAuthentifiedReadable());
-      Assert.assertTrue(altTourismPlaceModel.getSecurity().isAuthentifiedWriteable());
+      Assert.assertTrue(altTourismPlaceModel.getSecurity().isAuthentifiedWritable());
+      
+      // preparing creation tests
+      int i = 0;
       
       // logging in as guest
       authenticationService.loginAs("guest");
@@ -330,6 +333,21 @@ public class DatacoreApiServerMixinTest {
          Assert.assertTrue(true);
       }
       
+      // check that create not allowed as guest
+      try {
+         resourceService.createOrUpdate(buildSofiaMonastery(++i),
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false);
+         Assert.fail("Resource in guest type should not be creatable as guest");
+      } catch (Exception e) {
+         Assert.assertTrue(true);
+      }
+      try {
+         datacoreApiClient.postDataInType(buildSofiaMonastery(++i)); // client side
+         Assert.fail("Resource in guest type should not be creatable as guest");
+      } catch (Exception e) {
+         Assert.assertTrue(true);
+      }
+      
       // logging in as user with rights
       authenticationService.logout(); // NB. not required since followed by login
       authenticationService.loginAs("john");
@@ -350,24 +368,39 @@ public class DatacoreApiServerMixinTest {
          Assert.fail("Resource in guest type should be readable as user");
       }
       
-      // check that writeable by authentified user
+      // check that writable by authentified user
       try {
          resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true);
          Assert.assertTrue(true);
       } catch (Exception e) {
-         Assert.fail("Resource in authentified writeable type should be writeable as user");
+         Assert.fail("Resource in authentified writable type should be writable as user");
       }
       try {
          datacoreApiClient.postDataInType(altTourismPlaceSofiaMonasteryPosted); // client side
          Assert.assertTrue(true);
       } catch (Exception e) {
-         Assert.fail("Resource in authentified writeable type should be writeable as user");
+         Assert.fail("Resource in authentified writable type should be writable as user");
+      }
+      
+      // check that creatable by authentified user
+      try {
+         resourceService.createOrUpdate(buildSofiaMonastery(++i),
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false);
+         Assert.assertTrue(true);
+      } catch (Exception e) {
+         Assert.fail("Resource in authentified creatable type should be creatable as user");
+      }
+      try {
+         datacoreApiClient.postDataInType(buildSofiaMonastery(++i)); // client side
+         Assert.assertTrue(true);
+      } catch (Exception e) {
+         Assert.fail("Resource in authentified creatable type should be creatable as user");
       }
       
       // make model secured (still authentified readable)
       altTourismPlaceModel.getSecurity().setGuestReadable(false);
-      altTourismPlaceModel.getSecurity().setAuthentifiedWriteable(false);
+      altTourismPlaceModel.getSecurity().setAuthentifiedWritable(false);
       
       // logging in as guest
       authenticationService.logout(); // NB. not required since followed by login
@@ -407,6 +440,21 @@ public class DatacoreApiServerMixinTest {
       try {
          datacoreApiClient.postDataInType(altTourismPlaceSofiaMonasteryPosted); // client side
          Assert.fail("Resource in authentified type should not be writable as guest");
+      } catch (Exception e) {
+         Assert.assertTrue(true);
+      }
+      
+      // check that create still not allowed as guest
+      try {
+         resourceService.createOrUpdate(buildSofiaMonastery(++i),
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false);
+         Assert.fail("Resource in authentified type should not be creatable as guest");
+      } catch (Exception e) {
+         Assert.assertTrue(true);
+      }
+      try {
+         datacoreApiClient.postDataInType(buildSofiaMonastery(++i)); // client side
+         Assert.fail("Resource in authentified type should not be creatable as guest");
       } catch (Exception e) {
          Assert.assertTrue(true);
       }
@@ -468,6 +516,21 @@ public class DatacoreApiServerMixinTest {
          Assert.assertTrue(true);
       }
       
+      // check that not creatable because not in writer group
+      try {
+         resourceService.createOrUpdate(buildSofiaMonastery(++i),
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false);
+         Assert.fail("Resource in authentified type should not be creatable because not yet in writer group");
+      } catch (Exception e) {
+         Assert.assertTrue(true);
+      }
+      try {
+         datacoreApiClient.postDataInType(buildSofiaMonastery(++i)); // client side
+         Assert.fail("Resource in authentified type should not be creatable because not yet in writer group");
+      } catch (Exception e) {
+         Assert.assertTrue(true);
+      }
+      
       // make model more secured (not authentified readable)
       altTourismPlaceModel.getSecurity().setAuthentifiedReadable(false);
       
@@ -515,6 +578,21 @@ public class DatacoreApiServerMixinTest {
       try {
          datacoreApiClient.postDataInType(altTourismPlaceSofiaMonasteryPosted); // client side
          Assert.fail("Resource in private type should not be writable as GUEST");
+      } catch (Exception e) {
+         Assert.assertTrue(true);
+      }
+      
+      // check that not creatable because still not in writer group
+      try {
+         resourceService.createOrUpdate(buildSofiaMonastery(++i),
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false);
+         Assert.fail("Resource in private type should not be creatable as GUEST");
+      } catch (Exception e) {
+         Assert.assertTrue(true);
+      }
+      try {
+         datacoreApiClient.postDataInType(buildSofiaMonastery(++i)); // client side
+         Assert.fail("Resource in private type should not be creatable as GUEST");
       } catch (Exception e) {
          Assert.assertTrue(true);
       }
@@ -577,10 +655,26 @@ public class DatacoreApiServerMixinTest {
          Assert.assertTrue(true);
       }
       
+      // check that not creatable by user not in writer group
+      try {
+         resourceService.createOrUpdate(buildSofiaMonastery(++i),
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false);
+         Assert.fail("Resource in private type should not be creatable by user not in writer group");
+      } catch (Exception e) {
+         Assert.assertTrue(true);
+      }
+      try {
+         datacoreApiClient.postDataInType(buildSofiaMonastery(++i)); // client side
+         Assert.fail("Resource in private type should not be creatable by user not in writer group");
+      } catch (Exception e) {
+         Assert.assertTrue(true);
+      }
+      
       authenticationService.logout(); // NB. not required since followed by login
 
-      // check that not writable by user in not yet set writer group
       authenticationService.loginAs("jim");
+      
+      // check that not writable by user in not yet set writer group
       try {
          resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true);
@@ -594,6 +688,22 @@ public class DatacoreApiServerMixinTest {
       } catch (Exception e) {
          Assert.assertTrue(true);
       }
+
+      // check that not creatable by user in not yet set writer group
+      try {
+         resourceService.createOrUpdate(buildSofiaMonastery(++i),
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false);
+         Assert.fail("Resource in private type should not be creatable by user in not yet set writer group");
+      } catch (Exception e) {
+         Assert.assertTrue(true);
+      }
+      try {
+         datacoreApiClient.postDataInType(buildSofiaMonastery(++i)); // client side
+         Assert.fail("Resource in private type should not be creatable by user in not yet set writer group");
+      } catch (Exception e) {
+         Assert.assertTrue(true);
+      }
+      
       authenticationService.logout(); // NB. not required since followed by login
       
       // set writer rights
@@ -605,6 +715,7 @@ public class DatacoreApiServerMixinTest {
 
       // check that writable by user in writer group
       authenticationService.loginAs("jim");
+      
       try {
          resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true);
@@ -618,12 +729,35 @@ public class DatacoreApiServerMixinTest {
       } catch (Exception e) {
          Assert.assertTrue(true);
       }
+
+      // check that creatable by user in writer group
+      try {
+         resourceService.createOrUpdate(buildSofiaMonastery(++i),
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false);
+         Assert.fail("Resource in private type should be creatable by user in writer group");
+      } catch (Exception e) {
+         Assert.assertTrue(true);
+      }
+      try {
+         datacoreApiClient.postDataInType(buildSofiaMonastery(++i)); // client side
+         Assert.fail("Resource in private type should be creatable by user in writer group");
+      } catch (Exception e) {
+         Assert.assertTrue(true);
+      }
+      
       authenticationService.logout();
       
       // revert model to default (public)
       altTourismPlaceModel.getSecurity().setGuestReadable(true);
    }
    
+   private DCResource buildSofiaMonastery(int i) {
+      return resourceService.create(AltTourismPlaceAddressSample.ALTTOURISM_PLACE,
+            "Sofia_Monastery_" + i).set("name", "Sofia_Monastery_" + i)
+            .set("kind", UriHelper.buildUri(containerUrl, AltTourismPlaceAddressSample.ALTTOURISM_PLACEKIND,
+                  "monastery")).set("zipCode", "1000");
+   }
+
    /*public void doAs(String login, Callback callback) {
       mockAuthenticationService.login("john");
       callback.execute();

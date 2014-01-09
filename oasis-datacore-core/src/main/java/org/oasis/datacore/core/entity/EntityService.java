@@ -29,6 +29,7 @@ public interface EntityService {
     * @throws DuplicateKeyException if already exists
     * @throws NonTransientDataAccessException other, unexpected storage error
     */
+   @PreAuthorize("hasPermission(#dataEntity, 'create')")
    void create(DCEntity dataEntity) throws DuplicateKeyException, NonTransientDataAccessException;
 
    /**

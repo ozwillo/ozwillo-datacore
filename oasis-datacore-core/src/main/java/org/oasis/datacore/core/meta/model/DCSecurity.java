@@ -26,11 +26,11 @@ public class DCSecurity {
       this.isAuthentifiedReadable = isAuthentifiedReadable;
    }
 
-   public boolean isAuthentifiedWriteable() {
+   public boolean isAuthentifiedWritable() {
       return isAuthentifiedWriteable;
    }
 
-   public void setAuthentifiedWriteable(boolean isAuthentifiedWriteable) {
+   public void setAuthentifiedWritable(boolean isAuthentifiedWriteable) {
       this.isAuthentifiedWriteable = isAuthentifiedWriteable;
    }
 
