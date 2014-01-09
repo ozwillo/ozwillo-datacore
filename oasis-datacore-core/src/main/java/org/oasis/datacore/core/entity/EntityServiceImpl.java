@@ -77,6 +77,12 @@ public class EntityServiceImpl implements EntityService {
       }
       return dataEntity;
    }
+
+   @Override
+   public DCEntity getByUriUnsecured(String uri, DCModel dcModel) throws NonTransientDataAccessException {
+      return getByUri(uri, dcModel);
+   }
+   
    /* (non-Javadoc)
     * @see org.oasis.datacore.core.entity.DCEntityService#isUpToDate(java.lang.String, org.oasis.datacore.core.meta.model.DCModel, java.lang.Long)
     */

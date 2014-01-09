@@ -56,17 +56,22 @@ public class DCUserImpl extends User {
          if (!this.isAdmin && role.equals(ADMIN_GROUP)) { // TODO or dc_r_admin
             this.isAdmin = true;
             
-         } else if (role.startsWith("admin_r_")) { // TODO regex ; dc_r_t_admin
-            String modelTypeName = role.substring("t_admin_".length(), role.length());
+         } else if (role.startsWith("rom_")) { // TODO regex ; dc_r_t_admin ; admin_r_
+            String modelTypeName = role.substring("rom_".length(), role.length());
             this.resourceAdminForModelTypes.add(modelTypeName);
             // TODO also type readers & writers ?
             
-         } else if (role.startsWith("admin_m_")) { // TODO regex ; dc_m_t_admin ; NOO = thisModelEntity.owners.add(user)
+         } else if (role.startsWith("mo_")) { // TODO regex ; dc_m_t_admin ; admin_t_ ; NOO = thisModelEntity.owners.add(user)
             // TODO Q manage model rights using groups (required if stored in datacore) or model conf ??
-            String modelTypeName = role.substring("m_admin_".length(), role.length());
+            String modelTypeName = role.substring("mo_".length(), role.length());
             this.adminOfModelTypes.add(modelTypeName);
             
-            // TODO also type readers, writers, creators !!
+         } else if (role.startsWith("rcm_")) { // TODO regex ; dc_m_t_c_
+            // TODO Q manage model rights using groups (required if stored in datacore) or model conf ??
+            String modelTypeName = role.substring("rcm_".length(), role.length());
+            this.resourceCreatorForModelTypes.add(modelTypeName);
+            
+            // TODO also type creators !! and LATER even readers, writers ?!
             
             // else if not datacore related, skip
             

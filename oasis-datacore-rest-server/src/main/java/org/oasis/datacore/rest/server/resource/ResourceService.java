@@ -278,7 +278,8 @@ public class ResourceService {
 
       DCEntity dataEntity = null;
       if (!canUpdate || !isCreation) {
-         dataEntity = entityService.getByUri(stringUri, dcModel); // TODO could use unsecured service
+         dataEntity = entityService.getByUriUnsecured(stringUri, dcModel); // NB. unsecured
+         // in order to avoid having to fill readers ACL by all writers ACL
          if (dataEntity != null) {
             if (!canUpdate) {
                // already exists, but only allow creation

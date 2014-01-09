@@ -74,7 +74,7 @@
    <!-- auditing see http://maciejwalkowiak.pl/blog/2013/05/24/auditing-entities-in-spring-data-mongodb/ -->
    <!-- mongo:auditing / -->
    <mongo:auditing auditor-aware-ref="auditor" />
-   <bean id="auditor" class="org.oasis.datacore.core.security.OasisAuthAuditor"/>
+   <bean id="auditor" class="org.oasis.datacore.core.security.SpringSecurityAuthAuditor"/>
    
    <mongo:db-factory id="mongoDbFactory" dbname="datacore"
       write-concern="#{T(com.mongodb.WriteConcern).ACKNOWLEDGED}"/><!-- which differs from string "ACKNOWEDLGED" WriteConcern

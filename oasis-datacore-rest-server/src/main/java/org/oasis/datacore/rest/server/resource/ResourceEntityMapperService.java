@@ -190,8 +190,9 @@ public class ResourceEntityMapperService {
             DCModel refModel = modelService.getModel(dcUri.getType()); // TODO LATER from cached model ref in DCURI
             
             // checking that it exists :
-            DCEntity refEntity = entityService.getByUri(dcUri.toString(), refModel);
-            if (refEntity == null) {
+            // (without rights ; only in checkMode, otherwise only warning)
+            if (entityService.getByUriUnsecured(dcUri.toString(), refModel) == null) {
+               // TODO rather still allow update / only warning ? & add /check API keeping it as error ??
                throw new ResourceParsingException("Can't find data of resource type " + refModel.getName()
                      + " referenced by resource Field of URI value " + dcUri.toString());
             }
@@ -209,7 +210,7 @@ public class ResourceEntityMapperService {
             
             // TODO TODO provide refEntity in model (ex. DCResourceValue) OR IN GRAPH,
             // ex. for 2nd pass or in case of expanded + embedded return ?!?
-            entityValue = refEntity;
+            //entityValue = refEntity;
             entityValue = dcUri.toString();
             
          } else if (resourceValue instanceof Map<?,?>) {

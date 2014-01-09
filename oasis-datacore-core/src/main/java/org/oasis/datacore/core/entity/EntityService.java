@@ -33,7 +33,7 @@ public interface EntityService {
    void create(DCEntity dataEntity) throws DuplicateKeyException, NonTransientDataAccessException;
 
    /**
-    * TODO or model cached : in custom context implementing "get" reused in both hasPermission & here ??
+    * TODO or cache model : in custom context implementing "get" reused in both hasPermission & here ??
     * as transient param of resource ?? in EHCache (but beware of Resource obsolescence) ??
     * This method does not change state (else @PostAuthorize would not work)
     * @param uri
@@ -45,9 +45,20 @@ public interface EntityService {
    DCEntity getByUri(String uri, DCModel dcModel) throws NonTransientDataAccessException;
 
    /**
+    * Unprotected read to be used only for update purpose (to get ex. right ACL lists) ;
+    * BEWARE no rights check, so should be followed by update() to check them or only
+    * used for checking existence of Resource reference.
+    * @param uri
+    * @param dcModel
+    * @return
+    * @throws NonTransientDataAccessException
+    */
+   DCEntity getByUriUnsecured(String uri, DCModel dcModel) throws NonTransientDataAccessException;
+   
+   /**
     * Used for more efficient If-None-Match=versionETag conditional GET :
     * allows not to load entity (nor resource) if same version.
-    * BEWARE no rights check, so should be followed by ex. getByUriId
+    * BEWARE no rights check, so should be followed by ex. getByUriId()
     * to check them.
     * @param uri
     * @param dcModel

@@ -373,30 +373,30 @@ public class DatacoreApiServerMixinTest {
       
       // check that writable by authentified user
       try {
-         resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
+         altTourismPlaceSofiaMonasteryPosted = resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true);
-         Assert.assertTrue(true);
+         Assert.assertEquals("john", altTourismPlaceSofiaMonasteryPosted.getLastModifiedBy()); // check auditor
       } catch (Exception e) {
          Assert.fail("Resource in authentified writable type should be writable as user");
       }
       try {
-         datacoreApiClient.postDataInType(altTourismPlaceSofiaMonasteryPosted); // client side
-         Assert.assertTrue(true);
+         altTourismPlaceSofiaMonasteryPosted = datacoreApiClient.postDataInType(altTourismPlaceSofiaMonasteryPosted); // client side
+         Assert.assertEquals("john", altTourismPlaceSofiaMonasteryPosted.getLastModifiedBy()); // check auditor
       } catch (Exception e) {
          Assert.fail("Resource in authentified writable type should be writable as user");
       }
       
       // check that creatable by authentified user
       try {
-         resourceService.createOrUpdate(buildSofiaMonastery(++i),
+         DCResource resource = resourceService.createOrUpdate(buildSofiaMonastery(++i),
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false);
-         Assert.assertTrue(true);
+         Assert.assertEquals("john", resource.getCreatedBy()); // check auditor
       } catch (Exception e) {
          Assert.fail("Resource in authentified creatable type should be creatable as user");
       }
       try {
-         datacoreApiClient.postDataInType(buildSofiaMonastery(++i)); // client side
-         Assert.assertTrue(true);
+         DCResource resource = datacoreApiClient.postDataInType(buildSofiaMonastery(++i)); // client side
+         Assert.assertEquals("john", resource.getCreatedBy()); // check auditor
       } catch (Exception e) {
          Assert.fail("Resource in authentified creatable type should be creatable as user");
       }
@@ -606,8 +606,10 @@ public class DatacoreApiServerMixinTest {
       // set reader rights
       authenticationService.loginAs("admin");
       DCEntity altTourismPlaceSofiaMonasteryEntity = entityService.getByUri(altTourismPlaceSofiaMonastery.getUri(), altTourismPlaceModel);
-      altTourismPlaceSofiaMonasteryEntity.setReaders(new ArrayList<String>() {{ add("altTourism.Place.SofiaMonastery_readers"); }});
+      altTourismPlaceSofiaMonasteryEntity.setReaders(new ArrayList<String>() {{ add("rm_altTourism.place.SofiaMonastery_readers"); }});
       entityService.update(altTourismPlaceSofiaMonasteryEntity);
+      // get with updated version :
+      altTourismPlaceSofiaMonasteryPosted = datacoreApiClient.getData(AltTourismPlaceAddressSample.ALTTOURISM_PLACE, "Sofia_Monastery");
       authenticationService.logout(); // NB. not required since followed by login
       ///altTourismPlaceSofiaMonastery = datacoreApiClient.postDataInType(altTourismPlaceSofiaMonastery);
 
@@ -692,28 +694,30 @@ public class DatacoreApiServerMixinTest {
       } catch (Exception e) {
          Assert.assertTrue(true);
       }
-
-      // check that not creatable by user in not yet set writer group
+      
+      // check that creatable by user in writer group
       try {
-         resourceService.createOrUpdate(buildSofiaMonastery(++i),
+         DCResource resource = resourceService.createOrUpdate(buildSofiaMonastery(++i),
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false);
-         Assert.fail("Resource in private type should not be creatable by user in not yet set writer group");
+         Assert.assertEquals("jim", resource.getCreatedBy()); // check auditor
       } catch (Exception e) {
-         Assert.assertTrue(true);
+         Assert.fail("Resource in private type should be creatable by user in writer group");
       }
       try {
-         datacoreApiClient.postDataInType(buildSofiaMonastery(++i)); // client side
-         Assert.fail("Resource in private type should not be creatable by user in not yet set writer group");
+         DCResource resource = datacoreApiClient.postDataInType(buildSofiaMonastery(++i)); // client side
+         Assert.assertEquals("jim", resource.getCreatedBy()); // check auditor
       } catch (Exception e) {
-         Assert.assertTrue(true);
+         Assert.fail("Resource in private type should be creatable by user in writer group");
       }
       
       authenticationService.logout(); // NB. not required since followed by login
       
       // set writer rights
       authenticationService.loginAs("admin");
-      altTourismPlaceSofiaMonasteryEntity.setWriters(new ArrayList<String>() {{ add("altTourism.Place.SofiaMonastery_writers"); }});
+      altTourismPlaceSofiaMonasteryEntity.setWriters(new ArrayList<String>() {{ add("rm_altTourism.place.SofiaMonastery_writers"); }});
       entityService.update(altTourismPlaceSofiaMonasteryEntity);
+      // get with updated version :
+      altTourismPlaceSofiaMonasteryPosted = datacoreApiClient.getData(AltTourismPlaceAddressSample.ALTTOURISM_PLACE, "Sofia_Monastery");
       authenticationService.logout(); // NB. not required since followed by login
       ///altTourismPlaceSofiaMonastery = datacoreApiClient.postDataInType(altTourismPlaceSofiaMonastery); // TODO also test
 
@@ -721,32 +725,32 @@ public class DatacoreApiServerMixinTest {
       authenticationService.loginAs("jim");
       
       try {
-         resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
+         altTourismPlaceSofiaMonasteryPosted = resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true);
-         Assert.fail("Resource in private type should be writable by user in writer group");
+         Assert.assertEquals("jim", altTourismPlaceSofiaMonasteryPosted.getLastModifiedBy()); // check auditor
       } catch (Exception e) {
-         Assert.assertTrue(true);
+         Assert.fail("Resource in private type should be writable by user in writer group");
       }
       try {
-         datacoreApiClient.postDataInType(altTourismPlaceSofiaMonasteryPosted); // client side
-         Assert.fail("Resource in private type should be writable by user in writer group");
+         altTourismPlaceSofiaMonasteryPosted = datacoreApiClient.postDataInType(altTourismPlaceSofiaMonasteryPosted); // client side
+         Assert.assertEquals("jim", altTourismPlaceSofiaMonasteryPosted.getLastModifiedBy()); // check auditor
       } catch (Exception e) {
-         Assert.assertTrue(true);
+         Assert.fail("Resource in private type should be writable by user in writer group");
       }
 
-      // check that creatable by user in writer group
+      // check that still creatable by user in writer group
       try {
-         resourceService.createOrUpdate(buildSofiaMonastery(++i),
+         DCResource resource = resourceService.createOrUpdate(buildSofiaMonastery(++i),
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false);
-         Assert.fail("Resource in private type should be creatable by user in writer group");
+         Assert.assertEquals("jim", resource.getCreatedBy()); // check auditor
       } catch (Exception e) {
-         Assert.assertTrue(true);
+         Assert.fail("Resource in private type should be creatable by user in writer group");
       }
       try {
-         datacoreApiClient.postDataInType(buildSofiaMonastery(++i)); // client side
-         Assert.fail("Resource in private type should be creatable by user in writer group");
+         DCResource resource = datacoreApiClient.postDataInType(buildSofiaMonastery(++i)); // client side
+         Assert.assertEquals("jim", resource.getCreatedBy()); // check auditor
       } catch (Exception e) {
-         Assert.assertTrue(true);
+         Assert.fail("Resource in private type should be creatable by user in writer group");
       }
       
       authenticationService.logout();

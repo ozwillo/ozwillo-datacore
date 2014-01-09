@@ -16,7 +16,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.oasis.datacore.core.entity.EntityQueryService;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
-import org.oasis.datacore.core.security.OasisAuthAuditor;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.ResourceParsingHelper;
 import org.oasis.datacore.rest.api.util.UriHelper;
@@ -312,12 +311,12 @@ public class DatacoreApiServerTest {
       // check audit data
       DateTime creationDate = postBordeauxCityResource.getCreated();
       Assert.assertNotNull("creation date should not be null", creationDate);
-      String creationAuditor = postBordeauxCityResource.getCreatedBy();
-      Assert.assertEquals(OasisAuthAuditor.TEST_AUDITOR, creationAuditor);
+      String creator = postBordeauxCityResource.getCreatedBy();
+      Assert.assertTrue("admin".equals(creator) || "guest".equals(creator)); // prod or dev
       Assert.assertEquals("at creation, created & modified dates should be the same",
             creationDate, postBordeauxCityResource.getLastModified());
       Assert.assertEquals("at creation, created & modified auditors should be the same",
-            creationAuditor, postBordeauxCityResource.getLastModifiedBy());
+            creator, postBordeauxCityResource.getLastModifiedBy());
       
       // put (& patch)
       bordeauxCityResource = datacoreApiClient.postDataInType(bordeauxCityResource, CityCountrySample.CITY_MODEL_NAME); // first create...
@@ -328,10 +327,11 @@ public class DatacoreApiServerTest {
       Assert.assertEquals("at modification, created date should not change",
             creationDate, postBordeauxCityResource.getCreated());
       Assert.assertEquals("at modification, created auditor should not change",
-            creationAuditor, postBordeauxCityResource.getCreatedBy());
+            creator, postBordeauxCityResource.getCreatedBy());
       Assert.assertNotSame("at modification, modified date should differ from create date",
             creationDate, postBordeauxCityResource.getLastModified());
-      Assert.assertEquals(OasisAuthAuditor.TEST_AUDITOR, postBordeauxCityResource.getLastModifiedBy());
+      String modifier = postBordeauxCityResource.getLastModifiedBy();
+      Assert.assertTrue("admin".equals(modifier) || "guest".equals(modifier)); // prod or dev
    }
    
    /**
