@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.model.DCField;
@@ -395,7 +396,9 @@ public class ResourceEntityMapperService {
             
          } else */if (resourcePropValue instanceof Date) {
             if (!(resourcePropValue instanceof DateTime)) {
-               resourcePropValue = new DateTime((Date) resourcePropValue); // TODO better in mongo persistence
+               // TODO better in mongo persistence
+               resourcePropValue = new DateTime((Date) resourcePropValue, DateTimeZone.UTC);
+               // NB. if not UTC, default timezone has a non-integer time shift
             }
          }
          resourceProps.put(entityPropName, resourcePropValue);

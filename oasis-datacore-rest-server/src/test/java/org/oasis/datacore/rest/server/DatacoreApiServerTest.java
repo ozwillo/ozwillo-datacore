@@ -341,20 +341,110 @@ public class DatacoreApiServerTest {
     * @throws Exception
     */
    @Test
-   public void test3propDateString() throws Exception {
+   public void test3propDateStringUtcBC() throws Exception {
+      cityCountrySample.cleanDataOfCreatedModels(); // first clean up data
+
+      datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "UK"));
+      DCResource londonCityData = buildCityData("London", "UK", false);
+      DateTime londonFoundedDate = new DateTime(-43, 4, 1, 0, 0, DateTimeZone.UTC);
+      // NB. if created without timezone, the default one is weird : "0300-04-01T00:00:00.000+00:09:21"
+      // because http://stackoverflow.com/questions/2420527/odd-results-in-joda-datetime-for-01-04-1893
+      londonCityData.setProperty("founded", londonFoundedDate); // testing date field
+      
+      DCResource postedLondonCityResource = datacoreApiClient.postDataInType(londonCityData, CityCountrySample.CITY_MODEL_NAME);
+      String postedlondonFoundedDateString = (String) postedLondonCityResource.get("founded");
+      DateTime postedlondonFoundedDateStringParsed = ResourceParsingHelper.parseDate(postedlondonFoundedDateString);
+      Assert.assertEquals("POST returned date field should be UTC",
+            DateTimeZone.UTC, postedlondonFoundedDateStringParsed.getZone());
+      Assert.assertEquals("POST returned date field should be the same date as the one sent",
+            londonFoundedDate, postedlondonFoundedDateStringParsed);
+
+      DCResource gottenLondonCityResource = datacoreApiClient.getData(CityCountrySample.CITY_MODEL_NAME,
+            "UK/London", -1l); // to force refresh
+      String gottenLondonCityResourceDateString = (String) gottenLondonCityResource.get("founded");
+      DateTime gottenLondonCityResourceDateStringParsed = ResourceParsingHelper.parseDate(gottenLondonCityResourceDateString);
+      Assert.assertEquals("GET returned date field should be UTC",
+            DateTimeZone.UTC, gottenLondonCityResourceDateStringParsed.getZone());
+      Assert.assertEquals("GET returned date field should be the same date as the one POSTed",
+            londonFoundedDate, gottenLondonCityResourceDateStringParsed);
+      
+      DCResource putLondonCityResource = datacoreApiClient.putDataInType(postedLondonCityResource, CityCountrySample.CITY_MODEL_NAME, "UK/London");
+      String putLondonCityResourceDateString = (String) putLondonCityResource.get("founded");
+      DateTime putLondonCityResourceDateStringParsed = ResourceParsingHelper.parseDate(putLondonCityResourceDateString);
+      Assert.assertEquals("PUT returned date field should be UTC",
+            DateTimeZone.UTC, putLondonCityResourceDateStringParsed.getZone());
+      Assert.assertEquals("PUT returned date field should be the same date as the one POSTed",
+            londonFoundedDate, putLondonCityResourceDateStringParsed);
+      
+      List<DCResource> foundLondonCityResources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("name", "London"), 0, 10);
+      Assert.assertEquals(1, foundLondonCityResources.size());
+      DCResource foundLondonCityResource = foundLondonCityResources.get(0);
+      String foundLondonCityResourceDateString = (String) foundLondonCityResource.get("founded");
+      DateTime foundLondonCityResourceDateStringParsed = ResourceParsingHelper.parseDate(foundLondonCityResourceDateString);
+      Assert.assertEquals("GET returned date field should be UTC",
+            DateTimeZone.UTC, foundLondonCityResourceDateStringParsed.getZone());
+      Assert.assertEquals("GET returned date field should be the same date as the one POSTed",
+            londonFoundedDate, foundLondonCityResourceDateStringParsed);
+      
+      datacoreApiClient.deleteData(CityCountrySample.CITY_MODEL_NAME, "UK/London");
+   }
+   
+   /**
+    * For now, client doesn't know when to parse String as Date
+    * but we can still check if this String is OK
+    * (would require (cached) Models for that)
+    * @throws Exception
+    */
+   @Test
+   public void test3propDateStringPlusOneTimezone() throws Exception {
       cityCountrySample.cleanDataOfCreatedModels(); // first clean up data
 
       datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "France"));
       DCResource bordeauxCityData = buildCityData("Bordeaux", "France", false);
-      DateTime bordeauxFoundedDate = new DateTime(300, 4, 1, 0, 0, DateTimeZone.UTC);
-      // NB. if created without timezone, adds 9h21min timezone : "0300-04-01T00:00:00.000+00:09:21" ??!!
+      DateTime bordeauxFoundedDate = new DateTime(300, 4, 1, 0, 0, DateTimeZone.forID("+01:00"));
+      // NB. if created without timezone, the default one (i.e. DateTimeZone.forID("Europe/Paris"))
+      // is weird : "0300-04-01T00:00:00.000+00:09:21" ; see explanation :
+      // http://stackoverflow.com/questions/2420527/odd-results-in-joda-datetime-for-01-04-1893
       bordeauxCityData.setProperty("founded", bordeauxFoundedDate); // testing date field
+      
       DCResource postedBordeauxCityResource = datacoreApiClient.postDataInType(bordeauxCityData, CityCountrySample.CITY_MODEL_NAME);
-      checkCachedBordeauxCityDataAndDelete(postedBordeauxCityResource);
-      String bordeauxFoundedDateGetString = (String) postedBordeauxCityResource.getProperties().get("founded");
-      DateTime bordeauxFoundedDateGetStringParsed = ResourceParsingHelper.parseDate(bordeauxFoundedDateGetString);
-      Assert.assertEquals("returned date field should mean the same date as the one put",
-            bordeauxFoundedDateGetStringParsed, bordeauxFoundedDate);
+      String postedBordeauxFoundedDateString = (String) postedBordeauxCityResource.get("founded");
+      DateTime postedBordeauxFoundedDateStringParsed = ResourceParsingHelper.parseDate(postedBordeauxFoundedDateString);
+      Assert.assertEquals("POST returned date field should be UTC",
+            DateTimeZone.UTC, postedBordeauxFoundedDateStringParsed.getZone());
+      Assert.assertEquals("POST returned date field should mean the same date as the one sent",
+            bordeauxFoundedDate.toDateTime(DateTimeZone.UTC), postedBordeauxFoundedDateStringParsed);
+      
+      DCResource gottenBordeauxCityResource = datacoreApiClient.getData(CityCountrySample.CITY_MODEL_NAME,
+            "France/Bordeaux", -1l); // to force refresh
+      String gottenBordeauxCityResourceDateString = (String) gottenBordeauxCityResource.get("founded");
+      DateTime gottenBordeauxCityResourceDateStringParsed = ResourceParsingHelper.parseDate(gottenBordeauxCityResourceDateString);
+      Assert.assertEquals("PUT returned date field should be UTC",
+            DateTimeZone.UTC, postedBordeauxFoundedDateStringParsed.getZone());
+      Assert.assertEquals("GET returned date field should mean the same date as the one POSTed",
+            bordeauxFoundedDate.toDateTime(DateTimeZone.UTC), gottenBordeauxCityResourceDateStringParsed);
+      
+      DCResource putBordeauxCityResource = datacoreApiClient.putDataInType(postedBordeauxCityResource, CityCountrySample.CITY_MODEL_NAME, "France/Bordeaux");
+      String putBordeauxCityResourceDateString = (String) putBordeauxCityResource.get("founded");
+      DateTime putBordeauxCityResourceDateStringParsed = ResourceParsingHelper.parseDate(putBordeauxCityResourceDateString);
+      Assert.assertEquals("PUT returned date field should be UTC",
+            DateTimeZone.UTC, postedBordeauxFoundedDateStringParsed.getZone());
+      Assert.assertEquals("PUT returned date field should mean the same date as the one POSTed",
+            bordeauxFoundedDate.toDateTime(DateTimeZone.UTC), putBordeauxCityResourceDateStringParsed);
+      
+      List<DCResource> foundBordeauxCityResources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("name", "Bordeaux"), 0, 10);
+      Assert.assertEquals(1, foundBordeauxCityResources.size());
+      DCResource foundBordeauxCityResource = foundBordeauxCityResources.get(0);
+      String foundBordeauxCityResourceDateString = (String) foundBordeauxCityResource.get("founded");
+      DateTime foundBordeauxCityResourceDateStringParsed = ResourceParsingHelper.parseDate(foundBordeauxCityResourceDateString);
+      Assert.assertEquals("GET returned date field should be UTC",
+            DateTimeZone.UTC, foundBordeauxCityResourceDateStringParsed.getZone());
+      Assert.assertEquals("GET returned date field should be the same date as the one POSTed",
+            bordeauxFoundedDate.toDateTime(DateTimeZone.UTC), foundBordeauxCityResourceDateStringParsed);
+      
+      checkCachedBordeauxCityDataAndDelete(putBordeauxCityResource);
    }
 
    /**
@@ -407,7 +497,10 @@ public class DatacoreApiServerTest {
       
       // query all - one resource
       datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "UK"));
-      datacoreApiClient.postDataInType(buildCityData("London", "UK", false));
+      DateTime londonFoundedDate = new DateTime(-43, 4, 1, 0, 0, DateTimeZone.UTC);
+      DCResource londonCityData = buildCityData("London", "UK", false);
+      londonCityData.setProperty("founded", londonFoundedDate);
+      datacoreApiClient.postDataInType(londonCityData );
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters(), null, null);
       Assert.assertEquals(1, resources.size());
@@ -416,7 +509,7 @@ public class DatacoreApiServerTest {
       // query all - two resource
       datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "France"));
       DCResource bordeauxCityData = buildCityData("Bordeaux", "France", false);
-      DateTime bordeauxFoundedDate = new DateTime(300, 4, 1, 0, 0, DateTimeZone.UTC);
+      DateTime bordeauxFoundedDate = new DateTime(300, 4, 1, 0, 0, DateTimeZone.forID("+01:00"));
       bordeauxCityData.setProperty("founded", bordeauxFoundedDate);
       DCResource postedBordeauxCityData = datacoreApiClient.postDataInType(bordeauxCityData);
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
@@ -469,31 +562,69 @@ public class DatacoreApiServerTest {
             new QueryParameters().add("name", "$in[\"Bordeaux\",\"London\"]"), null, 10);
       Assert.assertEquals(2, resources.size());
       
-      // JSON date period
+      // JSON +01:00 date period
       // on year :
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-            new QueryParameters().add("founded", ">\"0200-04-01T00:00:00.000Z\"")
-            .add("founded", "<\"0300-04-02T00:00:00.000Z\""), null, 10);
+            new QueryParameters().add("founded", ">\"0200-04-01T00:00:00.000+01:00\"")
+            .add("founded", "<\"0300-04-02T00:00:00.000+01:00\""), null, 10);
       Assert.assertEquals(1, resources.size());
       // on second :
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-            new QueryParameters().add("founded", ">\"0200-04-01T00:00:00.000Z\"")
-            .add("founded", "<\"0300-04-01T00:00:00.001Z\""), null, 10);
+            new QueryParameters().add("founded", ">\"0200-04-01T00:00:00.000+01:00\"")
+            .add("founded", "<\"0300-04-01T00:00:00.001+01:00\""), null, 10);
       Assert.assertEquals(1, resources.size());
       // strict :
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-            new QueryParameters().add("founded", ">\"0300-04-01T00:00:00.000Z\"")
-            .add("founded", "<\"0300-04-02T00:00:00.000Z\""), null, 10);
+            new QueryParameters().add("founded", ">\"0300-04-01T00:00:00.000+01:00\"")
+            .add("founded", "<\"0300-04-02T00:00:00.000+01:00\""), null, 10);
       Assert.assertEquals(0, resources.size());
-      // equal :
+      // gte :
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-            new QueryParameters().add("founded", ">=\"0300-04-01T00:00:00.000Z\"")
-            .add("founded", "<\"0300-04-02T00:00:00.000Z\""), null, 10);
+            new QueryParameters().add("founded", ">=\"0300-04-01T00:00:00.000+01:00\"")
+            .add("founded", "<\"0300-04-02T00:00:00.000+01:00\""), null, 10);
+      Assert.assertEquals(1, resources.size());
+      // lte :
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("founded", ">\"0200-04-01T00:00:00.000+01:00\"")
+            .add("founded", "<=\"0300-04-01T00:00:00.000+01:00\""), null, 10);
       Assert.assertEquals(1, resources.size());
       // on year, using LDP query :
       resources = datacoreApiClient.queryDataInType(CityCountrySample.CITY_MODEL_NAME,
-            new QueryParameters().add("founded", ">\"0200-04-01T00:00:00.000Z\"")
-            .add("founded", "<\"0300-04-02T00:00:00.000Z\"").add("limit", "10").toString(),
+            new QueryParameters().add("founded", ">\"0200-04-01T00:00:00.000+01:00\"")
+            .add("founded", "<\"0300-04-02T00:00:00.000+01:00\"").add("limit", "10").toString(),
+            EntityQueryService.LANGUAGE_LDPQL);
+      Assert.assertEquals(1, resources.size());
+      
+      // JSON UTC date period
+      // on year :
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("founded", ">\"-0143-04-01T00:00:00.000Z\"")
+            .add("founded", "<\"-0043-04-02T00:00:00.000Z\""), null, 10);
+      Assert.assertEquals(1, resources.size());
+      // on second :
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("founded", ">\"-0143-04-01T00:00:00.000Z\"")
+            .add("founded", "<\"-0043-04-01T00:00:00.001Z\""), null, 10);
+      Assert.assertEquals(1, resources.size());
+      // strict :
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("founded", ">\"-0043-04-01T00:00:00.000Z\"")
+            .add("founded", "<\"-0043-04-02T00:00:00.000Z\""), null, 10);
+      Assert.assertEquals(0, resources.size());
+      // gte :
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("founded", ">=\"-0043-04-01T00:00:00.000Z\"")
+            .add("founded", "<\"-0043-04-02T00:00:00.000Z\""), null, 10);
+      Assert.assertEquals(1, resources.size());
+      // lte :
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("founded", ">\"-0143-04-01T00:00:00.000Z\"")
+            .add("founded", "<=\"-0043-04-01T00:00:00.000Z\""), null, 10);
+      Assert.assertEquals(1, resources.size());
+      // on year, using LDP query :
+      resources = datacoreApiClient.queryDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("founded", ">\"-0143-04-01T00:00:00.000Z\"")
+            .add("founded", "<\"-0043-04-02T00:00:00.000Z\"").add("limit", "10").toString(),
             EntityQueryService.LANGUAGE_LDPQL);
       Assert.assertEquals(1, resources.size());
    }

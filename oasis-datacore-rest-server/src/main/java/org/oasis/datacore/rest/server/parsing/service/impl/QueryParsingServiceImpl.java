@@ -13,8 +13,6 @@ import org.oasis.datacore.rest.server.parsing.model.QueryOperatorsEnum;
 import org.oasis.datacore.rest.server.parsing.service.QueryParsingService;
 import org.oasis.datacore.rest.server.resource.ValueParsingService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -23,18 +21,21 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 	@Autowired
 	public ValueParsingService valueParsingService;
 	
-	public void parseCriteriaFromQueryParameter(String fieldPath, String operatorAndValue, 
-												DCField dcField, DCQueryParsingContext queryParsingContext) 
-												throws ResourceParsingException {
-		// TODO (mongo)operator for error & in parse ?
-		String entityFieldPath = "_p." + fieldPath;
+	public void parseCriteriaFromQueryParameter(String operatorAndValue,
+	      DCField dcField, DCQueryParsingContext queryParsingContext) 
+	      throws ResourceParsingException {
+      if (operatorAndValue == null) {
+         // should not happen, at worse ""
+         throw new ResourceParsingException("Missing value");
+      }
 		
 		// QueryOperatorEnum = operator name
 		// Integer = operator size
 		SimpleEntry<QueryOperatorsEnum, Integer> operatorEntry = QueryOperatorsEnum.getEnumFromOperator(operatorAndValue);
 		QueryOperatorsEnum operatorEnum = operatorEntry.getKey();
       if (operatorEnum == null) {
-         throw new ResourceParsingException("Query operator wasn't identified for query parameter " + operatorAndValue);
+         throw new ResourceParsingException("Query operator wasn't identified for query parameter "
+               + operatorAndValue);
       }
       
 		// We check if the selected operator is suitable for the type of DCField
@@ -65,13 +66,14 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 				// TODO LATER $all with $elemMatch
 				// TODO same fieldPath for mongodb ??
 				if(parsedData instanceof ArrayList<?>) {
-					queryParsingContext.getCriteria().and(entityFieldPath).all((Collection<?>)parsedData);
+				   queryParsingContext.addCriteria().all((Collection<?>)parsedData);
 				}
 				break;
 				
 			case ELEM_MATCH:
 				if (!"list".equals(dcField.getType())) {
-					throw new ResourceParsingException("$elemMatch can only be applied to a list but found " + dcField.getType() + " Field");
+					throw new ResourceParsingException("$elemMatch can only be applied to a list but found "
+					      + dcField.getType() + " Field");
 				}
 				// parsing using the latest upmost list field :
 				// WARNING the first element in the array must be selective, because all documents
@@ -89,7 +91,7 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 				
 			case EQUALS:
             // TODO if null parsedData, AND / OR !$exists
-				queryParsingContext.getCriteria().and(entityFieldPath).is(parsedData);
+			   queryParsingContext.addCriteria().is(parsedData);
 				break;
 			
 			case EXISTS:
@@ -98,62 +100,60 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 				// TODO AND / OR field value == null
 				// TODO sparse index ?????????
 				// TODO TODO can't return false because already failed to find field
-				queryParsingContext.getCriteria().and(entityFieldPath).exists(true); // TODO same fieldPath for mongodb ??
+			   queryParsingContext.addCriteria().exists(true);
 				break;
 			
 			case GREATER_OR_EQUAL:
 				// TODO LATER allow (joined) resource and order per its default order field ??
 				// TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
 				// TODO check that indexed (or set low limit) ??
-				addSort(entityFieldPath, sortEnum, queryParsingContext);
-				queryParsingContext.getCriteria().and(entityFieldPath).gte(parsedData);
+            queryParsingContext.addSort(sortEnum);
+				queryParsingContext.addCriteria().gte(parsedData);
 				break;
 			
 			case GREATER_THAN:
 				// TODO LATER allow (joined) resource and order per its default order field ??
 				// TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
 				// TODO check that indexed (or set low limit) ??
-				addSort(entityFieldPath, sortEnum, queryParsingContext);
-				queryParsingContext.getCriteria().and(entityFieldPath).gt(parsedData); // TODO same fieldPath for mongodb ??
+            queryParsingContext.addSort(sortEnum);
+				queryParsingContext.addCriteria().gt(parsedData);
 				break;
 			
 			case IN:
 				// TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
 				// TODO check that indexed (or set low limit) ??
-				addSort(entityFieldPath, sortEnum, queryParsingContext);
-				queryParsingContext.getCriteria().and(entityFieldPath) // TODO same fieldPath for mongodb ??
-				   .in((Collection<?>) parsedData); // BEWARE else taken as an object (array of array)
+            queryParsingContext.addSort(sortEnum);
+				queryParsingContext.addCriteria().in((Collection<?>) parsedData); // BEWARE else taken as an object (array of array)
 				break;
 		
 			case LOWER_OR_EQUAL:
 				// TODO LATER allow (joined) resource and order per its default order field ??
 				// TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
 				// TODO check that indexed (or set low limit) ??
-				addSort(entityFieldPath, sortEnum, queryParsingContext);
-				queryParsingContext.getCriteria().and(entityFieldPath).lte(parsedData); // TODO same fieldPath for mongodb ??
+            queryParsingContext.addSort(sortEnum);
+				queryParsingContext.addCriteria().lte(parsedData);
 				break;
 				
 			case LOWER_THAN:
 				// TODO LATER allow (joined) resource and order per its default order field ??
 				// TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
 				// TODO check that indexed (or set low limit) ??
-				addSort(entityFieldPath, sortEnum, queryParsingContext);
-				queryParsingContext.getCriteria().and(entityFieldPath).lt(parsedData); // TODO same fieldPath for mongodb ??
+            queryParsingContext.addSort(sortEnum);
+				queryParsingContext.addCriteria().lt(parsedData);
 				break;
 				
 			case NOT_EQUALS:
 				// TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
 				// TODO check that indexed (or set low limit) ??
-				addSort(entityFieldPath, sortEnum, queryParsingContext);
-				queryParsingContext.getCriteria().and(entityFieldPath).ne(parsedData);
+            queryParsingContext.addSort(sortEnum);
+				queryParsingContext.addCriteria().ne(parsedData);
 				break;
 				
 			case NOT_IN:
 			    // TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
 			    // TODO check that indexed (or set low limit) ??
-				addSort(entityFieldPath, sortEnum, queryParsingContext);
-			    queryParsingContext.getCriteria().and(entityFieldPath) // TODO same fieldPath for mongodb ??
-			       .nin((Collection<?>) parsedData); // BEWARE else taken as an object (array of array)
+			   queryParsingContext.addSort(sortEnum);
+				queryParsingContext.addCriteria().nin((Collection<?>) parsedData); // BEWARE else taken as an object (array of array)
 				break;
 				
 			case REGEX:
@@ -167,9 +167,9 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 			    }
 			    // TODO prevent or warn if first character(s) not provided in regex (making it much less efficient)
 			    if (options == null) {
-			    	queryParsingContext.getCriteria().and(entityFieldPath).regex(regexValue);
+			       queryParsingContext.addCriteria().regex(regexValue);
 			    } else {
-			    	queryParsingContext.getCriteria().and(entityFieldPath).regex(regexValue, options);
+			       queryParsingContext.addCriteria().regex(regexValue, options);
 			    }
 			    break;
 			 
@@ -177,21 +177,21 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 				// TODO (mongo)operator for error & in parse ?
 				// parsing using the latest upmost list field :
 			    // NB. mongo arrays with millions of items are supported, but let's not go in the Long area
-				queryParsingContext.getCriteria().and(entityFieldPath).size((int)parsedData);
+			   queryParsingContext.addCriteria().size((int) parsedData);
 			
 			case SORT_ASC:		// TODO (mongo)operator for error & in parse ?
 
 				// TODO LATER allow (joined) resource and order per its default order field ??
 				// TODO check that not i18n (which is map ! ; or allow fallback, order for locale) ???
 				// TODO check that indexed (or set low limit) ??
-				queryParsingContext.addSort(new Sort(Direction.ASC, entityFieldPath));
+				queryParsingContext.addSort(QueryOperatorsEnum.SORT_ASC);
 				break;
 				
 			case SORT_DESC:
 				// TODO LATER allow (joined) resource and order per its default order field ??
 				// TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
 				// TODO check that indexed (or set low limit) ?!??
-				queryParsingContext.addSort(new Sort(Direction.DESC, entityFieldPath));
+				queryParsingContext.addSort(QueryOperatorsEnum.SORT_DESC);
 				break;
 				
 			default:
@@ -199,7 +199,7 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 			    // TODO check that indexed ??
 			    // TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
 			    // NB. can't sort a single value
-			    queryParsingContext.getCriteria().and(entityFieldPath).is(parsedData);
+			   queryParsingContext.addCriteria().is(parsedData);
 				break;
 				
 		}
@@ -260,23 +260,6 @@ public class QueryParsingServiceImpl implements QueryParsingService {
       return parsedValue;
    }
 	
-	
-	public void addSort(String fieldPath, QueryOperatorsEnum sortEnum, DCQueryParsingContext queryParsingContext) {
-		
-		if (sortEnum != null) {
-			switch (sortEnum) {
-			case SORT_ASC:
-				queryParsingContext.addSort(new Sort(Direction.ASC, fieldPath));
-				break;
-			case SORT_DESC:
-				queryParsingContext.addSort(new Sort(Direction.DESC, fieldPath));
-				break;
-			default:
-				break;
-			}
-		}
-		
-	}
 	
 	private QueryOperatorsEnum isSortNeeded(String queryValue) {
 		

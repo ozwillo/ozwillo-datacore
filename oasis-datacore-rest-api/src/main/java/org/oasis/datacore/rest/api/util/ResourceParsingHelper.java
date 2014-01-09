@@ -31,7 +31,7 @@ public class ResourceParsingHelper {
    //public ObjectMapper mapper = new DatacoreObjectMapper();
 
    /**
-    * Parses a Datacore field (property) value of type date.
+    * Parses a Datacore field (property) value of type date (using UTC timezone)
     * @param stringValue
     * @return null if no value (null or empty)
     * @throws IllegalArgumentException

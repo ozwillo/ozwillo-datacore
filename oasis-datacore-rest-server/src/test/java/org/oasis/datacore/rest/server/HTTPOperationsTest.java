@@ -62,7 +62,8 @@ public class HTTPOperationsTest {
 		List<DCResource> postedData = null;
 		Assert.assertNull(postedData);
 		
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME),
+		      BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		Assert.assertNotNull(postedData);
 		
 	}
@@ -83,7 +84,9 @@ public class HTTPOperationsTest {
 		Assert.assertNull(postedData);
 		
 		try {
-			postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
+			postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME),
+			      BrandCarMotorcycleModel.CAR_MODEL_NAME);
+         Assert.fail("Exception should be raised");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(postedData);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -113,7 +116,9 @@ public class HTTPOperationsTest {
 			DCResource brand = listBrands.get(0);
 			Assert.assertNotNull(brand);
 			brand.setProperty("fault$/!#property", "test");
-			postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+			postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME),
+			      BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+         Assert.fail("Exception should be raised");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(postedData);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -145,7 +150,9 @@ public class HTTPOperationsTest {
 			Assert.assertNotNull(brand);
 			brand.setProperty("name", "Toyota");
 			brand.setVersion(8l);
-			postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+			postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME),
+			      BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+         Assert.fail("Exception should be raised");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(postedData);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -174,6 +181,7 @@ public class HTTPOperationsTest {
 			listBrands = mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 			Assert.assertNotNull(listBrands);
 			postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), "nonexistingmodel");
+         Assert.fail("Exception should be raised");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(postedData);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -197,14 +205,17 @@ public class HTTPOperationsTest {
 		List<DCResource> postedData = null;
 		Assert.assertNull(postedData);
 		
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME),
+		      BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		Assert.assertNotNull(postedData);
 		postedData = null;
 		
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME),
+		      BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
 		
-		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, new QueryParameters(), 0, 1);
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME,
+		      new QueryParameters(), 0, 1);
 		Assert.assertNotNull(listCars);
 		DCResource car = listCars.get(0);
 		car.setProperty("model", "Espace");
@@ -231,12 +242,15 @@ public class HTTPOperationsTest {
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
 		List<DCResource> updatedResource = null;
 		Assert.assertNull(updatedResource);
-		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(
+		      BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		Assert.assertNotNull(postedData);
 		postedData = null;
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME),
+		      BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
-		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, new QueryParameters(), 0, 1);
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME,
+		      new QueryParameters(), 0, 1);
 		
 		try {
 			Assert.assertNotNull(listCars);		
@@ -245,6 +259,7 @@ public class HTTPOperationsTest {
 			List<DCResource> listDataToUpdate = new ArrayList<DCResource>();
 			listDataToUpdate.add(car);
 			updatedResource = api.putAllDataInType(listDataToUpdate, BrandCarMotorcycleModel.CAR_MODEL_NAME);
+         Assert.fail("Exception should be raised");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(updatedResource);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -267,12 +282,15 @@ public class HTTPOperationsTest {
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
 		List<DCResource> updatedResource = null;
 		Assert.assertNull(updatedResource);
-		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(
+		      BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		Assert.assertNotNull(postedData);
 		postedData = null;
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME),
+		      BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
-		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, new QueryParameters(), 0, 1);
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME,
+		      new QueryParameters(), 0, 1);
 		
 		try {
 			Assert.assertNotNull(listCars);		
@@ -282,6 +300,7 @@ public class HTTPOperationsTest {
 			List<DCResource> listDataToUpdate = new ArrayList<DCResource>();
 			listDataToUpdate.add(car); 
 			updatedResource = api.putAllDataInType(listDataToUpdate, BrandCarMotorcycleModel.CAR_MODEL_NAME);
+         Assert.fail("Exception should be raised");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(updatedResource);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -304,12 +323,15 @@ public class HTTPOperationsTest {
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
 		List<DCResource> updatedResource = null;
 		Assert.assertNull(updatedResource);
-		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(
+		      BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		Assert.assertNotNull(postedData);
 		postedData = null;
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME),
+		      BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
-		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, new QueryParameters(), 0, 1);
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME,
+		      new QueryParameters(), 0, 1);
 		
 		try {
 			Assert.assertNotNull(listCars);		
@@ -318,6 +340,7 @@ public class HTTPOperationsTest {
 			List<DCResource> listDataToUpdate = new ArrayList<DCResource>();
 			listDataToUpdate.add(car);
 			updatedResource = api.putAllDataInType(listDataToUpdate, BrandCarMotorcycleModel.CAR_MODEL_NAME);
+         Assert.fail("Exception should be raised");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(updatedResource);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -338,12 +361,15 @@ public class HTTPOperationsTest {
 		
 		Map<String, List<DCResource>> mapData = brandCarMotorcycleData.getData();
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
-		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(
+		      BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		Assert.assertNotNull(postedData);
 		postedData = null;
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME), BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME),
+		      BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
-		List<DCResource> listMotorcycles = api.findDataInType(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, new QueryParameters(), 0, 10);
+		List<DCResource> listMotorcycles = api.findDataInType(
+		      BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, new QueryParameters(), 0, 10);
 		Assert.assertNotNull(listMotorcycles);
 		
 	}
@@ -360,15 +386,18 @@ public class HTTPOperationsTest {
 		
 		Map<String, List<DCResource>> mapData = brandCarMotorcycleData.getData();
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
-		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(
+		      BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		Assert.assertNotNull(postedData);
 		postedData = null;
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME), BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME),
+		      BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
 		List<DCResource> listMotorcycles = null;
 		try {
 			listMotorcycles = api.findDataInType(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME,
 			      new QueryParameters().add("test", "true").add("noquery", "0"), 0, 10);
+         Assert.fail("Exception should be raised");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(listMotorcycles);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -392,6 +421,7 @@ public class HTTPOperationsTest {
 		List<DCResource> listConceptCars = null;
 		try {
 			listConceptCars = api.findDataInType("ConceptCars", new QueryParameters(), 0, 10);
+         Assert.fail("Exception should be raised");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(listConceptCars);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -446,6 +476,7 @@ public class HTTPOperationsTest {
 		resource.setUri("\\o$!$");
 		try {
 			postedData = api.postAllData(listData);
+         Assert.fail("Exception should be raised");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(postedData);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -478,6 +509,7 @@ public class HTTPOperationsTest {
 			Assert.assertNotNull(resource);
 			resource.setProperty("fault$/!#property", "test");
 			postedData = api.postAllData(listData);
+         Assert.fail("Exception should be raised");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(postedData);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -516,6 +548,7 @@ public class HTTPOperationsTest {
 			List<DCResource> newData = new ArrayList<DCResource>();
 			newData.add(resource);
 			postedData = api.postAllData(newData);
+         Assert.fail("Exception should be raised");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(postedData);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -544,7 +577,8 @@ public class HTTPOperationsTest {
 			listData.addAll(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME));
 			listData.addAll(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME));
 			Assert.assertNotNull(listData);
-			postedData = api.postAllData(listData);
+			postedData = api.postAllDataInType(listData, "conceptcars");
+         Assert.fail("Exception should be raised");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(postedData);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -568,14 +602,17 @@ public class HTTPOperationsTest {
 		List<DCResource> postedData = null;
 		Assert.assertNull(postedData);
 		
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME),
+		      BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		Assert.assertNotNull(postedData);
 		postedData = null;
 		
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME), BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME),
+		      BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
 		
-		List<DCResource> listMotorcycles = api.findDataInType(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, new QueryParameters(), 0, 1);
+		List<DCResource> listMotorcycles = api.findDataInType(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME,
+		      new QueryParameters(), 0, 1);
 		Assert.assertNotNull(listMotorcycles);
 		DCResource motorcycle = listMotorcycles.get(0);
 		motorcycle.setProperty("hp", new Integer(200));
@@ -602,12 +639,15 @@ public class HTTPOperationsTest {
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
 		List<DCResource> updatedResource = null;
 		Assert.assertNull(updatedResource);
-		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(
+		      BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		Assert.assertNotNull(postedData);
 		postedData = null;
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME), BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME),
+		      BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
-		List<DCResource> listMotorcycles = api.findDataInType(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, new QueryParameters(), 0, 1);
+		List<DCResource> listMotorcycles = api.findDataInType(
+		      BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, new QueryParameters(), 0, 1);
 		
 		try {
 			Assert.assertNotNull(listMotorcycles);		
@@ -616,6 +656,7 @@ public class HTTPOperationsTest {
 			List<DCResource> listDataToUpdate = new ArrayList<DCResource>();
 			listDataToUpdate.add(motorcycle);
 			updatedResource = api.putAllData(listDataToUpdate);
+         Assert.fail("Exception should be raised");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(updatedResource);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -638,12 +679,15 @@ public class HTTPOperationsTest {
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
 		List<DCResource> updatedResource = null;
 		Assert.assertNull(updatedResource);
-		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(
+		      BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		Assert.assertNotNull(postedData);
 		postedData = null;
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME), BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME),
+		      BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
-		List<DCResource> listMotorcycles = api.findDataInType(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, new QueryParameters(), 0, 1);
+		List<DCResource> listMotorcycles = api.findDataInType(
+		      BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, new QueryParameters(), 0, 1);
 		
 		try {
 			Assert.assertNotNull(listMotorcycles);		
@@ -653,6 +697,7 @@ public class HTTPOperationsTest {
 			List<DCResource> listDataToUpdate = new ArrayList<DCResource>();
 			listDataToUpdate.add(motorcycle); 
 			updatedResource = api.putAllData(listDataToUpdate);
+         Assert.fail("Exception should be raised");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(updatedResource);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -675,12 +720,15 @@ public class HTTPOperationsTest {
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
 		List<DCResource> updatedResource = null;
 		Assert.assertNull(updatedResource);
-		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(
+		      BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		Assert.assertNotNull(postedData);
 		postedData = null;
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME), BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME),
+		      BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
-		List<DCResource> listMotorcycles = api.findDataInType(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, new QueryParameters(), 0, 1);
+		List<DCResource> listMotorcycles = api.findDataInType(
+		      BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, new QueryParameters(), 0, 1);
 		
 		try {
 			Assert.assertNotNull(listMotorcycles);		
@@ -689,6 +737,7 @@ public class HTTPOperationsTest {
 			List<DCResource> listDataToUpdate = new ArrayList<DCResource>();
 			listDataToUpdate.add(car);
 			updatedResource = api.putAllData(listDataToUpdate);
+         Assert.fail("Exception should be raised");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(updatedResource);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -709,13 +758,17 @@ public class HTTPOperationsTest {
 		
 		Map<String, List<DCResource>> mapData = brandCarMotorcycleData.getData();
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
-		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(
+		      BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		Assert.assertNotNull(postedData);
 		postedData = null;
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME), BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME),
+		      BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
-		List<DCResource> listMotorcycles = api.findData(new QueryParameters().add("year", "2014"), 0, 10);
+		List<DCResource> listMotorcycles = api.findDataInType(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME,
+		      new QueryParameters().add("year", "2014"), 0, 10);
 		Assert.assertNotNull(listMotorcycles);
+      Assert.assertEquals(1, listMotorcycles.size());
 		
 	}
 	
@@ -731,14 +784,18 @@ public class HTTPOperationsTest {
 		
 		Map<String, List<DCResource>> mapData = brandCarMotorcycleData.getData();
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
-		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(
+		      BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		Assert.assertNotNull(postedData);
 		postedData = null;
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME), BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME),
+		      BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
 		List<DCResource> listMotorcycles = null;
 		try {
-			listMotorcycles = api.findData(new QueryParameters().add("test", "true").add("noquery", "0"), 0, 10);
+			listMotorcycles = api.findDataInType(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME,
+			      new QueryParameters().add("test", "true").add("noquery", "0"), 0, 10);
+         Assert.fail("Exception should be raised");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(listMotorcycles);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -761,7 +818,8 @@ public class HTTPOperationsTest {
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
 		List<DCResource> listConceptCars = null;
 		try {
-			listConceptCars = api.findData(new QueryParameters().add("model", "conceptcars"), 0, 10);
+			listConceptCars = api.findDataInType("conceptcars", new QueryParameters(), 0, 10);
+         Assert.fail("Exception should be raised");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(listConceptCars);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -785,14 +843,17 @@ public class HTTPOperationsTest {
 		List<DCResource> postedData = null;
 		Assert.assertNull(postedData);
 		
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME),
+		      BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		Assert.assertNotNull(postedData);
 		postedData = null;
 		
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME),
+		      BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
 		
-		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, new QueryParameters(), 0, 1);
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME,
+		      new QueryParameters(), 0, 1);
 		Assert.assertNotNull(listCars);
 		DCResource car = listCars.get(0);
 		car.setProperty("model", "Espace");
@@ -817,18 +878,22 @@ public class HTTPOperationsTest {
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
 		DCResource updatedResource = null;
 		Assert.assertNull(updatedResource);
-		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(
+		      BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		Assert.assertNotNull(postedData);
 		postedData = null;
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME),
+		      BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
-		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, new QueryParameters(), 0, 1);
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME,
+		      new QueryParameters(), 0, 1);
 		
 		try {
 			Assert.assertNotNull(listCars);		
 			DCResource car = listCars.get(0);
 			car.setProperty("fault$/!#property", "test");
 			updatedResource = api.putDataInType(car, BrandCarMotorcycleModel.CAR_MODEL_NAME, car.getUri());
+         Assert.fail("Exception should be raised");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(updatedResource);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -851,12 +916,15 @@ public class HTTPOperationsTest {
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
 		DCResource updatedResource = null;
 		Assert.assertNull(updatedResource);
-		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(
+		      BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		Assert.assertNotNull(postedData);
 		postedData = null;
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME),
+		      BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
-		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, new QueryParameters(), 0, 1);
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME,
+		      new QueryParameters(), 0, 1);
 		
 		try {
 			Assert.assertNotNull(listCars);		
@@ -864,6 +932,7 @@ public class HTTPOperationsTest {
 			car.setVersion(8l);
 			car.setProperty("model", "updateTest");
 			updatedResource = api.putDataInType(car, BrandCarMotorcycleModel.CAR_MODEL_NAME, car.getUri());
+         Assert.fail("Exception should be raised");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(updatedResource);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -886,18 +955,22 @@ public class HTTPOperationsTest {
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
 		DCResource updatedResource = null;
 		Assert.assertNull(updatedResource);
-		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(
+		      BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		Assert.assertNotNull(postedData);
 		postedData = null;
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME),
+		      BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
-		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, new QueryParameters(), 0, 1);
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME,
+		      new QueryParameters(), 0, 1);
 		
 		try {
 			Assert.assertNotNull(listCars);		
 			DCResource car = listCars.get(0);
 			car.setVersion(null);
 			updatedResource = api.putDataInType(car, BrandCarMotorcycleModel.CAR_MODEL_NAME, car.getUri());
+         Assert.fail("Exception should be raised");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(updatedResource);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -920,10 +993,12 @@ public class HTTPOperationsTest {
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
 		DCResource updatedResource = null;
 		Assert.assertNull(updatedResource);
-		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(
+		      BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		Assert.assertNotNull(postedData);
 		postedData = null;
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME),
+		      BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		Assert.assertNotNull(postedData);		
 		DCResource resource = api.getData(BrandCarMotorcycleModel.CAR_MODEL_NAME, "Renault/Megane/1996");
 		Assert.assertNotNull(resource);
@@ -944,15 +1019,18 @@ public class HTTPOperationsTest {
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
 		DCResource updatedResource = null;
 		Assert.assertNull(updatedResource);
-		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(
+		      BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		Assert.assertNotNull(postedData);
 		postedData = null;
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME),
+		      BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		Assert.assertNotNull(postedData);	
 		DCResource resource = null;
 		Assert.assertNull(resource);
 		try {
 			resource = api.getData("conceptcars", "Renault/Megane/1996");
+         Assert.fail("Exception should be raised");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(resource);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -975,16 +1053,18 @@ public class HTTPOperationsTest {
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
 		DCResource updatedResource = null;
 		Assert.assertNull(updatedResource);
-		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(
+		      BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		Assert.assertNotNull(postedData);
 		postedData = null;
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME),
+		      BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		Assert.assertNotNull(postedData);	
 		DCResource resource = null;
 		try {
 			Assert.assertNull(resource);
 			resource = api.getData(BrandCarMotorcycleModel.CAR_MODEL_NAME, "Renault/Megane/2007");
-			Assert.assertNull(resource);
+			Assert.fail("Exception should be raised");
 		} catch (WebApplicationException e) {
 			Assert.assertNull(resource);
 			int httpStatus = UnitTestHelper.getHttpStatusFromWAE(e);
@@ -1010,18 +1090,22 @@ public class HTTPOperationsTest {
 		Assert.assertTrue(mapData != null && !mapData.isEmpty());
 		DCResource updatedResource = null;
 		Assert.assertNull(updatedResource);
-		List<DCResource> postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.BRAND_MODEL_NAME), BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+		List<DCResource> postedData = api.postAllDataInType(mapData.get(
+		      BrandCarMotorcycleModel.BRAND_MODEL_NAME),
+		      BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		Assert.assertNotNull(postedData);
 		postedData = null;
-		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME), BrandCarMotorcycleModel.CAR_MODEL_NAME);
+		postedData = api.postAllDataInType(mapData.get(BrandCarMotorcycleModel.CAR_MODEL_NAME),
+		      BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		Assert.assertNotNull(postedData);
-		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME, new QueryParameters().add("model", "Megane").add("year", "1996"), 0, 1);
+		List<DCResource> listCars = api.findDataInType(BrandCarMotorcycleModel.CAR_MODEL_NAME,
+		      new QueryParameters().add("model", "Megane").add("year", "1996"), 0, 1);
 		Assert.assertNotNull(listCars);
 		Assert.assertTrue(!listCars.isEmpty());
 		try {
 			api.deleteData(BrandCarMotorcycleModel.CAR_MODEL_NAME, "Renault/Megane/1996");
 		} catch (Exception e) {
-			e.printStackTrace();
+         Assert.fail("Exception should not happen");
 		}
 	}
 

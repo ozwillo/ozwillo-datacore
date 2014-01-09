@@ -104,8 +104,7 @@ public class FunctionalOperationsTest {
 		QueryParameters queryParameters = null;
 		List<DCResource> listResource = null;
 		
-		queryParameters = new QueryParameters();
-		queryParameters.add("name", "+");
+		queryParameters = new QueryParameters().add("name", "+");
 		listResource = api.findDataInType(MarkaInvestModel.FIELD_MODEL_NAME, queryParameters, 0, 10);
 		Assert.assertNotNull(listResource);
 		Assert.assertFalse("Resource list should not be empty", listResource.isEmpty());
@@ -125,8 +124,7 @@ public class FunctionalOperationsTest {
 		QueryParameters queryParameters = null;
 		List<DCResource> listResource = null;
 		
-		queryParameters = new QueryParameters();
-		queryParameters.add("name", "-");
+		queryParameters = new QueryParameters().add("name", "-");
 		listResource = api.findDataInType(MarkaInvestModel.FIELD_MODEL_NAME, queryParameters, 0, 10);
 		Assert.assertNotNull(listResource);
 		Assert.assertFalse("Resource list should not be empty", listResource.isEmpty());

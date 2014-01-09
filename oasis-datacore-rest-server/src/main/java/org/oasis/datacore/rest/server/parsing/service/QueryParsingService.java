@@ -13,10 +13,20 @@ import org.oasis.datacore.rest.server.parsing.model.QueryOperatorsEnum;
 
 public interface QueryParsingService {
 
-	public void parseCriteriaFromQueryParameter(String fieldPath, String operatorAndValue, DCField dcField, DCQueryParsingContext queryParsingContext) throws ResourceParsingException;
+   /**
+    * Parses query parameter criteria according to model field.
+    * TODO LATER using ANTLR ?!?
+    * recognizes MongoDB criteria (operators & values), see http://docs.mongodb.org/manual/reference/operator/query/
+    * and fills Spring Criteria with them
+    * @param operatorAndValue
+    * @param dcField
+    * @param queryParsingContext
+    * @throws ResourceParsingException
+    */
+	public void parseCriteriaFromQueryParameter(String operatorAndValue,
+	      DCField dcField, DCQueryParsingContext queryParsingContext)
+	      throws ResourceParsingException;
 
-	public void addSort(String fieldPath, QueryOperatorsEnum sortEnum, DCQueryParsingContext queryParsingContext);
-	
 	/**
 	 * Parses using the operatorEnum.parsingType if any, else the given dcField type
 	 * @param operatorEnum

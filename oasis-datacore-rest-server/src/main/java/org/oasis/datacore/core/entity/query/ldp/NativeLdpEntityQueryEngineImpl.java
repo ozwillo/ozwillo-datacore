@@ -56,7 +56,7 @@ public class NativeLdpEntityQueryEngineImpl extends EntityQueryEngineBase {
       // TODO or to be able to refactor in LdpNativeQueryServiceImpl, rather do (as getQueryParameters does) :
       /// params = JAXRSUtils.getStructuredParams((String)message.get(Message.QUERY_STRING), "&", decode, decode);
       // by getting query string from either @Context-injected CXF Message or uriInfo.getRequestUri() (BUT costlier) ??
-      boolean decode = true;
+      boolean decode = false; // don't decode, has already been decoded as part of HTTP query
       MultivaluedMap<String, String> params = JAXRSUtils.getStructuredParams(query, "&", decode, decode);
       int start = getIntParam(params, "start", 0);
       int limit = getIntParam(params, "limit", 10);

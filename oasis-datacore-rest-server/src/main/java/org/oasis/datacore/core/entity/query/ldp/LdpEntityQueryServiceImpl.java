@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
 
@@ -133,27 +134,35 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          }
          
          List<String> values = params.get(fieldPath);
-         if (values == null || values.size() == 0) {
-            queryParsingContext.addError("Missing value for parameter " + fieldPath);
-            continue;
-         } // should not happen
-         String operatorAndValue = values.get(0);
-         if (operatorAndValue == null) {
+         if (values == null || values.isEmpty()) {
             queryParsingContext.addError("Missing value for parameter " + fieldPath);
             continue; // should not happen
          }
          
-         // parsing query parameter criteria according to model field :
-         // TODO LATER using ANTLR ?!?
-         // recognizes MongoDB criteria (operators & values), see http://docs.mongodb.org/manual/reference/operator/query/
-         // and fills Spring Criteria with them
-         
-         try {
-        	 queryParsingService.parseCriteriaFromQueryParameter(fieldPath, operatorAndValue, dcField, queryParsingContext);
-         } catch (Exception ex) {
-            queryParsingContext.addError("Error while parsing query criteria " + fieldPath
-                  + operatorAndValue, ex);
+         // TODO (mongo)operator for error & in parse ?
+         String entityFieldPath = "_p." + fieldPath; // almost the same fieldPath for mongodb (?)
+
+         queryParsingContext.enterCriteria(entityFieldPath, values.size());
+         try  {
+            // parsing multiple values (of a field that is mentioned several times) :
+            // (such as {limit=[10], founded=[>"-0143-04-01T00:00:00.000Z", <"-0043-04-02T00:00:00.000Z"]})
+            // NB. can't be done by merely chaining .and(...)'s because of mongo BasicDBObject limitations, see
+            // http://www.mkyong.com/java/due-to-limitations-of-the-basicdbobject-you-cant-add-a-second-and/
+            for (String operatorAndValue : values) {
+               try {
+                  // parsing query parameter criteria according to model field :
+                  queryParsingService.parseCriteriaFromQueryParameter(operatorAndValue,
+                        dcField, queryParsingContext);
+               } catch (Exception ex) {
+                  queryParsingContext.addError("Error while parsing query criteria " + fieldPath
+                        + operatorAndValue, ex);
+               }
+            }
+            
+         } finally {
+            queryParsingContext.exitCriteria();
          }
+
       }
       
 

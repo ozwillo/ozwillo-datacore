@@ -18,7 +18,7 @@ public class DatacoreObjectMapper extends ObjectMapper {
       super();
       
       // date databinding configuration :
-
+      
       // model dates as Joda's DateTime,
       // else com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException: Unrecognized field "weekOfWeekyear" (class org.joda.time.DateTime)
       // or JsonMappingException: Can not instantiate value of type [simple type, class org.joda.time.DateTime]
@@ -33,6 +33,7 @@ public class DatacoreObjectMapper extends ObjectMapper {
       
       // NO joda is used instead anyway (which parses using new DateTime(string, UTC))
       //this.setDateFormat(StdDateFormat.getBlueprintISO8601Format());
+      // or SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ") 
       
       // allow leading zeroes
       // else fails on date with years serialized with wrong leading zeroes ex. 0300 :
