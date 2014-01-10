@@ -1,7 +1,6 @@
 package org.oasis.datacore.core.security;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Set;
 
 import org.oasis.datacore.core.entity.EntityModelService;
@@ -121,7 +120,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
     * @param entityAclGroups
     * @return
     */
-   private boolean hasAnyEntityAclGroup(DCUserImpl user, List<String> entityAclGroups) {
+   private boolean hasAnyEntityAclGroup(DCUserImpl user, Set<String> entityAclGroups) {
       if (entityAclGroups == null || entityAclGroups.isEmpty()) { // TODO null should not happen ?!?
          return false;
       }

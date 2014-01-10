@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.joda.time.DateTime;
 import org.oasis.datacore.core.meta.model.DCModel;
@@ -120,13 +121,13 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
 
    /** required to check query rights (which is read mass operation) in a single step */
    @Field("_r")
-   private List<String> readers;
+   private Set<String> readers;
    /** ONLY REQUIRED IF MASS W & O OPERATIONS but otherwise still need to be stored somewhere */
    @Field("_w")
-   private List<String> writers;
+   private Set<String> writers;
    /** ONLY REQUIRED IF MASS W & O OPERATIONS but otherwise still need to be stored somewhere */
    @Field("_o")
-   private List<String> owners;
+   private Set<String> owners;
    
    /** request-scoped cache built in resourceToEntity or else getEntity */
    @Transient
@@ -307,27 +308,27 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
       this.properties = properties;
    }
 
-   public List<String> getReaders() {
+   public Set<String> getReaders() {
       return readers;
    }
 
-   public void setReaders(List<String> readers) {
+   public void setReaders(Set<String> readers) {
       this.readers = readers;
    }
 
-   public List<String> getWriters() {
+   public Set<String> getWriters() {
       return writers;
    }
 
-   public void setWriters(List<String> writers) {
+   public void setWriters(Set<String> writers) {
       this.writers = writers;
    }
 
-   public List<String> getOwners() {
+   public Set<String> getOwners() {
       return owners;
    }
 
-   public void setOwners(List<String> owners) {
+   public void setOwners(Set<String> owners) {
       this.owners = owners;
    }
 

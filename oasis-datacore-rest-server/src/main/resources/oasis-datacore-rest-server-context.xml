@@ -144,20 +144,20 @@
          <!-- bean class="org.apache.cxf.jaxrs.impl.WebApplicationExceptionMapper">
             <property name="addMessageToResponse" value="true"/>
          </bean -->
-         <bean class="org.oasis.datacore.core.security.AccessDeniedExceptionMapper"/><!-- to HTTP 403 -->
+         <bean class="org.oasis.datacore.rest.server.security.AccessDeniedExceptionMapper"/><!-- to HTTP 403 -->
          <ref bean="swagger.resourceWriter" />
          <ref bean="swagger.apiWriter" />
       </jaxrs:providers>
       <!-- Single value array POST handling interceptors (rather than whole bus) : -->
       <jaxrs:inInterceptors>
-         <bean class="org.oasis.datacore.core.security.mock.MockLoginServerInInterceptor"/><!-- TODO MOCK move -->
+         <bean class="org.oasis.datacore.rest.server.security.mock.MockLoginServerInInterceptor"/><!-- TODO MOCK move -->
          <bean class="org.oasis.datacore.rest.server.cxf.ArrayServerInInterceptor">
             <property name="objectMapper"><ref bean="datacoreApiServer.objectMapper"/></property>
          </bean>
       </jaxrs:inInterceptors>
       <jaxrs:outInterceptors>
          <bean class="org.oasis.datacore.rest.server.cxf.ArrayServerOutInterceptor"/>
-         <bean class="org.oasis.datacore.core.security.mock.MockLoginServerOutInterceptor"/><!-- TODO MOCK move -->
+         <bean class="org.oasis.datacore.rest.server.security.mock.MockLoginServerOutInterceptor"/><!-- TODO MOCK move -->
       </jaxrs:outInterceptors>
       <!-- TODO also autn --><!-- bean id="authorizationFilter" class="com.bar.providers.AuthorizationRequestHandler"/ -->
       <jaxrs:features>

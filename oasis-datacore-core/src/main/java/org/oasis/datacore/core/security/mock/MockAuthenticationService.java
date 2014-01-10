@@ -33,8 +33,14 @@ import org.springframework.stereotype.Component;
  */
 @Component // always instanciated but non-test code can't call it
 public class MockAuthenticationService {
-
-   @Autowired
+   
+   /** User id (for resource auditor & creator as owner) in case there is no Spring Security
+    * Authentication object in context (even guest or system should have one). Can only
+    * happen if EntityServiceImpl is used directly and not through its secured interface. */
+   public static final String NO_USER = "*no_user*";
+   
+   /** TODO LATER remove optional when there is a mock in the -core project */
+   @Autowired(required = false)
    private UserDetailsService mockUserDetailsService;
    
    public void loginAs(String username) {
@@ -72,6 +78,12 @@ public class MockAuthenticationService {
          throw new RuntimeException("No authentication in security context");  
       }
       return (DCUserImpl) currentUserAuth.getPrincipal();
+   }
+
+   /** for resource : to put creator as owner, and get auditor (created/modifiedBy) */
+   public String getCurrentUserId() {
+      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+      return (authentication == null) ? NO_USER : authentication.getName();
    }
 
    /**

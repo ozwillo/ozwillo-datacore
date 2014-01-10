@@ -1,4 +1,4 @@
-package org.oasis.datacore.core.security.mock;
+package org.oasis.datacore.rest.server.security.mock;
 
 import java.util.List;
 import java.util.Map;
@@ -14,6 +14,7 @@ import org.apache.cxf.jaxrs.utils.JAXRSUtils;
 import org.apache.cxf.message.Message;
 import org.apache.cxf.phase.AbstractPhaseInterceptor;
 import org.apache.cxf.phase.Phase;
+import org.oasis.datacore.core.security.mock.MockAuthenticationService;
 import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.client.cxf.CxfMessageHelper;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,8 +1,8 @@
 package org.oasis.datacore.core.security;
 
+import org.oasis.datacore.core.security.mock.MockAuthenticationService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.AuditorAware;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 
 /**
@@ -14,19 +14,16 @@ import org.springframework.security.core.context.SecurityContextHolder;
  *
  */
 public class SpringSecurityAuthAuditor implements AuditorAware<String> {
-   
-   /** in case there is no Spring Security Authentication object in context
-    * (even guest or system should have one). Can only happen if EntityServiceImpl
-    * is used directly and not through its secured interface. */
-   public static final String NO_USER = "*no_user*";
 
+   @Autowired
+   private MockAuthenticationService authenticationService;
+   
 	/**
 	 * Returns current user id
 	 */
 	@Override
 	public String getCurrentAuditor() {
-	   Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		return (authentication == null) ? NO_USER : authentication.getName();
+	   return authenticationService.getCurrentUserId();
 	}
 
 }

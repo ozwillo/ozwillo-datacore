@@ -50,6 +50,6 @@ public class DatacoreEntityTest {
    public void testMongoConf() {
       Assert.assertEquals(WriteConcern.ACKNOWLEDGED, mt.getDb().getWriteConcern());
       // TODO LATER for prod, check & test REPLICA_ACKNOWLEDGED (and not / also FSYNCED or JOURNALED ??)
-      // TODO LATER for prod, test mongo auth
+      // TODO LATER2 for prod, test mongo auth
    }
 }

@@ -2,13 +2,17 @@ package org.oasis.datacore.rest.server.resource;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelService;
+import org.oasis.datacore.core.security.mock.MockAuthenticationService;
 import org.oasis.datacore.historization.exception.HistorizationException;
 import org.oasis.datacore.historization.service.HistorizationService;
 import org.oasis.datacore.rest.api.DCResource;
@@ -26,6 +30,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.ImmutableMap;
@@ -53,6 +58,10 @@ public class ResourceService {
    private ResourceEntityMapperService resourceEntityMapperService;
    @Autowired
    private EntityService entityService;
+   
+   /** to put creator as owner */
+   @Autowired
+   private MockAuthenticationService authenticationService;
    
    @Autowired
    private EventService eventService;
@@ -338,11 +347,15 @@ public class ResourceService {
       eventService.triggerResourceEvent(aboutToEventType, resource);
       
       if (isCreation) {
-         // TODO maintain uri unicity : index (but not sharded so also handle duplicates a posteriori)
-         // and catch conflict ?!?
+         // setting creator (group) as sole owner
+         Set<String> creatorOwners = new HashSet<String>(1);
+         creatorOwners.add("u_" + authenticationService.getCurrentUserId()); // TODO TODO
+         dataEntity.setOwners(creatorOwners);
          try {
             entityService.create(dataEntity);
          } catch (DuplicateKeyException dkex) {
+            // detected by unique index on _uri
+            // TODO unicity across shards : index not sharded so also handle duplicates a posteriori
             throw new ResourceAlreadyExistsException("Trying to create already existing "
                   + "data resource." , resource);
          } catch (NonTransientDataAccessException ntdaex) {

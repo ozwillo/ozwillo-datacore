@@ -1,4 +1,4 @@
-package org.oasis.datacore.core.security;
+package org.oasis.datacore.rest.server.security;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;

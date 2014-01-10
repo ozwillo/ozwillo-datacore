@@ -2,7 +2,9 @@ package org.oasis.datacore.rest.server;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.BadRequestException;
 
@@ -376,12 +378,16 @@ public class DatacoreApiServerMixinTest {
          altTourismPlaceSofiaMonasteryPosted = resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true);
          Assert.assertEquals("john", altTourismPlaceSofiaMonasteryPosted.getLastModifiedBy()); // check auditor
+         Set<String> owners = entityService.getByUriUnsecured(altTourismPlaceSofiaMonasteryPosted.getUri(), altTourismPlaceModel).getOwners();
+         Assert.assertTrue(owners != null && owners.size() == 1 &&  !"u_john".equals(owners.iterator().next())); // check creator as owner
       } catch (Exception e) {
          Assert.fail("Resource in authentified writable type should be writable as user");
       }
       try {
          altTourismPlaceSofiaMonasteryPosted = datacoreApiClient.postDataInType(altTourismPlaceSofiaMonasteryPosted); // client side
          Assert.assertEquals("john", altTourismPlaceSofiaMonasteryPosted.getLastModifiedBy()); // check auditor
+         Set<String> owners = entityService.getByUriUnsecured(altTourismPlaceSofiaMonasteryPosted.getUri(), altTourismPlaceModel).getOwners();
+         Assert.assertTrue(owners != null && owners.size() == 1 &&  !"u_john".equals(owners.iterator().next())); // check creator as owner
       } catch (Exception e) {
          Assert.fail("Resource in authentified writable type should be writable as user");
       }
@@ -391,12 +397,16 @@ public class DatacoreApiServerMixinTest {
          DCResource resource = resourceService.createOrUpdate(buildSofiaMonastery(++i),
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false);
          Assert.assertEquals("john", resource.getCreatedBy()); // check auditor
+         Set<String> owners = entityService.getByUriUnsecured(resource.getUri(), altTourismPlaceModel).getOwners();
+         Assert.assertTrue(owners != null && owners.size() == 1 &&  "u_john".equals(owners.iterator().next())); // check creator as owner
       } catch (Exception e) {
          Assert.fail("Resource in authentified creatable type should be creatable as user");
       }
       try {
          DCResource resource = datacoreApiClient.postDataInType(buildSofiaMonastery(++i)); // client side
          Assert.assertEquals("john", resource.getCreatedBy()); // check auditor
+         Set<String> owners = entityService.getByUriUnsecured(resource.getUri(), altTourismPlaceModel).getOwners();
+         Assert.assertTrue(owners != null && owners.size() == 1 &&  "u_john".equals(owners.iterator().next())); // check creator as owner
       } catch (Exception e) {
          Assert.fail("Resource in authentified creatable type should be creatable as user");
       }
@@ -606,7 +616,7 @@ public class DatacoreApiServerMixinTest {
       // set reader rights
       authenticationService.loginAs("admin");
       DCEntity altTourismPlaceSofiaMonasteryEntity = entityService.getByUri(altTourismPlaceSofiaMonastery.getUri(), altTourismPlaceModel);
-      altTourismPlaceSofiaMonasteryEntity.setReaders(new ArrayList<String>() {{ add("rm_altTourism.place.SofiaMonastery_readers"); }});
+      altTourismPlaceSofiaMonasteryEntity.setReaders(new HashSet<String>() {{ add("rm_altTourism.place.SofiaMonastery_readers"); }});
       entityService.update(altTourismPlaceSofiaMonasteryEntity);
       // get with updated version :
       altTourismPlaceSofiaMonasteryPosted = datacoreApiClient.getData(AltTourismPlaceAddressSample.ALTTOURISM_PLACE, "Sofia_Monastery");
@@ -700,6 +710,8 @@ public class DatacoreApiServerMixinTest {
          DCResource resource = resourceService.createOrUpdate(buildSofiaMonastery(++i),
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false);
          Assert.assertEquals("jim", resource.getCreatedBy()); // check auditor
+         Set<String> owners = entityService.getByUriUnsecured(resource.getUri(), altTourismPlaceModel).getOwners();
+         Assert.assertTrue(owners != null && owners.size() == 1 &&  "u_jim".equals(owners.iterator().next())); // check creator as owner
       } catch (Exception e) {
          Assert.fail("Resource in private type should be creatable by user in writer group");
       }
@@ -714,7 +726,7 @@ public class DatacoreApiServerMixinTest {
       
       // set writer rights
       authenticationService.loginAs("admin");
-      altTourismPlaceSofiaMonasteryEntity.setWriters(new ArrayList<String>() {{ add("rm_altTourism.place.SofiaMonastery_writers"); }});
+      altTourismPlaceSofiaMonasteryEntity.setWriters(new HashSet<String>() {{ add("rm_altTourism.place.SofiaMonastery_writers"); }});
       entityService.update(altTourismPlaceSofiaMonasteryEntity);
       // get with updated version :
       altTourismPlaceSofiaMonasteryPosted = datacoreApiClient.getData(AltTourismPlaceAddressSample.ALTTOURISM_PLACE, "Sofia_Monastery");
@@ -743,6 +755,8 @@ public class DatacoreApiServerMixinTest {
          DCResource resource = resourceService.createOrUpdate(buildSofiaMonastery(++i),
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false);
          Assert.assertEquals("jim", resource.getCreatedBy()); // check auditor
+         Set<String> owners = entityService.getByUriUnsecured(resource.getUri(), altTourismPlaceModel).getOwners();
+         Assert.assertTrue(owners != null && owners.size() == 1 &&  "u_jim".equals(owners.iterator().next())); // check creator as owner
       } catch (Exception e) {
          Assert.fail("Resource in private type should be creatable by user in writer group");
       }

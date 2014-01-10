@@ -1,4 +1,4 @@
-package org.oasis.datacore.core.security.mock;
+package org.oasis.datacore.rest.server.security.mock;
 
 import java.util.logging.Logger;
 
