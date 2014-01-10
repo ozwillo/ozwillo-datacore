@@ -20,6 +20,7 @@ import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
+import org.oasis.datacore.core.security.EntityPermissionService;
 import org.oasis.datacore.core.security.mock.MockAuthenticationService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
@@ -69,6 +70,8 @@ public class DatacoreApiServerMixinTest {
    /** to setup security tests */
    @Autowired
    private EntityService entityService;
+   @Autowired
+   private EntityPermissionService entityPermissionService;
    @Autowired
    private MockAuthenticationService authenticationService;
    
@@ -616,7 +619,8 @@ public class DatacoreApiServerMixinTest {
       // set reader rights
       authenticationService.loginAs("admin");
       DCEntity altTourismPlaceSofiaMonasteryEntity = entityService.getByUri(altTourismPlaceSofiaMonastery.getUri(), altTourismPlaceModel);
-      altTourismPlaceSofiaMonasteryEntity.setReaders(new HashSet<String>() {{ add("rm_altTourism.place.SofiaMonastery_readers"); }});
+      entityPermissionService.setReaders(altTourismPlaceSofiaMonasteryEntity,
+            new HashSet<String>() {{ add("rm_altTourism.place.SofiaMonastery_readers"); }});
       entityService.update(altTourismPlaceSofiaMonasteryEntity);
       // get with updated version :
       altTourismPlaceSofiaMonasteryPosted = datacoreApiClient.getData(AltTourismPlaceAddressSample.ALTTOURISM_PLACE, "Sofia_Monastery");
@@ -726,7 +730,8 @@ public class DatacoreApiServerMixinTest {
       
       // set writer rights
       authenticationService.loginAs("admin");
-      altTourismPlaceSofiaMonasteryEntity.setWriters(new HashSet<String>() {{ add("rm_altTourism.place.SofiaMonastery_writers"); }});
+      entityPermissionService.setWriters(altTourismPlaceSofiaMonasteryEntity,
+            new HashSet<String>() {{ add("rm_altTourism.place.SofiaMonastery_writers"); }});
       entityService.update(altTourismPlaceSofiaMonasteryEntity);
       // get with updated version :
       altTourismPlaceSofiaMonasteryPosted = datacoreApiClient.getData(AltTourismPlaceAddressSample.ALTTOURISM_PLACE, "Sofia_Monastery");

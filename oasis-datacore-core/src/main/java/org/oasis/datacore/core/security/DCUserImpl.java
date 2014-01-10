@@ -104,7 +104,7 @@ public class DCUserImpl extends User {
       return entityGroups;
    }
 
-   public boolean isModelTypeResourceAdmin(String modelType) {
+   public boolean isModelTypeResourceOwner(String modelType) {
       return resourceAdminForModelTypes.contains(modelType);
    }
 

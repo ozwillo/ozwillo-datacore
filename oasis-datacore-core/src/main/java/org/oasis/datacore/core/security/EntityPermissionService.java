@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.oasis.datacore.core.entity.model.DCEntity;
+import org.springframework.stereotype.Component;
 
 
 /**
@@ -12,6 +13,7 @@ import org.oasis.datacore.core.entity.model.DCEntity;
  * @author mdutoo
  *
  */
+@Component
 public class EntityPermissionService {
 
    public void setReaders(DCEntity entity, Set<String> readers) {
@@ -22,6 +24,7 @@ public class EntityPermissionService {
          return;
       }
       entity.setReaders(readers);
+      recomputeAllReaders(entity);
    }
 
    public void setWriters(DCEntity entity, Set<String> writers) {
@@ -32,13 +35,7 @@ public class EntityPermissionService {
          return;
       }
       entity.setWriters(writers);
-      Set<String> readers = entity.getReaders();
-      if (readers == null) {
-         entity.setReaders(new HashSet<String>(writers));
-      } else {
-         readers.addAll(writers);
-         entity.setReaders(readers);
-      }
+      recomputeAllReaders(entity);
    }
 
    public void setOwners(DCEntity entity, Set<String> owners) {
@@ -49,6 +46,25 @@ public class EntityPermissionService {
          return;
       }
       entity.setOwners(owners);
+      recomputeAllReaders(entity);
+   }
+
+   private void recomputeAllReaders(DCEntity entity) {
+      entity.setAllReaders(addAllIfNotNullOrEmpty(entity.getReaders(),
+            addAllIfNotNullOrEmpty(entity.getWriters(),
+                  addAllIfNotNullOrEmpty(entity.getOwners(), null))));
+   }
+
+   private Set<String> addAllIfNotNullOrEmpty(Set<String> acl, Set<String> setToFill) {
+      if (acl == null || acl.isEmpty()) {
+         return setToFill;
+      }
+      if (setToFill == null) {
+         setToFill = new HashSet<String>(acl);
+      } else {
+         setToFill.addAll(acl);
+      }
+      return setToFill;
    }
    
 }

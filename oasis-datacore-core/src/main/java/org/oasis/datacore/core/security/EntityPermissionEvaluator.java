@@ -69,7 +69,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
          throw new RuntimeException("Unknown model for " + dataEntity);
       }
 
-      if (user.isModelTypeResourceAdmin(model.getName())) {
+      if (user.isModelTypeResourceOwner(model.getName())) {
          return true;
       }
       
@@ -78,17 +78,17 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       switch (permissionName) {
       case "read" :
          // to be used in @PostAuthorize on GET
-         // NB. readers have to contain ALSO writers & owners (i.e. be precomputed)
+         // NB. allReaders have to contain ALSO writers & owners (i.e. be precomputed)
          // to allow efficient query filtering by rights criteria
          // => TODO that in PermissionAdminApi/Service
          return model.getSecurity().isGuestReadable()
                || model.getSecurity().isAuthentifiedReadable() && !user.isGuest()
                || user.isModelTypeResourceReader(model.getName())
-               || hasAnyEntityAclGroup(user, dataEntity.getReaders());
+               || hasAnyEntityAclGroup(user, dataEntity.getAllReaders());
       case "write" :
          // to be used in @PreAuthorize on update ??
          // NB. writers have NOT to contain also writers & owners (i.e. be precomputed)
-         // because no mass write operations yet
+         // because no mass write operations (yet)
          return model.getSecurity().isAuthentifiedWritable() && !user.isGuest()
                || user.isModelTypeResourceWriter(model.getName())
                || hasAnyEntityAclGroup(user, dataEntity.getWriters())

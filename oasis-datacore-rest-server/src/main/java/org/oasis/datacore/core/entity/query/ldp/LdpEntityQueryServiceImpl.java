@@ -194,9 +194,9 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          
          if (!user.isAdmin()
                && !modelSecurity.isAuthentifiedReadable() // NB. not guest
-               && !user.isModelTypeResourceAdmin(modelType)
+               && !user.isModelTypeResourceOwner(modelType)
                && !user.isModelTypeResourceReader(modelType)) {
-            queryParsingContext.getCriteria().and("_r").in(user.getEntityGroups());
+            queryParsingContext.getCriteria().and("_ar").in(user.getEntityGroups());
          } // else (datacore global or model-scoped) admin, so no security check
       } // else public, so no security check
       

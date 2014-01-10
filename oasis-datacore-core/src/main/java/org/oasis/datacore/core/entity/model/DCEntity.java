@@ -119,7 +119,15 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
 
    // TODO for datacore : _container_id/uri
 
-   /** required to check query rights (which is read mass operation) in a single step */
+   /** required to check query rights (which is read mass operation) in a single step.
+    * Computed out of readers (only) + writers + readers. Only readers are not enough
+    * because when removing a user's write permission, can't know if must also remove
+    * his read permission or if he also independently had a read permission.
+    * Alternative : allow several same values by storing as list, but there is still
+    * as much requiring to be stored. */
+   @Field("_ar")
+   private Set<String> allReaders;
+   /** ONLY REQUIRED IF MASS W & O OPERATIONS but otherwise still need to be stored somewhere */
    @Field("_r")
    private Set<String> readers;
    /** ONLY REQUIRED IF MASS W & O OPERATIONS but otherwise still need to be stored somewhere */
@@ -306,6 +314,14 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
 
    public void setProperties(Map<String,Object> properties) {
       this.properties = properties;
+   }
+
+   public Set<String> getAllReaders() {
+      return allReaders;
+   }
+
+   public void setAllReaders(Set<String> allReaders) {
+      this.allReaders = allReaders;
    }
 
    public Set<String> getReaders() {
