@@ -216,7 +216,6 @@ public class MarkaInvestData extends DatacoreSampleBase {
 				
 	}
 	
-
 	public void insertData() {
 		
 		try {

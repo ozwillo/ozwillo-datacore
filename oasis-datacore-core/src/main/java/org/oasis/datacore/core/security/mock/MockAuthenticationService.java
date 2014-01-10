@@ -5,6 +5,7 @@ import java.util.Set;
 
 import org.oasis.datacore.core.security.DCUserImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -33,7 +34,7 @@ import org.springframework.stereotype.Component;
  */
 @Component // always instanciated but non-test code can't call it
 public class MockAuthenticationService {
-   
+	
    /** User id (for resource auditor & creator as owner) in case there is no Spring Security
     * Authentication object in context (even guest or system should have one). Can only
     * happen if EntityServiceImpl is used directly and not through its secured interface. */
@@ -41,6 +42,7 @@ public class MockAuthenticationService {
    
    /** TODO LATER remove optional when there is a mock in the -core project */
    @Autowired(required = false)
+   @Qualifier("datacore.userDetailsService")
    private UserDetailsService mockUserDetailsService;
    
    public void loginAs(String username) {

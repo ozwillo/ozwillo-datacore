@@ -23,11 +23,11 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.codec.Base64;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
+import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 import org.springframework.security.oauth2.provider.BaseClientDetails;
 import org.springframework.security.oauth2.provider.DefaultAuthorizationRequest;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;
-import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.DefaultResponseErrorHandler;
@@ -94,19 +94,28 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 		headers.set("Authorization", getAuthorizationHeader(clientId, clientSecret));
 		Map<String, Object> map = postForMap(checkTokenEndpointUrl, formData, headers);
 
-		if (map.containsKey("error")) {
+		if (map.containsKey("active") && Boolean.FALSE.equals(map.get("active"))) {
 			logger.debug("check_token returned error: " + map.get("error"));
 			throw new InvalidTokenException(accessToken);
 		}
 
-		Assert.state(map.containsKey("client_id"), "Client id must be present in response from auth server");
+		if (!map.containsKey("client_id")) {
+			logger.warn("client_id must be present in response from introspection point");
+			throw OAuth2Exception.create(OAuth2Exception.UNSUPPORTED_RESPONSE_TYPE, "client_id must be present in response from introspection point");
+		}
+		
 		String remoteClientId = (String) map.get("client_id");
 
 		Set<String> scope = new HashSet<String>();
 		if (map.containsKey("scope")) {
-			@SuppressWarnings("unchecked")
-			Collection<String> values = (Collection<String>) map.get("scope");
-			scope.addAll(values);
+			Object scopes = map.get("scope");
+			if(scopes instanceof String) {
+				String values = (String)scopes;
+				scope.add(values);
+			} else {
+				Collection<String> values = (Collection<String>) map.get("scope");
+				scope.addAll(values);
+			}
 		}
 		DefaultAuthorizationRequest clientAuthentication = new DefaultAuthorizationRequest(remoteClientId, scope);
 
@@ -129,6 +138,19 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 			clientDetails.setAuthorities(clientAuthorities);
 			clientAuthentication.addClientDetails(clientDetails);
 		}
+		
+		Set<String> groupSet = new HashSet<String>();
+		if(map.containsKey("sub_groups")) {
+			Object groups = map.get("sub_groups");
+			if(groups instanceof String) {
+				String values = (String)groups;
+				groupSet.add(values);
+			} else {
+				Collection<String> values = (Collection<String>) map.get("sub_groups");
+				groupSet.addAll(values);
+			}
+			// put groups where ?
+		}
 
 
 		if (map.containsKey(Claims.ADDITIONAL_AZ_ATTR)) {
@@ -141,7 +163,6 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 		}
 
 		Authentication userAuthentication = getUserAuthentication(map, scope);
-
 		clientAuthentication.setApproved(true);
 		return new OAuth2Authentication(clientAuthentication, userAuthentication);
 	}
@@ -193,9 +214,7 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 		if (headers.getContentType() == null) {
 			headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 		}
-		@SuppressWarnings("rawtypes")
-		Map map = restTemplate.exchange(path, HttpMethod.POST,
-				new HttpEntity<MultiValueMap<String, String>>(formData, headers), Map.class).getBody();
+		Map map = restTemplate.exchange(path, HttpMethod.POST, new HttpEntity<MultiValueMap<String, String>>(formData, headers), Map.class).getBody();
 		@SuppressWarnings("unchecked")
 		Map<String, Object> result = (Map<String, Object>) map;
 		return result;

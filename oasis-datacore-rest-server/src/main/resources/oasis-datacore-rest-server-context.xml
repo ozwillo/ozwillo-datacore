@@ -27,8 +27,9 @@
       order="-1" ignore-unresolvable="true"/><!-- so defaults to importing PropertyPlaceholder/*Resolver -->
    
    <import resource="classpath:oasis-datacore-core-context.xml" />
-   <!-- <import resource="classpath:oasis-datacore-security-context.xml" />  -->
-   <import resource="classpath:oasis-datacore-security-mock-context.xml" />
+   
+   <import resource="classpath:oasis-datacore-security-mock-context.xml" />  
+   <import resource="classpath:oasis-datacore-security-context.xml" />
    <!-- reusing client for init of samples : -->
    <import resource="classpath:oasis-datacore-rest-client-context.xml" />
 
@@ -150,7 +151,7 @@
       </jaxrs:providers>
       <!-- Single value array POST handling interceptors (rather than whole bus) : -->
       <jaxrs:inInterceptors>
-         <bean class="org.oasis.datacore.rest.server.security.mock.MockLoginServerInInterceptor"/><!-- TODO MOCK move -->
+		 <bean class="org.oasis.datacore.rest.server.security.mock.MockLoginServerInInterceptor"/><!-- TODO MOCK move -->
          <bean class="org.oasis.datacore.rest.server.cxf.ArrayServerInInterceptor">
             <property name="objectMapper"><ref bean="datacoreApiServer.objectMapper"/></property>
          </bean>

@@ -66,7 +66,9 @@ public class MockLoginServerInInterceptor extends AbstractPhaseInterceptor<Messa
       }
 
       try {
-         mockAuthenticationService.loginAs(username); // NB. username can't be null
+    	  if(!username.startsWith("Bearer")) {
+    		  mockAuthenticationService.loginAs(username); // NB. username can't be null
+    	  }
       } catch (RuntimeException rex) {
          throw new Fault(
                new ClientException( // or any non-Fault exception, else blocks in
