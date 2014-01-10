@@ -7,6 +7,7 @@ import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.EntityTag;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -29,7 +30,7 @@ import org.springframework.beans.factory.annotation.Value;
  */
 public class DatacoreApiMockServerImpl extends JaxrsServerBase implements DatacoreApi {
    
-   public static final String TEST_USER_MODEL_TYPE_QUERY_TRIGGER = "testUserJohnModelTypeQueryTrigger";
+   public static final String TEST_HEADER_MODEL_TYPE_QUERY_TRIGGER = "testUserJohnModelTypeQueryTrigger";
 
    /** to be able to build a full uri */
    ///@Value("${datacoreApiClient.baseUrl}") 
@@ -173,11 +174,12 @@ public class DatacoreApiMockServerImpl extends JaxrsServerBase implements Dataco
 
    @Override
    public List<DCResource> findDataInType(String modelType, UriInfo uriInfo, Integer start, Integer limit) {
-      if (TEST_USER_MODEL_TYPE_QUERY_TRIGGER.equals(modelType)) {
+      if (TEST_HEADER_MODEL_TYPE_QUERY_TRIGGER.equals(modelType)) {
          ArrayList<DCResource> res = new ArrayList<DCResource>();
          DCResource responseResource = new DCResource();
-         responseResource.setUri(UriHelper.buildUri(containerUrl, modelType, DatacoreApi.TEST_USER));
-         responseResource.set(DatacoreApi.TEST_USER, httpHeaders.getHeaderString(DatacoreApi.TEST_USER));
+         String header = HttpHeaders.AUTHORIZATION;
+         responseResource.setUri(UriHelper.buildUri(containerUrl, modelType, header));
+         responseResource.set(header, httpHeaders.getHeaderString(header));
          res.add(responseResource);
          return res;
       }

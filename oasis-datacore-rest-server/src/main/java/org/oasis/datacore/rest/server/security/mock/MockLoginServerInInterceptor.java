@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.client.ClientException;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.cxf.common.logging.LogUtils;
@@ -42,9 +43,8 @@ public class MockLoginServerInInterceptor extends AbstractPhaseInterceptor<Messa
       String username = null;
       
       Map<String, List<String>> headers = CxfMessageHelper.getRequestHeaders(serverInRequestMessage);
-      List<String> authHeader = headers.get(DatacoreApi.TEST_USER);
-      // TODO LATER rather do it using Basic Auth ? (some more work on client sides)
-      //List<String> authHeader = headers.get("Authorization"); // "Basic " + base64(username:password)
+      List<String> authHeader = headers.get(HttpHeaders.AUTHORIZATION);
+      // TODO Basic Auth "Basic " + base64(username:password)
       if (authHeader != null && !authHeader.isEmpty()) {
          username = authHeader.get(0);
       }

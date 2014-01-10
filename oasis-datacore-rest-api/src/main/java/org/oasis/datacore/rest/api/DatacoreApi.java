@@ -110,7 +110,6 @@ public interface DatacoreApi {
    
    public static final String QUERY_PARAMETERS = "#queryParameters";
    public static final String DC_TYPE_PATH = "dc/type"; // TODO better from JAXRS annotations using reflection ?
-   public static final String TEST_USER = "testUser";
    
    /*
     * TODO NO conflicts with postAllDataInType, rather client helper only ? or in interceptors ???
@@ -136,8 +135,8 @@ public interface DatacoreApi {
             + "(which first requires that strict POST mode is not enabled)",
             response = DCResource.class)
    @ApiImplicitParams({
-      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
-            value="DEV MODE ONLY test user login")
+      @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
+            value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue="Basic YWRtaW46YWRtaW4=")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
@@ -176,8 +175,8 @@ public interface DatacoreApi {
             + "supported.",
             response = DCResource.class, responseContainer="List", position = 0) // fix jdk7 random order in UI
    @ApiImplicitParams({
-      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
-            value="DEV MODE ONLY test user login")
+      @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
+            value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue="Basic YWRtaW46YWRtaW4=")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
@@ -212,8 +211,8 @@ public interface DatacoreApi {
             + "existing resources (which first requires that strict POST mode is not enabled)",
             response = DCResource.class, responseContainer="List", position = 1)
    @ApiImplicitParams({
-      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
-            value="DEV MODE ONLY test user login")
+      @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
+            value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue="Basic YWRtaW46YWRtaW4=")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
@@ -249,8 +248,8 @@ public interface DatacoreApi {
             + "TODO all fields must be provided OR PATCH behaviour differ from PUT's",
             response = DCResource.class, position = 2)
    @ApiImplicitParams({
-      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
-            value="DEV MODE ONLY test user login")
+      @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
+            value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue="Basic YWRtaW46YWRtaW4=")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
@@ -287,8 +286,8 @@ public interface DatacoreApi {
             + "TODO all fields must be provided OR PATCH behaviour differ from PUT's",
             response = DCResource.class, responseContainer="List", position = 3)
    @ApiImplicitParams({
-      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
-            value="DEV MODE ONLY test user login")
+      @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
+            value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue="Basic YWRtaW46YWRtaW4=")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
@@ -323,8 +322,8 @@ public interface DatacoreApi {
             + "TODO all fields must be provided OR PATCH behaviour differ from PUT's",
             response = DCResource.class, responseContainer="List", position = 4)
    @ApiImplicitParams({
-      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
-            value="DEV MODE ONLY test user login")
+      @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
+            value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue="Basic YWRtaW46YWRtaW4=")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
@@ -364,8 +363,8 @@ public interface DatacoreApi {
    @ApiImplicitParams({
       /*@ApiImplicitParam(name=HttpHeaders.IF_NONE_MATCH, paramType="header", dataType="string",
             value="version (if matched, returns 304 instead)")*/
-      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
-            value="DEV MODE ONLY test user login")
+      @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
+            value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue="Basic YWRtaW46YWRtaW4=")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
@@ -397,8 +396,8 @@ public interface DatacoreApi {
    @ApiImplicitParams({
       /*@ApiImplicitParam(name=HttpHeaders.IF_MATCH, paramType="header", dataType="string",
             required=true, value="version to match")*/
-      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
-            value="DEV MODE ONLY test user login")
+      @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
+            value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue="Basic YWRtaW46YWRtaW4=")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
@@ -478,8 +477,8 @@ public interface DatacoreApi {
             + "(which first requires that strict POST mode is not enabled)",
             response = DCResource.class, position = 7)
    @ApiImplicitParams({
-      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
-            value="DEV MODE ONLY test user login")
+      @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
+            value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue="Basic YWRtaW46YWRtaW4=")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
@@ -527,8 +526,8 @@ public interface DatacoreApi {
                + "Delete doesn't check whether said data Resource exists beforehands.",
                response = DCResource.class, position = 8)
    @ApiImplicitParams({
-      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
-            value="DEV MODE ONLY test user login")
+      @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
+            value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue="Basic YWRtaW46YWRtaW4=")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
@@ -621,8 +620,8 @@ public interface DatacoreApi {
             value="Each other HTTP query parameter (in Swagger UI, enter them "
                   + "as a single URL query string, ex. name=London&population=>100000) "
                   + "is a Datacore query criteria"),
-      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
-            value="DEV MODE ONLY test user login")
+      @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
+            value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue="Basic YWRtaW46YWRtaW4=")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
@@ -698,8 +697,8 @@ public interface DatacoreApi {
             value="Each other HTTP query parameter (in Swagger UI, enter them "
                   + "as a single URL query string, ex. name=London&population=>100000) "
                   + "is a Datacore query criteria."),
-      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
-            value="DEV MODE ONLY test user login")
+      @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
+            value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue="Basic YWRtaW46YWRtaW4=")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
@@ -786,8 +785,8 @@ public interface DatacoreApi {
             + "LIMIT, OFFSET, ORDER BY",
             response = DCResource.class, responseContainer="List", position = 10)
    @ApiImplicitParams({
-      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
-            value="DEV MODE ONLY test user login")
+      @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
+            value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue="Basic YWRtaW46YWRtaW4=")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
@@ -858,8 +857,8 @@ public interface DatacoreApi {
             + "LIMIT, OFFSET, ORDER BY",
             response = DCResource.class, responseContainer="List", position = 11)
    @ApiImplicitParams({
-      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
-            value="DEV MODE ONLY test user login")
+      @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
+            value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue="Basic YWRtaW46YWRtaW4=")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
@@ -886,8 +885,8 @@ public interface DatacoreApi {
       					 + " - version : 0 (or whatever version you need)",
       			 response = DCResource.class, position = 12)
    @ApiImplicitParams({
-      @ApiImplicitParam(name=TEST_USER, paramType="header", dataType="string",
-            value="DEV MODE ONLY test user login")
+      @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
+            value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue="Basic YWRtaW46YWRtaW4=")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {

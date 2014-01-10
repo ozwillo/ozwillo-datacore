@@ -4,12 +4,13 @@ import java.net.URLEncoder;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.core.HttpHeaders;
+
 import org.apache.cxf.jaxrs.utils.HttpUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.oasis.datacore.rest.api.DCResource;
-import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.client.QueryParameters;
 import org.oasis.datacore.rest.client.cxf.mock.MockClientAuthenticationHelper;
@@ -117,10 +118,10 @@ public class DatacoreApiCXFClientTest {
    public void testMockAuthenticationTestUser() {
       MockClientAuthenticationHelper.loginAs(TEST_USER_JOHN);
       try {
-         List<DCResource> res = datacoreApiClient.findDataInType(DatacoreApiMockServerImpl.TEST_USER_MODEL_TYPE_QUERY_TRIGGER,
+         List<DCResource> res = datacoreApiClient.findDataInType(DatacoreApiMockServerImpl.TEST_HEADER_MODEL_TYPE_QUERY_TRIGGER,
                new QueryParameters(), 0, 0);
          Assert.assertTrue("Test user login should have been found in testUser header",
-               res != null && !res.isEmpty() && TEST_USER_JOHN.equals(res.get(0).get(DatacoreApi.TEST_USER)));
+               res != null && !res.isEmpty() && TEST_USER_JOHN.equals(res.get(0).get(HttpHeaders.AUTHORIZATION)));
       } finally {
          MockClientAuthenticationHelper.logout();
       }
