@@ -35,14 +35,14 @@
 	  <security:authentication-provider user-service-ref="datacore.userDetailsService" /><!-- clientDetailsUserService -->
 	</security:authentication-manager>
    
-   <!-- bean id="datacore.userDetailsService" class="org.oasis.datacore.core.security.MockUserDetailsServiceImpl"/ -->
+   <!-- <bean id="datacore.userDetailsService" class="org.oasis.datacore.core.security.MockUserDetailsServiceImpl" /> -->
    <security:user-service id="datacore.userDetailsService">
      <security:user name="guest" password="guest" authorities="guest" /><!-- or is guest group fictive ??? -->
      <security:user name="admin" password="admin" authorities="admin" /><!-- guest is superfluous -->
      <security:user name="john" password="john" authorities="u_john,tutor_jim,rm_altTourism.place.SofiaMonastery_readers,guest" /><!-- ROLE_USER, ROLE_ADMIN -->
      <security:user name="jim" password="jim" authorities="u_jim,rm_altTourism.place.SofiaMonastery_writers,rcm_altTourism.place,guest" /><!-- most useful ones first... -->
    </security:user-service>
-   <!-- security:user-service id="datacore.userDetailsService" properties="oasis-datacore-mockusers.properties"/ -->
+   <!-- <security:user-service id="datacore.userDetailsService" /> -->
 
 	<!-- oauth:client-details-service id="clientDetailsService">
 		<oauth:client client-id="e64425f0-3b0a-44ab-b5bc-1f1c52b099f8"
