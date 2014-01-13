@@ -15,7 +15,7 @@
 
 	<oauth:resource-server id="oauth2ProviderFilter" resource-id="oasis-datacore" token-services-ref="tokenServices" />
 	
-	<security:http pattern="/dc/**" entry-point-ref="oauthAuthenticationEntryPoint" access-decision-manager-ref="accessDecisionManager" authentication-manager-ref="authenticationManager">
+	<security:http pattern="/dc/**" entry-point-ref="oauthAuthenticationEntryPoint" access-decision-manager-ref="accessDecisionManager" authentication-manager-ref="authenticationManager" create-session="never">
 		<security:intercept-url pattern="/**" access="SCOPE_DATACORE, IS_AUTHENTICATED_FULLY" />
 		<security:custom-filter position="BASIC_AUTH_FILTER" ref="basicAuthenticationFilter" />
 		<security:custom-filter ref="oauth2ProviderFilter" after="BASIC_AUTH_FILTER" /> <!--  before="PRE_AUTH_FILTER" -->
