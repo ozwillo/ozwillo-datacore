@@ -139,20 +139,6 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 			clientAuthentication.addClientDetails(clientDetails);
 		}
 		
-		Set<String> groupSet = new HashSet<String>();
-		if(map.containsKey("sub_groups")) {
-			Object groups = map.get("sub_groups");
-			if(groups instanceof String) {
-				String values = (String)groups;
-				groupSet.add(values);
-			} else {
-				Collection<String> values = (Collection<String>) map.get("sub_groups");
-				groupSet.addAll(values);
-			}
-			// put groups where ?
-		}
-
-
 		if (map.containsKey(Claims.ADDITIONAL_AZ_ATTR)) {
 			try {
 				clientAuthentication.setAuthorizationParameters(Collections.singletonMap(Claims.ADDITIONAL_AZ_ATTR,
@@ -161,8 +147,16 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 				throw new IllegalStateException("Cannot convert access token to JSON", e);
 			}
 		}
+		
+		if (map.containsKey("sub_groups")) {
+			Set<GrantedAuthority> userAuthorities = new HashSet<GrantedAuthority>();
+			Collection<String> values = (Collection<String>) map.get("sub_groups");
+			userAuthorities.addAll(getAuthorities(values));
+			clientAuthentication.setAuthorities(userAuthorities);
+		}
 
 		Authentication userAuthentication = getUserAuthentication(map, scope);
+		
 		clientAuthentication.setApproved(true);
 		return new OAuth2Authentication(clientAuthentication, userAuthentication);
 	}
@@ -173,9 +167,9 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 			return null;
 		}
 		Set<GrantedAuthority> userAuthorities = new HashSet<GrantedAuthority>();
-		if (map.containsKey("user_authorities")) {
+		if (map.containsKey("sub_groups")) {
 			@SuppressWarnings("unchecked")
-			Collection<String> values = (Collection<String>) map.get("user_authorities");
+			Collection<String> values = (Collection<String>) map.get("sub_groups");
 			userAuthorities.addAll(getAuthorities(values));
 		}
 		else {
