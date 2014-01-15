@@ -96,7 +96,10 @@ public class ResourceEntityMapperService {
          entityValue = (Integer) resourceValue; // TODO LATER also allow String  ??
          
       } else if ("float".equals(dcField.getType())) {
-         if (!(resourceValue instanceof Float)) {
+    	  if (resourceValue instanceof Double) {
+        		entityValue = new Double((Double)resourceValue);
+          }
+    	  else if (!(resourceValue instanceof Float)) {
             if (resourceValue instanceof Integer) {
                entityValue = new Float((Integer) resourceValue);
                resourceParsingContext.addWarning("float Field value is a JSON integer : " + resourceValue
@@ -104,9 +107,9 @@ public class ResourceEntityMapperService {
             }
             throw new ResourceParsingException("float Field value is not a JSON float "
                   + "(nor integer, which is allowed as fallback) : " + resourceValue);
-         }
-         entityValue = (Float) resourceValue; // TODO LATER also allow String  ??
-         
+         } else {
+        	 entityValue = (Float) resourceValue; // TODO LATER also allow String  ?? 
+         } 
       } else if ("long".equals(dcField.getType())) {
          // Javascript has no long : http://javascript.about.com/od/reference/g/rlong.htm
          // so supported through String instead
