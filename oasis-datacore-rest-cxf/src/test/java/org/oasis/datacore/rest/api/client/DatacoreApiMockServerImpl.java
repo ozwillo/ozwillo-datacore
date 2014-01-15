@@ -177,7 +177,7 @@ public class DatacoreApiMockServerImpl extends JaxrsServerBase implements Dataco
       if (TEST_HEADER_MODEL_TYPE_QUERY_TRIGGER.equals(modelType)) {
          ArrayList<DCResource> res = new ArrayList<DCResource>();
          DCResource responseResource = new DCResource();
-         String header = HttpHeaders.AUTHORIZATION;
+         String header = "testUser";
          responseResource.setUri(UriHelper.buildUri(containerUrl, modelType, header));
          responseResource.set(header, httpHeaders.getHeaderString(header));
          res.add(responseResource);

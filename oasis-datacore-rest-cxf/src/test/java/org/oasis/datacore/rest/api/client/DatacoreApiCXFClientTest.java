@@ -121,7 +121,7 @@ public class DatacoreApiCXFClientTest {
          List<DCResource> res = datacoreApiClient.findDataInType(DatacoreApiMockServerImpl.TEST_HEADER_MODEL_TYPE_QUERY_TRIGGER,
                new QueryParameters(), 0, 0);
          Assert.assertTrue("Test user login should have been found in testUser header",
-               res != null && !res.isEmpty() && TEST_USER_JOHN.equals(res.get(0).get(HttpHeaders.AUTHORIZATION)));
+               res != null && !res.isEmpty() && TEST_USER_JOHN.equals(res.get(0).get("testUser")));
       } finally {
          MockClientAuthenticationHelper.logout();
       }
