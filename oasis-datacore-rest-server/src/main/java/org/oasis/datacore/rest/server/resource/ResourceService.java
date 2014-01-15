@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.ImmutableMap;
@@ -353,7 +354,13 @@ public class ResourceService {
          creatorOwners.add(authenticationService.getUserGroup(authenticationService.getCurrentUserId()));
          entityPermissionService.setOwners(dataEntity, creatorOwners);
          try {
-            entityService.create(dataEntity);
+        	 try {
+                 historizationService.historize(dataEntity, dcModel);
+              } catch (HistorizationException hex) {
+             	throw new ResourceException("Error while historizing", hex, resource);
+              }
+        	 entityService.create(dataEntity);
+        	 // NB. if creation fails will exist in history, but OK if 1. hidden on GET and 2. rewritten on recreate
          } catch (DuplicateKeyException dkex) {
             // detected by unique index on _uri
             // TODO unicity across shards : index not sharded so also handle duplicates a posteriori
@@ -368,7 +375,6 @@ public class ResourceService {
       } else {
          try {
             try {
-               // NB. called first so (it saves PREVIOUS version) and if it fails it's still OK
                historizationService.historize(dataEntity, dcModel);
              } catch (HistorizationException hex) {
                 throw new ResourceException("Error while historizing", hex, resource);

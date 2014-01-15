@@ -15,7 +15,6 @@ import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
@@ -451,10 +450,10 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
    }
 
    	@Override
-	public DCResource findHistorizedResource(String modelType, String iri, Integer version, Request request) throws BadRequestException, NotFoundException {
+	public DCResource findHistorizedResource(String modelType, String iri, Integer version) throws BadRequestException, NotFoundException {
 
 		String uri = resourceService.buildUri(modelType, iri);
-
+		
 		DCModel dcModel = modelService.getModel(modelType);
 		if (dcModel == null) {
 			throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST).entity("Unknown Model type " + modelType).type(MediaType.TEXT_PLAIN).build());

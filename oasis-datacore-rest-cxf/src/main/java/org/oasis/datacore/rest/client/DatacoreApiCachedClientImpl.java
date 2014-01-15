@@ -353,8 +353,8 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
    }
    
   	@Override
-	public DCResource findHistorizedResource(String modelType, String iri, Integer version, Request request) throws BadRequestException, NotFoundException {
-		DCResource resource = this.delegate.findHistorizedResource(modelType, iri, version, request);
+	public DCResource findHistorizedResource(String modelType, String iri, Integer version) throws BadRequestException, NotFoundException {
+		DCResource resource = this.delegate.findHistorizedResource(modelType, iri, version);
 		return resource;
 	}
 

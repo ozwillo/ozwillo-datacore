@@ -44,6 +44,8 @@ public interface HistorizationService {
 	
 	/**
 	 * Return an historized entity matching uri AND version
+	 * We are also checking that the original entity exist, if not
+	 * we do net retrieve the historized one EVEN if it exist !
 	 * @param uri
 	 * @param version
 	 * @param originalModel

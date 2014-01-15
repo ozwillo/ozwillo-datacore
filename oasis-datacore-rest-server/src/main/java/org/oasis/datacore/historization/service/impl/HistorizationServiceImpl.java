@@ -118,6 +118,12 @@ public class HistorizationServiceImpl implements HistorizationService {
 		if(originalModel == null) {
 			throw new HistorizationException("Original model must not be null");
 		}
+
+		DCEntity originalDataEntity = mongoOperations.findOne(new Query(new Criteria("_uri").is(uri).and("_v").is(version)), DCEntity.class, originalModel.getCollectionName());
+		
+		if(originalDataEntity == null) {
+			return null;
+		}
 		
 		DCModel historizationModel = getHistorizationModel(originalModel);
 		if(historizationModel == null) {

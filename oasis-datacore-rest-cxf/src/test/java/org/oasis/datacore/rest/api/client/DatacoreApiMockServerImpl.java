@@ -206,7 +206,7 @@ public class DatacoreApiMockServerImpl extends JaxrsServerBase implements Dataco
    }
 
 	@Override
-	public DCResource findHistorizedResource(String modelType, String iri, Integer version, Request request) throws BadRequestException, NotFoundException {
+	public DCResource findHistorizedResource(String modelType, String iri, Integer version) throws BadRequestException, NotFoundException {
 
 		return null;
 

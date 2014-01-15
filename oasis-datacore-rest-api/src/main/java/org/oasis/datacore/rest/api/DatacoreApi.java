@@ -896,7 +896,6 @@ public interface DatacoreApi {
    })
    DCResource findHistorizedResource(@ApiParam(value = "Resource's model type", required = true) @PathParam("type") String modelType,
 		   							 @ApiParam(value = "Type-relative resource id", required = true) @PathParam("iri") String iri,
-		   							 @ApiParam(value = "Resource version", required = true) @PathParam("version") Integer version,
-		   							 @Context Request request)throws BadRequestException, NotFoundException;
+		   							 @ApiParam(value = "Resource version", required = true) @PathParam("version") Integer version) throws BadRequestException, NotFoundException;
       
 }
