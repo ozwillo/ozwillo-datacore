@@ -151,7 +151,7 @@
       </jaxrs:providers>
       <!-- Single value array POST handling interceptors (rather than whole bus) : -->
       <jaxrs:inInterceptors>
-		 <!-- <bean class="org.oasis.datacore.rest.server.security.mock.MockLoginServerInInterceptor"/>  --><!-- TODO MOCK move -->
+		 <bean class="org.oasis.datacore.rest.server.security.mock.MockLoginServerInInterceptor"/><!-- TODO MOCK move -->
          <bean class="org.oasis.datacore.rest.server.cxf.ArrayServerInInterceptor">
             <property name="objectMapper"><ref bean="datacoreApiServer.objectMapper"/></property>
          </bean>

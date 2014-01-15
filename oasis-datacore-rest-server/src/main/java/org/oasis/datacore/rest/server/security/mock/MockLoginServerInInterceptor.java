@@ -8,6 +8,7 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.client.ClientException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.wsdl.extensions.http.HTTPOperation;
 
 import org.apache.cxf.common.logging.LogUtils;
 import org.apache.cxf.interceptor.Fault;
@@ -43,10 +44,13 @@ public class MockLoginServerInInterceptor extends AbstractPhaseInterceptor<Messa
       String username = null;
       
       Map<String, List<String>> headers = CxfMessageHelper.getRequestHeaders(serverInRequestMessage);
-      List<String> authHeader = headers.get(HttpHeaders.AUTHORIZATION);
+      if(headers.get(HttpHeaders.AUTHORIZATION) != null) {
+    	  return;
+      }
+      List<String> authHeader = headers.get("testUser");
       // TODO Basic Auth "Basic " + base64(username:password)
       if (authHeader != null && !authHeader.isEmpty()) {
-         username = authHeader.get(0);
+    	  username = authHeader.get(0);
       }
       
       if (username == null && isGetOperation(serverInRequestMessage)) {

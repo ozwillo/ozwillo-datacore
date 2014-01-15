@@ -2,8 +2,6 @@ package org.oasis.datacore.rest.client.cxf.mock;
 
 import java.util.logging.Logger;
 
-import javax.ws.rs.core.HttpHeaders;
-
 import org.apache.cxf.common.logging.LogUtils;
 import org.apache.cxf.interceptor.Fault;
 import org.apache.cxf.message.Message;
@@ -28,13 +26,12 @@ public class MockLoginClientOutInterceptor extends AbstractPhaseInterceptor<Mess
       super(Phase.SETUP);
    }
 
-   @Override
+	@Override
    public void handleMessage(Message clientOutRequestMessage) throws Fault {
       Authentication currentUserAuth = SecurityContextHolder.getContext().getAuthentication();
       if (currentUserAuth != null) {
          // TODO Basic Auth "Basic " + base64(username:password)
-         CxfMessageHelper.setHeader(clientOutRequestMessage,
-               HttpHeaders.AUTHORIZATION, currentUserAuth.getName());
+    	 CxfMessageHelper.setHeader(clientOutRequestMessage, "testUser", currentUserAuth.getName());
       }
    }
 
