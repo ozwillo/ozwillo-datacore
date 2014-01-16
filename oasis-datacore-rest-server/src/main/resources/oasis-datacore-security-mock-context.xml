@@ -31,7 +31,7 @@
      <!- property name="filterProcessesUrl" value="/j_spring_security_check"/ ->
    </bean -->
 
-	<security:authentication-manager id="datacore.AuthenticationManager"><!-- i.e. id="org.springframework.security.authenticationManager" -->
+	<security:authentication-manager id="datacore.AuthenticationManager" erase-credentials="false"><!-- i.e. id="org.springframework.security.authenticationManager" -->
 	  <security:authentication-provider user-service-ref="datacore.userDetailsService" /><!-- clientDetailsUserService -->
 	</security:authentication-manager>
    

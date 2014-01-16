@@ -81,11 +81,18 @@ public class MockAuthenticationService {
 
    /** TODO in service interface or at least util */
    public DCUserImpl getCurrentUser() {
-      Authentication currentUserAuth = SecurityContextHolder.getContext().getAuthentication();
+      
+	  Authentication currentUserAuth = SecurityContextHolder.getContext().getAuthentication();
+      
       if (currentUserAuth == null) {
          throw new RuntimeException("No authentication in security context");  
       }
-      return (DCUserImpl) currentUserAuth.getPrincipal();
+      if (currentUserAuth.getPrincipal() instanceof DCUserImpl) {
+    	  return (DCUserImpl) currentUserAuth.getPrincipal();
+      } else {
+    	  return new DCUserImpl((User)currentUserAuth.getPrincipal());
+      }
+      
    }
 
    /** for resource : to put creator as owner, and get auditor (created/modifiedBy) */
