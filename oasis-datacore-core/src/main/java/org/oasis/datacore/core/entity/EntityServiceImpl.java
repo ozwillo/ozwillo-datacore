@@ -125,15 +125,15 @@ public class EntityServiceImpl implements EntityService {
     * @see org.oasis.datacore.core.entity.DCEntityService#deleteByUriId(java.lang.String, long, org.oasis.datacore.core.meta.model.DCModel)
     */
    @Override
-   public void deleteByUriId(String uri, long version, DCModel dcModel)
-         throws NonTransientDataAccessException {
-      String collectionName = dcModel.getCollectionName(); // TODO for view Models or weird type names ?!?
+   public void deleteByUriId(DCEntity dataEntity) throws NonTransientDataAccessException {
+	   
+	   String collectionName = getModel(dataEntity).getCollectionName(); // TODO for view Models or weird type names ?!?
       
       // NB. could first check 1. that uri exists & has version and 2. user has write rights
       // and fail if not, but in Mongo & REST spirit it's enough to merely ensure that
       // it doesn't exist at the end
       
-      Query query = new Query(Criteria.where("_uri").is(uri).and("_v").is(version)
+      Query query = new Query(Criteria.where("_uri").is(dataEntity.getUri()).and("_v").is(dataEntity.getVersion())
             /*.and("_w").in(currentUserRoles)*/);
       mgo.remove(query, collectionName);
       // NB. obviously won't conflict / throw MongoDataIntegrityViolationException

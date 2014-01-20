@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.EntityNotFoundException;
+
 import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.model.DCModel;
@@ -467,12 +469,26 @@ public class ResourceService {
     * @throws ResourceTypeNotFoundException
     */
    public void delete(String uri, String modelType, Long version) throws ResourceTypeNotFoundException {
+	   
       DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
       if (dcModel == null) {
          throw new ResourceTypeNotFoundException(modelType, null, null, null);
       }
       modelType = dcModel.getName(); // normalize ; TODO useful ?
-
-      entityService.deleteByUriId(uri, version, dcModel);
+      
+      DCEntity dataEntity = null;
+      
+      if (uri != null && version != null && dcModel != null) {
+    	  dataEntity = entityService.getByUriUnsecured(uri, dcModel);
+      } else {
+    	  throw new RuntimeException("Cannot get uri or version or model, cannot evaluate permissions");
+      }
+      
+      if(dataEntity != null && version.equals(dataEntity.getVersion())) {
+    	  entityService.deleteByUriId(dataEntity);
+      } else {
+    	  throw new EntityNotFoundException();
+      }
+      
    }
 }

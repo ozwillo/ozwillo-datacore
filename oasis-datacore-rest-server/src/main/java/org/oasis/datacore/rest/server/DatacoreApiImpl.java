@@ -3,6 +3,7 @@ package org.oasis.datacore.rest.server;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.EntityNotFoundException;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.Consumes;
@@ -296,6 +297,9 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       } catch (ResourceTypeNotFoundException e) {
          throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
                .entity("Unknown Model type " + e.getModelType()).type(MediaType.TEXT_PLAIN).build());
+      } catch (EntityNotFoundException e) {
+    	  throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
+                  .entity("Resource (model:iri:version) " + modelType + ":" + iri + ":" + version + " does not exist").type(MediaType.TEXT_PLAIN).build());
       }
 
       throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT).build());

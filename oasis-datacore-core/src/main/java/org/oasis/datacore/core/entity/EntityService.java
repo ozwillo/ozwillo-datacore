@@ -94,9 +94,8 @@ public interface EntityService {
     * @param dcModel
     * @throws NonTransientDataAccessException other, unexpected storage error
     */
-   //@PreAuthorize("hasPermission(#dataEntity, 'write')")
-   public abstract void deleteByUriId(String uri, long version, DCModel dcModel)
-         throws NonTransientDataAccessException;
+   @PreAuthorize("hasPermission(#dataEntity, 'write')")
+   public abstract void deleteByUriId(DCEntity dataEntity) throws NonTransientDataAccessException;
 
    /** TODO (re)move ?*/
    public abstract DCEntity getSampleData();
