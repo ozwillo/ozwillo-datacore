@@ -21,6 +21,9 @@ import org.oasis.datacore.rights.enumeration.RightsActionType;
 import org.oasis.datacore.rights.rest.api.DCRights;
 import org.oasis.datacore.rights.rest.api.RightsApi;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 
 @Path("dc/r")
 public class RightsApiImpl implements RightsApi {
@@ -113,7 +116,59 @@ public class RightsApiImpl implements RightsApi {
 		entityService.changeRights(entity);
 		
 		throw new WebApplicationException(Response.status(Response.Status.OK).entity("Rights have been flushed (readers,writers) on the resource " + uri).type(MediaType.TEXT_PLAIN).build());
-
+		
+	}
+	
+	public void replaceRightsOnResource(String modelType, String iri, long version, DCRights dcRights) {
+		
+		preMergeVerification(null, modelType, iri, version, null, null, null);
+		
+		DCModel model = modelService.getModel(modelType);
+		
+		if(model == null) {
+			throw new NotFoundException(Response.status(Response.Status.NOT_FOUND).entity("Model " + modelType + " was not found").type(MediaType.TEXT_PLAIN).build());
+		}
+		
+		String uri = resourceService.buildUri(modelType, iri);
+		DCEntity entity = entityService.getByUriUnsecured(uri, model);
+		
+		if(entity == null) {
+			throw new NotFoundException(Response.status(Response.Status.NOT_FOUND).entity("Entity " + uri + " was not found").type(MediaType.TEXT_PLAIN).build());
+		}
+		
+		if(dcRights == null) {
+			throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST).entity("DCRight object has to be defined if you want to replace rights").type(MediaType.TEXT_PLAIN).build());
+		}
+		
+		entity.setOwners(new HashSet<String>());
+		if(dcRights.getOwners() != null) {
+			entity.getOwners().addAll(dcRights.getOwners());
+		} else {
+			// we put the current user (how might me owner)
+			// if he is not the changeRights will not work and this will not affect the entity
+			entity.setOwners(new HashSet<String>());
+			Authentication currentUserAuth = SecurityContextHolder.getContext().getAuthentication();
+		    if (currentUserAuth != null && currentUserAuth.getPrincipal() != null && currentUserAuth.getPrincipal() instanceof User) {
+		    	User user = (User) currentUserAuth.getPrincipal();
+		    	entity.getOwners().add("u_" + user.getUsername()); 
+		    }
+		}
+		
+		entity.setReaders(new HashSet<String>());
+		if(dcRights.getReaders() != null) {
+			entity.getReaders().addAll(dcRights.getReaders());
+		}
+		
+		entity.setWriters(new HashSet<String>());
+		if(dcRights.getWriters() != null) {
+			entity.getWriters().addAll(dcRights.getWriters());
+		}
+		
+		entityPermissionService.recomputeAllReaders(entity);
+		
+		entityService.changeRights(entity);
+		
+		throw new WebApplicationException(Response.status(Response.Status.OK).entity("Rights have been replaced on the resource " + uri).type(MediaType.TEXT_PLAIN).build());
 		
 	}
 
@@ -127,7 +182,7 @@ public class RightsApiImpl implements RightsApi {
 			throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST).entity("IRI must be defined").type(MediaType.TEXT_PLAIN).build());
 		}
 
-		if (writers == null && readers == null && owners == null && rightsActionType != RightsActionType.FLUSH) {
+		if (writers == null && readers == null && owners == null && rightsActionType != null & rightsActionType != RightsActionType.FLUSH) {
 			throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST).entity("One of the sets must be defined (writers,readers,owners)").type(MediaType.TEXT_PLAIN).build());
 		}
 

@@ -126,6 +126,35 @@ public interface RightsApi {
 			@PathParam("version") long version
 	   );
 	   
+	   @Path("/{type}/{iri}/{version}")
+	   @PUT
+	   @ApiOperation(
+			   value = "Replace all rights on the selected resource by the DCRights in payload",
+			   notes = "You must provide the type, id and version of the resource. " +
+			   		   "Don't forget that the DCRights you give in the body will replace entirely the one on the resource (EVEN THE OWNERS !)."
+	   )
+	   @ApiResponses(value = {
+			   @ApiResponse(code = 500, message = "Internal server error"),
+			   @ApiResponse(code = 404, message = "Resource not found"),
+			   @ApiResponse(code = 400, message = "Bad request"),
+			   @ApiResponse(code = 200, message = "Rights have been replace successfully")
+	   })
+	   @ApiImplicitParams({
+		    @ApiImplicitParam(
+		    		name=HttpHeaders.AUTHORIZATION,
+		    		paramType="header",
+		    		dataType="string",
+		            value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth",
+		            defaultValue="Basic YWRtaW46YWRtaW4="
+		    )
+	   })
+	   public void replaceRightsOnResource(
+			@PathParam("type") String modelType,
+			@PathParam("iri") String iri,
+			@PathParam("version") long version,
+			@ApiParam(value = "New rights") DCRights dcRights
+	   );
+	   
 	   
 	   @Path("/{type}/{iri}/{version}")
 	   @GET

@@ -10,7 +10,6 @@ import org.apache.cxf.common.util.StringUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
@@ -53,7 +52,6 @@ public class RightsTest {
 	@Autowired
 	private MongoOperations mongoOperations;
 
-	/** TODO actual */
 	@Autowired
 	private MockAuthenticationService mockAuthenticationService;
 
@@ -83,13 +81,7 @@ public class RightsTest {
 		mockAuthenticationService.logout();
 
 	}
-	
-//	u_bob,rom_sample.marka.city,mo_sample.marka.company,sample.marka.investor_reader,sample.marka.user_owner,sample.marka.country_writer
-	
-//	Resource admin for model type : sample.marka.city
-//	Model owner : sample.marka.company
 
-	@Ignore
 	@Test
 	public void testCreateResourceWhenResourceAdminForModelType() {
 		
@@ -111,7 +103,6 @@ public class RightsTest {
 	
 	}
 	
-	@Ignore
 	@Test
 	public void testCreateAndModifyResourceWhenModelOwner() {
 		
@@ -144,7 +135,6 @@ public class RightsTest {
 		
 	}
 	
-	@Ignore
 	@Test
 	public void testReadingWithoutRightsOnResource() {
 		
@@ -260,6 +250,7 @@ public class RightsTest {
 		mockAuthenticationService.loginAs("jim");
 	
 		DCResource country = datacoreApi.getData(MarkaInvestModel.COUNTRY_MODEL_NAME, "1");
+		
 		Assert.assertNotNull(country);
 		
 		mockAuthenticationService.logout();

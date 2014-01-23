@@ -163,7 +163,7 @@ public class EntityServiceImpl implements EntityService {
 		if (dataEntity == null) {
 			throw new RuntimeException("Entity cannot be null while changing rights");
 		}
-
+		
 		String collectionName = getModel(dataEntity).getCollectionName();
 		mgo.save(dataEntity, collectionName);
 		
