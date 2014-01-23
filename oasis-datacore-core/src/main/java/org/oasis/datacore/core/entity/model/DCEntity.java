@@ -126,6 +126,7 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
     * Alternative : allow several same values by storing as list, but there is still
     * as much requiring to be stored. */
    @Field("_ar")
+//   @Indexed(unique = true)
    private Set<String> allReaders;
    /** ONLY REQUIRED IF MASS W & O OPERATIONS but otherwise still need to be stored somewhere */
    @Field("_r")

@@ -40,7 +40,8 @@
      <security:user name="guest" password="guest" authorities="guest" /><!-- or is guest group fictive ??? -->
      <security:user name="admin" password="admin" authorities="admin" /><!-- guest is superfluous -->
      <security:user name="john" password="john" authorities="u_john,tutor_jim,rm_altTourism.place.SofiaMonastery_readers,guest" /><!-- ROLE_USER, ROLE_ADMIN -->
-     <security:user name="jim" password="jim" authorities="u_jim,rm_altTourism.place.SofiaMonastery_writers,rcm_altTourism.place,guest" /><!-- most useful ones first... -->
+     <security:user name="jim" password="jim" authorities="u_jim,rm_altTourism.place.SofiaMonastery_writers,rcm_altTourism.place,guest,sample.marka.country.readers" /><!-- most useful ones first... -->
+     <security:user name="bob" password="bob" authorities="u_bob,rom_sample.marka.city,mo_sample.marka.company" />
    </security:user-service>
    <!-- <security:user-service id="datacore.userDetailsService" /> -->
 

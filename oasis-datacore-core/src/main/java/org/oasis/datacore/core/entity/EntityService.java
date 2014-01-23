@@ -97,6 +97,17 @@ public interface EntityService {
    @PreAuthorize("hasPermission(#dataEntity, 'write')")
    public abstract void deleteByUriId(DCEntity dataEntity) throws NonTransientDataAccessException;
 
+   @PreAuthorize("hasPermission(#dataEntity, 'changeRights')")
+   public void changeRights(DCEntity dataEntity);
+   
+   /**
+    * Only here to check if we are owner on the resource
+    * If we are not an exception is thrown
+    * @param dataEntity
+    */
+   @PreAuthorize("hasPermission(#dataEntity, 'getRights')")
+   public void getRights(DCEntity dataEntity);
+   
    /** TODO (re)move ?*/
    public abstract DCEntity getSampleData();
 

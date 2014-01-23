@@ -1,6 +1,7 @@
 package org.oasis.datacore.core.security;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.oasis.datacore.core.entity.model.DCEntity;
@@ -49,13 +50,13 @@ public class EntityPermissionService {
       recomputeAllReaders(entity);
    }
 
-   private void recomputeAllReaders(DCEntity entity) {
+   public void recomputeAllReaders(DCEntity entity) {
       entity.setAllReaders(addAllIfNotNullOrEmpty(entity.getReaders(),
             addAllIfNotNullOrEmpty(entity.getWriters(),
                   addAllIfNotNullOrEmpty(entity.getOwners(), null))));
    }
 
-   private Set<String> addAllIfNotNullOrEmpty(Set<String> acl, Set<String> setToFill) {
+   public Set<String> addAllIfNotNullOrEmpty(Set<String> acl, Set<String> setToFill) {
       if (acl == null || acl.isEmpty()) {
          return setToFill;
       }
@@ -66,5 +67,35 @@ public class EntityPermissionService {
       }
       return setToFill;
    }
+   
+	public Set<String> addRights(Set<String> entitySet, List<String> toAddSet) {
+		
+		if(entitySet == null && toAddSet != null) {
+			return new HashSet<>(toAddSet);
+		} else if (entitySet != null && toAddSet == null) {
+			return entitySet;
+		} else if (entitySet == null && toAddSet == null) {
+			return new HashSet<String>();
+		} else {
+			entitySet.addAll(toAddSet);
+			return entitySet;
+		}
+		
+	}
+	
+	public Set<String> removeRights(Set<String> entitySet, List<String> toRemoveSet) {
+		
+		if(entitySet == null && toRemoveSet != null) {
+			return new HashSet<String>();
+		} else if (entitySet != null && toRemoveSet == null) {
+			return entitySet;
+		} else if (entitySet == null && toRemoveSet == null) {
+			return new HashSet<String>();
+		} else {
+			entitySet.removeAll(toRemoveSet);
+			return entitySet;
+		}
+		
+	}
    
 }

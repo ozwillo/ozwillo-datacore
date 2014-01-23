@@ -16,6 +16,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 
@@ -155,6 +156,24 @@ public class EntityServiceImpl implements EntityService {
    /* (non-Javadoc)
     * @see org.oasis.datacore.core.entity.DCEntityService#getSampleData()
     */
+
+	@Override
+	public void changeRights(DCEntity dataEntity) {
+
+		if (dataEntity == null) {
+			throw new RuntimeException("Entity cannot be null while changing rights");
+		}
+
+		String collectionName = getModel(dataEntity).getCollectionName();
+		mgo.save(dataEntity, collectionName);
+		
+	}
+	
+	@Override
+	public void getRights(DCEntity dataEntity) {
+		return;
+	}
+   
    @Override
    public DCEntity getSampleData() {
       String sampleCollectionName = "sample";
@@ -208,5 +227,5 @@ public class EntityServiceImpl implements EntityService {
       
       return getSampleData();
    }
-   
+
 }

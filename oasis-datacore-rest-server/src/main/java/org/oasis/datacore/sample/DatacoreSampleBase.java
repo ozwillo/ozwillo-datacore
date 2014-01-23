@@ -128,8 +128,9 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
    private void createCollectionAndGenerateIndices(DCModel model) {
       DBCollection coll = mgo.createCollection(model.getCollectionName());
       
-      // generating static index
+      // generating static indexes
       coll.ensureIndex(new BasicDBObject("_uri", 1), null, true);
+//      coll.ensureIndex(new BasicDBObject("_ar", 1), null, true);
       
       // generating field indices
       generateFieldIndices(coll, "_p.", model.getGlobalFieldMap().values());

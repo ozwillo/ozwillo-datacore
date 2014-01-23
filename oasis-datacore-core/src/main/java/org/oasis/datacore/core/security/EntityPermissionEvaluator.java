@@ -107,6 +107,9 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
          // => TODO that in PermissionAdminApi/Service
          return hasAnyEntityAclGroup(user, dataEntity.getOwners()); // NB. no public owners !!
       
+      case "getRights" :
+    	 return hasAnyEntityAclGroup(user, dataEntity.getOwners()); 
+    	 
       // NB. (model type) admin has already been done (first thing even)
          
       default :
