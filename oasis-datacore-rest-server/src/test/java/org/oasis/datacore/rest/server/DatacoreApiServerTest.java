@@ -9,6 +9,7 @@ import javax.ws.rs.WebApplicationException;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -39,7 +40,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:oasis-datacore-rest-server-test-context.xml" })
-@FixMethodOrder(MethodSorters.NAME_ASCENDING) // else random since java 7
+//@FixMethodOrder(MethodSorters.NAME_ASCENDING) // else random since java 7 NOT REQUIRED ANYMORE
 public class DatacoreApiServerTest {
    
    @Autowired
@@ -77,10 +78,10 @@ public class DatacoreApiServerTest {
    private CityCountrySample cityCountrySample;
    
    
-   @Test // rather than @BeforeClass, else static and spring can't inject
-   //@BeforeClass
-   public /*static */void init1setupModels() {
+   @Before
+   public void cleanDataAndCache() {
       cityCountrySample.cleanDataOfCreatedModels(); // (was already called but this first cleans up data)
+      datacoreApiClient.clearCache(); // to avoid side effects
    }
    
    /**
@@ -96,7 +97,7 @@ public class DatacoreApiServerTest {
    }*/
 
    @Test
-   public void test1CreateFailInStrictModeWithVersion() {
+   public void testCreateFailInStrictModeWithVersion() {
       checkNoResource(CityCountrySample.CITY_MODEL_NAME, "UK/London");
 
       DCResource londonCityData = buildCityData("London", "UK", true);
@@ -118,7 +119,7 @@ public class DatacoreApiServerTest {
    // TODO test uri : replaceBaseUrlMode, normalizeUrlMode
 
    @Test
-   public void test1CreateFailWithoutReferencedData() {
+   public void testCreateFailWithoutReferencedData() {
       checkNoResource(CityCountrySample.CITY_MODEL_NAME, "UK/London");
 
       DCResource londonCityData = buildCityData("London", "UK", false);
@@ -135,13 +136,13 @@ public class DatacoreApiServerTest {
     * 
     */
    @Test
-   public void test2Create() {
-      test2Create("UK", "London");
+   public void testCreate() {
+      testCreate("UK", "London");
    }
 
    // TODO LATER
    //@Test
-   public void test2CreateWithReferencedDataInGraph() {
+   public void testCreateWithReferencedDataInGraph() {
       checkNoResource(CityCountrySample.CITY_MODEL_NAME, "UK/London");
 
       DCResource londonCityData = buildCityData("London", "UK", false);
@@ -154,7 +155,7 @@ public class DatacoreApiServerTest {
     * @param city
     * @return client resource BUT NOT POSTed one (no version)
     */
-   public DCResource test2Create(String country, String city) {
+   public DCResource testCreate(String country, String city) {
       checkNoResource(CityCountrySample.COUNTRY_MODEL_NAME, country);
       
       DCResource ukCountryData = buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, country);
@@ -211,7 +212,7 @@ public class DatacoreApiServerTest {
    }
 
    ///@Test
-   public void test2CreateEmbedded() {
+   public void testCreateEmbedded() {
       checkNoResource(CityCountrySample.CITY_MODEL_NAME, "France/Bordeaux");
 
       DCResource bordeauxCityData = buildCityData("Bordeaux", "France", true);
@@ -256,7 +257,10 @@ public class DatacoreApiServerTest {
     * @throws Exception If a problem occurs
     */
    @Test
-   public void test2GetUpdateVersion() throws Exception {
+   public void testGetUpdateVersion() throws Exception {
+      // first fill some data
+      testCreate();
+      
       DCResource data = datacoreApiClient.getData(CityCountrySample.CITY_MODEL_NAME, "UK/London");
       Assert.assertNotNull(data);
       Assert.assertNotNull(data.getVersion());
@@ -277,8 +281,8 @@ public class DatacoreApiServerTest {
    }
 
    @Test
-   public void test3clientCache() throws Exception {
-      String bordeauxUriToEvict = test2Create("France", "Bordeaux").getUri();
+   public void testClientCache() throws Exception {
+      String bordeauxUriToEvict = testCreate("France", "Bordeaux").getUri();
       resourceCache.evict(bordeauxUriToEvict); // create with country but clean cache
 
       try {
@@ -340,7 +344,7 @@ public class DatacoreApiServerTest {
     * @throws Exception
     */
    @Test
-   public void test3propDateStringUtcBC() throws Exception {
+   public void testPropDateStringUtcBC() throws Exception {
       cityCountrySample.cleanDataOfCreatedModels(); // first clean up data
 
       datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "UK"));
@@ -396,7 +400,7 @@ public class DatacoreApiServerTest {
     * @throws Exception
     */
    @Test
-   public void test3propDateStringPlusOneTimezone() throws Exception {
+   public void testPropDateStringPlusOneTimezone() throws Exception {
       cityCountrySample.cleanDataOfCreatedModels(); // first clean up data
 
       datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "France"));
@@ -453,7 +457,7 @@ public class DatacoreApiServerTest {
     */
    @Test
    @Ignore // LATER
-   public void test3propDateJoda() throws Exception {
+   public void testPropDateJoda() throws Exception {
       cityCountrySample.cleanDataOfCreatedModels(); // first clean up data
       
       DCResource bordeauxCityResource = buildCityData("Bordeaux", "France", false);
@@ -486,7 +490,7 @@ public class DatacoreApiServerTest {
    }
 
    @Test
-   public void test3find() throws Exception {
+   public void testFind() throws Exception {
       cityCountrySample.cleanDataOfCreatedModels(); // first clean up data
 
       // query all - no resource
