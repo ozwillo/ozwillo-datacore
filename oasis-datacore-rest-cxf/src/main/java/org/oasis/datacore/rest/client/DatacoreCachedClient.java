@@ -32,6 +32,10 @@ public interface DatacoreCachedClient extends DatacoreClientApi {
     * @return
     */
    public DCResource putDataInType(DCResource resource);
+
+   DCResource getData(DCResource resource);
+
+   void deleteData(DCResource resource);
    
    void clearCache();
    

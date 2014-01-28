@@ -69,6 +69,10 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
       return UriHelper.buildUri(this.containerUrl, type, iri);
    }
 
+   /**
+    * Shortcut to postDataInType(DCResource resource, String modelType)
+    */
+   //@CachePut(value={"org.oasis.datacore.rest.api.DCResource"}, key="resource.uri")
    @Override
    public DCResource postDataInType(DCResource resource) {
       String modelType = resource.getModelType(); // NB. if null lets server explode
@@ -137,6 +141,12 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
       return delegate.putDataInType(resource, modelType, iri);
    }
 
+   /**
+    * Shortcut to putAllDataInType(List<DCResource> resources, String modelType).
+    * Copies that method's cache annotations, because they are not applied when calling it
+    * (because it doesn't call the cached wrapper but the impl instance).
+    */
+   @CachePut(value={"org.oasis.datacore.rest.api.DCResource"}, key="#resource.uri") // after invocation
    @Override
    public DCResource putDataInType(DCResource resource) {
       String modelType = resource.getModelType(); // NB. if null lets server explode
@@ -186,6 +196,25 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
    }
 
    /**
+    * Shortcut to getData (modelType, iri, version) using provided resource's
+    */
+   @Override
+   public DCResource getData(DCResource resource) {
+      String modelType = resource.getModelType(); // NB. if null lets server explode
+      String id = resource.getId();
+      if (id == null) {
+         // init id to make it easier to reuse POSTed & returned resources :
+         // TODO rather make id transient ? or auto set id on unmarshall ??
+         try { 
+            id = UriHelper.parseURI(resource.getUri()).getId();
+         } catch (Exception e) {
+            throw new RuntimeException(e);
+         }
+      }
+      return this.getData(modelType, id, resource.getVersion());
+   }
+
+   /**
     * Same as TODO but with header version ETag
     * coming from cache
     */
@@ -224,8 +253,9 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
       //DCResource resource = (DCResource) response.getEntity();
       //return resource;
    }
-   //@CachePut(value={"org.oasis.datacore.rest.api.DCResource"}, key="resource.uri") // NO key not fully known
-   //@Cacheable(value={"org.oasis.datacore.rest.api.DCResource"}, key="resource.uri")
+   
+   //@CachePut(value={"org.oasis.datacore.rest.api.DCResource"}, key="resource.uri") // NO only put if not cached yet
+   //@Cacheable(value={"org.oasis.datacore.rest.api.DCResource"}, key="resource.uri") // NO key not fully known
    // NOT Cacheable because returning from cache is triggered from HTTP 304 reponse
    @Override
    public DCResource getData(String modelType, String iri, Long version) {
@@ -264,6 +294,26 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
    }
 
    /**
+    * Shortcut to deleteData (modelType, iri, version) using provided resource's
+    * @return 
+    */
+   @Override
+   public void deleteData(DCResource resource) {
+      String modelType = resource.getModelType(); // NB. if null lets server explode
+      String id = resource.getId();
+      if (id == null) {
+         // init id to make it easier to reuse POSTed & returned resources :
+         // TODO rather make id transient ? or auto set id on unmarshall ??
+         try { 
+            id = UriHelper.parseURI(resource.getUri()).getId();
+         } catch (Exception e) {
+            throw new RuntimeException(e);
+         }
+      }
+      this.deleteData(modelType, id, resource.getVersion());
+   }
+
+   /**
     * Same as deleteData(modelType, iri, version) but with header version ETag
     * coming from cache
     */
@@ -277,8 +327,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
    }
    /**
     * Always evict (after invocation) and replace by updated data, using Spring CacheEvict annotation
-    * done in wrapper logic (Spring CacheEvict needs full uri)
-    * done in wrapper logic (Spring CachePut annotation doesn't support item lists)
+    * done in wrapper logic (Spring CacheEvict needs full uri, no return value to use by Spring CachePut)
     * TODO LATER save if no diff
     */
    //@CacheEvict(value={"org.oasis.datacore.rest.api.DCResource"}, key="resource.uri") // NO key not fully known

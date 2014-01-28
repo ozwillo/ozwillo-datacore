@@ -10,11 +10,9 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
 import org.oasis.datacore.core.entity.EntityQueryService;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.rest.api.DCResource;
@@ -100,7 +98,7 @@ public class DatacoreApiServerTest {
    public void testCreateFailInStrictModeWithVersion() {
       checkNoResource(CityCountrySample.CITY_MODEL_NAME, "UK/London");
 
-      DCResource londonCityData = buildCityData("London", "UK", true);
+      DCResource londonCityData = buildCityData("London", "UK", 10000000, true);
       londonCityData.setVersion(0l);
       boolean oldStrictPostMode = datacoreApiImpl.isStrictPostMode();
       datacoreApiImpl.setStrictPostMode(true);
@@ -122,7 +120,7 @@ public class DatacoreApiServerTest {
    public void testCreateFailWithoutReferencedData() {
       checkNoResource(CityCountrySample.CITY_MODEL_NAME, "UK/London");
 
-      DCResource londonCityData = buildCityData("London", "UK", false);
+      DCResource londonCityData = buildCityData("London", "UK", 10000000, false);
       try {
          datacoreApiClient.postDataInType(londonCityData, CityCountrySample.CITY_MODEL_NAME);
          Assert.fail("Creation should fail when referenced data doesn't exist");
@@ -137,7 +135,7 @@ public class DatacoreApiServerTest {
     */
    @Test
    public void testCreate() {
-      testCreate("UK", "London");
+      testCreate("UK", "London", 10000000);
    }
 
    // TODO LATER
@@ -145,7 +143,7 @@ public class DatacoreApiServerTest {
    public void testCreateWithReferencedDataInGraph() {
       checkNoResource(CityCountrySample.CITY_MODEL_NAME, "UK/London");
 
-      DCResource londonCityData = buildCityData("London", "UK", false);
+      DCResource londonCityData = buildCityData("London", "UK", 10000000, false);
       DCResource postedLondonCityData = datacoreApiClient.postDataInType(londonCityData, CityCountrySample.CITY_MODEL_NAME);
    }
    
@@ -155,7 +153,7 @@ public class DatacoreApiServerTest {
     * @param city
     * @return client resource BUT NOT POSTed one (no version)
     */
-   public DCResource testCreate(String country, String city) {
+   public DCResource testCreate(String country, String city, int populationCount) {
       checkNoResource(CityCountrySample.COUNTRY_MODEL_NAME, country);
       
       DCResource ukCountryData = buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, country);
@@ -178,15 +176,15 @@ public class DatacoreApiServerTest {
       String iri = country + '/' + city;
       checkNoResource(CityCountrySample.CITY_MODEL_NAME, iri);
 
-      DCResource cityData = buildCityData(city, country, false);
+      DCResource cityData = buildCityData(city, country, 10000000, false);
       DCResource postedLondonCityData = datacoreApiClient.postDataInType(cityData, CityCountrySample.CITY_MODEL_NAME);
       Assert.assertNotNull(postedLondonCityData);
-      Assert.assertEquals(cityData.getProperties().get("description"),
-            postedUkCountryData.getProperties().get("description"));
+      Assert.assertEquals(cityData.getProperties().get("populationCount"),
+            postedLondonCityData.getProperties().get("populationCount"));
       DCResource gottenLondonCityData = datacoreApiClient.getData(CityCountrySample.CITY_MODEL_NAME, iri);
       Assert.assertNotNull(gottenLondonCityData);
-      Assert.assertEquals(cityData.getProperties().get("description"),
-            postedUkCountryData.getProperties().get("description"));
+      Assert.assertEquals(cityData.getProperties().get("populationCount"),
+            postedLondonCityData.getProperties().get("populationCount"));
       
       try {
          datacoreApiClient.postDataInType(cityData, CityCountrySample.CITY_MODEL_NAME);
@@ -215,7 +213,7 @@ public class DatacoreApiServerTest {
    public void testCreateEmbedded() {
       checkNoResource(CityCountrySample.CITY_MODEL_NAME, "France/Bordeaux");
 
-      DCResource bordeauxCityData = buildCityData("Bordeaux", "France", true);
+      DCResource bordeauxCityData = buildCityData("Bordeaux", "France", 300000, true);
       DCResource postedBordeauxCityData = datacoreApiClient.postDataInType(bordeauxCityData, CityCountrySample.CITY_MODEL_NAME);
       Assert.assertNotNull(postedBordeauxCityData);
    }
@@ -230,7 +228,8 @@ public class DatacoreApiServerTest {
       return resource;
    }
    
-   private DCResource buildCityData(String name, String countryName, boolean embeddedCountry) {
+   private DCResource buildCityData(String name, String countryName,
+         int populationCount, boolean embeddedCountry) {
       String type = CityCountrySample.CITY_MODEL_NAME;
       String iri = countryName + '/' + name;
       DCResource cityResource = DCResource.create(containerUrl, type, iri).set("name", name);
@@ -240,6 +239,7 @@ public class DatacoreApiServerTest {
       //cityResource.setVersion(-1l);
       /*cityResource.setProperty("type", type);
       cityResource.setProperty("iri", iri);*/
+      cityResource.set("populationCount", populationCount);
       
       String countryType = CityCountrySample.COUNTRY_MODEL_NAME;
       String countryUri = UriHelper.buildUri(containerUrl, countryType, countryName);
@@ -282,7 +282,7 @@ public class DatacoreApiServerTest {
 
    @Test
    public void testClientCache() throws Exception {
-      String bordeauxUriToEvict = testCreate("France", "Bordeaux").getUri();
+      String bordeauxUriToEvict = testCreate("France", "Bordeaux", 300000).getUri();
       resourceCache.evict(bordeauxUriToEvict); // create with country but clean cache
 
       try {
@@ -336,6 +336,48 @@ public class DatacoreApiServerTest {
       String modifier = postBordeauxCityResource.getLastModifiedBy();
       Assert.assertTrue("admin".equals(modifier) || "guest".equals(modifier)); // prod or dev
    }
+
+   @Test
+   @Ignore
+   public void testRemoveProperty() throws Exception {
+      // fill some data
+      datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "UK"));
+      DCResource londonCityData = buildCityData("London", "UK", 10000000, false);
+      londonCityData.set("populationCount", 10000000);
+      DCResource postedLondonCityResource = datacoreApiClient.postDataInType(londonCityData, CityCountrySample.CITY_MODEL_NAME);
+      
+      // check return, server's & without cache
+      Assert.assertEquals(10000000, postedLondonCityResource.get("populationCount"));
+      Assert.assertEquals(10000000, datacoreApiClient.getData(postedLondonCityResource)
+            .get("populationCount")); // re-get in cache
+      //datacoreApiClient.clearCache();
+      Assert.assertEquals(10000000, datacoreApiClient.getData(londonCityData)
+            .get("populationCount")); // without cache
+      
+      // removing, but using POST/PATCH so not on server
+      postedLondonCityResource.getProperties().remove("populationCount");
+      Assert.assertEquals(null, postedLondonCityResource.get("populationCount"));
+      postedLondonCityResource = datacoreApiClient.putDataInType(postedLondonCityResource);
+      // check return, server's & without cache
+      Assert.assertEquals(null, postedLondonCityResource.get("populationCount")); // BECAUSE RETURN !!!!!!!!!
+      Assert.assertEquals(null, datacoreApiClient.getData(postedLondonCityResource)
+            .get("populationCount")); // re-get in cache ; BECAUSE RETURN !!!!!!!!!
+      datacoreApiClient.clearCache();
+      Assert.assertEquals(10000000, datacoreApiClient.getData(londonCityData)
+            .get("populationCount")); // without cache
+      
+      // actually removing, using PUT so also on server
+      postedLondonCityResource.getProperties().remove("populationCount");
+      Assert.assertEquals(null, postedLondonCityResource.get("populationCount"));
+      DCResource putLondonCityResource = datacoreApiClient.putDataInType(postedLondonCityResource);
+      // check return, server's & without cache
+      Assert.assertEquals(null, putLondonCityResource.get("populationCount")); // BECAUSE RETURN !!!!!!!!!
+      Assert.assertEquals(null, datacoreApiClient.getData(putLondonCityResource)
+            .get("populationCount")); // re-get in cache ; BECAUSE RETURN !!!!!!!!!
+      datacoreApiClient.clearCache();
+      Assert.assertEquals(null, datacoreApiClient.getData(londonCityData)
+            .get("populationCount")); // without cache
+   }
    
    /**
     * For now, client doesn't know when to parse String as Date
@@ -345,10 +387,8 @@ public class DatacoreApiServerTest {
     */
    @Test
    public void testPropDateStringUtcBC() throws Exception {
-      cityCountrySample.cleanDataOfCreatedModels(); // first clean up data
-
       datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "UK"));
-      DCResource londonCityData = buildCityData("London", "UK", false);
+      DCResource londonCityData = buildCityData("London", "UK", 10000000, false);
       DateTime londonFoundedDate = new DateTime(-43, 4, 1, 0, 0, DateTimeZone.UTC);
       // NB. if created without timezone, the default one is weird : "0300-04-01T00:00:00.000+00:09:21"
       // because http://stackoverflow.com/questions/2420527/odd-results-in-joda-datetime-for-01-04-1893
@@ -401,10 +441,8 @@ public class DatacoreApiServerTest {
     */
    @Test
    public void testPropDateStringPlusOneTimezone() throws Exception {
-      cityCountrySample.cleanDataOfCreatedModels(); // first clean up data
-
       datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "France"));
-      DCResource bordeauxCityData = buildCityData("Bordeaux", "France", false);
+      DCResource bordeauxCityData = buildCityData("Bordeaux", "France", 10000000, false);
       DateTime bordeauxFoundedDate = new DateTime(300, 4, 1, 0, 0, DateTimeZone.forID("+01:00"));
       // NB. if created without timezone, the default one (i.e. DateTimeZone.forID("Europe/Paris"))
       // is weird : "0300-04-01T00:00:00.000+00:09:21" ; see explanation :
@@ -458,9 +496,7 @@ public class DatacoreApiServerTest {
    @Test
    @Ignore // LATER
    public void testPropDateJoda() throws Exception {
-      cityCountrySample.cleanDataOfCreatedModels(); // first clean up data
-      
-      DCResource bordeauxCityResource = buildCityData("Bordeaux", "France", false);
+      DCResource bordeauxCityResource = buildCityData("Bordeaux", "France", 10000000, false);
       DateTime bordeauxFoundedDate = new DateTime(300, 4, 1, 0, 0);
       bordeauxCityResource.setProperty("founded", bordeauxFoundedDate); // testing date field
       DCResource putBordeauxCityResource = datacoreApiClient.postDataInType(bordeauxCityResource, CityCountrySample.CITY_MODEL_NAME);
@@ -491,8 +527,6 @@ public class DatacoreApiServerTest {
 
    @Test
    public void testFind() throws Exception {
-      cityCountrySample.cleanDataOfCreatedModels(); // first clean up data
-
       // query all - no resource
       List<DCResource> resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters(), null, null);
@@ -501,7 +535,7 @@ public class DatacoreApiServerTest {
       // query all - one resource
       datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "UK"));
       DateTime londonFoundedDate = new DateTime(-43, 4, 1, 0, 0, DateTimeZone.UTC);
-      DCResource londonCityData = buildCityData("London", "UK", false);
+      DCResource londonCityData = buildCityData("London", "UK", 10000000, false);
       londonCityData.setProperty("founded", londonFoundedDate);
       datacoreApiClient.postDataInType(londonCityData );
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
@@ -511,7 +545,7 @@ public class DatacoreApiServerTest {
 
       // query all - two resource
       datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "France"));
-      DCResource bordeauxCityData = buildCityData("Bordeaux", "France", false);
+      DCResource bordeauxCityData = buildCityData("Bordeaux", "France", 10000000, false);
       DateTime bordeauxFoundedDate = new DateTime(300, 4, 1, 0, 0, DateTimeZone.forID("+01:00"));
       bordeauxCityData.setProperty("founded", bordeauxFoundedDate);
       DCResource postedBordeauxCityData = datacoreApiClient.postDataInType(bordeauxCityData);
@@ -631,4 +665,5 @@ public class DatacoreApiServerTest {
             EntityQueryService.LANGUAGE_LDPQL);
       Assert.assertEquals(1, resources.size());
    }
+   
 }
