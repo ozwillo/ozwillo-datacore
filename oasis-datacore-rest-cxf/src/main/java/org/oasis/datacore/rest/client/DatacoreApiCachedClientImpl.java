@@ -7,7 +7,6 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.RedirectionException;
 import javax.ws.rs.client.ClientException;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
@@ -24,7 +23,9 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.stereotype.Component;
 
 /**
- * This wrapper adds caching to DatacoreApi client.
+ * This wrapper adds caching to DatacoreApi client, to use it inject
+ * DatacoreCachedClient.
+ * 
  * Putting in cache is done either using Spring Cacheable etc. annotations
  * if possible, or in wrapper logic.
  * Getting from cache is done in wrapper logic, when receiving HTTP 304
@@ -390,6 +391,12 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
    public List<DCResource> queryData(String query, String language) {
       return delegate.queryData(query, language); // TODO cache ??
    }
+   
+   @Override
+   public void clearCache() {
+      this.getCache().clear();
+   }
+   
 
    public /*DatacoreApi*/DatacoreClientApi getDelegate() {
       return delegate;

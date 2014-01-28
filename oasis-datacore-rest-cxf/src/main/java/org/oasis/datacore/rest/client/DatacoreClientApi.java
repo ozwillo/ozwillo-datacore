@@ -26,9 +26,22 @@ import com.wordnik.swagger.annotations.ApiResponses;
 
 
 /**
- * Client-side-only API to allow using all operations
- * using the proxy client paradigm (with the help of some interceptors)
- * (TODO LATER and ease up the client user's job)
+ * WARNING rather use DatacoreCachedClient, because this is a utilitarian API
+ * designed to achieve DatacoreCachedClient(Impl) features. For instance,
+ * DatacoreClientApi's DELETE and GET operations will still use the client-side
+ * cache (which is injected in CXF interceptors), and if cache is not
+ * up-to-date these DELETE and GET operations will throw up RedirectException
+ * (meaning HTTP 304 Not Modified).
+ * 
+ * This interface is the client-side point of view on Datacore API and has been
+ * designed to allow using all operations using the proxy client paradigm
+ * (with the help of some interceptors). It is used by DatacoreCachedClientImpl
+ * to provide those in a cached manner (again with the help of some interceptors).
+ * 
+ * Its implementation is an (ex. CXF) (uncached) proxy client of the server REST API.
+ * This means that HTTP 304 Not Modified returns must be handled explicitly, as RedirectException.
+ *    
+ * Methods are almost-copies from DatacoreApi's ones, comments and Swagger doc included.
  * 
  * @author mdutoo
  *

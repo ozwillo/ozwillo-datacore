@@ -14,12 +14,11 @@ import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.security.mock.MockAuthenticationService;
 import org.oasis.datacore.rest.api.DCResource;
-import org.oasis.datacore.rest.client.DatacoreClientApi;
+import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.client.QueryParameters;
 import org.oasis.datacore.sample.MarkaInvestData;
 import org.oasis.datacore.sample.MarkaInvestModel;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
@@ -33,8 +32,7 @@ import com.google.common.collect.Ordering;
 public class FunctionalOperationsTest {
 	
 	@Autowired
-	@Qualifier("datacoreApiClient")
-	protected DatacoreClientApi api;
+	protected DatacoreCachedClient api;
 
 	@Value("${datacoreApiClient.containerUrl}")
 	private String containerUrl;

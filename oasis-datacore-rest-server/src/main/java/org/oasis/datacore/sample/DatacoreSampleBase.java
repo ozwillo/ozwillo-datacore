@@ -20,12 +20,11 @@ import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.security.mock.MockAuthenticationService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
-import org.oasis.datacore.rest.client.DatacoreClientApi;
+import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.server.DatacoreApiImpl;
 import org.oasis.datacore.rest.server.event.EventService;
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.mongodb.core.MongoOperations;
 
 import com.mongodb.BasicDBObject;
@@ -64,9 +63,8 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
    @Autowired
    protected DataModelServiceImpl modelAdminService;
 
-   @Autowired//
-   @Qualifier("datacoreApiCachedClient")
-   protected /*DatacoreApi*/DatacoreClientApi datacoreApiClient;
+   @Autowired
+   protected /*DatacoreApi*/DatacoreCachedClient datacoreApiClient;
    /** for tests */
    @Autowired
    protected DatacoreApiImpl datacoreApiImpl;

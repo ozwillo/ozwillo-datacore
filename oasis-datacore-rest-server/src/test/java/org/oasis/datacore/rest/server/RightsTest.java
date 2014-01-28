@@ -8,6 +8,7 @@ import javax.ws.rs.WebApplicationException;
 
 import org.apache.cxf.common.util.StringUtils;
 import org.apache.http.HttpStatus;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,13 +19,12 @@ import org.oasis.datacore.core.security.mock.MockAuthenticationService;
 import org.oasis.datacore.historization.exception.HistorizationException;
 import org.oasis.datacore.historization.service.HistorizationService;
 import org.oasis.datacore.rest.api.DCResource;
-import org.oasis.datacore.rest.client.DatacoreClientApi;
+import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rights.rest.api.DCRights;
 import org.oasis.datacore.rights.rest.api.RightsApi;
 import org.oasis.datacore.sample.MarkaInvestData;
 import org.oasis.datacore.sample.MarkaInvestModel;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
@@ -40,8 +40,7 @@ public class RightsTest {
 	private RightsApi rightsApi;
 	
 	@Autowired
-	@Qualifier("datacoreApiClient")
-	private DatacoreClientApi datacoreApi;
+	private DatacoreCachedClient datacoreApi;
 
 	@Value("${datacoreApiClient.containerUrl}")
 	private String containerUrl;
@@ -80,6 +79,19 @@ public class RightsTest {
 		markaInvestData.createDataSample();
 		mockAuthenticationService.logout();
 
+	}
+	
+	/**
+	 * Logout after tests to restore default unlogged state.
+	 * This is required in tests that use authentication,
+	 * else if last test fails, tests that don't login will use logged in user
+	 * rather than default one, which may trigger a different behaviour and
+	 * make some tests fail (ex. DatacoreApiServerTest.test3clientCache asserting
+	 * that creator is admin or guest).
+	 */
+	@After
+	public void logoutAfter() {
+      mockAuthenticationService.logout();
 	}
 
 	@Test

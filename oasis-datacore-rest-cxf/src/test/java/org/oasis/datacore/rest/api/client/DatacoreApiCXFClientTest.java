@@ -4,8 +4,6 @@ import java.net.URLEncoder;
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.core.HttpHeaders;
-
 import org.apache.cxf.jaxrs.utils.HttpUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -15,7 +13,6 @@ import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.client.QueryParameters;
 import org.oasis.datacore.rest.client.cxf.mock.MockClientAuthenticationHelper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -33,12 +30,8 @@ public class DatacoreApiCXFClientTest {
 
    public static final String TEST_USER_JOHN = "john";
    
-   //@Autowired
-   //@Qualifier("datacoreApiClient")
-   //private /DatacoreApi/DatacoreClientApi datacoreApiClient;
-   @Autowired // injection brings control (?)
-   @Qualifier("datacoreApiCachedClient") // rather than...
-   private DatacoreCachedClient datacoreApiClient; // NOT DatacoreApiCachedClientImpl ; Datacore(Client)Api ??
+   @Autowired
+   private DatacoreCachedClient datacoreApiClient;
    
    /** to be able to build a full uri, to check in tests
     * TODO rather client-side DCURI or rewrite uri in server */

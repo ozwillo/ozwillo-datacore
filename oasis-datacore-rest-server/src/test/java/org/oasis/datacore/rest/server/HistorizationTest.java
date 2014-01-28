@@ -3,6 +3,7 @@ package org.oasis.datacore.rest.server;
 import java.util.List;
 
 import org.apache.cxf.common.util.StringUtils;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,7 +17,6 @@ import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.sample.MarkaInvestData;
 import org.oasis.datacore.sample.MarkaInvestModel;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
@@ -29,7 +29,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class HistorizationTest {
 
 	@Autowired
-	@Qualifier("datacoreApiCachedClient")
 	private DatacoreCachedClient datacoreApiClient;
 
 	@Value("${datacoreApiClient.containerUrl}")
@@ -70,7 +69,20 @@ public class HistorizationTest {
 		mockAuthenticationService.logout();
 
 	}
-		
+   
+   /**
+    * Logout after tests to restore default unlogged state.
+    * This is required in tests that use authentication,
+    * else if last test fails, tests that don't login will use logged in user
+    * rather than default one, which may trigger a different behaviour and
+    * make some tests fail (ex. DatacoreApiServerTest.test3clientCache asserting
+    * that creator is admin or guest).
+    */
+   @After
+   public void logoutAfter() {
+      mockAuthenticationService.logout();
+   }
+   
 	@Test
 	public void testHistorization() {
 		

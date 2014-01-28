@@ -43,7 +43,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class DatacoreApiServerTest {
    
    @Autowired
-   @Qualifier("datacoreApiCachedClient")
    private /*DatacoreApi*/DatacoreCachedClient datacoreApiClient;
    
    /** to init models */

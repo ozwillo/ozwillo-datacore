@@ -8,6 +8,7 @@ import java.util.Set;
 
 import javax.ws.rs.BadRequestException;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -49,7 +50,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class DatacoreApiServerMixinTest {
    
    @Autowired
-   @Qualifier("datacoreApiCachedClient")
    private /*DatacoreApi*/DatacoreCachedClient datacoreApiClient;
    
    @Autowired
@@ -124,6 +124,19 @@ public class DatacoreApiServerMixinTest {
    //@BeforeClass
    public /*static */void init1setupModels() {
       
+   }
+   
+   /**
+    * Logout after tests to restore default unlogged state.
+    * This is required in tests that use authentication,
+    * else if last test fails, tests that don't login will use logged in user
+    * rather than default one, which may trigger a different behaviour and
+    * make some tests fail (ex. DatacoreApiServerTest.test3clientCache asserting
+    * that creator is admin or guest).
+    */
+   @After
+   public void logoutAfter() {
+      authenticationService.logout();
    }
 
    @Test

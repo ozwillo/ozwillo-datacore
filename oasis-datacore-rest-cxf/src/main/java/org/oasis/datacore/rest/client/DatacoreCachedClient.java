@@ -4,8 +4,14 @@ import org.oasis.datacore.rest.api.DCResource;
 
 
 /**
+ * Use this interface to use the Datacore cached client.
+ * 
  * Extends DatacoreClientApi with local-only, non-JAXRS client helper methods
  * especially to take advantage of client local caching.
+ * 
+ * Along with DCResource's builder methods, it eases up the client developer's
+ * job.
+ * 
  * @author mdutoo
  *
  */
@@ -26,5 +32,7 @@ public interface DatacoreCachedClient extends DatacoreClientApi {
     * @return
     */
    public DCResource putDataInType(DCResource resource);
+   
+   void clearCache();
    
 }
