@@ -62,8 +62,9 @@
 
 	<bean id="oauthAccessDeniedHandler" class="org.springframework.security.oauth2.provider.error.OAuth2AccessDeniedHandler" />
 	
-	<bean id="tokenServices" class="org.oasis.datacore.oauth.RemoteTokenServices">
+	<bean id="tokenServices" class="org.oasis.datacore.core.security.oauth2.RemoteTokenServices">
     	<property name="checkTokenEndpointUrl" value="https://oasis-demo.atolcd.com/a/tokeninfo" />
+    	<property name="userInfoEndpointUrl" value="https://oasis-demo.atolcd.com/a/userinfo" />
         <property name="clientId" value="8274888e-ecd6-42bc-8393-e62dba7212c4" />
         <property name="clientSecret" value="" />
     </bean>

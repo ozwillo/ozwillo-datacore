@@ -254,5 +254,21 @@ public class MarkaInvestData extends DatacoreSampleBase {
 	public HashMap<String, List<DCResource>> getData() {
 		return mapData;
 	}
+
+	public String getContainerUrl() {
+		return containerUrl;
+	}
+
+	public void setContainerUrl(String containerUrl) {
+		this.containerUrl = containerUrl;
+	}
+
+	public Boolean getEnableMarkaSampleDataInsertionAtStartup() {
+		return enableMarkaSampleDataInsertionAtStartup;
+	}
+
+	public void setEnableMarkaSampleDataInsertionAtStartup(Boolean enableMarkaSampleDataInsertionAtStartup) {
+		this.enableMarkaSampleDataInsertionAtStartup = enableMarkaSampleDataInsertionAtStartup;
+	}
 	
 }

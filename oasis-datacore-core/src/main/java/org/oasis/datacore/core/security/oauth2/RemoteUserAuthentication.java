@@ -1,10 +1,11 @@
-package org.oasis.datacore.oauth;
+package org.oasis.datacore.core.security.oauth2;
 
 import java.util.Collection;
 
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 
 /**
  * Authentication token representing a user decoded from a UAA access token.
@@ -18,6 +19,7 @@ public class RemoteUserAuthentication extends AbstractAuthenticationToken implem
 	private String id;
 	private String username;
 	private String email;
+	private User user;
 
 	public RemoteUserAuthentication(String id, String username, String email, Collection<? extends GrantedAuthority> authorities) {
 		super(authorities);
@@ -25,6 +27,7 @@ public class RemoteUserAuthentication extends AbstractAuthenticationToken implem
 		this.username = username;
 		this.email = email;
 		this.setAuthenticated(true);
+		this.user = new User(username, "", authorities);
 	}
 
 	@Override
@@ -34,7 +37,7 @@ public class RemoteUserAuthentication extends AbstractAuthenticationToken implem
 
 	@Override
 	public Object getPrincipal() {
-		return username;
+		return user;
 	}
 
 	public String getId() {

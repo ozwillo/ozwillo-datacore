@@ -1,4 +1,4 @@
-package org.oasis.datacore.oauth;
+package org.oasis.datacore.core.security.oauth2;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -20,6 +20,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.codec.Base64;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
@@ -50,6 +51,8 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 	private RestOperations restTemplate;
 
 	private String checkTokenEndpointUrl;
+	
+	private String userInfoEndpointUrl;
 
 	private String clientId;
 
@@ -84,6 +87,10 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 
 	public void setClientSecret(String clientSecret) {
 		this.clientSecret = clientSecret;
+	}
+	
+	public void setUserInfoEndpointUrl(String userInfoEndpointUrl) {
+		this.userInfoEndpointUrl = userInfoEndpointUrl;
 	}
 
 	public OAuth2Authentication loadAuthentication(String accessToken) throws AuthenticationException {
@@ -148,24 +155,25 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 			}
 		}
 		
-		if (map.containsKey("sub_groups")) {
-			Set<GrantedAuthority> userAuthorities = new HashSet<GrantedAuthority>();
-			Collection<String> values = (Collection<String>) map.get("sub_groups");
-			userAuthorities.addAll(getAuthorities(values));
-			clientAuthentication.setAuthorities(userAuthorities);
-		}
-
-		Authentication userAuthentication = getUserAuthentication(map, scope);
+		Authentication userAuthentication = getUserAuthentication(map, scope, userInfoEndpointUrl, accessToken);
 		
 		clientAuthentication.setApproved(true);
 		return new OAuth2Authentication(clientAuthentication, userAuthentication);
 	}
 
-	private Authentication getUserAuthentication(Map<String, Object> map, Set<String> scope) {
-		String username = (String) map.get("user_name");
-		if (username==null) {
-			return null;
+	private Authentication getUserAuthentication(Map<String, Object> map, Set<String> scope, String path, String accessClientToken) {
+		
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("Authorization", OAuth2AccessToken.BEARER_TYPE + " " + accessClientToken);
+		headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
+		
+		@SuppressWarnings("unchecked")
+		Map<String, Object> resultMap = restTemplate.exchange(path, HttpMethod.GET, new HttpEntity<>(headers), Map.class).getBody();
+		
+		if(resultMap == null) {
+			throw new UsernameNotFoundException("User associated to this token was not found, security context cannot be fill");
 		}
+		
 		Set<GrantedAuthority> userAuthorities = new HashSet<GrantedAuthority>();
 		if (map.containsKey("sub_groups")) {
 			@SuppressWarnings("unchecked")
@@ -176,9 +184,9 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 			// User authorities had better not be empty or we might mistake user for unauthenticated
 			userAuthorities.addAll(getAuthorities(scope));
 		}
-		String email = (String) map.get("email");
-		String id = (String) map.get("user_id");
-		return new RemoteUserAuthentication(id, username, email, userAuthorities);
+		
+		return new RemoteUserAuthentication((String)resultMap.get("sub"), (String)resultMap.get("name"), (String)resultMap.get("email"), userAuthorities);
+			
 	}
 
 	@Override
@@ -213,5 +221,6 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 		Map<String, Object> result = (Map<String, Object>) map;
 		return result;
 	}
+
 
 }

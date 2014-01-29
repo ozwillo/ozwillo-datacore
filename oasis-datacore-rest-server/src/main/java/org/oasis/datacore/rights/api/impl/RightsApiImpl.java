@@ -16,14 +16,12 @@ import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.security.EntityPermissionService;
+import org.oasis.datacore.core.security.mock.MockAuthenticationService;
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.rights.enumeration.RightsActionType;
 import org.oasis.datacore.rights.rest.api.DCRights;
 import org.oasis.datacore.rights.rest.api.RightsApi;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 
 @Path("dc/r")
 public class RightsApiImpl implements RightsApi {
@@ -39,6 +37,9 @@ public class RightsApiImpl implements RightsApi {
 
 	@Autowired
 	private ResourceService resourceService;
+	
+	@Autowired
+	private MockAuthenticationService mockAuthenticationService;
 
 	public void addRightsOnResource(String modelType, String iri, long version, DCRights dcRights) {
 
@@ -147,11 +148,7 @@ public class RightsApiImpl implements RightsApi {
 			// we put the current user (how might me owner)
 			// if he is not the changeRights will not work and this will not affect the entity
 			entity.setOwners(new HashSet<String>());
-			Authentication currentUserAuth = SecurityContextHolder.getContext().getAuthentication();
-		    if (currentUserAuth != null && currentUserAuth.getPrincipal() != null && currentUserAuth.getPrincipal() instanceof User) {
-		    	User user = (User) currentUserAuth.getPrincipal();
-		    	entity.getOwners().add("u_" + user.getUsername()); 
-		    }
+			entity.getOwners().add("u_" + mockAuthenticationService.getCurrentUserId()); 
 		}
 		
 		entity.setReaders(new HashSet<String>());
@@ -216,9 +213,24 @@ public class RightsApiImpl implements RightsApi {
 		entityService.getRights(entity);
 		
 		DCRights dcRights = new DCRights();
-		dcRights.setOwners(new ArrayList<String>(entity.getOwners()));
-		dcRights.setReaders(new ArrayList<String>(entity.getReaders()));
-		dcRights.setWriters(new ArrayList<String>(entity.getWriters()));
+		
+		dcRights.setReaders(new ArrayList<String>());
+		dcRights.setWriters(new ArrayList<String>());
+		
+		if(entity.getOwners() != null) {
+			dcRights.setOwners(new ArrayList<String>());
+			dcRights.getOwners().addAll(entity.getOwners());
+		}
+		
+		if(entity.getReaders() != null) {
+			dcRights.setReaders(new ArrayList<String>());
+			dcRights.getReaders().addAll(entity.getReaders());
+		}
+		
+		if(entity.getWriters() != null) {
+			dcRights.setWriters(new ArrayList<String>());
+			dcRights.getWriters().addAll(entity.getWriters());
+		}
 		
 		throw new WebApplicationException(Response.status(Response.Status.OK).entity(dcRights).type(MediaType.APPLICATION_JSON).build());
 		

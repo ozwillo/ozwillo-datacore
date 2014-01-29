@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Set;
 
 import org.oasis.datacore.core.security.DCUserImpl;
+import org.oasis.datacore.core.security.oauth2.RemoteUserAuthentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -15,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.stereotype.Component;
 
 /**
@@ -87,10 +89,11 @@ public class MockAuthenticationService {
       if (currentUserAuth == null) {
          throw new RuntimeException("No authentication in security context");  
       }
+      
       if (currentUserAuth.getPrincipal() instanceof DCUserImpl) {
     	  return (DCUserImpl) currentUserAuth.getPrincipal();
       } else {
-    	  return new DCUserImpl((User)currentUserAuth.getPrincipal());
+    	  return new DCUserImpl((User)currentUserAuth.getPrincipal(), getCurrentUserId());
       }
       
    }
@@ -98,7 +101,13 @@ public class MockAuthenticationService {
    /** for resource : to put creator as owner, and get auditor (created/modifiedBy) */
    public String getCurrentUserId() {
       Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-      return (authentication == null) ? NO_USER : authentication.getName();
+      if(authentication instanceof OAuth2Authentication) {
+    	  OAuth2Authentication oAuth2Authentication = (OAuth2Authentication) authentication;
+    	  if(oAuth2Authentication.getUserAuthentication() instanceof RemoteUserAuthentication) {
+    		  return ((RemoteUserAuthentication)oAuth2Authentication.getUserAuthentication()).getId();
+    	  }
+      }
+      return (authentication == null) ? NO_USER : authentication.getName(); 
    }
 
    /**

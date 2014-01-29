@@ -1,4 +1,4 @@
-package org.oasis.datacore.oauth;
+package org.oasis.datacore.core.security.oauth2;
 
 /**
  * <p>
