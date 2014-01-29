@@ -20,14 +20,12 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.stereotype.Component;
 
 /**
- * Mock local auth service using default hardcoded user conf.
+ * Mock local auth service using default hardcoded user conf, available in dev mode only.
  * 
- * TODO migrate / merge to custom AuthenticationProvider (?) that returns well-filled
- * OIDCAuthenticationToken
- * http://aykutakin.wordpress.com/2013/07/08/spring-security-spring-custom-authentication-provider/
+ * TODO separate what is mock (loginAs) from what is not (getCurrentUser(Id)/EntityGroups())
  * 
- * ALL AUTHENTICATION SERVICES / PROVIDER should provide users :
- * - guest with guest authority (modeled as (Datacore-wide) default group) TODO OR use AnonymousAuthenticationToken ?
+ * Hardcoded conf should provide users :
+ * - "guest" with guest authority (modeled as (Datacore-wide) default group)
  * - all other users with additional guest authority (add it on load if not yet there)
  * - "admin" user ; TODO users are made admin by conf (hardcoded and LATER REST API)
  * 
@@ -47,6 +45,11 @@ public class MockAuthenticationService {
    @Qualifier("datacore.userDetailsService")
    private UserDetailsService mockUserDetailsService;
    
+   /**
+    * WARNING can only log in a mock auth hardcoded conf user, not ex. an OAuth user
+    * (because it would have to get its details) 
+    * @param username
+    */
    public void loginAs(String username) {
       UserDetails userDetails = mockUserDetailsService.loadUserByUsername(username);
       if (userDetails == null) {
