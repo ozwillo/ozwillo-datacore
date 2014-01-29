@@ -342,7 +342,7 @@ public class DatacoreApiServerMixinTest {
       // check that write not allowed as guest
       try {
          resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
-               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true);
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true, false);
          Assert.fail("Resource in guest type should not be writable as guest");
       } catch (Exception e) {
          Assert.assertTrue(true);
@@ -357,7 +357,7 @@ public class DatacoreApiServerMixinTest {
       // check that create not allowed as guest
       try {
          resourceService.createOrUpdate(buildSofiaMonastery(++i),
-               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false);
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false, false);
          Assert.fail("Resource in guest type should not be creatable as guest");
       } catch (Exception e) {
          Assert.assertTrue(true);
@@ -392,7 +392,7 @@ public class DatacoreApiServerMixinTest {
       // check that writable by authentified user
       try {
          altTourismPlaceSofiaMonasteryPosted = resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
-               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true);
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true, false);
          Assert.assertEquals("john", altTourismPlaceSofiaMonasteryPosted.getLastModifiedBy()); // check auditor
          Set<String> owners = entityService.getByUriUnsecured(altTourismPlaceSofiaMonasteryPosted.getUri(), altTourismPlaceModel).getOwners();
          Assert.assertTrue(owners != null && owners.size() == 1 &&  !"u_john".equals(owners.iterator().next())); // check creator as owner
@@ -411,7 +411,7 @@ public class DatacoreApiServerMixinTest {
       // check that creatable by authentified user
       try {
          DCResource resource = resourceService.createOrUpdate(buildSofiaMonastery(++i),
-               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false);
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false, false);
          Assert.assertEquals("john", resource.getCreatedBy()); // check auditor
          Set<String> owners = entityService.getByUriUnsecured(resource.getUri(), altTourismPlaceModel).getOwners();
          Assert.assertTrue(owners != null && owners.size() == 1 &&  "u_john".equals(owners.iterator().next())); // check creator as owner
@@ -462,7 +462,7 @@ public class DatacoreApiServerMixinTest {
       // check that write still not allowed as guest
       try {
          resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
-               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true);
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true, false);
          Assert.fail("Resource in authentified type should not be writable as guest");
       } catch (Exception e) {
          Assert.assertTrue(true);
@@ -477,7 +477,7 @@ public class DatacoreApiServerMixinTest {
       // check that create still not allowed as guest
       try {
          resourceService.createOrUpdate(buildSofiaMonastery(++i),
-               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false);
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false, false);
          Assert.fail("Resource in authentified type should not be creatable as guest");
       } catch (Exception e) {
          Assert.assertTrue(true);
@@ -534,7 +534,7 @@ public class DatacoreApiServerMixinTest {
       // check that not writable because not in writer group
       try {
          resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
-               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true);
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true, false);
          Assert.fail("Resource in authentified type should not be writable because not yet in writer group");
       } catch (Exception e) {
          Assert.assertTrue(true);
@@ -549,7 +549,7 @@ public class DatacoreApiServerMixinTest {
       // check that not creatable because not in writer group
       try {
          resourceService.createOrUpdate(buildSofiaMonastery(++i),
-               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false);
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false, false);
          Assert.fail("Resource in authentified type should not be creatable because not yet in writer group");
       } catch (Exception e) {
          Assert.assertTrue(true);
@@ -600,7 +600,7 @@ public class DatacoreApiServerMixinTest {
       // check that not writable because still not in writer group
       try {
          resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
-               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true);
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true, false);
          Assert.fail("Resource in private type should not be writable as GUEST");
       } catch (Exception e) {
          Assert.assertTrue(true);
@@ -615,7 +615,7 @@ public class DatacoreApiServerMixinTest {
       // check that not creatable because still not in writer group
       try {
          resourceService.createOrUpdate(buildSofiaMonastery(++i),
-               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false);
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false, false);
          Assert.fail("Resource in private type should not be creatable as GUEST");
       } catch (Exception e) {
          Assert.assertTrue(true);
@@ -676,7 +676,7 @@ public class DatacoreApiServerMixinTest {
       // check that not writable by user not in writer group
       try {
          resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
-               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true);
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true, false);
          Assert.fail("Resource in private type should not be writable by user not in writer group");
       } catch (Exception e) {
          Assert.assertTrue(true);
@@ -691,7 +691,7 @@ public class DatacoreApiServerMixinTest {
       // check that not creatable by user not in writer group
       try {
          resourceService.createOrUpdate(buildSofiaMonastery(++i),
-               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false);
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false, false);
          Assert.fail("Resource in private type should not be creatable by user not in writer group");
       } catch (Exception e) {
          Assert.assertTrue(true);
@@ -710,7 +710,7 @@ public class DatacoreApiServerMixinTest {
       // check that not writable by user in not yet set writer group
       try {
          resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
-               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true);
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true, false);
          Assert.fail("Resource in private type should not be writable by user in not yet set writer group");
       } catch (Exception e) {
          Assert.assertTrue(true);
@@ -725,7 +725,7 @@ public class DatacoreApiServerMixinTest {
       // check that creatable by user in writer group
       try {
          DCResource resource = resourceService.createOrUpdate(buildSofiaMonastery(++i),
-               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false);
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false, false);
          Assert.assertEquals("jim", resource.getCreatedBy()); // check auditor
          Set<String> owners = entityService.getByUriUnsecured(resource.getUri(), altTourismPlaceModel).getOwners();
          Assert.assertTrue(owners != null && owners.size() == 1 &&  "u_jim".equals(owners.iterator().next())); // check creator as owner
@@ -756,7 +756,7 @@ public class DatacoreApiServerMixinTest {
       
       try {
          altTourismPlaceSofiaMonasteryPosted = resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
-               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true);
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true, false);
          Assert.assertEquals("jim", altTourismPlaceSofiaMonasteryPosted.getLastModifiedBy()); // check auditor
       } catch (Exception e) {
          Assert.fail("Resource in private type should be writable by user in writer group");
@@ -771,7 +771,7 @@ public class DatacoreApiServerMixinTest {
       // check that still creatable by user in writer group
       try {
          DCResource resource = resourceService.createOrUpdate(buildSofiaMonastery(++i),
-               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false);
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false, false);
          Assert.assertEquals("jim", resource.getCreatedBy()); // check auditor
          Set<String> owners = entityService.getByUriUnsecured(resource.getUri(), altTourismPlaceModel).getOwners();
          Assert.assertTrue(owners != null && owners.size() == 1 &&  "u_jim".equals(owners.iterator().next())); // check creator as owner

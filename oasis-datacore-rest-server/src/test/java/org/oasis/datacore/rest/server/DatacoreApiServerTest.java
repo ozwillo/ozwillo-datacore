@@ -356,11 +356,11 @@ public class DatacoreApiServerTest {
       // removing, but using POST/PATCH so not on server
       postedLondonCityResource.getProperties().remove("populationCount");
       Assert.assertEquals(null, postedLondonCityResource.get("populationCount"));
-      postedLondonCityResource = datacoreApiClient.putDataInType(postedLondonCityResource);
+      postedLondonCityResource = datacoreApiClient.postDataInType(postedLondonCityResource);
       // check return, server's & without cache
-      Assert.assertEquals(null, postedLondonCityResource.get("populationCount")); // BECAUSE RETURN !!!!!!!!!
-      Assert.assertEquals(null, datacoreApiClient.getData(postedLondonCityResource)
-            .get("populationCount")); // re-get in cache ; BECAUSE RETURN !!!!!!!!!
+      Assert.assertEquals(10000000, postedLondonCityResource.get("populationCount"));
+      Assert.assertEquals(10000000, datacoreApiClient.getData(postedLondonCityResource)
+            .get("populationCount")); // re-get in cache
       datacoreApiClient.getCache().clear();
       Assert.assertEquals(10000000, datacoreApiClient.getData(londonCityData)
             .get("populationCount")); // without cache
@@ -370,12 +370,12 @@ public class DatacoreApiServerTest {
       Assert.assertEquals(null, postedLondonCityResource.get("populationCount"));
       DCResource putLondonCityResource = datacoreApiClient.putDataInType(postedLondonCityResource);
       // check return, server's & without cache
-      Assert.assertEquals(null, putLondonCityResource.get("populationCount")); // BECAUSE RETURN !!!!!!!!!
+      Assert.assertEquals(null, putLondonCityResource.get("populationCount"));
       Assert.assertEquals(null, datacoreApiClient.getData(putLondonCityResource)
-            .get("populationCount")); // re-get in cache ; BECAUSE RETURN !!!!!!!!!
+            .get("populationCount")); // re-get in cache
       datacoreApiClient.getCache().clear();
-      //Assert.assertEquals(null, datacoreApiClient.getData(londonCityData)
-      //      .get("populationCount")); // without cache
+      Assert.assertEquals(null, datacoreApiClient.getData(londonCityData)
+            .get("populationCount")); // without cache
    }
    
    /**

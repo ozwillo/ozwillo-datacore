@@ -87,7 +87,8 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
 
    
    public DCResource postDataInType(DCResource resource, String modelType) {
-      DCResource postedResource = this.internalPostDataInType(resource, modelType, true, !this.strictPostMode);
+      DCResource postedResource = this.internalPostDataInType(resource, modelType,
+            true, !this.strictPostMode, false);
       
       //return dcData; // rather 201 Created with ETag header :
       String httpEntity = postedResource.getVersion().toString(); // no need of additional uri because only for THIS resource
@@ -109,9 +110,10 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
     * @return
     */
    public DCResource internalPostDataInType(DCResource resource, String modelType,
-         boolean canCreate, boolean canUpdate) {
+         boolean canCreate, boolean canUpdate, boolean putRatherThanPatchMode) {
       try {
-         return resourceService.createOrUpdate(resource, modelType, canCreate, canUpdate);
+         return resourceService.createOrUpdate(resource, modelType,
+               canCreate, canUpdate, putRatherThanPatchMode);
          
       } catch (ResourceTypeNotFoundException rtnfex) {
          throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
@@ -140,14 +142,15 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
    }
    
    public List<DCResource> postAllDataInType(List<DCResource> resources, String modelType) {
-      List<DCResource> res = this.internalPostAllDataInType(resources, modelType, true, !this.strictPostMode);
+      List<DCResource> res = this.internalPostAllDataInType(resources, modelType,
+            true, !this.strictPostMode, false);
       throw new WebApplicationException(Response.status(Response.Status.CREATED)
             ///.tag(new EntityTag(httpEntity)) // .lastModified(dataEntity.getLastModified().toDate())
             .entity(res)
             .type(MediaType.APPLICATION_JSON).build());
    }
    public List<DCResource> internalPostAllDataInType(List<DCResource> resources, String modelType,
-         boolean canCreate, boolean canUpdate) {
+         boolean canCreate, boolean canUpdate, boolean putRatherThanPatchMode) {
       if (resources == null || resources.isEmpty()) {
          throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
                .type(MediaType.APPLICATION_JSON).build());
@@ -155,7 +158,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       ArrayList<DCResource> res = new ArrayList<DCResource>(resources.size());
       for (DCResource resource : resources) {
          // TODO LATER rather put exceptions in context to allow always checking multiple POSTed resources
-         res.add(internalPostDataInType(resource, modelType, canCreate, canUpdate));
+         res.add(internalPostDataInType(resource, modelType, canCreate, canUpdate, putRatherThanPatchMode));
          // NB. ETag validation is not supported because will be checked at db save time anyway
          // (and to support multiple POSTs, would have to be complex or use
          // the given dataResource.version instead)
@@ -169,13 +172,14 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       return res;
    }
    public List<DCResource> postAllData(List<DCResource> resources) {
-      List<DCResource> res = this.internalPostAllData(resources, true, !this.strictPostMode);
+      List<DCResource> res = this.internalPostAllData(resources, true, !this.strictPostMode, false);
       throw new WebApplicationException(Response.status(Response.Status.CREATED)
             ///.tag(new EntityTag(httpEntity)) // .lastModified(dataEntity.getLastModified().toDate())
             .entity(res)
             .type(MediaType.APPLICATION_JSON).build());
    }
-   public List<DCResource> internalPostAllData(List<DCResource> resources, boolean canCreate, boolean canUpdate) {
+   public List<DCResource> internalPostAllData(List<DCResource> resources,
+         boolean canCreate, boolean canUpdate, boolean putRatherThanPatchMode) {
       if (resources == null || resources.isEmpty()) {
          throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT)
                .type(MediaType.APPLICATION_JSON).build());
@@ -195,7 +199,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
             throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
                   .entity(rpex.getMessage()).type(MediaType.TEXT_PLAIN).build());
          }
-         res.add(internalPostDataInType(resource, uri.getType(), canCreate, canUpdate));
+         res.add(internalPostDataInType(resource, uri.getType(), canCreate, canUpdate, putRatherThanPatchMode));
          // NB. no ETag validation support, see discussion in internalPostAllDataInType()
       }
       return res;
@@ -203,15 +207,15 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
    
    public DCResource putDataInType(DCResource resource, String modelType, String iri) {
       // NB. no ETag validation support (same as POST), see discussion in internalPostAllDataInType()
-      return internalPostDataInType(resource, modelType, false, true);
+      return internalPostDataInType(resource, modelType, false, true, true);
    }
    public List<DCResource> putAllDataInType(List<DCResource> resources, String modelType) {
       // NB. no ETag validation support (same as POST), see discussion in internalPostAllDataInType()
-      return internalPostAllDataInType(resources, modelType, false, true);
+      return internalPostAllDataInType(resources, modelType, false, true, true);
    }
    public List<DCResource> putAllData(List<DCResource> resources) {
       // NB. no ETag validation support (same as POST), see discussion in internalPostAllDataInType()
-      return internalPostAllData(resources, false, true);
+      return internalPostAllData(resources, false, true, true);
    }
    
    public DCResource getData(String modelType, String iri, Long version) {

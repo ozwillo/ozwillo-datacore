@@ -32,7 +32,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.ImmutableMap;
@@ -214,6 +213,7 @@ public class ResourceService {
     * @param modelType
     * @param canCreate
     * @param canUpdate
+    * @param putRatherThanPatchMode 
     * @return
     * @throws ResourceTypeNotFoundException if unknown model type
     * @throws ResourceNotFoundException
@@ -225,8 +225,9 @@ public class ResourceService {
     * missing required version in PUT mode,
     */
    public DCResource createOrUpdate(DCResource resource, String modelType,
-         boolean canCreate, boolean canUpdate) throws ResourceTypeNotFoundException,
-         ResourceNotFoundException, BadUriException, ResourceObsoleteException, ResourceException {
+         boolean canCreate, boolean canUpdate, boolean putRatherThanPatchMode)
+               throws ResourceTypeNotFoundException, ResourceNotFoundException,
+               BadUriException, ResourceObsoleteException, ResourceException {
       // TODO pass request to validate ETag,
       // or rather in a CXF ResponseHandler (or interceptor but closer to JAXRS 2) see http://cxf.apache.org/docs/jax-rs-filters.html
       // by getting result with outMessage.getContent(Object.class), see ServiceInvokerInterceptor.handleMessage() l.78
@@ -320,10 +321,13 @@ public class ResourceService {
       
       /**/
       
+      // supporting PUT vs default PATCH-like POST mode :
       if (dataEntity == null) {
          dataEntity = new DCEntity();
          dataEntity.setCachedModel(dcModel); // TODO or in DCEntityService ?
          dataEntity.setUri(stringUri);
+      } else if (putRatherThanPatchMode) {
+         dataEntity.getProperties().clear();
       }
 
       Map<String, Object> dataProps = resource.getProperties();
@@ -393,18 +397,10 @@ public class ResourceService {
          }
       }
 
-      //Map<String, Object> dcDataProps = new HashMap<String,Object>(dataEntity.getProperties());
-      //DCData dcData = new DCData(dcDataProps);
-      //dcData.setUri(uri);
-      resource.setVersion(dataEntity.getVersion());
-      
-      resource.setCreated(dataEntity.getCreated()); // NB. if already provided, only if creation
-      resource.setCreatedBy(dataEntity.getCreatedBy()); // NB. if already provided, only if creation
-      resource.setLastModified(dataEntity.getLastModified());
-      resource.setLastModifiedBy(dataEntity.getLastModifiedBy());
-      
-      // TODO setProperties if changed ex. default values ? or copied queriable fields, or on behaviours ???
-      // ex. for model.getDefaultValues() { dcData.setProperty(name, defaultValue);
+      resource = resourceEntityMapperService.entityToResource(dataEntity);
+      // NB. rather than manually updating resource, because props may have changed
+      // (ex. if POST/PATCH of a null prop => has not actually been removed)
+      // ((and LATER possibly because of behaviours))
 
       // 2nd pass : post save hooks
       // TODO better
