@@ -107,7 +107,7 @@ public class DCResource {
     * @throws MalformedURLException */
    public static DCResource create(String uri) throws MalformedURLException, URISyntaxException {
       DCResource resource = new DCResource();
-      DCURI dcUri = DCURI.fromUri(uri);
+      DCURI dcUri = UriHelper.parseUri(uri);
       String modelType = dcUri.getType();
       resource.getTypes().add(modelType);
       resource.setUri(UriHelper.buildUri(dcUri.getContainer(), modelType, dcUri.getId()));

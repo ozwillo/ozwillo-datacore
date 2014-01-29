@@ -56,12 +56,12 @@ public class DCInitIdEventListener extends DCResourceEventListener implements DC
                throw new AbortOperationEventException("Missing id field " + idFieldName
                      + " in resource with null uri of types " + r.getTypes());
             }
-            r.setUri(resourceService.buildUri(r.getModelType(), id.toString()));
+            r.setUri(uriService.buildUri(r.getModelType(), id.toString()));
             
          } else if (id == null) {
             String uri = r.getUri();
             try {
-               DCURI dcUri = resourceService.parseUri(uri);
+               DCURI dcUri = uriService.parseUri(uri);
                r.set(this.idFieldName, dcUri.getId());
             } catch (BadUriException e) {
                // should not happen

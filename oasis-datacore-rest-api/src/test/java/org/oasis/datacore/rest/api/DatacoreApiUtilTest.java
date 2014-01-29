@@ -72,7 +72,7 @@ public class DatacoreApiUtilTest {
       // test normalizeUrlMode relative URI
       res = UriHelper.getUriNormalizedContainerAndPathWithoutSlash(
             testRelativeUri, containerUrl, true, false);
-      Assert.assertEquals(containerUrl, res[0]);
+      Assert.assertEquals(null, res[0]);
       Assert.assertEquals("dc/type/sample.marka.field/1", res[1]);
 
       // test normalizeUrlMode fails on bad URI chars
@@ -123,6 +123,12 @@ public class DatacoreApiUtilTest {
       } catch (MalformedURLException e) {
          Assert.assertTrue(true);
       }
+      
+      // test matchBaseUrlMode relative URI BEWARE DOESN'T CHECK URI OR URL CHARS
+      res = UriHelper.getUriNormalizedContainerAndPathWithoutSlash(
+            testRelativeUri, containerUrl, false, true);
+      Assert.assertEquals(null, res[0]);
+      Assert.assertEquals("dc/type/sample.marka.field/1", res[1]);
       
       // test bare replace mode BEWARE NO CHECKS AND EXPECTS CONTAINER URL
       res = UriHelper.getUriNormalizedContainerAndPathWithoutSlash(

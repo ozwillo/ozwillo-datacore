@@ -3,6 +3,7 @@ package org.oasis.datacore.rest.server.event;
 import javax.annotation.PostConstruct;
 
 import org.oasis.datacore.rest.server.resource.ResourceService;
+import org.oasis.datacore.rest.server.resource.UriService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 
@@ -25,6 +26,8 @@ public abstract class DCEventListenerBase implements DCEventListener {
    protected EventService eventService;
    @Autowired
    protected ResourceService resourceService;
+   @Autowired
+   protected UriService uriService;
    
    public DCEventListenerBase() {
       

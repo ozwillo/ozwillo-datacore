@@ -137,17 +137,17 @@ public class DCResourceParsingContext {
       if (resourceParsingContext.hasWarnings()) {
          // TODO or render (HTML ?) template ?
          sb.append("\nWarnings:");
-         for (ResourceParsingLog error : resourceParsingContext.getErrors()) {
+         for (ResourceParsingLog warning : resourceParsingContext.getWarnings()) {
             sb.append("\n   - for field ");
-            sb.append(error.getFieldFullPath());
+            sb.append(warning.getFieldFullPath());
             sb.append(" : ");
-            sb.append(error.getMessage());
-            if (error.getException() != null) {
+            sb.append(warning.getMessage());
+            if (warning.getException() != null) {
                sb.append(". Exception message : ");
-               sb.append(error.getException().getMessage());
+               sb.append(warning.getException().getMessage());
                if (detailedErrorsMode) {
                   sb.append("\n      Exception details : \n\n");
-                  sb.append(ExceptionUtils.getFullStackTrace(error.getException()));
+                  sb.append(ExceptionUtils.getFullStackTrace(warning.getException()));
                   sb.append("\n");
                }
             }

@@ -17,7 +17,7 @@ import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.security.EntityPermissionService;
 import org.oasis.datacore.core.security.mock.MockAuthenticationService;
-import org.oasis.datacore.rest.server.resource.ResourceService;
+import org.oasis.datacore.rest.server.resource.UriService;
 import org.oasis.datacore.rights.enumeration.RightsActionType;
 import org.oasis.datacore.rights.rest.api.DCRights;
 import org.oasis.datacore.rights.rest.api.RightsApi;
@@ -34,9 +34,9 @@ public class RightsApiImpl implements RightsApi {
 
 	@Autowired
 	private EntityService entityService;
-
-	@Autowired
-	private ResourceService resourceService;
+   
+   @Autowired
+   private UriService uriService;
 	
 	@Autowired
 	private MockAuthenticationService mockAuthenticationService;
@@ -51,7 +51,7 @@ public class RightsApiImpl implements RightsApi {
 			throw new NotFoundException(Response.status(Response.Status.NOT_FOUND).entity("Model " + modelType + " was not found").type(MediaType.TEXT_PLAIN).build());
 		}
 
-		String uri = resourceService.buildUri(modelType, iri);
+		String uri = uriService.buildUri(modelType, iri);
 		DCEntity entity = entityService.getByUriUnsecured(uri, model);
 
 		if (entity == null) {
@@ -76,7 +76,7 @@ public class RightsApiImpl implements RightsApi {
 			throw new NotFoundException(Response.status(Response.Status.NOT_FOUND).entity("Model " + modelType + " was not found").type(MediaType.TEXT_PLAIN).build());
 		}
 
-		String uri = resourceService.buildUri(modelType, iri);
+		String uri = uriService.buildUri(modelType, iri);
 		DCEntity entity = entityService.getByUriUnsecured(uri, model);
 
 		if (entity == null) {
@@ -105,7 +105,7 @@ public class RightsApiImpl implements RightsApi {
 			throw new NotFoundException(Response.status(Response.Status.NOT_FOUND).entity("Model " + modelType + " was not found").type(MediaType.TEXT_PLAIN).build());
 		}
 		
-		String uri = resourceService.buildUri(modelType, iri);
+		String uri = uriService.buildUri(modelType, iri);
 		DCEntity entity = entityService.getByUriUnsecured(uri, model);
 		
 		if(entity == null) {
@@ -130,7 +130,7 @@ public class RightsApiImpl implements RightsApi {
 			throw new NotFoundException(Response.status(Response.Status.NOT_FOUND).entity("Model " + modelType + " was not found").type(MediaType.TEXT_PLAIN).build());
 		}
 		
-		String uri = resourceService.buildUri(modelType, iri);
+		String uri = uriService.buildUri(modelType, iri);
 		DCEntity entity = entityService.getByUriUnsecured(uri, model);
 		
 		if(entity == null) {
@@ -202,7 +202,7 @@ public class RightsApiImpl implements RightsApi {
 			throw new NotFoundException(Response.status(Response.Status.NOT_FOUND).entity("Model " + modelType + " was not found").type(MediaType.TEXT_PLAIN).build());
 		}
 		
-		String uri = resourceService.buildUri(modelType, iri);
+		String uri = uriService.buildUri(modelType, iri);
 		DCEntity entity = entityService.getByUriUnsecured(uri, model);
 		
 		if(entity == null) {

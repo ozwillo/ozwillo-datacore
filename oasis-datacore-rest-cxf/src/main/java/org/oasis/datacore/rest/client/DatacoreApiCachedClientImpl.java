@@ -156,7 +156,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
          // init id to make it easier to reuse POSTed & returned resources :
          // TODO rather make id transient ? or auto set id on unmarshall ??
          try { 
-            id = UriHelper.parseURI(resource.getUri()).getId();
+            id = UriHelper.parseUri(resource.getUri(), this.containerUrl).getId();
          } catch (Exception e) {
             throw new RuntimeException(e);
          }
@@ -207,7 +207,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
    @Override
    public DCResource getData(final DCResource resource) {
       try { 
-         final DCURI dcUri = UriHelper.parseURI(resource.getUri());
+         final DCURI dcUri = UriHelper.parseUri(resource.getUri(), this.containerUrl);
          return new AbstractCachedGetDataPerformer() {
             @Override
             public DCResource doGetData() {
@@ -316,7 +316,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
          // init id to make it easier to reuse POSTed & returned resources :
          // TODO rather make id transient ? or auto set id on unmarshall ??
          try { 
-            id = UriHelper.parseURI(resource.getUri()).getId();
+            id = UriHelper.parseUri(resource.getUri(), this.containerUrl).getId();
          } catch (Exception e) {
             throw new RuntimeException(e);
          }

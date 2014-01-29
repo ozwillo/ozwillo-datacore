@@ -28,7 +28,7 @@ public class UriHelper {
    
 
    /**
-    * Only for client, not used by server ; does new DCURI().toString()
+    * Only for client, not used by server. Does new DCURI(...).toString()
     * and also checks syntax & normalizes URL.
     * @param containerUrl
     * @param modelType
@@ -36,13 +36,13 @@ public class UriHelper {
     * @return
     */
    public static String buildUri(String containerUrl, String modelType, String iri) {
-      String uri = new DCURI(containerUrl, modelType, iri).toString();
+      String uri = new DCURI(containerUrl, modelType, iri, false, false, false).toString();
       try {
          // cannonicalize
          // TODO reuse getUriNormalizedContainerAndPathWithoutSlash's code...
          return new URL(uri).toURI().normalize().toString();
       } catch (MalformedURLException | URISyntaxException e) {
-         throw new RuntimeException("Bad URL : " + uri, e);
+         throw new IllegalArgumentException("Bad URL : " + uri, e);
       }
    }
    
@@ -63,23 +63,66 @@ public class UriHelper {
       return containerUrl + urlPathWithoutSlash;
    }
    
-   public static DCURI parseURI(String uri) throws MalformedURLException, URISyntaxException {
+   /**
+    * Parses any URI, even external
+    * @param uri
+    * @param containerUrl used only for relative URIs, which require it
+    * @return
+    * @throws MalformedURLException
+    * @throws URISyntaxException
+    */
+   public static DCURI parseUri(String uri, String containerUrl) throws MalformedURLException, URISyntaxException {
       String[] containerAndPathWithoutSlash = getUriNormalizedContainerAndPathWithoutSlash(
             uri, null, true, false);
       String urlContainer = containerAndPathWithoutSlash[0];
-      if (urlContainer == null) {
-         // happens when URI is relative, which it should not be
-         throw new MalformedURLException("Can't parse URI because is relative " + uri);
+
+      boolean isRelativeUri = urlContainer == null;
+      ///boolean isExternalDatacoreUri = false;
+      ///boolean isExternalWebUri = false;
+      if (isRelativeUri) {
+         if (containerUrl == null) {
+            throw new MalformedURLException("Can't parse URI because is relative "
+                  + "and no provided container URL " + uri);
+         }
+         urlContainer = containerUrl;
+         // TODO LATER OPT also accept local type-relative uri (type-less iri) ???
+      } else if (containerUrl != null && !containerUrl.equals(urlContainer)) {
+         // external resource (another Datacore or any Web resource) :
+         // NB. can't know if it's another Datacore
+         // so Web resource :
+         ///isExternalWebUri = true;
+         // doesn't know how to parse modelType out of containerAndPathWithoutSlash
+         // TODO LATER knownWebContainerUrlSet allowing such parsing & auth schemes
+         // therefore return :
+         return new DCURI(urlContainer, null, containerAndPathWithoutSlash[1], false, false, true);
       }
       
-      return parseURI(containerAndPathWithoutSlash[0], containerAndPathWithoutSlash[1]);
+      String[] iri = parseIri(containerAndPathWithoutSlash[1]);
+      return new DCURI(containerUrl, iri[0], iri[1], isRelativeUri, false, false);
+   }
+   /**
+    * Parses any URI, even external ; shortcut to parseUri(uri, null)
+    * @param uri
+    * @return
+    * @throws MalformedURLException
+    * @throws URISyntaxException
+    */
+   public static DCURI parseUri(String uri) throws MalformedURLException, URISyntaxException {
+      return parseUri(uri, null);
    }
    
-   public static DCURI parseURI(String containerUrl, String urlPathWithoutSlash) {
-      int iriSlashIndex = urlPathWithoutSlash .indexOf('/', typeIndexInType); // TODO use Pattern & DC_TYPE_PATH
-      String modelType = urlPathWithoutSlash.substring(typeIndexInType, iriSlashIndex);
-      String iri = urlPathWithoutSlash.substring(iriSlashIndex + 1); // TODO useful ??
-      return new DCURI(containerUrl, modelType, iri);
+   /**
+    * To be called after a previous getUriNormalizedContainerAndPathWithoutSlash
+    * to complete URI parsing.
+    * @param containerUrl used to build parsed DCURI
+    * @param urlPathWithoutSlash
+    * @return
+    */
+   public static String[] parseIri(String urlPathWithoutSlash) {
+      int idSlashIndex = urlPathWithoutSlash.indexOf('/', typeIndexInType); // TODO use Pattern & DC_TYPE_PATH
+      String modelType = urlPathWithoutSlash.substring(typeIndexInType, idSlashIndex);
+      String id = urlPathWithoutSlash.substring(idSlashIndex + 1); // TODO useful ??
+      return new String[] { modelType, id };
    }
    
    /**
@@ -88,11 +131,13 @@ public class UriHelper {
     * Else if matchBaseUrlMode, uses pattern matching to split and normalize if
     * absolute checks it has an http or https protocol
     * Else merely splits at the given containerUrl's length
-    * @param stringUriValue ex.http://data.oasis-eu.org/dc//type/sample.marka.field//1
-    * @param containerUrl used only for default mode or if given URI is relative
+    * @param stringUriValue absolute ex. http://data.oasis-eu.org/dc//type/sample.marka.field//1
+    * or relative (then uses provided containerUrl) ex. type//sample.marka.field///1
+    * @param containerUrl used only for default mode or if given URI is relative,
+    * not used to check absolute URL
     * @param normalizeUrlMode
     * @param matchBaseUrlMode
-    * @return the given Datacore URI's container URL (i.e. base URL, null if URI is relative)
+    * @return the given Datacore URI's container URL (i.e. base URL, or null if URI is relative)
     * and URL Path without slash
     * ex. [ "http://data.oasis-eu.org/", "dc/type/sample.marka.field/1" ]
     * @throws ResourceParsingException
@@ -118,10 +163,10 @@ public class UriHelper {
             stringUriValue = urlValue.toString(); // ex. http://localhost:8180/dc/type/country/UK
             uriBaseUrl = stringUriValue.substring(0, stringUriValue.length()
                   - urlPathWithoutSlash.length()); // includes end slash
-         } else {
-            // no parsed uriBaseUrl (so possibly no leading slash), defaults to given one
-            uriBaseUrl = containerUrl;
          }
+         
+         // else no parsed uriBaseUrl (so possibly no leading slash)
+         //uriBaseUrl = containerUrl; // DON'T set default, let caller decide (ex. rather baseUrl)
          
       } else if (matchBaseUrlMode) {
          // checking that URI is an HTTP(S) one
@@ -136,8 +181,8 @@ public class UriHelper {
                }
             }*/
             urlPathWithoutSlash = multiSlashPattern.matcher(stringUriValue).replaceAll("/"); // ex. dc/type/sample.marka.field/1
-            // no parsed uriBaseUrl, defaults to given one
-            uriBaseUrl = containerUrl;
+            // no parsed uriBaseUrl
+            //uriBaseUrl = containerUrl; // DON'T set default, let caller decide (ex. rather baseUrl)
             
          } else {
             // building uriBaseUrl & checking protocol
@@ -158,10 +203,11 @@ public class UriHelper {
          }
          
       } else {
-         // default mode : fastest, assume that URI starts exactly with containerUrl
-         // (no https vs http or additional slash)
+         // default, "exact container" mode :
+         // fastest, assumes that URI starts exactly with containerUrl ending by single slash
+         // (no relative URL or https vs http or additional slash)
          urlPathWithoutSlash = stringUriValue.substring(containerUrl.length());
-         uriBaseUrl = containerUrl;
+         uriBaseUrl = containerUrl; // stringUriValue.substring(0, containerUrlLength);
       }
       return new String[] {uriBaseUrl, urlPathWithoutSlash };
    }

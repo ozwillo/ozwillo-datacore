@@ -19,11 +19,11 @@ import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.security.mock.MockAuthenticationService;
 import org.oasis.datacore.rest.api.DCResource;
-import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.server.DatacoreApiImpl;
 import org.oasis.datacore.rest.server.event.EventService;
 import org.oasis.datacore.rest.server.resource.ResourceService;
+import org.oasis.datacore.rest.server.resource.UriService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
 
@@ -75,6 +75,8 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
    
    @Autowired
    protected ResourceService resourceService;
+   @Autowired
+   protected UriService uriService;
 
    @Autowired
    protected EventService eventService;
@@ -177,7 +179,7 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
    public DCResource putDataInType(DCResource resource) {
       try {
          return datacoreApiImpl.putDataInType(resource, resource.getModelType(),
-               UriHelper.parseURI(resource.getUri()).getId());
+               uriService.parseUri(resource.getUri()).getId());
       } catch (WebApplicationException e) {
          if (e.getResponse().getStatus() / 100 != 2) {
             throw e;

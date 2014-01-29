@@ -33,12 +33,14 @@ import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.util.DCURI;
 import org.oasis.datacore.rest.server.cxf.JaxrsServerBase;
+import org.oasis.datacore.rest.server.resource.ExternalResourceException;
 import org.oasis.datacore.rest.server.resource.ResourceEntityMapperService;
 import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.oasis.datacore.rest.server.resource.ResourceNotFoundException;
 import org.oasis.datacore.rest.server.resource.ResourceObsoleteException;
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.rest.server.resource.ResourceTypeNotFoundException;
+import org.oasis.datacore.rest.server.resource.UriService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DuplicateKeyException;
@@ -70,6 +72,8 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
    
    @Autowired
    private ResourceService resourceService;
+   @Autowired
+   private UriService uriService;
    @Autowired
    private ResourceEntityMapperService resourceEntityMapperService;
    
@@ -118,6 +122,19 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       } catch (ResourceTypeNotFoundException rtnfex) {
          throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
                .entity(rtnfex.getMessage()).type(MediaType.TEXT_PLAIN).build());
+         
+      } catch (ExternalResourceException ere) {
+         String msg;
+         if (ere.getUri().isExternalDatacoreUri()) {
+            // TODO LATER OPT true broker / proxy mode ?
+            msg = "Resource URI has known external Datacore container, "
+                  + "this Datacore can't handle it, but doing a POST/PUT rather there should work";
+         } else { // ere.getUri().isExternalWebUri())
+            msg = "Resource has external unkown container, this Datacore can't handle it, "
+                  + "see rather there how to do a POST/PUT (if it can)";
+         } // TODO LATER OPT known external Web container ?
+         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
+               .entity(msg).type(MediaType.TEXT_PLAIN).build());
          
       } catch (ResourceNotFoundException rnfex) {
          throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
@@ -192,7 +209,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       for (DCResource resource : resources) {
          DCURI uri;
          try {
-            uri = resourceService.normalizeAdaptCheckTypeOfUri(resource.getUri(), null, 
+            uri = uriService.normalizeAdaptCheckTypeOfUri(resource.getUri(), null, 
                   normalizeUrlMode, replaceBaseUrlMode);
          } catch (BadUriException rpex) {
             // TODO LATER rather context & for multi post
@@ -219,7 +236,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
    }
    
    public DCResource getData(String modelType, String iri, Long version) {
-      String uri = resourceService.buildUri(modelType, iri);
+      String uri = uriService.buildUri(modelType, iri);
 
       ///Long version = getVersionFromHeader(HttpHeaders.IF_NONE_MATCH, uri);
 
@@ -235,6 +252,9 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       } catch (ResourceTypeNotFoundException e) {
          throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
              .entity("Unknown Model type " + e.getModelType()).type(MediaType.TEXT_PLAIN).build());
+         
+      // NB. no ExternalResourceException because URI is HTTP URL which can't be external !
+      // therefore no RedirectException to throw because of it
          
       } catch (ResourceNotFoundException e) {
          //return Response.noContent().build();
@@ -287,7 +307,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
    
    public void deleteData(String modelType, String iri, Long version) {
       // TODO LATER also add a "deleted" flag that can be set in POST ?!?
-      String uri = resourceService.buildUri(modelType, iri);
+      String uri = uriService.buildUri(modelType, iri);
 
       ///Long version = getVersionFromHeader(HttpHeaders.IF_MATCH, uri);
       if (version == null) {
@@ -298,9 +318,13 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       
       try {
          resourceService.delete(uri, modelType, version);
+         
       } catch (ResourceTypeNotFoundException e) {
          throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
                .entity("Unknown Model type " + e.getModelType()).type(MediaType.TEXT_PLAIN).build());
+         
+      // NB. no ExternalResourceException because URI is HTTP URL which can't be external !
+         
       } catch (EntityNotFoundException e) {
     	  throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
                   .entity("Resource (model:iri:version) " + modelType + ":" + iri + ":" + version + " does not exist").type(MediaType.TEXT_PLAIN).build());
@@ -460,7 +484,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
    	@Override
 	public DCResource findHistorizedResource(String modelType, String iri, Integer version) throws BadRequestException, NotFoundException {
 
-		String uri = resourceService.buildUri(modelType, iri);
+		String uri = uriService.buildUri(modelType, iri);
 		
 		DCModel dcModel = modelService.getModel(modelType);
 		if (dcModel == null) {

@@ -130,6 +130,49 @@ public class DatacoreApiServerTest {
       }
    }
 
+   @Test
+   public void testCreateFailWithWrongLocalReferenceModel() {
+      checkNoResource(CityCountrySample.CITY_MODEL_NAME, "UK/London");
+
+      DCResource londonCityData = buildCityData("London", "UK", 10000000, false);
+      londonCityData.set("inCountry", londonCityData.getUri());
+      try {
+         datacoreApiClient.postDataInType(londonCityData, CityCountrySample.CITY_MODEL_NAME);
+         Assert.fail("Creation should fail when referenced data is of the wrong (here, same) model");
+      } catch (BadRequestException brex) {
+         String responseContent = String.valueOf(brex.getResponse().getEntity());
+         Assert.assertTrue(responseContent.contains(CityCountrySample.CITY_MODEL_NAME + " does not match"));
+      }
+   }
+
+   @Test
+   public void testCreateFailWithWrongExternalDatacoreReferenceModel() throws Exception {
+      String knownExternalDatacoreContainerUrl = "http://otherknowndatacore.org/";
+
+      // create a city with a country stored externally, in another kown Datacore
+      DCResource torinoCityData = buildCityData("Torino", "IT", 3000000, false);
+      String countryUri = UriHelper.buildUri(knownExternalDatacoreContainerUrl, CityCountrySample.COUNTRY_MODEL_NAME, "IT");
+      torinoCityData.setProperty("inCountry", countryUri);
+      DCResource postedTorinoCityResource = datacoreApiClient.postDataInType(torinoCityData, CityCountrySample.CITY_MODEL_NAME);
+      Assert.assertEquals("External known Datacore resource references "
+            + "should not fail when non-existing (unlike local references)",
+            postedTorinoCityResource.get("inCountry"), countryUri);
+
+      // create a city with a country stored externally in another kown Datacore, but of illegal city type
+      DCResource londonCityData = buildCityData("London", "UK", 10000000, false);
+      String externalKnownDatacoreCityUri = UriHelper.buildUri(knownExternalDatacoreContainerUrl,
+            CityCountrySample.CITY_MODEL_NAME, "IT/Torino");
+      londonCityData.set("inCountry", externalKnownDatacoreCityUri);
+      try {
+         datacoreApiClient.postDataInType(londonCityData, CityCountrySample.CITY_MODEL_NAME);
+         Assert.fail("Creation should fail when referenced data in external known Datacore "
+               + "is of the wrong (here, same) model");
+      } catch (BadRequestException brex) {
+         String responseContent = String.valueOf(brex.getResponse().getEntity());
+         Assert.assertTrue(responseContent.contains(CityCountrySample.CITY_MODEL_NAME + " does not match"));
+      }
+   }
+
    /**
     * 
     */
@@ -241,10 +284,9 @@ public class DatacoreApiServerTest {
       cityResource.setProperty("iri", iri);*/
       cityResource.set("populationCount", populationCount);
       
-      String countryType = CityCountrySample.COUNTRY_MODEL_NAME;
-      String countryUri = UriHelper.buildUri(containerUrl, countryType, countryName);
+      String countryUri = UriHelper.buildUri(containerUrl, CityCountrySample.COUNTRY_MODEL_NAME, countryName);
       if (embeddedCountry) {
-         DCResource countryResource = buildNamedData(countryType, countryName);
+         DCResource countryResource = buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, countryName);
          cityResource.setProperty("inCountry", countryResource);
       } else {
          cityResource.setProperty("inCountry", countryUri);
@@ -342,7 +384,6 @@ public class DatacoreApiServerTest {
       // fill some data
       datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "UK"));
       DCResource londonCityData = buildCityData("London", "UK", 10000000, false);
-      londonCityData.set("populationCount", 10000000);
       DCResource postedLondonCityResource = datacoreApiClient.postDataInType(londonCityData, CityCountrySample.CITY_MODEL_NAME);
       
       // check return, server's & without cache
@@ -376,6 +417,29 @@ public class DatacoreApiServerTest {
       datacoreApiClient.getCache().clear();
       Assert.assertEquals(null, datacoreApiClient.getData(londonCityData)
             .get("populationCount")); // without cache
+   }
+
+   @Test
+   public void testExternalReferencedResource() throws Exception {
+      // create a city with a country stored externally, in another unkown Datacore or on the web
+      String externalContainerUrl = "http://myotherunkowncontainerorwebsite.org/";
+      DCResource torinoCityData = buildCityData("Torino", "IT", 3000000, false);
+      String countryUri = UriHelper.buildUri(externalContainerUrl, CityCountrySample.COUNTRY_MODEL_NAME, "IT");
+      torinoCityData.setProperty("inCountry", countryUri);
+      DCResource postedTorinoCityResource = datacoreApiClient.postDataInType(torinoCityData, CityCountrySample.CITY_MODEL_NAME);
+      Assert.assertEquals("External resource references should not fail when non-existing (unlike local references)",
+            postedTorinoCityResource.get("inCountry"), countryUri);
+      
+      // now making it fail, to see external resource check warning :
+      postedTorinoCityResource.set("populationCount", "illegal population count");
+      try {
+         postedTorinoCityResource = datacoreApiClient.postDataInType(postedTorinoCityResource, CityCountrySample.CITY_MODEL_NAME);
+         Assert.fail("POST creation of city with String populationCount should fail");
+      } catch (BadRequestException brex) {
+         String responseContent = String.valueOf(brex.getResponse().getEntity());
+         Assert.assertTrue(responseContent.contains(externalContainerUrl)
+               && responseContent.contains("UnknownHostException"));
+      }
    }
    
    /**
