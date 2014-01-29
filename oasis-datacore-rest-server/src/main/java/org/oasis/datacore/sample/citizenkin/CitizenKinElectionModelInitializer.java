@@ -46,15 +46,15 @@ public class CitizenKinElectionModelInitializer extends DatacoreSampleBase {
 
         model.addField(new DCResourceField("envelope", CITIZENKIN_PROCEDURE_ENVELOPE, true, 10));
 
-        model.addField(new DCField("nom_de_famille", STRING_TYPE, true, 0));
+        model.addField(new DCField("nom_de_famille", STRING_TYPE, false, 0));
         model.addField(new DCField("nom_d_usage", STRING_TYPE, false, 0));
-        model.addField(new DCField("prenom", STRING_TYPE, true, 0));
+        model.addField(new DCField("prenom", STRING_TYPE, false, 0));
         model.addField(new DCField("sexe", STRING_TYPE, true, 0));
-        model.addField(new DCField("date_de_naissance", DATE_TYPE, true, 0));
-        model.addField(new DCField("commune_de_naissance", STRING_TYPE, true, 0));
+        model.addField(new DCField("date_de_naissance", DATE_TYPE, false, 0));
+        model.addField(new DCField("commune_de_naissance", STRING_TYPE, false, 0));
         model.addField(new DCField("code_departement_de_naissance", STRING_TYPE, false, 0));
         model.addField(new DCField("libelle_territoire_de_naissance_outremer", STRING_TYPE, false, 0));
-        model.addField(new DCField("pays_de_naissance", STRING_TYPE, true, 0));
+        model.addField(new DCField("pays_de_naissance", STRING_TYPE, false, 0));
 
         /* One of:
         "premiere_demande"
@@ -70,10 +70,10 @@ public class CitizenKinElectionModelInitializer extends DatacoreSampleBase {
         model.addField(new DCField("ambassade_poste_consulaire_origine", STRING_TYPE, false, 0));
         model.addField(new DCField("pays_origine", STRING_TYPE, false, 0));
 
-        model.addField(new DCField("adresse1", STRING_TYPE, true, 0));
+        model.addField(new DCField("adresse1", STRING_TYPE, false, 0));
         model.addField(new DCField("adresse2", STRING_TYPE, false, 0));
-        model.addField(new DCField("code_postal", STRING_TYPE, true, 0));
-        model.addField(new DCField("commune", STRING_TYPE, true, 0));
+        model.addField(new DCField("code_postal", STRING_TYPE, false, 0));
+        model.addField(new DCField("commune", STRING_TYPE, false, 0));
         model.addField(new DCField("telephone", STRING_TYPE, false, 0));
         model.addField(new DCField("courriel", STRING_TYPE, false, 0));
 
@@ -81,8 +81,8 @@ public class CitizenKinElectionModelInitializer extends DatacoreSampleBase {
          * in January 2014: points to a CK-local URL
          * Later: points to a Digital Safe resource (somehow)
          */
-        model.addField(new DCField("justificatif_identite", STRING_TYPE, true, 0));
-        model.addField(new DCListField("justificatifs_domicile", new DCField("justificatif_domicile", STRING_TYPE, true, 0)));
+        model.addField(new DCField("justificatif_identite", STRING_TYPE, false, 0));
+        model.addField(new DCListField("justificatifs_domicile", new DCField("justificatif_domicile", STRING_TYPE, false, 0)));
 
 
         modelAdminService.addModel(model);
