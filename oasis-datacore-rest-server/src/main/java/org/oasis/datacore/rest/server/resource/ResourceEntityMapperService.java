@@ -215,37 +215,37 @@ public class ResourceEntityMapperService {
                }
             } else {
                // Datacore URI (local or external)
-            
-            // check type :
-            // TODO more mixins / aspects / type constraints
-            DCModel refModel = modelService.getModel(dcUri.getType()); // TODO LATER from cached model ref in DCURI
-            // NB. type has been checked in uriService above
-            /*if (!dcUri.getType().equals(((DCResourceField) dcField).getResourceType())) {
-            //if (!modelService.hasType(refEntity, ((DCResourceField) dcField).getTypeConstraints())) {
-               throw new ResourceParsingException("Target resource referenced by resource Field of URI value "
-                     + dcUri + " is not of required type " + ((DCResourceField) dcField).getResourceType());
-               // does not match type constraints TODO
-            }*/
-            
-            // checking that it exists :
-            if (dcUri.isExternalDatacoreUri()) {
-               if (checkExternalDatacoreUri) {
-                  // TODO LATER OPT check using (dynamic ??) CXF Datacore client that propagates auth
-                  // TODO LATER OPT2 store and check also version, to allow consistent references ??
-                  throw new UnsupportedOperationException("Not implemented yet");
-               }
                
-            } else {
-               // local Datacore URI
-            
-               // (without rights ; only in checkMode, otherwise only warning)
-            if (entityService.getByUriUnsecured(dcUri.toString(), refModel) == null) {
-               // TODO rather still allow update / only warning ? & add /check API keeping it as error ??
-               throw new ResourceParsingException("Can't find data of resource type " + refModel.getName()
-                     + " referenced by resource Field of URI value " + dcUri.toString());
-            }
-            
-            }
+               // check type :
+               // TODO more mixins / aspects / type constraints
+               DCModel refModel = modelService.getModel(dcUri.getType()); // TODO LATER from cached model ref in DCURI
+               // NB. type has been checked in uriService above
+               /*if (!dcUri.getType().equals(((DCResourceField) dcField).getResourceType())) {
+               //if (!modelService.hasType(refEntity, ((DCResourceField) dcField).getTypeConstraints())) {
+                  throw new ResourceParsingException("Target resource referenced by resource Field of URI value "
+                        + dcUri + " is not of required type " + ((DCResourceField) dcField).getResourceType());
+                  // does not match type constraints TODO
+               }*/
+               
+               // checking that it exists :
+               if (dcUri.isExternalDatacoreUri()) {
+                  if (checkExternalDatacoreUri) {
+                     // TODO LATER OPT check using (dynamic ??) CXF Datacore client that propagates auth
+                     // TODO LATER OPT2 store and check also version, to allow consistent references ??
+                     throw new UnsupportedOperationException("Not implemented yet");
+                  }
+                  
+               } else {
+                  // local Datacore URI
+               
+                  // (without rights ; only in checkMode, otherwise only warning)
+                  if (entityService.getByUriUnsecured(dcUri.toString(), refModel) == null) {
+                     // TODO rather still allow update / only warning ? & add /check API keeping it as error ??
+                     throw new ResourceParsingException("Can't find data of resource type " + refModel.getName()
+                           + " referenced by resource Field of URI value " + dcUri.toString());
+                  }
+               
+               }
             }
             
             // TODO TODO provide refEntity in model (ex. DCResourceValue) OR IN GRAPH,
