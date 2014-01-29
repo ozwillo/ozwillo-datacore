@@ -1,6 +1,7 @@
 package org.oasis.datacore.rest.client;
 
 import org.oasis.datacore.rest.api.DCResource;
+import org.springframework.cache.Cache;
 
 
 /**
@@ -33,10 +34,20 @@ public interface DatacoreCachedClient extends DatacoreClientApi {
     */
    public DCResource putDataInType(DCResource resource);
 
+   /**
+    * Shortcut to getData (modelType, iri, version) using provided resource's
+    */
    DCResource getData(DCResource resource);
 
+   /**
+    * Shortcut to deleteData (modelType, iri, version) using provided resource's
+    * @return 
+    */
    void deleteData(DCResource resource);
    
-   void clearCache();
+   /**
+    * Provide access to cache, ex. to clear it or evict some Resources from it
+    */
+   Cache getCache();
    
 }

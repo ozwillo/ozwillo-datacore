@@ -12,6 +12,7 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.cxf.interceptor.OutInterceptors;
 import org.oasis.datacore.rest.api.DCResource;
+import org.oasis.datacore.rest.api.util.DCURI;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.cxf.ETagClientOutInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,10 +70,10 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
       return UriHelper.buildUri(this.containerUrl, type, iri);
    }
 
-   /**
-    * Shortcut to postDataInType(DCResource resource, String modelType)
+   /* (non-Javadoc)
+    * @see org.oasis.datacore.rest.client.DatacoreCachedClient#postDataInType(org.oasis.datacore.rest.api.DCResource)
     */
-   //@CachePut(value={"org.oasis.datacore.rest.api.DCResource"}, key="resource.uri")
+   @CachePut(value={"org.oasis.datacore.rest.api.DCResource"}, key="#resource.uri")
    @Override
    public DCResource postDataInType(DCResource resource) {
       String modelType = resource.getModelType(); // NB. if null lets server explode
@@ -84,7 +85,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
     * done in wrapper logic (Spring CachePut annotation would use possibly not yet created uri from argument)
     * TODO LATER save if no diff (in non strict post mode)
     */
-   //@CachePut(value={"org.oasis.datacore.rest.api.DCResource"}, key="resource.uri")
+   @CachePut(value={"org.oasis.datacore.rest.api.DCResource"}, key="#resource.uri")
    @Override
    public DCResource postDataInType(DCResource resource, String modelType) {
       resource = delegate.postDataInType(resource, modelType); // TODO better than client side helper :
@@ -95,7 +96,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
       */
 
       // put in cache :
-      resourceCache.put(resource.getUri(), resource); // NB. if no error, resource can't be null
+      ///resourceCache.put(resource.getUri(), resource); // NB. if no error, resource can't be null
       return resource;
    }
 
@@ -195,107 +196,117 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
       return resources;
    }
 
-   /**
-    * Shortcut to getData (modelType, iri, version) using provided resource's
+   /* (non-Javadoc)
+    * @see org.oasis.datacore.rest.client.DatacoreCachedClient#getData(org.oasis.datacore.rest.api.DCResource)
     */
+   //@CachePut(condition="#resource != null and (resourceCache.get(#resource.getUri) == null "
+   //      + "or #resource.version != resourceCache.get(#resource.getUri).version)",
+   //      value={"org.oasis.datacore.rest.api.DCResource"}, key="#resource.uri") // NO would never return cached object
+   //@Cacheable(value={"org.oasis.datacore.rest.api.DCResource"}, key="buildUri(#modelType, #iri)")
+   // so NOT Cacheable because returning from cache is triggered from HTTP 304 reponse (complex caching decision)
    @Override
-   public DCResource getData(DCResource resource) {
-      String modelType = resource.getModelType(); // NB. if null lets server explode
-      String id = resource.getId();
-      if (id == null) {
-         // init id to make it easier to reuse POSTed & returned resources :
-         // TODO rather make id transient ? or auto set id on unmarshall ??
-         try { 
-            id = UriHelper.parseURI(resource.getUri()).getId();
-         } catch (Exception e) {
-            throw new RuntimeException(e);
-         }
+   public DCResource getData(final DCResource resource) {
+      try { 
+         final DCURI dcUri = UriHelper.parseURI(resource.getUri());
+         return new AbstractCachedGetDataPerformer() {
+            @Override
+            public DCResource doGetData() {
+               return delegate.getData(dcUri.getType(), dcUri.getId(), resource.getVersion());
+            }
+         }.performCachedGetData(resource.getUri());
+      } catch (Exception e) {
+         throw new RuntimeException(e);
       }
-      return this.getData(modelType, id, resource.getVersion());
    }
 
    /**
     * Same as TODO but with header version ETag
     * coming from cache
     */
+   //@CachePut(condition="#resource != null and (resourceCache.get(#resource.getUri) == null "
+   //      + "or #resource.version != resourceCache.get(#resource.getUri).version)",
+   //      value={"org.oasis.datacore.rest.api.DCResource"}, key="#resource.uri") // NO would never return cached object
+   //@Cacheable(value={"org.oasis.datacore.rest.api.DCResource"}, key="buildUri(#modelType, #iri)")
+   // so NOT Cacheable because returning from cache is triggered from HTTP 304 reponse (complex caching decision)
    @Override
-   public DCResource getData(String modelType, String iri) {
-      // NB. request is only for server etag, on client side it is done rather in interceptor
-      try {
-         DCResource resource = delegate.getData(modelType, iri);
-
-         // put in cache :
-         if (resource != null) {
-            resourceCache.put(resource.getUri(), resource);
-         } // else if server still has null it costs nothing to send it back,
-         // so no ETag support in this case (though Spring Cache could cache null)
-         return resource;
-
-      } catch (RedirectionException rex) {
-         if (Status.NOT_MODIFIED.getStatusCode() == rex.getResponse().getStatus()) {
-            // HTTP 304 (not modified) : get from cache
-            String uri = buildUri(modelType, iri);
-            ValueWrapper cachedDataWrapper = resourceCache.get(uri); // NB. ValueWrapper wraps cached null
-            if (cachedDataWrapper != null) {
-               DCResource cachedData = (DCResource) cachedDataWrapper.get();
-               if (cachedData != null) {
-                  return cachedData;
-               }
-            }
-
-            throw new RuntimeException("Received HTTP 304 (not modified) but no more data "
-                  + "in cache, maybe has just been evicted by DELETE ?", rex); // should not happen
+   public DCResource getData(final String modelType, final String iri) {
+      String uri = buildUri(modelType, iri); // for caching
+      return new AbstractCachedGetDataPerformer() {
+         @Override
+         public DCResource doGetData() {
+            return delegate.getData(modelType, iri);
          }
+      }.performCachedGetData(uri);
+      //Response response = this.delegate.getData(type, iri, method, request);
+      //DCResource resource = (DCResource) response.getEntity();
+      //return resource;
+   }
 
-         throw rex;
-      }
+   /* (non-Javadoc)
+    * @see org.oasis.datacore.rest.api.DatacoreApi#getData(java.lang.String, java.lang.String, java.lang.Long)
+    */
+   //@CachePut(condition="#resource != null and (resourceCache.get(#resource.getUri) == null "
+   //      + "or #resource.version != resourceCache.get(#resource.getUri).version)",
+   //      value={"org.oasis.datacore.rest.api.DCResource"}, key="#resource.uri") // NO would never return cached object
+   //@Cacheable(value={"org.oasis.datacore.rest.api.DCResource"}, key="buildUri(#modelType, #iri)")
+   // so NOT Cacheable because returning from cache is triggered from HTTP 304 reponse (complex caching decision)
+   @Override
+   public DCResource getData(final String modelType, final String iri, final Long version) {
+      String uri = buildUri(modelType, iri); // for caching
+      return new AbstractCachedGetDataPerformer() {
+         @Override
+         public DCResource doGetData() {
+            return delegate.getData(modelType, iri, version);
+         }
+      }.performCachedGetData(uri);
       //Response response = this.delegate.getData(type, iri, method, request);
       //DCResource resource = (DCResource) response.getEntity();
       //return resource;
    }
    
-   //@CachePut(value={"org.oasis.datacore.rest.api.DCResource"}, key="resource.uri") // NO only put if not cached yet
-   //@Cacheable(value={"org.oasis.datacore.rest.api.DCResource"}, key="resource.uri") // NO key not fully known
-   // NOT Cacheable because returning from cache is triggered from HTTP 304 reponse
-   @Override
-   public DCResource getData(String modelType, String iri, Long version) {
-      // NB. request is only for server etag, on client side it is done rather in interceptor
-      try {
-         DCResource resource = this.delegate.getData(modelType, iri, version);
+   /**
+    * Common code to all cached getData
+    * @author mdutoo
+    */
+   private abstract class AbstractCachedGetDataPerformer {
+      protected abstract DCResource doGetData();
+      public DCResource performCachedGetData(String uri) {
+         // NB. request is only for server etag, on client side it is done rather in interceptor
+         try {
+            DCResource resource = doGetData();
 
-         // put in cache :
-         if (resource != null) {
-            resourceCache.put(resource.getUri(), resource);
-         } // else if server still has null it costs nothing to send it back,
-         // so no ETag support in this case (though Spring Cache could cache null)
-         return resource;
+            // put in cache :
+            if (resource != null) {
+               resourceCache.put(resource.getUri(), resource);
+            } else {
+               // server still has null it costs nothing to send it back,
+               // so no ETag support in this case, but still empty cache
+               resourceCache.evict(uri);
+            }
+            return resource;
 
-      } catch (RedirectionException rex) {
-         if (Status.NOT_MODIFIED.getStatusCode() == rex.getResponse().getStatus()) {
-            // HTTP 304 (not modified) : get from cache
-            String uri = buildUri(modelType, iri);
-            ValueWrapper cachedDataWrapper = resourceCache.get(uri); // NB. ValueWrapper wraps cached null
-            if (cachedDataWrapper != null) {
-               DCResource cachedData = (DCResource) cachedDataWrapper.get();
-               if (cachedData != null) {
-                  return cachedData;
+         } catch (RedirectionException rex) {
+            if (Status.NOT_MODIFIED.getStatusCode() == rex.getResponse().getStatus()) {
+               // HTTP 304 (not modified) : get from cache
+               ValueWrapper cachedDataWrapper = resourceCache.get(uri); // NB. ValueWrapper wraps cached null
+               if (cachedDataWrapper != null) {
+                  DCResource cachedData = (DCResource) cachedDataWrapper.get();
+                  if (cachedData != null) {
+                     return cachedData;
+                  }
                }
+
+               throw new RuntimeException("Received HTTP 304 (not modified) but no more data "
+                     + "in cache, maybe has just been evicted by DELETE ?", rex); // should not happen
             }
 
-            throw new RuntimeException("Received HTTP 304 (not modified) but no more data "
-                  + "in cache, maybe has just been evicted by DELETE ?", rex); // should not happen
+            throw rex;
          }
-
-         throw rex;
       }
-      //Response response = this.delegate.getData(type, iri, method, request);
-      //DCResource resource = (DCResource) response.getEntity();
-      //return resource;
    }
 
-   /**
-    * Shortcut to deleteData (modelType, iri, version) using provided resource's
-    * @return 
+   /* (non-Javadoc)
+    * @see org.oasis.datacore.rest.client.DatacoreCachedClient#deleteData(org.oasis.datacore.rest.api.DCResource)
     */
    @Override
    public void deleteData(DCResource resource) {
@@ -325,6 +336,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
       String uri = buildUri(modelType, iri);
       resourceCache.evict(uri);
    }
+   
    /**
     * Always evict (after invocation) and replace by updated data, using Spring CacheEvict annotation
     * done in wrapper logic (Spring CacheEvict needs full uri, no return value to use by Spring CachePut)
@@ -341,11 +353,17 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
    }
 
 
+   /**
+    * NOT IMPLEMENTED YET
+    */
    @Override
    public List<DCResource> updateDataInTypeWhere(DCResource resourceDiff,
          String modelType, UriInfo uriInfo) {
       return this.delegate.updateDataInTypeWhere(resourceDiff, modelType, uriInfo);
    }
+   /**
+    * NOT IMPLEMENTED YET
+    */
    @Override
    public void deleteDataInTypeWhere(String modelType, UriInfo uriInfo) {
       this.delegate.deleteDataInTypeWhere(modelType, uriInfo);
@@ -402,48 +420,64 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
       return resource;
    }
    
+  	/* (non-Javadoc)
+  	 * @see org.oasis.datacore.rest.api.DatacoreApi#findHistorizedResource(java.lang.String, java.lang.String, java.lang.Integer)
+  	 */
   	@Override
 	public DCResource findHistorizedResource(String modelType, String iri, Integer version) throws BadRequestException, NotFoundException {
 		DCResource resource = this.delegate.findHistorizedResource(modelType, iri, version);
 		return resource;
 	}
 
+   /* (non-Javadoc)
+    * @see org.oasis.datacore.rest.api.DatacoreApi#findDataInType(java.lang.String, javax.ws.rs.core.UriInfo, java.lang.Integer, java.lang.Integer)
+    */
    @Override
    public List<DCResource> findDataInType(String modelType, UriInfo uriInfo, Integer start, Integer limit) {
       //return delegate.findDataInType(type, uriInfo, start, limit, sort); // TODO cache ??
       throw new ClientException("Use rather findDataInType(String queryParams ...) on client side");
    }
 
+   /* (non-Javadoc)
+    * @see org.oasis.datacore.rest.api.DatacoreApi#findData(javax.ws.rs.core.UriInfo, java.lang.Integer, java.lang.Integer)
+    */
    @Override
    public List<DCResource> findData(UriInfo uriInfo, Integer start, Integer limit) {
       //return delegate.findData(uriInfo, start, limit, sort); // TODO cache ??
       throw new ClientException("Use rather findData(String queryParams ...) on client side");
    }
 
+   /* (non-Javadoc)
+    * @see org.oasis.datacore.rest.client.DatacoreClientApi#findDataInType(java.lang.String, org.oasis.datacore.rest.client.QueryParameters, java.lang.Integer, java.lang.Integer)
+    */
    @Override
    public List<DCResource> findDataInType(String modelType, QueryParameters queryParams,
          Integer start, Integer limit) {
       return delegate.findDataInType(modelType, queryParams, start, limit);
    }
+   /* (non-Javadoc)
+    * @see org.oasis.datacore.rest.client.DatacoreClientApi#findData(org.oasis.datacore.rest.client.QueryParameters, java.lang.Integer, java.lang.Integer)
+    */
    @Override
    public List<DCResource> findData(QueryParameters queryParams, Integer start,
          Integer limit) {
       return delegate.findData(queryParams, start, limit);
    }
 
+   /* (non-Javadoc)
+    * @see org.oasis.datacore.rest.api.DatacoreApi#queryDataInType(java.lang.String, java.lang.String, java.lang.String)
+    */
    @Override
    public List<DCResource> queryDataInType(String modelType, String query, String language) {
       return delegate.queryDataInType(modelType, query, language); // TODO cache ??
    }
 
+   /* (non-Javadoc)
+    * @see org.oasis.datacore.rest.api.DatacoreApi#queryData(java.lang.String, java.lang.String)
+    */
    @Override
    public List<DCResource> queryData(String query, String language) {
       return delegate.queryData(query, language); // TODO cache ??
-   }
-   
-   @Override
-   public void clearCache() {
-      this.getCache().clear();
    }
    
 
