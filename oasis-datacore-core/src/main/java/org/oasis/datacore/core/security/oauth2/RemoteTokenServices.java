@@ -120,6 +120,7 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 				String values = (String)scopes;
 				scope.add(values);
 			} else {
+				@SuppressWarnings("unchecked")
 				Collection<String> values = (Collection<String>) map.get("scope");
 				scope.addAll(values);
 			}
@@ -174,6 +175,10 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 			throw new UsernameNotFoundException("User associated to this token was not found, security context cannot be fill");
 		}
 		
+		if(resultMap.get("sub") == null) {
+			throw new UsernameNotFoundException("User id cannot be find, we can't identify him");
+		}
+		
 		Set<GrantedAuthority> userAuthorities = new HashSet<GrantedAuthority>();
 		if (map.containsKey("sub_groups")) {
 			@SuppressWarnings("unchecked")
@@ -185,7 +190,23 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 			userAuthorities.addAll(getAuthorities(scope));
 		}
 		
-		return new RemoteUserAuthentication((String)resultMap.get("sub"), (String)resultMap.get("name"), (String)resultMap.get("email"), userAuthorities);
+		String username = null;
+		String id = (String)resultMap.get("sub");
+		String email = null;
+		
+		if(resultMap.get("name") != null) {
+			username = (String)resultMap.get("name");
+		} else {
+			username = id;
+		}
+		
+		if(resultMap.get("email") != null) {
+			email = (String)resultMap.get("email");
+		} else {
+			email = id;
+		}
+		
+		return new RemoteUserAuthentication(id, username, email, userAuthorities);
 			
 	}
 
@@ -216,11 +237,9 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 		if (headers.getContentType() == null) {
 			headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 		}
-		Map map = restTemplate.exchange(path, HttpMethod.POST, new HttpEntity<MultiValueMap<String, String>>(formData, headers), Map.class).getBody();
 		@SuppressWarnings("unchecked")
-		Map<String, Object> result = (Map<String, Object>) map;
-		return result;
+		Map<String, Object> map = restTemplate.exchange(path, HttpMethod.POST, new HttpEntity<MultiValueMap<String, String>>(formData, headers), Map.class).getBody();
+		return map;
 	}
-
 
 }
