@@ -23,7 +23,7 @@ public interface QueryParsingService {
     * @param queryParsingContext
     * @throws ResourceParsingException
     */
-	public void parseCriteriaFromQueryParameter(String operatorAndValue,
+	void parseCriteriaFromQueryParameter(String operatorAndValue,
 	      DCField dcField, DCQueryParsingContext queryParsingContext)
 	      throws ResourceParsingException;
 

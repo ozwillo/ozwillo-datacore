@@ -24,7 +24,7 @@ public interface DatacoreCachedClient extends DatacoreClientApi {
     * @param resource
     * @return
     */
-   public DCResource postDataInType(DCResource resource);
+   DCResource postDataInType(DCResource resource);
 
    /**
     * Shortcut to putDataInType using resource's first type & id
@@ -32,7 +32,7 @@ public interface DatacoreCachedClient extends DatacoreClientApi {
     * @param resource
     * @return
     */
-   public DCResource putDataInType(DCResource resource);
+   DCResource putDataInType(DCResource resource);
 
    /**
     * Shortcut to getData (modelType, iri, version) using provided resource's

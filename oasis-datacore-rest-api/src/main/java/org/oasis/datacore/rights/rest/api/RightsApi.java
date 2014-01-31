@@ -58,7 +58,7 @@ public interface RightsApi {
 		            defaultValue="Basic YWRtaW46YWRtaW4="
 		    )
 	   })
-	   public void addRightsOnResource(
+	   void addRightsOnResource(
 			@PathParam("type") String modelType,
 			@PathParam("iri") String iri,
 			@PathParam("version") long version,
@@ -91,7 +91,7 @@ public interface RightsApi {
 		            defaultValue="Basic YWRtaW46YWRtaW4="
 		    )
 	   })
-	   public void removeRightsOnResource(
+	   void removeRightsOnResource(
 			@PathParam("type") String modelType,
 			@PathParam("iri") String iri,
 			@PathParam("version") long version,
@@ -120,7 +120,7 @@ public interface RightsApi {
 		            defaultValue="Basic YWRtaW46YWRtaW4="
 		    )
 	   })
-	   public void flushRightsOnResource(
+	   void flushRightsOnResource(
 			@PathParam("type") String modelType,
 			@PathParam("iri") String iri,
 			@PathParam("version") long version
@@ -148,7 +148,7 @@ public interface RightsApi {
 		            defaultValue="Basic YWRtaW46YWRtaW4="
 		    )
 	   })
-	   public void replaceRightsOnResource(
+	   void replaceRightsOnResource(
 			@PathParam("type") String modelType,
 			@PathParam("iri") String iri,
 			@PathParam("version") long version,
@@ -179,7 +179,7 @@ public interface RightsApi {
 		            defaultValue="Basic YWRtaW46YWRtaW4="
 		    )
 	   })
-	   public DCRights getRightsOnResource(
+	   DCRights getRightsOnResource(
 			@PathParam("type") String modelType,
 			@PathParam("iri") String iri,
 			@PathParam("version") long version
