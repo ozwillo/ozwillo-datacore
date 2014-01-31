@@ -14,15 +14,15 @@ import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCSecurity;
 import org.oasis.datacore.core.security.DCUserImpl;
-import org.oasis.datacore.core.security.mock.MockAuthenticationService;
+import org.oasis.datacore.core.security.service.DatacoreSecurityService;
 import org.oasis.datacore.rest.server.parsing.model.DCQueryParsingContext;
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
 import org.oasis.datacore.rest.server.parsing.service.QueryParsingService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
 
@@ -48,8 +48,9 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    
    /** TODO mock */
    @Autowired
-   private MockAuthenticationService authenticationService;
-
+   @Qualifier("datacoreSecurityServiceImpl")
+   private DatacoreSecurityService datacoreSecurityService;
+   
    @Autowired
    private MongoOperations mgo; // TODO remove it by hiding it in services
    
@@ -187,7 +188,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          // => OPT LATER
          // (in any way, there'll always be a balance to find between performance and storage)
          
-         DCUserImpl user = authenticationService.getCurrentUser();
+         DCUserImpl user = datacoreSecurityService.getCurrentUser();
          if (user.isGuest()) {
             return new ArrayList<DCEntity>(0); // TODO or exception ??
          }

@@ -16,7 +16,7 @@ import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.security.EntityPermissionService;
-import org.oasis.datacore.core.security.mock.MockAuthenticationService;
+import org.oasis.datacore.core.security.service.DatacoreSecurityService;
 import org.oasis.datacore.rest.server.resource.UriService;
 import org.oasis.datacore.rights.enumeration.RightsActionType;
 import org.oasis.datacore.rights.rest.api.DCRights;
@@ -39,7 +39,7 @@ public class RightsApiImpl implements RightsApi {
    private UriService uriService;
 	
 	@Autowired
-	private MockAuthenticationService mockAuthenticationService;
+	private DatacoreSecurityService datacoreSecurityService;
 
 	public void addRightsOnResource(String modelType, String iri, long version, DCRights dcRights) {
 
@@ -148,7 +148,7 @@ public class RightsApiImpl implements RightsApi {
 			// we put the current user (how might me owner)
 			// if he is not the changeRights will not work and this will not affect the entity
 			entity.setOwners(new HashSet<String>());
-			entity.getOwners().add("u_" + mockAuthenticationService.getCurrentUserId()); 
+			entity.getOwners().add("u_" + datacoreSecurityService.getCurrentUserId()); 
 		}
 		
 		entity.setReaders(new HashSet<String>());

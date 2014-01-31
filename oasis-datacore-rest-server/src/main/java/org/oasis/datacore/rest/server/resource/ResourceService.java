@@ -13,6 +13,7 @@ import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.security.EntityPermissionService;
 import org.oasis.datacore.core.security.mock.MockAuthenticationService;
+import org.oasis.datacore.core.security.service.DatacoreSecurityService;
 import org.oasis.datacore.historization.exception.HistorizationException;
 import org.oasis.datacore.historization.service.HistorizationService;
 import org.oasis.datacore.rest.api.DCResource;
@@ -25,6 +26,7 @@ import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
 import org.oasis.datacore.rest.server.parsing.service.QueryParsingService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -53,6 +55,11 @@ public class ResourceService {
    /** to put creator as owner */
    @Autowired
    private MockAuthenticationService authenticationService;
+   
+   @Autowired
+   @Qualifier("datacoreSecurityServiceImpl")
+   private DatacoreSecurityService datacoreSecurityService;
+   
    @Autowired
    private EntityPermissionService entityPermissionService;
    
@@ -263,7 +270,7 @@ public class ResourceService {
       if (isCreation) {
          // setting creator (group) as sole owner
          Set<String> creatorOwners = new HashSet<String>(1);
-         creatorOwners.add(authenticationService.getUserGroup(authenticationService.getCurrentUserId()));
+         creatorOwners.add(authenticationService.getUserGroup(datacoreSecurityService.getCurrentUserId()));
          entityPermissionService.setOwners(dataEntity, creatorOwners);
          try {
         	 try {

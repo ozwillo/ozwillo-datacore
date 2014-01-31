@@ -32,8 +32,12 @@
    </bean -->
 
 	<security:authentication-manager id="datacore.AuthenticationManager" erase-credentials="false"><!-- i.e. id="org.springframework.security.authenticationManager" -->
-	  <security:authentication-provider user-service-ref="datacore.userDetailsService" /><!-- clientDetailsUserService -->
+	  <security:authentication-provider ref="proxyDaoAuthenticationProvider" /><!-- clientDetailsUserService -->
 	</security:authentication-manager>
+	
+	<bean id="proxyDaoAuthenticationProvider" class="org.oasis.datacore.core.security.providers.ProxyDaoAuthenticationProvider">
+		<property name="delegate.userDetailsService" ref="datacore.userDetailsService" />
+	</bean> 
    
    <!-- <bean id="datacore.userDetailsService" class="org.oasis.datacore.core.security.MockUserDetailsServiceImpl" /> -->
    <security:user-service id="datacore.userDetailsService">

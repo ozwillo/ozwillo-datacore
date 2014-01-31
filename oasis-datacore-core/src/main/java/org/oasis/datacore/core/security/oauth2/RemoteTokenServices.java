@@ -126,87 +126,24 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 			}
 		}
 		DefaultAuthorizationRequest clientAuthentication = new DefaultAuthorizationRequest(remoteClientId, scope);
-
-		if (map.containsKey("resource_ids") || map.containsKey("client_authorities")) {
-			Set<String> resourceIds = new HashSet<String>();
-			if (map.containsKey("resource_ids")) {
-				@SuppressWarnings("unchecked")
-				Collection<String> values = (Collection<String>) map.get("resource_ids");
-				resourceIds.addAll(values);
-			}
-			Set<GrantedAuthority> clientAuthorities = new HashSet<GrantedAuthority>();
-			if (map.containsKey("client_authorities")) {
-				@SuppressWarnings("unchecked")
-				Collection<String> values = (Collection<String>) map.get("client_authorities");
-				clientAuthorities.addAll(getAuthorities(values));
-			}
-			BaseClientDetails clientDetails = new BaseClientDetails();
-			clientDetails.setClientId(remoteClientId);
-			clientDetails.setResourceIds(resourceIds);
-			clientDetails.setAuthorities(clientAuthorities);
-			clientAuthentication.addClientDetails(clientDetails);
-		}
 		
-		if (map.containsKey(Claims.ADDITIONAL_AZ_ATTR)) {
-			try {
-				clientAuthentication.setAuthorizationParameters(Collections.singletonMap(Claims.ADDITIONAL_AZ_ATTR,
-						mapper.writeValueAsString(map.get(Claims.ADDITIONAL_AZ_ATTR))));
-			} catch (IOException e) {
-				throw new IllegalStateException("Cannot convert access token to JSON", e);
-			}
-		}
-		
-		Authentication userAuthentication = getUserAuthentication(map, scope, userInfoEndpointUrl, accessToken);
-		
+		Authentication userAuthentication = getUserAuthentication(map, scope);
 		clientAuthentication.setApproved(true);
+		
 		return new OAuth2Authentication(clientAuthentication, userAuthentication);
 	}
 
-	private Authentication getUserAuthentication(Map<String, Object> map, Set<String> scope, String path, String accessClientToken) {
-		
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", OAuth2AccessToken.BEARER_TYPE + " " + accessClientToken);
-		headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
-		
-		@SuppressWarnings("unchecked")
-		Map<String, Object> resultMap = restTemplate.exchange(path, HttpMethod.GET, new HttpEntity<>(headers), Map.class).getBody();
-		
-		if(resultMap == null) {
-			throw new UsernameNotFoundException("User associated to this token was not found, security context cannot be fill");
-		}
-		
-		if(resultMap.get("sub") == null) {
-			throw new UsernameNotFoundException("User id cannot be find, we can't identify him");
-		}
+	private Authentication getUserAuthentication(Map<String, Object> map, Set<String> scope) {
 		
 		Set<GrantedAuthority> userAuthorities = new HashSet<GrantedAuthority>();
+		
 		if (map.containsKey("sub_groups")) {
 			@SuppressWarnings("unchecked")
 			Collection<String> values = (Collection<String>) map.get("sub_groups");
 			userAuthorities.addAll(getAuthorities(values));
 		}
-		else {
-			// User authorities had better not be empty or we might mistake user for unauthenticated
-			userAuthorities.addAll(getAuthorities(scope));
-		}
 		
-		String username = null;
-		String id = (String)resultMap.get("sub");
-		String email = null;
-		
-		if(resultMap.get("name") != null) {
-			username = (String)resultMap.get("name");
-		} else {
-			username = id;
-		}
-		
-		if(resultMap.get("email") != null) {
-			email = (String)resultMap.get("email");
-		} else {
-			email = id;
-		}
-		
-		return new RemoteUserAuthentication(id, username, email, userAuthorities);
+		return new RemoteUserAuthentication((String)map.get("sub"), userAuthorities);
 			
 	}
 

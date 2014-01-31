@@ -6,8 +6,9 @@ import java.util.Set;
 import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.model.DCModel;
-import org.oasis.datacore.core.security.mock.MockAuthenticationService;
+import org.oasis.datacore.core.security.service.DatacoreSecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.core.Authentication;
 
@@ -23,9 +24,10 @@ import org.springframework.security.core.Authentication;
  */
 public class EntityPermissionEvaluator implements PermissionEvaluator {
 
-   /** TODO mock */
    @Autowired
-   private MockAuthenticationService authenticationService;
+   @Qualifier("datacoreSecurityServiceImpl")
+   private DatacoreSecurityService datacoreSecurityService;
+   
    @Autowired
    private EntityModelService entityModelService;
 
@@ -59,7 +61,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       // because this way it's not copied and never forgotten)
       
       //if (hasRole("admin") || hasRole("t_" + model.getName() + "_admin")) {
-      DCUserImpl user = authenticationService.getCurrentUser();
+      DCUserImpl user = datacoreSecurityService.getCurrentUser();
       if (user.isAdmin()) {
          return true;
       }

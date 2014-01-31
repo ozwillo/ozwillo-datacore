@@ -2,6 +2,7 @@ package org.oasis.datacore.core.security.oauth2;
 
 import java.util.Collection;
 
+import org.oasis.datacore.core.security.DCUserImpl;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -16,18 +17,15 @@ import org.springframework.security.core.userdetails.User;
 public class RemoteUserAuthentication extends AbstractAuthenticationToken implements Authentication {
 
 	private static final long serialVersionUID = -4366727088199157491L;
-	private String id;
 	private String username;
 	private String email;
 	private User user;
 
-	public RemoteUserAuthentication(String id, String username, String email, Collection<? extends GrantedAuthority> authorities) {
+	public RemoteUserAuthentication(String username, Collection<? extends GrantedAuthority> authorities) {
 		super(authorities);
-		this.id = id;
 		this.username = username;
-		this.email = email;
 		this.setAuthenticated(true);
-		this.user = new User(username, "", authorities);
+		this.user = new DCUserImpl(new User(username, "", authorities));
 	}
 
 	@Override
@@ -38,10 +36,6 @@ public class RemoteUserAuthentication extends AbstractAuthenticationToken implem
 	@Override
 	public Object getPrincipal() {
 		return user;
-	}
-
-	public String getId() {
-		return id;
 	}
 
 	public String getUsername() {

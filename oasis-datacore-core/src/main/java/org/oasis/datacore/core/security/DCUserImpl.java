@@ -22,7 +22,6 @@ public class DCUserImpl extends User {
    public final static String GUEST = "guest";
    public final static String ADMIN_GROUP = "admin";
 
-   private String id;
    private Set<String> roles = new HashSet<String>();
    private boolean isGuest;
    private boolean isAdmin;
@@ -41,15 +40,6 @@ public class DCUserImpl extends User {
       
       initGroups();
    }
-   
-   public DCUserImpl(User user, String id) {	      
-	   super(user.getUsername(), user.getPassword(),
-	            user.isEnabled(), user.isAccountNonExpired(),
-	            user.isCredentialsNonExpired(), user.isAccountNonLocked(),
-	            initAuthorities(user.getAuthorities()));
-	   this.id = id;
-	   initGroups();
-}
 
    private void initGroups() {
       if (this.getUsername().equals(GUEST)) {
@@ -91,8 +81,8 @@ public class DCUserImpl extends User {
       }
       
       // We add the user the default group wich is u_ + user.getId()
-      if(this.getId() != null && !"".equals(this.getId())) {
-    	  this.entityGroups.add("u_" + this.getId());
+      if(this.getUsername() != null && !"".equals(this.getUsername())) {
+    	  this.entityGroups.add("u_" + this.getUsername());
       }
    }
 
@@ -138,13 +128,5 @@ public class DCUserImpl extends User {
    public Set<String> getAdminOfModelTypes() {
       return adminOfModelTypes;
    }
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
    
 }

@@ -16,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.stereotype.Component;
 
@@ -35,11 +36,6 @@ import org.springframework.stereotype.Component;
 @Component // always instanciated but non-test code can't call it
 public class MockAuthenticationService {
 	
-   /** User id (for resource auditor & creator as owner) in case there is no Spring Security
-    * Authentication object in context (even guest or system should have one). Can only
-    * happen if EntityServiceImpl is used directly and not through its secured interface. */
-   public static final String NO_USER = "*no_user*";
-   
    /** TODO LATER remove optional when there is a mock in the -core project */
    @Autowired(required = false)
    @Qualifier("datacore.userDetailsService")
@@ -84,35 +80,7 @@ public class MockAuthenticationService {
    }
 
 
-   /** TODO in service interface or at least util */
-   public DCUserImpl getCurrentUser() {
-      
-	  Authentication currentUserAuth = SecurityContextHolder.getContext().getAuthentication();
-      
-      if (currentUserAuth == null) {
-         throw new RuntimeException("No authentication in security context");  
-      }
-      
-      if (currentUserAuth.getPrincipal() instanceof DCUserImpl) {
-    	  return (DCUserImpl) currentUserAuth.getPrincipal();
-      } else {
-    	  return new DCUserImpl((User)currentUserAuth.getPrincipal(), getCurrentUserId());
-      }
-      
-   }
-
-   /** for resource : to put creator as owner, and get auditor (created/modifiedBy) */
-   public String getCurrentUserId() {
-      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-      if(authentication instanceof OAuth2Authentication) {
-    	  OAuth2Authentication oAuth2Authentication = (OAuth2Authentication) authentication;
-    	  if(oAuth2Authentication.getUserAuthentication() instanceof RemoteUserAuthentication) {
-    		  return ((RemoteUserAuthentication)oAuth2Authentication.getUserAuthentication()).getId();
-    	  }
-      }
-      return (authentication == null) ? NO_USER : authentication.getName(); 
-   }
-
+ 
    /**
     * @obsolete use rather getCurrentUser().getEntityGroups()
     * (permissions should be precomputed rather than added at getGroups time)

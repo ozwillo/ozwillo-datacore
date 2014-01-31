@@ -42,7 +42,7 @@
             authorities="ROLE_CLIENT" scope="datacore"
 			secret="" />
 	</oauth:client-details-service>
-
+	
 	<bean id="clientDetailsUserService" class="org.springframework.security.oauth2.provider.client.ClientDetailsUserDetailsService">
 		<constructor-arg ref="clientDetailsService" />
 	</bean> 
