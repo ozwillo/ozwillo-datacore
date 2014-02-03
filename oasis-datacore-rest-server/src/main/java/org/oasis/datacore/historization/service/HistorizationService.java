@@ -5,14 +5,21 @@ import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.historization.exception.HistorizationException;
 
 /**
- * Historization service
+ * Historization service.
+ * 
+ * Security of Historized data is (at least) the same as security of its latest version
+ * (LATER OPT it could have additional business / Model-level permission to check).
+ * Therefore it is not secured by itself, but by calling EntityService, which must therefore
+ * be called (at least) once in each secured operation.
+ * 
  * @author agiraudon
  *
  */
 public interface HistorizationService {
 
 	/**
-	 * Historize an entity of a defined model
+	 * Historize an entity of a defined model.
+	 * Secured, by being called before entityService.create/update().
 	 * @param entity
 	 * @param model
 	 * @return
@@ -43,9 +50,13 @@ public interface HistorizationService {
 	public boolean isHistorizable(DCModel model) throws HistorizationException;
 	
 	/**
-	 * Return an historized entity matching uri AND version
-	 * We are also checking that the original entity exist, if not
-	 * we do net retrieve the historized one EVEN if it exist !
+	 * Returns an historized entity matching uri AND version.
+	 * We are also checking that the original entity exists with this latest version, if not
+	 * we do not retrieve the historized one EVEN if it exists, because it would mean
+	 * that the historized one has been created before a failed create/update operation !
+	 * 
+	 * Secured, by calling EntityService for this exact purpose.
+	 * 
 	 * @param uri
 	 * @param version
 	 * @param originalModel
