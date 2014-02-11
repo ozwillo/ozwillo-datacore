@@ -29,7 +29,7 @@ Build ([Maven 3](http://maven.apache.org/download.cgi) required) : at root, do :
 
 Deployment : go in the oasis-datacore-web subproject and do : mvn jetty:run
 
-Then go have a look at API docs at http://localhost:8080/swagger-ui/index.html . To try it out, for instance do a GET /dc/type/city to see what cities are available. For more, see the [wiki](https://github.com/pole-numerique/oasis-datacore/wiki).
+Then go have a look at API docs at http://localhost:8080/swagger-ui/index.html . To try it out, for instance do a GET /dc/type/sample.city.city to see what cities are available. For more, see the [wiki](https://github.com/pole-numerique/oasis-datacore/wiki).
 
 Alternatively, to deploy it in production ([Tomcat 7](http://tomcat.apache.org/download-70.cgi) required) : put the war contents in a tomcat 7 root and start it :
 
@@ -98,7 +98,7 @@ to allow optimal data modeling flexibility (i.e. be able to model any business a
 
  - W3C LDP-like REST query filters. For instance, to get all cities of France sorted by name with a population of more than 500000 (with a default maximum of 50 results) :
 
-http://data.oasis-eu.org/city?inCountry=http://data.oasis-eu.org/country/France&name=+&population=>500000
+http://data.oasis-eu.org/dc/type/sample.city.city?inCountry=http://data.oasis-eu.org/dc/type/sample.city.country/France&name=+&population=>500000
 
  - but also a “mini-SPARQL” built on these last ones
 
