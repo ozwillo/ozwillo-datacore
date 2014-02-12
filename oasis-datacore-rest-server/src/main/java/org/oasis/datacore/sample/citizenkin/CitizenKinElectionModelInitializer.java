@@ -36,7 +36,6 @@ public class CitizenKinElectionModelInitializer extends DatacoreSampleBase {
         envelope.addField(new DCField("state", STRING_TYPE, true, 10));
         envelope.addField(new DCField("start_date", DATE_TYPE, true, 0));
         envelope.addField(new DCField("modify_date", DATE_TYPE, false, 0));
-        envelope.addField(new DCField("administration_id", LONG_TYPE, true, 100));
         envelope.addField(new DCField("comments", STRING_TYPE, false, 0));
 
         modelAdminService.addModel(envelope);
