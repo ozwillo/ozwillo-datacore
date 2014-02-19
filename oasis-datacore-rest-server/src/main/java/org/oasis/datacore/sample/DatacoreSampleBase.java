@@ -130,7 +130,7 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
       
       // generating static indexes
       coll.ensureIndex(new BasicDBObject("_uri", 1), null, true);
-//      coll.ensureIndex(new BasicDBObject("_ar", 1), null, true);
+      coll.ensureIndex(new BasicDBObject("_ar", 1));
       
       // generating field indices
       generateFieldIndices(coll, "_p.", model.getGlobalFieldMap().values());

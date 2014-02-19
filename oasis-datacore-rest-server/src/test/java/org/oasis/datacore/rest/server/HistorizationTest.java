@@ -8,6 +8,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.security.mock.MockAuthenticationService;
@@ -97,6 +98,7 @@ public class HistorizationTest {
 		Assert.assertTrue("Company list must contain elements", listCompanies.size() > 0);
 
 		DCResource company = listCompanies.get(0);
+
 		datacoreApiClient.postDataInType(company, MarkaInvestModel.COMPANY_MODEL_NAME);
 		
 		String companyId =  "" + company.getProperties().get("id");

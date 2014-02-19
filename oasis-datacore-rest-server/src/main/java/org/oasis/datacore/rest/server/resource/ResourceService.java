@@ -126,8 +126,9 @@ public class ResourceService {
    
 
    /**
+    * TODO: replace modelType with the DCModel you want to use
     * @param resource
-    * @param modelType
+    * @param modelType TODO rather DCModel to allow storing same model in different places (contributions, storage strategy...)
     * @param canCreate
     * @param canUpdate
     * @param putRatherThanPatchMode 
@@ -369,7 +370,7 @@ public class ResourceService {
       DCResource resource = resourceEntityMapperService.entityToResource(entity);
       return resource;
    }
-
+   
    /**
     * NB. deleting a non-existing resource does silently nothing.
     * @param uri

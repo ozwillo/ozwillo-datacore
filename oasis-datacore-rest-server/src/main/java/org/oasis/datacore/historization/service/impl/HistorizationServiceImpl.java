@@ -31,7 +31,7 @@ public class HistorizationServiceImpl implements HistorizationService {
 	@Autowired
 	private DataModelServiceImpl dataModelServiceImpl;
 	
-	private final static String HISTORIZATION_COLLECTION_PREFIX = "h.";
+	private final static String HISTORIZATION_COLLECTION_SUFFIX = ".h";
 	
 	
 	/**
@@ -69,7 +69,7 @@ public class HistorizationServiceImpl implements HistorizationService {
 	public DCModel getHistorizationModel(DCModel originalModel) throws HistorizationException {
 		
 		if(originalModel != null) {
-			DCModel historizationModel = dcModelService.getModel(HISTORIZATION_COLLECTION_PREFIX + originalModel.getName());
+			DCModel historizationModel = dcModelService.getModel(originalModel.getName() + HISTORIZATION_COLLECTION_SUFFIX);
 			if(historizationModel != null) {
 				return historizationModel;
 			} else {
@@ -85,7 +85,7 @@ public class HistorizationServiceImpl implements HistorizationService {
 	public DCModel createHistorizationModel(DCModel originalModel) throws HistorizationException {
 				
 		if(originalModel != null) {
-			String historizationModelName = HISTORIZATION_COLLECTION_PREFIX + originalModel.getName();
+			String historizationModelName = originalModel.getName() + HISTORIZATION_COLLECTION_SUFFIX;
 			DCModel historizationModel = new DCModel(historizationModelName);
 			for(DCField originalField : originalModel.getFieldMap().values()) {
 				historizationModel.addField(originalField);
@@ -139,7 +139,7 @@ public class HistorizationServiceImpl implements HistorizationService {
 	public String getHistorizedCollectionNameFromOriginalModel(DCModel originalModel) throws HistorizationException {
 		
 		if(originalModel != null && originalModel.isHistorizable()) {
-			return HISTORIZATION_COLLECTION_PREFIX + originalModel.getName();
+			return originalModel.getName() + HISTORIZATION_COLLECTION_SUFFIX;
 		} else {
 			throw new HistorizationException("Original model cannot be null or non-historizable");
 		}

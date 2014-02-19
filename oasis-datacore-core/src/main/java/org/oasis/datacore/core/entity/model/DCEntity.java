@@ -49,7 +49,7 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    @Version
    @Field("_v")
    private Long version;
-   @Indexed(unique = true)
+   @Indexed(unique = true) // NB. created in DatacoreSampleBase since Spring not in a single collection
    //@Id
    @Field("_uri")
    private String uri; // TODO Q not obligatory if embedded ? or then only sub-uri ??
@@ -126,7 +126,7 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
     * Alternative : allow several same values by storing as list, but there is still
     * as much requiring to be stored. */
    @Field("_ar")
-//   @Indexed(unique = true)
+   @Indexed // NB. created in DatacoreSampleBase since Spring not in a single collection
    private Set<String> allReaders;
    /** ONLY REQUIRED IF MASS W & O OPERATIONS but otherwise still need to be stored somewhere */
    @Field("_r")

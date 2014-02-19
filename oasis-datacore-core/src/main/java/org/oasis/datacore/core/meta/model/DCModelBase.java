@@ -35,6 +35,7 @@ public abstract class DCModelBase {
    private Map<String,DCField> globalFieldMap = null;
    
    private boolean isHistorizable;
+   private boolean isContributable;
    
    /** for unmarshalling only */
    public DCModelBase() {
@@ -201,11 +202,21 @@ public abstract class DCModelBase {
    public void setListeners(List<Object> listeners) {
       this.listeners = listeners;
    }
-public boolean isHistorizable() {
-	return isHistorizable;
-}
-public void setHistorizable(boolean isHistorizable) {
-	this.isHistorizable = isHistorizable;
-}
+
+	public boolean isHistorizable() {
+		return isHistorizable;
+	}
+
+	public void setHistorizable(boolean isHistorizable) {
+		this.isHistorizable = isHistorizable;
+	}
+
+	public boolean isContributable() {
+		return isContributable;
+	}
+
+	public void setContributable(boolean isContributable) {
+		this.isContributable = isContributable;
+	}
    
 }

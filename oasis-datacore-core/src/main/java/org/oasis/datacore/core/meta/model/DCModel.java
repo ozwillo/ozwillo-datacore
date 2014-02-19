@@ -20,28 +20,28 @@ package org.oasis.datacore.core.meta.model;
  */
 public class DCModel extends DCModelBase {
 
-   private DCSecurity security = new DCSecurity();
+	private DCSecurity security = new DCSecurity();
 
-   /** for unmarshalling only */
-   public DCModel() {
-      super();
-   }
+	/** for unmarshalling only */
+	public DCModel() {
+		super();
+	}
 
-   public DCModel(String name) {
-      super(name);
-   }
-   
-   public String getCollectionName() {
-      return this.getName();
-   }
+	public DCModel(String name) {
+		super(name);
+	}
 
-   /** TODO or in DCModelBase (i.e. mixins) ?? on fields ????? */
-   public DCSecurity getSecurity() {
-      return security;
-   }
+	public String getCollectionName() {
+		return this.getName();
+	}
 
-   public void setSecurity(DCSecurity security) {
-      this.security = security;
-   }
-   
+	/** TODO or in DCModelBase (i.e. mixins) ?? on fields ????? */
+	public DCSecurity getSecurity() {
+		return security;
+	}
+
+	public void setSecurity(DCSecurity security) {
+		this.security = security;
+	}
+
 }

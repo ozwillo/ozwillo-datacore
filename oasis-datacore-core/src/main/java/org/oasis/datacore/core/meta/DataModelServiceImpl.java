@@ -52,7 +52,15 @@ public class DataModelServiceImpl implements DCModelService {
    // admin / update methods
 
    public void addModel(DCModel dcModel) {
-      modelMap.put(dcModel.getName(), dcModel);
+	  modelMap.put(dcModel.getName(), dcModel);  
+   }
+   
+   public void addModel(DCModel dcModel, String name) {
+	   modelMap.put(name, dcModel);
+   }
+   
+   public void removeModel(String name) {
+	   modelMap.remove(name);
    }
    
    public Map<String, DCModel> getModelMap() {

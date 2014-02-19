@@ -1,5 +1,8 @@
 package org.oasis.datacore.sample;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
@@ -29,6 +32,8 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 	public static String COST_TYPE_MODEL_NAME = "sample.marka.cost";
 	public static String INVESTMENT_ASSISTANCE_REQUEST_MODEL_NAME = "sample.marka.planned_investment_assistance_request";
 
+	private List<DCModel> listModel = new ArrayList<>(); 
+	
 	@Autowired
 	private DataModelServiceImpl modelAdminService;
 	
@@ -61,14 +66,20 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		companyModel.addField(new DCField("address", DCFieldTypeEnum.STRING.getType()));
 		companyModel.addField(new DCResourceField("city", CITY_MODEL_NAME));
 		companyModel.setHistorizable(true);
-
+		companyModel.getSecurity().addAdmin("model_admin_sample.marka.company");
+		listModel.add(companyModel);
+		
 		DCModel fieldModel = new DCModel(FIELD_MODEL_NAME);
 		fieldModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
 		fieldModel.addField(new DCField("name", DCFieldTypeEnum.STRING.getType(), true, 100));
+		fieldModel.setContributable(true);
+		fieldModel.getSecurity().addReader("model_readers_sample.marka.field");
+		listModel.add(fieldModel);
 
 		DCModel sectorModel = new DCModel(SECTOR_MODEL_NAME);
 		sectorModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
 		sectorModel.addField(new DCField("name", DCFieldTypeEnum.STRING.getType(), true, 100));
+		listModel.add(sectorModel);
 		
 		DCModel countryModel = new DCModel(COUNTRY_MODEL_NAME);
 		countryModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
@@ -77,6 +88,7 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		countryModel.addField(new DCField("long", DCFieldTypeEnum.FLOAT.getType()));
 		countryModel.addField(new DCField("population", DCFieldTypeEnum.INTEGER.getType()));
 		countryModel.addField(new DCField("language", DCFieldTypeEnum.STRING.getType()));
+		listModel.add(countryModel);
 		
 		DCModel cityModel = new DCModel(CITY_MODEL_NAME);
 		cityModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
@@ -86,6 +98,8 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		cityModel.addField(new DCField("lat", DCFieldTypeEnum.FLOAT.getType()));
 		cityModel.addField(new DCField("long", DCFieldTypeEnum.FLOAT.getType()));
 		cityModel.addField(new DCResourceField("country", COUNTRY_MODEL_NAME));
+		cityModel.getSecurity().addResourceAdmin("model_resource_admin_sample.marka.city");
+		listModel.add(cityModel);
 		
 		DCModel userModel = new DCModel(USER_MODEL_NAME);
 		userModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
@@ -95,6 +109,7 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		userModel.addField(new DCField("email", DCFieldTypeEnum.STRING.getType()));
 		userModel.addField(new DCField("tel", DCFieldTypeEnum.STRING.getType()));
 		userModel.addField(new DCField("fax", DCFieldTypeEnum.STRING.getType()));
+		listModel.add(userModel);
 		
 		DCModel investorModel = new DCModel(INVESTOR_MODEL_NAME);
 		investorModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
@@ -102,15 +117,18 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		investorModel.addField(new DCListField("types", new DCResourceField("type", INVESTOR_TYPE_MODEL_NAME)));
 		investorModel.addField(new DCField("fundsAvailable", DCFieldTypeEnum.FLOAT.getType()));
 		investorModel.addField(new DCListField("sectors", new DCResourceField("sector", SECTOR_MODEL_NAME)));
+		listModel.add(investorModel);
 		
 		DCModel investorTypeModel = new DCModel(INVESTOR_TYPE_MODEL_NAME);
 		investorTypeModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
 		investorTypeModel.addField(new DCField("code", DCFieldTypeEnum.STRING.getType(), true, 100));
 		investorTypeModel.addField(new DCField("description", DCFieldTypeEnum.STRING.getType()));
+		listModel.add(investorTypeModel);
 		
 		DCModel costModel = new DCModel(COST_TYPE_MODEL_NAME);
 		costModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
 		costModel.addField(new DCField("name", DCFieldTypeEnum.STRING.getType(), true, 100));
+		listModel.add(costModel);
 		
 		DCModel plannedInvestmentAssistanceRequestModel = new DCModel(INVESTMENT_ASSISTANCE_REQUEST_MODEL_NAME);
 		plannedInvestmentAssistanceRequestModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
@@ -119,6 +137,7 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		plannedInvestmentAssistanceRequestModel.addField(new DCField("fundRequired", DCFieldTypeEnum.FLOAT.getType()));
 		plannedInvestmentAssistanceRequestModel.addField(new DCField("start", DCFieldTypeEnum.DATE.getType()));
 		plannedInvestmentAssistanceRequestModel.addField(new DCField("end", DCFieldTypeEnum.DATE.getType()));
+		listModel.add(plannedInvestmentAssistanceRequestModel);
 
 		modelAdminService.addModel(companyModel);
 		modelAdminService.addModel(fieldModel);
@@ -131,6 +150,14 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		modelAdminService.addModel(costModel);
 		modelAdminService.addModel(plannedInvestmentAssistanceRequestModel);
 		
+	}
+
+	public List<DCModel> getListModel() {
+		return listModel;
+	}
+
+	public void setListModel(List<DCModel> listModel) {
+		this.listModel = listModel;
 	}
 	
 }

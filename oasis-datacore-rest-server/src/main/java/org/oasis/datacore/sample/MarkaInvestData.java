@@ -62,7 +62,7 @@ public class MarkaInvestData extends DatacoreSampleBase {
 	}
 	
 	@SafeVarargs
-	private final DCResource buildResource(String modelType, SimpleEntry<String,?>... entries) {
+	public final DCResource buildResource(String modelType, SimpleEntry<String,?>... entries) {
 		DCResource resource = new DCResource();
 		List<String> types = new ArrayList<String>();
 		types.add(modelType);

@@ -82,7 +82,7 @@ public class ResourceEntityMapperService {
       
       Object entityValue;
       if (resourceValue == null) {
-         if (!dcField.isRequired()) { // TODO ? for all ?! or only for MapField ??
+         if (!dcField.isRequired() && !"string".equals(dcField.getType())) { // TODO ? for all ?! or only for MapField ??
             throw new ResourceParsingException("map Field value is not a JSON Object : " + resourceValue);
          }
          entityValue = null;

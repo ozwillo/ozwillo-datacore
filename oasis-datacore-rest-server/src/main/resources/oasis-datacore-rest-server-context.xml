@@ -111,9 +111,11 @@
    <bean id="datacoreApiImpl" class="org.oasis.datacore.rest.server.DatacoreApiImpl"/>
    <bean id="datacore.model.apiImpl" class="org.oasis.datacore.model.rest.server.DataModelApiImpl"/>
    <bean id="datacore.rights.apiImpl" class="org.oasis.datacore.rights.api.impl.RightsApiImpl"/>
+   <bean id="datacore.contribution.apiImpl" class="org.oasis.datacore.contribution.api.impl.ContributionApiImpl"/>
    
    <bean id="queryParsingService" class="org.oasis.datacore.rest.server.parsing.service.impl.QueryParsingServiceImpl" />
    <bean id="historizationService" class="org.oasis.datacore.historization.service.impl.HistorizationServiceImpl"/>
+   <bean id="contributionService" class="org.oasis.datacore.contribution.service.impl.ContributionServiceImpl"/>
    
    <!-- mapper taken out to configure it (allow to inject it in ArrayServerInInterceptor, register modules) -->
    <bean id="datacoreApiServer.objectMapper" class="org.oasis.datacore.rest.api.binding.DatacoreObjectMapper"/>
@@ -135,6 +137,7 @@
          <ref bean="datacoreApiImpl"/>
          <ref bean="datacore.model.apiImpl"/>
          <ref bean="datacore.rights.apiImpl" /> 
+         <ref bean="datacore.contribution.apiImpl" /> 
          <ref bean="swagger.resourceJSON" />
          <bean class="org.oasis.datacore.rest.server.RootRedirectResource">
             <property name="targetUri" value="/swagger-ui/index.html"/>

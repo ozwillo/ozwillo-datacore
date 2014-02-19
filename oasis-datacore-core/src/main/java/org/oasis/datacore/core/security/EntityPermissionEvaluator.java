@@ -71,7 +71,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
          throw new RuntimeException("Unknown model for " + dataEntity);
       }
 
-      if (user.isModelTypeResourceOwner(model.getName())) {
+      if (model.getSecurity().isResourceAdmin(user)) {
          return true;
       }
       
@@ -85,14 +85,14 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
          // => TODO that in PermissionAdminApi/Service
          return model.getSecurity().isGuestReadable()
                || model.getSecurity().isAuthentifiedReadable() && !user.isGuest()
-               || user.isModelTypeResourceReader(model.getName())
+               || model.getSecurity().isResourceReader(user)
                || hasAnyEntityAclGroup(user, dataEntity.getAllReaders());
       case "write" :
          // to be used in @PreAuthorize on update ??
          // NB. writers have NOT to contain also writers & owners (i.e. be precomputed)
          // because no mass write operations (yet)
          return model.getSecurity().isAuthentifiedWritable() && !user.isGuest()
-               || user.isModelTypeResourceWriter(model.getName())
+               || model.getSecurity().isResourceWriter(user)
                || hasAnyEntityAclGroup(user, dataEntity.getWriters())
                || hasAnyEntityAclGroup(user, dataEntity.getOwners());
          
@@ -100,7 +100,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
          // to be used in @PreAuthorize on update ????
          ///return entityService.getModel(dataEntity).getSecurity().hasCreator(user); /// TODO or this ?
          return model.getSecurity().isAuthentifiedCreatable() && !user.isGuest()
-               || user.isModelTypeResourceCreator(model.getName());
+               || model.getSecurity().isResourceCreator(user);
          
       case "changeRights" :
          // to be used in @PostAuthorize on GET

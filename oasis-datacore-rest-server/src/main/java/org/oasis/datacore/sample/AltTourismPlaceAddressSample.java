@@ -41,6 +41,7 @@ public class AltTourismPlaceAddressSample extends DatacoreSampleBase {
       altTourismPlaceKind.addField(new DCField("name", "string", true, 100));
       ///altTourismPlaceKind.addListener(eventService.init(new DCInitIdEventListener(AltTourismPlaceAddressSample.ALTTOURISM_PLACEKIND, "name"))); // TODO null
       DCModel altTourismPlace = new DCModel(AltTourismPlaceAddressSample.ALTTOURISM_PLACE);
+      altTourismPlace.getSecurity().addResourceCreator("model_resource_creator_altTourism.place");
       altTourismPlace.addField(new DCField("name", "string", true, 100));
       altTourismPlace.addField(new DCResourceField("kind", AltTourismPlaceAddressSample.ALTTOURISM_PLACEKIND, true, 100)); // hotel... ; alternativeTourismPlaceKind
       eventService.init(new DCInitIdEventListener(AltTourismPlaceAddressSample.ALTTOURISM_PLACEKIND, "name"));
