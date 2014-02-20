@@ -271,7 +271,7 @@ public class ResourceService {
       if (isCreation) {
          // setting creator (group) as sole owner
          Set<String> creatorOwners = new HashSet<String>(1);
-         creatorOwners.add(authenticationService.getUserGroup(datacoreSecurityService.getCurrentUserId()));
+         creatorOwners.add(datacoreSecurityService.getUserGroup());
          entityPermissionService.setOwners(dataEntity, creatorOwners);
          try {
         	 try {

@@ -72,14 +72,6 @@ public class MockAuthenticationService {
    public void logout() {
       SecurityContextHolder.clearContext();
    }
-   
-   /** @return the name of the given user's self group / authority (allows ex. tutor).
-    * NB. userId would not work because we have to know that is a *self* group. */
-   public String getUserGroup(String userId) {
-      return "u_" + userId;
-   }
-
-
  
    /**
     * @obsolete use rather getCurrentUser().getEntityGroups()

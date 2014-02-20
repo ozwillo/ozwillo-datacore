@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 @Service("datacoreSecurityServiceImpl")
 public class DatacoreSecurityServiceImpl implements DatacoreSecurityService {
 
+	private static final String USER_GROUP_PREFIX = "u_";
+	
 	/**
 	 * User id (for resource auditor & creator as owner) in case there is no
 	 * Spring Security Authentication object in context (even guest or system
@@ -44,6 +46,10 @@ public class DatacoreSecurityServiceImpl implements DatacoreSecurityService {
 			return (authentication == null) ? NO_USER : authentication.getName();
 		}
 
+	}
+
+	public String getUserGroup() {
+		return USER_GROUP_PREFIX + this.getCurrentUserId();
 	}
 
 }
