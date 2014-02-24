@@ -37,10 +37,12 @@ public interface RightsApi {
 	   @ApiOperation(
 			   value = "Add rights on a resource",
 			   notes = "You must provide the type, id and version of the resource " +
-			   		   "you need to add rights on." +
-					   "One of the tree set (writers, readers, owners) must be defined." +
-			   		   "The DCRights object will add rights on your resource only if they are not already on it." +
-					   "Only owners are allowed to add rights on a resource." +
+			   		   "you need to add rights on.<br/>" +
+					   "At least one of writers, readers, owners must be defined. Those ACLs (Access Control "
+					   + "List) may contain u_[username] or groups defined in Kernel using User Directory "
+					   + "or Social API or (DEV MODE ONLY) mock auth conf.<br/>" +
+			   		   "The DCRights object will add rights on your resource only if they are not already on it. " +
+					   "Only owners are allowed to add rights on a resource. " +
 					   "(The scope implementation will be added in the future)"
 	   )
 	   @ApiResponses(value = {
@@ -71,8 +73,10 @@ public interface RightsApi {
 	   @ApiOperation(
 			   value = "Remove rights on a resource",
 			   notes = "You must provide the type, id and version of the resource " +
-			   		   "you need to remove rights on." +
-					   "One of the tree set (writers, readers, owners) must be defined" +
+			   		   "you need to remove rights on<br/>" +
+                  "At least one of writers, readers, owners must be defined. Those ACLs (Access Control "
+                  + "List) may contain u_[username] or groups defined in Kernel using User Directory "
+                  + "or Social API or (DEV MODE ONLY) mock auth conf.<br/>" +
 					   "Only owners are allowed to remove rights on a resource" +
 					   "(The scope implementation will be added in the future)"
 	   )
@@ -130,7 +134,10 @@ public interface RightsApi {
 	   @PUT
 	   @ApiOperation(
 			   value = "Replace all rights on the selected resource by the DCRights in payload",
-			   notes = "You must provide the type, id and version of the resource. " +
+			   notes = "You must provide the type, id and version of the resource.<br/>" +
+                  "At least one of writers, readers, owners must be defined. Those ACLs (Access Control "
+                  + "List) may contain u_[username] or groups defined in Kernel using User Directory "
+                  + "or Social API or (DEV MODE ONLY) mock auth conf.<br/>" +
 			   		   "Don't forget that the DCRights you give in the body will replace entirely the one on the resource (EVEN THE OWNERS !)."
 	   )
 	   @ApiResponses(value = {
