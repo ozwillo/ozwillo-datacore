@@ -8,16 +8,29 @@ Copyright (c) 2013 Open Wide SA
 About OASIS Datacore
 --------------------
 
-OASIS Datacore's business is collaboration on linked data.
+OASIS Datacore is A Cloud of shared Open Linked Data.
+
+Its goal is cross-business data collaboration and integration. By linking data from different business together, it allows to create value by developing new OASIS services on top of it.
+
+To interact and scale up, it uses Web technologies (HTTP REST API, OAuth2) and architecture (sharding and replication, client-side caching).
+To achieve data model flexibility, it follows Semantic Web principles ("almost" W3C JSON-LD compatible), but curbed to fit real world constraints.
 
 Features
-   * 
+   * HTTP REST API for sharing data, with OAuth2 authentication, client-side caching and online playground
+   * W3C JSON-LD-like data Resource representation
+   * W3C LDP-inspired query filters
+   * JSON Schema-like data models with Model (primary) and Mixin types. Models are the place where collaboration on data happens.
+   * scalable MongoDB storage, Java server (Apache CXF / Spring)
+   * Rights (readers, writers, owners) at Resource, Model and business (Scope) levels, with query optimization
+   * Historization
+   * Approvable changes, up to Contributions (merging Resources from other similar Models)
+   * and more upcoming : see [Roadmap](https://github.com/pole-numerique/oasis-datacore/issues)
 
 Team
-   * Design & Development : Marc Dutoo, Open Wide SA - http://www.openwide.fr
+   * Design & Development of v1 : Marc Dutoo, Open Wide SA - http://www.openwide.fr
+   * Authentication, Historization, Rights API, Contributions : Aurélien Giraudon, Open Wide SA - http://www.openwide.fr
 
-License
-   * LGPL
+LGPL License
 
 
 Getting Started with the server
