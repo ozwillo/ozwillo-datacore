@@ -8,7 +8,7 @@ Copyright (c) 2013 Open Wide SA
 About OASIS Datacore
 --------------------
 
-OASIS Datacore is A Cloud of shared Open Linked Data.
+OASIS Datacore is a Cloud of shared Open Linked Data.
 
 Its goal is cross-business data collaboration and integration. By linking data from different business together, it allows to create value by developing new OASIS services on top of it.
 
@@ -42,7 +42,7 @@ Build ([Maven 3](http://maven.apache.org/download.cgi) required) : at root, do :
 
 Deployment : go in the oasis-datacore-web subproject and do : mvn jetty:run
 
-Then go have a look at API docs at http://localhost:8080/swagger-ui/index.html . To try it out, for instance do a GET /dc/type/sample.city.city to see what cities are available. For more, see the [wiki](https://github.com/pole-numerique/oasis-datacore/wiki).
+Then go have a look at API documentation and playground at http://localhost:8080/swagger-ui/index.html . To try it out, for instance do a GET /dc/type/sample.city.city to see what cities are available. For more, do the [city & country Tutorial](https://github.com/pole-numerique/oasis-datacore/wiki/Tutorial---city-&-country).
 
 Alternatively, to deploy it in production ([Tomcat 7](http://tomcat.apache.org/download-70.cgi) required) : put the war contents in a tomcat 7 root and start it :
 
@@ -94,65 +94,28 @@ At worst, you can talk to DatacoreApi server by writing the right JSON/HTTP requ
 Documentation
 --------------
 
-See online API (ask URL to Pole Numerique) and [wiki](https://github.com/pole-numerique/oasis-datacore/wiki).
+See online API (ask URL to Pole Numerique or run your own local Datacore) and its packaged examples, [wiki](https://github.com/pole-numerique/oasis-datacore/wiki) and Java tests.
 
-Still missing :
-
-* a more formal description of (the metamodel of) supported data resources : what field types are supported, how to model them, how they behave (especially Map, List and external vs embedded Resource fields types) ; and wider, documentation of the metamodel itself : its fields, Mixin types (soon to be supported)...
-* more samples (a single one for now)
+Documentation still can be improved. If something is missing, ask us about it. Especially missing is a more formal description of supported data resources : what field types are supported, how to model them, how they behave (especially Map, List and external vs embedded Resource fields types) ; and wider, documentation of the metamodel itself : field types, Mixin (light, reusable, multiple) types and inheritance, security and mediation configuration...
 
 
-Goals :
-
-* RDF compatible
-to allow optimal data modeling flexibility (i.e. be able to model any business and support any change), data compatibility (i.e. data homogenization)
-
- - thanks to an “almost” JSON-LD representation which is natively RDF-compatible,
-
- - W3C LDP-like REST query filters. For instance, to get all cities of France sorted by name with a population of more than 500000 (with a default maximum of 50 results) :
-
-http://data.oasis-eu.org/dc/type/sample.city.city?inCountry=http://data.oasis-eu.org/dc/type/sample.city.country/France&name=+&population=>500000
-
- - but also a “mini-SPARQL” built on these last ones
+More
+----
+See [wiki](https://github.com/pole-numerique/oasis-datacore/wiki) for
+* References
+* Tutorials
+* Samples
+* FAQ
+* Developer environment
 
 
-* But at the same time, to optimally support the collaborative linked data business, it has to handle the following differences from a native RDF implementation :
-
- - all data are not equal : each data Resource has a “primary”, “Model”, “collaboration” type (the first “rdf:type” of JSON-LD resources) which corresponds to its collaborative data business use. Such a “Model” type is born each time a community of service providers agrees on collaborating together on a given kind of data, and will follow the specific governance rules decided by this community. If a new service provider wants to contribute to the same kind of data, either it subscribes to the existing community and rules, possibly even only partly (such as its contributions having to undergo approval before being accepted), or manages to get the community to change them, or it has to do it all separately, which OASIS discourages though. 
-
- - granularity of the RDF triple is too fine to be efficient, easily handled, modeled or understood by service providers. Therefore an intermediate “Mixin” / aspect-like granularity is promoted, which roughly corresponds to a an RDF predicate's namespace.
-
- - allow complex properties (lists and maps)
-
-
-* In order to allow use cases shown at the Valence workshop :
-
- - URI as id
- - predicate attribute / property values of the required types : string / text (including textual format such as Well-Known Text (WKT) for geolocalization info), boolean, int, float, long, double, date, map (allowing internationalized text), list, resource / reference (including cross container ; allowing classification in categories...)
- - multiple typing, shared types (ex. address), data layers (ex. Cityhalls patching INSEE / IGN data) (allowing having different sources providing different values)
- - per Resource-authorization : each having its own readers, writers, owners Access Control Lists (ACLs) (allowing for personal / confidential data, and granting rights management right)
- - data quality...
-
-
-Samples :
-
-* [city & country](https://github.com/pole-numerique/oasis-datacore/wiki/Tutorial---city-&-country)
-
-TODO not yet shown : Mixin (light, reusable, multiple) types, client-side cache using version as ETag, range & list queries, OPTIONAL tunneled methods on GET, LATER SPARQL, details on how it is stored in MongoDB...
-
-
-FAQ
----
-See [wiki](https://github.com/pole-numerique/oasis-datacore/wiki).
-
-
-For developers
---------------
-See [wiki](https://github.com/pole-numerique/oasis-datacore/wiki).
+Release Notes - 1.0
+-------------------
+* more examples, Mixin, Authentication, Historization, Rights checking and API, Contributions
 
 
 Release Notes - 0.5
 -------------------
-First release.
+* Prototype : REST API & Java client, server with Resource parsing and querying according to Model on top of MongoDB storage
 
 
