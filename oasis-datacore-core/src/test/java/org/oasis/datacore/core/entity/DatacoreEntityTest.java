@@ -1,5 +1,9 @@
 package org.oasis.datacore.core.entity;
 
+
+import java.io.File;
+import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.Map;
 
 import org.joda.time.DateTime;
@@ -14,6 +18,14 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.CommandResult;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoException.DuplicateKey;
 import com.mongodb.WriteConcern;
 
 
@@ -47,9 +59,90 @@ public class DatacoreEntityTest {
    }
 
    @Test
-   public void testMongoConf() {
+   public void testMongoConfAcknowledged() {
       Assert.assertEquals(WriteConcern.ACKNOWLEDGED, mt.getDb().getWriteConcern());
       // TODO LATER for prod, check & test REPLICA_ACKNOWLEDGED (and not / also FSYNCED or JOURNALED ??)
       // TODO LATER2 for prod, test mongo auth
    }
+
+   @Test
+   public void testMongoNoDuplicateUriIndex() {
+	   DBCollection coll = !mt.collectionExists("test.unicity") ? mt.createCollection("test.unicity") : mt.getCollection("test.unicity");
+	   String duplicatedUri = "http://data.oasis-eu.org/city/France/Lyon";
+
+	   DBObject city1 = new BasicDBObject(
+				"_id_source", "42")
+               .append("_uri", duplicatedUri)
+               .append("name", "Lyon")
+               .append("countryName", "France")
+               .append("inCountry", "http://data.oasis-eu.org/country/France");
+
+	   DBObject city2 = new BasicDBObject(
+				"_id_source", "21")
+               .append("_uri", duplicatedUri)
+               .append("name", "Strasbourg")
+               .append("countryName", "France")
+               .append("inCountry", "http://data.oasis-eu.org/country/France");
+
+	   //Be sure the collection is empty
+	   coll.remove(new BasicDBObject());
+	   Assert.assertTrue(!coll.find().hasNext());
+
+	   coll.ensureIndex(new BasicDBObject("_uri", 1), null, true);
+	   coll.insert(city1);
+
+	   //Be sure that city1 has been persisted
+	   DBCursor findLyon = coll.find(new BasicDBObject("name", "Lyon"));
+	   Assert.assertTrue(findLyon.count() == 1);
+
+	   try {
+		   coll.insert(city2);
+		   Assert.fail("Insert city2 should be impossible.");
+	   } catch (DuplicateKey e) {
+		   Assert.assertTrue(true);
+	   } catch (Exception e) {
+		   Assert.fail("Bad exception");
+	   }
+
+	   if(mt.collectionExists("test.unicity")) {
+		   mt.dropCollection("test.unicity");
+	   }
+   }
+
+   /**
+    * testMongoQueryUsingIndex() :
+    * Query on indexed field & assert explain.toString contains BTree_Cursor,
+    * Query on non-indexed field & assert it contains BasicCursor
+    */
+   @Test
+   public void testMongoQueryUsingIndex() {
+	   DBCollection coll = !mt.collectionExists("test.index") ? mt.createCollection("test.index") : mt.getCollection("test.index");
+
+	   //Be sure the collection is empty
+	   coll.remove(new BasicDBObject());
+	   Assert.assertTrue(!coll.find().hasNext());
+
+	   DBObject city = new BasicDBObject(
+				"_id_source", "42")
+              .append("_uri", "http://data.oasis-eu.org/city/France/Lyon")
+              .append("name", "Lyon")
+              .append("countryName", "France")
+              .append("inCountry", "http://data.oasis-eu.org/country/France");
+
+	   coll.ensureIndex(new BasicDBObject("_uri", 1), null, true);
+	   coll.insert(city);
+
+	   DBCursor findLyon = coll.find(new BasicDBObject("name", "Lyon"));
+	   Assert.assertTrue(findLyon.count() == 1);
+	   Assert.assertEquals("Should have BasicCursor on non-indexed field.", "BasicCursor", findLyon.explain().get("cursor"));
+
+	   DBCursor findUri = coll.find(new BasicDBObject("_uri", "http://data.oasis-eu.org/city/France/Lyon"));
+	   Assert.assertTrue(findUri.count() == 1);
+	   Assert.assertEquals("Should have BtreeCursor on indexed field.", "BtreeCursor _uri_1", findUri.explain().get("cursor"));
+
+	   if(mt.collectionExists("test.index")) {
+		   mt.dropCollection("test.index");
+	   }
+   }
+
 }
