@@ -59,4 +59,18 @@
       </jaxrs:features>
    </jaxrs:server>
 
+   <jaxrs:client id="webClient"
+      address="https://localhost:7777/services/rest"
+      serviceClass="org.apache.cxf.jaxrs.client.WebClient">
+      <jaxrs:headers>
+         <entry key="Accept" value="text/xml"/>
+      </jaxrs:headers>
+   </jaxrs:client>
+
+   <jaxrs:server id="AuditLogEndpointTestMockServer" address="http://localhost:8282/">
+      <jaxrs:serviceBeans>
+         <bean class="org.oasis.datacore.rest.api.client.AuditLogEndpointMockServer"/>
+      </jaxrs:serviceBeans>
+   </jaxrs:server>
+
 </beans>

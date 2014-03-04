@@ -68,6 +68,27 @@
 				<role>Developer</role>
 			</roles>
 		</developer>
+      <developer>
+         <id>spdy</id>
+         <name>Aurélien Giraudon</name>
+         <email>aurelien.giraudon@openwide.fr</email>
+         <organization>Open Wide</organization>
+         <organizationUrl>http://www.openwide.fr</organizationUrl>
+         <roles>
+            <role>Architect</role>
+            <role>Developer</role>
+         </roles>
+      </developer>
+      <developer>
+         <id>vvision</id>
+         <name>Victor Voisin</name>
+         <email>victor.voisin@openwide.fr</email>
+         <organization>Open Wide</organization>
+         <organizationUrl>http://www.openwide.fr</organizationUrl>
+         <roles>
+            <role>Developer</role>
+         </roles>
+      </developer>
 	</developers>
 
 
