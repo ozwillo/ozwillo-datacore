@@ -59,14 +59,33 @@
       </jaxrs:features>
    </jaxrs:server>
 
-   <jaxrs:client id="webClient"
-      address="https://localhost:7777/services/rest"
-      serviceClass="org.apache.cxf.jaxrs.client.WebClient">
-      <jaxrs:headers>
-         <entry key="Accept" value="text/xml"/>
-      </jaxrs:headers>
+   
+   <jaxrs:client id="auditLogAPIClient"
+         serviceClass="org.oasis.datacore.rest.api.client.AuditLogClientAPI"
+         address="https://oasis-demo.atolcd.com/">
+      <jaxrs:providers>
+         <!-- JSON provider (Jackson's) : -->
+         <bean class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider">
+            <constructor-arg><bean class="org.oasis.datacore.rest.api.binding.DatacoreObjectMapper"/></constructor-arg>
+            <!-- needs at least joda... -->
+         </bean>
+         <!-- no cache (!) -->
+      </jaxrs:providers>
+      <jaxrs:outInterceptors>
+         <!-- no cache (!) -->
+         <bean class="org.oasis.datacore.rest.client.cxf.mock.MockLoginClientOutInterceptor"/><!-- no auth yet... -->
+      </jaxrs:outInterceptors>
+      <jaxrs:features>
+         <cxf:logging/>
+      </jaxrs:features>
+      <jaxrs:properties>
+         <!-- Prevents logging WebApplicationException not HTTP 400 or 500 -->
+         <!-- entry key="org.apache.cxf.logging.FaultListener">
+            <bean class="org.oasis.datacore.rest.server.cxf.ClientServerErrorFaultListener"/>
+         </entry -->
+      </jaxrs:properties>     
    </jaxrs:client>
-
+   
    <jaxrs:server id="AuditLogEndpointTestMockServer" address="http://localhost:8282/">
       <jaxrs:serviceBeans>
          <bean class="org.oasis.datacore.rest.api.client.AuditLogEndpointMockServer"/>
