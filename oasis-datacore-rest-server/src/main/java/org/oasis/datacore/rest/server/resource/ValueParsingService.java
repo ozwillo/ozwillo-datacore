@@ -76,8 +76,16 @@ public class ValueParsingService {
    }
    
    /**
-    * Eager parsing, notably to be used to parse query criteria. 
-    * @param fieldTypeEnum
+    * Eager parsing, notably to be used to parse query criteria.
+    * 
+    * If fieldTypeEnum (operator's if any, else field's) is a string primitive (ex. string, resource),
+    * tries to unquote and returns string ;
+    * else if it's a serialized string primitive (ex. date, long or not ex. string, resource),
+    * quotes and parses as JSON ;
+    * else tries to parse as JSON ; if fails : if empty returns null, else if list attempts to read as Object
+    * to return single value list. 
+    * 
+    * @param fieldTypeEnum 
     * @param value
     * @return
     * @throws ResourceParsingException
@@ -96,13 +104,12 @@ public class ValueParsingService {
          // they can be returned as is
          int valueLength = value.length();
          if (valueLength > 1 && value.charAt(0) == '\"' && value.charAt(valueLength -1) == '\"') {
-            // first, tried JSON case
+            // first, trying JSON case (to get a string enclosed in quotes, double quote it)
             return value.substring(1, valueLength - 1);
          }
-         if (DCFieldTypeEnum.RESOURCE.equals(fieldTypeEnum)) {
-            //value = quote(value);
-            return parseStringPrimitiveValueFromString(value); //return value;
-         } // else try to parse embedded or root resource
+         // else no JSON : return string value as is
+         return parseStringPrimitiveValueFromString(value); //return value;
+         // TODO LATER try to parse embedded or root resource
          
       } else if (DCFieldTypeEnum.stringSerializedPrimitiveTypes.contains(fieldTypeEnum)) {
          // they MUST be parsed AS JSON (i.e. quoted string)
@@ -114,7 +121,7 @@ public class ValueParsingService {
       }
       
       try {
-         // then try to parse as json :
+         // else try to parse as json :
          return parseValueFromJSONInternal(fieldTypeEnum, value);
          
       } catch (IOException ioex) {
@@ -125,9 +132,6 @@ public class ValueParsingService {
             return null; // guessing it means "no value"
          }
          switch (fieldTypeEnum) {
-         case STRING:
-            // notably unquoted regex query criteria case such as $regex.*Bord.*
-            return value;
          case LIST:
             // attempt to read as single value array
             List<Object> singleValueList = new ArrayList<Object>(1);

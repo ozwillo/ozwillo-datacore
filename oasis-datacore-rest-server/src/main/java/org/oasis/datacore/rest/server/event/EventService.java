@@ -9,6 +9,7 @@ import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.server.event.DCResourceEvent.Types;
 import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.oasis.datacore.rest.server.resource.ResourceService;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
@@ -17,7 +18,7 @@ import org.springframework.stereotype.Component;
 @Component // TODO @Service ??
 public class EventService {
    
-   private static final org.slf4j.Logger logger = LoggerFactory.getLogger(EventService.class);
+   private static final Logger logger = LoggerFactory.getLogger(EventService.class);
 
    /** to autowire programmatically-created listeners */
    @Autowired

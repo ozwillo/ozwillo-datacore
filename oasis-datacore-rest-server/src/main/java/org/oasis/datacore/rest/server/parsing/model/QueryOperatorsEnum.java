@@ -46,7 +46,8 @@ public enum QueryOperatorsEnum {
    
 	private Collection<String> listOperators;
 	private Collection<DCFieldTypeEnum> listCompatibleTypes;
-	/** field type to parse criteria value as if differs from criteria field's */
+	/** field type to parse criteria value as, if differs from criteria field's (for
+	 * $in, $nin, $all, $elemMatch, $size) ; else null */
    private DCFieldTypeEnum parsingType;
 	
 	private QueryOperatorsEnum(Collection<DCFieldTypeEnum> compatibleTypes,

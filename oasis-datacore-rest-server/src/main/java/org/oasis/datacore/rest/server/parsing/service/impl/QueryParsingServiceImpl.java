@@ -262,6 +262,9 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 
 
    private QueryOperatorsEnum isSortNeeded(String queryValue) {
+      if (queryValue == null || queryValue.isEmpty()) {
+         return null;
+      }
 
       char lastChar = queryValue.charAt(queryValue.length() - 1);
       switch (lastChar) {

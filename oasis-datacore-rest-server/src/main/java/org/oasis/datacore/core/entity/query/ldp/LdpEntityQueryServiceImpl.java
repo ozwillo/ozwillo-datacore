@@ -15,9 +15,12 @@ import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCSecurity;
 import org.oasis.datacore.core.security.DCUserImpl;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
+import org.oasis.datacore.rest.server.event.EventService;
 import org.oasis.datacore.rest.server.parsing.model.DCQueryParsingContext;
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
 import org.oasis.datacore.rest.server.parsing.service.QueryParsingService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Sort;
@@ -38,6 +41,8 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
+
+   private static final Logger logger = LoggerFactory.getLogger(EventService.class);
    
    private static Set<String> findConfParams = new HashSet<String>();
    static {
@@ -219,6 +224,12 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       // executing the mongo query :
       String collectionName = dcModel.getCollectionName(); // TODO getType() or getCollectionName(); for weird type names ??
       List<DCEntity> foundEntities = mgo.find(springMongoQuery, DCEntity.class, collectionName);
+      
+      if (logger.isDebugEnabled()) {
+         logger.debug("Done Spring Mongo query: " + springMongoQuery
+               + "\n   in collection " + collectionName + " from Model " + modelType + " and parameters: " + params
+               + "\n   with result nb " + foundEntities.size());
+      }
       
       return foundEntities;
    }

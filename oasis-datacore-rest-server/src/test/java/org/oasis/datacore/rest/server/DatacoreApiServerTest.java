@@ -646,6 +646,8 @@ public class DatacoreApiServerTest {
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(postedBordeauxCityData.getUri(), resources.get(0).getUri());
 
+      // More query case - see #9 :
+      
       // JSON $in
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters().add("name", "$in[\"Bordeaux\"]"), null, 10);
@@ -727,6 +729,20 @@ public class DatacoreApiServerTest {
             .add("founded", "<\"-0043-04-02T00:00:00.000Z\"").add("limit", "10").toString(),
             EntityQueryService.LANGUAGE_LDPQL);
       Assert.assertEquals(1, resources.size());
+
+      // equals (empty) starting with number
+      DCResource cityStartingWithNumberCityData = buildCityData("7henextcity", "France", 10000000, false);
+      DCResource postedCityStartingWithNumberCityData = datacoreApiClient.postDataInType(cityStartingWithNumberCityData);
+      // works unquoted (not parsed anymore as starting JSON number 7)...
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("name", "7henextcity"), null, 10);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(postedCityStartingWithNumberCityData.getUri(), resources.get(0).getUri());
+      // and works quoted alright
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("name", "\"7henextcity\""), null, 10);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(postedCityStartingWithNumberCityData.getUri(), resources.get(0).getUri());
    }
    
 }
