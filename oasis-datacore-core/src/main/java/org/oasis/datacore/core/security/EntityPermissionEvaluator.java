@@ -19,6 +19,9 @@ import org.springframework.security.core.Authentication;
  * 
  * Secures (only) DCEntity objects
  * 
+ * Must NOT depend on EntityService, else circular dependency / cycle / loop at Spring init,
+ * see details on EntityModelService.
+ * 
  * @author mdutoo
  *
  */
