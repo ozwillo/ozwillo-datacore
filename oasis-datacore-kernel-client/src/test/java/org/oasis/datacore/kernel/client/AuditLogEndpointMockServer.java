@@ -1,4 +1,4 @@
-package org.oasis.datacore.rest.api.client;
+package org.oasis.datacore.kernel.client;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;

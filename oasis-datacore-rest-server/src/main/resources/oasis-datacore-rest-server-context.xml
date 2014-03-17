@@ -32,12 +32,12 @@
    <import resource="classpath:oasis-datacore-security-context.xml" />
    <!-- reusing client for init of samples : -->
    <import resource="classpath:oasis-datacore-rest-client-context.xml" />
-
+   <!-- Client for AuditLog API -->
+   <import resource="classpath:oasis-datacore-kernel-client-context.xml" />
 
    <import resource="classpath:META-INF/cxf/cxf.xml" />
    <!-- import resource="classpath:META-INF/cxf/cxf-extension-http-jetty.xml"/ -->
    <!-- would be for test server but NO : OldSpringSupport [WARN] Import of META-INF/cxf/cxf-extension-http-jetty.xml has been deprecated and is unnecessary-->
-
 
 
    <!-- NB. war-less webapp deployment on Jetty could be configured here -->
@@ -72,7 +72,6 @@
          </bean>
       </property ->
    </bean -->
-
 
    <!-- for caching & context -->
    <!-- context:component-scan base-package="org.oasis.datacore.rest.api" />
@@ -128,7 +127,7 @@
       <constructor-arg value="ACCEPT_SINGLE_VALUE_AS_ARRAY"/>
       <constructor-arg value="true"/><!-- NOT USED -->
    </bean>
-         
+
    <!-- Spring configuration for Datacore API CXF server -->
    <jaxrs:server id="datacoreApiServer" address="${datacoreApiServer.jaxrsBaseUrl}"
          staticSubresourceResolution="true"><!-- optimization since no JAXRS annotations on impls,

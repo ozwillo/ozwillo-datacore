@@ -15,6 +15,7 @@ import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCSecurity;
 import org.oasis.datacore.core.security.DCUserImpl;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
+import org.oasis.datacore.rest.server.MonitoringLogServiceImpl;
 import org.oasis.datacore.rest.server.event.EventService;
 import org.oasis.datacore.rest.server.parsing.model.DCQueryParsingContext;
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
@@ -62,12 +63,18 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    @Autowired
    private QueryParsingService queryParsingService;
 
+   @Autowired
+   private MonitoringLogServiceImpl monitoringLogServiceImpl;
+
    @Override
    public List<DCEntity> findDataInType(DCModel dcModel, Map<String, List<String>> params,
          Integer start, Integer limit) throws QueryException {
       boolean detailedErrorsMode = true; // TODO
       
       String modelType = dcModel.getName(); // for error logging
+
+      //Log to AuditLog Endpoint
+      //monitoringLogServiceImpl.postLog(modelType, "findDataInType");
 
       // parsing query parameters criteria according to model :
       DCQueryParsingContext queryParsingContext = new DCQueryParsingContext(dcModel, null);

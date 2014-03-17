@@ -19,6 +19,7 @@ import org.oasis.datacore.historization.service.HistorizationService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.DCURI;
 import org.oasis.datacore.rest.server.BadUriException;
+import org.oasis.datacore.rest.server.MonitoringLogServiceImpl;
 import org.oasis.datacore.rest.server.event.DCResourceEvent;
 import org.oasis.datacore.rest.server.event.DCResourceEvent.Types;
 import org.oasis.datacore.rest.server.event.EventService;
@@ -74,6 +75,9 @@ public class ResourceService {
    
    @Autowired
    private HistorizationService historizationService;
+
+   @Autowired
+   private MonitoringLogServiceImpl monitoringLogServiceImpl;
    
    
    /** helper method to create (fluently) new Resources FOR TESTING */
@@ -149,7 +153,6 @@ public class ResourceService {
       // TODO pass request to validate ETag,
       // or rather in a CXF ResponseHandler (or interceptor but closer to JAXRS 2) see http://cxf.apache.org/docs/jax-rs-filters.html
       // by getting result with outMessage.getContent(Object.class), see ServiceInvokerInterceptor.handleMessage() l.78
-      
       // conf :
       // TODO header or param...
       boolean detailedErrorsMode = true;
@@ -368,6 +371,10 @@ public class ResourceService {
          // https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/apps/ApplicationDirectoryResource.java
       }
       DCResource resource = resourceEntityMapperService.entityToResource(entity);
+
+      //Log to AuditLog Endpoint
+      //monitoringLogServiceImpl.postLog(modelType, "Resource:Get");
+
       return resource;
    }
    

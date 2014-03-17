@@ -1,4 +1,4 @@
-package org.oasis.datacore.rest.api.client;
+package org.oasis.datacore.kernel.client;
 
 import java.util.Map;
 
@@ -10,6 +10,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+
 public interface AuditLogClientAPI {
 	
 	 @Path("/l/event")
@@ -20,6 +21,13 @@ public interface AuditLogClientAPI {
 	 class RemoteEvent {
 		 Instant time;
 		 Map<String, Object> log;
+		 
+		 public RemoteEvent() {}
+		 
+		 public RemoteEvent(Instant t, Map<String, Object> l ) {
+			 time = t;
+			 log = l;
+		 }
 	
 		 public Instant getTime() {
 		   return time;

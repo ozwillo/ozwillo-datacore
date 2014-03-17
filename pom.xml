@@ -180,6 +180,7 @@
 		<module>oasis-datacore-web</module>
 		<!-- TODO mocks ex. Social Graph ? -->
 		<!-- TODO features ex. approval workflow, RDF/SPARQL, backend UI ?? -->
+		<module>oasis-datacore-kernel-client</module>
 	</modules>
 
 	<!-- ============ -->

@@ -1,4 +1,4 @@
-package org.oasis.datacore.rest.api.client;
+package org.oasis.datacore.kernel.client;
 
 import org.apache.cxf.jaxrs.client.WebClient;
 
@@ -8,7 +8,8 @@ import org.joda.time.Instant;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.oasis.datacore.rest.api.client.AuditLogClientAPI.RemoteEvent;
+import org.oasis.datacore.kernel.client.AuditLogClientAPI;
+import org.oasis.datacore.kernel.client.AuditLogClientAPI.RemoteEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -18,7 +19,7 @@ import java.util.Map;
 
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = { "classpath:oasis-datacore-rest-client-test-context.xml" })
+@ContextConfiguration(locations = { "classpath:oasis-datacore-kernel-client-test-context.xml" })
 public class AuditLogEndpointTest {
 
    @Autowired
@@ -29,9 +30,7 @@ public class AuditLogEndpointTest {
       Map<String, Object> map = new HashMap<String, Object>();
       map.put("foo", "bar");
 
-      RemoteEvent content = new RemoteEvent();
-      content.time = Instant.now();
-      content.log = map;
+      RemoteEvent content = new RemoteEvent(Instant.now(), map);
 
       Response res = auditLogAPIClient.json(content);
       Assert.assertTrue("Sould get 200 or 204", res.getStatus() == 200 || res.getStatus() == 204);
