@@ -548,6 +548,13 @@
 				<version>${spring.version}</version>
 			</dependency>
 
+			<!-- to push data to Riemann -->
+			<dependency>
+				<groupId>com.aphyr</groupId>
+				<artifactId>riemann-java-client</artifactId>
+				<version>0.2.8</version>
+			</dependency>
+
 		</dependencies>
 	</dependencyManagement>
 
@@ -614,6 +621,12 @@
 		<!-- repository> <id>oasis-datacore-local-libs</id> <name>oasis-datacore 
 			local project libraries</name> <url>file://${project.basedir}/lib</url> <layout>default</layout> 
 			</repository --><!-- oasis-datacore-core/lib -->
+
+       <!-- Riemann Java client -->
+	    <repository>
+         <id>clojars.org</id>
+         <url>http://clojars.org/repo</url>
+       </repository>
 	</repositories>
 	<pluginRepositories>
 	</pluginRepositories>
