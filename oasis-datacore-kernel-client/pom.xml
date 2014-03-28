@@ -121,6 +121,12 @@
          <groupId>commons-io</groupId>
          <artifactId>commons-io</artifactId>
       </dependency>
+      
+      <!-- for sending events to Riemann -->
+      <dependency>
+         <groupId>com.aphyr</groupId>
+         <artifactId>riemann-java-client</artifactId>
+      </dependency>
 
    </dependencies>
    

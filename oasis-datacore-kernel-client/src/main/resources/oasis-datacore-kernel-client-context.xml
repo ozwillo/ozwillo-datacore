@@ -24,6 +24,8 @@
    <!-- context:component-scan base-package="org.oasis.datacore.rest.client" / -->
    <!-- else can't autowire client delegate because not yet created from xml -->
    <context:annotation-config /><!-- actually auto enabled by previous line -->
+   
+   <bean id="RiemannClientLog" class="org.oasis.datacore.kernel.client.RiemannClientLog"/>
 
    <!-- Monitoring using Audit Log API -->
    <jaxrs:client id="auditLogAPIClient"
