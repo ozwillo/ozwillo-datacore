@@ -9,7 +9,8 @@ public class RiemannClientLog {
 	public RiemannClientLog() {
 		try {
 			//TODO Allow configuration
-			client = RiemannClient.tcp("127.0.0.1", 5555);
+			client = RiemannClient.udp("127.0.0.1", 5555);
+			client.connect();
 		} catch(Exception e) {
 			//TODO Log unable to start RiemannClient
 		}		
@@ -17,7 +18,7 @@ public class RiemannClientLog {
 
 	public void sendEvent(String service, String desc, String tags) {
 		try {
-	      	client.connect();
+	      	
 	      	client.event().
 	      	  service(service).
 	      	  state("running").
@@ -26,7 +27,7 @@ public class RiemannClientLog {
 	      	  tags(tags).
 	      	  ttl(30).
 	      	  send();
-	      	client.disconnect();
+	      	//client.disconnect();
 		} catch(Exception e) {
 			
 		}

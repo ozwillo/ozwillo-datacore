@@ -10,6 +10,7 @@ import org.joda.time.Instant;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
 import org.oasis.datacore.kernel.client.AuditLogClientAPI;
 import org.oasis.datacore.kernel.client.AuditLogClientAPI.RemoteEvent;
+import org.oasis.datacore.kernel.client.RiemannClientLog;
 import org.oasis.datacore.rest.api.util.JaxrsApiProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -17,6 +18,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class MonitoringLogServiceImpl {
+	
+	private boolean useRiemann = true;
+	private boolean useAuditLogEndpoint = true;
 
 	@Resource
 	//@Resource, See https://stackoverflow.com/questions/15614786/could-not-autowire-jaxrs-client
@@ -30,29 +34,45 @@ public class MonitoringLogServiceImpl {
 	@Qualifier("datacoreSecurityServiceImpl")
 	private DatacoreSecurityService datacoreSecurityService;
 	
+	@Autowired
+	private RiemannClientLog riemannClientLog;
+	
 	public void postLog(String type, String msg) {
-	    Map<String, Object> map = new HashMap<String, Object>();
-	    map.put("type", type);
-	    map.put("msg", msg);
-	    
-	    if(isInServerContext()) {
+		if(useAuditLogEndpoint) {
+		    Map<String, Object> map = new HashMap<String, Object>();
+		    map.put("type", type);
+		    map.put("msg", msg);
+		    
+		    if(isInServerContext()) {
+			    try {
+			    	map.put("method", jaxrsApiProvider.getMethod());
+			    	map.put("path", jaxrsApiProvider.getAbsolutePath());
+			    	map.put("query", jaxrsApiProvider.getQueryParameters());
+			    } catch(Exception e) {
+			    	map.put("request", "No request context.");
+			    }
+		    }
+		    
 		    try {
-		    	map.put("method", jaxrsApiProvider.getMethod());
-		    	map.put("path", jaxrsApiProvider.getAbsolutePath());
-		    	map.put("query", jaxrsApiProvider.getQueryParameters());
+			    map.put("userId", datacoreSecurityService.getCurrentUserId());
+			    map.put("guest", datacoreSecurityService.getCurrentUser().isGuest());
+			    map.put("admin", datacoreSecurityService.getCurrentUser().isAdmin());
 		    } catch(Exception e) {
-		    	map.put("request", "No request context.");
+		    	map.put("security", "No security context.");
+		    }
+	    
+		    try {
+		    	auditLogAPIClient.json(new RemoteEvent(Instant.now(), map));
+		    } catch(Exception e) {
+		    	//TODO: Log
 		    }
 	    }
 	    
-	    try {
-		    map.put("userId", datacoreSecurityService.getCurrentUserId());
-		    map.put("guest", datacoreSecurityService.getCurrentUser().isGuest());
-		    map.put("admin", datacoreSecurityService.getCurrentUser().isAdmin());
-	    } catch(Exception e) {
-	    	map.put("security", "No security context.");
+	    if(useRiemann) {
+	    	if(isInServerContext()) {
+	    		riemannClientLog.sendEvent("LdpEntityQueryService", jaxrsApiProvider.getAbsolutePath().toString(), "query");
+	    	}
 	    }
-	    auditLogAPIClient.json(new RemoteEvent(Instant.now(), map));
 	}
 
 	public boolean isInServerContext() {
@@ -60,4 +80,3 @@ public class MonitoringLogServiceImpl {
     }
 	 
 }
-
