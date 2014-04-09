@@ -89,7 +89,7 @@ public class UseCaseTest {
 	}
 	
 	@Test
-	//@Ignore
+	@Ignore
 	public void useCase() {
 		
 		mockAuthenticationService.loginAs("admin");
@@ -196,7 +196,7 @@ public class UseCaseTest {
 		try {
 			datacoreApiClient.getData(MarkaInvestModel.COMPANY_MODEL_NAME, "4");
 		} catch (NotFoundException e) {
-			Assert.assertTrue(true);;
+			Assert.assertTrue(true);
 		}
 		mockAuthenticationService.logout();
 	}
