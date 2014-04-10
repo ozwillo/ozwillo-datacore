@@ -277,11 +277,7 @@ public class ResourceService {
          creatorOwners.add(datacoreSecurityService.getUserGroup());
          entityPermissionService.setOwners(dataEntity, creatorOwners);
          try {
-        	 try {
-                 historizationService.historize(dataEntity, dcModel);
-              } catch (HistorizationException hex) {
-             	throw new ResourceException("Error while historizing", hex, resource);
-              }
+        	 historizeResource(resource, dataEntity, dcModel);
         	 entityService.create(dataEntity);
         	 // NB. if creation fails will exist in history, but OK if 1. hidden on GET and 2. rewritten on recreate
          } catch (DuplicateKeyException dkex) {
@@ -297,13 +293,7 @@ public class ResourceService {
          
       } else {
          try {
-            try {
-               historizationService.historize(dataEntity, dcModel);
-             } catch (HistorizationException hex) {
-                throw new ResourceException("Error while historizing", hex, resource);
-             } catch (Exception ex) {
-                throw new ResourceException("Unknown error while historizing", ex, resource);
-             }
+            historizeResource(resource, dataEntity, dcModel);
             entityService.update(dataEntity);
          } catch (OptimisticLockingFailureException olfex) {
             throw new ResourceObsoleteException("Trying to update data resource "
@@ -406,6 +396,15 @@ public class ResourceService {
       } else {
     	  throw new EntityNotFoundException();
       }
-      
+   }
+
+   public void historizeResource(DCResource resource, DCEntity dataEntity, DCModel dcModel) throws ResourceException {
+      try {
+         historizationService.historize(dataEntity, dcModel);
+      } catch (HistorizationException hex) {
+         throw new ResourceException("Error while historizing", hex, resource);
+      } catch (Exception ex) {
+        throw new ResourceException("Unknown error while historizing", ex, resource);
+      }
    }
 }

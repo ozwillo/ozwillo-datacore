@@ -8,6 +8,7 @@ import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.historization.exception.HistorizationException;
 import org.oasis.datacore.historization.service.HistorizationService;
+import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -54,9 +55,21 @@ public class HistorizationServiceImpl implements HistorizationService {
 			query.addCriteria(Criteria.where("_uri").is(entity.getUri()).and("_v").is(entity.getVersion()));
 			DCEntity existantEntity = mongoOperations.findOne(query, DCEntity.class, historizationModel.getCollectionName());
 			
-			// If it already exist we delete the existant entity
+			// If it already exists we delete the existant entity
 			if(existantEntity != null) {
 				mongoOperations.remove(existantEntity, historizationModel.getCollectionName());
+			} else {
+            // In case of previous creation failure or deletion
+			   //If it's a new creation, we delete previous data if any
+			   if(entity.getVersion() == null) {
+   	         Query findOldEntity = new Query();
+   	         findOldEntity.addCriteria(Criteria.where("_uri").is(entity.getUri()));
+   	         DCEntity oldEntity = mongoOperations.findOne(findOldEntity, DCEntity.class, historizationModel.getCollectionName());
+   	         //Be sure to delete old historized data if inserting a new one with same uri
+   	         if(oldEntity != null) {
+   	            mongoOperations.remove(oldEntity, historizationModel.getCollectionName());
+   	         }
+			   }
 			}
 			
 			// Then we insert the new one
