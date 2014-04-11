@@ -13,6 +13,9 @@
       http://www.springframework.org/schema/security/oauth2
       http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 
+   <context:property-placeholder location="classpath:oasis-datacore-rest-api.properties,classpath:oasis-datacore-rest-server.properties,classpath*:oasis-datacore-deploy*.properties"
+      order="-1" ignore-unresolvable="true"/>
+
 	<oauth:resource-server id="oauth2ProviderFilter" resource-id="oasis-datacore" token-services-ref="tokenServices" />
 	
 	<security:http pattern="/dc/**" entry-point-ref="oauthAuthenticationEntryPoint" access-decision-manager-ref="accessDecisionManager" authentication-manager-ref="authenticationManager" create-session="never">
@@ -37,10 +40,10 @@
 
   	<oauth:client-details-service id="clientDetailsService">
 		<oauth:client
-			client-id="29ef97c0-bb33-4f96-be22-3fd480e05d5f"
+			client-id="${datacoreOAuthClientDetailsService.client_id}"
 			authorized-grant-types="password,authorization_code,refresh_token,implicit"
-            authorities="ROLE_CLIENT" scope="datacore"
-			secret="" />
+         authorities="ROLE_CLIENT" scope="datacore"
+			secret="${datacoreOAuthClientDetailsService.client_secret}" />
 	</oauth:client-details-service>
 	
 	<bean id="clientDetailsUserService" class="org.springframework.security.oauth2.provider.client.ClientDetailsUserDetailsService">
@@ -65,8 +68,8 @@
 	<bean id="tokenServices" class="org.oasis.datacore.core.security.oauth2.RemoteTokenServices">
     	<property name="checkTokenEndpointUrl" value="https://oasis-demo.atolcd.com/a/tokeninfo" />
     	<property name="userInfoEndpointUrl" value="https://oasis-demo.atolcd.com/a/userinfo" />
-        <property name="clientId" value="8274888e-ecd6-42bc-8393-e62dba7212c4" />
-        <property name="clientSecret" value="" />
+        <property name="clientId" value="${datacoreOAuthTokenService.client_id}" />
+        <property name="clientSecret" value="${datacoreOAuthTokenService.client_secret}" />
     </bean>
 	
 	<bean id="tokenStore"
