@@ -9,7 +9,6 @@ import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCResourceField;
-import org.oasis.datacore.historization.service.HistorizationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -37,22 +36,8 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 	@Autowired
 	private DataModelServiceImpl modelAdminService;
 	
-	@Autowired
-	private HistorizationService historizationService;
-	
 	@Override
 	public void doInit() {
-		
-		mgo.dropCollection(COMPANY_MODEL_NAME);
-		mgo.dropCollection(FIELD_MODEL_NAME);
-		mgo.dropCollection(SECTOR_MODEL_NAME);
-		mgo.dropCollection(COUNTRY_MODEL_NAME);
-		mgo.dropCollection(CITY_MODEL_NAME);
-		mgo.dropCollection(USER_MODEL_NAME);
-		mgo.dropCollection(INVESTOR_MODEL_NAME);
-		mgo.dropCollection(INVESTOR_TYPE_MODEL_NAME);
-		mgo.dropCollection(COST_TYPE_MODEL_NAME);
-		mgo.dropCollection(INVESTMENT_ASSISTANCE_REQUEST_MODEL_NAME);
 				
 		DCModel companyModel = new DCModel(COMPANY_MODEL_NAME);
 		companyModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
@@ -139,17 +124,7 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		plannedInvestmentAssistanceRequestModel.addField(new DCField("end", DCFieldTypeEnum.DATE.getType()));
 		listModel.add(plannedInvestmentAssistanceRequestModel);
 
-		modelAdminService.addModel(companyModel);
-		modelAdminService.addModel(fieldModel);
-		modelAdminService.addModel(sectorModel);
-		modelAdminService.addModel(countryModel);
-		modelAdminService.addModel(cityModel);
-		modelAdminService.addModel(userModel);
-		modelAdminService.addModel(investorModel);
-		modelAdminService.addModel(investorTypeModel);
-		modelAdminService.addModel(costModel);
-		modelAdminService.addModel(plannedInvestmentAssistanceRequestModel);
-		
+	   createModelsAndCleanTheirData(companyModel, fieldModel, sectorModel, countryModel, cityModel, userModel, investorModel, investorTypeModel, costModel, plannedInvestmentAssistanceRequestModel);
 	}
 
 	public List<DCModel> getListModel() {

@@ -18,6 +18,8 @@ import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.security.mock.MockAuthenticationService;
+import org.oasis.datacore.historization.exception.HistorizationException;
+import org.oasis.datacore.historization.service.impl.HistorizationServiceImpl;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.server.DatacoreApiImpl;
@@ -81,6 +83,9 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
    @Autowired
    protected EventService eventService;
 
+   @Autowired
+   private HistorizationServiceImpl historizationService;
+
    private HashSet<DCModel> models = new HashSet<DCModel>();
 
 
@@ -113,10 +118,8 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
             // adding model
             modelAdminService.addModel(model);
             models.add(model);
-            // cleaning data
-            mgo.dropCollection(model.getCollectionName());
             
-            createCollectionAndGenerateIndices(model);
+            dropAndCreateCollectionAndIndices(model);
             
          } else { // mixin
             DCMixin mixin = (DCMixin) modelOrMixin;
@@ -125,7 +128,27 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
       }
    }
 
-   private void createCollectionAndGenerateIndices(DCModel model) {
+   public void dropAndCreateCollectionAndIndices(DCModel model) {
+      // cleaning data
+      mgo.dropCollection(model.getCollectionName());
+      createCollectionAndIndices(model);
+      if(model.isHistorizable()) {
+         dropAndCreateHistorizedCollectionAndIndices(model);
+      }
+   }
+
+   public void dropAndCreateHistorizedCollectionAndIndices(DCModel model) {
+      DCModel historizedModel;
+      try {
+         historizedModel = historizationService.createHistorizationModel(model);
+         mgo.dropCollection(historizedModel.getCollectionName());
+         createCollectionAndIndices(historizedModel);
+      } catch (HistorizationException e) {
+
+      }
+   }
+
+   private void createCollectionAndIndices(DCModel model) {
       DBCollection coll = mgo.createCollection(model.getCollectionName());
       
       // generating static indexes
@@ -165,9 +188,7 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
 
    public void cleanDataOfCreatedModels() {
       for (DCModel model : this.models) {
-         // cleaning data
-         mgo.dropCollection(model.getCollectionName());
-         createCollectionAndGenerateIndices(model);
+         dropAndCreateCollectionAndIndices(model);
       }
    }
 
