@@ -13,7 +13,8 @@
       http://www.springframework.org/schema/context/spring-context-3.1.xsd
       http://cxf.apache.org/core http://cxf.apache.org/schemas/core.xsd
       http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd
-      http://cxf.apache.org/transports/http/configuration http://cxf.apache.org/schemas/configuration/http-conf.xsd">
+      http://cxf.apache.org/transports/http/configuration
+      http://cxf.apache.org/schemas/configuration/http-conf.xsd">
 
    <!-- overriding some properties (BEFORE import to take precedence over imported properties) -->
    <context:property-placeholder location="classpath:oasis-datacore-rest-server-test.properties"
@@ -27,7 +28,7 @@
    <import resource="classpath:oasis-datacore-rest-server-context.xml" />
    
  <!-- Used to record requests with JMeter -->  
- <!-- http-conf:conduit name="*.http-conduit""http://localhost:8081/.*"-->
+ <!-- http-conf:conduit name="http://localhost:8081/.*"-->
  <!--
  <http-conf:conduit name="*.http-conduit">
   <http-conf:client ProxyServer="localhost"
