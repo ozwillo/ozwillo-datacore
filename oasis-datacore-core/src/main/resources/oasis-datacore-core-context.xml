@@ -24,7 +24,11 @@
 
    <!-- Default mongo bean name is 'mongo'
    TODO externalize conf, change it in tests & prod -->
-   <mongo:mongo host="${oasis.datacore.mongodb.host}" port="${oasis.datacore.mongodb.port}">
+   <mongo:mongo id="mongo" host="${oasis.datacore.mongodb.host}" port="${oasis.datacore.mongodb.port}">
+      <mongo:options
+         connections-per-host="100"
+         threads-allowed-to-block-for-connection-multiplier="4"
+      />
       <!-- mongo:options
             write-number="1"
             write-timeout="0"
@@ -68,15 +72,20 @@
          </bean>
       </property ->
    </bean -->
-   <mongo:mapping-converter />
- 
+
+   <!-- Disable validation because it might take the same time as serialization. -->
+   <mongo:mapping-converter disable-validation="true"/>
+
   
    <!-- auditing see http://maciejwalkowiak.pl/blog/2013/05/24/auditing-entities-in-spring-data-mongodb/ -->
    <!-- mongo:auditing / -->
    <mongo:auditing auditor-aware-ref="auditor" />
    <bean id="auditor" class="org.oasis.datacore.core.security.SpringSecurityAuthAuditor"/>
    
+   <!-- Make sure that db-factory use the configured mongo and not always 127.0.0.1:27017.
+      http://stackoverflow.com/questions/16744260/spring-data-mongo-seems-to-ignore-host-in-xml-configuration -->
    <mongo:db-factory id="mongoDbFactory" dbname="datacore"
+      mongo-ref="mongo"
       write-concern="#{T(com.mongodb.WriteConcern).ACKNOWLEDGED}"/><!-- which differs from string "ACKNOWEDLGED" WriteConcern
       see http://stackoverflow.com/questions/17865270/error-handling-with-spring-data-and-mongo-java-driver -->
       <!-- TODO in prod (& test it),
