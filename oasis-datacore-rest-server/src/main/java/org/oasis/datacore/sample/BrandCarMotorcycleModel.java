@@ -21,10 +21,6 @@ public class BrandCarMotorcycleModel extends DatacoreSampleBase {
 
 	
 	public void doInit() {
-		
-		mgo.dropCollection(BRAND_MODEL_NAME);
-		mgo.dropCollection(CAR_MODEL_NAME);
-		mgo.dropCollection(MOTORCYCLE_MODEL_NAME);
 
 		DCModel brandModel = new DCModel(BRAND_MODEL_NAME);
 		brandModel.addField(new DCField("name", "string", true, 100));
@@ -40,10 +36,7 @@ public class BrandCarMotorcycleModel extends DatacoreSampleBase {
 		motorcycleModel.addField(new DCField("year", "int"));
 		motorcycleModel.addField(new DCField("hp", "int"));
 
-		modelAdminService.addModel(brandModel);
-		modelAdminService.addModel(carModel);
-		modelAdminService.addModel(motorcycleModel);
-
+		createModelsAndCleanTheirData(brandModel, carModel, motorcycleModel);
 	}
 
 }
