@@ -46,7 +46,7 @@ public class HistorizationServiceImpl implements HistorizationService {
 			DCModel historizationModel = getHistorizationModel(model);
 			
 			// Before inserting we search if the entity already exist in the historized model
-			// We check by URI & version
+			// We check by URI
 			Query query = new Query();
 			query.addCriteria(Criteria.where("_uri").is(entity.getUri()));
 			DCEntity existantEntity = mongoOperations.findOne(query, DCEntity.class, historizationModel.getCollectionName());

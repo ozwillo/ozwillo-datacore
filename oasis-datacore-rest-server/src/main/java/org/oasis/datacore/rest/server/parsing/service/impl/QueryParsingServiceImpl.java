@@ -178,6 +178,7 @@ public class QueryParsingServiceImpl implements QueryParsingService {
          // parsing using the latest upmost list field :
          // NB. mongo arrays with millions of items are supported, but let's not go in the Long area
          queryParsingContext.addCriteria().size((int) parsedData);
+         break;
 
       case SORT_ASC:		// TODO (mongo)operator for error & in parse ?
 
