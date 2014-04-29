@@ -82,7 +82,7 @@
    <mongo:auditing auditor-aware-ref="auditor" />
    <bean id="auditor" class="org.oasis.datacore.core.security.SpringSecurityAuthAuditor"/>
    
-   <!-- Make sure that db-factory use the configured mongo and not always 127.0.0.1:27017.
+   <!-- Make sure db-factory uses the configured mongo and not always 127.0.0.1:27017.
       http://stackoverflow.com/questions/16744260/spring-data-mongo-seems-to-ignore-host-in-xml-configuration -->
    <mongo:db-factory id="mongoDbFactory" dbname="datacore"
       mongo-ref="mongo"

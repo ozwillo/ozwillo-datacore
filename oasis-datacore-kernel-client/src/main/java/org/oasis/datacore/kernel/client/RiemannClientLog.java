@@ -16,21 +16,36 @@ public class RiemannClientLog {
 		}		
 	}
 
-	public void sendEvent(String service, String desc, String tags) {
+	public void sendEvent(String service, String desc, String... tags) {
 		try {
-	      	
-	      	client.event().
-	      	  service(service).
-	      	  state("running").
-	      	  description(desc).
-	      	  metric(1).
-	      	  tags(tags).
-	      	  ttl(30).
-	      	  send();
-	      	//client.disconnect();
+      	client.event().
+      	  service(service).
+      	  state("running").
+      	  description(desc).
+      	  metric(1).
+      	  tags(tags).
+      	  ttl(30).
+      	  send();
+      	//client.disconnect();
 		} catch(Exception e) {
 			
 		}
 	}
+	
+  public void sendTimeEvent(String service, String desc, long time, String... tags) {
+      try {
+         client.event().
+           service(service).
+           state("running").
+           description(desc).
+           metric(time).
+           tags(tags).
+           ttl(30).
+           send();
+         //client.disconnect();
+      } catch(Exception e) {
+         
+      }
+   }
 	
 }
