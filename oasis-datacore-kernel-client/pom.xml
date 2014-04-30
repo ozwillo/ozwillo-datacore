@@ -17,13 +17,19 @@
 
       <!-- Datacore REST API -->
       <dependency>
-        <groupId>org.oasis.datacore</groupId>
-        <artifactId>oasis-datacore-rest-api</artifactId><!-- brings JacksonJsonProvider, to configure in clients -->
+         <groupId>org.oasis.datacore</groupId>
+         <artifactId>oasis-datacore-rest-api</artifactId><!-- brings JacksonJsonProvider, to configure in clients -->
       </dependency>
       
+            <!-- Datacore Core -->
       <dependency>
-        <groupId>org.oasis.datacore</groupId>
-        <artifactId>oasis-datacore-rest-cxf</artifactId>
+         <groupId>org.oasis.datacore</groupId>
+         <artifactId>oasis-datacore-core</artifactId><!-- brings JacksonJsonProvider, to configure in clients -->
+      </dependency>
+
+      <dependency>
+         <groupId>org.oasis.datacore</groupId>
+         <artifactId>oasis-datacore-rest-cxf</artifactId>
       </dependency>
       <!-- Stuff ALREADY IN API : -->
       <!-- Jackson annotations

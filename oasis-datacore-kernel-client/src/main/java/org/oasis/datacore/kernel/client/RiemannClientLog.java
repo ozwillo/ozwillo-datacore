@@ -1,5 +1,7 @@
 package org.oasis.datacore.kernel.client;
 
+import java.util.Map;
+
 import com.aphyr.riemann.client.RiemannClient;
 
 public class RiemannClientLog {
@@ -32,7 +34,7 @@ public class RiemannClientLog {
 		}
 	}
 	
-  public void sendTimeEvent(String service, String desc, long time, String... tags) {
+	public void sendTimeEvent(String service, String desc, long time, String... tags) {
       try {
          client.event().
            service(service).
@@ -44,8 +46,25 @@ public class RiemannClientLog {
            send();
          //client.disconnect();
       } catch(Exception e) {
-         
+
       }
    }
-	
+
+	public void sendFullDataEvent(String service, String desc, Map<String, String> data, long time, String... tags) {
+      try {
+         client.event().
+           service(service).
+           state("running").
+           description(desc).
+           attributes(data).
+           metric(time).
+           tags(tags).
+           ttl(30).
+           send();
+         //client.disconnect();
+      } catch(Exception e) {
+
+      }
+   }
+
 }

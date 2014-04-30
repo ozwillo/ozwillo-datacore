@@ -160,6 +160,7 @@
             <property name="objectMapper"><ref bean="datacoreApiServer.objectMapper"/></property>
          </bean>
          <bean class="org.oasis.datacore.kernel.client.TimeTaggerInInterceptor"/>
+         <bean class="org.oasis.datacore.kernel.client.ContextInInterceptor"/>
       </jaxrs:inInterceptors>
       <jaxrs:outInterceptors>
          <bean class="org.oasis.datacore.rest.server.cxf.ArrayServerOutInterceptor"/>
