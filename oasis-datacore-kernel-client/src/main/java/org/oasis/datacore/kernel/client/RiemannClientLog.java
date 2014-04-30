@@ -2,21 +2,34 @@ package org.oasis.datacore.kernel.client;
 
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Value;
+
 import com.aphyr.riemann.client.RiemannClient;
 
-public class RiemannClientLog {
-	
+public class RiemannClientLog implements InitializingBean {
+
+   @Value("${riemann.serverIP}")
+   private String riemannIP;
+
+   @Value("${riemann.serverPort}")
+   private int riemannPort;
+
 	private RiemannClient client;
-	
-	public RiemannClientLog() {
-		try {
-			//TODO Allow configuration
-			client = RiemannClient.udp("127.0.0.1", 5555);
-			client.connect();
-		} catch(Exception e) {
-			//TODO Log unable to start RiemannClient
-		}		
-	}
+
+   private static final Logger logger = LoggerFactory.getLogger(RiemannClientLog.class);
+
+   @Override
+   public void afterPropertiesSet() throws Exception {
+      try {
+         client = RiemannClient.udp(riemannIP, riemannPort);
+         client.connect();
+      } catch(Exception e) {
+         logger.error("Unable to start RiemannClient.");
+      }
+   }
 
 	public void sendEvent(String service, String desc, String... tags) {
 		try {

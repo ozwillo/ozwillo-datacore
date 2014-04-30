@@ -19,6 +19,8 @@
    <!-- import resource="classpath:META-INF/cxf/cxf-extension-http-jetty.xml"/ -->
    <!-- would be for test server but NO : OldSpringSupport [WARN] Import of META-INF/cxf/cxf-extension-http-jetty.xml has been deprecated and is unnecessary-->
 
+  <context:property-placeholder location="classpath:oasis-datacore-kernel-client.properties"
+     order="-1" ignore-unresolvable="true"/>
 
    <context:component-scan base-package="org.oasis.datacore.kernel.client" /><!-- for caching & context -->
    <!-- context:component-scan base-package="org.oasis.datacore.rest.client" / -->
