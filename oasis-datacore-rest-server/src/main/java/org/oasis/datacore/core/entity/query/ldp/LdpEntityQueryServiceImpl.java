@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.oasis.datacore.core.entity.model.DCEntity;
+import org.oasis.datacore.core.entity.mongodb.DatacoreMongoTemplate;
 import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCMapField;
@@ -26,7 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.CursorProviderQueryCursorPreparer;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
 
@@ -58,7 +59,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    private DatacoreSecurityService datacoreSecurityService;
    
    @Autowired
-   private MongoOperations mgo; // TODO remove it by hiding it in services
+   private /*MongoOperations*/DatacoreMongoTemplate mgo; // TODO remove it by hiding it in services
    
    @Autowired
    private QueryParsingService queryParsingService;
@@ -230,7 +231,11 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          
       // executing the mongo query :
       String collectionName = dcModel.getCollectionName(); // TODO getType() or getCollectionName(); for weird type names ??
-      List<DCEntity> foundEntities = mgo.find(springMongoQuery, DCEntity.class, collectionName);
+      // using custom find() to get access to mongo DBCursor for explain() etc. :
+      // (rather than mgo.find(springMongoQuery, DCEntity.class, collectionName)) 
+      CursorProviderQueryCursorPreparer cursorProvider = new CursorProviderQueryCursorPreparer(mgo, springMongoQuery);
+      List<DCEntity> foundEntities = mgo.find(springMongoQuery, DCEntity.class, collectionName, cursorProvider);
+      cursorProvider.getCursorPrepared().explain();
       
       if (logger.isDebugEnabled()) {
          logger.debug("Done Spring Mongo query: " + springMongoQuery

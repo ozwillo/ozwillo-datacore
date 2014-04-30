@@ -1,8 +1,11 @@
-===============================
+=====================================================
+
 OASIS - Datacore
 http://www.oasis-eu.org/
-Copyright (c) 2013 Open Wide SA
-===============================
+https://github.com/pole-numerique/oasis-datacore
+Copyright (c) 2013 Open Wide - http://www.openwide.fr
+
+=====================================================
 
 
 About OASIS Datacore
@@ -27,8 +30,8 @@ Features
    * and more upcoming : see [Roadmap](https://github.com/pole-numerique/oasis-datacore/issues)
 
 Team
-   * Design & Development of v1 : Marc Dutoo, Open Wide SA - http://www.openwide.fr
-   * Authentication, Historization, Rights API, Contributions : Aurélien Giraudon, Open Wide SA - http://www.openwide.fr
+   * Design & Development of v1 : Marc Dutoo, Open Wide - http://www.openwide.fr
+   * Authentication, Historization, Rights API, Contributions : Aurélien Giraudon, Open Wide - http://www.openwide.fr
 
 LGPL License
 
