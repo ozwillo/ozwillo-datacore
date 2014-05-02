@@ -814,5 +814,29 @@ public class DatacoreApiServerTest {
       }
 
    }
+
+
+   @Test
+   public void testFindDcEntityIndexedFields() throws Exception {
+      // two resources
+      datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "UK"));
+      DCResource londonCityData = datacoreApiClient.postDataInType(buildCityData("London", "UK", 10000000, false));
+      datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "France"));
+      DCResource bordeauxCityData = datacoreApiClient.postDataInType(buildCityData("Bordeaux", "France", 10000000, false));
+
+      // requiring index
+      ldpEntityQueryServiceImpl.setMaxScan(1);
+
+      // unquoted equals (empty)
+      List<DCResource> resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("_uri", londonCityData.getUri()), null, 10);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(londonCityData.getUri(), resources.get(0).getUri());
+      
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("_uri", bordeauxCityData.getUri()), null, 10);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(bordeauxCityData.getUri(), resources.get(0).getUri());
+   }
    
 }

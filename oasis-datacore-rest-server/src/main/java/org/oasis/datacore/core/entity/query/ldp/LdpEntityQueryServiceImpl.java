@@ -2,6 +2,7 @@ package org.oasis.datacore.core.entity.query.ldp;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +55,13 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       // TODO rather using Enum, see BSON$RegexFlag
       findConfParams.add("start");
       findConfParams.add("limit");
+   }
+   private static Map<String,DCField> dcEntityIndexedFields = new HashMap<String,DCField>();
+   static {
+      // TODO rather using Enum, see BSON$RegexFlag
+      dcEntityIndexedFields.put("_uri", new DCField("_uri", "string", true, 100000));
+      //dcEntityIndexedFields.add("_allReaders"); // don't allow to look it up
+      dcEntityIndexedFields.put("_changedAt", new DCField("_chAt", "date", true, 100000));
    }
 
    /** default maximum number of documents to scan when fulfilling a query, overriden by
@@ -114,8 +122,9 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       }
       Sort sort = queryParsingContext.getSort();
       if (sort == null) {
-         // TODO sort by default : configured in model (uri, last modified date, iri?, other fields...)
-         sort = new Sort(Direction.ASC, "_uri");
+         // TODO sort by default : configured in model (last modified date, uri,
+         // iri?, types?, owners? other fields...)
+         sort = new Sort(Direction.ASC, "_chAt"); // _uri...
       }
       
       Query springMongoQuery = new Query(queryParsingContext.getCriteria())
@@ -149,7 +158,14 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          if (fieldPathElements.length == 0) {
             continue; // should not happen
          }
-         DCField dcField = dcModel.getGlobalField(fieldPathElements[0]);
+         String topFieldPathElement = fieldPathElements[0];
+         boolean isDcEntityIndexedField = false;
+         DCField dcField = dcEntityIndexedFields.get(topFieldPathElement);
+         if (dcField != null) {
+            isDcEntityIndexedField = true;
+         } else {
+            dcField = dcModel.getGlobalField(topFieldPathElement);
+         }
          if (dcField == null) {
             queryParsingContext.addError("In type " + dcModel.getName() + ", can't find field with path elements "
                   + Arrays.asList(fieldPathElements) + " : can't find field for first path element "
@@ -210,7 +226,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          }
          
          // TODO (mongo)operator for error & in parse ?
-         String entityFieldPath = "_p." + fieldPath; // almost the same fieldPath for mongodb (?)
+         String entityFieldPath = (isDcEntityIndexedField) ? fieldPath : "_p." + fieldPath; // almost the same fieldPath for mongodb (?)
 
          queryParsingContext.enterCriteria(entityFieldPath, values.size());
          try  {
