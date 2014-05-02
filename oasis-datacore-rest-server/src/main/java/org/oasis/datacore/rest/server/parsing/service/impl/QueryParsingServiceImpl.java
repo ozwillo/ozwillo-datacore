@@ -59,6 +59,16 @@ public class QueryParsingServiceImpl implements QueryParsingService {
          // Then we parse the data
          parsedData = parseQueryValue(operatorEnum, dcField, queryValue);
       }
+      
+      // update queryParsingContext aggregated info :
+      // queryLimit :
+      // (TODO LATER maybe per operator algo...)
+      if (dcField.getQueryLimit() > queryParsingContext.getAggregatedQueryLimit()) {
+         queryParsingContext.setAggregatedQueryLimit(dcField.getQueryLimit());
+      }
+      // hasNoIndexedField :
+      queryParsingContext.setHasNoIndexedField(
+            queryParsingContext.isHasNoIndexedField() || dcField.getQueryLimit() == 0);
 
       switch(operatorEnum) {
 

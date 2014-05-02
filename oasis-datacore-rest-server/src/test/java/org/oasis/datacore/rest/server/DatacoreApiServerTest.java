@@ -8,12 +8,14 @@ import javax.ws.rs.WebApplicationException;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.oasis.datacore.core.entity.EntityQueryService;
+import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryServiceImpl;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.ResourceParsingHelper;
@@ -71,7 +73,10 @@ public class DatacoreApiServerTest {
    @Autowired
    @Qualifier("datacoreApiImpl") 
    private DatacoreApiImpl datacoreApiImpl;
-
+   /** for testing purpose */
+   @Autowired
+   private LdpEntityQueryServiceImpl ldpEntityQueryServiceImpl;
+   
    @Autowired
    private CityCountrySample cityCountrySample;
    
@@ -80,6 +85,10 @@ public class DatacoreApiServerTest {
    public void cleanDataAndCache() {
       cityCountrySample.cleanDataOfCreatedModels(); // (was already called but this first cleans up data)
       datacoreApiClient.getCache().clear(); // to avoid side effects
+   }
+   @After
+   public void resetDefaults() {
+      ldpEntityQueryServiceImpl.setMaxScan(0); // unlimited, default in test
    }
    
    /**
@@ -743,6 +752,67 @@ public class DatacoreApiServerTest {
             new QueryParameters().add("name", "\"7henextcity\""), null, 10);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(postedCityStartingWithNumberCityData.getUri(), resources.get(0).getUri());
+   }
+
+
+   @Test
+   public void testQueryMaxScanError() throws Exception {
+      ldpEntityQueryServiceImpl.setMaxScan(0); // unlimited, default in test
+      
+      // no resource
+      
+      // query all
+      List<DCResource> resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters(), null, null);
+      // should not fail : query has no non indexed field
+      Assert.assertEquals(0, resources.size());
+
+      String nonExistingFoundedDate = "=\"1200-04-01T00:00:00.000+01:00\"";
+
+      // unquoted equals (empty)
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("founded", nonExistingFoundedDate), null, 10);
+      // should not fail : less documents in db than any maxScan for now
+      Assert.assertEquals(0, resources.size());
+      
+      // two resources
+      datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "UK"));
+      DateTime londonFoundedDate = new DateTime(-43, 4, 1, 0, 0, DateTimeZone.UTC);
+      DCResource londonCityData = buildCityData("London", "UK", 10000000, false);
+      londonCityData.setProperty("founded", londonFoundedDate);
+      datacoreApiClient.postDataInType(londonCityData );
+      datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "France"));
+      DCResource bordeauxCityData = buildCityData("Bordeaux", "France", 10000000, false);
+      DateTime bordeauxFoundedDate = new DateTime(300, 4, 1, 0, 0, DateTimeZone.forID("+01:00"));
+      bordeauxCityData.setProperty("founded", bordeauxFoundedDate);
+      DCResource postedBordeauxCityData = datacoreApiClient.postDataInType(bordeauxCityData);
+      
+      // query all
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters(), null, null);
+      // should not fail : query has no non indexed field
+      Assert.assertEquals(2, resources.size());
+      // limiting maxScan to less than document nb :
+      ldpEntityQueryServiceImpl.setMaxScan(1);
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters(), null, null);
+      // should not fail : query has no non indexed field
+      Assert.assertEquals(1, resources.size());
+
+      // limiting maxScan to (less or equal than) document nb :
+      ldpEntityQueryServiceImpl.setMaxScan(2);
+      try {
+         // unquoted equals (empty)
+         resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+               new QueryParameters().add("founded", nonExistingFoundedDate), null, 10);
+         //Assert.assertEquals(0, resources.size());
+         //Assert.assertEquals(postedBordeauxCityData.getUri(), resources.get(0).getUri());
+         Assert.fail("Should have raised exception because query on non indexed field reached "
+               + "maxScan before document limit");
+      } catch (BadRequestException brex) {
+         Assert.assertTrue((brex.getResponse().getEntity() + "").contains("maxScan"));
+      }
+
    }
    
 }

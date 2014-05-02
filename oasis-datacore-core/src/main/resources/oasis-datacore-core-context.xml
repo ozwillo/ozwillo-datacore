@@ -23,9 +23,10 @@
 
 
    <!-- Default mongo bean name is 'mongo'
-   TODO externalize conf, change it in tests & prod -->
+   TODO externalize conf, change it in tests & prod
+   NB. no socket timeout because would NOT stop the query on the mongo server see #23 -->
    <mongo:mongo id="mongo" host="${oasis.datacore.mongodb.host}" port="${oasis.datacore.mongodb.port}">
-      <mongo:options
+      <mongo:options 
          connections-per-host="100"
          threads-allowed-to-block-for-connection-multiplier="4"
       />
@@ -83,8 +84,9 @@
    <bean id="auditor" class="org.oasis.datacore.core.security.SpringSecurityAuthAuditor"/>
    
    <!-- Make sure db-factory uses the configured mongo and not always 127.0.0.1:27017.
-      http://stackoverflow.com/questions/16744260/spring-data-mongo-seems-to-ignore-host-in-xml-configuration -->
-   <mongo:db-factory id="mongoDbFactory" dbname="datacore"
+   http://stackoverflow.com/questions/16744260/spring-data-mongo-seems-to-ignore-host-in-xml-configuration 
+   NB. ReadPreference is not available here but on MongoTemplate -->
+   <mongo:db-factory id="mongoDbFactory" dbname="${oasis.datacore.mongodb.dbname}"
       mongo-ref="mongo"
       write-concern="#{T(com.mongodb.WriteConcern).ACKNOWLEDGED}"/><!-- which differs from string "ACKNOWEDLGED" WriteConcern
       see http://stackoverflow.com/questions/17865270/error-handling-with-spring-data-and-mongo-java-driver -->
@@ -113,6 +115,7 @@
             <constructor-arg name="j" value="true" /><!- wait for journaled ->
          </bean>
       </property -->
+      <property name="readPreference" value="${oasis.datacore.mongodb.readPreference}"/>
    </bean>
    <mongo:repositories base-package="org.oasis.datacore.core" /><!-- TODO -->
 

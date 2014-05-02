@@ -16,8 +16,10 @@ public class DCField {
    /** Is a non-null value required ? defaults to false */
    private boolean required = false;
    /** size of results allowed when querying on this field
-    * if > 0, field will be indexed (sparse if !required)
-    * defaults to 0 */
+    * if > 0, field will be indexed (TODO LATER2 BUT RESULTS MAY BE INCOMPLETE sparse if !required)
+    * defaults to 0
+    * TODO LATER replace by indexed & maxScan fields OR rename to resourceJoinQueryLimit
+    * OR add business fields "hotterRatherThanColder", "smallSetOfValuesRatherThanBigOne" */
    private int queryLimit = 0;
    
    // TODO also :
