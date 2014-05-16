@@ -54,8 +54,8 @@ public class ContextInInterceptor extends AbstractPhaseInterceptor<Message> {
          if(objs != null && objs.size() != 0) {
             Object resource = objs.get(0);
             if(resource instanceof ArrayList) {
-               DCResource dcRes = (DCResource) ((ArrayList) resource).get(0);
-               context.put("req.model", dcRes.getModelType());
+               ArrayList<DCResource> dcRes = (ArrayList) resource;
+               context.put("req.model", dcRes.get(0).getModelType());
             }
          }
       }

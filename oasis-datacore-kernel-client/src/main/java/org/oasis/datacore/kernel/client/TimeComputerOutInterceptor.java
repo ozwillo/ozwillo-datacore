@@ -2,6 +2,7 @@ package org.oasis.datacore.kernel.client;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.HttpHeaders;
@@ -66,9 +67,12 @@ public class TimeComputerOutInterceptor extends AbstractPhaseInterceptor<Message
                if(resource instanceof Response) {
                   // result is already a response (built in server impl code, ex. to return custom status)
                   Response response = (Response) resource;
-                  DCResource entity = (DCResource) response.getEntity();
-                  if(entity != null) {
-                     fullData.put("res.model", entity.getModelType());
+                  Object entityFound =  response.getEntity();
+                  if(entityFound instanceof List<?>) {
+                     List<DCResource> entityList = (List<DCResource>) entityFound;
+                     if(entityList != null) {
+                        fullData.put("res.model", entityList.get(0).getModelType());
+                     }
                   }
                }
             }
@@ -94,6 +98,7 @@ public class TimeComputerOutInterceptor extends AbstractPhaseInterceptor<Message
 
          //TODO (un)parsed query
          //TODO Passing attributes to Riemann client as a Map is bugged but corrected so wait for the next release.
+         //riemannClientLog.sendTimeEvent("TimeComputer", data.get("method").toString(), duration, "timestamp", "duration");
          riemannClientLog.sendFullDataEvent("TimeComputer", data.get("method").toString(), fullData, duration, "timestamp", "duration", "fullContext");
       }
    }
