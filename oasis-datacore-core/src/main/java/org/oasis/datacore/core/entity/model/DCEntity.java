@@ -67,6 +67,7 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
     * TODO LATER rather direct references filled etc. ?
     */
    @Field("_t")
+   // TODO index if used to discriminate ex. polymorphism
    private List<String> types;
 
    // more auditing see
@@ -74,11 +75,13 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    // timestamps : TODO required ?
    @CreatedDate
    @Field("_crAt")
+   // TODO Q index ?
    private DateTime created;
    // keep names short
    // http://stackoverflow.com/questions/5916080/what-are-naming-conventions-for-mongodb
    @LastModifiedDate
    @Field("_chAt")
+   @Indexed // NB. created in DatacoreSampleBase since Spring not in a single collection
    private DateTime lastModified;
 
    /**
@@ -94,6 +97,7 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    // http://stackoverflow.com/questions/5916080/what-are-naming-conventions-for-mongodb
    @LastModifiedBy
    @Field("_chBy")
+   // TODO Q index ?
    private String lastModifiedBy;
    
    /** TODO Q rather store properties at root (using lifecycle event) ?
@@ -136,6 +140,7 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    private Set<String> writers;
    /** ONLY REQUIRED IF MASS W & O OPERATIONS but otherwise still need to be stored somewhere */
    @Field("_o")
+   // For now NOT indexed, "my documents" has to be found using business / modeled DCFields
    private Set<String> owners;
    
    /** request-scoped cache built in resourceToEntity or else getEntity */

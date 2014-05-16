@@ -2,6 +2,7 @@ package org.oasis.datacore.core.entity.query.ldp;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -25,11 +26,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.CursorProviderQueryCursorPreparer;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
+
+import com.mongodb.DBObject;
 
 
 /**
@@ -52,8 +56,27 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       findConfParams.add("start");
       findConfParams.add("limit");
    }
+   private static Map<String,DCField> dcEntityIndexedFields = new HashMap<String,DCField>();
+   static {
+      // TODO rather using Enum, see BSON$RegexFlag
+      dcEntityIndexedFields.put("_uri", new DCField("_uri", "string", true, 100000));
+      //dcEntityIndexedFields.add("_allReaders"); // don't allow to look it up
+      dcEntityIndexedFields.put("_changedAt", new DCField("_chAt", "date", true, 100000));
+   }
+
+   /** default maximum number of documents to scan when fulfilling a query, overriden by
+    * DCFields', themselves limited by DCModel's. 0 means no limit (for tests), else ex.
+    * 1000 (secure default), 100000 (on query-only nodes using secondary & timeout)... 
+    * http://docs.mongodb.org/manual/reference/operator/meta/maxScan/ */
+   @Value("${datacoreApiServer.query.maxScan}")
+   private int maxScan;
+   /** default maximum start position : 500... */
+   @Value("${datacoreApiServer.query.maxStart}")
+   private int maxStart;
+   /** default maximum number of documents returned : 100... */
+   @Value("${datacoreApiServer.query.maxLimit}")
+   private int maxLimit;
    
-   /** TODO mock */
    @Autowired
    @Qualifier("datacoreSecurityServiceImpl")
    private DatacoreSecurityService datacoreSecurityService;
@@ -67,18 +90,60 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    @Autowired
    private MonitoringLogServiceImpl monitoringLogServiceImpl;
 
+   
    @Override
    public List<DCEntity> findDataInType(DCModel dcModel, Map<String, List<String>> params,
          Integer start, Integer limit) throws QueryException {
       boolean detailedErrorsMode = true; // TODO
-      
-      String modelType = dcModel.getName(); // for error logging
 
       //Log to AuditLog Endpoint
       //monitoringLogServiceImpl.postLog(modelType, "findDataInType");
 
       // parsing query parameters criteria according to model :
       DCQueryParsingContext queryParsingContext = new DCQueryParsingContext(dcModel, null);
+      parseQueryParameters(params, queryParsingContext);
+      if (queryParsingContext.hasErrors()) {
+         String msg = DCResourceParsingContext.formatParsingErrorsMessage(queryParsingContext, detailedErrorsMode);
+         throw new QueryException(msg);
+      } // else TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
+      
+      // add security :
+      boolean guestForbidden = addSecurityIfNotGuestForbidden(queryParsingContext);
+      if (guestForbidden) {
+         return new ArrayList<DCEntity>(0); // TODO or exception ??
+      }
+      
+      // adding paging & sorting :
+      if (start > 500) {
+         start = maxStart; // max, else prefer ranged query ; TODO or error message ?
+      }
+      if (limit > 50) {
+         limit = maxLimit; // max, else prefer ranged query ; TODO or error message ?
+      }
+      Sort sort = queryParsingContext.getSort();
+      if (sort == null) {
+         // TODO sort by default : configured in model (last modified date, uri,
+         // iri?, types?, owners? other fields...)
+         sort = new Sort(Direction.ASC, "_chAt"); // _uri...
+      }
+      
+      Query springMongoQuery = new Query(queryParsingContext.getCriteria())
+         .with(sort).skip(start).limit(limit); // TODO rather range query, if possible on sort field
+      
+      List<DCEntity> foundEntities = executeMongoDbQuery(springMongoQuery, queryParsingContext);
+      
+      if (logger.isDebugEnabled()) {
+         logger.debug("Done Spring Mongo query: " + springMongoQuery
+               + "\n   in collection " + dcModel.getCollectionName()
+               + " from Model " + dcModel.getName() + " and parameters: " + params
+               + "\n   with result nb " + foundEntities.size());
+      }
+      return foundEntities;
+   }
+
+   
+   private void parseQueryParameters(Map<String, List<String>> params, DCQueryParsingContext queryParsingContext) {
+      DCModel dcModel = queryParsingContext.peekModel();
       
       parameterLoop : for (String fieldPath : params.keySet()) {
          if (findConfParams.contains(fieldPath)) {
@@ -93,9 +158,16 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          if (fieldPathElements.length == 0) {
             continue; // should not happen
          }
-         DCField dcField = dcModel.getGlobalField(fieldPathElements[0]);
+         String topFieldPathElement = fieldPathElements[0];
+         boolean isDcEntityIndexedField = false;
+         DCField dcField = dcEntityIndexedFields.get(topFieldPathElement);
+         if (dcField != null) {
+            isDcEntityIndexedField = true;
+         } else {
+            dcField = dcModel.getGlobalField(topFieldPathElement);
+         }
          if (dcField == null) {
-            queryParsingContext.addError("In type " + modelType + ", can't find field with path elements "
+            queryParsingContext.addError("In type " + dcModel.getName() + ", can't find field with path elements "
                   + Arrays.asList(fieldPathElements) + " : can't find field for first path element "
                   + fieldPathElements[0]);
             continue;
@@ -118,18 +190,18 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
             if ("map".equals(dcField.getType())) {
                dcField = ((DCMapField) dcField).getMapFields().get(fieldPathElement);
                if (dcField == null) {
-                  queryParsingContext.addError("In type " + modelType + ", can't find field with path elements"
+                  queryParsingContext.addError("In type " + dcModel.getName() + ", can't find field with path elements"
                         + Arrays.asList(fieldPathElements) + ": can't go below " + i + "th path element "
                         + fieldPathElement + ", because field is unkown");
                   continue parameterLoop;
                }
             } else if ("resource".equals(dcField.getType())) {
-               queryParsingContext.addError("Found criteria requiring join : in type " + modelType + ", field "
+               queryParsingContext.addError("Found criteria requiring join : in type " + dcModel.getName() + ", field "
                      + fieldPath + " (" + i + "th in field path elements " + Arrays.asList(fieldPathElements)
                      + ") can't be done in findDataInType, do it rather on client side");
                continue parameterLoop; // TODO boum
             } else {
-               queryParsingContext.addError("In type " + modelType + ", can't find field with path elements"
+               queryParsingContext.addError("In type " + dcModel.getName() + ", can't find field with path elements"
                      + Arrays.asList(fieldPathElements) + ": can't go below " + i + "th element " 
                      + fieldPathElement + ", because field is neither map nor list but " + dcField.getType());
                continue parameterLoop; // TODO boum
@@ -154,7 +226,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          }
          
          // TODO (mongo)operator for error & in parse ?
-         String entityFieldPath = "_p." + fieldPath; // almost the same fieldPath for mongodb (?)
+         String entityFieldPath = (isDcEntityIndexedField) ? fieldPath : "_p." + fieldPath; // almost the same fieldPath for mongodb (?)
 
          queryParsingContext.enterCriteria(entityFieldPath, values.size());
          try  {
@@ -178,20 +250,15 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          }
 
       }
-      
+   }
 
-      if (queryParsingContext.hasErrors()) {
-         String msg = DCResourceParsingContext.formatParsingErrorsMessage(queryParsingContext, detailedErrorsMode);
-         throw new QueryException(msg);
-      } // else TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
-      
-      
-      // adding security :
+   
+   private boolean addSecurityIfNotGuestForbidden(DCQueryParsingContext queryParsingContext) {
       // TODO Q how to make all tests still work : null case ? other prop ? disable it ??
       // TODO better : in SecurityQueryEnricher ? rather in (Query)ParsingContext ?!?
       // TODO (LATER ?) on all sub Resources !!
       // TODO LATER in findDataInAllTypes(), on all root Resources
-      DCSecurity modelSecurity = dcModel.getSecurity();
+      DCSecurity modelSecurity = queryParsingContext.peekModel().getSecurity();
       if (!modelSecurity.isGuestReadable()) {
          // TODO Q or (b) also GUEST OK when empty ACL ?
          // NO maybe dangerous because *adding* a group / role to ACL would *remove* GUEST from it
@@ -203,7 +270,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          
          DCUserImpl user = datacoreSecurityService.getCurrentUser();
          if (user.isGuest()) {
-            return new ArrayList<DCEntity>(0); // TODO or exception ??
+            return true; // TODO or exception ??
          }
          
          if (!user.isAdmin()
@@ -214,36 +281,75 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          } // else (datacore global or model-scoped) admin, so no security check
       } // else public, so no security check
       
-      // adding paging & sorting :
-      if (start > 500) {
-         start = 500; // max (conf'ble in model ?), else prefer ranged query ; TODO or error message ?
+      return false;
+   }
+
+   
+   private List<DCEntity> executeMongoDbQuery(Query springMongoQuery,
+         DCQueryParsingContext queryParsingContext) throws QueryException {
+      DCModel dcModel = queryParsingContext.peekModel();
+      
+      // compute overall maxScan :
+      int maxScan = this.maxScan;
+      if (queryParsingContext.getAggregatedQueryLimit() > maxScan) {
+         // allow at least enough scan for expected results
+         maxScan = queryParsingContext.getAggregatedQueryLimit();
       }
-      if (limit > 50) {
-         limit = 50; // max (conf'ble in model ?), else prefer ranged query ; TODO or error message ?
+      if (dcModel.getMaxScan() > 0) {
+         // limit maxScan : take smallest
+         maxScan = (maxScan > dcModel.getMaxScan()) ?
+               dcModel.getMaxScan() : maxScan;
       }
-      Sort sort = queryParsingContext.getSort();
-      if (sort == null) {
-         // TODO sort by default : configured in model (uri, last modified date, iri?, other fields...)
-         sort = new Sort(Direction.ASC, "_uri");
-      }
-      Query springMongoQuery = new Query(queryParsingContext.getCriteria())
-         .with(sort).skip(start).limit(limit); // TODO rather range query, if possible on sort field
-         
-      // executing the mongo query :
-      String collectionName = dcModel.getCollectionName(); // TODO getType() or getCollectionName(); for weird type names ??
-      // using custom find() to get access to mongo DBCursor for explain() etc. :
+
+      boolean debug = false;
+      //TODO debug = context.get("debug") (put by debug() operation) || context.get("headers").get("X-Datacore-Debug")
+      boolean doExplainQuery = queryParsingContext.isHasNoIndexedField() || debug;
+      
+      // using custom CursorPreparer to get access to mongo DBCursor for explain() etc. :
       // (rather than mgo.find(springMongoQuery, DCEntity.class, collectionName)) 
-      CursorProviderQueryCursorPreparer cursorProvider = new CursorProviderQueryCursorPreparer(mgo, springMongoQuery);
+      CursorProviderQueryCursorPreparer cursorProvider = new CursorProviderQueryCursorPreparer(mgo,
+            springMongoQuery, doExplainQuery, maxScan);
+      // TODO LATER mongo 2.6 maxTimeMs() http://docs.mongodb.org/manual/reference/method/cursor.maxTimeMS/#cursor.maxTimeMS
+
+      String collectionName = dcModel.getCollectionName(); // TODO LATER for polymorphism...
       List<DCEntity> foundEntities = mgo.find(springMongoQuery, DCEntity.class, collectionName, cursorProvider);
-      cursorProvider.getCursorPrepared().explain();
       
-      if (logger.isDebugEnabled()) {
-         logger.debug("Done Spring Mongo query: " + springMongoQuery
-               + "\n   in collection " + collectionName + " from Model " + modelType + " and parameters: " + params
-               + "\n   with result nb " + foundEntities.size());
+      if (debug) {
+         DBObject sortExplain = cursorProvider.getCursorPrepared().explain();
+         //TODO context.set("query.explain", cursorProvider.getQueryExplain()) & getQuery(),
+         // sortExplain & getSort(), getSpecial() (ex. maxScan), getOptions()?,
+         // getReadPreference(), getServerAddress(), collectionName, or even Model (type(s), fields)...  
       }
       
+      if (maxScan != 0 && queryParsingContext.isHasNoIndexedField()) {
+         // (if maxScan == 0 it is infinite and its limit can't be reached)
+         if (foundEntities.size() < springMongoQuery.getLimit()
+               && ((int) cursorProvider.getQueryExplain().get("nscannedObjects")) == maxScan) {
+            throw new QueryException("Query with non indexed fields has reached maxScan (" + maxScan
+                  + ") before document limit (found " + foundEntities.size() + "<" + springMongoQuery.getLimit()
+                  + ") , meaning some documents can't be found without prohibitive cost. "
+                  + "Use only indexed fields, or if you really want the few documents already "
+                  + "found lower limit, or if in Model design mode add indexes.");
+         }
+      }
+   
       return foundEntities;
+   }
+
+   
+   /** for tests */
+   public void setMaxScan(int maxScan) {
+      this.maxScan = maxScan;
+   }
+
+   /** for tests */
+   public void setMaxStart(int maxStart) {
+      this.maxStart = maxStart;
+   }
+
+   /** for tests */
+   public void setMaxLimit(int maxLimit) {
+      this.maxLimit = maxLimit;
    }
   
 }

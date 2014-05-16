@@ -2,6 +2,7 @@ package org.oasis.datacore.rest.server.parsing.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.springframework.data.domain.Sort;
@@ -10,6 +11,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 public class DCQueryParsingContext extends DCResourceParsingContext {
 
+   private Stack<DCModel> modelStack;
+   
    // TODO privilege indexed fields !!!!!!!!!!
    private Criteria criteria = new Criteria();
    private String currentEntityFieldPath;
@@ -17,9 +20,33 @@ public class DCQueryParsingContext extends DCResourceParsingContext {
 
    // TODO sort, on INDEXED (Queriable) field
    private Sort sort = null;
+   private int aggregatedQueryLimit = 0;
+   private boolean hasNoIndexedField = false;
    
    public DCQueryParsingContext(DCModel model, String uri) {
       super(model, null);
+   }
+   
+   public DCModel peekModel() {
+      return this.modelStack.peek();
+   }
+
+   @Override
+   public void enter(DCModel model, String uri) {
+      super.enter(model, uri);
+      if (modelStack == null) {
+         modelStack = new Stack<DCModel>();
+         // NB. can't be done in declaration else can't be called in constructor
+      }
+      this.modelStack.push(model);
+   }
+
+   @Override
+   public void exit() {
+      super.exit();
+      if ("resource".equals(this.resourceValueStack.peek().getField().getType())) {
+         this.modelStack.pop();
+      }
    }
    
    public void enterCriteria(String entityFieldPath, int criteriaNb) {
@@ -81,6 +108,22 @@ public class DCQueryParsingContext extends DCResourceParsingContext {
 
    public Sort getSort() {
       return this.sort;
+   }
+
+   public int getAggregatedQueryLimit() {
+      return aggregatedQueryLimit;
+   }
+
+   public void setAggregatedQueryLimit(int aggregatedQueryLimit) {
+      this.aggregatedQueryLimit = aggregatedQueryLimit;
+   }
+
+   public boolean isHasNoIndexedField() {
+      return hasNoIndexedField;
+   }
+
+   public void setHasNoIndexedField(boolean hasNoIndexedField) {
+      this.hasNoIndexedField = hasNoIndexedField;
    }
 
 }

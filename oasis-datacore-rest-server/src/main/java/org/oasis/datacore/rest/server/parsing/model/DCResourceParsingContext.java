@@ -18,7 +18,7 @@ import org.oasis.datacore.core.meta.model.DCModel;
  */
 public class DCResourceParsingContext {
    
-   private Stack<DCResourceValue> resourceValueStack = new Stack<DCResourceValue>(); // TODO or of String only ??
+   protected Stack<DCResourceValue> resourceValueStack = new Stack<DCResourceValue>(); // TODO or of String only ??
 
    // TODO or same list, with error level in Log and boolean hasError ?!?
    private List<ResourceParsingLog> errors = null;
@@ -40,6 +40,10 @@ public class DCResourceParsingContext {
       this.enter(model, uri);
    }
    
+   public DCResourceValue peekResourceValue() {
+      return this.resourceValueStack.peek();
+   }
+   
    public void enter(DCModel model, String uri) {
       this.resourceValueStack.add(new DCResourceValue(model.getName(), null, uri));
    }
@@ -51,8 +55,8 @@ public class DCResourceParsingContext {
       } else {
          DCResourceValue previousResourceValue = this.resourceValueStack.peek();
          fullValuedPath = previousResourceValue.getFullValuedPath() + "/"
-               + ((value != null) ? value : field.getName()); // TODO better fullValuedPath,
-         // also xpath-like in addition to being a value path (which is particularly ugly in list case)
+               + ((value == null) ? field.getName() : field.getName() + "[='" + value + "']");
+         // TODO test if enough xpath-like in addition to being a value path (which is particularly ugly in list case)
       }
       this.resourceValueStack.add(new DCResourceValue(fullValuedPath, field,  value));
    }

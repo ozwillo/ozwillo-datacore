@@ -20,6 +20,10 @@ package org.oasis.datacore.core.meta.model;
  */
 public class DCModel extends DCModelBase {
 
+   /** Limits the specified number of documents to scan specified in DCField.queryLimit
+    * when fulfilling a query on this Model's collection
+    * http://docs.mongodb.org/manual/reference/operator/meta/maxScan/ */
+   private int maxScan = 0;
 	private DCSecurity security = new DCSecurity();
 
 	/** for unmarshalling only */
@@ -34,6 +38,14 @@ public class DCModel extends DCModelBase {
 	public String getCollectionName() {
 		return this.getName();
 	}
+
+   public int getMaxScan() {
+      return maxScan;
+   }
+
+   public void setMaxScan(int maxScan) {
+      this.maxScan = maxScan;
+   }
 
 	/** TODO or in DCModelBase (i.e. mixins) ?? on fields ????? */
 	public DCSecurity getSecurity() {
