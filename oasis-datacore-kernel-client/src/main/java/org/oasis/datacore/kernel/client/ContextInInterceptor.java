@@ -48,7 +48,7 @@ public class ContextInInterceptor extends AbstractPhaseInterceptor<Message> {
          }
       }
 
-      //Log Resource sent in request if any
+      //Log Resource model type sent in request if any
       if(logReqContent) {
          MessageContentsList objs = MessageContentsList.getContentsList(serverInRequestMessage);
          if(objs != null && objs.size() != 0) {

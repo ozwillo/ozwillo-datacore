@@ -56,25 +56,15 @@ public class TimeComputerOutInterceptor extends AbstractPhaseInterceptor<Message
 
          //Data from req
          Map<String, Object> data = (Map<String, Object>)exchange.get("reqContext");
-
          Map<String, String> fullData = convertAllDataToString(data);
 
-         //Log Resource sent back in response if any
+         //Log Resource model sent back in response if any
          if(logResContent) {
-            MessageContentsList objs = MessageContentsList.getContentsList(serverOutResponseMessage);
-            if(objs != null && objs.size() != 0) {
-               Object resource = objs.get(0);
-               if(resource instanceof Response) {
-                  // result is already a response (built in server impl code, ex. to return custom status)
-                  Response response = (Response) resource;
-                  Object entityFound =  response.getEntity();
-                  if(entityFound instanceof List<?>) {
-                     List<DCResource> entityList = (List<DCResource>) entityFound;
-                     if(entityList != null) {
-                        fullData.put("res.model", entityList.get(0).getModelType());
-                     }
-                  }
-               }
+            try {
+               //res.model from an ArrayServerOutInterceptor. May not exist.
+               fullData.put("res.model", exchange.get("res.model").toString());
+            } catch(NullPointerException e) {
+               
             }
          }
 

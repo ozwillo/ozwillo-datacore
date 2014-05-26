@@ -62,6 +62,7 @@ public class ArrayServerOutInterceptor extends AbstractPhaseInterceptor<Message>
             // result is already a response (built in server impl code, ex. to return custom status)
             Response response = (Response) resFound;
             Object resEntityFound = response.getEntity();
+
             if (resEntityFound instanceof List<?>) {
                @SuppressWarnings("unchecked")
                List<DCResource> resEntityList = (List<DCResource>) resEntityFound;
@@ -70,6 +71,9 @@ public class ArrayServerOutInterceptor extends AbstractPhaseInterceptor<Message>
                rb.entity(resEntityList.get(0));
                objs.remove(0);
                objs.add(0, rb.build());
+
+               //[Monitoring] Extract model type of the entity passed back in response
+               serverOutResponseMessage.getExchange().put("res.model", resEntityList.get(0).getModelType());          
             } // else should not happen
             
          } else if (resFound instanceof List<?>) {
