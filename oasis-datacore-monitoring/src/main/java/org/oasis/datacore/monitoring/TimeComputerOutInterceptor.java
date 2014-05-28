@@ -1,4 +1,4 @@
-package org.oasis.datacore.kernel.client;
+package org.oasis.datacore.monitoring;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -50,46 +50,29 @@ public class TimeComputerOutInterceptor extends AbstractPhaseInterceptor<Message
 
       if(monitorReqRes) {
          //Compute time taken
-         long reqArrival = (long) exchange.get("datacore.timestamp");
+         long reqArrival = (long) exchange.get("dc.timestamp");
          Date now = new Date();
          long duration = now.getTime() - reqArrival;
-
-         //Data from req
-         Map<String, Object> data = (Map<String, Object>)exchange.get("reqContext");
-         Map<String, String> fullData = convertAllDataToString(data);
-
-         //Log Resource model sent back in response if any
-         if(logResContent) {
-            try {
-               //res.model from an ArrayServerOutInterceptor. May not exist.
-               fullData.put("res.model", exchange.get("res.model").toString());
-            } catch(NullPointerException e) {
-               
-            }
-         }
+         exchange.put("dc.duration", duration);
 
          //Data for res
          HttpHeaders resHeader = jaxrsApiProvider.getHttpHeaders();
          String status = serverOutResponseMessage.get(Message.RESPONSE_CODE).toString();
-         fullData.put("statusCode", status);
-         fullData.put("resHeaders", resHeader.toString());//TODO extract useful data to string
+         exchange.put("dc.status", status);
+         exchange.put("dc.res.headers", resHeader.toString());//TODO extract useful data to string
 
          //Determine which function has been used to provide the response
          String operationName = serverOutResponseMessage.getContextualProperty("org.apache.cxf.resource.operation.name").toString();
-         fullData.put("operationName", operationName);
+         exchange.put("dc.operation", operationName);
 
          //Information about user
          try {
             String user = datacoreSecurityService.getCurrentUserId();
-            fullData.put("userId", user);
+            exchange.put("dc.userId", user);
          } catch(Exception e) {
 
          }
 
-         //TODO (un)parsed query
-         //TODO Passing attributes to Riemann client as a Map is bugged but corrected so wait for the next release.
-         //riemannClientLog.sendTimeEvent("TimeComputer", data.get("method").toString(), duration, "timestamp", "duration");
-         riemannClientLog.sendFullDataEvent("TimeComputer", data.get("method").toString(), fullData, duration, "timestamp", "duration", "fullContext");
       }
    }
 

@@ -73,7 +73,7 @@ public class ArrayServerOutInterceptor extends AbstractPhaseInterceptor<Message>
                objs.add(0, rb.build());
 
                //[Monitoring] Extract model type of the entity passed back in response
-               serverOutResponseMessage.getExchange().put("res.model", resEntityList.get(0).getModelType());          
+               serverOutResponseMessage.getExchange().put("dc.res.model", resEntityList.get(0).getModelType());
             } // else should not happen
             
          } else if (resFound instanceof List<?>) {

@@ -1,4 +1,4 @@
-package org.oasis.datacore.kernel.client;
+package org.oasis.datacore.monitoring;
 
 import java.util.Date;
 import org.apache.cxf.interceptor.Fault;
@@ -15,7 +15,7 @@ public class TimeTaggerInInterceptor extends AbstractPhaseInterceptor<Message> {
    @Override
    public void handleMessage(Message serverInRequestMessage) throws Fault {    
       Date now = new Date();
-      serverInRequestMessage.getExchange().put("datacore.timestamp", now.getTime());
+      serverInRequestMessage.getExchange().put("dc.timestamp", now.getTime());
    }
    
 }

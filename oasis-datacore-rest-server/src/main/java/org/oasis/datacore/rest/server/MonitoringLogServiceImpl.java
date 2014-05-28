@@ -10,7 +10,7 @@ import org.joda.time.Instant;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
 import org.oasis.datacore.kernel.client.AuditLogClientAPI;
 import org.oasis.datacore.kernel.client.AuditLogClientAPI.RemoteEvent;
-import org.oasis.datacore.kernel.client.RiemannClientLog;
+import org.oasis.datacore.monitoring.RiemannClientLog;
 import org.oasis.datacore.rest.api.util.JaxrsApiProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;

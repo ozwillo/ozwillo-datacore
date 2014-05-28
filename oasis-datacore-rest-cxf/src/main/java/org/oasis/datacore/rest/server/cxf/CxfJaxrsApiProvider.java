@@ -21,6 +21,7 @@ import javax.ws.rs.core.Variant;
 import org.apache.cxf.jaxrs.impl.HttpHeadersImpl;
 import org.apache.cxf.jaxrs.impl.RequestImpl;
 import org.apache.cxf.jaxrs.impl.UriInfoImpl;
+import org.apache.cxf.message.Exchange;
 import org.apache.cxf.message.Message;
 import org.apache.cxf.phase.PhaseInterceptorChain;
 import org.oasis.datacore.rest.api.util.JaxrsApiProvider;
@@ -52,6 +53,10 @@ public class CxfJaxrsApiProvider implements JaxrsApiProvider {
 
    public Message getInMessage() {
       return PhaseInterceptorChain.getCurrentMessage().getExchange().getInMessage();
+   }
+
+   public Exchange getExchange() {
+      return PhaseInterceptorChain.getCurrentMessage().getExchange();
    }
 
    @Override

@@ -19,36 +19,15 @@
    <!-- import resource="classpath:META-INF/cxf/cxf-extension-http-jetty.xml"/ -->
    <!-- would be for test server but NO : OldSpringSupport [WARN] Import of META-INF/cxf/cxf-extension-http-jetty.xml has been deprecated and is unnecessary-->
 
-  <context:property-placeholder location="classpath:oasis-datacore-kernel-client.properties"
+  <context:property-placeholder location="classpath:oasis-datacore-monitoring.properties"
      order="-1" ignore-unresolvable="true"/>
 
-   <context:component-scan base-package="org.oasis.datacore.kernel.client" /><!-- for caching & context -->
+   <context:component-scan base-package="org.oasis.datacore.monitoring" /><!-- for caching & context -->
    <!-- context:component-scan base-package="org.oasis.datacore.rest.client" / -->
    <!-- else can't autowire client delegate because not yet created from xml -->
    <context:annotation-config /><!-- actually auto enabled by previous line -->
-
-   <!-- Monitoring using Audit Log API -->
-   <jaxrs:client id="auditLogAPIClient"
-         serviceClass="org.oasis.datacore.kernel.client.AuditLogClientAPI"
-         address="https://oasis-demo.atolcd.com/">
-      <jaxrs:providers>
-         <!-- JSON provider (Jackson's) : -->
-         <bean class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider">
-            <constructor-arg><bean class="org.oasis.datacore.rest.api.binding.DatacoreObjectMapper"/></constructor-arg>
-            <!-- needs at least joda... -->
-         </bean>
-         <!-- no cache (!) -->
-      </jaxrs:providers>
-
-      <jaxrs:features>
-         <cxf:logging/>
-      </jaxrs:features>
-      <jaxrs:properties>
-         <!-- Prevents logging WebApplicationException not HTTP 400 or 500 -->
-         <!-- entry key="org.apache.cxf.logging.FaultListener">
-            <bean class="org.oasis.datacore.rest.server.cxf.ClientServerErrorFaultListener"/>
-         </entry -->
-      </jaxrs:properties>
-   </jaxrs:client>
+   
+   <bean id="RiemannClientLog" class="org.oasis.datacore.monitoring.RiemannClientLog"/>
+   <bean id="SimpleRiemannExtractor" class="org.oasis.datacore.monitoring.SimpleRiemannExtractor"/>
    
 </beans>

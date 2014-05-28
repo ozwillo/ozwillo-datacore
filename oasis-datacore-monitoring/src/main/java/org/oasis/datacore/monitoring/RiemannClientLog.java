@@ -1,4 +1,4 @@
-package org.oasis.datacore.kernel.client;
+package org.oasis.datacore.monitoring;
 
 import java.util.Map;
 
@@ -24,7 +24,9 @@ public class RiemannClientLog implements InitializingBean {
    @Override
    public void afterPropertiesSet() throws Exception {
       try {
-         client = RiemannClient.udp(riemannIP, riemannPort);
+         //UDP is bugged in 0.2.10, rather use TCP for now
+         //client = RiemannClient.udp(riemannIP, riemannPort);
+         client = RiemannClient.tcp(riemannIP, riemannPort);
          client.connect();
       } catch(Exception e) {
          logger.error("Unable to start RiemannClient.");
@@ -59,7 +61,7 @@ public class RiemannClientLog implements InitializingBean {
            send();
          //client.disconnect();
       } catch(Exception e) {
-
+         logger.error("******************ERROR*************");
       }
    }
 
@@ -76,7 +78,7 @@ public class RiemannClientLog implements InitializingBean {
            send();
          //client.disconnect();
       } catch(Exception e) {
-
+         logger.error("Unable to send all data to Riemann : " + e);
       }
    }
 
