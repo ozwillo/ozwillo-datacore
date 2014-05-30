@@ -620,6 +620,8 @@ public interface DatacoreApi {
             value="Each other HTTP query parameter (in Swagger UI, enter them "
                   + "as a single URL query string, ex. name=London&population=>100000) "
                   + "is a Datacore query criteria"),
+      @ApiImplicitParam(name="X-Datacore-Debug", paramType="header", dataType="boolean", allowMultiple=false,
+            value="Enable debug on query.", defaultValue="false"),//TODO:Default to true for test. Change in prod
       @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
             value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue="Basic YWRtaW46YWRtaW4=")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
@@ -632,7 +634,8 @@ public interface DatacoreApi {
    })
    List<DCResource> findDataInType(@PathParam("type") String modelType, @Context UriInfo uriInfo,
          @ApiParam(value="Pagination start") @DefaultValue("0") @QueryParam("start") Integer start,
-         @ApiParam(value="Pagination limit") @DefaultValue("10") @QueryParam("limit") Integer limit)
+         @ApiParam(value="Pagination limit") @DefaultValue("10") @QueryParam("limit") Integer limit,
+         @ApiParam(value="Debug") @DefaultValue("false") @QueryParam("debug") boolean debug)
          throws BadRequestException, NotFoundException;
 
 
