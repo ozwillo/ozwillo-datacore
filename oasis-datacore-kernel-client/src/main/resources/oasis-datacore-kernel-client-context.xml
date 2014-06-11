@@ -30,7 +30,7 @@
    <!-- Monitoring using Audit Log API -->
    <jaxrs:client id="auditLogAPIClient"
          serviceClass="org.oasis.datacore.kernel.client.AuditLogClientAPI"
-         address="https://oasis-demo.atolcd.com/">
+         address="${kernel.baseUrl}">
       <jaxrs:providers>
          <!-- JSON provider (Jackson's) : -->
          <bean class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider">
