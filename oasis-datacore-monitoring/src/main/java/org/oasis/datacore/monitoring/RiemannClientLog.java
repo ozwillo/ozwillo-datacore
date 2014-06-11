@@ -11,6 +11,9 @@ import com.aphyr.riemann.client.RiemannClient;
 
 public class RiemannClientLog implements InitializingBean {
 
+   @Value("${dtMonitoring.monitorReqRes}")
+   private boolean enableRiemannClient;
+
    @Value("${riemann.serverIP}")
    private String riemannIP;
 
@@ -23,18 +26,20 @@ public class RiemannClientLog implements InitializingBean {
 
    @Override
    public void afterPropertiesSet() throws Exception {
-      try {
-         //UDP is bugged in 0.2.10, rather use TCP for now
-         //client = RiemannClient.udp(riemannIP, riemannPort);
-         client = RiemannClient.tcp(riemannIP, riemannPort);
-         client.connect();
+      if(enableRiemannClient) {
+         try {
+            //UDP is bugged in 0.2.10, rather use TCP for now
+            //client = RiemannClient.udp(riemannIP, riemannPort);
+            client = RiemannClient.tcp(riemannIP, riemannPort);
+            client.connect();
 
-         //Register a shutdown hook to disconnect Riemann client cleanly
-         Runtime runtime = Runtime.getRuntime();
-         Thread thread = new Thread(new RiemannDisconnect(client));
-         runtime.addShutdownHook(thread);
-      } catch(Exception e) {
-         logger.error("Unable to start RiemannClient.");
+            //Register a shutdown hook to disconnect Riemann client cleanly
+            Runtime runtime = Runtime.getRuntime();
+            Thread thread = new Thread(new RiemannDisconnect(client));
+            runtime.addShutdownHook(thread);
+         } catch(Exception e) {
+            logger.error("Unable to start RiemannClient.");
+         }
       }
    }
 
