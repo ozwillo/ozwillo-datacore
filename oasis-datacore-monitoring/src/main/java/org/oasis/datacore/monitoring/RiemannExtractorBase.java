@@ -55,8 +55,8 @@ abstract class RiemannExtractorBase implements InitializingBean {
    @Override
    public void afterPropertiesSet() throws Exception {
       try {
-         client = RiemannClient.udp(riemannIP, riemannPort);
-         //client = RiemannClient.tcp(riemannIP, riemannPort);
+         //client = RiemannClient.udp(riemannIP, riemannPort);
+         client = RiemannClient.tcp(riemannIP, riemannPort);
          client.connect();
       } catch(Exception e) {
          logger.error("Unable to start RiemannClient.");

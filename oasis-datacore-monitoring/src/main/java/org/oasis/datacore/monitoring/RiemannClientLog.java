@@ -28,6 +28,11 @@ public class RiemannClientLog implements InitializingBean {
          //client = RiemannClient.udp(riemannIP, riemannPort);
          client = RiemannClient.tcp(riemannIP, riemannPort);
          client.connect();
+
+         //Register a shutdown hook to disconnect Riemann client cleanly
+         Runtime runtime = Runtime.getRuntime();
+         Thread thread = new Thread(new RiemannDisconnect(client));
+         runtime.addShutdownHook(thread);
       } catch(Exception e) {
          logger.error("Unable to start RiemannClient.");
       }
