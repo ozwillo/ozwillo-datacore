@@ -1,12 +1,8 @@
 package org.oasis.datacore.monitoring;
 
-import java.util.HashMap;
 import java.util.Map;
 
-import javax.ws.rs.core.HttpHeaders;
-
 import org.apache.cxf.message.Exchange;
-import org.apache.cxf.message.Message;
 import org.oasis.datacore.rest.server.cxf.CxfJaxrsApiProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +43,7 @@ abstract class RiemannExtractorBase implements InitializingBean {
 
    private RiemannClient client;
 
-   private static final Logger logger = LoggerFactory.getLogger(RiemannClientLog.class);
+   private static final Logger logger = LoggerFactory.getLogger(RiemannExtractorBase.class);
    
    @Autowired
    private CxfJaxrsApiProvider cxfJaxrsApiProvider;
@@ -55,9 +51,15 @@ abstract class RiemannExtractorBase implements InitializingBean {
    @Override
    public void afterPropertiesSet() throws Exception {
       try {
+         //UDP is bugged in 0.2.10, rather use TCP for now
          //client = RiemannClient.udp(riemannIP, riemannPort);
          client = RiemannClient.tcp(riemannIP, riemannPort);
          client.connect();
+
+         //Register a shutdown hook to disconnect Riemann client cleanly
+         Runtime runtime = Runtime.getRuntime();
+         Thread thread = new Thread(new RiemannDisconnect(client));
+         runtime.addShutdownHook(thread);
       } catch(Exception e) {
          logger.error("Unable to start RiemannClient.");
       }

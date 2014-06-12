@@ -27,7 +27,6 @@
    <!-- else can't autowire client delegate because not yet created from xml -->
    <context:annotation-config /><!-- actually auto enabled by previous line -->
    
-   <bean id="RiemannClientLog" class="org.oasis.datacore.monitoring.RiemannClientLog"/>
    <bean id="SimpleRiemannExtractor" class="org.oasis.datacore.monitoring.SimpleRiemannExtractor"/>
    
 </beans>

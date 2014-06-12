@@ -2,20 +2,16 @@ package org.oasis.datacore.monitoring;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
 
 import org.apache.cxf.interceptor.Fault;
 import org.apache.cxf.message.Exchange;
 import org.apache.cxf.message.Message;
-import org.apache.cxf.message.MessageContentsList;
 import org.apache.cxf.phase.AbstractPhaseInterceptor;
 import org.apache.cxf.phase.Phase;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
-import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.JaxrsApiProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -30,9 +26,6 @@ public class TimeComputerOutInterceptor extends AbstractPhaseInterceptor<Message
    @Autowired
    @Qualifier("datacoreSecurityServiceImpl")
    private DatacoreSecurityService datacoreSecurityService;
-
-   @Autowired
-   private RiemannClientLog riemannClientLog;
 
    @Value("${dtMonitoring.monitorReqRes}")
    private boolean monitorReqRes;
