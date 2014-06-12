@@ -13,7 +13,7 @@
       http://www.springframework.org/schema/security/oauth2
       http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 
-   <context:property-placeholder location="classpath:oasis-datacore-rest-api.properties,classpath:oasis-datacore-rest-server.properties,classpath*:oasis-datacore-deploy*.properties"
+   <context:property-placeholder location="classpath:oasis-datacore-security.properties,classpath:oasis-datacore-rest-api.properties,classpath:oasis-datacore-rest-server.properties,classpath*:oasis-datacore-deploy*.properties"
       order="-1" ignore-unresolvable="true"/>
 
 	<oauth:resource-server id="oauth2ProviderFilter" resource-id="oasis-datacore" token-services-ref="tokenServices" />
