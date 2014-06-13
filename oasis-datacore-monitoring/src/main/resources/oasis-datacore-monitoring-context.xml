@@ -27,6 +27,7 @@
    <!-- else can't autowire client delegate because not yet created from xml -->
    <context:annotation-config /><!-- actually auto enabled by previous line -->
    
-   <bean id="SimpleRiemannExtractor" class="org.oasis.datacore.monitoring.SimpleRiemannExtractor"/>
+   <!-- When adding a RiemannExtractor, explicitly add destroy-method="disconnect" so that Riemann Client will shutdown cleanly -->
+   <bean id="SimpleRiemannExtractor" class="org.oasis.datacore.monitoring.SimpleRiemannExtractor" destroy-method="disconnect"/>
    
 </beans>

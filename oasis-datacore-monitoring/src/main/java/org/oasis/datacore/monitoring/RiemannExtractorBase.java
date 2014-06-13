@@ -1,5 +1,6 @@
 package org.oasis.datacore.monitoring;
 
+import java.io.IOException;
 import java.util.Map;
 
 import org.apache.cxf.message.Exchange;
@@ -55,16 +56,24 @@ abstract class RiemannExtractorBase implements InitializingBean {
          //client = RiemannClient.udp(riemannIP, riemannPort);
          client = RiemannClient.tcp(riemannIP, riemannPort);
          client.connect();
-
-         //Register a shutdown hook to disconnect Riemann client cleanly
-         Runtime runtime = Runtime.getRuntime();
-         Thread thread = new Thread(new RiemannDisconnect(client));
-         runtime.addShutdownHook(thread);
       } catch(Exception e) {
          logger.error("Unable to start RiemannClient.");
       }
    }
-   
+
+   /*
+    * Disconnect client.
+    * Ensure Riemann Client stops when shutting down datacore.
+    * Need destroy-method="disconnect" in bean definition.
+    */
+   public void disconnect() {
+      try {
+         client.disconnect();
+      } catch (IOException e) {
+
+      }
+   }
+
    /*
     * Send a simple event to Riemann containing minimal information :
     */
