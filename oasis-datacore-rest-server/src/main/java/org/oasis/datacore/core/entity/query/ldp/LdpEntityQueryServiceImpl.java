@@ -124,7 +124,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       if (sort == null) {
          // TODO sort by default : configured in model (last modified date, uri,
          // iri?, types?, owners? other fields...)
-         sort = new Sort(Direction.ASC, "_chAt"); // _uri...
+         sort = new Sort(Direction.DESC, "_chAt"); // new Sort(Direction.ASC, "_uri")...
       }
       
       Query springMongoQuery = new Query(queryParsingContext.getCriteria())
