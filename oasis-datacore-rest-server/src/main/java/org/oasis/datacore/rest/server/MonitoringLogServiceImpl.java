@@ -10,7 +10,6 @@ import org.joda.time.Instant;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
 import org.oasis.datacore.kernel.client.AuditLogClientAPI;
 import org.oasis.datacore.kernel.client.AuditLogClientAPI.RemoteEvent;
-import org.oasis.datacore.kernel.client.RiemannClientLog;
 import org.oasis.datacore.rest.api.util.JaxrsApiProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -33,9 +32,6 @@ public class MonitoringLogServiceImpl {
 	@Autowired
 	@Qualifier("datacoreSecurityServiceImpl")
 	private DatacoreSecurityService datacoreSecurityService;
-	
-	@Autowired
-	private RiemannClientLog riemannClientLog;
 	
 	public void postLog(String type, String msg) {
 		if(useAuditLogEndpoint) {
@@ -66,12 +62,6 @@ public class MonitoringLogServiceImpl {
 		    } catch(Exception e) {
 		    	//TODO: Log
 		    }
-	    }
-	    
-	    if(useRiemann) {
-	    	if(isInServerContext()) {
-	    		riemannClientLog.sendEvent("LdpEntityQueryService", jaxrsApiProvider.getAbsolutePath().toString(), "query");
-	    	}
 	    }
 	}
 

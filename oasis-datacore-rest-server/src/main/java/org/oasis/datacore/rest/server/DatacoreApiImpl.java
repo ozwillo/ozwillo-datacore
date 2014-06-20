@@ -21,6 +21,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.cxf.message.Exchange;
 import org.oasis.datacore.core.entity.EntityQueryService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.query.QueryException;
@@ -32,6 +33,7 @@ import org.oasis.datacore.historization.service.HistorizationService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.util.DCURI;
+import org.oasis.datacore.rest.server.cxf.CxfJaxrsApiProvider;
 import org.oasis.datacore.rest.server.cxf.JaxrsServerBase;
 import org.oasis.datacore.rest.server.resource.ExternalResourceException;
 import org.oasis.datacore.rest.server.resource.ResourceEntityMapperService;
@@ -88,6 +90,9 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
    
    @Autowired
    private HistorizationService historizationService;
+
+   @Autowired
+   private CxfJaxrsApiProvider cxfJaxrsApiProvider;
 
    
    public DCResource postDataInType(DCResource resource, String modelType) {
@@ -401,9 +406,18 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
    }
 
    // TODO "native" query (W3C LDP-like) also refactored within a dedicated query engine ??
-   public List<DCResource> findDataInType(String modelType, UriInfo uriInfo, Integer start, Integer limit) {
+   public List<DCResource> findDataInType(String modelType, UriInfo uriInfo, Integer start, Integer limit, boolean debug) {
       boolean detailedErrorMode = true; // TODO
       boolean explainSwitch = false; // TODO LATER
+      Exchange exchange = cxfJaxrsApiProvider.getExchange();
+      try {
+         if(debug || cxfJaxrsApiProvider.getHttpHeaders().getHeaderString("X-Datacore-Debug").equalsIgnoreCase("true")) {
+            exchange.put("dc.params.debug", true);
+            explainSwitch = true;
+         }
+      } catch (Exception e) {
+
+      }
       
       DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
       if (dcModel == null) {
@@ -432,7 +446,15 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       }
       
       List<DCResource> foundDatas = resourceEntityMapperService.entitiesToResources(foundEntities);
-      return foundDatas;
+
+      if(explainSwitch) {
+         throw new WebApplicationException(Response.status(Response.Status.OK)
+               .entity("{\"explain\": " + exchange.get("dc.query.sortExplain") + ", \"results\": " + foundDatas + "}")
+               .type(MediaType.APPLICATION_JSON).build());
+      } else {
+         return foundDatas;
+      }
+
    }
 
 

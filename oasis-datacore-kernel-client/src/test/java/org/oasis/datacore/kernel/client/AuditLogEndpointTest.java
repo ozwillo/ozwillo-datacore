@@ -11,6 +11,7 @@ import org.junit.runner.RunWith;
 import org.oasis.datacore.kernel.client.AuditLogClientAPI;
 import org.oasis.datacore.kernel.client.AuditLogClientAPI.RemoteEvent;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -24,6 +25,9 @@ public class AuditLogEndpointTest {
 
    @Autowired
    private AuditLogClientAPI auditLogAPIClient;
+
+   @Value("${kernel.baseUrl}")
+   private String kernelBaseUrl;
 
    @Test
    public void postLogWithJAXRSClient() throws Exception {
@@ -41,10 +45,10 @@ public class AuditLogEndpointTest {
       long timestamp = System.currentTimeMillis();
       String body = "{\"time\": " + timestamp + ", \"log\": { \"foo\": \"bar\" } }";
 	
-      WebClient client = WebClient.create("https://oasis-demo.atolcd.com/");
+      WebClient client = WebClient.create(kernelBaseUrl);
       client.path("l/event");
       client.header("Content-Type", "application/json");
-      Assert.assertEquals("Should post to the right url.", "https://oasis-demo.atolcd.com/l/event", client.getCurrentURI().toString());
+      Assert.assertEquals("Should post to the right url.", kernelBaseUrl + "l/event", client.getCurrentURI().toString());
 
       Response r = client.post(body);
       Assert.assertFalse("Sould not get 500 error", r.getStatus() == 500);

@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.ws.rs.core.HttpHeaders;
+
+import org.apache.cxf.message.Exchange;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.mongodb.DatacoreMongoTemplate;
 import org.oasis.datacore.core.entity.query.QueryException;
@@ -18,6 +21,7 @@ import org.oasis.datacore.core.meta.model.DCSecurity;
 import org.oasis.datacore.core.security.DCUserImpl;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
 import org.oasis.datacore.rest.server.MonitoringLogServiceImpl;
+import org.oasis.datacore.rest.server.cxf.CxfJaxrsApiProvider;
 import org.oasis.datacore.rest.server.event.EventService;
 import org.oasis.datacore.rest.server.parsing.model.DCQueryParsingContext;
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
@@ -55,6 +59,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       // TODO rather using Enum, see BSON$RegexFlag
       findConfParams.add("start");
       findConfParams.add("limit");
+      findConfParams.add("debug");
    }
    private static Map<String,DCField> dcEntityIndexedFields = new HashMap<String,DCField>();
    static {
@@ -89,6 +94,9 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
 
    @Autowired
    private MonitoringLogServiceImpl monitoringLogServiceImpl;
+
+   @Autowired
+   private CxfJaxrsApiProvider cxfJaxrsApiProvider;
 
    
    @Override
@@ -303,6 +311,17 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
 
       boolean debug = false;
       //TODO debug = context.get("debug") (put by debug() operation) || context.get("headers").get("X-Datacore-Debug")
+
+      Exchange exchange = null;
+      try {
+         exchange = cxfJaxrsApiProvider.getExchange();
+         debug = (boolean) exchange.get("dc.params.debug");
+      } catch (Exception e) {
+         if (logger.isDebugEnabled()) {
+            logger.debug("Unable to find debug parameter state.");
+         }
+      }
+
       boolean doExplainQuery = queryParsingContext.isHasNoIndexedField() || debug;
       
       // using custom CursorPreparer to get access to mongo DBCursor for explain() etc. :
@@ -318,7 +337,17 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          DBObject sortExplain = cursorProvider.getCursorPrepared().explain();
          //TODO context.set("query.explain", cursorProvider.getQueryExplain()) & getQuery(),
          // sortExplain & getSort(), getSpecial() (ex. maxScan), getOptions()?,
-         // getReadPreference(), getServerAddress(), collectionName, or even Model (type(s), fields)...  
+         // getReadPreference(), getServerAddress(), collectionName, or even Model (type(s), fields)...
+         //Populate cxf exchange with info concerning the query.
+         try {
+            exchange.put("dc.query.explain", cursorProvider.getQueryExplain());
+            exchange.put("dc.query.query", cursorProvider.getCursorPrepared().getQuery());
+            exchange.put("dc.query.sortExplain", sortExplain);
+         } catch (Exception e) {
+            if (logger.isDebugEnabled()) {
+               logger.debug("Unable to find context.");
+            }
+         }
       }
       
       if (maxScan != 0 && queryParsingContext.isHasNoIndexedField()) {
