@@ -146,11 +146,11 @@
 		<commons-collections.version>3.2.1</commons-collections.version><!-- for 
 			ListUtils -->
 		<commons-lang.version>2.6</commons-lang.version><!-- for ExceptionUtils -->
-		<commons-io.version>2.4</commons-io.version><!-- for IOUtils TODO used 
-			?? -->
+		<commons-io.version>2.4</commons-io.version><!-- for IOUtils TODO used ?? -->
 
 		<swagger.version>1.3.0</swagger.version><!-- for apidoc -->
 
+      <!-- monitoring -->
       <!-- UDP is bugged in 0.2.10, rather use TCP for now -->
       <riemann-client.version>0.2.10</riemann-client.version>
       
@@ -166,7 +166,13 @@
       <spring.security.oauth2.version>1.0.5.RELEASE</spring.security.oauth2.version>
 		<mitre-openid-client.version>1.1.0</mitre-openid-client.version><!-- for client & test -->
 		<google.oauth.client.java6.version>1.17.0-rc</google.oauth.client.java6.version><!-- for tests -->
-
+      
+      <!-- JSON-LD (for RDF facade) -->
+      <jsonld-java.version>0.5-SNAPSHOT</jsonld-java.version>
+      <httpclient.version>4.2.5</httpclient.version><!-- same as openid-connect-common 1.1.0's -->
+      <!-- jackson.version>2.3.3</jackson.version><!- would conflict ->
+      <sesame.version>2.7.11</sesame.version>
+      <slf4j.version>1.7.7</slf4j.version -><!- would conflict -->
 	</properties>
 
 	<!-- ======= -->
@@ -560,6 +566,35 @@
 				<version>${riemann-client.version}</version>
 			</dependency>
 
+         <!-- JSON-LD facade -->
+         <dependency>
+            <groupId>com.github.jsonld-java</groupId>
+            <artifactId>jsonld-java</artifactId><!-- also brought by openid -->
+            <version>${jsonld-java.version}</version>
+         </dependency>
+         <!-- dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+         </dependency>
+         <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId><!- brought by rest-client ->
+         </dependency>
+         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+         </dependency -->
+         <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId><!-- also brought by openid -->
+            <version>${httpclient.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient-cache</artifactId>
+            <version>${httpclient.version}</version>
+         </dependency>
+         
 		</dependencies>
 	</dependencyManagement>
 

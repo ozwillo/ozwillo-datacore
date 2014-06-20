@@ -87,7 +87,33 @@
          <groupId>com.aphyr</groupId>
          <artifactId>riemann-java-client</artifactId>
       </dependency>
-
+      
+      <!-- JSON-LD facade -->
+      <dependency>
+         <groupId>com.github.jsonld-java</groupId>
+         <artifactId>jsonld-java</artifactId><!-- also brought by openid -->
+      </dependency>
+      <!-- dependency>
+         <groupId>com.fasterxml.jackson.core</groupId>
+         <artifactId>jackson-core</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.fasterxml.jackson.core</groupId>
+         <artifactId>jackson-databind</artifactId><!- brought by rest-client ->
+      </dependency>
+      <dependency>
+         <groupId>org.slf4j</groupId>
+         <artifactId>slf4j-api</artifactId>
+      </dependency -->
+      <dependency>
+         <groupId>org.apache.httpcomponents</groupId>
+         <artifactId>httpclient</artifactId><!-- also brought by openid -->
+      </dependency>
+      <dependency>
+         <groupId>org.apache.httpcomponents</groupId>
+         <artifactId>httpclient-cache</artifactId>
+      </dependency>
+      
 	</dependencies>
 
 </project>
