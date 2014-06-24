@@ -1,0 +1,20 @@
+###########################################
+# [OASIS] proxying to the tomcat7-dc
+
+# turning on host preservation (auto in ajp but required in http proxy)
+ProxyPreserveHost on
+
+<Proxy http://localhost:8080>
+        ProxySet timeout=300 retry=5
+        # allowing is required (by default the latest apache denies all)
+        Order allow,deny
+        allow from all
+</Proxy>
+
+# (reverse) proxy ; NB. ending slash required,
+# else builds URLs like http://localhost:8080dc
+ProxyPass / http://localhost:8080/
+ProxyPassReverse / http://localhost:8080/
+
+# [OASIS] end
+###########################################
