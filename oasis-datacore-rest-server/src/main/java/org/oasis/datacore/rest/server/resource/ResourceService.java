@@ -33,8 +33,8 @@ import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
 
 /**
  * TODO LATER2 once ModelService & Models are exposed as REST and available on client side,
@@ -98,8 +98,17 @@ public class ResourceService {
     * ex. resourceService.propertiesBuilder().put("name", "John").put("age", 18).build()
     * @return
     */
-   public Builder<String, Object> propertiesBuilder() {
+   public ImmutableMap.Builder<String, Object> propertiesBuilder() {
       return new ImmutableMap.Builder<String, Object>();
+   }
+
+   /**
+    * Helper for building Datacore lists
+    * ex. resourceService.listBuilder().add(landscape.getUri()).add(monument.getUri()).build()
+    * @return
+    */
+   public ImmutableList.Builder<Object> listBuilder() {
+      return new ImmutableList.Builder<Object>();
    }
 
    /**

@@ -39,4 +39,7 @@ public class BrandCarMotorcycleModel extends DatacoreSampleBase {
 		createModelsAndCleanTheirData(brandModel, carModel, motorcycleModel);
 	}
 
+	public void doInitData() {
+	}
+
 }

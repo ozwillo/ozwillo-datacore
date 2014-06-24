@@ -61,6 +61,9 @@ public class MarkaInvestData extends DatacoreSampleBase {
 				
 	}
 	
+	public void doInitData() {
+	}
+
 	@SafeVarargs
 	public final DCResource buildResource(String modelType, SimpleEntry<String,?>... entries) {
 		DCResource resource = new DCResource();

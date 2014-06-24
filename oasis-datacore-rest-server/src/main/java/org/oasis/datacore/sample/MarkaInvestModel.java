@@ -127,6 +127,9 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 	   createModelsAndCleanTheirData(companyModel, fieldModel, sectorModel, countryModel, cityModel, userModel, investorModel, investorTypeModel, costModel, plannedInvestmentAssistanceRequestModel);
 	}
 
+	public void doInitData() {
+	}
+
 	public List<DCModel> getListModel() {
 		return listModel;
 	}

@@ -114,5 +114,8 @@ public class BrandCarMotorcycleData extends DatacoreSampleBase {
 		} catch (WebApplicationException e) {}
 	
 	}
+
+	public void doInitData() {
+	}
 	
 }

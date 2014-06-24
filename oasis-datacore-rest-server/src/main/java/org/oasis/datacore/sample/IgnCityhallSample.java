@@ -46,6 +46,9 @@ public class IgnCityhallSample extends DatacoreSampleBase {
       this.initCityhallIgnV2Inheritance();
    }
    
+   public void doInitData() {
+   }
+
    public void initIgn() {
       // because IGN Model governance say so (but this could be forbidden by OASIS) :
       // field names are in French 

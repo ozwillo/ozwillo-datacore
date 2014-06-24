@@ -1,5 +1,7 @@
 package org.oasis.datacore.sample;
 
+import java.util.ArrayList;
+
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
@@ -25,7 +27,7 @@ public class CityCountrySample extends DatacoreSampleBase {
    @Override
    public void doInit() {
       initModel();
-      initData();
+      doInitData();
    }
    
    public void initModel() {
@@ -46,6 +48,16 @@ public class CityCountrySample extends DatacoreSampleBase {
       cityModel.addField(new DCResourceField("inCountry", COUNTRY_MODEL_NAME, true, 100));
       cityModel.addField(new DCField("populationCount", "int", false, 50));
       cityModel.addField(new DCField("founded", "date", false, 0));
+      //New i18n
+      //{v:London,t:en},{v:Londres,t:fr}
+
+      DCMapField i18nMapField = new DCMapField("i18_map");
+      i18nMapField.addField(new DCField("v", "string", true, 100));
+      i18nMapField.addField(new DCField("t", "string", false, 0));
+      DCListField i18nListField = new DCListField("i18Name", i18nMapField);
+      cityModel.addField(i18nListField);
+
+      //      new ArrayList());
       DCMapField name_18nMapField = new DCMapField("name_i18n"); // i18n
       name_18nMapField.addField(new DCField("fr", "string"));
       name_18nMapField.addField(new DCField("en", "string"));
@@ -58,7 +70,7 @@ public class CityCountrySample extends DatacoreSampleBase {
       super.createModelsAndCleanTheirData(poiModel, cityModel, countryModel);
    }
 
-   public void initData() {
+   public void doInitData() {
       // cleaning data first (else Conflict ?!)
       cleanDataOfCreatedModels();
       
@@ -72,6 +84,11 @@ public class CityCountrySample extends DatacoreSampleBase {
       ukCountry = postDataInType(ukCountry);
       italiaCountry = postDataInType(italiaCountry);
 
+      DCResource view = resourceService.create(POI_MODEL_NAME, "Basilica_di_Superga").set("name", "Basilica di Superga");
+      DCResource monument = resourceService.create(POI_MODEL_NAME, "Mole_Antonelliana").set("name", "Mole Antonelliana");
+      postDataInType(view);
+      postDataInType(monument);
+
       DCResource lyonCity = resourceService.create(CITY_MODEL_NAME, "France/Lyon")
             .set("name", "Lyon").set("inCountry", franceCountry.getUri())
             .set("populationCount", 500000);
@@ -82,7 +99,8 @@ public class CityCountrySample extends DatacoreSampleBase {
       DCResource torinoCity = resourceService.create(CITY_MODEL_NAME, "Italia/Torino")
             .set("name", "Torino").set("inCountry", italiaCountry.getUri())
             .set("populationCount", 900000).set("name_i18n",
-                  resourceService.propertiesBuilder().put("it", "Torino").put("fr", "Turin").build());
+                  resourceService.propertiesBuilder().put("it", "Torino").put("fr", "Turin").build())
+                  .set("pointsOfInterest", resourceService.listBuilder().add(view.getUri()).add(monument.getUri()).build());
       lyonCity = postDataInType(lyonCity);
       londonCity = postDataInType(londonCity);
       torinoCity = postDataInType(torinoCity);

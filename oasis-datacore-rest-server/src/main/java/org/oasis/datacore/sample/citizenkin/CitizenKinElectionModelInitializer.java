@@ -67,4 +67,7 @@ public class CitizenKinElectionModelInitializer extends DatacoreSampleBase {
 
         modelAdminService.addModel(model);
     }
+
+    public void doInitData() {
+    }
 }

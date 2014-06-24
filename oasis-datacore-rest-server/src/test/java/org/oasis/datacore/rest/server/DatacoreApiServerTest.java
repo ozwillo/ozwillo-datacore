@@ -1,5 +1,7 @@
 package org.oasis.datacore.rest.server;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.ws.rs.BadRequestException;
@@ -839,4 +841,65 @@ public class DatacoreApiServerTest {
       Assert.assertEquals(bordeauxCityData.getUri(), resources.get(0).getUri());
    }
    
+   @Test
+   public void testQueryInList() {
+      cityCountrySample.initData();
+
+      QueryParameters paramsPoi = new QueryParameters().add("name", "Mole Antonelliana");
+      List<DCResource> poi = datacoreApiClient.findDataInType(CityCountrySample.POI_MODEL_NAME,
+            paramsPoi, null, 10);
+      Assert.assertEquals(1, poi.size());
+
+      // in city :
+      QueryParameters params = new QueryParameters().add("pointsOfInterest", poi.get(0).getUri());
+      List<DCResource> resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            params, null, 10);
+      Assert.assertEquals(1, resources.size());
+   }
+
+   @Test
+   public void testI18nDraft() {
+      //Create Russia
+      //checkNoResource(CityCountrySample.COUNTRY_MODEL_NAME, "Russia");
+      DCResource russiaCountryData = buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "Russia");
+      DCResource postedRussiaCountryData = datacoreApiClient.postDataInType(russiaCountryData, CityCountrySample.COUNTRY_MODEL_NAME);
+      Assert.assertNotNull(postedRussiaCountryData);
+
+      //Create Moscow
+      DateTime moscowFoundedDate = new DateTime(1147, 4, 4, 0, 0, DateTimeZone.UTC);
+      DCResource moscowCityData = buildCityData("Moscow", "Russia", 10000000, false).set("founded", moscowFoundedDate);
+
+      //i18n
+      HashMap<String, String> fr = new HashMap<String, String>();
+      fr.put("t", "fr");
+      fr.put("v", "Moscou");
+      HashMap<String, String> en = new HashMap<String, String>();
+      en.put("t", "en");
+      en.put("v", "Moscow");
+      HashMap<String, String> us = new HashMap<String, String>();
+      us.put("t", "us");
+      us.put("v", "Moscow");
+      HashMap<String, String> ru = new HashMap<String, String>();
+      ru.put("t", "ru");
+      ru.put("v", "Моskva");
+      //ru.put("v", "Москва");
+      ArrayList<HashMap<String, String>> i18n = new ArrayList<HashMap<String, String>>();
+      i18n.add(fr);
+      i18n.add(en);
+      i18n.add(us);
+      i18n.add(ru);
+      moscowCityData.setProperty("i18Name", i18n);
+
+      datacoreApiClient.postDataInType(moscowCityData);
+
+      QueryParameters params = new QueryParameters();
+      params.add("i18Name.v", "Moscow");
+      //params.add("debug", "true");
+      List<DCResource> resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            params, null, 10);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(moscowCityData.getUri(), resources.get(0).getUri());
+      Assert.assertEquals(moscowCityData.get("i18Name"), resources.get(0).get("i18Name"));
+   }
+
 }

@@ -3,6 +3,7 @@ package org.oasis.datacore.rest.server;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -151,7 +152,24 @@ public class DatacoreApiServerJsonLdTest {
       DateTime londonFoundedDate = new DateTime(-43, 4, 1, 0, 0, DateTimeZone.UTC);
       DCResource londonCityData = buildCityData("London", "UK", 10000000, false);
       londonCityData.setProperty("founded", londonFoundedDate);
-      datacoreApiClient.postDataInType(londonCityData );
+
+      //i18n
+      HashMap<String, String> fr = new HashMap<String, String>();
+      fr.put("t", "fr");
+      fr.put("v", "Londres");
+      HashMap<String, String> en = new HashMap<String, String>();
+      en.put("t", "en");
+      en.put("v", "London");
+      HashMap<String, String> us = new HashMap<String, String>();
+      us.put("t", "us");
+      us.put("v", "London");
+      ArrayList<HashMap<String, String>> i18n = new ArrayList<HashMap<String, String>>();
+      i18n.add(fr);
+      i18n.add(en);
+      i18n.add(us);
+      londonCityData.setProperty("i18Name", i18n);
+
+      datacoreApiClient.postDataInType(londonCityData);
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters(), null, null);
       DatacoreObjectMapper dcObjectMapper = new DatacoreObjectMapper();

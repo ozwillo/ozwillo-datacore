@@ -15,6 +15,7 @@ import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.mongodb.DatacoreMongoTemplate;
 import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.meta.model.DCField;
+import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCSecurity;
@@ -203,6 +204,21 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
                         + fieldPathElement + ", because field is unkown");
                   continue parameterLoop;
                }
+            } else if ("list".equals(dcField.getType())) {
+               do {
+                 dcField = ((DCListField) dcField).getListElementField();
+                 //If we have a map in a list (for i18n)
+                 if("map".equals(dcField.getType())) {
+                    dcField = ((DCMapField) dcField).getMapFields().get(fieldPathElement);
+                    if (dcField == null) {
+                       queryParsingContext.addError("In type " + dcModel.getName() + ", can't find field with path elements"
+                             + Arrays.asList(fieldPathElements) + ": can't go below " + i + "th path element "
+                             + fieldPathElement + ", because field is unkown");
+                       continue parameterLoop;
+                    }
+                 }
+                 // TODO TODO check that indexed (or set low limit) ??
+               } while ("list".equals(dcField.getType()));
             } else if ("resource".equals(dcField.getType())) {
                queryParsingContext.addError("Found criteria requiring join : in type " + dcModel.getName() + ", field "
                      + fieldPath + " (" + i + "th in field path elements " + Arrays.asList(fieldPathElements)

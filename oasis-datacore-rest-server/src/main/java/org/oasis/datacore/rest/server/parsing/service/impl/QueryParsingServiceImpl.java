@@ -249,6 +249,12 @@ public class QueryParsingServiceImpl implements QueryParsingService {
       if (parsingTypeEnum == null) {
          // We get the DCFieldType enum according to the type of the field
          parsingTypeEnum = DCFieldTypeEnum.getEnumFromStringType(dcField.getType());
+         if (DCFieldTypeEnum.LIST.equals(parsingTypeEnum)) {
+            // if list (and not list-specific operator ex. $all), it is its inner field's parsingType
+            parsingTypeEnum = DCFieldTypeEnum.getEnumFromStringType(
+                  ((DCListField) dcField).getListElementField().getType());
+         }
+
          if (parsingTypeEnum == null) {
             throw new ResourceParsingException("Can't find the type of field " + dcField.getName());
          }

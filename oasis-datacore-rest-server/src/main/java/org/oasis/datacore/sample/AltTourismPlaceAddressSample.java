@@ -28,7 +28,7 @@ public class AltTourismPlaceAddressSample extends DatacoreSampleBase {
    @Override
    public void doInit() {
       this.initModel();
-      this.initData();
+      this.doInitData();
    }
    
    public void initModel() {
@@ -58,7 +58,7 @@ public class AltTourismPlaceAddressSample extends DatacoreSampleBase {
       createModelsAndCleanTheirData(myAppPlaceAddress, altTourismPlaceKind, altTourismPlace, oasisAddress);
    }
    
-   public void initData() {
+   public void doInitData() {
       // cleaning data first (else Conflict ?!)
       cleanDataOfCreatedModels();
       

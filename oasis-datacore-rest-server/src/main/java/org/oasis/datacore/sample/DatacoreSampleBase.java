@@ -105,6 +105,17 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
    }
    
    public abstract void doInit();
+   
+   public void initData() {
+      mockAuthenticationService.loginAs("admin");
+      try {
+         doInitData();
+      } finally {
+         mockAuthenticationService.logout();
+      }
+   }
+   
+   public abstract void doInitData();
 
    @PostConstruct
    public void register() {
@@ -174,7 +185,12 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
       switch (DCFieldTypeEnum.getEnumFromStringType(globalField.getType())) {
       case LIST:
          DCField listField = ((DCListField) globalField).getListElementField();
-         generateFieldIndices(coll, prefixedGlobalFieldName + ".", listField);
+         if(listField.getType() == "map") {
+            Map<String, DCField> mapFields = ((DCMapField) listField).getMapFields();
+            generateFieldIndices(coll, prefixedGlobalFieldName + ".", mapFields.values());
+         } else {
+            generateFieldIndices(coll, prefixedGlobalFieldName + ".", listField);
+         }
          break;
       case MAP:
          Map<String, DCField> mapFields = ((DCMapField) globalField).getMapFields();
