@@ -1,0 +1,8 @@
+name 'vvision-mmsagent'
+version '0.0.1'
+source ''
+author 'vvision'
+license 'Apache 2.0'
+summary 'Puppet module for Mongo agent'
+description 'Module for installing a Mongo agent'
+project_page ''

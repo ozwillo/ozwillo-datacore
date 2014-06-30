@@ -1,0 +1,24 @@
+#! /bin/sh
+
+# package conf
+
+nohup ./mongodb-mms-monitoring-agent >> monitoring-agent.log 2>&1 &
+
+INSTALL_PATH=/opt/mongodb-mms-agent
+SCRIPTNAME=mongodb-mms-monitoring-agent
+
+case "$1" in
+  start)
+        PWD=`pwd`
+        cd $INSTALL_PATH
+        nohup bash -c "./mongodb-mms-monitoring-agent" 1>>/var/log/mmsagent.log 2>> /var/log/mmsagent.err.log &
+        cd $PWD
+        ;;
+  stop)
+        echo "Usage: kill -9 pid" >&2
+        ;;
+  *)
+        echo "Usage: $SCRIPTNAME {start|stop|restart|force-reload}" >&2
+        exit 3
+        ;;
+esac
