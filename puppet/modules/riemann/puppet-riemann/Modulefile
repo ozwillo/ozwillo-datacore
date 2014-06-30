@@ -1,0 +1,8 @@
+name 'vvision-riemann'
+version '0.0.1'
+source ''
+author 'vvision'
+license 'Apache 2.0'
+summary 'Puppet module for Riemann'
+description 'Module for Riemann configuration'
+project_page ''
