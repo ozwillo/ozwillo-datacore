@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.wordnik.swagger.annotations.ApiModel;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
@@ -113,6 +115,16 @@ public class DCResource {
       resource.setUri(UriHelper.buildUri(dcUri.getContainer(), modelType, dcUri.getId()));
       return resource;
    }
+   /**
+    * Helps set URI once props are set
+    * @param containerUrl
+    * @param id
+    * @return
+    */
+   public DCResource setUriFromId(String containerUrl, String id) {
+      this.setUri(UriHelper.buildUri(containerUrl, this.getTypes().get(0), id));
+      return this;
+   }
    /** helper method to build new DCResources FOR TESTING
     * TODO or in builder instance ? */
    public DCResource addType(String mixinType) {
@@ -138,9 +150,28 @@ public class DCResource {
     * @return
     */
    public DCResource copy(DCResource source, Object ... modelOrMixins) {
-      // TODO copy it from IGN sample
+      // TODO copy it from IGN sample !!!!!!!!!!!!!!!!!!!!!!
       return this;
    }
+   
+   /**
+    * Helper for building Datacore maps
+    * ex. resourceService.propertiesBuilder().put("name", "John").put("age", 18).build()
+    * @return
+    */
+   public static ImmutableMap.Builder<String, Object> propertiesBuilder() {
+      return new ImmutableMap.Builder<String, Object>();
+   }
+
+   /**
+    * Helper for building Datacore lists
+    * ex. resourceService.listBuilder().add(landscape.getUri()).add(monument.getUri()).build()
+    * @return
+    */
+   public static ImmutableList.Builder<Object> listBuilder() {
+      return new ImmutableList.Builder<Object>();
+   }
+   
 
    /**
     * shortcut method

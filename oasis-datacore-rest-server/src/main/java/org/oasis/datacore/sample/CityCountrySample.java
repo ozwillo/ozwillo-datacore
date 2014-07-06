@@ -1,7 +1,5 @@
 package org.oasis.datacore.sample;
 
-import java.util.ArrayList;
-
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
@@ -95,12 +93,12 @@ public class CityCountrySample extends DatacoreSampleBase {
       DCResource londonCity = resourceService.create(CITY_MODEL_NAME, "UK/London")
             .set("name", "London").set("inCountry", ukCountry.getUri())
             .set("populationCount", 10000000).set("name_i18n",
-                  resourceService.propertiesBuilder().put("en", "London").put("fr", "Londres").build());
+                  DCResource.propertiesBuilder().put("en", "London").put("fr", "Londres").build());
       DCResource torinoCity = resourceService.create(CITY_MODEL_NAME, "Italia/Torino")
             .set("name", "Torino").set("inCountry", italiaCountry.getUri())
             .set("populationCount", 900000).set("name_i18n",
-                  resourceService.propertiesBuilder().put("it", "Torino").put("fr", "Turin").build())
-                  .set("pointsOfInterest", resourceService.listBuilder().add(view.getUri()).add(monument.getUri()).build());
+                  DCResource.propertiesBuilder().put("it", "Torino").put("fr", "Turin").build())
+                  .set("pointsOfInterest", DCResource.listBuilder().add(view.getUri()).add(monument.getUri()).build());
       lyonCity = postDataInType(lyonCity);
       londonCity = postDataInType(londonCity);
       torinoCity = postDataInType(torinoCity);
