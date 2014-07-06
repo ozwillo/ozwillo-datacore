@@ -106,27 +106,39 @@ public class ResourceEntityMapperService {
          entityValue = (Integer) resourceValue; // TODO LATER also allow String  ??
          
       } else if ("float".equals(dcField.getType())) {
-    	  if (resourceValue instanceof Double) {
-        		entityValue = new Double((Double)resourceValue);
-          }
-    	  else if (!(resourceValue instanceof Float)) {
-            if (resourceValue instanceof Integer) {
+         if (!(resourceValue instanceof Float)) {
+            if (resourceValue instanceof Double) {
+               // BEWARE jackson parses as Double what is sent as Float !
+               entityValue = (Double) resourceValue;
+            } else if (resourceValue instanceof Integer) {
                entityValue = new Float((Integer) resourceValue);
                resourceParsingContext.addWarning("float Field value is a JSON integer : " + resourceValue
-                     + ", which allowed as fallback be should rather be a JSON float");
+                     + ", which allowed as fallback but should rather be a JSON float");
+            } else {
+               // other types ex. Double, long are wrong
+               throw new ResourceParsingException("float Field value is not a JSON float "
+                     + "(nor integer, which is allowed as fallback) : " + resourceValue);
             }
-            throw new ResourceParsingException("float Field value is not a JSON float "
-                  + "(nor integer, which is allowed as fallback) : " + resourceValue);
          } else {
-        	 entityValue = (Float) resourceValue; // TODO LATER also allow String  ?? 
+            entityValue = (Float) resourceValue; // TODO LATER also allow String  ?? 
          } 
       } else if ("long".equals(dcField.getType())) {
          // Javascript has no long : http://javascript.about.com/od/reference/g/rlong.htm
-         // so supported through String instead
+         // so supported through String instead (or Integer as fallback)
          if (!(resourceValue instanceof String)) {
-            throw new ResourceParsingException("long Field value is not a string : " + resourceValue);
+            if (resourceValue instanceof Long) {
+               entityValue = (Long) resourceValue; // can only happen if called locally, NOT remotely through jackson
+            } else if (resourceValue instanceof Integer) {
+               entityValue = new Long((Integer) resourceValue);
+               resourceParsingContext.addWarning("long Field value is a JSON integer : " + resourceValue
+                     + ", which allowed as fallback but should rather be a JSON long");
+            } else {
+               // other types ex. Double, float are wrong
+               throw new ResourceParsingException("long Field value is not a string : " + resourceValue);
+            }
+         } else {
+            entityValue = valueParsingService.parseLongFromString((String) resourceValue);
          }
-         entityValue = valueParsingService.parseLongFromString((String)resourceValue);
          
       } else if ("double".equals(dcField.getType())) {
          if (!(resourceValue instanceof Double)) {

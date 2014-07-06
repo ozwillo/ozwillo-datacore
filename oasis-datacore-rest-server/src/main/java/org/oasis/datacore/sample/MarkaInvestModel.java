@@ -70,7 +70,7 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		countryModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
 		countryModel.addField(new DCField("name", DCFieldTypeEnum.STRING.getType(), true, 100));
 		countryModel.addField(new DCField("lat", DCFieldTypeEnum.FLOAT.getType()));
-		countryModel.addField(new DCField("long", DCFieldTypeEnum.FLOAT.getType()));
+		countryModel.addField(new DCField("long", DCFieldTypeEnum.LONG.getType()));
 		countryModel.addField(new DCField("population", DCFieldTypeEnum.INTEGER.getType()));
 		countryModel.addField(new DCField("language", DCFieldTypeEnum.STRING.getType()));
 		listModel.add(countryModel);
@@ -81,7 +81,7 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		cityModel.addField(new DCField("population", DCFieldTypeEnum.INTEGER.getType()));
 		cityModel.addField(new DCListField("postalCodes", new DCField("postalCode", DCFieldTypeEnum.STRING.getType())));
 		cityModel.addField(new DCField("lat", DCFieldTypeEnum.FLOAT.getType()));
-		cityModel.addField(new DCField("long", DCFieldTypeEnum.FLOAT.getType()));
+		cityModel.addField(new DCField("long", DCFieldTypeEnum.LONG.getType()));
 		cityModel.addField(new DCResourceField("country", COUNTRY_MODEL_NAME));
 		cityModel.getSecurity().addResourceAdmin("model_resource_admin_sample.marka.city");
 		listModel.add(cityModel);

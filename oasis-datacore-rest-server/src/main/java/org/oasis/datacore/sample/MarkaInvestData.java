@@ -94,12 +94,12 @@ public class MarkaInvestData extends DatacoreSampleBase {
 		listCountry.clear();
 		DCResource country1 = buildResource(MarkaInvestModel.COUNTRY_MODEL_NAME,
 				new SimpleEntry<>("id", 1),new SimpleEntry<>("name", "France"),
-				new SimpleEntry<>("lat", 46f), new SimpleEntry<>("long", 2f),
+				new SimpleEntry<>("lat", 46f), new SimpleEntry<>("long", 2l),
 				new SimpleEntry<>("population", 65000000), new SimpleEntry<>("language", "FR_fr"));
 		
 		DCResource country2 = buildResource(MarkaInvestModel.COUNTRY_MODEL_NAME,
 				new SimpleEntry<>("id", 2),new SimpleEntry<>("name", "Deutschland"),
-				new SimpleEntry<>("lat", 50f), new SimpleEntry<>("long", 15f),
+				new SimpleEntry<>("lat", 50f), new SimpleEntry<>("long", 15l),
 				new SimpleEntry<>("population", 55000000), new SimpleEntry<>("language", "De_de"));
 		listCountry.add(country1);
 		listCountry.add(country2);
@@ -112,7 +112,7 @@ public class MarkaInvestData extends DatacoreSampleBase {
 		DCResource city1 = buildResource(MarkaInvestModel.CITY_MODEL_NAME,
 				new SimpleEntry<>("id", 1),new SimpleEntry<>("name", "Lyon"),
 				new SimpleEntry<>("population", 2000000), new SimpleEntry<>("postalCodes", listPostalCodeCity1),
-				new SimpleEntry<>("lat", 61f), new SimpleEntry<>("long", 12f), new SimpleEntry<>("country", country1.getUri()));
+				new SimpleEntry<>("lat", 61f), new SimpleEntry<>("long", 12l), new SimpleEntry<>("country", country1.getUri()));
 		
 		List<String> listPostalCodeCity2 = new ArrayList<>();
 		listPostalCodeCity2.add("10243");
@@ -121,7 +121,7 @@ public class MarkaInvestData extends DatacoreSampleBase {
 		DCResource city2 = buildResource(MarkaInvestModel.CITY_MODEL_NAME,
 				new SimpleEntry<>("id", 2),new SimpleEntry<>("name", "Berlin"),
 				new SimpleEntry<>("population", 1000000), new SimpleEntry<>("postalCodes", listPostalCodeCity2),
-				new SimpleEntry<>("lat", 75f), new SimpleEntry<>("long", 35f), new SimpleEntry<>("country", country2.getUri()));
+				new SimpleEntry<>("lat", 75f), new SimpleEntry<>("long", 35l), new SimpleEntry<>("country", country2.getUri()));
 		listCity.add(city1);
 		listCity.add(city2);
 		
