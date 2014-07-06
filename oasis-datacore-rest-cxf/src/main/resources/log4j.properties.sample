@@ -7,14 +7,18 @@
 #
 #------------------------------------------------------------------------------
 
-#log4j.rootCategory=INFO, S, R
-log4j.rootCategory=DEBUG, S, R
+log4j.rootCategory=INFO, S, R
+#log4j.rootCategory=DEBUG, S, R
 
 #log4j.logger.org.oasis=DEBUG
 #log4j.logger.org.springframework=DEBUG
 #log4j.logger.com.mongodb=DEBUG
 log4j.logger.org.springframework.data.mongodb.core=INFO
 log4j.logger.org.springframework.data.auditing=INFO
+log4j.logger.org.springframework.security=INFO
+##USELESS? log4j.logger.org.springframework.security.access.intercept.AbstractSecurityInterceptor=INFO
+##USELESS? log4j.logger.org.springframework.security.access.vote.AbstractAccessDecisionManager=INFO
+##USELESS log4j.logger.org.springframework.security.access.prepost.PreInvocationAuthorizationAdviceVoter=INFO
 #log4j.logger.org.apache.cxf=DEBUG
 log4j.logger.org.apache.cxf.jaxrs.utils.JAXRSUtils=INFO
 log4j.logger.org.apache.cxf.phase.PhaseInterceptorChain=INFO
