@@ -98,7 +98,7 @@ public class UriHelper {
       }
       
       String[] iri = parseIri(containerAndPathWithoutSlash[1]);
-      return new DCURI(containerUrl, iri[0], iri[1], isRelativeUri, false, false);
+      return new DCURI(urlContainer, iri[0], iri[1], isRelativeUri, false, false);
    }
    /**
     * Parses any URI, even external ; shortcut to parseUri(uri, null)
