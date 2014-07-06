@@ -35,6 +35,11 @@ public class DCModel extends DCModelBase {
 		super(name);
 	}
 
+	/**
+	 * NB. to look up in mongo using special characters, do ex. with colon (':') :
+	 * db["my:model"].find()
+	 * @return
+	 */
 	public String getCollectionName() {
 		return this.getName();
 	}

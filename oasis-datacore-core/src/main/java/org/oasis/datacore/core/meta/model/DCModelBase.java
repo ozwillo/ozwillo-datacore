@@ -12,9 +12,9 @@ public abstract class DCModelBase {
    private String name;
    /** to be incremented each time there is a backward incompatible
     * (ex. field change, rather than new field) */
-   private String majorVersion;
-   /** regular optimistic locking version */
-   private String version;
+   private long majorVersion = 0;
+   /** regular optimistic locking version (and NOT a minor version of the major version) */
+   private long version = 0;
    /** TODO draft state & publish / life cycle */
    private String documentation; // TODO move in another collection for performance
    private Map<String,DCField> fieldMap = new HashMap<String,DCField>();
@@ -118,6 +118,12 @@ public abstract class DCModelBase {
    public String getName() {
       return name;
    }
+   public long getMajorVersion() {
+      return majorVersion;
+   }
+   public long getVersion() {
+      return version;
+   }
 
    /** TODO make it unmodifiable */
    public Map<String, DCField> getFieldMap() {
@@ -161,6 +167,17 @@ public abstract class DCModelBase {
       this.globalFieldMap = null;
       return this;
    }
+   public DCModelBase addMixins(DCMixin ... mixins) {
+      for (DCMixin mixin : mixins) {
+         this.getMixins().add(mixin);
+         this.fieldAndMixins.add(mixin);
+      }
+      this.globalFieldMap = null;
+      return this;
+   }
+   
+   
+   
    // update methods
 
    /** helper method to build new DCModel/Mixins FOR TESTING
@@ -181,6 +198,12 @@ public abstract class DCModelBase {
 
    public void setName(String name) {
       this.name = name;
+   }
+   public void setMajorVersion(long majorVersion) {
+      this.majorVersion = majorVersion;
+   }
+   public void setVersion(long version) {
+      this.version = version;
    }
 
    public void setDocumentation(String documentation) {

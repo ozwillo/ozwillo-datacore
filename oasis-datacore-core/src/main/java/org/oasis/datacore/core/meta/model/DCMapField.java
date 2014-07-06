@@ -15,14 +15,14 @@ import java.util.Map;
  * 
  * @author mdutoo
  */
-// TODO common abstract / inherit with DCModel
+// TODO common abstract / inherit with DCModel, possibly inherit from ancestor map fields
 public class DCMapField extends DCField {
 
    private Map<String,DCField> mapFields = new HashMap<String,DCField>();
    private List<String> mapFieldNames = new ArrayList<String>(); // to maintain order
    
    public DCMapField(String name) {
-      super(name, "map", false, 0);
+      super(name, "map", false, 0); // TODO required ?!?
       this.setName(name);
    }
 
@@ -38,9 +38,10 @@ public class DCMapField extends DCField {
    ///////////////////////////////////////
    // update methods
    
-   public void addField(DCField field) {
+   public DCMapField addField(DCField field) {
       mapFields.put(field.getName(), field);
       mapFieldNames.add(field.getName());
+      return this;
    }
 
    public void setMapFieldNames(List<String> mapFieldNames) {
