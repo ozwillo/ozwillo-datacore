@@ -2,6 +2,7 @@ package org.oasis.datacore.rest.server.parsing.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -12,6 +13,8 @@ import org.oasis.datacore.core.meta.model.DCModel;
 /**
  * Keeps the state of parsing (path in model instance) in order to be able
  * to display error messages that pinpoint to error location.
+ * 
+ * TODO LATER OPT less context for performance unless enabled in request context ?
  * 
  * @author mdutoo
  *
@@ -53,10 +56,12 @@ public class DCResourceParsingContext {
       if (this.resourceValueStack.isEmpty()) {
          fullValuedPath = "Missing root model name";
       } else {
+         // TODO LATER OPT less context for performance unless enabled in request context ?
          DCResourceValue previousResourceValue = this.resourceValueStack.peek();
-         fullValuedPath = previousResourceValue.getFullValuedPath() + "/"
-               + ((value == null) ? field.getName() : field.getName() + "[='" + value + "']");
-         // TODO test if enough xpath-like in addition to being a value path (which is particularly ugly in list case)
+         fullValuedPath = previousResourceValue.getFullValuedPath() + "/" + field.getName();
+         if (!(value instanceof List<?> || value instanceof Map<?,?>)) {
+            fullValuedPath += "[='" + ((value == null) ? "null" : value) + "']";
+         }
       }
       this.resourceValueStack.add(new DCResourceValue(fullValuedPath, field,  value));
    }
