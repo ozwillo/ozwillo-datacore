@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.annotation.PostConstruct;
 import javax.ws.rs.WebApplicationException;
 
+import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
 import org.oasis.datacore.core.init.InitService;
 import org.oasis.datacore.core.init.Initable;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
@@ -24,6 +25,7 @@ import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.server.DatacoreApiImpl;
 import org.oasis.datacore.rest.server.event.EventService;
+import org.oasis.datacore.rest.server.resource.ResourceEntityMapperService;
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.rest.server.resource.UriService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,7 +80,11 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
    @Autowired
    protected ResourceService resourceService;
    @Autowired
-   protected UriService uriService;
+   protected UriService uriService; // to build URIs when using ResourceService
+   @Autowired
+   protected LdpEntityQueryService ldpEntityQueryService;
+   @Autowired
+   protected ResourceEntityMapperService resourceEntityMapperService; // to unmap LdpEntityQueryService results
 
    @Autowired
    protected EventService eventService;
@@ -89,6 +95,13 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
    private HashSet<DCModel> models = new HashSet<DCModel>();
 
 
+   /**
+    * Override to come before or after
+    */
+   @Override
+   public int getOrder() {
+      return 1000;
+   }
    /*@Override
    public void onApplicationEvent(ContextRefreshedEvent event) {
       this.init();

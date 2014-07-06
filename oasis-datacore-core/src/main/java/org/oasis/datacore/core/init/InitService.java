@@ -2,6 +2,7 @@ package org.oasis.datacore.core.init;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,8 +91,18 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
       }
    }
 
-   public void register(Initable bootstrappable) {
-      this.initables.add(bootstrappable);
+   public void register(Initable initable) {
+      int order = initable.getOrder();
+      if (this.initables.isEmpty()
+            || order >= this.initables.get(this.initables.size() -1).getOrder()) {
+         this.initables.add(initable);  
+      }
+      for (ListIterator<Initable> initableListIt = this.initables.listIterator(0); initableListIt.hasNext();) {
+         if (order < initableListIt.next().getOrder()) {
+            initableListIt.add(initable);
+            break;
+         }
+      }
    }
 
 }
