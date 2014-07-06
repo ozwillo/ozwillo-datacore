@@ -173,6 +173,9 @@
       <!-- jackson.version>2.3.3</jackson.version><!- would conflict ->
       <sesame.version>2.7.11</sesame.version>
       <slf4j.version>1.7.7</slf4j.version -><!- would conflict -->
+      
+      <!-- import, for tests : -->
+      <opencsv.version>2.3</opencsv.version>
 	</properties>
 
 	<!-- ======= -->
@@ -593,6 +596,13 @@
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient-cache</artifactId>
             <version>${httpclient.version}</version>
+         </dependency>
+         
+         <!-- import, for tests : -->
+         <dependency>
+            <groupId>net.sf.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>${opencsv.version}</version>
          </dependency>
          
 		</dependencies>

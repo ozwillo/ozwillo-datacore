@@ -113,6 +113,13 @@
          <groupId>org.apache.httpcomponents</groupId>
          <artifactId>httpclient-cache</artifactId>
       </dependency>
+         
+      <!-- import, for tests : -->
+      <dependency>
+         <groupId>net.sf.opencsv</groupId>
+         <artifactId>opencsv</artifactId>
+         <!-- scope>test</scope -->
+      </dependency>
       
 	</dependencies>
 
