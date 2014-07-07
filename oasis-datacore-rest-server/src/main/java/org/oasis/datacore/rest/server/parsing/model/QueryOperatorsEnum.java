@@ -1,8 +1,8 @@
 package org.oasis.datacore.rest.server.parsing.model;
 
 import java.util.AbstractMap.SimpleEntry;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
@@ -36,46 +36,59 @@ public enum QueryOperatorsEnum {
 	NOT_IN(DCFieldTypeEnum.equalableTypes, DCFieldTypeEnum.LIST, "$nin"),
 	REGEX(DCFieldTypeEnum.onlyString, "$regex"),
 	EXISTS(DCFieldTypeEnum.everyTypes, "$exists"),
-	ALL(DCFieldTypeEnum.onlyList, DCFieldTypeEnum.LIST, "$all"),
-	ELEM_MATCH(DCFieldTypeEnum.onlyList, DCFieldTypeEnum.LIST, "$elemMatch"),
-	SIZE(DCFieldTypeEnum.onlyList, DCFieldTypeEnum.INTEGER, "$size");
+	ALL(true, DCFieldTypeEnum.LIST, "$all"), // list that contains all elements
+	ELEM_MATCH(true, DCFieldTypeEnum.MAP, "$elemMatch"), // list whose elements match all criteria ; NB. primitive types are easier done using equals !
+	SIZE(true, DCFieldTypeEnum.INTEGER, "$size"); // list of size
 
    public static final Set<QueryOperatorsEnum> noValueOperators = Sets.immutableEnumSet(new ImmutableSet
          .Builder<QueryOperatorsEnum>().add(QueryOperatorsEnum.SORT_ASC)
          .add(QueryOperatorsEnum.SORT_DESC).add(QueryOperatorsEnum.EXISTS).build()); // uses EnumSet
-   
-	private Collection<String> listOperators;
-	private Collection<DCFieldTypeEnum> listCompatibleTypes;
+
+   private Set<DCFieldTypeEnum> listCompatibleTypes;
+   private boolean isListSpecificOperator = false;
+	private Set<String> listOperators;
 	/** field type to parse criteria value as, if differs from criteria field's (for
 	 * $in, $nin, $all, $elemMatch, $size) ; else null */
    private DCFieldTypeEnum parsingType;
 	
-	private QueryOperatorsEnum(Collection<DCFieldTypeEnum> compatibleTypes,
-	      DCFieldTypeEnum parsingType, String... operators) {
-		this.listOperators = new ArrayList<String>();
-		if(operators != null) {
-			for(String operator : operators) {
-				this.listOperators.add(operator);
-			}
-		}
+	private QueryOperatorsEnum(Set<DCFieldTypeEnum> compatibleTypes,
+	      DCFieldTypeEnum parsingType, String... listOperators) {
       this.listCompatibleTypes = compatibleTypes;
       this.parsingType = parsingType;
+		this.listOperators = (listOperators == null) ? new HashSet<String>(0)
+		      : new HashSet<String>(Arrays.asList(listOperators));
 	}
+	/**
+	 * Constructor for list-specific operators : $all, $elemMatch, $size
+	 * NB. compatibleTypes are onlyList
+    * @param isListSpecificOperator must be true
+	 * @param parsingType
+	 * @param listOperators
+	 */
+   private QueryOperatorsEnum(boolean isListSpecificOperator,
+         DCFieldTypeEnum parsingType, String... listOperators) {
+      this(DCFieldTypeEnum.onlyList, parsingType, listOperators);
+      this.isListSpecificOperator = true;
+   }
 	
-   private QueryOperatorsEnum(Collection<DCFieldTypeEnum> compatibleTypes, String... operators) {
+   private QueryOperatorsEnum(Set<DCFieldTypeEnum> compatibleTypes, String... operators) {
       this(compatibleTypes, null, operators);
    }
 	
-	public Collection<String> getListOperators() {
-		return this.listOperators;
-	}
-	
-	public Collection<DCFieldTypeEnum> getListCompatibleTypes() {
+	public Set<DCFieldTypeEnum> getListCompatibleTypes() {
 		return this.listCompatibleTypes;
 	}
+
+   public boolean isListSpecificOperator() {
+      return isListSpecificOperator;
+   }
    
    public DCFieldTypeEnum getParsingType() {
       return parsingType;
+   }
+   
+   public Set<String> getListOperators() {
+      return this.listOperators;
    }
 
 	public static SimpleEntry<QueryOperatorsEnum, Integer> getEnumFromOperator(String operator) {

@@ -1,8 +1,6 @@
 package org.oasis.datacore.core.meta.model;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,8 +41,7 @@ public enum DCFieldTypeEnum {
          add(DCFieldTypeEnum.DOUBLE).add(DCFieldTypeEnum.DATE).build());
    /** types that can be tested to equality (& therefore also for $in) i.e. all without map & list */
    public static Set<DCFieldTypeEnum> equalableTypes = Sets.immutableEnumSet(new ImmutableSet
-         .Builder<DCFieldTypeEnum>().addAll(comparableTypes)
-         .add(DCFieldTypeEnum.RESOURCE).add(DCFieldTypeEnum.LIST).build()); ///////////////////// TODO !!
+         .Builder<DCFieldTypeEnum>().addAll(comparableTypes).add(DCFieldTypeEnum.RESOURCE).build());
    public static final Set<DCFieldTypeEnum> stringPrimitiveTypes = Sets.immutableEnumSet(new ImmutableSet
          .Builder<DCFieldTypeEnum>().add(DCFieldTypeEnum.STRING).add(DCFieldTypeEnum.RESOURCE).build());
    public static final Set<DCFieldTypeEnum> stringSerializedPrimitiveTypes = Sets.immutableEnumSet(new ImmutableSet
@@ -52,13 +49,6 @@ public enum DCFieldTypeEnum {
    //public static final Set<DCFieldTypeEnum> stringSerializedPrimitiveTypes = Sets.immutableEnumSet(new ImmutableSet
    //      .Builder<DCFieldTypeEnum>().add(DCFieldTypeEnum.STRING).add(DCFieldTypeEnum.DATE)
    //      .add(DCFieldTypeEnum.LONG).add(DCFieldTypeEnum.RESOURCE).build());
-	
-	static {
-      Collection<DCFieldTypeEnum> everyTypesWithoutMapListAndResource = new ArrayList<DCFieldTypeEnum>(everyTypes);
-      everyTypesWithoutMapListAndResource.remove(DCFieldTypeEnum.MAP);
-      everyTypesWithoutMapListAndResource.remove(DCFieldTypeEnum.LIST);
-      everyTypesWithoutMapListAndResource.remove(DCFieldTypeEnum.RESOURCE);
-	}
 	
 	private DCFieldTypeEnum(String type, Class<?> toClass) {
 		this.type = type;

@@ -3,16 +3,22 @@ package org.oasis.datacore.rest.server.parsing.service.impl;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 import org.oasis.datacore.core.meta.model.DCListField;
+import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
 import org.oasis.datacore.rest.server.parsing.model.DCQueryParsingContext;
 import org.oasis.datacore.rest.server.parsing.model.QueryOperatorsEnum;
 import org.oasis.datacore.rest.server.parsing.service.QueryParsingService;
 import org.oasis.datacore.rest.server.resource.ValueParsingService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -70,6 +76,8 @@ public class QueryParsingServiceImpl implements QueryParsingService {
       queryParsingContext.setHasNoIndexedField(
             queryParsingContext.isHasNoIndexedField() || dcField.getQueryLimit() == 0);
 
+      DCFieldTypeEnum dcFieldTypeEnum = DCFieldTypeEnum.getEnumFromStringType(dcField.getType()); // TODO LATER enum type
+      
       switch(operatorEnum) {
 
       case ALL: 
@@ -81,15 +89,41 @@ public class QueryParsingServiceImpl implements QueryParsingService {
          break;
 
       case ELEM_MATCH:
-         if (!"list".equals(dcField.getType())) {
-            throw new ResourceParsingException("$elemMatch can only be applied to a list but found "
-                  + dcField.getType() + " Field");
-         }
          // parsing using the latest upmost list field :
-         // WARNING the first element in the array must be selective, because all documents
+         // TODO WARNING the first element in the array must be selective, because all documents
          // containing it are scanned
-         // TODO which syntax ??
-         // TODO alt 1 : don't support it as a different operator but auto use it on list fields
+         if (!(parsedData instanceof LinkedHashMap<?, ?>)) {
+            // should be OK since has been checked to be of MAP parsing type and has been parsed by Jackson
+            throw new ResourceParsingException("$elemMatch criteria value should be JSON parsed as LinkedHashMap !");
+         }
+         DCField listElementField = ((DCListField) dcField).getListElementField(); // has been checked before
+         if (!(DCFieldTypeEnum.MAP.equals(DCFieldTypeEnum.getEnumFromStringType(listElementField.getType())))) {
+            throw new ResourceParsingException("$elemMatch criteria value should be on list whose elements are maps !");
+         }
+         Map<String, DCField> listElementMapFields = ((DCMapField) listElementField).getMapFields(); // has been checked before
+         @SuppressWarnings("unchecked")
+         LinkedHashMap<String,Object> elemMatchCriteriaMap = (LinkedHashMap<String, Object>) parsedData;
+         if (elemMatchCriteriaMap.isEmpty()) {
+            break; // nothing to do
+         }
+         Iterator<Entry<String, Object>> entryIt = elemMatchCriteriaMap.entrySet().iterator();
+         Entry<String, Object> entry = entryIt.next();
+         Criteria elemMatchCriteria = new Criteria(entry.getKey()).is(entry.getValue());
+         // TODO LATER support more than "equals", by moving out of Spring Data or reusing existing parsing algo
+         for (; entryIt.hasNext();) {entry = entryIt.next();
+            String subFieldName = entry.getKey();
+            if (!listElementMapFields.containsKey(subFieldName)) {
+               throw new ResourceParsingException("Trying to build an $elemMatch criteria on unknown field "
+                     + subFieldName + " of map (in list) " + queryParsingContext.peekResourceValue().getFullValuedPath()
+                      + " with fields " + listElementMapFields.keySet());
+            }
+            // TODO LATER support more than "equals", by moving out of Spring Data or reusing existing parsing algo
+            elemMatchCriteria = elemMatchCriteria.and(subFieldName).is(entry.getValue());
+         }
+         queryParsingContext.addCriteria().elemMatch(elemMatchCriteria);
+
+         // TODO which (other) syntax ??
+         // alt 1 : don't support it as a different operator but auto use it on list fields
          // (save if ex. boolean mode...) ; and add OR syntax here using ex. &join=OR syntax NO WRONG 
          // alt 2 : support it explicitly, with pure mongo syntax NO NOT IN HTTP GET QUERY
          // alt 3 : support it explicitly, with Datacore query syntax MAYBE ex. :
@@ -97,6 +131,9 @@ public class QueryParsingServiceImpl implements QueryParsingService {
          // (((TODO rather using another syntax ?? NOT FOR NOW rather should first add OR syntax
          // (i.e. autojoins ?!) to OR-like 'equals' on list elements, or prevent them)))
          // parsing using the mongodb syntax (so no sort) :
+         
+         // TODO arrays of arrays using {$elemMatch:{$elemMatch:
+         // http://stackoverflow.com/questions/12629692/querying-an-array-of-arrays-in-mongodb
          break;
 
       case EQUALS:
@@ -219,25 +256,32 @@ public class QueryParsingServiceImpl implements QueryParsingService {
 
    private void isQueryOperatorSuitableForField(DCField dcField, QueryOperatorsEnum queryOperatorsEnum) throws ResourceParsingException {
 
-      if(dcField != null && queryOperatorsEnum != null) {
-         DCFieldTypeEnum dcFieldTypeEnum = DCFieldTypeEnum.getEnumFromStringType(dcField.getType());
-         if(!"NOT_FOUND".equals(dcFieldTypeEnum.name())) {
-            if(!queryOperatorsEnum.getListCompatibleTypes().contains(dcFieldTypeEnum)) {
-               throw new ResourceParsingException("Field of type " + dcField.getType() + " is not compatible with query operator " + queryOperatorsEnum.name());
-            } else {
-               // If the field is a list we also check the element type
-               if(dcField instanceof DCListField) {
-                  DCField listField = ((DCListField)dcField).getListElementField();
-                  if(listField != null) {
-                     if(DCFieldTypeEnum.LIST.getType().equals(listField.getType()) || DCFieldTypeEnum.MAP.getType().equals(listField.getType())) {
-                        throw new ResourceParsingException("Field of type " + dcField.getType() + " is not compatible with operator " + queryOperatorsEnum.name());
-                     }
-                  }
-               }
-            }
+      if(dcField == null || queryOperatorsEnum == null) {
+         throw new ResourceParsingException("Field or query operator can't be null");
+      }
+      
+      DCFieldTypeEnum dcFieldTypeEnum = DCFieldTypeEnum.getEnumFromStringType(dcField.getType());
+      if(DCFieldTypeEnum.NOT_FOUND.name().equals(dcFieldTypeEnum.name())) {
+         return; // TODO can that even happen ??
+      }
+      
+      if (queryOperatorsEnum.isListSpecificOperator()) {
+         // if list-specific operator ex. $all, field must be a list
+         // (and its element field compatible with query value, but that is checked later)
+         if (!DCFieldTypeEnum.LIST.equals(dcFieldTypeEnum)) {
+            throw new ResourceParsingException("Field of type " + dcField.getType()
+                  + " is not compatible with operator " + queryOperatorsEnum.name()
+                  + " : list-specific operators only apply to list fields !");
          }
       } else {
-         throw new ResourceParsingException("Field or query operator can't be null");
+         while (DCFieldTypeEnum.LIST.equals(dcFieldTypeEnum)) {
+            // if list (and not list-specific operator ex. $all), it is its inner field's parsingType
+            dcField = ((DCListField) dcField).getListElementField();
+            dcFieldTypeEnum = DCFieldTypeEnum.getEnumFromStringType(dcField.getType());
+         }
+         if(!queryOperatorsEnum.getListCompatibleTypes().contains(dcFieldTypeEnum)) {
+            throw new ResourceParsingException("Field of type " + dcField.getType() + " is not compatible with query operator " + queryOperatorsEnum.name());
+         }
       }
 
    }
@@ -258,7 +302,7 @@ public class QueryParsingServiceImpl implements QueryParsingService {
          if (parsingTypeEnum == null) {
             throw new ResourceParsingException("Can't find the type of field " + dcField.getName());
          }
-      }
+      } // else operator with specific type, ex. $all with list type
 
       // special list case
       /*switch(operatorEnum) {

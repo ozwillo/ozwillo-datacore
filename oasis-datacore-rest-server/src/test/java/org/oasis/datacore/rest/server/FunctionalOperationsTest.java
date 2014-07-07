@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.ws.rs.BadRequestException;
+
 import org.apache.cxf.common.util.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -456,12 +458,33 @@ public class FunctionalOperationsTest {
 		List<DCResource> listResource = null;
 				
 		queryParameters = new QueryParameters();
-		queryParameters.add("companies", "$elemMatch[\"http://data-test.oasis-eu.org/dc/type/sample.marka.company/1\"]");
-		listResource = api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, queryParameters, 0, 10);
+		queryParameters.add("companies", "$elemMatch{\"nonExistingFieldA\":"
+		      + "\"http://data-test.oasis-eu.org/dc/type/sample.marka.company/1\""
+		      + ", \"nonExistingFieldB\":0}");
+		try {
+		   listResource = api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, queryParameters, 0, 10);
+      } catch (BadRequestException brex) {
+         Assert.assertTrue(brex.getResponse().getEntity().toString()
+               .contains("$elemMatch criteria value should be on list whose elements are maps"));
+      }
+		
+		// TODO test that works
+		/*
 		Assert.assertNotNull(listResource);
 		Assert.assertFalse("Resource list should not be empty", listResource.isEmpty());
 		Assert.assertTrue(listResource.size()==Integer.valueOf(2));
-						
+		*/
+		
+		try {
+		   api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, new QueryParameters()
+		      .add("firstName", "$elemMatch{\"nonExistingFieldA\":"
+		            + "\"http://data-test.oasis-eu.org/dc/type/sample.marka.company/1\"}"
+		            + ", \"nonExistingFieldB\":0"), 0, 10);
+		   Assert.fail("Should not be able to use $elemMatch on a non-list field !");
+		} catch (BadRequestException brex) {
+		   Assert.assertTrue(brex.getResponse().getEntity().toString()
+		         .contains("Field of type string is not compatible with operator ELEM_MATCH"));
+		}
 	}
 	
 	@Test
