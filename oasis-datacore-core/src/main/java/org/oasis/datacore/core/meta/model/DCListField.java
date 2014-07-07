@@ -8,7 +8,7 @@ public class DCListField extends DCField {
       
    }
    public DCListField(String name, DCField listElementField) {
-      super(name, "list", false, 0);
+      super(name, "list", false, 0, true);
       this.listElementField = listElementField;
    }
 

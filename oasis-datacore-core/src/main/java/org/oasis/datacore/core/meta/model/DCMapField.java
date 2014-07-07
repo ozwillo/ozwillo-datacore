@@ -22,7 +22,7 @@ public class DCMapField extends DCField {
    private List<String> mapFieldNames = new ArrayList<String>(); // to maintain order
    
    public DCMapField(String name) {
-      super(name, "map", false, 0); // TODO required ?!?
+      super(name, "map", false, 0, true); // TODO required ?!?
       this.setName(name);
    }
 

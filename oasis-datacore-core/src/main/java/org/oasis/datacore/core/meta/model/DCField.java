@@ -1,5 +1,9 @@
 package org.oasis.datacore.core.meta.model;
 
+import java.util.Set;
+
+import com.google.common.collect.ImmutableSet;
+
 
 /**
  * TODO readonly : setters only for tests, LATER admin using another (inheriting) model ?!?
@@ -32,6 +36,12 @@ public class DCField {
    // * on change event / action ??
    // * backoffice / admin UI conf ???
 
+   /** types that are supported by DCField i.e. all without map, list & resource ;
+    * TODO using Enum see DCFieldTypeEnum ?! */
+   public static Set<String> basicFieldTypes = new ImmutableSet
+         .Builder<String>().add("string").add("boolean").
+         add("int").add("float").add("long").add("double").add("date").build();
+   
    /** for unmarshalling only */
    public DCField() {
       
@@ -42,10 +52,22 @@ public class DCField {
       this.queryLimit = queryLimit;
    }
    public DCField(String name, String type) {
-      if (!DCFieldTypeEnum.basicFieldTypes.contains(type)) {
+      if (!basicFieldTypes.contains(type)) {
          throw new ClassCastException("DCField only supports basic fields and not " + type
                + " (name: " + name + ")");
       }
+      this.name = name;
+      this.type = type;
+   }
+   /** to be used in inheriting classes only, to skip constraint on type */
+   protected DCField(String name, String type, boolean required, int queryLimit,
+         boolean superConstructor) {
+      this(name, type, superConstructor);
+      this.required = required;
+      this.queryLimit = queryLimit;
+   }
+   /** to be used in inheriting classes only, to skip constraint on type */
+   protected DCField(String name, String type, boolean superConstructor) {
       this.name = name;
       this.type = type;
    }

@@ -20,12 +20,12 @@ public class DCResourceField extends DCField {
 
    public DCResourceField(String name, String resourceType, boolean required,
          int queryLimit) {
-      super(name, DCFieldTypeEnum.RESOURCE.getType(), required, queryLimit);
+      super(name, DCFieldTypeEnum.RESOURCE.getType(), required, queryLimit, true);
       this.setResourceType(resourceType);
    }
 
    public DCResourceField(String name, String resourceType) {
-      super(name, DCFieldTypeEnum.RESOURCE.getType());
+      super(name, DCFieldTypeEnum.RESOURCE.getType(), true);
       this.setResourceType(resourceType);
    }
 

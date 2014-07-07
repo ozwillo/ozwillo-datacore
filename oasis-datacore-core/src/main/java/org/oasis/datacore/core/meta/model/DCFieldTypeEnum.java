@@ -35,11 +35,6 @@ public enum DCFieldTypeEnum {
          .Builder<DCFieldTypeEnum>().add(DCFieldTypeEnum.LIST).build());
    public static final Set<DCFieldTypeEnum> onlyString = Sets.immutableEnumSet(new ImmutableSet
          .Builder<DCFieldTypeEnum>().add(DCFieldTypeEnum.STRING).build());
-   /** types that are supported by DCField i.e. all without map, list & resource */
-   public static Set<DCFieldTypeEnum> basicFieldTypes = Sets.immutableEnumSet(new ImmutableSet
-         .Builder<DCFieldTypeEnum>().add(DCFieldTypeEnum.STRING).add(DCFieldTypeEnum.BOOLEAN).
-         add(DCFieldTypeEnum.INTEGER).add(DCFieldTypeEnum.FLOAT).add(DCFieldTypeEnum.LONG).
-         add(DCFieldTypeEnum.DOUBLE).add(DCFieldTypeEnum.DATE).build());
    /** types that can be compared (& therefore sorted), i.e. all WithoutMapListAndResource ;
     * TODO add Resource in the case it has a sortable id ?!? */
    public static Set<DCFieldTypeEnum> comparableTypes = Sets.immutableEnumSet(new ImmutableSet
