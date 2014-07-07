@@ -32,7 +32,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
    ///private String baseUrl; // useless
    /////@Value("${datacoreApiClient.containerUrl}") // DOESN'T WORK 
    @Value("${datacoreApiServer.containerUrl}")
-   private String containerUrl;
+   private String containerUrl = "";
 
    
    /** after all models */
@@ -238,6 +238,9 @@ public class ResourceModelIniter extends DatacoreSampleBase {
                fieldToProps(((DCListField) field).getListElementField()));
          break;
       case "resource" :
+         if (!(field instanceof DCResourceField)) { // to debug pb
+            throw new RuntimeException("Not a DCResourceField : " + field.toString());
+         }
          fieldPropBuilder.put("dcmf:resourceType", ((DCResourceField) field).getResourceType());
          break;
       }
