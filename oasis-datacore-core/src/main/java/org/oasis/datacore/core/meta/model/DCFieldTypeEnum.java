@@ -23,7 +23,7 @@ public enum DCFieldTypeEnum {
 	DATE("date", DateTime.class),
 	MAP("map", Map.class),
 	LIST("list", List.class),
-	RESOURCE("resource", Map.class), // or String (if not root or embedded Resource case)
+	RESOURCE("resource", Map.class), // TODO (more commonly) or String (if not root or embedded Resource case)
 	NOT_FOUND("", null)
 	;
 	
@@ -35,12 +35,20 @@ public enum DCFieldTypeEnum {
          .Builder<DCFieldTypeEnum>().add(DCFieldTypeEnum.LIST).build());
    public static final Set<DCFieldTypeEnum> onlyString = Sets.immutableEnumSet(new ImmutableSet
          .Builder<DCFieldTypeEnum>().add(DCFieldTypeEnum.STRING).build());
-   public static Set<DCFieldTypeEnum> everyTypesWithoutMapListAndResource = Sets.immutableEnumSet(new ImmutableSet
+   /** types that are supported by DCField i.e. all without map, list & resource */
+   public static Set<DCFieldTypeEnum> basicFieldTypes = Sets.immutableEnumSet(new ImmutableSet
          .Builder<DCFieldTypeEnum>().add(DCFieldTypeEnum.STRING).add(DCFieldTypeEnum.BOOLEAN).
          add(DCFieldTypeEnum.INTEGER).add(DCFieldTypeEnum.FLOAT).add(DCFieldTypeEnum.LONG).
          add(DCFieldTypeEnum.DOUBLE).add(DCFieldTypeEnum.DATE).build());
-   public static Set<DCFieldTypeEnum> everyTypesWithoutMapAndList = Sets.immutableEnumSet(new ImmutableSet
-         .Builder<DCFieldTypeEnum>().addAll(everyTypesWithoutMapListAndResource)
+   /** types that can be compared (& therefore sorted), i.e. all WithoutMapListAndResource ;
+    * TODO add Resource in the case it has a sortable id ?!? */
+   public static Set<DCFieldTypeEnum> comparableTypes = Sets.immutableEnumSet(new ImmutableSet
+         .Builder<DCFieldTypeEnum>().add(DCFieldTypeEnum.STRING).add(DCFieldTypeEnum.BOOLEAN).
+         add(DCFieldTypeEnum.INTEGER).add(DCFieldTypeEnum.FLOAT).add(DCFieldTypeEnum.LONG).
+         add(DCFieldTypeEnum.DOUBLE).add(DCFieldTypeEnum.DATE).build());
+   /** types that can be tested to equality (& therefore also for $in) i.e. all without map & list */
+   public static Set<DCFieldTypeEnum> equalableTypes = Sets.immutableEnumSet(new ImmutableSet
+         .Builder<DCFieldTypeEnum>().addAll(comparableTypes)
          .add(DCFieldTypeEnum.RESOURCE).add(DCFieldTypeEnum.LIST).build()); ///////////////////// TODO !!
    public static final Set<DCFieldTypeEnum> stringPrimitiveTypes = Sets.immutableEnumSet(new ImmutableSet
          .Builder<DCFieldTypeEnum>().add(DCFieldTypeEnum.STRING).add(DCFieldTypeEnum.RESOURCE).build());

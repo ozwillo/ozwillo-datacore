@@ -24,16 +24,16 @@ import com.google.common.collect.Sets;
  */
 public enum QueryOperatorsEnum {
 
-	NOT_EQUALS(DCFieldTypeEnum.everyTypesWithoutMapAndList, "<>","&lt;&gt;","$ne","!="), // LATER2 also Map & List ???
-	GREATER_OR_EQUAL(DCFieldTypeEnum.everyTypesWithoutMapListAndResource, ">=","&gt;=","$gte"),
-	LOWER_OR_EQUAL(DCFieldTypeEnum.everyTypesWithoutMapListAndResource, "<=","&lt;=","$lte"),
-	EQUALS(DCFieldTypeEnum.everyTypesWithoutMapAndList, "==", "=", ""),
-	GREATER_THAN(DCFieldTypeEnum.everyTypesWithoutMapListAndResource, ">","&gt;","$gt"),
-	LOWER_THAN(DCFieldTypeEnum.everyTypesWithoutMapListAndResource, "<","&lt;","$lt"),
-	SORT_DESC(DCFieldTypeEnum.everyTypesWithoutMapListAndResource,"-"),
-	SORT_ASC(DCFieldTypeEnum.everyTypesWithoutMapListAndResource, "+"),
-	IN(DCFieldTypeEnum.everyTypesWithoutMapAndList, DCFieldTypeEnum.LIST, "$in"),
-	NOT_IN(DCFieldTypeEnum.everyTypesWithoutMapAndList, DCFieldTypeEnum.LIST, "$nin"),
+	NOT_EQUALS(DCFieldTypeEnum.equalableTypes, "<>","&lt;&gt;","$ne","!="), // LATER2 also Map & List ???
+	GREATER_OR_EQUAL(DCFieldTypeEnum.comparableTypes, ">=","&gt;=","$gte"),
+	LOWER_OR_EQUAL(DCFieldTypeEnum.comparableTypes, "<=","&lt;=","$lte"),
+	EQUALS(DCFieldTypeEnum.equalableTypes, "==", "=", ""),
+	GREATER_THAN(DCFieldTypeEnum.comparableTypes, ">","&gt;","$gt"),
+	LOWER_THAN(DCFieldTypeEnum.comparableTypes, "<","&lt;","$lt"),
+	SORT_DESC(DCFieldTypeEnum.comparableTypes,"-"),
+	SORT_ASC(DCFieldTypeEnum.comparableTypes, "+"),
+	IN(DCFieldTypeEnum.equalableTypes, DCFieldTypeEnum.LIST, "$in"),
+	NOT_IN(DCFieldTypeEnum.equalableTypes, DCFieldTypeEnum.LIST, "$nin"),
 	REGEX(DCFieldTypeEnum.onlyString, "$regex"),
 	EXISTS(DCFieldTypeEnum.everyTypes, "$exists"),
 	ALL(DCFieldTypeEnum.onlyList, DCFieldTypeEnum.LIST, "$all"),

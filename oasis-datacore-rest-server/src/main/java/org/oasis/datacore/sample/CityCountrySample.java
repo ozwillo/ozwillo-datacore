@@ -63,7 +63,6 @@ public class CityCountrySample extends DatacoreSampleBase {
       cityModel.addField(name_18nMapField);
       cityModel.addField(new DCListField("pointsOfInterest",
             new DCResourceField("zzz", POI_MODEL_NAME))); // TODO
-            ////new DCField("zzz", "resource")));
 
       super.createModelsAndCleanTheirData(poiModel, cityModel, countryModel);
    }

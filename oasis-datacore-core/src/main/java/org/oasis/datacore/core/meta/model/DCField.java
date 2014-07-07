@@ -37,12 +37,15 @@ public class DCField {
       
    }
    public DCField(String name, String type, boolean required, int queryLimit) {
-      this.name = name;
-      this.type = type;
+      this(name, type);
       this.required = required;
       this.queryLimit = queryLimit;
    }
    public DCField(String name, String type) {
+      if (!DCFieldTypeEnum.basicFieldTypes.contains(type)) {
+         throw new ClassCastException("DCField only supports basic fields and not " + type
+               + " (name: " + name + ")");
+      }
       this.name = name;
       this.type = type;
    }

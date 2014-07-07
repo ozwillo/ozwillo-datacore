@@ -238,10 +238,8 @@ public class ResourceModelIniter extends DatacoreSampleBase {
                fieldToProps(((DCListField) field).getListElementField()));
          break;
       case "resource" :
-         if (!(field instanceof DCResourceField)) { // to debug pb
-            throw new RuntimeException("Not a DCResourceField : " + field.toString());
-         }
          fieldPropBuilder.put("dcmf:resourceType", ((DCResourceField) field).getResourceType());
+         // TODO LATER OPT also embedded Resource as map
          break;
       }
       return fieldPropBuilder.build();

@@ -51,9 +51,9 @@ public class AltTourismPlaceAddressSample extends DatacoreSampleBase {
       oasisAddress.addField(new DCField("streetAndNumber", "string", false, 100)); // my.app.place.address.streetAndNumber ?!
       oasisAddress.addField(new DCField("zipCode", "string", true, 100)); // "string" for cedex / po box
       oasisAddress.addField(new DCField("cityName", "string", false, 100)); // OR only resource ??
-      oasisAddress.addField(new DCField("city", "resource", false, 100));
+      oasisAddress.addField(new DCResourceField("city", "city", false, 100)); // TODO create city model, or reuse sample ?!?
       oasisAddress.addField(new DCField("countryName", "string", false, 100)); // OR only resource ??
-      oasisAddress.addField(new DCField("country", "resource", false, 100));
+      oasisAddress.addField(new DCResourceField("country", "country", false, 100)); // TODO create country model, or reuse sample ?!?
 
       createModelsAndCleanTheirData(myAppPlaceAddress, altTourismPlaceKind, altTourismPlace, oasisAddress);
    }
