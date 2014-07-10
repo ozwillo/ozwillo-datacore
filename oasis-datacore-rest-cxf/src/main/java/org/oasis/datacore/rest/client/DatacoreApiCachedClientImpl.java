@@ -433,7 +433,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
     * @see org.oasis.datacore.rest.api.DatacoreApi#findDataInType(java.lang.String, javax.ws.rs.core.UriInfo, java.lang.Integer, java.lang.Integer)
     */
    @Override
-   public List<DCResource> findDataInType(String modelType, UriInfo uriInfo, Integer start, Integer limit, boolean debug) {
+   public List<DCResource> findDataInType(String modelType, UriInfo uriInfo, Integer start, Integer limit, String format, boolean debug) {
       //return delegate.findDataInType(type, uriInfo, start, limit, sort); // TODO cache ??
       throw new ClientException("Use rather findDataInType(String queryParams ...) on client side");
    }

@@ -13,6 +13,7 @@ import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.client.QueryParameters;
 import org.oasis.datacore.rest.client.cxf.mock.MockClientAuthenticationHelper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -31,6 +32,7 @@ public class DatacoreApiCXFClientTest {
    public static final String TEST_USER_JOHN = "john";
    
    @Autowired
+   @Qualifier("datacoreApiCachedJsonClient")
    private DatacoreCachedClient datacoreApiClient;
    
    /** to be able to build a full uri, to check in tests
@@ -68,7 +70,7 @@ public class DatacoreApiCXFClientTest {
       Assert.assertTrue(inCountryFound instanceof Map<?,?>);
       @SuppressWarnings("unchecked")
       Map<String,Object> inCountry = (Map<String,Object>) inCountryFound;
-      Assert.assertEquals(this.containerUrl + "dc/type/country/UK", inCountry.get("uri"));
+      Assert.assertEquals(this.containerUrl + "dc/type/country/UK", inCountry.get("@id"));
       Assert.assertEquals("UK", inCountry.get("name"));
       DCResource postedResource = datacoreApiClient.postDataInType(resource, "city");
       Assert.assertNotNull(postedResource);

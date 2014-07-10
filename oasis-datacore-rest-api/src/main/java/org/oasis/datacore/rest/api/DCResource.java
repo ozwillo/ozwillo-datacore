@@ -45,15 +45,15 @@ import com.wordnik.swagger.annotations.ApiModelProperty;
 public class DCResource {
    
    @ApiModelProperty(value = "URI", position=0, required=true)
-   @JsonProperty
+   @JsonProperty("@id")
    private String uri;
    @ApiModelProperty(value = "version", position=1, notes="The server's up-to-date version must "
          + "be provided (save when creating it), otherwise it will fail due to optimistic locking.")
-   @JsonProperty
+   @JsonProperty("o:version")
    private Long version;
 
    /** types : model (first one) plus type mixins */
-   @JsonProperty("rdf:type")
+   @JsonProperty("@type")
    private List<String> types;
    //@JsonProperty
    //private String type; // or this ? in addition to uri ? or model ?!? test conflict !
@@ -62,13 +62,13 @@ public class DCResource {
    private transient String id; // TODO or iri ? transient not required... ? in addition to uri ?? test conflict !
 
    // creation / last modified date, author ? (readonly !)
-   @JsonProperty
+   @JsonProperty("dc:created")
    private DateTime created;
-   @JsonProperty
+   @JsonProperty("dc:modified")
    private DateTime lastModified;
-   @JsonProperty
+   @JsonProperty("dc:creator")
    private String createdBy;
-   @JsonProperty
+   @JsonProperty("dc:contributor")
    private String lastModifiedBy;
    
    /** Other (business) properties. They are of the types supported by JSON (on Jackson) :

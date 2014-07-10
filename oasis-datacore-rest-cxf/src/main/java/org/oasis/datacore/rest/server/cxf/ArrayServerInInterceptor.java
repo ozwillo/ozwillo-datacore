@@ -16,6 +16,7 @@ import org.apache.cxf.phase.Phase;
 import org.oasis.datacore.rest.api.DatacoreApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.MediaType;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
@@ -56,7 +57,10 @@ public class ArrayServerInInterceptor extends AbstractPhaseInterceptor<Message> 
 
    @Override
    public void handleMessage(Message serverInRequestMessage) throws Fault {
-      if (!isPostDcTypeOperation(serverInRequestMessage)) {
+      @SuppressWarnings("static-access")
+      String type = (String) serverInRequestMessage.get(serverInRequestMessage.CONTENT_TYPE);
+
+      if (!isPostDcTypeOperation(serverInRequestMessage) || !MediaType.APPLICATION_JSON.isCompatibleWith(MediaType.valueOf(type))) {
          // NB. no org.apache.cxf.resource.operation.name yet
          return;
       }

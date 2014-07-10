@@ -16,6 +16,7 @@ import org.oasis.datacore.rest.api.util.JaxrsApiProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 
 public class ContextInInterceptor extends AbstractPhaseInterceptor<Message> {
 
@@ -34,8 +35,9 @@ public class ContextInInterceptor extends AbstractPhaseInterceptor<Message> {
    }
 
    @Override
-   public void handleMessage(Message serverInRequestMessage) throws Fault {
+   public void handleMessage(Message serverInRequestMessage) throws Fault {     
       Exchange ex = serverInRequestMessage.getExchange();
+      ex.put("dc.method", serverInRequestMessage.get(Message.HTTP_REQUEST_METHOD));
 
       if(getReqData && isInServerContext()) {
          try {
@@ -49,17 +51,21 @@ public class ContextInInterceptor extends AbstractPhaseInterceptor<Message> {
 
       //Log Resource model type sent in request if any
       if(logReqContent) {
+         @SuppressWarnings("static-access")
+         String type = (String) serverInRequestMessage.get(serverInRequestMessage.CONTENT_TYPE);
+         if (!MediaType.APPLICATION_JSON.isCompatibleWith(MediaType.valueOf(type))) {
+            return;
+         }
+         
          MessageContentsList objs = MessageContentsList.getContentsList(serverInRequestMessage);
          if(objs != null && objs.size() != 0) {
             Object resource = objs.get(0);
-            if(resource instanceof ArrayList) {
-               ArrayList<DCResource> dcRes = (ArrayList) resource;
+            if(resource instanceof ArrayList<?>) {
+               ArrayList<DCResource> dcRes = (ArrayList<DCResource>) resource;
                ex.put("dc.req.model", dcRes.get(0).getModelType());
             }
          }
       }
-
-      ex.put("dc.method", serverInRequestMessage.get(Message.HTTP_REQUEST_METHOD));
    }
 
    public boolean isInServerContext() {

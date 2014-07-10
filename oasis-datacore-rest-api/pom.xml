@@ -47,6 +47,17 @@
          <artifactId>swagger-jaxrs_2.10</artifactId>
       </dependency>
       
+      <dependency>
+         <groupId>commons-io</groupId>
+         <artifactId>commons-io</artifactId>
+      </dependency>
+      
+      <!-- JSON-LD facade -->
+      <dependency>
+         <groupId>com.github.jsonld-java</groupId>
+         <artifactId>jsonld-java</artifactId><!-- also brought by openid -->
+      </dependency>
+      
 	</dependencies>
  
 </project>

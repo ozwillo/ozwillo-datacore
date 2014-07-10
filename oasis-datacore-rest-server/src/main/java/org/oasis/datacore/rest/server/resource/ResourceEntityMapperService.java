@@ -18,6 +18,7 @@ import org.joda.time.DateTimeZone;
 import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.model.DCField;
+import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCModel;
@@ -159,8 +160,7 @@ public class ResourceEntityMapperService {
       } else if ("wkt".equals(dcField.getType())) { // TODO LATER2 ??
          entityValue = (String) resourceValue;*/
          
-      } else if ("map".equals(dcField.getType())
-            || "i18n".equals(dcField.getType())) { // TODO i18n better
+      } else if ("map".equals(dcField.getType())) {
          // NB. already tested not to be null
          if (!(resourceValue instanceof Map<?,?>)) {
             throw new ResourceParsingException("map Field value is not a JSON Object : " + resourceValue);
@@ -171,7 +171,6 @@ public class ResourceEntityMapperService {
          resourceToEntityFields(dataMap, entityMap, ((DCMapField) dcField).getMapFields(),
                resourceParsingContext, putRatherThanPatchMode);
          entityValue = entityMap;
-         
       } else if ("list".equals(dcField.getType())) {
          if (!(resourceValue instanceof List<?>)) {
             throw new ResourceParsingException("list Field value is not a JSON Array : " + resourceValue);
@@ -196,6 +195,40 @@ public class ResourceEntityMapperService {
                i++;
             }
             entityList.add(entityItem);
+         }
+         entityValue = entityList;
+         
+      } else if ("i18n".equals(dcField.getType())) {
+         if (!(resourceValue instanceof List<?>)) {
+            throw new ResourceParsingException("list Field value is not a JSON Array : " + resourceValue);
+         }
+         List<?> dataList = (List<?>) resourceValue;
+         ArrayList<Object> entityList = new ArrayList<Object>(dataList.size());
+
+         for (Object resourceItem : dataList) {
+            if(resourceItem instanceof Map<?, ?>) {
+               @SuppressWarnings("unchecked")
+               Map<String, Object> mapResourceItem = (Map<String,Object>) resourceItem;
+               Object i18nLanguage = mapResourceItem.get("@language");
+               Object i18nValue = mapResourceItem.get("@value");
+
+               if (!(i18nLanguage instanceof String)) {
+                  throw new ResourceParsingException("i18n Field language is not a JSON string : " + i18nLanguage);
+               }
+               String i18nEntityLanguage = (String) i18nLanguage;
+               if (!(i18nValue instanceof String)) {
+                  throw new ResourceParsingException("i18n Field value is not a JSON string : " + i18nValue);
+               }
+               String i18nEntityValue = (String) i18nValue;
+               HashMap<String, String> entityMap = new HashMap<String,String>();
+               entityMap.put("l", i18nEntityLanguage);
+               entityMap.put("v", i18nEntityValue);
+               entityList.add(entityMap);
+            } else {
+               resourceParsingContext.addError("Error while parsing i18n list element Field value as map" + resourceItem
+                     + " of JSON type " + ((resourceItem == null) ? "null" : resourceItem.getClass()));
+               resourceParsingContext.exit();
+            }
          }
          entityValue = entityList;
          
@@ -536,6 +569,24 @@ public class ResourceEntityMapperService {
                resourcePropValue = new DateTime((Date) resourcePropValue, DateTimeZone.UTC);
                // NB. if not UTC, default timezone has a non-integer time shift
             }
+         } else if(entityPropName.contains("i18n")) {
+            List<?> dataList = (List<?>) resourcePropValue;
+            ArrayList<Object> tempList = new ArrayList<Object>();
+            
+            for(Object mapResourceElement : dataList) {
+               if(mapResourceElement instanceof Map<?, ?>) {
+                  Map<String, String> tempMap = new HashMap<String, String>();
+                  
+                  @SuppressWarnings("unchecked")
+                  Map<String, String> mapResourceItem = (Map<String, String>) mapResourceElement;
+                  tempMap.put("@language", mapResourceItem.get("l"));
+                  tempMap.put("@value", mapResourceItem.get("v"));
+                  tempList.add(tempMap);
+               } else {
+                  //Error
+               }
+            }
+            resourcePropValue = tempList;
          }
          resourceProps.put(entityPropName, resourcePropValue);
       }

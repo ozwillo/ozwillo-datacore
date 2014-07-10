@@ -123,6 +123,12 @@
    <bean id="datacoreApiServer.jacksonJsonProvider" class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider">
       <constructor-arg><ref bean="datacoreApiServer.objectMapper"/></constructor-arg>
    </bean>
+   
+   <!-- Json-ld Provider-->
+   <bean id="datacoreApiServer.JsonLdJavaRdfProvider" class="org.oasis.datacore.rest.api.util.JsonLdJavaRdfProvider">
+      <property name="objectMapper" ><bean class="org.oasis.datacore.rest.api.binding.DatacoreObjectMapper"/></property>
+   </bean>
+
    <!-- provider configuration helping supporting POST of single DCResource.
    Let Jackson accepting single value as ARRRAY. See more details in ArrayServerInInterceptor -->
    <bean factory-bean="datacoreApiServer.jacksonJsonProvider" factory-method="enable">
@@ -146,6 +152,7 @@
       </jaxrs:serviceBeans>
       <jaxrs:providers>
          <ref bean="datacoreApiServer.jacksonJsonProvider"/>
+         <ref bean="datacoreApiServer.JsonLdJavaRdfProvider"/>
          <!-- to add to response error message built out of exception (ex. if WebApplicationException not thrown explicity) :
          (see http://cxf.apache.org/docs/jax-rs-basics.html#JAX-RSBasics-CustomizingdefaultWebApplicationExceptionmapper ) -->
          <!-- bean class="org.apache.cxf.jaxrs.impl.WebApplicationExceptionMapper">

@@ -40,7 +40,7 @@ public class DCField {
     * TODO using Enum see DCFieldTypeEnum ?! */
    public static Set<String> basicFieldTypes = new ImmutableSet
          .Builder<String>().add("string").add("boolean").
-         add("int").add("float").add("long").add("double").add("date").build();
+         add("int").add("float").add("long").add("double").add("date").add("i18n").build();
    
    /** for unmarshalling only */
    public DCField() {

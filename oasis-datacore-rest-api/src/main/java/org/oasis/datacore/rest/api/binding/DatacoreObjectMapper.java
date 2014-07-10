@@ -1,6 +1,7 @@
 package org.oasis.datacore.rest.api.binding;
 
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
@@ -39,6 +40,10 @@ public class DatacoreObjectMapper extends ObjectMapper {
       // else fails on date with years serialized with wrong leading zeroes ex. 0300 :
       // JsonParseException: Invalid numeric value: Leading zeroes not allowed, in ReaderBasedJsonParser._verifyNoLeadingZeroes()
       this.configure(JsonParser.Feature.ALLOW_NUMERIC_LEADING_ZEROS, true);
+      
+      // more lenient parsing that accepts a simpler kind of json :
+      // NB. required for JSON-LD/jsonld-java reading
+      this.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
    }
    
 }

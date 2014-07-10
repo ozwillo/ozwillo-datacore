@@ -21,6 +21,7 @@ public enum DCFieldTypeEnum {
 	DATE("date", DateTime.class),
 	MAP("map", Map.class),
 	LIST("list", List.class),
+	I18N("i18n", List.class),
 	RESOURCE("resource", Map.class), // TODO (more commonly) or String (if not root or embedded Resource case)
 	NOT_FOUND("", null)
 	;

@@ -15,6 +15,7 @@ import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.mongodb.DatacoreMongoTemplate;
 import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.meta.model.DCField;
+import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCModel;
@@ -61,6 +62,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       findConfParams.add("start");
       findConfParams.add("limit");
       findConfParams.add("debug");
+      findConfParams.add("format");
    }
    private static Map<String,DCField> dcEntityIndexedFields = new HashMap<String,DCField>();
    static {
@@ -224,6 +226,21 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
                      + fieldPath + " (" + i + "th in field path elements " + Arrays.asList(fieldPathElements)
                      + ") can't be done in findDataInType, do it rather on client side");
                continue parameterLoop; // TODO boum
+            } else if ("i18n".equals(dcField.getType())) {
+               do {
+                  dcField = ((DCListField) dcField).getListElementField();
+                  //If we have a map in a list (for i18n)
+                  if("map".equals(dcField.getType())) {
+                     dcField = ((DCMapField) dcField).getMapFields().get(fieldPathElement);
+                     if (dcField == null) {
+                        queryParsingContext.addError("In type " + dcModel.getName() + ", can't find field with path elements"
+                              + Arrays.asList(fieldPathElements) + ": can't go below " + i + "th path element "
+                              + fieldPathElement + ", because field is unkown");
+                        continue parameterLoop;
+                     }
+                  }
+                  // TODO TODO check that indexed (or set low limit) ??
+                } while ("list".equals(dcField.getType()));
             } else {
                queryParsingContext.addError("In type " + dcModel.getName() + ", can't find field with path elements"
                      + Arrays.asList(fieldPathElements) + ": can't go below " + i + "th element " 

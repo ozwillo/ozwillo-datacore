@@ -103,12 +103,12 @@ import com.wordnik.swagger.annotations.ApiResponses;
 @Path("dc") // relative path among other OASIS services
 @Api(value = "/dc", description = "Operations about Datacore Resources",
       authorizations="OASIS OAuth and required Datacore Resource authorizations")
-@Consumes(MediaType.APPLICATION_JSON) // TODO finer media type ex. +oasis-datacore ??
-@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.MEDIA_TYPE_WILDCARD) // TODO finer media type ex. +oasis-datacore ??
+@Produces(MediaType.MEDIA_TYPE_WILDCARD)
 public interface DatacoreApi {
    
-   public static final String QUERY_PARAMETERS = "#queryParameters";
-   public static final String DC_TYPE_PATH = "dc/type"; // TODO better from JAXRS annotations using reflection ?
+   public String QUERY_PARAMETERS = "#queryParameters";
+   public String DC_TYPE_PATH = "dc/type"; // TODO better from JAXRS annotations using reflection ?
    
    /*
     * TODO NO conflicts with postAllDataInType, rather client helper only ? or in interceptors ???
@@ -635,6 +635,7 @@ public interface DatacoreApi {
    List<DCResource> findDataInType(@PathParam("type") String modelType, @Context UriInfo uriInfo,
          @ApiParam(value="Pagination start") @DefaultValue("0") @QueryParam("start") Integer start,
          @ApiParam(value="Pagination limit") @DefaultValue("10") @QueryParam("limit") Integer limit,
+         @ApiParam(value="format") @DefaultValue("normal") @QueryParam("format") String format,
          @ApiParam(value="Debug") @DefaultValue("false") @QueryParam("debug") boolean debug)
          throws BadRequestException, NotFoundException;
 

@@ -36,6 +36,14 @@ import org.oasis.datacore.rest.client.cxf.CxfMessageHelper;
  */
 public class CxfJaxrsApiProvider implements JaxrsApiProvider {
 
+   public MediaType getNegotiatedResponseMediaType() {
+      String responseContentType = (this.getExchange() != null) ?
+            (String) this.getExchange().get(HttpHeaders.CONTENT_TYPE)
+            : MediaType.APPLICATION_JSON; // default if called directly in tests
+      // NB. exchange Content-Type has been negotiated according to Accept and set
+      return MediaType.valueOf(responseContentType);
+   }
+
    @Override
    public HttpHeaders getHttpHeaders() {
       return new HttpHeadersImpl(getInMessage());
@@ -52,11 +60,13 @@ public class CxfJaxrsApiProvider implements JaxrsApiProvider {
    }
 
    public Message getInMessage() {
-      return PhaseInterceptorChain.getCurrentMessage().getExchange().getInMessage();
+      return (PhaseInterceptorChain.getCurrentMessage() == null) ? null
+            : PhaseInterceptorChain.getCurrentMessage().getExchange().getInMessage();
    }
 
    public Exchange getExchange() {
-      return PhaseInterceptorChain.getCurrentMessage().getExchange();
+      return (PhaseInterceptorChain.getCurrentMessage() == null) ? null
+            :PhaseInterceptorChain.getCurrentMessage().getExchange();
    }
 
    @Override

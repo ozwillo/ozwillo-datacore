@@ -13,6 +13,7 @@ import org.apache.cxf.message.MessageContentsList;
 import org.apache.cxf.phase.AbstractPhaseInterceptor;
 import org.apache.cxf.phase.Phase;
 import org.oasis.datacore.rest.api.DCResource;
+import org.springframework.http.MediaType;
 
 /**
  * Helps supporting POST of single DCResource.
@@ -33,7 +34,10 @@ public class ArrayServerOutInterceptor extends AbstractPhaseInterceptor<Message>
    @Override
    public void handleMessage(Message serverOutResponseMessage) throws Fault {
       Message serverInRequestMessage = serverOutResponseMessage.getExchange().getInMessage();
-      if (!ArrayServerInInterceptor.isPostDcTypeOperation(serverInRequestMessage)) {
+      @SuppressWarnings("static-access")
+      String type = (String) serverOutResponseMessage.get(serverOutResponseMessage.CONTENT_TYPE);
+
+      if (!ArrayServerInInterceptor.isPostDcTypeOperation(serverInRequestMessage) || !MediaType.APPLICATION_JSON.isCompatibleWith(MediaType.valueOf(type))) {
          // NB. other failed alternatives :
          // org.apache.cxf.jaxrs.model.OperationResourceInfo has java method & uriTemplate
          // org.apache.cxf.resource.operation.name is DatacoreApiImpl#postAllDataInType

@@ -42,6 +42,7 @@ public class UseCaseTest {
 	private RightsApi rightsApi;
 	
 	@Autowired
+	@Qualifier("datacoreApiCachedJsonClient")
 	private DatacoreCachedClient datacoreApiClient;
 
 	@Value("${datacoreApiClient.containerUrl}")

@@ -171,7 +171,7 @@ public class DatacoreApiMockServerImpl extends JaxrsServerBase implements Dataco
    
 
    @Override
-   public List<DCResource> findDataInType(String modelType, UriInfo uriInfo, Integer start, Integer limit, boolean debug) {
+   public List<DCResource> findDataInType(String modelType, UriInfo uriInfo, Integer start, Integer limit, String format, boolean debug) {
       if (TEST_HEADER_MODEL_TYPE_QUERY_TRIGGER.equals(modelType)) {
          ArrayList<DCResource> res = new ArrayList<DCResource>();
          DCResource responseResource = new DCResource();

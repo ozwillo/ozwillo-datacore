@@ -23,6 +23,7 @@ import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.sample.MarkaInvestData;
 import org.oasis.datacore.sample.MarkaInvestModel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
@@ -35,6 +36,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class HistorizationTest {
 
 	@Autowired
+	@Qualifier("datacoreApiCachedJsonClient")
 	private DatacoreCachedClient datacoreApiClient;
 
 	@Value("${datacoreApiClient.containerUrl}")

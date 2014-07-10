@@ -48,6 +48,7 @@ import com.github.jsonldjava.utils.JsonUtils;
 public class DatacoreApiServerJsonLdTest {
    
    @Autowired
+   @Qualifier("datacoreApiCachedJsonClient")
    private /*DatacoreApi*/DatacoreCachedClient datacoreApiClient;
    
    /** to init models */
@@ -108,7 +109,7 @@ public class DatacoreApiServerJsonLdTest {
    }*/
 
    private DCResource buildNamedData(String type, String name) {
-      DCResource resource = DCResource.create(containerUrl, type, name).set("name", name);
+      DCResource resource = DCResource.create(containerUrl, type, name).set("n:name", name);
       /*String iri = name;
       resource.setUri(UriHelper.buildUri(containerUrl, type, iri));*/
       //resource.setVersion(-1l);
@@ -121,21 +122,21 @@ public class DatacoreApiServerJsonLdTest {
          int populationCount, boolean embeddedCountry) {
       String type = CityCountrySample.CITY_MODEL_NAME;
       String iri = countryName + '/' + name;
-      DCResource cityResource = DCResource.create(containerUrl, type, iri).set("name", name);
+      DCResource cityResource = DCResource.create(containerUrl, type, iri).set("n:name", name);
       /*DCResource cityResource = new DCResource();
       cityResource.setUri(UriHelper.buildUri(containerUrl, type, iri));
       cityResource.setProperty("name", name);*/
       //cityResource.setVersion(-1l);
       /*cityResource.setProperty("type", type);
       cityResource.setProperty("iri", iri);*/
-      cityResource.set("populationCount", populationCount);
+      cityResource.set("city:populationCount", populationCount);
       
       String countryUri = UriHelper.buildUri(containerUrl, CityCountrySample.COUNTRY_MODEL_NAME, countryName);
       if (embeddedCountry) {
          DCResource countryResource = buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, countryName);
-         cityResource.setProperty("inCountry", countryResource);
+         cityResource.setProperty("city:inCountry", countryResource);
       } else {
-         cityResource.setProperty("inCountry", countryUri);
+         cityResource.setProperty("city:inCountry", countryUri);
       }
       return cityResource;
    }
@@ -151,23 +152,23 @@ public class DatacoreApiServerJsonLdTest {
       datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "UK"));
       DateTime londonFoundedDate = new DateTime(-43, 4, 1, 0, 0, DateTimeZone.UTC);
       DCResource londonCityData = buildCityData("London", "UK", 10000000, false);
-      londonCityData.setProperty("founded", londonFoundedDate);
+      londonCityData.setProperty("city:founded", londonFoundedDate);
 
       //i18n
       HashMap<String, String> fr = new HashMap<String, String>();
-      fr.put("t", "fr");
-      fr.put("v", "Londres");
+      fr.put("@language", "fr");
+      fr.put("@value", "Londres");
       HashMap<String, String> en = new HashMap<String, String>();
-      en.put("t", "en");
-      en.put("v", "London");
+      en.put("@language", "en");
+      en.put("@value", "London");
       HashMap<String, String> us = new HashMap<String, String>();
-      us.put("t", "us");
-      us.put("v", "London");
+      us.put("@language", "us");
+      us.put("@value", "London");
       ArrayList<HashMap<String, String>> i18n = new ArrayList<HashMap<String, String>>();
       i18n.add(fr);
       i18n.add(en);
       i18n.add(us);
-      londonCityData.setProperty("i18Name", i18n);
+      londonCityData.setProperty("i18n:name", i18n);
 
       datacoreApiClient.postDataInType(londonCityData);
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
@@ -176,7 +177,9 @@ public class DatacoreApiServerJsonLdTest {
       ///JacksonJsonProvider dcJacksonJsonProvider = new JacksonJsonProvider(dcObjectMapper);
       ///ByteArrayOutputStream bos = new ByteArrayOutputStream();
       ///dcJacksonJsonProvider.writeTo(resources, type, genericType, annotations, mediaType, httpHeaders, bos);
-      String json = dcObjectMapper.writeValueAsString(resources);
+      String json = dcObjectMapper.writeValueAsString(resources)
+            .replaceAll("\"l\"", "\"@language\"")
+            .replaceAll("\"v\"", "\"@value\"");
       // now json SHOULD be json-ld
       // Read the file into an Object (The type of this object will be a List, Map, String, Boolean,
       // Number or null depending on the root object in the file).
@@ -185,6 +188,7 @@ public class DatacoreApiServerJsonLdTest {
       Map context = new HashMap();
       // Customise context...
       ///context.put("dc", "http://dc");
+      context.put("i18n:name", "{\"@container\": \"@language\"}");
       // Create an instance of JsonLdOptions with the standard JSON-LD options
       JsonLdOptions options = new JsonLdOptions();
       ///options.set

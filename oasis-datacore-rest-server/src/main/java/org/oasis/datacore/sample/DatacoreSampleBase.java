@@ -13,6 +13,7 @@ import org.oasis.datacore.core.init.Initable;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
+import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCMixin;
@@ -29,6 +30,7 @@ import org.oasis.datacore.rest.server.resource.ResourceEntityMapperService;
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.rest.server.resource.UriService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.mongodb.core.MongoOperations;
 
 import com.mongodb.BasicDBObject;
@@ -68,6 +70,7 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
    protected DataModelServiceImpl modelAdminService;
 
    @Autowired
+   @Qualifier("datacoreApiCachedJsonClient")
    protected /*DatacoreApi*/DatacoreCachedClient datacoreApiClient;
    /** for tests */
    @Autowired
@@ -209,6 +212,12 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
          Map<String, DCField> mapFields = ((DCMapField) globalField).getMapFields();
          // TODO WARNING : single map field can't be indexed !!!
          generateFieldIndices(coll, prefixedGlobalFieldName + ".", mapFields.values());
+         break;
+      case I18N:
+         DCField listI18nField = ((DCI18nField) globalField);
+         DCField map = ((DCListField) listI18nField).getListElementField();
+         Map<String, DCField> mapContent = ((DCMapField) map).getMapFields();
+         generateFieldIndices(coll, prefixedGlobalFieldName + ".", mapContent.values());
          break;
       default:
          break;

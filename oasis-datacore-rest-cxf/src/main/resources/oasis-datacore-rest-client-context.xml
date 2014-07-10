@@ -39,6 +39,13 @@
    <!-- context:component-scan base-package="org.oasis.datacore.rest.client" / -->
    <!-- else can't autowire client delegate because not yet created from xml -->
    <context:annotation-config /><!-- actually auto enabled by previous line -->
+   
+   <context:component-scan base-package="org.oasis.datacore.rest.api.util"/>
+   
+   <!-- Json-ld Provider-->
+   <bean id="datacoreApi.JsonLdJavaRdfProvider" class="org.oasis.datacore.rest.api.util.JsonLdJavaRdfProvider">
+      <property name="objectMapper" ><bean class="org.oasis.datacore.rest.api.binding.DatacoreObjectMapper"/></property>
+   </bean>
 
    <!-- Client sample CXF Bus
    All conf (features, properties, interceptors) is rather done on endpoints
@@ -62,6 +69,11 @@
    <jaxrs:client id="datacoreApiClient"
          serviceClass="org.oasis.datacore.rest.client.DatacoreClientApi"
          address="${datacoreApiClient.baseUrl}"><!-- TODO auth -->
+      <!-- OR rather than in annotated subinterfaces of DatacoreClientApi (which is simpler to understand),
+      specify serialized media / content type here (allows more of them) :
+      <jaxrs:headers>
+         <entry key="Consumes" value="application/json+ld"/>
+      </jaxrs:headers -->
       <jaxrs:providers>
          <!-- JSON provider (Jackson's) : -->
          <bean class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider">
@@ -98,6 +110,53 @@
    
    <bean id="datacoreApiCachedClient" class="org.oasis.datacore.rest.client.DatacoreApiCachedClientImpl">
       <property name="delegate"><ref bean="datacoreApiClient"/></property><!-- not necessary, autowired -->
+   </bean>
+
+
+   <jaxrs:client id="datacoreClientJsonApi"
+         serviceClass="org.oasis.datacore.rest.client.DatacoreClientJsonApi"
+         address="${datacoreApiClient.baseUrl}"><!-- TODO auth -->
+      <jaxrs:providers>
+         <!-- JSON provider (Jackson's) : -->
+         <bean class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider">
+            <constructor-arg><bean class="org.oasis.datacore.rest.api.binding.DatacoreObjectMapper"/></constructor-arg>
+         </bean>
+      </jaxrs:providers>
+      <jaxrs:outInterceptors>
+         <bean class="org.oasis.datacore.rest.client.cxf.QueryParametersClientOutInterceptor"/>
+         <bean class="org.oasis.datacore.rest.client.cxf.ETagClientOutInterceptor"/>
+         <bean class="org.oasis.datacore.rest.client.cxf.mock.MockLoginClientOutInterceptor"/><!-- TODO mock -->
+      </jaxrs:outInterceptors>
+      <jaxrs:features>
+         <cxf:logging/>
+      </jaxrs:features>
+      <jaxrs:properties></jaxrs:properties>
+   </jaxrs:client>
+  
+   <bean id="datacoreApiCachedJsonClient" class="org.oasis.datacore.rest.client.DatacoreApiCachedClientImpl">
+      <property name="delegate"><ref bean="datacoreClientJsonApi"/></property>
+   </bean>
+
+  
+   <jaxrs:client id="datacoreClientRdfApi"
+         serviceClass="org.oasis.datacore.rest.client.DatacoreClientRdfApi"
+         address="${datacoreApiClient.baseUrl}"><!-- TODO auth -->
+      <jaxrs:providers>
+         <ref bean="datacoreApi.JsonLdJavaRdfProvider"/>
+      </jaxrs:providers>
+      <jaxrs:outInterceptors>
+         <bean class="org.oasis.datacore.rest.client.cxf.QueryParametersClientOutInterceptor"/>
+         <bean class="org.oasis.datacore.rest.client.cxf.ETagClientOutInterceptor"/>
+         <bean class="org.oasis.datacore.rest.client.cxf.mock.MockLoginClientOutInterceptor"/><!-- TODO mock -->
+      </jaxrs:outInterceptors>
+      <jaxrs:features>
+         <cxf:logging/>
+      </jaxrs:features>
+      <jaxrs:properties></jaxrs:properties>
+   </jaxrs:client>
+   
+   <bean id="datacoreApiCachedRdfClient" class="org.oasis.datacore.rest.client.DatacoreApiCachedClientImpl">
+      <property name="delegate"><ref bean="datacoreClientRdfApi"/></property>
    </bean>
    
 </beans>

@@ -1,6 +1,9 @@
 package org.oasis.datacore.sample;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.oasis.datacore.core.meta.model.DCField;
+import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCModel;
@@ -32,36 +35,23 @@ public class CityCountrySample extends DatacoreSampleBase {
       DCModel countryModel = new DCModel(COUNTRY_MODEL_NAME);
       countryModel.setDocumentation("{ \"uri\": \"http://localhost:8180/dc/type/country/France\", "
             + "\"name\": \"France\" }");
-      countryModel.addField(new DCField("name", "string", true, 100));
+      countryModel.addField(new DCField("n:name", "string", true, 100));
       
       DCModel poiModel = new DCModel(POI_MODEL_NAME);
-      poiModel.addField(new DCField("name", "string", true, 50));
-      poiModel.addField(new DCField("description", "string"));
-      poiModel.addField(new DCField("location", "string")); // wkt
+      poiModel.addField(new DCField("n:name", "string", true, 50));
+      poiModel.addField(new DCField("poi:description", "string"));
+      poiModel.addField(new DCField("poi:location", "string")); // wkt
       
       DCModel cityModel = new DCModel(CITY_MODEL_NAME);
       cityModel.setDocumentation("{ \"uri\": \"http://localhost:8080/dc/type/city/France/Lyon\", "
             + "\"inCountry\": \"http://localhost:8080/dc/type/country/France\", \"name\": \"Lyon\" }");
-      cityModel.addField(new DCField("name", "string", true, 100));
-      cityModel.addField(new DCResourceField("inCountry", COUNTRY_MODEL_NAME, true, 100));
-      cityModel.addField(new DCField("populationCount", "int", false, 50));
-      cityModel.addField(new DCField("founded", "date", false, 0));
-      //New i18n
-      //{v:London,t:en},{v:Londres,t:fr}
-
-      DCMapField i18nMapField = new DCMapField("i18_map");
-      i18nMapField.addField(new DCField("v", "string", true, 100));
-      i18nMapField.addField(new DCField("t", "string", false, 0));
-      DCListField i18nListField = new DCListField("i18Name", i18nMapField);
-      cityModel.addField(i18nListField);
-
-      //      new ArrayList());
-      DCMapField name_18nMapField = new DCMapField("name_i18n"); // i18n
-      name_18nMapField.addField(new DCField("fr", "string"));
-      name_18nMapField.addField(new DCField("en", "string"));
-      name_18nMapField.addField(new DCField("it", "string"));
-      cityModel.addField(name_18nMapField);
-      cityModel.addField(new DCListField("pointsOfInterest",
+      cityModel.addField(new DCField("n:name", "string", true, 100));
+      cityModel.addField(new DCResourceField("city:inCountry", COUNTRY_MODEL_NAME, true, 100));
+      cityModel.addField(new DCField("city:populationCount", "int", false, 50));
+      cityModel.addField(new DCField("city:founded", "date", false, 0));
+         
+      cityModel.addField(new DCI18nField("i18n:name"));
+      cityModel.addField(new DCListField("city:pointsOfInterest",
             new DCResourceField("zzz", POI_MODEL_NAME))); // TODO
 
       super.createModelsAndCleanTheirData(poiModel, cityModel, countryModel);
@@ -72,35 +62,55 @@ public class CityCountrySample extends DatacoreSampleBase {
       cleanDataOfCreatedModels();
       
       DCResource franceCountry = resourceService.create(COUNTRY_MODEL_NAME, "France")
-            .set("name", "France");
+            .set("n:name", "France");
       DCResource ukCountry = resourceService.create(COUNTRY_MODEL_NAME, "UK")
-            .set("name", "UK");
+            .set("n:name", "UK");
       DCResource italiaCountry = resourceService.create(COUNTRY_MODEL_NAME, "Italia")
-            .set("name", "Italia");
+            .set("n:name", "Italia");
+      DCResource russiaCountry = resourceService.create(COUNTRY_MODEL_NAME, "Russia")
+            .set("n:name", "Russia");
       franceCountry = postDataInType(franceCountry);
       ukCountry = postDataInType(ukCountry);
       italiaCountry = postDataInType(italiaCountry);
+      russiaCountry = postDataInType(russiaCountry);
 
-      DCResource view = resourceService.create(POI_MODEL_NAME, "Basilica_di_Superga").set("name", "Basilica di Superga");
-      DCResource monument = resourceService.create(POI_MODEL_NAME, "Mole_Antonelliana").set("name", "Mole Antonelliana");
+      DCResource view = resourceService.create(POI_MODEL_NAME, "Basilica_di_Superga").set("n:name", "Basilica di Superga");
+      DCResource monument = resourceService.create(POI_MODEL_NAME, "Mole_Antonelliana").set("n:name", "Mole Antonelliana");
       postDataInType(view);
       postDataInType(monument);
 
       DCResource lyonCity = resourceService.create(CITY_MODEL_NAME, "France/Lyon")
-            .set("name", "Lyon").set("inCountry", franceCountry.getUri())
-            .set("populationCount", 500000);
+            .set("n:name", "Lyon").set("city:inCountry", franceCountry.getUri())
+            .set("city:populationCount", 500000);
       DCResource londonCity = resourceService.create(CITY_MODEL_NAME, "UK/London")
-            .set("name", "London").set("inCountry", ukCountry.getUri())
-            .set("populationCount", 10000000).set("name_i18n",
-                  DCResource.propertiesBuilder().put("en", "London").put("fr", "Londres").build());
+            .set("n:name", "London").set("city:inCountry", ukCountry.getUri())
+            .set("city:populationCount", 10000000)
+            .set("i18n:name", DCResource.listBuilder()
+                  .add(DCResource.propertiesBuilder().put("@language", "fr").put("@value", "Londres").build())
+                  .add(DCResource.propertiesBuilder().put("@language", "en").put("@value", "London").build())
+                  .build());
       DCResource torinoCity = resourceService.create(CITY_MODEL_NAME, "Italia/Torino")
-            .set("name", "Torino").set("inCountry", italiaCountry.getUri())
-            .set("populationCount", 900000).set("name_i18n",
-                  DCResource.propertiesBuilder().put("it", "Torino").put("fr", "Turin").build())
-                  .set("pointsOfInterest", DCResource.listBuilder().add(view.getUri()).add(monument.getUri()).build());
+            .set("n:name", "Torino").set("city:inCountry", italiaCountry.getUri())
+            .set("city:populationCount", 900000)
+            .set("i18n:name", DCResource.listBuilder()
+                  .add(DCResource.propertiesBuilder().put("@language", "fr").put("@value", "Turin").build())
+                  .add(DCResource.propertiesBuilder().put("@language", "it").put("@value", "Torino").build())
+                  .build())
+            .set("city:pointsOfInterest", DCResource.listBuilder().add(view.getUri()).add(monument.getUri()).build());
+      DCResource moscowCity = resourceService.create(CITY_MODEL_NAME, "Russia/Moscow")
+            .set("n:name", "Moscow").set("city:inCountry", russiaCountry.getUri())
+            .set("city:populationCount", 10000000).set("city:founded", new DateTime(1147, 4, 4, 0, 0, DateTimeZone.UTC).toString())
+            .set("i18n:name", DCResource.listBuilder()
+                  .add(DCResource.propertiesBuilder().put("@language", "fr").put("@value", "Moscou").build())
+                  .add(DCResource.propertiesBuilder().put("@language", "en").put("@value", "Moscow").build())
+                  .add(DCResource.propertiesBuilder().put("@language", "ru").put("@value", "Moskva").build())
+                  .add(DCResource.propertiesBuilder().put("@language", "us").put("@value", "Moscow").build())
+                  .build());
+      
       lyonCity = postDataInType(lyonCity);
       londonCity = postDataInType(londonCity);
       torinoCity = postDataInType(torinoCity);
+      moscowCity = postDataInType(moscowCity);
       
    }
 }
