@@ -10,11 +10,9 @@ import java.util.Map;
 import javax.persistence.EntityNotFoundException;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.HttpHeaders;
@@ -38,6 +36,7 @@ import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.binding.DatacoreObjectMapper;
 import org.oasis.datacore.rest.api.util.DCURI;
+import org.oasis.datacore.rest.api.util.DatacoreMediaType;
 import org.oasis.datacore.rest.server.cxf.CxfJaxrsApiProvider;
 import org.oasis.datacore.rest.server.cxf.JaxrsServerBase;
 import org.oasis.datacore.rest.server.resource.ExternalResourceException;
@@ -52,7 +51,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DuplicateKeyException;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jsonldjava.core.JsonLdError;
 import com.github.jsonldjava.core.JsonLdOptions;
 import com.github.jsonldjava.core.JsonLdProcessor;
@@ -120,7 +118,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       throw new WebApplicationException(Response.status(status)
             .tag(eTag) // .lastModified(dataEntity.getLastModified().toDate())
             .entity(postedResource)
-            .type(MediaType.APPLICATION_JSON).build());
+            .type(cxfJaxrsApiProvider.getNegotiatedResponseMediaType()).build());
    }
 
    /**
@@ -419,7 +417,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
    }
 
    // TODO "native" query (W3C LDP-like) also refactored within a dedicated query engine ??
-   public List<DCResource> findDataInType(String modelType, UriInfo uriInfo, Integer start, Integer limit, String format, boolean debug) {
+   public List<DCResource> findDataInType(String modelType, UriInfo uriInfo, Integer start, Integer limit, boolean debug) {
       boolean detailedErrorMode = true; // TODO
       boolean explainSwitch = false; // TODO LATER
       Exchange exchange = cxfJaxrsApiProvider.getExchange();
@@ -430,7 +428,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
          }
          
       } catch (Exception e) {
-
+         // should not happen
       }
       
       DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
@@ -461,67 +459,14 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       
       List<DCResource> foundDatas = resourceEntityMapperService.entitiesToResources(foundEntities);
       
-      if(format != null && !"normal".equals(format)) {     
-         try {
-            // TODO TODOOOOOOOOOOOOOOOOOOOOOOOO improve that !!
-            String json = dcObjectMapper.writeValueAsString(foundDatas)
-                  .replaceAll("\"l\"", "\"@language\"")
-                  .replaceAll("\"v\"", "\"@value\"");
-            
-            Object jsonObject = JsonUtils.fromInputStream(new ByteArrayInputStream(json.getBytes()));
-            
-            // Create a context JSON map containing prefixes and definitions
-            Map context = new HashMap();
-            // Customise context...
-            context.put("dc", "http://dc");
-            context.put("i18n:name", "{\"@container\": \"@language\"}");
-            // Create an instance of JsonLdOptions with the standard JSON-LD options
-            JsonLdOptions options = new JsonLdOptions();
-            ///options.set
-            // Customise options...
-            Object res = jsonObject;
-   
-            if("compact".equals(format)) {
-               res = JsonLdProcessor.compact(jsonObject, context, options);
-               //System.out.println(JsonUtils.toPrettyString(compact));
-            } else if("flatten".equals(format)) {
-               res = JsonLdProcessor.flatten(jsonObject, context, options);
-            } else if("expand".equals(format)) {
-               res = JsonLdProcessor.expand(jsonObject, options);
-            } else if("frame".equals(format)) {
-               res = JsonLdProcessor.frame(jsonObject, context, options);
-            } else if("text/plain".equals(format) || "nquads".equals(format)
-                  || "nq".equals(format) || "nt".equals(format)
-                  || "ntriples".equals(format)) {
-               //System.out.println("Generating Nquads Report");
-               options.format = "application/nquads";
-               res = JsonLdProcessor.toRDF(jsonObject, options);
-            } else if("text/turtle".equals(format) || "turtle".equals(format)
-                  || "ttl".equals(format)) {
-               
-               options.format = "text/turtle";
-               res = JsonLdProcessor.toRDF(jsonObject, options);
-            }
-            
-            throw new WebApplicationException(Response.status(Response.Status.OK)
-                  .entity("{\"" + format + "\": \"" + res.toString() + "\"}")
-                  .type(MediaType.APPLICATION_JSON).build());          
-         } catch(IOException | JsonLdError ioe) {
-            //Problem with json ld fall back to normal execution
-            return foundDatas;
-         }
-         
-      } else {
-
-         if(explainSwitch) {
-            throw new WebApplicationException(Response.status(Response.Status.OK)
-                  .entity("{\"explain\": " + exchange.get("dc.query.sortExplain") + ", \"results\": " + foundDatas + "}")
-                  .type(MediaType.APPLICATION_JSON).build());
-         } else {
-            return foundDatas;
-         }
+      if(explainSwitch) {
+         // NB. supports only json
+         throw new WebApplicationException(Response.status(Response.Status.OK)
+               .entity("{\"explain\": " + exchange.get("dc.query.sortExplain") + ", \"results\": " + foundDatas + "}")
+               .type(MediaType.APPLICATION_JSON).build());
       }
-
+      
+      return foundDatas;
    }
 
 

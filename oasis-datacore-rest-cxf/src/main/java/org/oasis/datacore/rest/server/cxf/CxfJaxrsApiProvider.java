@@ -1,6 +1,7 @@
 package org.oasis.datacore.rest.server.cxf;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -154,8 +155,12 @@ public class CxfJaxrsApiProvider implements JaxrsApiProvider {
 
    @Override
    public URI getRequestUri() {
-      // TODO better
-      return new UriInfoImpl(getInMessage()).getRequestUri();
+      //return new UriInfoImpl(getInMessage()).getRequestUri(); // NO TODO CXF BUG its impl returns http://localhost:8080api-docs !!
+      try {
+         return new URI((String) getInMessage().get("org.apache.cxf.request.url"));
+      } catch (URISyntaxException e) {
+         throw new IllegalArgumentException(e.getMessage(), e);
+      }
    }
 
    @Override

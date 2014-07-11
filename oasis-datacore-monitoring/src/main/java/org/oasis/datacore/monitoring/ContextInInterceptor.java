@@ -53,8 +53,8 @@ public class ContextInInterceptor extends AbstractPhaseInterceptor<Message> {
       if(logReqContent) {
          @SuppressWarnings("static-access")
          String type = (String) serverInRequestMessage.get(serverInRequestMessage.CONTENT_TYPE);
-         if (!MediaType.APPLICATION_JSON.isCompatibleWith(MediaType.valueOf(type))) {
-            return;
+         if (type == null || !MediaType.APPLICATION_JSON.isCompatibleWith(MediaType.valueOf(type))) {
+            return; // avoid introspection of non-JSON content
          }
          
          MessageContentsList objs = MessageContentsList.getContentsList(serverInRequestMessage);
