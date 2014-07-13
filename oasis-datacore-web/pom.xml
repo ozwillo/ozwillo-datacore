@@ -51,6 +51,10 @@
               <configuration>
                 <stopPort>9966</stopPort>
                 <stopKey>foo</stopKey>
+                <!-- avoiding scanning jars to speed up jetty startup :
+                http://haksoo.wordpress.com/2013/10/05/jetty-8-maven-plugin-too-slow/ -->
+                <contextXml>${basedir}/src/main/webapp/WEB-INF/jetty-context.xml</contextXml>
+                <scanIntervalSeconds>1</scanIntervalSeconds>
                 <webAppConfig>
                   <contextPath>/</contextPath>
                 </webAppConfig>
