@@ -93,12 +93,12 @@ public class DatacoreApiServerTest {
    
    
    @Before
-   public void cleanDataAndCache() {
+   public void reset() {
+      // cleanDataAndCache :
       cityCountrySample.cleanDataOfCreatedModels(); // (was already called but this first cleans up data)
       datacoreApiClient.getCache().clear(); // to avoid side effects
-   }
-   @After
-   public void resetDefaults() {
+      
+      // resetDefaults :
       ldpEntityQueryServiceImpl.setMaxScan(0); // unlimited, default in test
    }
    

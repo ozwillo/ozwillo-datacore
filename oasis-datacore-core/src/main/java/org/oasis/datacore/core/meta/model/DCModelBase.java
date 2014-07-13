@@ -1,8 +1,8 @@
 package org.oasis.datacore.core.meta.model;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,22 +17,21 @@ public abstract class DCModelBase {
    private long version = 0;
    /** TODO draft state & publish / life cycle */
    private String documentation; // TODO move in another collection for performance
-   private Map<String,DCField> fieldMap = new HashMap<String,DCField>();
+   private LinkedHashMap<String,DCField> fieldMap = new LinkedHashMap<String,DCField>();
    //private List<String> fieldNames = new ArrayList<String>(); // to maintain order ; easiest to persist (json / mongo) than ordered map
    private List<Object> fieldAndMixins = new ArrayList<Object>(); // TODO TODO only names ??? ; to maintain order ; easiest to persist (json / mongo) than ordered map
-   private List<DCModelBase> mixins = new ArrayList<DCModelBase>(); // allowing Models ; TODO or DCMixin ??
+   private LinkedHashMap<String,DCModelBase> mixinMap = new LinkedHashMap<String,DCModelBase>(); // allowing Models ; TODO or DCMixin ??
    // TODO allFieldNames, allFieldMap cached (?! beware versioning !!)
    /** Resource type event listeners (that use this DCModelBase's name as topic) */
    private List<Object> listeners = new ArrayList<Object>(); // TODO DC(Model/ResourceType)EventListener
 
    /** same as globalFieldMap */
-   private Map<String,DCModelBase> globalMixinMap = null;
-   private Set<String> globalMixinNameSet = null;
+   private LinkedHashMap<String,DCModelBase> globalMixinMap = null;
    /** cache, to be invalidated each type the model (or its mixins) change
     * (including when backward compatible).
     * TODO not thread-safe, handle it the REST way
     * TODO minorVersion ??? */
-   private Map<String,DCField> globalFieldMap = null;
+   private LinkedHashMap<String,DCField> globalFieldMap = null;
    
    private boolean isHistorizable;
    private boolean isContributable;
@@ -61,7 +60,7 @@ public abstract class DCModelBase {
    /** computed cache ; TODO LATER trigger reset, handle Model version (upgrade) */
    public Set<String> getGlobalMixinNameSet() {
       checkGlobalCaches();
-      return globalMixinNameSet;
+      return globalMixinMap.keySet();
    }
    /** computed cache ; TODO LATER trigger reset, handle Model version (upgrade) */
    public Map<String, DCField> getGlobalFieldMap() {
@@ -80,7 +79,6 @@ public abstract class DCModelBase {
 
    public void resetGlobalCaches() {
       this.globalMixinMap = null;
-      this.globalMixinNameSet = null;
       this.globalFieldMap = null;
    }
    /**
@@ -89,18 +87,16 @@ public abstract class DCModelBase {
     */
    private void checkGlobalCaches() {
       if (this.globalFieldMap == null) {
-         HashMap<String, DCField> newGlobalFieldMap = new HashMap<String,DCField>();
-         HashMap<String, DCModelBase> newGlobalMixinMap = new HashMap<String,DCModelBase>();
-         Set<String> newGlobalMixinNameSet = new HashSet<String>();
-         fillGlobalFieldMap(newGlobalMixinMap, newGlobalMixinNameSet, newGlobalFieldMap);
+         LinkedHashMap<String, DCField> newGlobalFieldMap = new LinkedHashMap<String,DCField>();
+         LinkedHashMap<String, DCModelBase> newGlobalMixinMap = new LinkedHashMap<String,DCModelBase>();
+         fillGlobalFieldMap(newGlobalMixinMap, newGlobalFieldMap);
          // NB. not required to be synchronized, because there's no problem if it's
          // done twice at the same time
          this.globalMixinMap = newGlobalMixinMap;
-         this.globalMixinNameSet = newGlobalMixinNameSet;
          this.globalFieldMap = newGlobalFieldMap;
       }
    }
-   private void fillGlobalFieldMap(Map<String,DCModelBase> globalMixinMap, Set<String> globalMixinNameSet,
+   private void fillGlobalFieldMap(Map<String,DCModelBase> globalMixinMap,
          Map<String,DCField> globalFieldMap) {
       for (Object fieldOrMixin : this.fieldAndMixins) {
          if (fieldOrMixin instanceof DCField) {
@@ -109,8 +105,7 @@ public abstract class DCModelBase {
          } else { // if (fieldOrMixin instanceof DCModelBase) {
             DCModelBase mixin = (DCModelBase) fieldOrMixin;
             globalMixinMap.put(mixin.getName(), mixin);
-            globalMixinNameSet.add(mixin.getName());
-            mixin.fillGlobalFieldMap(globalMixinMap, globalMixinNameSet, globalFieldMap);
+            mixin.fillGlobalFieldMap(globalMixinMap, globalFieldMap);
          }
       }
    }
@@ -126,18 +121,26 @@ public abstract class DCModelBase {
    }
 
    /** TODO make it unmodifiable */
+   public Set<String> getFieldNames() {
+      return fieldMap.keySet();
+   }
+   public Collection<DCField> getFields() {
+      return fieldMap.values();
+   }
+   /** TODO make it unmodifiable */
    public Map<String, DCField> getFieldMap() {
       return fieldMap;
    }
 
+   public Set<String> getMixinNames() {
+      return mixinMap.keySet();
+   }
+   public Collection<DCModelBase> getMixins() {
+      return mixinMap.values();
+   }
    /** TODO make it unmodifiable */
-   /*public List<String> getFieldNames() {
-      return fieldNames;
-   }*/
-
-   /** TODO make it unmodifiable */
-   public List<DCModelBase> getMixins() {
-      return mixins;
+   public Map<String,DCModelBase> getMixinMap() {
+      return mixinMap;
    }
 
    /** TODO make it unmodifiable */
@@ -162,17 +165,15 @@ public abstract class DCModelBase {
    /** helper method to build new DCModel/Mixins FOR TESTING
     * TODO or in builder instance ? */
    public DCModelBase addMixin(DCModelBase mixin) {
-      this.getMixins().add(mixin);
+      this.getMixinMap().put(mixin.getName(), mixin);
       this.fieldAndMixins.add(mixin);
       this.globalFieldMap = null;
       return this;
    }
    public DCModelBase addMixins(DCMixin ... mixins) {
       for (DCMixin mixin : mixins) {
-         this.getMixins().add(mixin);
-         this.fieldAndMixins.add(mixin);
+         addMixin(mixin);
       }
-      this.globalFieldMap = null;
       return this;
    }
    
@@ -211,15 +212,11 @@ public abstract class DCModelBase {
    }
 
    public void setFieldMap(Map<String, DCField> fieldMap) {
-      this.fieldMap = fieldMap;
+      this.fieldMap = new LinkedHashMap<String, DCField>(fieldMap);
    }
-
-   /*public void setFieldNames(List<String> fieldNames) {
-      this.fieldNames = fieldNames;
-   }*/
    
-   public void setMixins(List<DCModelBase> mixins) {
-      this.mixins = mixins;
+   public void setMixinMap(LinkedHashMap<String, DCModelBase> mixinMap) {
+      this.mixinMap = new LinkedHashMap<String, DCModelBase>(mixinMap);
    }
    
    public void setListeners(List<Object> listeners) {
@@ -240,6 +237,15 @@ public abstract class DCModelBase {
 
 	public void setContributable(boolean isContributable) {
 		this.isContributable = isContributable;
+	}
+	
+	/**
+    * TODO better (ObjectMapper ??)
+	 */
+	@Override
+	public String toString() {
+	   return "Model[" + this.name + ";m:" + this.globalMixinMap.keySet()
+	         + "](f:" + globalFieldMap.keySet() + ")";
 	}
    
 }

@@ -1,12 +1,19 @@
 package org.oasis.datacore.sample;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.ws.rs.WebApplicationException;
 
+import org.oasis.datacore.contribution.service.ContributionService;
+import org.oasis.datacore.core.entity.model.DCEntity;
+import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
 import org.oasis.datacore.core.init.InitService;
 import org.oasis.datacore.core.init.Initable;
@@ -29,9 +36,12 @@ import org.oasis.datacore.rest.server.event.EventService;
 import org.oasis.datacore.rest.server.resource.ResourceEntityMapperService;
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.rest.server.resource.UriService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
@@ -58,11 +68,13 @@ import com.mongodb.DBCollection;
  */
 public abstract class DatacoreSampleBase implements Initable/*implements ApplicationListener<ContextRefreshedEvent> */{
 
+   private static final Logger logger = LoggerFactory.getLogger(DatacoreSampleBase.class);
+   
    @Autowired
    private InitService initService;
 
    @Autowired
-   private MockAuthenticationService mockAuthenticationService;
+   protected MockAuthenticationService mockAuthenticationService;
 
    /** impl, to be able to modify it
     * TODO LATER extract interface */
@@ -94,9 +106,17 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
 
    @Autowired
    private HistorizationServiceImpl historizationService;
+   
+   @Autowired
+   private ContributionService contributionService;
 
-   private HashSet<DCModel> models = new HashSet<DCModel>();
+   protected HashSet<DCModel> models = new HashSet<DCModel>();
 
+   
+   
+   ///////////////////////////////////////////////////////////////////////////:
+   // Initable impl
+   // 
 
    /**
     * Override to come before or after
@@ -105,6 +125,12 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
    public int getOrder() {
       return 1000;
    }
+
+   @PostConstruct
+   public void register() {
+      initService.register(this);
+   }
+   
    /*@Override
    public void onApplicationEvent(ContextRefreshedEvent event) {
       this.init();
@@ -114,69 +140,313 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
    public void init() {
       mockAuthenticationService.loginAs("admin");
       try {
-         doInit();
+         List<DCModelBase> modelsToCreate = new ArrayList<DCModelBase>();
+         buildModels(modelsToCreate);
+         boolean allCollectionsAlreadyExist = createModels(modelsToCreate, false);
+         
+         if (modelsToCreate.isEmpty() // data only sample
+               || /*enableFillDataAtInit() && */(!allCollectionsAlreadyExist || hasSomeModelsWithoutResource())) {
+            cleanDataOfCreatedModels(modelsToCreate);
+            fillData();
+         }
       } finally {
          mockAuthenticationService.logout();
       }
    }
    
-   public abstract void doInit();
    
+
+   ///////////////////////////////////////////////////////////////////////////:
+   // For tests : methods to use & implement
+   // 
+   
+   protected abstract void buildModels(List<DCModelBase> models); // TODO TODOOOOO buildModels
+   
+   /**
+    * If called explicitly, better to clean data first (else Conflict ?!) ;
+    * IF IT CHANGES MODELS, models must be reinited first in tests !
+    */
+   protected abstract void fillData();
+   
+   /**
+    * To be called by tests only if they require to init all data explicitly,
+    * and even if there already are there (cleans first) ;
+    * otherwise, do cleanDataOfCreatedModels(someModels) then createSomeData()
+    */
    public void initData() {
       mockAuthenticationService.loginAs("admin");
       try {
-         doInitData();
+         cleanDataOfCreatedModels();
+         fillData();
+      } finally {
+         mockAuthenticationService.logout();
+      }
+   }
+   public void flushData() {
+      mockAuthenticationService.loginAs("admin");
+      try {
+         cleanDataOfCreatedModels();
+      } finally {
+         mockAuthenticationService.logout();
+      }
+   }
+
+   /**
+    * To be called by tests only if they require to init some models explictly.
+    */
+   public void initModels() {
+      mockAuthenticationService.loginAs("admin");
+      try {
+         List<DCModelBase> modelsToCreate = new ArrayList<DCModelBase>();
+         buildModels(modelsToCreate);
+         for (DCModelBase model : modelsToCreate) {
+            // NB. NOT this.models but new ones else might have been modified in previous initData()
+            createModel(model, true);
+         }
+      } finally {
+         mockAuthenticationService.logout();
+      }
+   }
+   public void initModels(DCModelBase ... modelsToCreate) {
+      initModels(Arrays.asList(modelsToCreate));
+   }
+   public void initModels(List<DCModelBase> modelsToCreate) {
+      mockAuthenticationService.loginAs("admin");
+      try {
+         createModels(modelsToCreate, true);
       } finally {
          mockAuthenticationService.logout();
       }
    }
    
-   public abstract void doInitData();
+   /**
+    * To be overriden if required
+    * @return
+    */
+   /*protected boolean enableFillDataAtInit() {
+      return true;
+   }*/
 
-   @PostConstruct
-   public void register() {
-      initService.register(this);
+   // for tests
+   public void cleanCreatedModels() {
+      for (DCModel model : this.models) {
+         mgo.dropCollection(model.getCollectionName()); // delete data
+         modelAdminService.removeModel(model.getName()); // remove model
+      }
+      this.models.clear();
    }
-   
-   protected void createModelsAndCleanTheirData(DCModelBase ... modelOrMixins) {
-      for (DCModelBase modelOrMixin : modelOrMixins) {
-         if (modelOrMixin instanceof DCModel) {
-            DCModel model = (DCModel) modelOrMixin;
-            // adding model
-            modelAdminService.addModel(model);
-            models.add(model);
+   public void cleanModels(DCModelBase ... models) {
+      cleanModels(Arrays.asList(models));
+   }
+   public void cleanModels(List<DCModelBase> models) {
+      List<DCModelBase> toBeRemovedModels = new ArrayList<DCModelBase>(models.size());
+      for (DCModelBase model : models) {
+         toBeRemovedModels.add(getCreatedModel(model.getName()));
+         if (model instanceof DCModel) {
+            DCModel dcModel = (DCModel) model;
+            mgo.dropCollection(dcModel.getCollectionName()); // delete data
             
-            dropAndCreateCollectionAndIndices(model);
+            if (dcModel.isHistorizable()) {
+               try {
+                  String historizationCollectionName = historizationService.getHistorizedCollectionNameFromOriginalModel(dcModel);
+                  //mgo.remove(new Query(), historizationCollectionName);
+                  mgo.dropCollection(historizationCollectionName);
+               } catch (HistorizationException e) {
+                  logger.error("error while dropping (historization of) model "
+                        + model.getName(), e);
+               }
+            }
             
-         } else { // mixin
-            DCMixin mixin = (DCMixin) modelOrMixin;
-            modelAdminService.addMixin(mixin);
+            if (dcModel.isContributable()) {
+               String contributionCollectionName = model.getName() + ".c"; // TODO TODOOOOOO move
+               //mgo.remove(new Query(), historizationCollectionName);
+               mgo.dropCollection(contributionCollectionName);
+            }
+            
+            modelAdminService.removeModel(model.getName()); // remove model
+         }
+      }
+      this.models.removeAll(toBeRemovedModels); // clean sampleBase state
+   }
+
+   public void cleanDataOfCreatedModels() {
+      for (DCModel model : this.models) {
+         cleanDataOfCreatedModel(model);
+      }
+   }
+   public void cleanDataOfCreatedModels(DCModelBase ... models) {
+      cleanDataOfCreatedModels(Arrays.asList(models));
+   }
+   public void cleanDataOfCreatedModels(List<DCModelBase> models) {
+      for (DCModelBase model : models) {
+         if (model instanceof DCModel) {
+            cleanDataOfCreatedModel((DCModel) model);
          }
       }
    }
+   public void cleanDataOfCreatedModel(DCModel model) {
+      // delete (rather than drop & recreate !) : 
+      mgo.remove(new Query(), model.getCollectionName());
 
-   public void dropAndCreateCollectionAndIndices(DCModel model) {
-      // cleaning data
-      mgo.dropCollection(model.getCollectionName());
-      createCollectionAndIndices(model);
-      if(model.isHistorizable()) {
-         dropAndCreateHistorizedCollectionAndIndices(model);
+      if (model.isHistorizable()) {
+         try {
+            DCModel historizedModel = historizationService.getHistorizationModel(model);
+            if (historizedModel == null) {
+               historizedModel = historizationService.createHistorizationModel(model); // TODO ??????
+            }
+            mgo.dropCollection(historizedModel.getCollectionName());
+         } catch (HistorizationException e) {
+            throw new RuntimeException("Historization init error of Model " + model.getName(), e);
+         }
+      }
+      
+      if (model.isContributable()) {
+         String contributionCollectionName = model.getName() + ".c"; // TODO TODOOOOOO move
+         mgo.dropCollection(contributionCollectionName);
+      }
+   }
+   
+   
+   
+   public DCModelBase getCreatedModel(String modelType, List<DCModelBase> modelsToCreate) {
+      for (DCModelBase model : modelsToCreate) {
+         if (model.getName().equals(modelType)) {
+            return model;
+         }
+      }
+      for (DCModelBase model : this.models) {
+         if (model.getName().equals(modelType)) {
+            return model;
+         }
+      }
+      return null;
+   }
+   private DCModelBase getCreatedModel(String modelType) {
+      for (DCModelBase model : this.models) {
+         if (model.getName().equals(modelType)) {
+            return model;
+         }
+      }
+      return null;
+   }
+   
+   
+   protected boolean hasSomeModelsWithoutResource() {
+      for (DCModel model : this.models) {
+         try {
+            List<DCEntity> resources = ldpEntityQueryService.findDataInType(model,
+                  new HashMap<String,List<String>>(0), 0, 1);
+            if (resources == null || resources.isEmpty()) {
+               return true;
+            }
+         } catch (QueryException e) {
+            throw new RuntimeException("Init error of resources of model " + model.getName(), e);
+         }
+      }
+      return false;
+   }
+   
+   /*protected void createModels(DCModelBase ... modelOrMixins) {
+      createModels(false, modelOrMixins);
+   }*/
+   /**
+    * 
+    * @param deleteCollectionsFirst
+    * @param modelOrMixins
+    * @return allCollectionsAlreadyExist
+    */
+   protected boolean createModels(List<DCModelBase> modelOrMixins, boolean deleteCollectionsFirst) {
+      boolean allCollectionsAlreadyExist = true;
+      for (DCModelBase modelOrMixin : modelOrMixins) {
+         allCollectionsAlreadyExist = createModel(modelOrMixin, deleteCollectionsFirst)
+               && allCollectionsAlreadyExist;
+      }
+      return allCollectionsAlreadyExist;
+   }
+   /**
+    * 
+    * @param deleteCollectionsFirst
+    * @param modelOrMixin
+    * @return collectionAlreadyExists
+    */
+   protected boolean createModel(DCModelBase modelOrMixin, boolean deleteCollectionsFirst) {
+      if (modelOrMixin instanceof DCModel) {
+         DCModel model = (DCModel) modelOrMixin;
+         if (deleteCollectionsFirst) {
+            modelAdminService.removeModel(model.getName());
+            models.remove(getCreatedModel(model.getName()));
+         }
+         // adding model
+         modelAdminService.addModel(model);
+         models.add(model);
+         
+         return ensureCollectionAndIndices(model, deleteCollectionsFirst);
+         
+      } else { // mixin
+         DCMixin mixin = (DCMixin) modelOrMixin;
+         modelAdminService.addMixin(mixin);
+         return true;
       }
    }
 
-   public void dropAndCreateHistorizedCollectionAndIndices(DCModel model) {
+   
+   
+   ///////////////////////////////////////////////////////////////////////////:
+   // Resource collection & index creation
+   // TODO move
+   
+   public boolean ensureCollectionAndIndices(DCModel model, boolean deleteCollectionsFirst) {
+      if (deleteCollectionsFirst) {
+         // cleaning data first
+         mgo.dropCollection(model.getCollectionName());
+      }
+      boolean collectionAlreadyExists = ensureCollectionAndIndices(model);
+      
+      if(model.isHistorizable()) {
+         collectionAlreadyExists = ensureHistorizedCollectionAndIndices(model, deleteCollectionsFirst)
+               || collectionAlreadyExists;
+      }
+      
+      if (model.isContributable()) {
+         collectionAlreadyExists = ensureContributedCollectionAndIndices(model, deleteCollectionsFirst);
+      }
+      
+      return collectionAlreadyExists;
+   }
+
+   public boolean ensureHistorizedCollectionAndIndices(DCModel model, boolean deleteCollectionsFirst) {
       DCModel historizedModel;
       try {
          historizedModel = historizationService.createHistorizationModel(model);
-         mgo.dropCollection(historizedModel.getCollectionName());
-         createCollectionAndIndices(historizedModel);
+         if (deleteCollectionsFirst) {
+            // cleaning data first
+            mgo.dropCollection(historizedModel.getCollectionName());
+         }
+         return ensureCollectionAndIndices(historizedModel);
       } catch (HistorizationException e) {
-
+         throw new RuntimeException("Historization init error of Model " + model.getName(), e);
       }
    }
 
-   private void createCollectionAndIndices(DCModel model) {
-      DBCollection coll = mgo.createCollection(model.getCollectionName());
+   public boolean ensureContributedCollectionAndIndices(DCModel model, boolean deleteCollectionsFirst) {
+      //contributiondModel = contributionService.createContributionModel(model); // TODO TODOOO
+      if (deleteCollectionsFirst) {
+         // cleaning data first
+         String contributionCollectionName = model.getName() + ".c"; // TODO TODOOOOOO move
+         mgo.dropCollection(contributionCollectionName);
+      }
+      return false; // ensureCollectionAndIndices(historizedModel); // TODO TODOOOO
+   }
+
+   
+   private boolean ensureCollectionAndIndices(DCModel model) {
+      DBCollection coll;
+      boolean collectionAlreadyExists = mgo.collectionExists(model.getCollectionName()); 
+      if (collectionAlreadyExists) {
+         coll = mgo.getCollection(model.getCollectionName());
+      } else {
+         coll = mgo.createCollection(model.getCollectionName());
+      }
       
       // generating static indexes
       coll.ensureIndex(new BasicDBObject("_uri", 1), null, true);
@@ -184,16 +454,18 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
       coll.ensureIndex(new BasicDBObject("_chAt", 1)); // for default order
       
       // generating field indices
-      generateFieldIndices(coll, "_p.", model.getGlobalFieldMap().values());
+      ensureFieldIndices(coll, "_p.", model.getGlobalFieldMap().values());
+      
+      return collectionAlreadyExists;
    }
 
-   private void generateFieldIndices(DBCollection coll, String prefix, Collection<DCField> globalFields) {
+   private void ensureFieldIndices(DBCollection coll, String prefix, Collection<DCField> globalFields) {
       for (DCField globalField : globalFields) {
-         generateFieldIndices(coll, prefix, globalField);
+         ensureFieldIndices(coll, prefix, globalField);
       }
    }
 
-   private void generateFieldIndices(DBCollection coll, String prefix, DCField globalField) {
+   private void ensureFieldIndices(DBCollection coll, String prefix, DCField globalField) {
       String prefixedGlobalFieldName = prefix + globalField.getName();
       if (globalField.getQueryLimit() > 0) {
          coll.ensureIndex(prefixedGlobalFieldName);
@@ -203,32 +475,26 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
          DCField listField = ((DCListField) globalField).getListElementField();
          if(listField.getType() == "map") {
             Map<String, DCField> mapFields = ((DCMapField) listField).getMapFields();
-            generateFieldIndices(coll, prefixedGlobalFieldName + ".", mapFields.values());
+            ensureFieldIndices(coll, prefixedGlobalFieldName + ".", mapFields.values());
          } else {
-            generateFieldIndices(coll, prefixedGlobalFieldName + ".", listField);
+            ensureFieldIndices(coll, prefixedGlobalFieldName + ".", listField);
          }
          break;
       case MAP:
          Map<String, DCField> mapFields = ((DCMapField) globalField).getMapFields();
          // TODO WARNING : single map field can't be indexed !!!
-         generateFieldIndices(coll, prefixedGlobalFieldName + ".", mapFields.values());
+         ensureFieldIndices(coll, prefixedGlobalFieldName + ".", mapFields.values());
          break;
       case I18N:
          DCField listI18nField = ((DCI18nField) globalField);
          DCField map = ((DCListField) listI18nField).getListElementField();
          Map<String, DCField> mapContent = ((DCMapField) map).getMapFields();
-         generateFieldIndices(coll, prefixedGlobalFieldName + ".", mapContent.values());
+         ensureFieldIndices(coll, prefixedGlobalFieldName + ".", mapContent.values());
          break;
       default:
          break;
       }
       // TODO LATER embedded resources
-   }
-
-   public void cleanDataOfCreatedModels() {
-      for (DCModel model : this.models) {
-         dropAndCreateCollectionAndIndices(model);
-      }
    }
 
 

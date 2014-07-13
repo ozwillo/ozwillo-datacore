@@ -64,7 +64,7 @@ public class RightsTest {
 
 	@Before
 	public void flushData() {
-		
+		/*
 		truncateModel(MarkaInvestModel.CITY_MODEL_NAME);
 		truncateModel(MarkaInvestModel.COMPANY_MODEL_NAME);
 		truncateHistorizationModel(MarkaInvestModel.COMPANY_MODEL_NAME);
@@ -75,12 +75,13 @@ public class RightsTest {
 		truncateModel(MarkaInvestModel.INVESTOR_MODEL_NAME);
 		truncateModel(MarkaInvestModel.INVESTOR_TYPE_MODEL_NAME);
 		truncateModel(MarkaInvestModel.SECTOR_MODEL_NAME);
-		truncateModel(MarkaInvestModel.USER_MODEL_NAME);
+		truncateModel(MarkaInvestModel.USER_MODEL_NAME);*/
 
+      /*markaInvestData.initModels();
 		mockAuthenticationService.loginAs("admin");
 		markaInvestData.createDataSample();
-		mockAuthenticationService.logout();
-
+		mockAuthenticationService.logout();*/
+	   markaInvestData.cleanDataOfCreatedModels();
 	}
 	
 	/**

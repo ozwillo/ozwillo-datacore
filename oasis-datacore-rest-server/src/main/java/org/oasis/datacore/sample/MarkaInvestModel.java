@@ -1,6 +1,7 @@
 package org.oasis.datacore.sample;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
@@ -8,6 +9,7 @@ import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -37,7 +39,7 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 	private DataModelServiceImpl modelAdminService;
 	
 	@Override
-	public void doInit() {
+	public void buildModels(List<DCModelBase> modelsToCreate) {
 				
 		DCModel companyModel = new DCModel(COMPANY_MODEL_NAME);
 		companyModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
@@ -124,10 +126,13 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		plannedInvestmentAssistanceRequestModel.addField(new DCField("end", DCFieldTypeEnum.DATE.getType()));
 		listModel.add(plannedInvestmentAssistanceRequestModel);
 
-	   createModelsAndCleanTheirData(companyModel, fieldModel, sectorModel, countryModel, cityModel, userModel, investorModel, investorTypeModel, costModel, plannedInvestmentAssistanceRequestModel);
+		modelsToCreate.addAll(Arrays.asList((DCModelBase) companyModel, fieldModel, sectorModel,
+		      countryModel, cityModel, userModel,
+		      investorModel, investorTypeModel, costModel, plannedInvestmentAssistanceRequestModel));
 	}
 
-	public void doInitData() {
+	@Override
+	public void fillData() {
 	}
 
 	public List<DCModel> getListModel() {

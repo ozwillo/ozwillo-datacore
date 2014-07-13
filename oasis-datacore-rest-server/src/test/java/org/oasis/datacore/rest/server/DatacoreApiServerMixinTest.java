@@ -142,21 +142,34 @@ public class DatacoreApiServerMixinTest {
 
    @Test
    public void testIgn() {
-      authenticationService.loginAs("admin"); // else ign resources not writable
+      /*ignCityhallSample.cleanCreatedModels();
+
+      List<DCModelBase> modelsIgn = new ArrayList<DCModelBase>();
+      ignCityhallSample.buildModelsIgn(modelsIgn);
+      ignCityhallSample.initModels(modelsIgn);
+      ignCityhallSample.fillDataIgn();*/
+      // cleaning data AND models is required by this test :
+      ignCityhallSample.initModels();
       
-      ignCityhallSample.initIgn();
+      authenticationService.loginAs("admin"); // else ign resources not writable
+
+      ignCityhallSample.fillDataIgn();
 
       DCModelBase ignParcelleModel = modelAdminService.getModel(IgnCityhallSample.IGN_PARCELLE);
       Assert.assertEquals("numeroParcelle field should be original one",
             100, ignParcelleModel.getGlobalField("numeroParcelle").getQueryLimit());
-      
-      ignCityhallSample.initCityhallIgnV1Mixin();
+
+      List<DCModelBase> modelsCityhallIgnV1Mixin = new ArrayList<DCModelBase>();
+      ignCityhallSample.buildModelsCityhallIgnV1Mixin(modelsCityhallIgnV1Mixin);
+      ignCityhallSample.initModels(modelsCityhallIgnV1Mixin);
 
       ignParcelleModel = modelAdminService.getModel(IgnCityhallSample.IGN_PARCELLE);
       Assert.assertEquals("numeroParcelle field should be overriding Cityhall Mixin's",
             101, ignParcelleModel.getGlobalField("numeroParcelle").getQueryLimit());
-      
-      ignCityhallSample.initCityhallIgnV2Inheritance();
+
+      List<DCModelBase> modelsCityhallIgnV2Inheritance = new ArrayList<DCModelBase>();
+      ignCityhallSample.buildModelsCityhallIgnV2Inheritance(modelsCityhallIgnV2Inheritance);
+      ignCityhallSample.initModels(modelsCityhallIgnV2Inheritance);
 
       DCModelBase cityhallIgnParcelleModel = modelAdminService.getModel(IgnCityhallSample.CITYHALL_IGN_PARCELLE);
       Assert.assertEquals("numeroParcelle field should be Cityhall Mixin's overriding original one copied / inherited using Mixin",
@@ -167,7 +180,8 @@ public class DatacoreApiServerMixinTest {
    
    @Test
    public void testAddress() throws QueryException {
-      altTourismPlaceAddressSample.initModel();
+      // cleaning data AND models is required by this test :
+      altTourismPlaceAddressSample.initModels();
       
       
       // Mixin for shared fields - use 1
@@ -175,6 +189,7 @@ public class DatacoreApiServerMixinTest {
       
       DCResource myAppPlace1 = resourceService.create(AltTourismPlaceAddressSample.MY_APP_PLACE, "my_place_1").set("name", "my_place_1");
       Assert.assertNotNull(myAppPlace1);
+      Assert.assertNull(myAppPlace1.getVersion());
       //Assert.assertEquals("...", myAppPlace1.getUri());
       Assert.assertEquals(1, myAppPlace1.getTypes().size());
       Assert.assertEquals(AltTourismPlaceAddressSample.MY_APP_PLACE, myAppPlace1.getModelType());

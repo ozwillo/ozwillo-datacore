@@ -1,9 +1,13 @@
 package org.oasis.datacore.sample;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.server.event.DCInitIdEventListener;
@@ -40,16 +44,18 @@ public class IgnCityhallSample extends DatacoreSampleBase {
 
 
    @Override
-   public void doInit() {
-      this.initIgn();
-      this.initCityhallIgnV1Mixin();
-      this.initCityhallIgnV2Inheritance();
-   }
-   
-   public void doInitData() {
+   public void buildModels(List<DCModelBase> modelsToCreate) {
+      this.buildModelsIgn(modelsToCreate);
+      //this.buildModelsCityhallIgnV1Mixin(modelsToCreate); // ONLY IN TESTS
+      //this.buildModelsCityhallIgnV2Inheritance(modelsToCreate); // ONLY IN TESTS
    }
 
-   public void initIgn() {
+   @Override
+   public void fillData() {
+      this.fillDataIgn();
+   }
+
+   public void buildModelsIgn(List<DCModelBase> modelsToCreate) {
       // because IGN Model governance say so (but this could be forbidden by OASIS) :
       // field names are in French 
       // all fields are required
@@ -131,9 +137,11 @@ public class IgnCityhallSample extends DatacoreSampleBase {
       //DCModel ignImageModel = new DCModel(IGN_IMAGE); // bdparcellaire.
       //DCModel ignPlaqueAddresseModel = new DCModel(IGN_PLAQUE_ADDRESSE); // bdparcellaire. ??!!
       
-      super.createModelsAndCleanTheirData(ignCommuneModel, ignDepartementModel, ignArrondissementModel, ignCantonModel,
-         ignParcelleModel, ignDivisionModel, ignLocalisantModel, ignBatimentModel);
+      modelsToCreate.addAll(Arrays.asList((DCModelBase) ignCommuneModel, ignDepartementModel, ignArrondissementModel, ignCantonModel,
+         ignParcelleModel, ignDivisionModel, ignLocalisantModel, ignBatimentModel));
+   }
 
+   public void fillDataIgn() {
       //DCResource departement01 = resourceService.create(IGN_DEPARTEMENT, "01")
       DCResource departement01 = DCResource.create(null, IGN_DEPARTEMENT)
             .set("nom", "AIN").set("departementCode", 01);
@@ -180,8 +188,8 @@ public class IgnCityhallSample extends DatacoreSampleBase {
       parcelleBousse389 = /*datacoreApiClient.*/postDataInType(parcelleBousse389);
    }
    
-   public void initCityhallIgnV1Mixin() {
-      DCModel ignParcelleModel = modelAdminService.getModel(IgnCityhallSample.IGN_PARCELLE);
+   public void buildModelsCityhallIgnV1Mixin(List<DCModelBase> modelsToCreate) {
+      DCModel ignParcelleModel = (DCModel) getCreatedModel(IgnCityhallSample.IGN_PARCELLE, modelsToCreate);
       
       // IGN patched by cityhalls - v1 (using Mixin, so in same collection)
       DCMixin cityhallIgnParcelleMixin = (DCMixin) new DCMixin(CITYHALL_IGN_PARCELLE) // bdparcellaire.
@@ -192,10 +200,12 @@ public class IgnCityhallSample extends DatacoreSampleBase {
             // numeroParcelle ?? => TODO PREFIXES !!!! OR prefix using declaring Model / Mixin ?!
       ignParcelleModel.addMixin(cityhallIgnParcelleMixin); // NB. doesn't change the Model version ?!?!?!
       ///modelAdminService.addModel(ignParcelleModel); // LATER re-add...
+      
+      modelsToCreate.addAll(Arrays.asList(ignParcelleModel, cityhallIgnParcelleMixin));
    }
    
-   public void initCityhallIgnV2Inheritance() {
-      DCModel ignParcelleModel = modelAdminService.getModel(IgnCityhallSample.IGN_PARCELLE);
+   public void buildModelsCityhallIgnV2Inheritance(List<DCModelBase> modelsToCreate) {
+      DCModel ignParcelleModel = (DCModel) getCreatedModel(IgnCityhallSample.IGN_PARCELLE, modelsToCreate);
       
       // IGN patched by cityhalls - v2 (using inheritance, so in separate collection)
       ///DCModel cityhallIgnParcelleModel = new DCModel("cityhall.ign.parcelle", ignParcelleModel.getName()); // bdparcellaire.
@@ -205,7 +215,8 @@ public class IgnCityhallSample extends DatacoreSampleBase {
          .addField(new DCField("cityhall.numeroParcelle", "int", true, 100)) // alt1 new field along the existing one
          .addField(new DCField("numeroParcelle", "long", true, 102)); // alt2 override
          // (of def ?? or only of value, or auto ?) TODO check that original field is writable (or in another model)
-      modelAdminService.addModel(cityhallIgnParcelleModel);
+      
+      modelsToCreate.addAll(Arrays.asList(new DCModelBase[] { cityhallIgnParcelleModel }));
    }
    
 }

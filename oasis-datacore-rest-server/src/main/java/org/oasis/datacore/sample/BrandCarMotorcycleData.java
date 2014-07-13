@@ -6,8 +6,10 @@ import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
 
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UnitTestHelper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
@@ -16,10 +18,10 @@ import org.springframework.stereotype.Component;
 @DependsOn("brandCarMotorcycleModel")
 public class BrandCarMotorcycleData extends DatacoreSampleBase {
 	
-	private List<DCResource> listBrands;
-	private List<DCResource> listCars;
-	private List<DCResource> listMotorcycle;
-	private HashMap<String, List<DCResource>> mapData;
+	private List<DCResource> listBrands = new ArrayList<DCResource>();;
+	private List<DCResource> listCars = new ArrayList<DCResource>();;
+	private List<DCResource> listMotorcycle = new ArrayList<DCResource>();;
+	private HashMap<String, List<DCResource>> mapData = new HashMap<String, List<DCResource>>();
 	
 	@Value("${datacoreApiServer.containerUrl}")
 	private String containerUrl;
@@ -27,14 +29,30 @@ public class BrandCarMotorcycleData extends DatacoreSampleBase {
 	@Value("#{new Boolean('${datacoreApiServer.enableBrandSampleDataInsertionAtStartup}')}")
 	private Boolean enableBrandSampleDataInsertionAtStartup;
 	
+	/** to help clean data */
+	@Autowired // (makes @DependsOn not necessary)
+	private BrandCarMotorcycleModel brandCarMotorcycleModel;
 	
+
+   @Override
+   public void buildModels(List<DCModelBase> modelsToCreate) {
+      
+   }
+
+   @Override
+   public void flushData() {
+      super.flushData();
+      createDataSample();
+   }
+
+   @Override
+   public void cleanDataOfCreatedModels() {
+      brandCarMotorcycleModel.cleanDataOfCreatedModels();
+   }
+      
 	@Override
-	public void doInit() {
+	public void fillData() {
 		
-		listBrands = new ArrayList<DCResource>();
-		listCars = new ArrayList<DCResource>();
-		listMotorcycle = new ArrayList<DCResource>();
-		mapData = new HashMap<String, List<DCResource>>();
 		createDataSample();
 		
 		if(enableBrandSampleDataInsertionAtStartup) {
@@ -113,9 +131,6 @@ public class BrandCarMotorcycleData extends DatacoreSampleBase {
 		   datacoreApiImpl.postAllDataInType(listMotorcycle, BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
 		} catch (WebApplicationException e) {}
 	
-	}
-
-	public void doInitData() {
 	}
 	
 }

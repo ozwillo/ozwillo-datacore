@@ -56,7 +56,7 @@ public class FunctionalOperationsTest {
 			
 	@Before
 	public void flushData() {
-		truncateModel(MarkaInvestModel.CITY_MODEL_NAME);
+		/*truncateModel(MarkaInvestModel.CITY_MODEL_NAME);
 		truncateModel(MarkaInvestModel.COMPANY_MODEL_NAME);
 		truncateModel(MarkaInvestModel.COST_TYPE_MODEL_NAME);
 		truncateModel(MarkaInvestModel.COUNTRY_MODEL_NAME);
@@ -70,7 +70,9 @@ public class FunctionalOperationsTest {
       mockAuthenticationService.loginAs("admin"); // else marka resources not writable
 		markaInvestData.createDataSample();
 		markaInvestData.insertData();
-      mockAuthenticationService.logout();
+      mockAuthenticationService.logout();*/
+	   markaInvestData.initModels();
+	   markaInvestData.initData();
 	}
 	
 	@Test

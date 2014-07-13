@@ -68,8 +68,9 @@ public class ContributionTest {
 
 	@Before
 	public void initBeforeTest() {
-		flushData();
-		createData();
+		/*flushData();
+		createData();*/
+      markaInvestData.cleanDataOfCreatedModels();
 	}
 	
 	private void createData() {
@@ -111,7 +112,7 @@ public class ContributionTest {
 	@After
 	public void logoutAfter() {
 		mockAuthenticationService.logout();
-		flushData();
+		///flushData();
 		DCModel fieldModel = modelAdminService.getModel(MarkaInvestModel.FIELD_MODEL_NAME);
 		Assert.assertNotNull(fieldModel);
 		fieldModel.getSecurity().setGuestReadable(true);
@@ -121,7 +122,7 @@ public class ContributionTest {
 	}
 
 	@Test
-	public void testAddDCContribution() {
+	public void testAddDCContribution() throws Exception {
 		
 		mockAuthenticationService.loginAs("admin");
 		datacoreApiClient.postAllDataInType(markaInvestData.getData().get(MarkaInvestModel.FIELD_MODEL_NAME), MarkaInvestModel.FIELD_MODEL_NAME);
@@ -159,14 +160,14 @@ public class ContributionTest {
 			Assert.assertNotNull(returnedContribution);
 			Assert.assertFalse(returnedContribution.getId().isEmpty());
 		} catch (ContributionWithoutResourcesException | ContributionWithNoModelException | ContributionDatacoreCheckFailException | BadUriException | ResourceException e) {
-			e.printStackTrace();
+			throw e;
 		}		
 			
 		mockAuthenticationService.logout();
 	}
 	
 	@Test
-	public void testGetDCContribution() {
+	public void testGetDCContribution() throws Exception {
 		
 		mockAuthenticationService.loginAs("admin");
 		datacoreApiClient.postAllDataInType(markaInvestData.getData().get(MarkaInvestModel.FIELD_MODEL_NAME), MarkaInvestModel.FIELD_MODEL_NAME);
@@ -198,7 +199,7 @@ public class ContributionTest {
 			Assert.assertNotNull(returnedContribution);
 			Assert.assertFalse(returnedContribution.getId().isEmpty());
 		} catch (ContributionWithoutResourcesException | ContributionWithNoModelException | ContributionDatacoreCheckFailException | BadUriException | ResourceException e) {
-			e.printStackTrace();
+			throw e;
 		}
 		String contributionId = returnedContribution.getId();
 		
@@ -272,7 +273,7 @@ public class ContributionTest {
 	}
 	
 	@Test
-	public void testRemoveDCContribution() {
+	public void testRemoveDCContribution() throws Exception {
 		
 		mockAuthenticationService.loginAs("admin");
 		datacoreApiClient.postAllDataInType(markaInvestData.getData().get(MarkaInvestModel.FIELD_MODEL_NAME), MarkaInvestModel.FIELD_MODEL_NAME);
@@ -304,7 +305,7 @@ public class ContributionTest {
 			Assert.assertNotNull(returnedContribution);
 			Assert.assertFalse(returnedContribution.getId().isEmpty());
 		} catch (ContributionWithoutResourcesException | ContributionWithNoModelException | ContributionDatacoreCheckFailException | BadUriException | ResourceException e) {
-			e.printStackTrace();
+			throw e;
 		}
 		String contributionId = returnedContribution.getId();
 		

@@ -7,8 +7,10 @@ import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
 
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
@@ -16,42 +18,42 @@ import org.springframework.stereotype.Component;
 @Component
 @DependsOn("markaInvestModel")
 public class MarkaInvestData extends DatacoreSampleBase {
+
+	private List<DCResource> listCompany = new ArrayList<DCResource>();
+	private List<DCResource> listField = new ArrayList<DCResource>();
+	private List<DCResource> listSector = new ArrayList<DCResource>();
+	private List<DCResource> listCountry = new ArrayList<DCResource>();
+	private List<DCResource> listCity = new ArrayList<DCResource>();
+	private List<DCResource> listUser = new ArrayList<DCResource>();
+	private List<DCResource> listInvestor = new ArrayList<DCResource>();
+	private List<DCResource> listInvestorType = new ArrayList<DCResource>();
+	private List<DCResource> listCost = new ArrayList<DCResource>();
+	private List<DCResource> listPlannedInvestmentAssistanceRequest = new ArrayList<DCResource>();
 	
-	private List<DCResource> listCompany;
-	private List<DCResource> listField;
-	private List<DCResource> listSector;
-	private List<DCResource> listCountry;
-	private List<DCResource> listCity;
-	private List<DCResource> listUser;
-	private List<DCResource> listInvestor;
-	private List<DCResource> listInvestorType;
-	private List<DCResource> listCost;
-	private List<DCResource> listPlannedInvestmentAssistanceRequest;
-	
-	private HashMap<String, List<DCResource>> mapData;
+	private HashMap<String, List<DCResource>> mapData = new HashMap<String, List<DCResource>>();;
 	
 	@Value("${datacoreApiServer.containerUrl}")
 	private String containerUrl;
 	
 	@Value("#{new Boolean('${datacoreApiServer.enableMarkaSampleDataInsertionAtStartup}')}")
 	private Boolean enableMarkaSampleDataInsertionAtStartup;
-	
+
+   /** to help clean data */
+   @Autowired // (makes @DependsOn not necessary)
+	private MarkaInvestModel markaInvestModel;
+
+   @Override
+   public void buildModels(List<DCModelBase> modelsToCreate) {
+      
+   }
+
+   @Override
+   public void cleanDataOfCreatedModels() {
+      markaInvestModel.cleanDataOfCreatedModels();
+   }
 	
 	@Override
-	public void doInit() {
-
-		listCompany = new ArrayList<DCResource>();
-		listField = new ArrayList<DCResource>();
-		listSector = new ArrayList<DCResource>();
-		listCountry = new ArrayList<DCResource>();
-		listCity = new ArrayList<DCResource>();
-		listUser = new ArrayList<DCResource>();
-		listInvestor = new ArrayList<DCResource>();
-		listInvestorType = new ArrayList<DCResource>();
-		listCost = new ArrayList<DCResource>();
-		listPlannedInvestmentAssistanceRequest = new ArrayList<DCResource>();
-	
-		mapData = new HashMap<String, List<DCResource>>();
+	public void fillData() {
 		
 		createDataSample();
 		
@@ -59,9 +61,6 @@ public class MarkaInvestData extends DatacoreSampleBase {
 			insertData();
 		}
 				
-	}
-	
-	public void doInitData() {
 	}
 
 	@SafeVarargs

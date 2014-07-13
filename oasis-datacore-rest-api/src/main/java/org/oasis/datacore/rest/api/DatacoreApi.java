@@ -40,6 +40,8 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import org.oasis.datacore.rest.api.util.DatacoreMediaType;
+
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiImplicitParam;
 import com.wordnik.swagger.annotations.ApiImplicitParams;
@@ -103,8 +105,16 @@ import com.wordnik.swagger.annotations.ApiResponses;
 @Path("dc") // relative path among other OASIS services
 @Api(value = "/dc", description = "Operations about Datacore Resources",
       authorizations="OASIS OAuth and required Datacore Resource authorizations")
-@Consumes(MediaType.MEDIA_TYPE_WILDCARD) // TODO finer media type ex. +oasis-datacore ??
-@Produces(MediaType.MEDIA_TYPE_WILDCARD)
+///@Consumes(MediaType.MEDIA_TYPE_WILDCARD) // TODO finer media type ex. +oasis-datacore ??
+///@Produces(MediaType.MEDIA_TYPE_WILDCARD)
+@Consumes({MediaType.APPLICATION_JSON, DatacoreMediaType.APPLICATION_NQUADS,
+   DatacoreMediaType.APPLICATION_TURTLE, DatacoreMediaType.APPLICATION_JSONLD_EXPAND,
+   DatacoreMediaType.APPLICATION_JSONLD_FRAME, DatacoreMediaType.APPLICATION_JSONLD_FLATTEN,
+   DatacoreMediaType.APPLICATION_JSONLD_COMPACT})
+@Produces({MediaType.APPLICATION_JSON, DatacoreMediaType.APPLICATION_NQUADS,
+   DatacoreMediaType.APPLICATION_TURTLE, DatacoreMediaType.APPLICATION_JSONLD_EXPAND,
+   DatacoreMediaType.APPLICATION_JSONLD_FRAME, DatacoreMediaType.APPLICATION_JSONLD_FLATTEN,
+   DatacoreMediaType.APPLICATION_JSONLD_COMPACT})
 public interface DatacoreApi {
    
    public String QUERY_PARAMETERS = "#queryParameters";
@@ -622,8 +632,7 @@ public interface DatacoreApi {
                   + "is a Datacore query criteria"),
       @ApiImplicitParam(name="X-Datacore-Debug", paramType="header", dataType="boolean", allowMultiple=false,
             value="Enable debug on query.", defaultValue="false"),//TODO:Default to true for test. Change in prod
-      @ApiImplicitParam(name=HttpHeaders.ACCEPT, paramType="header", dataType="string", allowMultiple=false,
-            value="Alternative response types : text/x-nquads, text/turtle, application/json;format=expand", defaultValue="application/json"), // else Swagger UI sends */* which may choose text/x-nquads
+      // NB. an implicit ACCEPT header param would not work with Swagger UI
       @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
             value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue="Basic YWRtaW46YWRtaW4=")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312

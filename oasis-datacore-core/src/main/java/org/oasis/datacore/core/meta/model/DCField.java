@@ -89,10 +89,11 @@ public class DCField {
    }
    
    /**
-    * TODO ObjectMapper
+    * TODO better (ObjectMapper ??)
     */
+   @Override
    public String toString() {
-      return name;
+      return name + "(" + type + ")";
    }
 
    
@@ -114,5 +115,5 @@ public class DCField {
    public void setQueryLimit(int queryLimit) {
       this.queryLimit = queryLimit;
    }
-
+   
 }

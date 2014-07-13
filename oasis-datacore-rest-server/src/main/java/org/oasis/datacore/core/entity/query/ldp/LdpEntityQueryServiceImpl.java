@@ -8,14 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ws.rs.core.HttpHeaders;
-
 import org.apache.cxf.message.Exchange;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.mongodb.DatacoreMongoTemplate;
 import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.meta.model.DCField;
-import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCModel;
@@ -24,7 +21,6 @@ import org.oasis.datacore.core.security.DCUserImpl;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
 import org.oasis.datacore.rest.server.MonitoringLogServiceImpl;
 import org.oasis.datacore.rest.server.cxf.CxfJaxrsApiProvider;
-import org.oasis.datacore.rest.server.event.EventService;
 import org.oasis.datacore.rest.server.parsing.model.DCQueryParsingContext;
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
 import org.oasis.datacore.rest.server.parsing.service.QueryParsingService;
@@ -54,7 +50,7 @@ import com.mongodb.DBObject;
 @Component
 public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
 
-   private static final Logger logger = LoggerFactory.getLogger(EventService.class);
+   private static final Logger logger = LoggerFactory.getLogger(LdpEntityQueryServiceImpl.class);
    
    private static Set<String> findConfParams = new HashSet<String>();
    static {

@@ -39,6 +39,9 @@ public class DatacoreSecurityServiceImpl implements DatacoreSecurityService {
 	public String getCurrentUserId() {
 
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+      if (authentication == null) {
+         throw new RuntimeException("No authentication in security context");
+      }
 
 		if (authentication.getPrincipal() != null && authentication.getPrincipal() instanceof DCUserImpl) {
 			return ((DCUserImpl) authentication.getPrincipal()).getUsername();

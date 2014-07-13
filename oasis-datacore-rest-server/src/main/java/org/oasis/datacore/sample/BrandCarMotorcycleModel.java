@@ -1,7 +1,11 @@
 package org.oasis.datacore.sample;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.springframework.stereotype.Component;
 
@@ -19,8 +23,8 @@ public class BrandCarMotorcycleModel extends DatacoreSampleBase {
 	public static String MOTORCYCLE_MODEL_NAME = "sample.brand.motorcycle";
 	public static String BRAND_MODEL_NAME = "sample.brand.brand";
 
-	
-	public void doInit() {
+	@Override
+   public void buildModels(List<DCModelBase> modelsToCreate) {
 
 		DCModel brandModel = new DCModel(BRAND_MODEL_NAME);
 		brandModel.addField(new DCField("name", "string", true, 100));
@@ -36,10 +40,11 @@ public class BrandCarMotorcycleModel extends DatacoreSampleBase {
 		motorcycleModel.addField(new DCField("year", "int"));
 		motorcycleModel.addField(new DCField("hp", "int"));
 
-		createModelsAndCleanTheirData(brandModel, carModel, motorcycleModel);
+		modelsToCreate.addAll(Arrays.asList((DCModelBase) brandModel, carModel, motorcycleModel));
 	}
 
-	public void doInitData() {
+	@Override
+	public void fillData() {
 	}
 
 }

@@ -1,6 +1,5 @@
 package org.oasis.datacore.sample;
 
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -8,12 +7,9 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.binary.Base64;
 import org.oasis.datacore.core.entity.model.DCEntity;
@@ -24,9 +20,7 @@ import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
-import org.oasis.datacore.rest.server.resource.ResourceEntityMapperService;
 import org.oasis.datacore.rest.server.resource.ResourceNotFoundException;
-import org.oasis.datacore.rest.server.resource.ResourceTypeNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -48,16 +42,10 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
    /////@Value("${datacoreApiClient.containerUrl}") // DOESN'T WORK 
    @Value("${datacoreApiServer.containerUrl}")
    private String containerUrl;
-
-
-   @Override
-   public void doInit() {
-      doInitModel();
-      doInitData(); // do provide samples TODO better !!!!!!!!!!!!!!!!!!!!!!!!
-   }
+   
 
    @Override
-   public void doInitData() {
+   public void fillData() {
       try {
          doInitReferenceData();
       } catch (Exception e) {
@@ -202,7 +190,8 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
    }
 
    
-   public void doInitModel() {
+   @Override
+   public void buildModels(List<DCModelBase> modelsToCreate) {
       // 2. find out which Models already exist, including "this" ex. economicalActivity,
       // and reconcile with them :
       // - reuse existing fields ; if format is different, if bijective convert them on the fly,
@@ -336,8 +325,8 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
          ;
       cityAreaModel.setDocumentation("id = !pli:city + '/' + hash(id)");
       
-      super.createModelsAndCleanTheirData(atecoModel, countryModel, cityModel, companyModel, // TODO also Mixins ???
-            italianUrbanAreaDestinationOfUseModel, cityAreaModel);
+      modelsToCreate.addAll(Arrays.asList((DCModelBase) atecoModel, countryModel, cityModel, companyModel, // TODO also Mixins ???
+            italianUrbanAreaDestinationOfUseModel, cityAreaModel));
    }
 
 

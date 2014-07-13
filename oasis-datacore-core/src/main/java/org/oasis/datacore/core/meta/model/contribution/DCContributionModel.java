@@ -1,5 +1,6 @@
 package org.oasis.datacore.core.meta.model.contribution;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -85,7 +86,7 @@ public class DCContributionModel extends DCModel {
 		return delegate.getFieldMap();
 	}
 
-	public List<DCModelBase> getMixins() {
+	public Collection<DCModelBase> getMixins() {
 		return delegate.getMixins();
 	}
 
@@ -115,10 +116,6 @@ public class DCContributionModel extends DCModel {
 
 	public void setFieldMap(Map<String, DCField> fieldMap) {
 		delegate.setFieldMap(fieldMap);
-	}
-
-	public void setMixins(List<DCModelBase> mixins) {
-		delegate.setMixins(mixins);
 	}
 
 	public void setListeners(List<Object> listeners) {

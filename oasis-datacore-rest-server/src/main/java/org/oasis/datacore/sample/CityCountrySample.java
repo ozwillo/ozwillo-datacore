@@ -1,12 +1,15 @@
 package org.oasis.datacore.sample;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
-import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.rest.api.DCResource;
 import org.springframework.stereotype.Component;
@@ -26,12 +29,7 @@ public class CityCountrySample extends DatacoreSampleBase {
    public static String POI_MODEL_NAME = "sample.city.pointOfInterest";
 
    @Override
-   public void doInit() {
-      initModel();
-      doInitData();
-   }
-   
-   public void initModel() {
+   public void buildModels(List<DCModelBase> modelsToCreate) {
       DCModel countryModel = new DCModel(COUNTRY_MODEL_NAME);
       countryModel.setDocumentation("{ \"uri\": \"http://localhost:8180/dc/type/country/France\", "
             + "\"name\": \"France\" }");
@@ -54,12 +52,12 @@ public class CityCountrySample extends DatacoreSampleBase {
       cityModel.addField(new DCListField("city:pointsOfInterest",
             new DCResourceField("zzz", POI_MODEL_NAME))); // TODO
 
-      super.createModelsAndCleanTheirData(poiModel, cityModel, countryModel);
+      modelsToCreate.addAll(Arrays.asList((DCModelBase) poiModel, cityModel, countryModel));
    }
 
-   public void doInitData() {
+   public void fillData() {
       // cleaning data first (else Conflict ?!)
-      cleanDataOfCreatedModels();
+      //////////////////cleanDataOfCreatedModels();
       
       DCResource franceCountry = resourceService.create(COUNTRY_MODEL_NAME, "France")
             .set("n:name", "France");

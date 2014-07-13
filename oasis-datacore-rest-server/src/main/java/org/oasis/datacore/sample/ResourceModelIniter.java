@@ -1,12 +1,14 @@
 package org.oasis.datacore.sample;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
+import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCResourceField;
@@ -42,7 +44,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
    }
 
    @Override
-   public void doInit() {
+   public void buildModels(List<DCModelBase> modelsToCreate) {
       DCModel metaModel = (DCModel) new DCModel("dcmo:model")
          // TODO security
          .addField(new DCField("dcmo:name", "string", true, 100))
@@ -66,15 +68,13 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       /*ignCommuneModel.setDocumentsetDocumentationation("{ \"uri\": \"http://localhost:8180/dc/type/country/France\", "
       + "\"name\": \"France\" }");*/
 
-      DCModel mixinModel = (DCModel) new DCModel("dcmi:name")
+      DCModel mixinModel = (DCModel) new DCModel("dcmi:mixin")
          // TODO maxScan, security, collectionName
          .addField(new DCField("dcmi:name", "string", true, 100));
       
       // TODO prefixes & namespaces, fields ???
       
-      super.createModelsAndCleanTheirData(metaModel, mixinModel); // TODO also Mixins ???
-      
-      doInitData();
+      modelsToCreate.addAll(Arrays.asList((DCModelBase) metaModel, mixinModel)); // also Mixins
    }
 
    private DCMapField addFieldFields(DCMapField mapField) { // TODO polymorphism
@@ -101,12 +101,14 @@ public class ResourceModelIniter extends DatacoreSampleBase {
    
    
    @Override
-   public void doInitData() {
+   public void fillData() {
       List<DCResource> resourcesToPost = new ArrayList<DCResource>();
+      
+      // TODO TODOOOOOOOOOOOOOOOOOO mixin for common fields between DCModel & DCMixin !!!
       
       for (DCModel model : modelAdminService.getModels()) {
          
-         // filling company's provided props :
+         // filling model's provided props :
          final DCResource modelResource = DCResource.create(null, "dcmo:model")
                .set("dcmo:name", model.getName())
                .set("dcmo:majorVersion", model.getMajorVersion())
@@ -187,7 +189,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
             //resourcesToPost.add(city); // BEWARE must be posted before company else resource reference check fails
          }
          */
-
+         
          
          // once props are complete, build URI out of them and schedule post :
          
@@ -196,6 +198,39 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          resourcesToPost.add(modelResource);
          
       }
+      
+
+      for (DCMixin mixinModel : modelAdminService.getMixins()) {
+         // filling model's provided props :
+         final DCResource modelResource = DCResource.create(null, "dcmi:mixin")
+               .set("dcmo:name", mixinModel.getName())
+               .set("dcmo:majorVersion", mixinModel.getMajorVersion())
+               // NB. minor version is Resource version
+               .set("dcmo:documentation", mixinModel.getDocumentation())// TODO in another collection for performance
+               // TODO security
+               .set("dcmo:fields", fieldsToProps(mixinModel.getFieldMap()))
+               ;
+         //modelResource.setVersion(model.getVersion()); // not at creation (or < 0),
+         // rather update DCModel.version from its resource after each put
+         
+         ImmutableList.Builder<Object> mixinsPropBuilder = DCResource.listBuilder();
+         for (DCModelBase mixin : mixinModel.getMixins()) {
+            mixinsPropBuilder.add(mixin.getName());
+         }
+         modelResource.set("dcmo:mixins", mixinsPropBuilder.build());
+         
+         // caches : (TODO also for mixins ?????)
+         modelResource.set("dcmo:globalMixins",
+               new ArrayList<String>(mixinModel.getGlobalMixinNameSet())); // TODO order
+         modelResource.set("dcmo:globalFields", fieldsToProps(mixinModel.getGlobalFieldMap()));
+
+         // once props are complete, build URI out of them and schedule post :
+         
+         modelResource.setUri(UriHelper.buildUri(containerUrl, "dcmi:mixin",
+               (String) modelResource.get("dcmo:name") + '/' + modelResource.get("dcmo:majorVersion")));
+         resourcesToPost.add(modelResource);
+      }
+
 
       for (DCResource resource : resourcesToPost) {
          if ("dcmo:model".equals(resource.get("dcmo:name"))) {

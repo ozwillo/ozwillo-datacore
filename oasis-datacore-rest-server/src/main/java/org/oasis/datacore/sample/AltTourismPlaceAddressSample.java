@@ -1,8 +1,12 @@
 package org.oasis.datacore.sample;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.server.event.DCInitIdEventListener;
@@ -26,12 +30,7 @@ public class AltTourismPlaceAddressSample extends DatacoreSampleBase {
    
 
    @Override
-   public void doInit() {
-      this.initModel();
-      this.doInitData();
-   }
-   
-   public void initModel() {
+   public void buildModels(List<DCModelBase> modelsToCreate) {
       // Mixin for shared fields - use 1
       DCModel myAppPlaceAddress = new DCModel(MY_APP_PLACE);
       myAppPlaceAddress.addField(new DCField("name", "string", true, 100)); // my.app.place.name ?!
@@ -55,13 +54,14 @@ public class AltTourismPlaceAddressSample extends DatacoreSampleBase {
       oasisAddress.addField(new DCField("countryName", "string", false, 100)); // OR only resource ??
       oasisAddress.addField(new DCResourceField("country", "country", false, 100)); // TODO create country model, or reuse sample ?!?
 
-      createModelsAndCleanTheirData(myAppPlaceAddress, altTourismPlaceKind, altTourismPlace, oasisAddress);
+      modelsToCreate.addAll(Arrays.asList(myAppPlaceAddress, altTourismPlaceKind, altTourismPlace, oasisAddress));
    }
    
-   public void doInitData() {
-      // cleaning data first (else Conflict ?!)
-      cleanDataOfCreatedModels();
-      
+   /**
+    * BEWARE changes model, models must be reinited first in tests
+    */
+   @Override
+   public void fillData() {
       // Mixin for shared fields - use 1
       //MY_APP_PLACE
       
@@ -69,21 +69,18 @@ public class AltTourismPlaceAddressSample extends DatacoreSampleBase {
       
       DCResource myAppPlace1Posted = /*datacoreApiClient.*/postDataInType(myAppPlace1);
       
-      // check that field without mixin fails, at update : 
-      myAppPlace1Posted.set("zipCode", "69100");
-
-      // check that field without mixin fails, same but already at creation :
-      DCResource myAppPlace2 = resourceService.create(MY_APP_PLACE, "my_place_2").set("name", "my_place_2")
-            .set("zipCode", "69100");
-      
       // step 2 - now adding mixin
       modelAdminService.getModel(MY_APP_PLACE).addMixin(modelAdminService.getMixin(OASIS_ADDRESS));
       ///modelAdminService.addModel(myAppPlaceAddress); // LATER re-add...
 
       // check, at update :
+      // (field without mixin would have failed) 
+      myAppPlace1Posted.set("zipCode", "69100");
       DCResource myAppPlace1Put = /*datacoreApiClient.*/putDataInType(myAppPlace1Posted);
 
       // check, same but already at creation :
+      DCResource myAppPlace2 = resourceService.create(MY_APP_PLACE, "my_place_2").set("name", "my_place_2")
+            .set("zipCode", "69100");
       DCResource myAppPlace2Posted = /*datacoreApiClient.*/postDataInType(myAppPlace2);
       
       
@@ -98,22 +95,21 @@ public class AltTourismPlaceAddressSample extends DatacoreSampleBase {
       DCResource altTourismPlaceJoWinery = resourceService.create(ALTTOURISM_PLACE, "Jo_Winery")
             .set("name", "Jo_Winery").set("kind", altTourismWineryKind.getUri());
       DCResource altTourismPlaceJoWineryPosted = /*datacoreApiClient.*/postDataInType(altTourismPlaceJoWinery);
-
-      // check that field without mixin fails, at update : 
-      altTourismPlaceJoWineryPosted.set("zipCode", "1000");
-
-      // check that field without mixin fails, same but already at creation :
+         
+      // step 2 - now adding mixin
+      modelAdminService.getModel(ALTTOURISM_PLACE).addMixin(modelAdminService.getMixin(OASIS_ADDRESS));
+      ///modelAdminService.addModel(altTourismPlace); // LATER re-add...
+      
+      // (field without mixin would have failed) same but already at creation :
       DCResource altTourismMonasteryKind = resourceService.create(ALTTOURISM_PLACEKIND, "monastery").set("name", "monastery");
       altTourismMonasteryKind = /*datacoreApiClient.*/postDataInType(altTourismMonasteryKind);
       DCResource altTourismPlaceSofiaMonastery = resourceService.create(ALTTOURISM_PLACE, "Sofia_Monastery")
             .set("name", "Sofia_Monastery").set("kind", altTourismMonasteryKind.getUri())
             .set("zipCode", "1000");
-         
-      // step 2 - now adding mixin
-      modelAdminService.getModel(ALTTOURISM_PLACE).addMixin(modelAdminService.getMixin(OASIS_ADDRESS));
-      ///modelAdminService.addModel(altTourismPlace); // LATER re-add...
 
       // check, at update :
+      // (field without mixin would have failed)
+      altTourismPlaceJoWineryPosted.set("zipCode", "1000");
       DCResource altTourismPlaceJoWineryPut = /*datacoreApiClient.*/putDataInType(altTourismPlaceJoWineryPosted);
 
       // check, same but already at creation :

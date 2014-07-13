@@ -1,5 +1,8 @@
 package org.oasis.datacore.sample.citizenkin;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.oasis.datacore.core.meta.model.*;
 import org.oasis.datacore.sample.DatacoreSampleBase;
 import org.springframework.stereotype.Component;
@@ -23,7 +26,7 @@ public class CitizenKinElectionModelInitializer extends DatacoreSampleBase {
     public static final String DATE_TYPE = DCFieldTypeEnum.DATE.getType();
 
     @Override
-    public void doInit() {
+    public void buildModels(List<DCModelBase> modelsToCreate) {
 
         DCModel model = new DCModel(CITIZENKIN_PROCEDURE_ELECTORAL_ROLL_REGISTRATION);
 
@@ -65,9 +68,11 @@ public class CitizenKinElectionModelInitializer extends DatacoreSampleBase {
         model.addField(new DCListField("justificatifs_domicile", new DCField("justificatif_domicile", STRING_TYPE, true, 0)));
 
 
-        modelAdminService.addModel(model);
+        modelsToCreate.addAll(Arrays.asList(new DCModelBase[] { model }));
     }
 
-    public void doInitData() {
+    @Override
+    public void fillData() {
     }
+    
 }

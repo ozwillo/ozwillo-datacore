@@ -6,13 +6,11 @@ import java.util.Map;
 
 import javax.ws.rs.WebApplicationException;
 
-import org.apache.cxf.common.util.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
-import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UnitTestHelper;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
@@ -23,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -43,7 +40,7 @@ public class HTTPOperationsTest {
 
 	@Autowired
 	private MongoOperations mongoOperations;
-	
+
 	@Autowired
 	private BrandCarMotorcycleData brandCarMotorcycleData;
 	
@@ -1111,21 +1108,7 @@ public class HTTPOperationsTest {
 
 	@Before
 	public void flushData() {
-		truncateModel(BrandCarMotorcycleModel.BRAND_MODEL_NAME);
-		truncateModel(BrandCarMotorcycleModel.CAR_MODEL_NAME);
-		truncateModel(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
-		brandCarMotorcycleData.createDataSample();
-	}
-	
-	private void truncateModel(String type) {
-		if (type != null && !StringUtils.isEmpty(type)) {
-			DCModel dcModel = modelAdminService.getModel(type);
-			if (dcModel != null) {
-				mongoOperations.remove(new Query(), dcModel.getCollectionName());
-			}
-		} else {
-			System.out.println("Model type is null or empty, cannot truncate model");
-		}
+	   brandCarMotorcycleData.initData();
 	}
 
 }
