@@ -127,31 +127,37 @@ public class JsonLdJavaRdfProvider implements MessageBodyReader<Object>, Message
          String format = mediaType.getParameters().get(DatacoreMediaType.APPLICATION_JSONLD_FORMAT_PARAM);
          // NB. JSONLD parameterized media types are all "compatible" together,
          // so rather checking format parameter explicitly :
-         if(DatacoreMediaType.JSONLD_COMPACT.equals(format)) {
-            res = JsonLdProcessor.compact(jsonObject, context, options);
-            //System.out.println(JsonUtils.toPrettyString(compact));
-         } else if(DatacoreMediaType.JSONLD_FLATTEN.equals(format)) {
-            res = JsonLdProcessor.flatten(jsonObject, context, options);
-         } else if(DatacoreMediaType.JSONLD_EXPAND.equals(format)) {
-            res = JsonLdProcessor.expand(jsonObject, options);
-         } else if(DatacoreMediaType.JSONLD_FRAME.equals(format)) {
-            res = JsonLdProcessor.frame(jsonObject, context, options);
-         } else if(mediaType.isCompatible(DatacoreMediaType.APPLICATION_TURTLE_TYPE)
-               || "turtle".equals(format) || "ttl".equals(format)) {
-            options.format = "text/turtle";
-            res = JsonLdProcessor.toRDF(jsonObject, options);
-         } else if(format == null
-               || mediaType.isCompatible(MediaType.TEXT_PLAIN_TYPE) || "text/plain".equals(format)
-               || mediaType.isCompatible(DatacoreMediaType.APPLICATION_NQUADS_TYPE)
-               || mediaType.isCompatible(DatacoreMediaType.APPLICATION_NTRIPLES_TYPE)
-               || "nquads".equals(format) || "nq".equals(format) || "nt".equals(format)
-               || "ntriples".equals(format)) {
-            //System.out.println("Generating Nquads Report");
-            options.format = "application/nquads";
-            res = JsonLdProcessor.toRDF(jsonObject, options);
+         if(mediaType.isCompatible(DatacoreMediaType.APPLICATION_JSONLD_TYPE)) {
+            if(DatacoreMediaType.JSONLD_COMPACT.equals(format)) {
+               res = JsonLdProcessor.compact(jsonObject, context, options);
+               //System.out.println(JsonUtils.toPrettyString(compact));
+            } else if(DatacoreMediaType.JSONLD_FLATTEN.equals(format)) {
+               res = JsonLdProcessor.flatten(jsonObject, context, options);
+            } else if(DatacoreMediaType.JSONLD_EXPAND.equals(format)) {
+               res = JsonLdProcessor.expand(jsonObject, options);
+            } else if(DatacoreMediaType.JSONLD_FRAME.equals(format)) {
+               res = JsonLdProcessor.frame(jsonObject, context, options);
+            }
+            // NB. and NOT res.toString() else map key & values not quoted !!
+            JsonUtils.write(new OutputStreamWriter(entityStream), res);
+            
+         } else {
+            if(mediaType.isCompatible(DatacoreMediaType.APPLICATION_TURTLE_TYPE)
+                  || "turtle".equals(format) || "ttl".equals(format)) {
+               options.format = "text/turtle";
+               res = JsonLdProcessor.toRDF(jsonObject, options);
+            } else if(format == null
+                  || mediaType.isCompatible(MediaType.TEXT_PLAIN_TYPE) || "text/plain".equals(format)
+                  || mediaType.isCompatible(DatacoreMediaType.APPLICATION_NQUADS_TYPE)
+                  || mediaType.isCompatible(DatacoreMediaType.APPLICATION_NTRIPLES_TYPE)
+                  || "nquads".equals(format) || "nq".equals(format) || "nt".equals(format)
+                  || "ntriples".equals(format)) {
+               //System.out.println("Generating Nquads Report");
+               options.format = "application/nquads";
+               res = JsonLdProcessor.toRDF(jsonObject, options);
+            }
+            IOUtils.write(res.toString(), entityStream);
          }
-         JsonUtils.write(new OutputStreamWriter(entityStream), res);
-         // NB. and NOT res.toString() else map key & values not quoted !!
          
       } catch(IOException | JsonLdError ioe) {
          //Problem with json ld fall back to normal execution
@@ -226,7 +232,7 @@ public class JsonLdJavaRdfProvider implements MessageBodyReader<Object>, Message
          options.setUseNativeTypes(true);
          jsonObject = JsonLdProcessor.fromRDF(rdfString, options, nquadParser);
       } catch (JsonLdError e) {
-         e.printStackTrace();
+         throw new IOException("Error while reading as JSON following RDF : " + rdfString, e);
       }
       
       if(type.toString().contains("DCResource")) {
