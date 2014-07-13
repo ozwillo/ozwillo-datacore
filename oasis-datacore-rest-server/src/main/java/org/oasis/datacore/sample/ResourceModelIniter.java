@@ -8,7 +8,6 @@ import java.util.Map;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
-import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCResourceField;
@@ -45,18 +44,15 @@ public class ResourceModelIniter extends DatacoreSampleBase {
 
    @Override
    public void buildModels(List<DCModelBase> modelsToCreate) {
-      DCModel metaModel = (DCModel) new DCModel("dcmo:model")
-         // TODO security
+
+      // Mixins (or only as names ??) model and at the same time modelBase :
+      DCModel mixinModel = (DCModel) new DCModel("dcmi:mixin")
          .addField(new DCField("dcmo:name", "string", true, 100))
          .addField(new DCField("dcmo:majorVersion", "long", true, 100)) // don't index and rather lookup on URI ??
-         .addField(new DCField("dcmo:collectionName", "string", true, 100))
-         .addField(new DCField("dcmo:maxScan", "int")) // not "required"
          // NB. Resource version is finer but NOT the minorVersion of the majorVersion
          .addField(new DCField("dcmo:documentation", "string", true, 100)) // TODO in another collection for performance
          .addField(new DCListField("dcmo:fields", addFieldFields(new DCMapField("useless"))))
          .addField(new DCListField("dcmo:mixins", new DCField("useless", "string")))
-         .addField(new DCField("dcmo:isHistorizable", "boolean", true, 100))
-         .addField(new DCField("dcmo:isContributable", "boolean", true, 100))
          
          // caches :
          .addField(new DCListField("dcmo:globalFields", addFieldFields(new DCMapField("useless")))) // TODO polymorphism
@@ -64,17 +60,25 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          // embedded mixins, globalMixins ???
          // & listeners ??
          ;
+      mixinModel.setDocumentation("id = name + '/' + version");
+      /*ignCommuneModel.setDocumentsetDocumentationation("{ \"uri\": \"http://localhost:8180/dc/type/country/France\", "
+      + "\"name\": \"France\" }");*/
+   
+      DCModel metaModel = (DCModel) new DCModel("dcmo:model")
+         // TODO security
+         .addMixin(mixinModel)
+         .addField(new DCField("dcmo:collectionName", "string", true, 100))
+         .addField(new DCField("dcmo:maxScan", "int")) // not "required"
+         .addField(new DCField("dcmo:isHistorizable", "boolean", true, 100))
+         .addField(new DCField("dcmo:isContributable", "boolean", true, 100))
+         ;
       metaModel.setDocumentation("id = name + '/' + version");
       /*ignCommuneModel.setDocumentsetDocumentationation("{ \"uri\": \"http://localhost:8180/dc/type/country/France\", "
       + "\"name\": \"France\" }");*/
-
-      DCModel mixinModel = (DCModel) new DCModel("dcmi:mixin")
-         // TODO maxScan, security, collectionName
-         .addField(new DCField("dcmi:name", "string", true, 100));
       
       // TODO prefixes & namespaces, fields ???
       
-      modelsToCreate.addAll(Arrays.asList((DCModelBase) metaModel, mixinModel)); // also Mixins
+      modelsToCreate.addAll(Arrays.asList((DCModelBase) metaModel, mixinModel));
    }
 
    private DCMapField addFieldFields(DCMapField mapField) { // TODO polymorphism
@@ -199,8 +203,12 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          
       }
       
+      
+      for (DCModel model : modelAdminService.getModels()) {
+         registerMixins(model);
+      }
 
-      for (DCMixin mixinModel : modelAdminService.getMixins()) {
+      for (DCModelBase mixinModel : modelAdminService.getMixins()) {
          // filling model's provided props :
          final DCResource modelResource = DCResource.create(null, "dcmi:mixin")
                .set("dcmo:name", mixinModel.getName())
@@ -233,7 +241,8 @@ public class ResourceModelIniter extends DatacoreSampleBase {
 
 
       for (DCResource resource : resourcesToPost) {
-         if ("dcmo:model".equals(resource.get("dcmo:name"))) {
+         if ("dcmo:model".equals(resource.get("dcmo:name"))
+               || "dcmi:mixin".equals(resource.get("dcmo:name"))) {
             // for now non-recursive metaModel can't be posted,
             // LATER do it to document it (what is queriable etc.)
             continue;
@@ -242,6 +251,14 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       }
    }
 
+
+   // TODO move to modelAdminService.addModel() !
+   private void registerMixins(DCModelBase model) {
+      for (DCModelBase mixin : model.getMixins()) {
+         modelAdminService.addMixin((DCModelBase) mixin);
+         registerMixins(mixin);
+      }
+   }
 
    private ImmutableList<Object> fieldsToProps(Map<String, DCField> fieldMap) {
       // TODO order !!

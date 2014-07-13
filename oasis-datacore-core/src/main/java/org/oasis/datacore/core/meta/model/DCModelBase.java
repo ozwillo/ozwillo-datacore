@@ -244,8 +244,8 @@ public abstract class DCModelBase {
 	 */
 	@Override
 	public String toString() {
-	   return "Model[" + this.name + ";m:" + this.globalMixinMap.keySet()
-	         + "](f:" + globalFieldMap.keySet() + ")";
+	   return "Model[" + this.name + ";m:" + this.getGlobalMixinMap().keySet()
+	         + "](f:" + this.getGlobalFieldMap().keySet() + ")";
 	}
    
 }
