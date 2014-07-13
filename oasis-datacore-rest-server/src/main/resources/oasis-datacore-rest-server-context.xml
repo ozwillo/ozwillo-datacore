@@ -196,7 +196,11 @@
       <property name="version" value="1.0.0"/>
       <property name="basePath" value="${datacoreApiServer.baseUrl}"/>
       <property name="title" value="Datacore Resource API"/>
-      <property name="description" value="${datacore.api.doc}"/>
+      <property name="description">
+         <bean class="org.apache.commons.io.IOUtils" factory-method="toString">
+            <constructor-arg value="classpath:swagger/dc/description.html" type="java.io.InputStream" />
+         </bean>
+      </property>
       <property name="contact" value="http://www.oasis-eu.org"/>
       <property name="license" value="Apache 2.0 License"/><!-- TODO LGPL ??? -->
       <property name="licenseUrl" value="http://www.apache.org/licenses/LICENSE-2.0.html"/>
