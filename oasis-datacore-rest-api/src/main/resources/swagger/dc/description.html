@@ -36,7 +36,7 @@ function getData(relativeUrl) {
    var i = ti.indexOf('/', l);
    window.t = ti.substring(0, i);
    window.iri = ti.substring(i + 1);
-   window.datacore = new SwaggerApi({ url: 'http://localhost:8080/api-docs', success: function() {
+   window.datacore = new SwaggerApi({ url: '/api-docs', success: function() {
       if(datacore.ready === true) {
          datacore.apis.dc.getData({type:window.t, iri:window.iri, 'If-None-Match':-1,
             Authorization:'Basic YWRtaW46YWRtaW4='}, function(data) {
