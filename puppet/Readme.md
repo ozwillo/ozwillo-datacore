@@ -20,7 +20,7 @@ Modules from [Puppet Forge](https://forge.puppetlabs.com/):
 * [Collectd](https://forge.puppetlabs.com/pdxcat/collectd)
 
 ```
-puppet module install dwerder-mongodb 
+puppet module install dwerder-mongodb
 puppet module install dwerder-graphite
 puppet module install elasticsearch-elasticsearch
 puppet module install pdxcat-collectd
@@ -98,7 +98,7 @@ puppet agent --verbose --no-daemonize
 
 #### Datacore
 
-Modify ```/home/oasis/install/tomcat7-dc/webapps/ROOT/WEB-INF/classes/oasis-datacore-deploy.properties``` to fit your needs, especially *datacoreApiServer.baseUrl* and maybe also *kernel.checkTokenEndpointUrl*, *kernel.userInfoEndpointUrl*, *kernel.baseUrl*
+Modify [/home/oasis/install/tomcat7-dc/webapps/ROOT/WEB-INF/classes/oasis-datacore-deploy.properties](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-deploy/vmdc/home/oasis/install/tomcat7-dc/webapps/ROOT/WEB-INF/classes/oasis-datacore-deploy.properties) to fit your needs, especially *datacoreApiServer.baseUrl* and maybe also *kernel.baseUrl*
 
 #### Graphite
 

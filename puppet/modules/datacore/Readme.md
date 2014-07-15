@@ -20,3 +20,15 @@ It should create ```pkg/oasis-datacore-0.0.1.tar.gz```.
 ### Install datacore
 
 ```puppet apply install.pp```
+
+### Dependency
+
+Module from [Puppet Forge](https://forge.puppetlabs.com/):
+* [MongoDB](https://forge.puppetlabs.com/dwerder/mongodb)
+
+This module is automatically installed.
+
+In case it did not work, you can still install it manually.
+```
+puppet module install dwerder-mongodb
+```

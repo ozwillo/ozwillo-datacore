@@ -1,7 +1,7 @@
 #Required :
 #Fork -> Build it from https://github.com/vvision/puppet-jmeter
 #Default -> puppet module install dduvnjak-jmeter
-#/!\ Automatically install openjdk-6-jre-headless
+#/!\ Default module automatically install openjdk-6-jre-headless
 
 class { 'jmeter::server':
   version => '2.11',

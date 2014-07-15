@@ -1,8 +1,10 @@
 name 'oasis-datacore'
 version '0.0.3'
 source ''
-author 'Victor Voisin <victor.voisin@openwide.fr>'
+author 'Victor Voisin'
 description 'Install Oasis datacore'
 summary 'Oasis Datacore'
 license 'MIT'
 project_page ''
+
+dependency 'dwerder-mongodb', '>=3.4.0'
