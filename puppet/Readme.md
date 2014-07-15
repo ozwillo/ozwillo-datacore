@@ -13,16 +13,31 @@ Get this directory on Puppet Master
 
 #### Modules installation (Master)
 
-* puppet module install dwerder-mongodb (Use HEAD -> Waiting for changes to be published)
-* puppet module install dwerder-graphite
-* puppet module install elasticsearch-elasticsearch
-* puppet module install pdxcat-collectd
+Modules from [Puppet Forge](https://forge.puppetlabs.com/):
+* [MongoDB](https://forge.puppetlabs.com/dwerder/mongodb)
+* [Graphite](https://forge.puppetlabs.com/dwerder/graphite)
+* [Elasticsearch](https://forge.puppetlabs.com/elasticsearch/elasticsearch)
+* [Collectd](https://forge.puppetlabs.com/pdxcat/collectd)
 
-Personal modules (Must be manually built):
-* puppet module install oasis-datacore-0.0.3.tar.gz --force
-* puppet module install jmeter-0.0.1.tar.gz --force
-* puppet module install riemann-0.0.1.tar.gz --force
-* puppet module install mmsagent-0.0.1.tar.gz --force
+```
+puppet module install dwerder-mongodb 
+puppet module install dwerder-graphite
+puppet module install elasticsearch-elasticsearch
+puppet module install pdxcat-collectd
+```
+
+[Custom modules](https://github.com/pole-numerique/oasis-datacore/tree/master/puppet/modules) (Must be manually built):
+* Datacore
+* JMeter
+* Riemann
+* MMSAgent
+
+```
+puppet module install oasis-datacore-0.0.3.tar.gz --force
+puppet module install jmeter-0.0.1.tar.gz --force
+puppet module install riemann-0.0.1.tar.gz --force
+puppet module install mmsagent-0.0.1.tar.gz --force
+```
 
 ## Puppet Configuration
 
@@ -125,48 +140,26 @@ https://jmeter.apache.org/usermanual/remote-test.html
 
 #### Catalog
 
-Add the configuration of the different nodes in /etc/puppet/manifests/site.pp :
+Configurations are available in the directory [conf](https://github.com/pole-numerique/oasis-datacore/tree/master/puppet/conf).
+
+#### General Example
+
+Add the configuration of the different nodes in /etc/puppet/manifests/site.pp on the master:
 ```
 include mongodb
 
 node  'certname of the concerned VM' {
 
   mongodb::mongod {
-    'mongo42':
-      mongod_instance    => 'mongo42'
+    'mongo':
+      mongod_instance    => 'mongo'
   }
   
   include '::datacore'
-
 }
 
 node basenode {
 
 }
 ```
-
-Configurations are available in the directory *Configurations*.
-
-####Associated Architecture
-
-PLNM-TEST-TSTJAVA 01, 02, 03, 04 :
-* Datacore
-* Riemann
-* Mongos
-* Collectd
-
-PLNM-TEST-TSTJAVA 05 :
-* Graphite
-* ElasticSearch
-* Kibana
-
-PLNM-TEST-TSTJAVA 06 :
-* JMeter
-* Puppet Master
-
-PLNM-TEST-TSTMONGO :
-* mongod
-
-PLNM-TEST-TSTMONGO 01, 03, 04 :
-* mongo config
 
