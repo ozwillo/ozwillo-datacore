@@ -7,7 +7,7 @@
  -->
  <script type="text/javascript">
 $(function() {
-   /*window.datacore = new SwaggerApi({ url: 'http://localhost:8080/api-docs', success: function() {
+   /*window.datacore = new SwaggerApi({ url: '/api-docs', success: function() {
       // TODO display status
    }};*/
 });
@@ -17,7 +17,7 @@ function findDataByType(relativeUrl) {
    var i = tq.indexOf('?');
    window.t = i == -1 ? tq : tq.substring(0, i);
    window.q = i == -1 ? '' : tq.substring(i + 1);
-   window.datacore = new SwaggerApi({ url: 'http://localhost:8080/api-docs',
+   window.datacore = new SwaggerApi({ url: '/api-docs',
       success: function() {
          if(datacore.ready === true) {
             datacore.apis.dc.findDataInType({type:window.t, '#queryParameters':window.q,
@@ -67,7 +67,7 @@ javascript:return findDataByType($(this).attr('href'));
 In addition to the simpler default native pure JSON format, "true" JSON-LD formats and semantic web formats (such as 
 <a href="http://en.wikipedia.org/wiki/Resource_Description_Framework">RDF</a>, see 
 <a href="/dc/type/!pli:city" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
-javascript:var l = '/dc/type/'.length; var tq = $(this).attr('href').substring(l); var i = tq.indexOf('?'); window.t = i == -1 ? tq : tq.substring(0, i); window.q = i == -1 ? '' : tq.substring(i + 1); window.datacore = new SwaggerApi({ url: 'http://localhost:8080/api-docs', success: function() { if(datacore.ready === true) { datacore.apis.dc.findDataInType({type:window.t, '#queryParameters':window.q, Authorization:'Basic YWRtaW46YWRtaW4='}, {responseContentType:'text/x-nquads'}, function(data) { var prettyText = data.content.data; $('.mydata').text(prettyText); }); } } }); return false;
+javascript:var l = '/dc/type/'.length; var tq = $(this).attr('href').substring(l); var i = tq.indexOf('?'); window.t = i == -1 ? tq : tq.substring(0, i); window.q = i == -1 ? '' : tq.substring(i + 1); window.datacore = new SwaggerApi({ url: '/api-docs', success: function() { if(datacore.ready === true) { datacore.apis.dc.findDataInType({type:window.t, '#queryParameters':window.q, Authorization:'Basic YWRtaW46YWRtaW4='}, {responseContentType:'text/x-nquads'}, function(data) { var prettyText = data.content.data; $('.mydata').text(prettyText); }); } } }); return false;
 ">example</a>) are available. 
 <br/><br/>
 &nbsp;&nbsp;- <b>Data Models</b> describe what kinds of Data Resources are allowed in a 
