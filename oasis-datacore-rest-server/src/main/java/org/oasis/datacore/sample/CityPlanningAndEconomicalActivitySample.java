@@ -65,7 +65,11 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
 
       
       /////////////////////////////////////////////////////////
-      // 1.a provide a denormalized view of your data, and write a Model for it
+      // 1.a provide a denormalized view of your data :
+      // i.e. flat, including fields of related classifications
+      // ex. https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-server/src/main/resources/samples/provto/economicalActivity/economicalActivity.csv
+      //
+      // and write a Model for it :
       // (the simplest one : no outside references, all fields queriable and string).
       // NB. avoid adding internal / technical / business id (unique) fields to allow
       // applications to reconcile with it. Rather, build your Resources' URIs out of those ids,
@@ -80,7 +84,7 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
             + "\"name\": \"France\" }");*/
          
          // about company :
-         .addField(new DCField("ecoact:codiceFiscale", "string", true, 100)) // ex. "GNTLMR89S61L219Q"
+         .addField(new DCField("!ecoact:codiceFiscale", "string", true, 100)) // ex. "GNTLMR89S61L219Q"
          // => might be extracted to another a generic Italian company Mixin on this Model
          //.addField(new DCResourceField("!companyUri", "!codiceFiscale", true, 100)) // used as identifier
          .addField(new DCField("!ecoact:companyName", "string", true, 100)) // 
@@ -94,37 +98,37 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
          .addField(new DCField("!ecoact:atecoCode", "string", true, 100)) // ex. "1.2" or "1.2.3" (in turkish : "" & "NACE" comes from an international one)
          .addField(new DCField("!?ecoact:atecoDescription", "string", true, 100)) // 1000s ; ex. "Commercio al dettaglio di articoli sportivi e per il tempo libero"
          // => to be extracted to another Model, therefore add its uri/id :
-         .addField(new DCResourceField("ecoact:atecoUri", "!ateco", true, 100))
+         .addField(new DCResourceField("!ecoact:atecoUri", "!ecoact:ateco", true, 100))
          
          // about city (and company) :
          .addField(new DCField("!ecoact:municipality", "string", true, 100)) // ex. COLLEGNO ; only description (display name) and not toponimo
          // => to be extracted to another Model, therefore add its uri/id :
-         .addField(new DCResourceField("!ecoact:municipalityUri", "!city", true, 100))
+         .addField(new DCResourceField("!ecoact:municipalityUri", "!ecoact:municipality", true, 100))
          ;
       
 
-      DCModel cityPlanningModel = (DCModel) new DCModel("!cityPlanning") // OR urbanArea
+      DCModel cityPlanningModel = (DCModel) new DCModel("!cityarea:cityPlanning") // OR urbanArea
       /*ignCommuneModel.setDocumentsetDocumentationation("{ \"uri\": \"http://localhost:8180/dc/type/country/France\", "
             + "\"name\": \"France\" }");*/
       
           // about city : "italianCityMixin"
-         .addField(new DCField("!ISTAT", "int", true, 100)) // ex. "1272" 4 digits
-         .addField(new DCField("!?city:name", "string", true, 100)) // "Torino" ; i18n
-         .addField(new DCResourceField("!cityUri", "!city", true, 100))
+         .addField(new DCField("!cityarea:ISTAT", "int", true, 100)) // ex. "1272" 4 digits
+         .addField(new DCField("!?cityarea:city_name", "string", true, 100)) // "Torino" ; i18n
+         .addField(new DCResourceField("!cityarea:cityUri", "!city", true, 100))
          
          // about destination of use :
-         .addField(new DCField("!?normalizedCode", "string", true, 100)) // COD_N "1,1", "2.4", "6", "6,32"
-         .addField(new DCField("!destinationOfUse.description", "strin", true, 100)) // ex. "rezidentiale consolidato"
-         .addField(new DCField("!destinationOfUse.sigla", "float", true, 100)) // non-standardized, decided internally by its city ; R2 R9 M1...
+         .addField(new DCField("!?cityarea:destinationOfUse_normalizedCode", "string", true, 100)) // COD_N "1,1", "2.4", "6", "6,32"
+         .addField(new DCField("!cityarea:destinationOfUse_description", "strin", true, 100)) // ex. "rezidentiale consolidato"
+         .addField(new DCField("!cityarea:destinationOfUse_sigla", "float", true, 100)) // non-standardized, decided internally by its city ; R2 R9 M1...
          // + city of use to differentiate sigla
-         .addField(new DCResourceField("!destinationOfUseUri", "!destinationOfUse", true, 100)) // useful ?
+         .addField(new DCResourceField("!destinationOfUse:destinationOfUseUri", "!destinationOfUse:destinationOfUse", true, 100)) // useful ?
          
          // about public act (of the mayor) that defines this destination :
-         .addField(new DCField("!dcc", "string", true, 100)) // public act (of the mayor) that defines this destination ex. 2008/04/01-61
-         .addField(new DCResourceField("!dccUri", "!cityDcc", true, 100)) // useful ?
+         .addField(new DCField("!cityarea:dcc", "string", true, 100)) // public act (of the mayor) that defines this destination ex. 2008/04/01-61
+         .addField(new DCResourceField("!cityarea:dccUri", "!cityarea:cityDcc", true, 100)) // useful ?
          
          // about urban area ;
-         .addField(new DCField("!geometry", "string", true, 100)) // shape of the urban area ; WKS ; used as identifier
+         .addField(new DCField("!cityarea:geometry", "string", true, 100)) // shape of the urban area ; WKS ; used as identifier
          ;
    }
 
@@ -141,42 +145,42 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
       // i.e. query limit or index.
       
 
-      DCModel atecoModel = (DCModel) new DCModel("!economicalActivity_!ateco")
+      DCModel atecoModel = (DCModel) new DCModel("!ateco:ateco")
       /*ignCommuneModel.setDocumentsetDocumentationation("{ \"uri\": \"http://localhost:8180/dc/type/country/France\", "
             + "\"name\": \"France\" }");*/
-         .addField(new DCField("!atecoCode", "string", true, 100)) // ex. "1.2" or "1.2.3" (in turkish : "" & "NACE" comes from an international one)
-         .addField(new DCField("!?atecoDescription", "string", true, 100));
+         .addField(new DCField("!ateco:atecoCode", "string", true, 100)) // ex. "1.2" or "1.2.3" (in turkish : "" & "NACE" comes from an international one)
+         .addField(new DCField("!?ateco:atecoDescription", "string", true, 100));
 
-      DCMixin atecoReferencingMixin = (DCMixin) new DCMixin("!economicalActivity_!ateco.ref")
+      DCMixin atecoReferencingMixin = (DCMixin) new DCMixin("!ecoact:ateco.ref")
       /*ignCommuneModel.setDocumentsetDocumentationation("{ \"uri\": \"http://localhost:8180/dc/type/country/France\", "
             + "\"name\": \"France\" }");*/
-         .addField(atecoModel.getField("!atecoCode")) // ex. "1.2" or "1.2.3" (in turkish : "" & "NACE" comes from an international one)
-         .addField(atecoModel.getField("!?atecoDescription")) // 1000s ; ex. "Commercio al dettaglio di articoli sportivi e per il tempo libero"
-         .addField(new DCResourceField("!ateco", "!ateco", true, 100));
+         .addField(atecoModel.getField("!ateco:atecoCode")) // ex. "1.2" or "1.2.3" (in turkish : "" & "NACE" comes from an international one)
+         .addField(atecoModel.getField("!?ateco:atecoDescription")) // 1000s ; ex. "Commercio al dettaglio di articoli sportivi e per il tempo libero"
+         .addField(new DCResourceField("!ateco:ateco", "!ateco", true, 100));
 
-      DCModel municipalityModel = (DCModel) new DCModel("!economicalActivity_!municipality") // "italianCityMixin"
+      DCModel municipalityModel = (DCModel) new DCModel("!municipality:municipality") // "italianCityMixin"
       /*ignCommuneModel.setDocumentsetDocumentationation("{ \"uri\": \"http://localhost:8180/dc/type/country/France\", "
             + "\"name\": \"France\" }");*/
-         .addField(new DCField("!municipality", "string", true, 100)); // ex. COLLEGNO ; only description (display name) and not toponimo;
+         .addField(new DCField("!municipality:municipality", "string", true, 100)); // ex. COLLEGNO ; only description (display name) and not toponimo;
 
-      DCMixin municipalityReferencingMixin = (DCMixin) new DCMixin("!economicalActivity_!municipality.ref")
+      DCMixin municipalityReferencingMixin = (DCMixin) new DCMixin("!ecoact:municipality.ref")
       /*ignCommuneModel.setDocumentsetDocumentationation("{ \"uri\": \"http://localhost:8180/dc/type/country/France\", "
             + "\"name\": \"France\" }");*/
          .addField(municipalityModel.getField("!municipality")) // ex. COLLEGNO ; only description (display name) and not toponimo
          // => to be extracted to another Model, therefore add its uri/id :
-         .addField(new DCResourceField("!municipalityUri", "!city", true, 100));
+         .addField(new DCResourceField("!ecoact:municipalityUri", "!municipality:municipality", true, 100));
          
       ///DCModel economicalActivityModel = (DCModel) new DCMixin("!economicalActivityMixin"); // "italianCompanyMixin"
-      DCModel economicalActivityModel = (DCModel) new DCModel("!economicalActivity") // OR on company model !!!!!!!!!
+      DCModel economicalActivityModel = (DCModel) new DCModel("!ecoact:economicalActivity") // OR on company model !!!!!!!!!
       /*ignCommuneModel.setDocumentsetDocumentationation("{ \"uri\": \"http://localhost:8180/dc/type/country/France\", "
             + "\"name\": \"France\" }");*/
             
             // about company :
-            .addField(new DCField("codiceFiscale", "string", true, 100)) // ex. "GNTLMR89S61L219Q" ; used as identifier
+            .addField(new DCField("ecoact:codiceFiscale", "string", true, 100)) // ex. "GNTLMR89S61L219Q" ; used as identifier
             // => might be extracted to another a generic Italian company Mixin on this Model
-            .addField(new DCField("!companyName", "string", true, 100)) // 
-            .addField(new DCField("!address", "string", true, 100)) // AND NOT SEVERAL FIELDS ! ex. VIA COSTA ANDREA 3D ; HARD TO RECONCILE !!!!!! ; might be a standardized "address" field
-            .addField(new DCField("!geometry", "string", true, 100)) // point ; WKS ; might be used as identifier ; might be a standardized "geo" field
+            .addField(new DCField("!ecoact:companyName", "string", true, 100)) // 
+            .addField(new DCField("!ecoact:address", "string", true, 100)) // AND NOT SEVERAL FIELDS ! ex. VIA COSTA ANDREA 3D ; HARD TO RECONCILE !!!!!! ; might be a standardized "address" field
+            .addField(new DCField("!ecoact:geometry", "string", true, 100)) // point ; WKS ; might be used as identifier ; might be a standardized "geo" field
             // => might be extracted to another a generic company Mixin on this Model
             // but referencing of another (company or codiceFiscale) Model since it's
             // already thought out to be the same as this one
