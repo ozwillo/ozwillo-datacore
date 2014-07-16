@@ -17,7 +17,12 @@ function findDataByType(relativeUrl) {
    var i = tq.indexOf('?');
    window.t = i == -1 ? tq : tq.substring(0, i);
    window.q = i == -1 ? '' : tq.substring(i + 1);
-   window.datacore = new SwaggerApi({ url: '/api-docs',
+   swaggerUi.api.dc.findDataInType({type:window.t, '#queryParameters':window.q,
+       Authorization:'Basic YWRtaW46YWRtaW4='}, function(data) {
+           var prettyJson = JSON.stringify(eval(data.content.data), null, '\t').replace(/\n/g, '<br>');
+           $('.mydata').html(prettyJson);
+        });
+   /*window.datacore = new SwaggerApi({ url: '/api-docs',
       success: function() {
          if(datacore.ready === true) {
             datacore.apis.dc.findDataInType({type:window.t, '#queryParameters':window.q,
@@ -27,7 +32,7 @@ function findDataByType(relativeUrl) {
             });
          }
       }
-   });
+   });*/
    return false;
 }
 function getData(relativeUrl) {
@@ -36,7 +41,12 @@ function getData(relativeUrl) {
    var i = ti.indexOf('/', l);
    window.t = ti.substring(0, i);
    window.iri = ti.substring(i + 1);
-   window.datacore = new SwaggerApi({ url: '/api-docs', success: function() {
+   swaggerUi.api.dc.getData({type:window.t, iri:window.iri,
+	   'If-None-Match':-1, Authorization:'Basic YWRtaW46YWRtaW4='}, function(data) {
+           var prettyJson = JSON.stringify(eval('[' + data.content.data + ']'), null, '\t').replace(/\n/g, '<br>');
+           $('.mydata').html(prettyJson);
+        });
+   /*window.datacore = new SwaggerApi({ url: '/api-docs', success: function() {
       if(datacore.ready === true) {
          datacore.apis.dc.getData({type:window.t, iri:window.iri, 'If-None-Match':-1,
             Authorization:'Basic YWRtaW46YWRtaW4='}, function(data) {
@@ -45,7 +55,28 @@ function getData(relativeUrl) {
             });
          }
       }
-   });
+   });*/
+   return false;
+}
+function findDataByTypeRdf(relativeUrl) {
+   var l = '/dc/type/'.length;
+   var tq = relativeUrl.substring(l);
+   var i = tq.indexOf('?');
+   window.t = i == -1 ? tq : tq.substring(0, i);
+   window.q = i == -1 ? '' : tq.substring(i + 1);
+   swaggerUi.api.dc.findDataInType({type:window.t, '#queryParameters':window.q,
+       Authorization:'Basic YWRtaW46YWRtaW4='}, {responseContentType:'text/x-nquads'}, function(data) {
+           var prettyText = data.content.data; $('.mydata').text(prettyText);
+        });
+   /*window.datacore = new SwaggerApi({ url: '/api-docs', success: function() {
+      if(datacore.ready === true) {
+         datacore.apis.dc.findDataInType({type:window.t, '#queryParameters':window.q,
+            Authorization:'Basic YWRtaW46YWRtaW4='}, {responseContentType:'text/x-nquads'}, function(data) {
+               var prettyText = data.content.data; $('.mydata').text(prettyText);
+            });
+         }
+      }
+   });*/
    return false;
 }
  </script>
@@ -67,7 +98,7 @@ javascript:return findDataByType($(this).attr('href'));
 In addition to the simpler default native pure JSON format, "true" JSON-LD formats and semantic web formats (such as 
 <a href="http://en.wikipedia.org/wiki/Resource_Description_Framework">RDF</a>, see 
 <a href="/dc/type/!pli:city" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
-javascript:var l = '/dc/type/'.length; var tq = $(this).attr('href').substring(l); var i = tq.indexOf('?'); window.t = i == -1 ? tq : tq.substring(0, i); window.q = i == -1 ? '' : tq.substring(i + 1); window.datacore = new SwaggerApi({ url: '/api-docs', success: function() { if(datacore.ready === true) { datacore.apis.dc.findDataInType({type:window.t, '#queryParameters':window.q, Authorization:'Basic YWRtaW46YWRtaW4='}, {responseContentType:'text/x-nquads'}, function(data) { var prettyText = data.content.data; $('.mydata').text(prettyText); }); } } }); return false;
+javascript:return findDataByTypeRdf($(this).attr('href'));
 ">example</a>) are available. 
 <br/><br/>
 &nbsp;&nbsp;- <b>Data Models</b> describe what kinds of Data Resources are allowed in a 
