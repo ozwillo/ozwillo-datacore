@@ -11,11 +11,11 @@ To be able to build the datacore from source, you should provide a valid private
 In the directory of the project :
 ```puppet module build .```
 
-It should create ```pkg/oasis-datacore-0.0.1.tar.gz```.
+It should create ```pkg/oasis-datacore-0.0.3.tar.gz```.
 
 ### Install the module
 
-```puppet module install pkg/oasis-datacore-0.0.1.tar.gz --force```
+```puppet module install pkg/oasis-datacore-0.0.3.tar.gz --force```
 
 ### Install datacore
 

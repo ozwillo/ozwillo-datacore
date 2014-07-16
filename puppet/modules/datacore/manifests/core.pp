@@ -13,8 +13,11 @@ class datacore::core (
         command => "/bin/cp -rf /home/oasis/dev/workspace/oasis-datacore/oasis-datacore-web/target/datacore/* /home/oasis/install/tomcat7-dc/webapps/ROOT/",
         require => Exec['mvn installation', 'Removing previous files'];
       "Install conf files":
-        command => "/bin/cp -rf /home/oasis/dev/workspace/oasis-datacore/oasis-datacore-deploy/vmdc/* /",
+        command => "/bin/cp -rf /home/oasis/dev/workspace/oasis-datacore/oasis-datacore-deploy/base/vmdc/* /",
         require => Exec['mvn installation', 'Copying datacore to Tomcat'];
+      "Install demo files":
+        command => "/bin/cp -rf /home/oasis/dev/workspace/oasis-datacore/oasis-datacore-deploy/demo/vmdc/* /",
+        require => Exec['Install conf files'];
       "Change owner":
         command => "/bin/chown -R oasis ~oasis";
       "Change group":
