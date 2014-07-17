@@ -265,14 +265,9 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       }
    }
 
-   private ImmutableList<Object> fieldsToProps(Map<String, DCField> fieldMap) {
-      // TODO order !!
-      return fieldsToProps(fieldMap, new ArrayList<String>(fieldMap.keySet()));
-   }
-   private ImmutableList<Object> fieldsToProps(Map<String, DCField> mapFields,
-         List<String> mapFieldNames) {
+   private ImmutableList<Object> fieldsToProps(Map<String, DCField> mapFields) {
       ImmutableList.Builder<Object> fieldsPropBuilder = DCResource.listBuilder();
-      for (String fieldName : mapFieldNames) {
+      for (String fieldName : mapFields.keySet()) { // NB. ordered
          DCField field = mapFields.get(fieldName);
          fieldsPropBuilder.add(fieldToProps(field));
       }
@@ -288,7 +283,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       case "map" :
          DCMapField mapField = (DCMapField) field;
          fieldPropBuilder.put("dcmf:mapFields",
-               fieldsToProps(mapField.getMapFields(), mapField.getMapFieldNames()));
+               fieldsToProps(mapField.getMapFields()));
          break;
       case "list" :
          fieldPropBuilder.put("dcmf:listElementField",

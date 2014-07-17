@@ -1,8 +1,7 @@
 package org.oasis.datacore.core.meta.model;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 
@@ -18,8 +17,8 @@ import java.util.Map;
 // TODO common abstract / inherit with DCModel, possibly inherit from ancestor map fields
 public class DCMapField extends DCField {
 
-   private Map<String,DCField> mapFields = new HashMap<String,DCField>();
-   private List<String> mapFieldNames = new ArrayList<String>(); // to maintain order
+   // NB. maintains order
+   private LinkedHashMap<String,DCField> mapFields = new LinkedHashMap<String,DCField>();
    
    public DCMapField(String name) {
       super(name, "map", false, 0, true); // TODO required ?!?
@@ -30,8 +29,8 @@ public class DCMapField extends DCField {
       return mapFields;
    }
 
-   public List<String> getMapFieldNames() {
-      return mapFieldNames;
+   public Collection<String> getMapFieldNames() {
+      return mapFields.keySet();
    }
    
    
@@ -40,16 +39,11 @@ public class DCMapField extends DCField {
    
    public DCMapField addField(DCField field) {
       mapFields.put(field.getName(), field);
-      mapFieldNames.add(field.getName());
       return this;
    }
 
-   public void setMapFieldNames(List<String> mapFieldNames) {
-      this.mapFieldNames = mapFieldNames;
-   }
-
    public void setMapFields(Map<String, DCField> mapFields) {
-      this.mapFields = mapFields;
+      this.mapFields = new LinkedHashMap<String,DCField>(mapFields);
    }
 
 }
