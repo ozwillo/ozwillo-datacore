@@ -412,11 +412,12 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
 
    // TODO "native" query (W3C LDP-like) also refactored within a dedicated query engine ??
    public List<DCResource> findDataInType(String modelType, UriInfo uriInfo, Integer start, Integer limit, boolean debug) {
-      boolean detailedErrorMode = true; // TODO
-      boolean explainSwitch = false; // TODO LATER
+      boolean explainSwitch = false;
       Exchange exchange = cxfJaxrsApiProvider.getExchange();
-      if(debug || "true".equalsIgnoreCase(cxfJaxrsApiProvider.getHttpHeaders().getHeaderString("X-Datacore-Debug"))) {
-         exchange.put("dc.params.debug", true); // keeping it for ldpEntityQueryService
+      if(exchange != null // else not called through REST
+            && (debug || "true".equalsIgnoreCase(cxfJaxrsApiProvider.getHttpHeaders().getHeaderString("X-Datacore-Debug")))) {
+         // TODO do it in custom Datacore context (or helper)
+         exchange.put("dc.params.debug", true); // keeping it for ldpEntityQueryService ; TODO constant
          explainSwitch = true;
       }
       

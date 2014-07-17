@@ -94,6 +94,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    @Autowired
    private MonitoringLogServiceImpl monitoringLogServiceImpl;
 
+   /** to access debug switch & put its explained results */
    @Autowired
    private CxfJaxrsApiProvider cxfJaxrsApiProvider;
 
@@ -341,15 +342,9 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       boolean debug = false;
       //TODO debug = context.get("debug") (put by debug() operation) || context.get("headers").get("X-Datacore-Debug")
 
-      Exchange exchange = null;
-      try {
-         exchange = cxfJaxrsApiProvider.getExchange();
-         debug = (boolean) exchange.get("dc.params.debug");
-      } catch (Exception e) {
-         if (logger.isDebugEnabled()) {
-            logger.debug("Unable to find debug parameter state.");
-         }
-      }
+      Exchange exchange = cxfJaxrsApiProvider.getExchange();
+      debug = exchange != null // else not called through REST
+            && Boolean.TRUE.equals(exchange.get("dc.params.debug")); // NB. was set by DatacoreApiImpl, TODO rather in custom context
 
       boolean doExplainQuery = queryParsingContext.isHasNoIndexedField() || debug;
       
@@ -369,7 +364,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          // getReadPreference(), getServerAddress(), collectionName, or even Model (type(s), fields)...
          //Populate cxf exchange with info concerning the query.
          try {
-            exchange.put("dc.query.explain", cursorProvider.getQueryExplain());
+            exchange.put("dc.query.explain", cursorProvider.getQueryExplain()); // TODO constants
             exchange.put("dc.query.query", cursorProvider.getCursorPrepared().getQuery());
             exchange.put("dc.query.sortExplain", sortExplain);
          } catch (Exception e) {

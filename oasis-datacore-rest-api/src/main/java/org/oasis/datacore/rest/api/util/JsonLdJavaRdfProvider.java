@@ -106,9 +106,9 @@ public class JsonLdJavaRdfProvider implements MessageBodyReader<Object>, Message
       */
       
       try {
-         // TODO TODOOOOOOOOOOOOOOOOOOOOOOOO improve that !!
-         String json = objectMapper.writeValueAsString(t)
-               .replaceAll("\"l\"", "\"@language\"")
+         String json = objectMapper.writeValueAsString(t); // TODO improve that !
+         // if we're writing a client request, prepare DCResource JSON for JSON-LD : 
+         json = json.replaceAll("\"l\"", "\"@language\"" )// TODO TODOOOOOOOOOOOOOOOOOOOOOOOO improve that !!
                .replaceAll("\"v\"", "\"@value\"");
          
          Object jsonObject = JsonUtils.fromInputStream(new ByteArrayInputStream(json.getBytes()));
@@ -249,6 +249,10 @@ public class JsonLdJavaRdfProvider implements MessageBodyReader<Object>, Message
          } else {
             resourceList.add(parseAndBuildResource(jsonObject));
          }
+         
+         // NB. mapping of i18n @language => l and @value => v is done in
+         // ResourceEntityMapperService (which supports both @ in addition
+         // to default native l/v)
          
          return resourceList;
       }
