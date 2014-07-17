@@ -266,27 +266,27 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
       DCModel countryModel = (DCModel) new DCModel("!plo:country_0")
       /*ignCommuneModel.setDocumentsetDocumentationation("{ \"uri\": \"http://localhost:8180/dc/type/country/France\", "
             + "\"name\": \"France\" }");*/
-         .addField(new DCField("!plo:country_name", "string", true, 100));
-      countryModel.setDocumentation("id = !plo:country_name");
+         .addField(new DCField("!plo:name", "string", true, 100));
+      countryModel.setDocumentation("id = !plo:name");
 
       DCMixin countryReferencingMixin = (DCMixin) new DCMixin("!plo:country_0_ref_0")
       /*ignCommuneModel.setDocumentsetDocumentationation("{ \"uri\": \"http://localhost:8180/dc/type/country/France\", "
             + "\"name\": \"France\" }");*/
-         .addField(countryModel.getField("!plo:country_name")) // ex. ITALY
+         .addField(countryModel.getField("!plo:name")) // ex. ITALY
          // => to be extracted to another Model, therefore add its uri/id :
          .addField(new DCResourceField("!plo:country", "!plo:country_0", true, 100));
 
       DCModel cityModel = (DCModel) new DCModel("!pli:city_0") // more fields in an "italianCityMixin" ?
-         .addField(new DCField("!pli:city_name", "string", true, 100)) // ex. COLLEGNO ; only description (display name) and not toponimo
+         .addField(new DCField("!pli:name", "string", true, 100)) // ex. COLLEGNO ; only description (display name) and not toponimo
          .addMixin(countryReferencingMixin);
-      cityModel.setDocumentation("id = !plo:country_name + '/' + !pli:city_name");
+      cityModel.setDocumentation("id = !plo:name + '/' + !pli:name");
 
       /*DCMixin cityReferencingMixin = (DCMixin) new DCMixin("!pli:city/0_ref/0")
-         .addField(cityModel.getField("!pli:city_name")) // ex. COLLEGNO ; only description (display name) and not toponimo
+         .addField(cityModel.getField("!pli:name")) // ex. COLLEGNO ; only description (display name) and not toponimo
          // => to be extracted to another Model, therefore add its uri/id :
          .addField(new DCResourceField("!pli:city", "!pli:city/0", true, 100))
          .addMixin(countryReferencingMixin);*/
-      DCMixin cityReferencingMixin = (DCMixin) createReferencingMixin(cityModel, true, "!pli:city_name");
+      DCMixin cityReferencingMixin = (DCMixin) createReferencingMixin(cityModel, true, "!pli:name");
       
       DCMixin placeMixin = (DCMixin) new DCMixin("!pl:place_0")
          .addField(new DCField("!pl:name", "string", true, 100)) // NB. same name, address & geometry as all places,
@@ -343,7 +343,7 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
          .addField(new DCField("!cityareauseit:sigla", "string", true, 100)) // non-standardized, decided internally by its city ; R2 R9 M1...
           // + city of use to differentiate sigla
          .addMixin(italianCityReferencingMixin);
-      italianUrbanAreaDestinationOfUseModel.setDocumentation("id = !1cityareauseit:normalizedCode + '/' + !pli:city_name + '/' + !cityareauseit:sigla");
+      italianUrbanAreaDestinationOfUseModel.setDocumentation("id = !1cityareauseit:normalizedCode + '/' + !pli:name + '/' + !cityareauseit:sigla");
 
       DCMixin italianUrbanAreaDestinationOfUseReferencingMixin = (DCMixin) new DCMixin("!cityareauseit:urbanAreaDestinationOfUse_0_ref_0")
          .addField(italianUrbanAreaDestinationOfUseModel.getField("!?cityareauseit:normalizedCode")) // COD_N "1,1", "2,4", "6", "6,32" ; TODO international ??
@@ -401,9 +401,9 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
             throw new RuntimeException("Unexpected error", waex);
          }*/
          DCResource country = DCResource.create(countryUri)
-               .set("!plo:country_name", "Italia");
+               .set("!plo:name", "Italia");
          // once props are complete, build URI out of them and schedule post :
-         ///country.setUriFromId(containerUrl, (String) country.get("!plo:country_name"));
+         ///country.setUriFromId(containerUrl, (String) country.get("!plo:name"));
          resourcesToPost.add(country);
       }
       
@@ -483,8 +483,8 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
                   .set("!pl:name", line[1])
                   .set("!pl:address", line[4])
                   .set("!pl:geo", "") // setting dummy for now because required
-                  .set("!pli:city_name", line[3])
-                  .set("!plo:country_name", "Italia"); // hardcoded
+                  .set("!pli:name", line[3])
+                  .set("!plo:name", "Italia"); // hardcoded
             
             
             // filling company's resource props and missing referencing Mixin props : 
@@ -493,10 +493,10 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
             
             // NB. single Italia country has to be filled at "install" time
             company.set("!plo:country", UriHelper.buildUri(containerUrl, "!plo:country_0",
-                  (String) company.get("!plo:country_name")));
+                  (String) company.get("!plo:name")));
 
             company.set("!pli:city", UriHelper.buildUri(containerUrl, "!pli:city_0",
-                  (String) company.get("!plo:country_name") + '/' + (String) company.get("!pli:city_name")));
+                  (String) company.get("!plo:name") + '/' + (String) company.get("!pli:name")));
 
             // NB. ateco Model has to be filled at "install" time else code is not known
             List<DCEntity> atecos = ldpEntityQueryService.findDataInType(modelAdminService.getModel("!coita:ateco_0"), new HashMap<String,List<String>>() {{
@@ -529,11 +529,11 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
                   throw new RuntimeException("Unexpected error", waex.getResponse().getEntity());
                }*/
                DCResource city = DCResource.create((String) company.get("!pli:city"))
-                     .set("!pli:city_name", company.get("!pli:city_name"))
-                     .set("!plo:country_name", (String) company.get("!plo:country_name"))
+                     .set("!pli:name", company.get("!pli:name"))
+                     .set("!plo:name", (String) company.get("!plo:name"))
                      .set("!plo:country", (String) company.get("!plo:country"));
                // once props are complete, build URI out of them and (schedule) post :
-               ///city.setUriFromId(containerUrl, (String) company.get("!plo:country_name") + '/' + (String) company.get("!pli:city_name"));
+               ///city.setUriFromId(containerUrl, (String) company.get("!plo:name") + '/' + (String) company.get("!pli:name"));
                /*datacoreApiClient.*/postDataInType(city);
                //resourcesToPost.add(city); // BEWARE must be posted before company else resource reference check fails
             }
@@ -542,7 +542,7 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
             // once props are complete, build URI out of them and schedule post :
             
             company.setUri(UriHelper.buildUri(containerUrl, "!co:company_0",
-                  (String) company.get("!plo:country_name") + '/' + (String) company.get("!coit:codiceFiscale")));
+                  (String) company.get("!plo:name") + '/' + (String) company.get("!coit:codiceFiscale")));
             resourcesToPost.add(company);
          }
 
@@ -594,9 +594,9 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
                   .set("!?cityareauseit:normalizedCode", line[2])
                   .set("!cityareauseit:description", line[3])
                   .set("!cityareauseit:sigla", line[4])
-                  .set("!pli:city_name", line[1])
+                  .set("!pli:name", line[1])
                   .set("!pliit:ISTAT", Integer.parseInt(line[0])) // int !
-                  .set("!plo:country_name", "Italia"); // hardcoded
+                  .set("!plo:name", "Italia"); // hardcoded
             
             
             // filling company's resource props and missing referencing Mixin props : 
@@ -605,14 +605,14 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
             
             // NB. single Italia country has to be filled at "install" time
             cityArea.set("!plo:country", UriHelper.buildUri(containerUrl, "!plo:country_0",
-                  (String) cityArea.get("!plo:country_name")));
+                  (String) cityArea.get("!plo:name")));
 
             cityArea.set("!pli:city", UriHelper.buildUri(containerUrl, "!pli:city_0",
-                  (String) cityArea.get("!plo:country_name") + '/' + (String) cityArea.get("!pli:city_name")));
+                  (String) cityArea.get("!plo:name") + '/' + (String) cityArea.get("!pli:name")));
 
             cityArea.set("!cityareauseit:urbanAreaDestinationOfUse", UriHelper.buildUri(containerUrl,
                   "!cityareauseit:urbanAreaDestinationOfUse_0", (String) cityArea.get("!?cityareauseit:normalizedCode")
-                  + '/' + (String) cityArea.get("!pli:city_name") + '/' + (String) cityArea.get("!cityareauseit:sigla")));
+                  + '/' + (String) cityArea.get("!pli:name") + '/' + (String) cityArea.get("!cityareauseit:sigla")));
 
             
             // filling other Models that this table is a source of :
@@ -632,12 +632,12 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
                   throw new RuntimeException("Unexpected error", waex.getResponse().getEntity());
                }*/
                DCResource city = DCResource.create((String) cityArea.get("!pli:city"))
-                     .set("!pli:city_name", cityArea.get("!pli:city_name"))
+                     .set("!pli:name", cityArea.get("!pli:name"))
                      .set("!pliit:ISTAT", cityArea.get("!pliit:ISTAT"))
-                     .set("!plo:country_name", cityArea.get("!plo:country_name"))
+                     .set("!plo:name", cityArea.get("!plo:name"))
                      .set("!plo:country", cityArea.get("!plo:country"));
                // once props are complete, build URI out of them and (schedule) post :
-               ///city.setUriFromId(containerUrl, (String) company.get("!plo:country_name") + '/' + (String) company.get("!pli:city_name"));
+               ///city.setUriFromId(containerUrl, (String) company.get("!plo:name") + '/' + (String) company.get("!pli:name"));
                /*datacoreApiClient.*/postDataInType(city);
                //resourcesToPost.add(city); // BEWARE must be posted before company else resource reference check fails
             }
@@ -652,12 +652,12 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
                      .set("!?cityareauseit:normalizedCode", cityArea.get("!?cityareauseit:normalizedCode"))
                      .set("!cityareauseit:description", cityArea.get("!cityareauseit:description"))
                      .set("!cityareauseit:sigla", cityArea.get("!cityareauseit:sigla"))
-                     .set("!pli:city_name", cityArea.get("!pli:city_name"))
+                     .set("!pli:name", cityArea.get("!pli:name"))
                      .set("!pli:city", cityArea.get("!pli:city"))
-                     .set("!plo:country_name", cityArea.get("!plo:country_name"))
+                     .set("!plo:name", cityArea.get("!plo:name"))
                      .set("!plo:country", cityArea.get("!plo:country"));
                // once props are complete, build URI out of them and (schedule) post :
-               ///city.setUriFromId(containerUrl, (String) company.get("!plo:country_name") + '/' + (String) company.get("!pli:city_name"));
+               ///city.setUriFromId(containerUrl, (String) company.get("!plo:name") + '/' + (String) company.get("!pli:name"));
                /*datacoreApiClient.*/postDataInType(cityAreaUseIt);
                //resourcesToPost.add(cityAreaUseIt); // BEWARE must be posted before company else resource reference check fails
             }
@@ -666,7 +666,7 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
             // once props are complete, build URI out of them and schedule post :
             
             cityArea.setUri(UriHelper.buildUri(containerUrl, "!cityarea:cityArea_0",
-                  (String) cityArea.get("!plo:country_name") + '/' + (String) cityArea.get("!pli:city_name")
+                  (String) cityArea.get("!plo:name") + '/' + (String) cityArea.get("!pli:name")
                   + '/' + generateId((String) cityArea.get("!pls:geo")))); // OR only hash ?
             resourcesToPost.add(cityArea);
          }
