@@ -209,8 +209,14 @@ public class ResourceEntityMapperService {
             if(resourceItem instanceof Map<?, ?>) {
                @SuppressWarnings("unchecked")
                Map<String, Object> mapResourceItem = (Map<String,Object>) resourceItem;
-               Object i18nLanguage = mapResourceItem.get("@language");
-               Object i18nValue = mapResourceItem.get("@value");
+               Object i18nLanguage = mapResourceItem.get(DCI18nField.KEY_LANGUAGE); // native DC Resource support
+               if (i18nLanguage == null) {
+                  i18nLanguage = mapResourceItem.get("@language"); // JSON-LD support
+               }
+               Object i18nValue = mapResourceItem.get(DCI18nField.KEY_VALUE); // native DC Resource support
+               if (i18nValue == null) {
+                  i18nValue = mapResourceItem.get("@value"); // JSON-LD support
+               }
 
                if (!(i18nLanguage instanceof String)) {
                   throw new ResourceParsingException("i18n Field language is not a JSON string : " + i18nLanguage);
@@ -221,8 +227,8 @@ public class ResourceEntityMapperService {
                }
                String i18nEntityValue = (String) i18nValue;
                HashMap<String, String> entityMap = new HashMap<String,String>();
-               entityMap.put("l", i18nEntityLanguage);
-               entityMap.put("v", i18nEntityValue);
+               entityMap.put(DCI18nField.KEY_LANGUAGE, i18nEntityLanguage);
+               entityMap.put(DCI18nField.KEY_VALUE, i18nEntityValue);
                entityList.add(entityMap);
             } else {
                resourceParsingContext.addError("Error while parsing i18n list element Field value as map" + resourceItem

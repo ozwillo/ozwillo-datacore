@@ -15,6 +15,7 @@ import org.oasis.datacore.core.security.EntityPermissionService;
 import org.oasis.datacore.core.security.mock.MockAuthenticationService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
+import org.oasis.datacore.rest.client.QueryParameters;
 import org.oasis.datacore.rest.server.event.EventService;
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.sample.CityPlanningAndEconomicalActivitySample;
@@ -107,6 +108,16 @@ public class CityPlanningAndEconomicalActivityTest {
       Assert.assertNotNull(modelAdminService.getModel("!co:company_0"));
       List<DCResource> companies = datacoreApiClient.findDataInType("!co:company_0", null, null, 10);
       Assert.assertTrue(companies != null && !companies.isEmpty());
+
+      Assert.assertNotNull(modelAdminService.getModel("!plo:country_0"));
+      List<DCResource> italia = datacoreApiClient.findDataInType("!plo:country_0",
+            new QueryParameters().add("!plo:name_i18n.v", "Italia"), null, 10);
+      Assert.assertTrue(italia != null && !italia.isEmpty());
+
+      Assert.assertNotNull(modelAdminService.getModel("!pli:city_0"));
+      List<DCResource> torino = datacoreApiClient.findDataInType("!pli:city_0",
+            new QueryParameters().add("!pli:name_i18n.v", "Torino"), null, 10);
+      Assert.assertTrue(torino != null && !torino.isEmpty());
       
       /*
       cityPlanningAndEconomicalActivitySample.init();

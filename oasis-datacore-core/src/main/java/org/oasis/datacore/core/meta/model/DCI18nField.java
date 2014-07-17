@@ -1,7 +1,16 @@
 package org.oasis.datacore.core.meta.model;
 
-public class DCI18nField extends DCListField{
+public class DCI18nField extends DCListField {
    
+   public static final String KEY_LANGUAGE = "l";
+   public static final String KEY_VALUE = "v";
+   
+   /** NOT USED YET Model-level default language if any ; NB. "required" means "default language required" for i18n field */
+   private String defaultLanguage = null;
+   /* Whether any Resource-level default language ; NB. "required" means "default language required" for i18n field */
+   //private String hasResourceLevelDefaultLanguage = null;
+
+   /** for unmarshalling only */
    public DCI18nField() {
       
    }
@@ -22,8 +31,8 @@ public class DCI18nField extends DCListField{
    
    private static DCMapField createI18nMap(int queryLimit) {
       DCMapField i18Map = new DCMapField("i18nMap"); // NB. this map name is meaningless
-      i18Map.addField(new DCField("v", "string", true, queryLimit));
-      i18Map.addField(new DCField("l", "string", false, 0));
+      i18Map.addField(new DCField(KEY_VALUE, "string", true, queryLimit));
+      i18Map.addField(new DCField(KEY_LANGUAGE, "string", false, 0));
       return i18Map;
    }
    
@@ -34,6 +43,14 @@ public class DCI18nField extends DCListField{
       //new DCField("t", "string", false, 10);
       //new DCField("v", "string", false, 10);
    }
-   
+
+   public String getDefaultLanguage() {
+      return defaultLanguage;
+   }
+
+   public DCI18nField setDefaultLanguage(String defaultLanguage) {
+      this.defaultLanguage = defaultLanguage;
+      return this;
+   }
    
 }
