@@ -37,7 +37,8 @@ public class HistorizationServiceImpl implements HistorizationService {
 	/**
 	 * Must be called BEFORE actual resource update so that it historizes PREVIOUS version
 	 * and not called at resource update, otherwise failures may not leave a consistent state.
-	 * TODO LATER could be on DCResource than DCEntity IF DCResource.cachedEntity
+	 * Clones entity else updates version and OptimisticLockingException at actual createOrUpdate !
+	 * TODO LATER could be on DCResource than DCEntity IF DCResource.cachedEntity !
 	 */
 	@Override
 	public void historize(DCEntity entity, DCModel model) throws HistorizationException {
@@ -51,13 +52,17 @@ public class HistorizationServiceImpl implements HistorizationService {
 			query.addCriteria(Criteria.where("_uri").is(entity.getUri()));
 			DCEntity existantEntity = mongoOperations.findOne(query, DCEntity.class, historizationModel.getCollectionName());
 			
+			// TODO TODOOOO better in a single operation !!?
+			
 			// If it already exists we delete the existant entity
 			if(existantEntity != null) {
 				mongoOperations.remove(existantEntity, historizationModel.getCollectionName());
 			}
 			
 			// Then we insert the new one
-			mongoOperations.insert(entity, historizationModel.getCollectionName());
+			DCEntity historyEntity = new DCEntity(entity);
+			// NB. cloning else updates version and OptimisticLockingException at actual createOrUpdate !!
+			mongoOperations.insert(historyEntity, historizationModel.getCollectionName());
 		}
 		
 	}

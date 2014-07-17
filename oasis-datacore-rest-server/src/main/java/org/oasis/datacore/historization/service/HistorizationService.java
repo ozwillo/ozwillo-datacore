@@ -20,7 +20,11 @@ public interface HistorizationService {
 	/**
 	 * Historize an entity of a defined model.
 	 * Secured, by being called before entityService.create/update().
-	 * @param entity
+    * Must be called BEFORE actual resource update so that it historizes PREVIOUS version
+    * and not called at resource update, otherwise failures may not leave a consistent state.
+    * TODO LATER could be on DCResource than DCEntity IF DCResource.cachedEntity !
+	 * @param entity (impl should clone it else updates version and
+	 * OptimisticLockingException at actual createOrUpdate)
 	 * @param model
 	 * @return
 	 */

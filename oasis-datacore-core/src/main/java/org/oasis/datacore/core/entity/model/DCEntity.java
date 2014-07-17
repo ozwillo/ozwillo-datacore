@@ -165,6 +165,11 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
       this.setLastModified(dcEntity.getLastModified());
       this.setCreatedBy(dcEntity.getCreatedBy());
       this.setLastModifiedBy(dcEntity.getLastModifiedBy());
+      this.setAllReaders(dcEntity.getAllReaders());
+      this.setReaders(dcEntity.getReaders());
+      this.setWriters(dcEntity.getWriters());
+      this.setOwners(dcEntity.getOwners());
+      //this.setCachedModel(dcEntity.getCachedModel()); // not copying model in case of derived model ex. historization
       this.properties = new HashMap<String, Object>(dcEntity.properties.size());
       //this.properties = new HashMap<String, DCEntityValueBase>(dcEntity.properties.size());
       for (String key : dcEntity.properties.keySet()) {
