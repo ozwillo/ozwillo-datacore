@@ -1,11 +1,7 @@
 package org.oasis.datacore.rest.server;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.persistence.EntityNotFoundException;
 import javax.ws.rs.BadRequestException;
@@ -36,7 +32,6 @@ import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.binding.DatacoreObjectMapper;
 import org.oasis.datacore.rest.api.util.DCURI;
-import org.oasis.datacore.rest.api.util.DatacoreMediaType;
 import org.oasis.datacore.rest.server.cxf.CxfJaxrsApiProvider;
 import org.oasis.datacore.rest.server.cxf.JaxrsServerBase;
 import org.oasis.datacore.rest.server.resource.ExternalResourceException;
@@ -47,14 +42,11 @@ import org.oasis.datacore.rest.server.resource.ResourceObsoleteException;
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.rest.server.resource.ResourceTypeNotFoundException;
 import org.oasis.datacore.rest.server.resource.UriService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DuplicateKeyException;
-
-import com.github.jsonldjava.core.JsonLdError;
-import com.github.jsonldjava.core.JsonLdOptions;
-import com.github.jsonldjava.core.JsonLdProcessor;
-import com.github.jsonldjava.utils.JsonUtils;
 
 
 /**
@@ -78,6 +70,8 @@ import com.github.jsonldjava.utils.JsonUtils;
 @Produces(MediaType.APPLICATION_JSON)*/
 ///@Component("datacoreApiServer") // else can't autowire Qualified ; TODO @Service ?
 public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
+
+   private static final Logger logger = LoggerFactory.getLogger(DatacoreApiImpl.class);
 
    private boolean strictPostMode = false;
    
@@ -428,7 +422,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
          }
          
       } catch (Exception e) {
-         // should not happen
+         logger.error("Error while getting query explain switch", e);
       }
       
       DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
@@ -460,6 +454,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       List<DCResource> foundDatas = resourceEntityMapperService.entitiesToResources(foundEntities);
       
       if(explainSwitch) {
+         // TODO move that to LdpEntityQueryServiceImpl !
          // NB. supports only json
          throw new WebApplicationException(Response.status(Response.Status.OK)
                .entity("{\"explain\": " + exchange.get("dc.query.sortExplain") + ", \"results\": " + foundDatas + "}")
