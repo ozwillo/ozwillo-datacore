@@ -1,7 +1,6 @@
 package org.oasis.datacore.rest.server;
 
 import java.io.ByteArrayInputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +11,6 @@ import javax.ws.rs.WebApplicationException;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -36,7 +34,6 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.jsonldjava.core.JsonLdOptions;
 import com.github.jsonldjava.core.JsonLdProcessor;
 import com.github.jsonldjava.utils.JsonUtils;
@@ -867,12 +864,12 @@ public class DatacoreApiServerTest {
    }
 
    @Test
-   public void testI18nDraft() {
+   public void testI18n() {
       cityCountrySample.initData();
+      
       /*
-       * i18n, looking up in no languages
+       * i18n, looking up in any language
        */
-
       QueryParameters params = new QueryParameters().add("i18n:name.v", "Moscow");
       //params.add("debug", "true");
       List<DCResource> resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
@@ -880,21 +877,40 @@ public class DatacoreApiServerTest {
       Assert.assertEquals(1, resources.size());
       //Assert.assertEquals(moscowCityData.getUri(), resources.get(0).getUri());
       //Assert.assertEquals(moscowCityData.get("i18Name"), resources.get(0).get("i18Name"));
+   
+      params.add("debug", "true");
+      List<DCResource> explainRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            params, null, 10);
+      Assert.assertEquals(1, explainRes.size());
+      @SuppressWarnings("unchecked")
+      Map<String, String> explain = (Map<String,String>) explainRes.get(0).get("explain");
+      Assert.assertTrue("Should have used index on i18n", ((String) explain
+            .get("cursor")).startsWith("BtreeCursor _p.i18n:name.v"));
       
       /*
        * i18n, looking for a particular language
        */    
-      QueryParameters lang = new QueryParameters().add("i18n:name.l", "ru").add("debug", "true");
-      cityCountrySample.initData();
-      try {
-         datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME, lang, null, 10);
-      } catch(Exception e) {
-         Throwable thr = e.getCause();
-         boolean hasScanned = thr.getLocalizedMessage().contains("\"nscanned\" : 4");
-         boolean useBasicCursor = thr.getLocalizedMessage().contains("BasicCursor");
-         Assert.assertEquals(true, hasScanned);
-         Assert.assertEquals(true, useBasicCursor);
-      }
+      QueryParameters langParams = new QueryParameters().add("i18n:name.l", "ru");
+      List<DCResource> langResources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            langParams, null, 10);
+      Assert.assertEquals(1, langResources.size());
+      
+      langParams.add("debug", "true");
+      explainRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME, langParams, null, 10);
+      @SuppressWarnings("unchecked")
+      Map<String,String> explain2 = (Map<String,String>) explainRes.get(0).get("explain");
+      Assert.assertFalse("Should not have used index on i18n", ((String) explain2
+            .get("cursor")).startsWith("BtreeCursor _p.i18n:name.v"));
+
+      /*
+       * i18n, looking up in a particular language
+       */    
+      langParams.add("i18n:name.v", "Moscow");
+      explainRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME, langParams, null, 10);
+      @SuppressWarnings("unchecked")
+      Map<String,String> explain3 = (Map<String,String>) explainRes.get(0).get("explain");
+      Assert.assertTrue("Should have used index on i18n", ((String) explain3
+            .get("cursor")).startsWith("BtreeCursor _p.i18n:name.v"));
    }
    
    @Test
@@ -922,12 +938,18 @@ public class DatacoreApiServerTest {
       ///options.set
       // Customise options...
       // Call whichever JSONLD function you want! (e.g. compact)
-      Object compact = JsonLdProcessor.frame(jsonObject, context, options);
-      System.out.println(JsonUtils.toPrettyString(compact));
+      Map<String, Object> compact = JsonLdProcessor.frame(jsonObject, context, options);
+      String compactString = JsonUtils.toPrettyString(compact);
+      ///System.out.println(compactString);
+      Assert.assertTrue(compactString.contains("@graph"));
+      Assert.assertTrue(compactString.contains("\"@language\" : \"ru\""));
       
       options.format = "text/turtle";
-      Object turtlefRdf = JsonLdProcessor.toRDF(jsonObject, options); // compact
-      System.out.println(JsonUtils.toPrettyString(turtlefRdf));
+      String turtlefRdf = (String) JsonLdProcessor.toRDF(jsonObject, options);
+      Assert.assertTrue(turtlefRdf.startsWith("<http://data-test.oasis-eu.org/dc/type/sample.city.city/Russia/Moscow> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <sample.city.city> ;"));
+      Assert.assertTrue(turtlefRdf.contains("<city:populationCount> 10000000"));
+      Assert.assertTrue(turtlefRdf.contains("\"Moskva\"@ru"));
+      ///System.out.println(JsonUtils.toPrettyString(turtlefRdf));
    }
 
 }

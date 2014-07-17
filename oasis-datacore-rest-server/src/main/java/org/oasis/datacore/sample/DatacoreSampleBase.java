@@ -483,12 +483,7 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
       switch (DCFieldTypeEnum.getEnumFromStringType(globalField.getType())) {
       case LIST:
          DCField listField = ((DCListField) globalField).getListElementField();
-         if(listField.getType() == "map") {
-            Map<String, DCField> mapFields = ((DCMapField) listField).getMapFields();
-            ensureFieldIndices(coll, prefixedGlobalFieldName + ".", mapFields.values());
-         } else {
-            ensureFieldIndices(coll, prefixedGlobalFieldName + ".", listField);
-         }
+         ensureFieldIndices(coll, prefixedGlobalFieldName + ".", listField);
          break;
       case MAP:
          Map<String, DCField> mapFields = ((DCMapField) globalField).getMapFields();

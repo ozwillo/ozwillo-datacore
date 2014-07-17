@@ -48,7 +48,7 @@ public class CityCountrySample extends DatacoreSampleBase {
       cityModel.addField(new DCField("city:populationCount", "int", false, 50));
       cityModel.addField(new DCField("city:founded", "date", false, 0));
          
-      cityModel.addField(new DCI18nField("i18n:name"));
+      cityModel.addField(new DCI18nField("i18n:name", 100));
       cityModel.addField(new DCListField("city:pointsOfInterest",
             new DCResourceField("zzz", POI_MODEL_NAME))); // TODO
 
