@@ -144,8 +144,9 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
          buildModels(modelsToCreate);
          boolean allCollectionsAlreadyExist = createModels(modelsToCreate, false);
          
-         if (modelsToCreate.isEmpty() // data only sample
-               || /*enableFillDataAtInit() && */(!allCollectionsAlreadyExist || hasSomeModelsWithoutResource())) {
+         if (modelsToCreate.isEmpty()) { // data only sample
+            cleanDataOfCreatedModels(); // uses dependent sample models
+         } else if (/*enableFillDataAtInit() && */(!allCollectionsAlreadyExist || hasSomeModelsWithoutResource())) {
             cleanDataOfCreatedModels(modelsToCreate);
             fillData();
          }
@@ -231,15 +232,19 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
    
    /**
     * To be overriden if required
+    * @return 
     * @return
     */
    /*protected boolean enableFillDataAtInit() {
       return true;
    }*/
 
+   public HashSet<DCModel> getCreatedModels() {
+      return this.models;
+   }
    // for tests
    public void cleanCreatedModels() {
-      for (DCModel model : this.models) {
+      for (DCModel model : this.getCreatedModels()) {
          mgo.dropCollection(model.getCollectionName()); // delete data
          modelAdminService.removeModel(model.getName()); // remove model
       }
@@ -280,7 +285,7 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
    }
 
    public void cleanDataOfCreatedModels() {
-      for (DCModel model : this.models) {
+      for (DCModel model : this.getCreatedModels()) {
          cleanDataOfCreatedModel(model);
       }
    }

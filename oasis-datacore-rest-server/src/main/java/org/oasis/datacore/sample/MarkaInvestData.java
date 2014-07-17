@@ -3,10 +3,12 @@ package org.oasis.datacore.sample;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
 
+import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
@@ -48,8 +50,8 @@ public class MarkaInvestData extends DatacoreSampleBase {
    }
 
    @Override
-   public void cleanDataOfCreatedModels() {
-      markaInvestModel.cleanDataOfCreatedModels();
+   public HashSet<DCModel> getCreatedModels() {
+      return this.models;
    }
 	
 	@Override
