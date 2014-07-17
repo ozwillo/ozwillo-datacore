@@ -100,12 +100,12 @@ public class CityPlanningAndEconomicalActivityTest {
 
    @Test
    public void testProvto() {
-      Assert.assertNotNull(modelAdminService.getModel("!coita:ateco"));
-      List<DCResource> atecos = datacoreApiClient.findDataInType("!coita:ateco", null, null, 10);
+      Assert.assertNotNull(modelAdminService.getModel("!coita:ateco_0"));
+      List<DCResource> atecos = datacoreApiClient.findDataInType("!coita:ateco_0", null, null, 10);
       Assert.assertTrue(atecos != null && !atecos.isEmpty());
 
-      Assert.assertNotNull(modelAdminService.getModel("!co:company"));
-      List<DCResource> companies = datacoreApiClient.findDataInType("!co:company", null, null, 10);
+      Assert.assertNotNull(modelAdminService.getModel("!co:company_0"));
+      List<DCResource> companies = datacoreApiClient.findDataInType("!co:company_0", null, null, 10);
       Assert.assertTrue(companies != null && !companies.isEmpty());
       
       /*

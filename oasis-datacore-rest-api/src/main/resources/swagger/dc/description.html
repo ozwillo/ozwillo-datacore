@@ -90,14 +90,14 @@ playground</a>) and with <b>W3C LDP</b> (Linked Data Platform, see
 future collection filtering (<a href="http://www.w3.org/2012/ldp/wiki/LDPNext">1</a>, 
 <a href="http://lists.w3.org/Archives/Public/public-ldp-wg/2012Dec/0030.html">2</a>)
 -inspired finders etc.). <b>Have a look at existing Resources, at</b> 
-<a href="/dc/type/!pli:city" onMouseOver="this.style.backgroundColor='#FFFE55'" onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+<a href="/dc/type/!pli:city_0" onMouseOver="this.style.backgroundColor='#FFFE55'" onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
 javascript:return findDataByType($(this).attr('href'));
-">/dc/type/!pli:city</a> for instance for resources in the 
+">/dc/type/!pli:city_0</a> for instance for resources in the 
 <span style="font-family: Consolas,'Liberation Mono',Menlo,Courier,monospace; background-color: #f8f8f8; border: 1px solid #ddd; border-radius: 3px;">
-!pli:city</span> Model type. 
+!pli:city_0</span> Model type (which is the version 0 of the !pli:city Model). 
 In addition to the simpler default native pure JSON format, "true" JSON-LD formats and semantic web formats (such as 
 <a href="http://en.wikipedia.org/wiki/Resource_Description_Framework">RDF</a>, see 
-<a href="/dc/type/!pli:city" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+<a href="/dc/type/!pli:city_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
 javascript:return findDataByTypeRdf($(this).attr('href'));
 ">example</a>) are available. 
 <br/><br/>
@@ -107,62 +107,62 @@ javascript:return findDataByTypeRdf($(this).attr('href'));
 <span style="font-family: Consolas,'Liberation Mono',Menlo,Courier,monospace; background-color: #f8f8f8; border: 1px solid #ddd; border-radius: 3px;">
 string, boolean, int, float, long, double, date, map, list, i18n, resource
 </span> fields grouped in reusable <b>Mixin</b> types. 
-<b>Have a look at known Models at</b> <a href="/dc/type/dcmo:model" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+<b>Have a look at known Models at</b> <a href="/dc/type/dcmo:model_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
 javascript:return findDataByType($(this).attr('href'));
-">/dc/type/dcmo:model</a> and Mixins at <a href="/dc/type/dcmi:mixin" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+">/dc/type/dcmo:model_0</a> and Mixins at <a href="/dc/type/dcmi:mixin_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
 javascript:return findDataByType($(this).attr('href'));
-">/dc/type/dcmi:mixin</a> (<b>beta</b>, see full Model definitions at <u>/dc/model</u>), 
+">/dc/type/dcmi:mixin_0</a> (<b>beta</b>, see full Model definitions at <u>/dc/model</u>), 
 in their own metamodel where they may be queried as Resources. 
 This allows to know in which Model types a given kind of Resources can be queried, for instance :
 <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <a href="/dc/type/dcmo:model?dcmo:globalMixins=!pl:place" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <a href="/dc/type/dcmo:model_0?dcmo:globalMixins=!pl:place_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
 javascript:return findDataByType($(this).attr('href'));
-">dcmo:globalMixins=!pl:place</a> : lists Models that describe a location i.e. have a pl:shape WKS point, 
+">dcmo:globalMixins=!pl:place_0</a> : lists Models that describe a location i.e. have a pl:shape WKS point, 
 such as : 
-<a href="/dc/type/dcmo:model/!co:company/0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+<a href="/dc/type/dcmo:model_0/!co:company_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
 javascript:return getData($(this).attr('href'));
-">!co:company</a>, 
+">!co:company_0</a>, 
 whose WKS can then be retrieved, for instance by 
-GET <a href="/dc/type/!co:company" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+GET <a href="/dc/type/!co:company_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
 javascript:return findDataByType($(this).attr('href'));
-">/dc/type/!co:company</a> .
+">/dc/type/!co:company_0</a> .
 <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <a href="/dc/type/dcmo:model?dcmo:globalFields.dcmf:name=!plo:country_name" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <a href="/dc/type/dcmo:model_0?dcmo:globalFields.dcmf:name=!plo:country_name" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
 javascript:return findDataByType($(this).attr('href'));
 ">dcmo:globalFields.dcmf:name=!plo:country_name</a> : lists Models that "officially" have a country 
 (i.e. having the "official" field for a country in OASIS Datacore), and that can therefore be queried on that, 
 such as : 
-<a href="/dc/type/dcmo:model/!plo:country/0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+<a href="/dc/type/dcmo:model_0/!plo:country_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
 javascript:return getData($(this).attr('href'));
-">!plo:country</a>, 
-<a href="/dc/type/dcmo:model/!pli:city/0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+">!plo:country_0</a>, 
+<a href="/dc/type/dcmo:model_0/!pli:city_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
 javascript:return getData($(this).attr('href'));
-">!pli:city</a>, 
-<a href="/dc/type/dcmo:model/!co:company/0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+">!pli:city_0</a>, 
+<a href="/dc/type/dcmo:model_0/!co:company_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
 javascript:return getData($(this).attr('href'));
-">!co:company</a>, 
-<a href="/dc/type/dcmo:model/!cityareauseit:urbanAreaDestinationOfUse/0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+">!co:company_0</a>, 
+<a href="/dc/type/dcmo:model_0/!cityareauseit:urbanAreaDestinationOfUse_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
 javascript:return getData($(this).attr('href'));
-">!cityareauseit:urbanAreaDestinationOfUse</a>, 
-<a href="/dc/type/dcmo:model/!cityarea:cityArea/0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+">!cityareauseit:urbanAreaDestinationOfUse_0</a>, 
+<a href="/dc/type/dcmo:model_0/!cityarea:cityArea_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
 javascript:return getData($(this).attr('href'));
-">!cityarea:cityArea</a> , 
+">!cityarea:cityArea_0</a> , 
 which can then be queried by country, for instance by 
-GET <a href="/dc/type/!plo:country" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+GET <a href="/dc/type/!plo:country_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
 javascript:return findDataByType($(this).attr('href'));
-">/dc/type/!plo:country</a>, 
-GET <a href="/dc/type/!pli:city" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+">/dc/type/!plo:country_0</a>, 
+GET <a href="/dc/type/!pli:city_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
 javascript:return findDataByType($(this).attr('href'));
-">/dc/type/!pli:city</a>, 
-GET <a href="/dc/type/!co:company" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+">/dc/type/!pli:city_0</a>, 
+GET <a href="/dc/type/!co:company_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
 javascript:return findDataByType($(this).attr('href'));
-">/dc/type/!co:company</a>, 
-GET <a href="/dc/type/!cityareauseit:urbanAreaDestinationOfUse" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+">/dc/type/!co:company_0</a>, 
+GET <a href="/dc/type/!cityareauseit:urbanAreaDestinationOfUse_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
 javascript:return findDataByType($(this).attr('href'));
-">/dc/type/!cityareauseit:urbanAreaDestinationOfUse</a> 
-and GET <a href="/dc/type/!cityarea:cityArea" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+">/dc/type/!cityareauseit:urbanAreaDestinationOfUse_0</a> 
+and GET <a href="/dc/type/!cityarea:cityArea_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
 javascript:return findDataByType($(this).attr('href'));
-">/dc/type/!cityarea:cityArea</a>.
+">/dc/type/!cityarea:cityArea_0</a>.
 <br/><br/>
 <a href="https://github.com/pole-numerique/oasis-datacore/wiki">See wiki</a> for further 
 examples, FAQ, how to & common use cases, cookbook (writing clients...) and full documentation.

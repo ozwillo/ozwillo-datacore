@@ -46,7 +46,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
    public void buildModels(List<DCModelBase> modelsToCreate) {
 
       // Mixins (or only as names ??) model and at the same time modelBase :
-      DCModel mixinModel = (DCModel) new DCModel("dcmi:mixin")
+      DCModel mixinModel = (DCModel) new DCModel("dcmi:mixin_0")
          .addField(new DCField("dcmo:name", "string", true, 100))
          .addField(new DCField("dcmo:majorVersion", "long", true, 100)) // don't index and rather lookup on URI ??
          // NB. Resource version is finer but NOT the minorVersion of the majorVersion
@@ -60,11 +60,11 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          // embedded mixins, globalMixins ???
          // & listeners ??
          ;
-      mixinModel.setDocumentation("id = name + '/' + version");
+      mixinModel.setDocumentation("id = name + '_' + version"); // TODO LATER rathter '/' separator
       /*ignCommuneModel.setDocumentsetDocumentationation("{ \"uri\": \"http://localhost:8180/dc/type/country/France\", "
       + "\"name\": \"France\" }");*/
    
-      DCModel metaModel = (DCModel) new DCModel("dcmo:model")
+      DCModel metaModel = (DCModel) new DCModel("dcmo:model_0")
          // TODO security
          .addMixin(mixinModel)
          .addField(new DCField("dcmo:collectionName", "string", true, 100))
@@ -72,7 +72,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addField(new DCField("dcmo:isHistorizable", "boolean", true, 100))
          .addField(new DCField("dcmo:isContributable", "boolean", true, 100))
          ;
-      metaModel.setDocumentation("id = name + '/' + version");
+      metaModel.setDocumentation("id = name + '_' + version"); // TODO LATER rathter '/' separator
       /*ignCommuneModel.setDocumentsetDocumentationation("{ \"uri\": \"http://localhost:8180/dc/type/country/France\", "
       + "\"name\": \"France\" }");*/
       
@@ -113,7 +113,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       for (DCModel model : modelAdminService.getModels()) {
          
          // filling model's provided props :
-         final DCResource modelResource = DCResource.create(null, "dcmo:model")
+         final DCResource modelResource = DCResource.create(null, "dcmo:model_0")
                .set("dcmo:name", model.getName())
                .set("dcmo:majorVersion", model.getMajorVersion())
                // NB. minor version is Resource version
@@ -197,8 +197,8 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          
          // once props are complete, build URI out of them and schedule post :
          
-         modelResource.setUri(UriHelper.buildUri(containerUrl, "dcmo:model",
-               (String) modelResource.get("dcmo:name") + '/' + modelResource.get("dcmo:majorVersion")));
+         modelResource.setUri(UriHelper.buildUri(containerUrl, "dcmo:model_0",
+               (String) modelResource.get("dcmo:name")/* + '_' + modelResource.get("dcmo:majorVersion")*/)); // LATER refactor
          resourcesToPost.add(modelResource);
          
       }
@@ -210,7 +210,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
 
       for (DCModelBase mixinModel : modelAdminService.getMixins()) {
          // filling model's provided props :
-         final DCResource modelResource = DCResource.create(null, "dcmi:mixin")
+         final DCResource modelResource = DCResource.create(null, "dcmi:mixin_0")
                .set("dcmo:name", mixinModel.getName())
                .set("dcmo:majorVersion", mixinModel.getMajorVersion())
                // NB. minor version is Resource version
@@ -234,15 +234,20 @@ public class ResourceModelIniter extends DatacoreSampleBase {
 
          // once props are complete, build URI out of them and schedule post :
          
-         modelResource.setUri(UriHelper.buildUri(containerUrl, "dcmi:mixin",
-               (String) modelResource.get("dcmo:name") + '/' + modelResource.get("dcmo:majorVersion")));
+         modelResource.setUri(UriHelper.buildUri(containerUrl, "dcmi:mixin_0",
+               (String) modelResource.get("dcmo:name")/* + '_' + modelResource.get("dcmo:majorVersion")*/)); // LATER refactor
          resourcesToPost.add(modelResource);
       }
 
 
       for (DCResource resource : resourcesToPost) {
-         if ("dcmo:model".equals(resource.get("dcmo:name"))
-               || "dcmi:mixin".equals(resource.get("dcmo:name"))) {
+         String modelResourceName = (String) resource.get("dcmo:name");
+         String[] modelType = modelResourceName.split("_", 2); // TODO better
+         String modelName = (modelType.length == 2) ? modelType[0] : modelResourceName;
+         String modelVersionIfAny = (modelType.length == 2) ? modelType[1] : null;
+         String modelNameWithVersionIfAny = modelResourceName;
+         if ("dcmo:model".equals(modelName)
+               || "dcmi:mixin".equals(modelName)) {
             // for now non-recursive metaModel can't be posted,
             // LATER do it to document it (what is queriable etc.)
             continue;

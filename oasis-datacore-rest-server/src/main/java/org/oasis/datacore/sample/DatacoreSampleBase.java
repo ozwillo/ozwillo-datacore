@@ -149,6 +149,16 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
             cleanDataOfCreatedModels(modelsToCreate);
             fillData();
          }
+
+      } catch (WebApplicationException waex) {
+         logger.error("HTTP " + waex.getResponse().getStatus()
+               + " web app error initing " + this.getClass().getName() + ":\n"
+               + waex.getResponse().getStringHeaders()
+               + ((waex.getResponse().getEntity() != null) ? "\n" + waex.getResponse().getEntity() + "\n" : ""), waex);
+
+      } catch (Throwable t) {
+         logger.error("Error initing " + this.getClass().getName(), t);
+               
       } finally {
          mockAuthenticationService.logout();
       }
