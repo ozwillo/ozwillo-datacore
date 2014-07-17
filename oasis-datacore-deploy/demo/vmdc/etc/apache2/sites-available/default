@@ -28,8 +28,8 @@
 
    # Certificate - SSL Configuration
    SSLEngine On
-   SSLCertificateKeyFile /etc/ssl/private/ozwillo.key
-   SSLCertificateFile /etc/ssl/private/ozwillo-cert.pem
+   SSLCertificateKeyFile /etc/ssl/private/ozwillo-preprod.key
+   SSLCertificateFile /etc/ssl/private/ozwillo-preprod-cert.pem
 
    # Based on https://wiki.mozilla.org/Security/Server_Side_TLS - consider as global configuration
    SSLProtocol all -SSLv2
