@@ -309,7 +309,7 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
             if (historizedModel == null) {
                historizedModel = historizationService.createHistorizationModel(model); // TODO ??????
             }
-            mgo.dropCollection(historizedModel.getCollectionName());
+            mgo.remove(new Query(), historizedModel.getCollectionName());
          } catch (HistorizationException e) {
             throw new RuntimeException("Historization init error of Model " + model.getName(), e);
          }
@@ -317,7 +317,7 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
       
       if (model.isContributable()) {
          String contributionCollectionName = model.getName() + ".c"; // TODO TODOOOOOO move
-         mgo.dropCollection(contributionCollectionName);
+         mgo.remove(new Query(), contributionCollectionName);
       }
    }
    
