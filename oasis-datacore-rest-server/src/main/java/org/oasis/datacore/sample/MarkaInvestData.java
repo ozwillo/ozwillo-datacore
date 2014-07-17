@@ -51,7 +51,7 @@ public class MarkaInvestData extends DatacoreSampleBase {
 
    @Override
    public HashSet<DCModel> getCreatedModels() {
-      return this.models;
+      return markaInvestModel.getCreatedModels();
    }
 	
 	@Override
@@ -224,34 +224,64 @@ public class MarkaInvestData extends DatacoreSampleBase {
 		
 		try {
 			datacoreApiImpl.postAllDataInType(listField, MarkaInvestModel.FIELD_MODEL_NAME);
-		} catch (WebApplicationException e) {}
+		} catch (WebApplicationException e) {
+		   listField = (List<DCResource>) e.getResponse().getEntity();
+      }
 		try {
 			datacoreApiImpl.postAllDataInType(listCountry, MarkaInvestModel.COUNTRY_MODEL_NAME);
-		} catch (WebApplicationException e) {}
+      } catch (WebApplicationException e) {
+         listCountry = (List<DCResource>) e.getResponse().getEntity();
+      }
 		try {
 			datacoreApiImpl.postAllDataInType(listCity, MarkaInvestModel.CITY_MODEL_NAME);
-		} catch (WebApplicationException e) {}
+      } catch (WebApplicationException e) {
+         listCity = (List<DCResource>) e.getResponse().getEntity();
+      }
 		try {
 			datacoreApiImpl.postAllDataInType(listCompany, MarkaInvestModel.COMPANY_MODEL_NAME);
-		} catch (WebApplicationException e) {}
+      } catch (WebApplicationException e) {
+         listCompany = (List<DCResource>) e.getResponse().getEntity();
+      }
 		try {
 			datacoreApiImpl.postAllDataInType(listSector, MarkaInvestModel.SECTOR_MODEL_NAME);
-		} catch (WebApplicationException e) {}
+      } catch (WebApplicationException e) {
+         listSector = (List<DCResource>) e.getResponse().getEntity();
+      }
 		try {
 			datacoreApiImpl.postAllDataInType(listUser, MarkaInvestModel.USER_MODEL_NAME);
-		} catch (WebApplicationException e) {}
+      } catch (WebApplicationException e) {
+         listUser = (List<DCResource>) e.getResponse().getEntity();
+      }
 		try {
 			datacoreApiImpl.postAllDataInType(listInvestorType, MarkaInvestModel.INVESTOR_TYPE_MODEL_NAME);
-		} catch (WebApplicationException e) {}
+      } catch (WebApplicationException e) {
+         listInvestorType = (List<DCResource>) e.getResponse().getEntity();
+      }
 		try {
 			datacoreApiImpl.postAllDataInType(listInvestor, MarkaInvestModel.INVESTOR_MODEL_NAME);
-		} catch (WebApplicationException e) {}
+      } catch (WebApplicationException e) {
+         listInvestor = (List<DCResource>) e.getResponse().getEntity();
+      }
 		try {
 			datacoreApiImpl.postAllDataInType(listCost, MarkaInvestModel.COST_TYPE_MODEL_NAME);
-		} catch (WebApplicationException e) {}
+      } catch (WebApplicationException e) {
+         listCost = (List<DCResource>) e.getResponse().getEntity();
+      }
 		try {
 			datacoreApiImpl.postAllDataInType(listPlannedInvestmentAssistanceRequest, MarkaInvestModel.INVESTMENT_ASSISTANCE_REQUEST_MODEL_NAME);
-		} catch (WebApplicationException e) {}
+      } catch (WebApplicationException e) {
+         listPlannedInvestmentAssistanceRequest = (List<DCResource>) e.getResponse().getEntity();
+      }
+      mapData.put(MarkaInvestModel.COMPANY_MODEL_NAME, listCompany);
+      mapData.put(MarkaInvestModel.FIELD_MODEL_NAME, listField);
+      mapData.put(MarkaInvestModel.SECTOR_MODEL_NAME, listSector);
+      mapData.put(MarkaInvestModel.COUNTRY_MODEL_NAME, listCountry);
+      mapData.put(MarkaInvestModel.CITY_MODEL_NAME, listCity);
+      mapData.put(MarkaInvestModel.USER_MODEL_NAME, listUser);
+      mapData.put(MarkaInvestModel.INVESTOR_MODEL_NAME, listInvestor);
+      mapData.put(MarkaInvestModel.INVESTOR_TYPE_MODEL_NAME, listInvestorType);
+      mapData.put(MarkaInvestModel.COST_TYPE_MODEL_NAME, listCost);
+      mapData.put(MarkaInvestModel.INVESTMENT_ASSISTANCE_REQUEST_MODEL_NAME, listPlannedInvestmentAssistanceRequest);   
 	
 	}
 

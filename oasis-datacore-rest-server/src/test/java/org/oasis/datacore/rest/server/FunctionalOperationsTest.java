@@ -71,7 +71,7 @@ public class FunctionalOperationsTest {
 		markaInvestData.createDataSample();
 		markaInvestData.insertData();
       mockAuthenticationService.logout();*/
-	   markaInvestData.initData();
+	   markaInvestData.initData(); // cleans data first
 	}
 	
 	@Test

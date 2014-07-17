@@ -81,7 +81,7 @@ public class RightsTest {
 		mockAuthenticationService.loginAs("admin");
 		markaInvestData.createDataSample();
 		mockAuthenticationService.logout();*/
-	   markaInvestData.cleanDataOfCreatedModels();
+      markaInvestData.initData(); // cleans data first
 	}
 	
 	/**

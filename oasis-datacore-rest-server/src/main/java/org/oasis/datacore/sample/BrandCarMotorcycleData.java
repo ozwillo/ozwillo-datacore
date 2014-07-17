@@ -124,14 +124,17 @@ public class BrandCarMotorcycleData extends DatacoreSampleBase {
 	private void insertData() {
 		
 		try {
-			datacoreApiImpl.postAllDataInType(listBrands, BrandCarMotorcycleModel.BRAND_MODEL_NAME);
+		   listBrands = datacoreApiImpl.postAllDataInType(listBrands, BrandCarMotorcycleModel.BRAND_MODEL_NAME);
 		} catch (WebApplicationException e) {}
 		try {
-		   datacoreApiImpl.postAllDataInType(listCars, BrandCarMotorcycleModel.CAR_MODEL_NAME);
+		   listCars = datacoreApiImpl.postAllDataInType(listCars, BrandCarMotorcycleModel.CAR_MODEL_NAME);
 		} catch (WebApplicationException e) {}
 		try {
-		   datacoreApiImpl.postAllDataInType(listMotorcycle, BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
+		   listMotorcycle = datacoreApiImpl.postAllDataInType(listMotorcycle, BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME);
 		} catch (WebApplicationException e) {}
+      mapData.put(BrandCarMotorcycleModel.BRAND_MODEL_NAME, listBrands);
+      mapData.put(BrandCarMotorcycleModel.CAR_MODEL_NAME, listCars);
+      mapData.put(BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, listMotorcycle);
 	
 	}
 	

@@ -70,7 +70,10 @@ public class ContributionTest {
 	public void initBeforeTest() {
 		/*flushData();
 		createData();*/
-      markaInvestData.cleanDataOfCreatedModels();
+      //markaInvestData.initData(); // NO don't insert else "Version is forbidden
+	   // in POSTed data resource to create in strict POST mode", rather clean & create :
+	   markaInvestData.cleanDataOfCreatedModels();
+      markaInvestData.createDataSample();
 	}
 	
 	private void createData() {

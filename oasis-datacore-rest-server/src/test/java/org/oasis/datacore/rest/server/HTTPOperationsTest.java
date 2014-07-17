@@ -1108,7 +1108,7 @@ public class HTTPOperationsTest {
 
 	@Before
 	public void flushData() {
-	   brandCarMotorcycleData.initData();
+	   brandCarMotorcycleData.initData(); // cleans data first
 	}
 
 }
