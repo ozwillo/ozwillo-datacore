@@ -1,0 +1,23 @@
+tendererModel:
+	type: model
+	name: tenderer:tenderer
+
+	field: tenderer:name, string
+	field: tenderer:firstName, string
+	field: tenderer:secondName, string
+	field: tenderer:VAT, string
+	field: tenderer:phone, string
+	field: tenderer:fax, string
+	field: tenderer:mail, string
+	field: tenderer:address, string
+	field: tenderer:zip, string
+	field: tenderer:municipality, string
+	field: tenderer:country, string
+	field: tenderer:coordX, string
+	field: tenderer:coordY, string
+
+	mixin: tenderer:municipality, municipality:municipality.ref
+	mixin: tenderer:NACE, NACE:NACE.ref
+	mixin: tenderer:legal, person:person.ref
+	mixin: tenderer:contact, contact:contact.ref
+	mixin: tenderer:bank, bank:bank.ref

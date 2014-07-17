@@ -1,0 +1,77 @@
+municipalityModel:
+	type: model
+	name: municipality:municipality
+
+	field: municipality:name
+
+municipalityReferencingMixin:
+	type: mixin
+	name: municipality:municipality.ref
+
+	field: municipality:name
+	resource: municipality:URI, municipality:municipality
+
+naceModel:
+	type: model
+	name: NACE:NACE
+
+	field: NACE:code, string
+	field: NACE:description, string
+
+naceReferencingMixin:
+	type: mixin
+	name: NACE:NACE.ref
+
+	field: NACE:code, string
+	field: NACE:description, string
+	resource: NACE:URI, NACE:NACE
+
+personModel:
+	type: model
+	name: person:person
+
+	field: person:name, string
+	field: person:firstName, string
+	field: person:secondName, string
+	field: person:IDCard, string
+	field: person:phone, string
+	field: person:mail, string
+	field: person:dateOfBirth, string
+
+personReferencingMixin:
+	type: mixin
+	name: person:person.ref
+
+	field: person:name, string
+	field: person:firstName, string
+	field: person:secondName, string
+	field: person:IDCard, string
+	field: person:phone, string
+	field: person:mail, string
+	field: person:dateOfBirth, string
+	resource: person:URI, person:person
+
+bankModel:
+	type: model
+	name: bank:bank
+
+	field: bank:person1, string
+	field: bank:person2, string
+	field: bank:IBAN, string
+	field: bank:bank, string
+	field: bank:branch, string
+	field: bank:DC, string
+	field: bank:account, string
+
+bankReferencingMixin:
+	type: mixin
+	name: bank:bank.ref
+
+	field: bank:person1, string
+	field: bank:person2, string
+	field: bank:IBAN, string
+	field: bank:bank, string
+	field: bank:branch, string
+	field: bank:DC, string
+	field: bank:account, string
+	resource: bank:URI, bank:bank

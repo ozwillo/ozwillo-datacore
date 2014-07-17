@@ -1,0 +1,45 @@
+flatTendererModel:
+	type: model
+	name: tenderer:tenderer
+
+	field: tenderer:name, string
+	field: tenderer:firstname, string
+	field: tenderer:secondname, string
+	field: tenderer:VAT NUMBER, string
+	field: tenderer:Telephone, string
+	field: tenderer:Fax, string
+	field: tenderer:mail, string
+	field: tenderer:adress, string
+	field: tenderer:CP, string
+	field: tenderer:Country, string
+	field: tenderer:CoordX, string
+	field: tenderer:CoordY, string
+
+	field: tenderer:Municipality, string
+
+	field: tenderer:NACE Code:Nace code Id, string
+	field: tenderer:NACE Code:Code Description, string
+
+	field: tenderer:legal representative:Name, string
+	field: tenderer:legal representative:FirstName, string
+	field: tenderer:legal representative:SecondName, string
+	field: tenderer:legal representative:CardNumber, string
+	field: tenderer:legal representative:Telephone, string
+	field: tenderer:legal representative:Mail, string
+	field: tenderer:legal representative:DateOfBirth, string
+
+	field: tenderer:contact:Name, string
+	field: tenderer:contact:FirstName, string
+	field: tenderer:contact:SecondName, string
+	field: tenderer:contact:CardNumber, string
+	field: tenderer:contact:Telephone, string
+	field: tenderer:contact:Mail, string
+	field: tenderer:contact:DateOfBirth, string
+
+	field: tenderer:bank:Person1, string
+	field: tenderer:bank:Person2, string
+	field: tenderer:bank:IBAN, string
+	field: tenderer:bank:Bank, string
+	field: tenderer:bank:Sucursal, string
+	field: tenderer:bank:DC, string
+	field: tenderer:bank:Compte, string

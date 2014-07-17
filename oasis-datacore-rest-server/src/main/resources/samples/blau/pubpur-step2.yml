@@ -1,0 +1,45 @@
+flatTendererModel:
+	type: model
+	name: tenderer:tenderer
+
+	field: tenderer:name, string
+	field: tenderer:firstName, string
+	field: tenderer:secondName, string
+	field: tenderer:VAT, string
+	field: tenderer:phone, string
+	field: tenderer:fax, string
+	field: tenderer:mail, string
+	field: tenderer:address, string
+	field: tenderer:zip, string
+	field: tenderer:country, string
+	field: tenderer:coordX, string
+	field: tenderer:coordY, string
+
+	field: tenderer:municipality, string
+
+	field: tenderer:NACE:code, string
+	field: tenderer:NACE:description, string
+
+	field: tenderer:legal:name, string
+	field: tenderer:legal:firstName, string
+	field: tenderer:legal:secondName, string
+	field: tenderer:legal:IDCard, string
+	field: tenderer:legal:phone, string
+	field: tenderer:legal:mail, string
+	field: tenderer:legal:dateOfBirth, string
+
+	field: tenderer:contact:name, string
+	field: tenderer:contact:firstName, string
+	field: tenderer:contact:secondName, string
+	field: tenderer:contact:IDCard, string
+	field: tenderer:contact:phone, string
+	field: tenderer:contact:mail, string
+	field: tenderer:contact:dateOfBirth, string
+
+	field: tenderer:bank:person1, string
+	field: tenderer:bank:person2, string
+	field: tenderer:bank:IBAN, string
+	field: tenderer:bank:bank, string
+	field: tenderer:bank:branch, string
+	field: tenderer:bank:DC, string
+	field: tenderer:bank:account, string
