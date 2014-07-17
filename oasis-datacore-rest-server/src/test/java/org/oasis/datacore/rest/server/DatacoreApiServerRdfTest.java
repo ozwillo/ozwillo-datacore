@@ -1,7 +1,6 @@
 package org.oasis.datacore.rest.server;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import org.joda.time.DateTime;
@@ -125,20 +124,10 @@ public class DatacoreApiServerRdfTest {
       DateTime londonFoundedDate = new DateTime(-43, 4, 1, 0, 0, DateTimeZone.UTC);
       DCResource londonCityData = buildCityData("London", "UK", 10000000, false);
       londonCityData.setProperty("city:founded", londonFoundedDate);
-      HashMap<String, String> fr = new HashMap<String, String>();
-      fr.put("@language", "fr");
-      fr.put("@value", "Londres");
-      HashMap<String, String> en = new HashMap<String, String>();
-      en.put("@language", "en");
-      en.put("@value", "London");
-      HashMap<String, String> us = new HashMap<String, String>();
-      us.put("@language", "us");
-      us.put("@value", "London");
-      ArrayList<HashMap<String, String>> i18n = new ArrayList<HashMap<String, String>>();
-      i18n.add(fr);
-      i18n.add(en);
-      i18n.add(us);
-      londonCityData.setProperty("i18n:name", i18n);
+      londonCityData.setProperty("i18n:name", DCResource.listBuilder()
+            .add(DCResource.propertiesBuilder().put("l", "fr").put("v", "Londres").build())
+            .add(DCResource.propertiesBuilder().put("l", "en").put("v", "London").build())
+            .add(DCResource.propertiesBuilder().put("l", "us").put("v", "London").build()).build());
       DCResource resource = datacoreApiClient.postDataInType(londonCityData);
       
       Assert.assertEquals(londonCityData.getUri(), resource.getUri());
