@@ -89,7 +89,7 @@ public class EntityServiceImpl implements EntityService {
    @Override
    public boolean isUpToDate(String uri, DCModel dcModel, Long version)
          throws NonTransientDataAccessException {
-      if (version == null) {
+      if (version == null || version < 0) {
          return false;
       }
       
