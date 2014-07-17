@@ -415,14 +415,9 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       boolean detailedErrorMode = true; // TODO
       boolean explainSwitch = false; // TODO LATER
       Exchange exchange = cxfJaxrsApiProvider.getExchange();
-      try {
-         if(debug || cxfJaxrsApiProvider.getHttpHeaders().getHeaderString("X-Datacore-Debug").equalsIgnoreCase("true")) {
-            exchange.put("dc.params.debug", true);
-            explainSwitch = true;
-         }
-         
-      } catch (Exception e) {
-         logger.error("Error while getting query explain switch", e);
+      if(debug || "true".equalsIgnoreCase(cxfJaxrsApiProvider.getHttpHeaders().getHeaderString("X-Datacore-Debug"))) {
+         exchange.put("dc.params.debug", true); // keeping it for ldpEntityQueryService
+         explainSwitch = true;
       }
       
       DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
