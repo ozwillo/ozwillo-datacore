@@ -1,0 +1,197 @@
+
+# from italian example
+
+countryModel:
+	type: model
+	name: plo:country_0
+
+	field: plo:name, string
+
+countryReferencingMixin:
+	type: mixin
+	name: plo:country_0_ref_0
+
+	field: plo:name, string
+	resource: plo:URI, plo:country_0
+
+cityModel:
+	type: model
+	name: pli:city_0
+
+	field: pli:name, string
+	mixin: pli:country, plo:country_0_ref_0
+
+cityReferencingMixin:
+	type: mixin
+	name: pli:city_0_ref_0
+
+	field: pli:name, string
+	mixin: pli:country, plo:country_0_ref_0
+	resource: pli:URI, pli:city_0
+
+# pla for place address
+addressModel:
+	type: model
+	name: pla:address_0
+
+	field: pla:address, string
+	field: pla:zip, string
+	mixin: pla:city, pli:city_0_ref_0
+
+addressReferencingMixin:
+	type: mixin
+	name: pla:address_0_ref_0
+
+	field: pla:address, string
+	field: pla:zip, string
+	mixin: pla:city, pli:city_0_ref_0
+	resource: pla:URI, pla:address_0
+	# comment inclure le pays lui même mixin de city
+
+# modified from italian example
+
+placeModel:
+	type: model
+	name: pl:place_0
+
+	field: pl:name, string
+	field: pl:geo, string
+	field: pl:x, string
+	field: pl:y, string
+	mixin: pl:address, pla:address_0_ref_0
+
+# pl : public purchasing places (projection without name and geo)
+placeReferencingMixin:
+	type: mixin
+	name: pl:place_0_ref_0
+
+	field: pl:name, string
+	field: pl:geo, string
+	field: pl:x, string
+	field: pl:y, string
+	mixin: pl:address, pla:address_0_ref_0
+	resource: pl:URI, pl:place_0
+
+# soc : social contact
+contactModel:
+	type: model
+	name: soc:contact_0
+
+	field: soc:mail, string
+	field: soc:phone, string
+	field: soc:fax, string
+
+contactReferencingMixin:
+	type: model
+	name: soc:contact_0_ref_0
+
+	field: soc:mail, string
+	field: soc:phone, string
+	field: soc:fax, string
+	resource: soc:URI, soc:contact_0
+
+# sop : social person
+
+personModel:
+	type: model
+	name: sop:person_0
+
+	field: sop:firstName, string
+	field: sop:firstFamilyName, string
+	field: sop:secondFamilyName, string
+	field: sop:IDCard, string
+	mixin: sop:contact, soc:contact_0_ref_0
+
+personReferencingMixin:
+	type: model
+	name: sop:person_0_ref_0
+
+	field: sop:firstName, string
+	field: sop:firstFamilyName, string
+	field: sop:secondFamilyName, string
+	field: sop:IDCard, string
+	mixin: sop:contact, soc:contact_0_ref_0
+	resource: sop:URI, sop:person_0
+
+# coeuna for company europe nace
+naceModel:
+	type: model
+	name: coeuna:NACE_0
+
+	field: coeuna:code, string
+	field: coeuna:description, string
+
+naceReferencingMixin:
+	type: mixin
+	name: coeuna:NACE_0_ref_0
+
+	field: coeuna:code, string
+	field: coeuna:description, string
+	resource: coeuna:URI, coeuna:NACE_0
+
+# baa : bank account
+
+accountModel:
+	type: model
+	name: baa:bank_0
+
+	field: baa:person1, string
+	field: baa:person2, string
+	field: baa:IBAN, string
+	field: baa:bank, string
+	field: baa:branch, string
+	field: baa:DC, string
+	field: baa:account, string
+
+accountReferencingMixin:
+	type: mixin
+	name: baa:bank_0_ref_0
+
+	field: baa:person1, string
+	field: baa:person2, string
+	field: baa:IBAN, string
+	field: baa:bank, string
+	field: baa:branch, string
+	field: baa:DC, string
+	field: baa:account, string
+	resource: baa:URI, baa:bank_0
+
+
+# cosp : company in spanish public purchasing scenario
+
+ppCompanyModel:
+	type: model
+	name: cosp:company_0
+
+	field: cosp:VAT, string
+
+	mixin: cosp:contact, soc:contact_0_ref_0
+	mixin: cosp:natural, sop:person_0_ref_0
+	mixin: cosp:contactPerson, sop:person_0_ref_0
+	mixin: cosp:legal, sop:person_0_ref_0
+	mixin: cosp:NACE, coeuna:NACE_0_ref_0
+	mixin: cosp:account, baa:bank_0_ref_0
+
+ppCompanyReferencingMixin:
+	type: model
+	name: cosp:company_0_ref_0
+
+	field: cosp:VAT, string
+
+	mixin: cosp:contact, soc:contact_0_ref_0
+	mixin: cosp:natural, sop:person_0_ref_0
+	mixin: cosp:contactPerson, sop:person_0_ref_0
+	mixin: cosp:legal, sop:person_0_ref_0
+	mixin: cosp:NACE, coeuna:NACE_0_ref_0
+	mixin: cosp:account, baa:bank_0_ref_0
+	resource: cosp:URI, cosp:company_0
+
+#
+
+companyModel:
+	type: model
+	name: co:company_0
+
+	mixin: co:place, pl:place_0_ref_0
+	mixin: co:spanishCompany, cosp:company_0_ref_0
+	# and italian mixin
