@@ -311,6 +311,11 @@ public class DatacoreApiServerTest {
       return cityResource;
    }
 
+   @Test
+   public void testCreateSample() {
+      cityCountrySample.initData(); // NB. re-cleans
+   }
+
    /**
     * Tests the CXF client with the DatacoreApi service
     * @throws Exception If a problem occurs

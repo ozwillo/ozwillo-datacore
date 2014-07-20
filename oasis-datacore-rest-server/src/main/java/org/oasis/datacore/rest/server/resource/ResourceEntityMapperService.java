@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.cxf.message.Exchange;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.oasis.datacore.core.entity.EntityService;
@@ -22,18 +23,24 @@ import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.DCURI;
 import org.oasis.datacore.rest.server.BadUriException;
+import org.oasis.datacore.rest.server.cxf.CxfJaxrsApiProvider;
 import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ResourceEntityMapperService {
+
+   private static final Logger logger = LoggerFactory.getLogger(ResourceEntityMapperService.class);
 
    private static Set<String> resourceNativeJavaFields = new HashSet<String>();
    static {
@@ -60,6 +67,10 @@ public class ResourceEntityMapperService {
    
    @Autowired
    private ValueParsingService valueParsingService;
+
+   /** to know whether expected output is semantic (JSON-LD, RDF) */
+   @Autowired
+   private CxfJaxrsApiProvider cxfJaxrsApiProvider;
    
    /**
     * Does 3 things :
@@ -171,6 +182,7 @@ public class ResourceEntityMapperService {
          resourceToEntityFields(dataMap, entityMap, ((DCMapField) dcField).getMapFields(),
                resourceParsingContext, putRatherThanPatchMode);
          entityValue = entityMap;
+         
       } else if ("list".equals(dcField.getType())) {
          if (!(resourceValue instanceof List<?>)) {
             throw new ResourceParsingException("list Field value is not a JSON Array : " + resourceValue);
@@ -303,6 +315,15 @@ public class ResourceEntityMapperService {
             // ex. for 2nd pass or in case of expanded + embedded return ?!?
             //entityValue = refEntity;
             entityValue = dcUri.toString();
+
+         } else if (resourceValue instanceof DCResource) {
+            // (tests only) "framed" (JSONLD) / embedded : embedded subresource (potentially may be (partial) copy)
+            DCResource subResource = (DCResource) resourceValue;
+            String entityValueUri = subResource.getUri();
+            Long entityValueVersion = subResource.getVersion();
+            List<String> entityValueTypesFound = subResource.getTypes();
+            entityValue = subResourceToEntityFields(entityValueUri, entityValueVersion, entityValueTypesFound,
+                  subResource.getProperties(), dcResourceField, resourceParsingContext, putRatherThanPatchMode);
             
          } else if (resourceValue instanceof Map<?,?>) {
             // "framed" (JSONLD) / embedded : embedded subresource (potentially may be (partial) copy)
@@ -312,119 +333,56 @@ public class ResourceEntityMapperService {
             
             @SuppressWarnings("unchecked")
             Map<String, Object> dataMap = (Map<String,Object>) resourceValue;
-            Object entityValueUri = dataMap.get("uri");
-            if (entityValueUri == null) {
+            Object entityValueUriFound = dataMap.get(DCResource.KEY_URI);
+            if (entityValueUriFound == null) {
                throw new ResourceParsingException("Can't find uri among properties of Object value of "
                      + "resource Field but only " + dataMap);
-            } else if (!(entityValueUri instanceof String)) {
+            } else if (!(entityValueUriFound instanceof String)) {
                throw new ResourceParsingException("Property uri of Object value of "
-                     + "resource Field is not a String but " + entityValueUri
-                     + " (" + entityValueUri.getClass() + ")");
+                     + "resource Field is not a String but " + entityValueUriFound
+                     + " (" + entityValueUriFound.getClass() + ")");
             }
-            // check uri, type & get entity (as above) :
-            DCURI dcUri;
-            try {
-               dcUri = uriService.normalizeAdaptCheckTypeOfUri((String) entityValueUri,
-                     dcResourceField.getResourceType(), normalizeUrlMode, replaceBaseUrlMode);
-               // NB. this also checks model type if any
-            } catch (BadUriException buex) {
-               throw new ResourceParsingException(buex.getMessage(), buex.getCause());
-            }
-            
-            if (dcUri.isExternalUri()) {
-               throw new ResourceParsingException("Embedded resource should not have "
-                     + "external uri but has " + dcUri.toString());
-               // TODO LATER OPT2 or as local copy of an existing external resource ???
-            }
-
-            // check type :
-            // TODO more mixins / aspects / type constraints
-            DCModel valueModel = modelService.getModel(dcUri.getType()); // TODO LATER from cached model ref in DCURI
-            // NB. type has been checked in uriService above
-            /*if (!dcUri.getType().equals(((DCResourceField) dcField).getResourceType())) {
-            //if (!modelService.hasType(refEntity, ((DCResourceField) dcField).getTypeConstraints())) {
-               throw new ResourceParsingException("Target resource referenced by resource Field of URI value "
-                     + dcUri + " is not of required type " + ((DCResourceField) dcField).getResourceType());
-               // does not match type constraints TODO
-            }*/
-
-            // checking that it exists :
-            DCEntity entityEntityValue = entityService.getByUri(dcUri.toString(), valueModel);
-            
-            // TODO TODO provide refEntity in model (ex. DCResourceValue) OR IN GRAPH,
-            // ex. for 2nd pass or in case of expanded + embedded return ?!?
-
-            // supporting PUT vs default PATCH-like POST mode :
-            if (entityEntityValue == null) {
-               // TODO allow not exists & creation ????!?
-               if (!allowNew) {
-                  throw new ResourceParsingException("Can't find data of resource type " + dcUri.getType()
-                        + " referenced by resource Field of Object value with URI property " + dcUri);
-               }
-               entityEntityValue = new DCEntity();
-               entityEntityValue.setCachedModel(valueModel); // TODO or in DCEntityService ?
-               entityEntityValue.setUri(dcUri.toString());
-               // NB. no version yet
-               
-            } else if (putRatherThanPatchMode) {
-               entityEntityValue.getProperties().clear();
-            } // else reuse existing entity as base : PATCH-like behaviour
-
-            entityEntityValue.setModelName(valueModel.getName()); // TODO LATER2 check that same (otherwise ex. external approvable contrib ??)
+            String entityValueUri = (String) entityValueUriFound;
             
             // get version if any, LATER might be used for transaction :
             // TODO parseLong
-            Object entityValueVersion = dataMap.get("version");
-            if (entityValueVersion == null) {
-               // allowed (NB. but then can't update ??!!)
-               resourceParsingContext.addWarning("No embedded resource version");
-            } else if (entityValueVersion instanceof Integer) { // TODO refactor to parseInt ?
-               entityEntityValue.setVersion(new Long((Integer) entityValueVersion));
-            } else if (entityValueVersion instanceof String) { // TODO refactor to parseLongFromString ?
+            Object entityValueVersionFound = dataMap.get(DCResource.KEY_VERSION);
+            Long entityValueVersion = null;
+            if (entityValueVersionFound instanceof Long) { // tests only ?
+               entityValueVersion = (Long) entityValueVersionFound;
+            } else if (entityValueVersionFound instanceof Integer) { // TODO refactor to parseInt ?
+               entityValueVersion = new Long((Integer) entityValueVersionFound);
+            } else if (entityValueVersionFound instanceof String) { // TODO refactor to parseLongFromString ?
                try {
                   // Javascript don't support Long so allow them as String :
-                  entityEntityValue.setVersion(Long.parseLong((String) entityValueVersion));
+                  entityValueVersion = Long.parseLong((String) entityValueVersionFound);
                } catch (NumberFormatException nfex) {
                   resourceParsingContext.addWarning("Embedded resource version is not "
                         + "a long-formatted String but " + entityValueVersion);
                }
-            } else {
+            } else if (entityValueVersionFound != null) {
                resourceParsingContext.addWarning("Embedded resource version is not "
                      + "an int, a long or a long-formatted String but " + entityValueVersion);
-            }
+            } // else handled in subResourceToEntityFields
 
             // get types if any :
-            Object entityValueTypesFound = dataMap.get("types");
-            if (entityValueTypesFound == null) {
-               // allowed
-               resourceParsingContext.addWarning("No embedded resource types");
-            } else if (entityValueTypesFound instanceof List<?>) {
-               @SuppressWarnings("unchecked")
-               List<String> entityValueTypes = (List<String>) entityValueTypesFound;
-               entityEntityValue.setTypes(entityValueTypes); // TODO or no modelType, or remove modelName ??
-            } else {
+            Object entityValueTypesFound = dataMap.get(DCResource.KEY_TYPES);
+            List<String> entityValueTypes = null;
+            if (entityValueTypesFound instanceof List<?>) {
+               entityValueTypes = (List<String>) entityValueTypesFound;
+               if (entityValueTypes.isEmpty()) {
+                  // allowed
+                  resourceParsingContext.addWarning("No embedded resource types");
+               } else {
+                  // entityEntityValue.setTypes(entityValueTypes); // TODO or no modelType, or remove modelName ??
+               }
+            } else if (entityValueTypesFound != null) {
                resourceParsingContext.addWarning("Embedded resource types is not "
                      + "a String list but " + entityValueTypesFound);
-            }
-            
-            // parse other fields :
-            // TODO for what use, multiple update or even creation (rather flattened ?) ?? constraints ???
-            // TODO do it later to allow all-encompassing transaction ???
-            // clean by removing native fields : (TODO or clone first, ex. if immutable ??)
-            for (String resourceNativeJavaField : resourceNativeJavaFields) {
-               dataMap.remove(resourceNativeJavaField);
-            }
-            resourceToEntityFields(dataMap, entityEntityValue.getProperties(),
-                  valueModel.getGlobalFieldMap(), resourceParsingContext,putRatherThanPatchMode);
-            // TODO TODO add entityEntityValue to graph ?! again, for what use :
-            // multiple update or even creation (rather flattened ?) ??
-            //embeddedEntitiesToAlsoUpdate.add(entityEntityValue);
-            // constraints ex. "update only if these fields have these values (in addition to version)" ???
-            // cache it in DCURI for ex. rendering returned value ??
-            // dcUri.setEntity(entityEntityValue);
-            
-            /////entityValue = dcUri.toString();
-            entityValue = entityEntityValue;
+            } // else handled in subResourceToEntityFields
+
+            entityValue = subResourceToEntityFields(entityValueUri, entityValueVersion, entityValueTypes,
+                  dataMap, dcResourceField, resourceParsingContext, putRatherThanPatchMode);
             
          } else {
             // unknown type for resource value : to help debug model design, add error to context
@@ -438,6 +396,141 @@ public class ResourceEntityMapperService {
       }
       
       return entityValue;
+   }
+
+
+   // TODO rm entityValueValue OR impl rights etc. !
+   private HashMap<String, Object>/*DCEntity*/ subResourceToEntityFields(String entityValueUri,
+         Long entityValueVersion, List<String> entityValueTypes,
+         Map<String, Object> properties, DCResourceField dcResourceField,
+         DCResourceParsingContext resourceParsingContext, boolean putRatherThanPatchMode)
+               throws ResourceParsingException {
+      // "framed" (JSONLD) / embedded : embedded subresource (potentially may be (partial) copy)
+      boolean normalizeUrlMode = true;
+      boolean replaceBaseUrlMode = true;
+      boolean allowNew = true; // TODO
+      
+      Map<String, Object> dataMap = properties;
+      if (entityValueUri == null) {
+         throw new ResourceParsingException("Can't find uri among properties of Object value of "
+               + "resource Field but only " + dataMap);
+      }
+      // check uri, type & get entity (as above) :
+      DCURI dcUri;
+      try {
+         dcUri = uriService.normalizeAdaptCheckTypeOfUri((String) entityValueUri,
+               dcResourceField.getResourceType(), normalizeUrlMode, replaceBaseUrlMode);
+         // NB. this also checks model type if any
+      } catch (BadUriException buex) {
+         throw new ResourceParsingException(buex.getMessage(), buex.getCause());
+      }
+      
+      if (dcUri.isExternalUri()) {
+         throw new ResourceParsingException("Embedded resource should not have "
+               + "external uri but has " + dcUri.toString());
+         // TODO LATER OPT2 or as local copy of an existing external resource ???
+      }
+
+      // check type :
+      // 2 cases : 1. embedded referencing / partially copied Resource = Model, 2. fully embedded Resource / typed map = Mixins
+      // TODO more mixins / aspects / type constraints
+      DCModel valueModel = modelService.getModel(dcUri.getType()); // TODO LATER from cached model ref in DCURI
+      // NB. type has been checked in uriService above
+      /*if (!dcUri.getType().equals(((DCResourceField) dcField).getResourceType())) {
+      //if (!modelService.hasType(refEntity, ((DCResourceField) dcField).getTypeConstraints())) {
+         throw new ResourceParsingException("Target resource referenced by resource Field of URI value "
+               + dcUri + " is not of required type " + ((DCResourceField) dcField).getResourceType());
+         // does not match type constraints TODO
+      }*/
+      DCModelBase valueModelOrMixin = valueModel;
+      DCEntity entityEntityValue = null;
+      if (valueModel != null) {
+         // embedded referencing Resource
+   
+         // checking that it exists :
+         entityEntityValue = entityService.getByUri(dcUri.toString(), valueModel);
+         
+      } else {
+         // assuming fully embedded Resource, similar to new entity
+         // TODO check mixin(s)
+         valueModelOrMixin = modelService.getMixin(entityValueTypes.get(0));
+         if (valueModelOrMixin == null) {
+            throw new ResourceParsingException("Can't find Mixin " + valueModelOrMixin
+                  + " nor Model " + dcUri.getType() + " for Embedded resource wth uri "
+                  + dcUri.toString());
+         }
+      }
+         
+      // TODO TODO provide refEntity in model (ex. DCResourceValue) OR IN GRAPH,
+      // ex. for 2nd pass or in case of expanded + embedded return ?!?
+
+      // supporting PUT vs default PATCH-like POST mode :
+      if (entityEntityValue == null) {
+         // TODO TODOO allow not exists & creation ????!?
+         if (!allowNew) {
+            throw new ResourceParsingException("Can't find data of resource type " + dcUri.getType()
+                  + " referenced by resource Field of Object value with URI property " + dcUri);
+         }
+         entityEntityValue = new DCEntity();
+         entityEntityValue.setUri(dcUri.toString());
+         if (valueModel != null) {
+            entityEntityValue.setCachedModel(valueModel); // TODO or in DCEntityService ?
+            entityEntityValue.setModelName(valueModel.getName()); // TODO LATER2 check that same (otherwise ex. external approvable contrib ??)
+         } // else fully embedded subresource
+         // NB. no version yet
+         
+      } else if (putRatherThanPatchMode) {
+         entityEntityValue.getProperties().clear();
+      } // else reuse existing entity as base : PATCH-like behaviour
+      
+      // get version if any, LATER might be used for transaction :
+      // TODO parseLong
+      if (entityValueVersion == null) {
+         // allowed (NB. but then can't update ??!!)
+         resourceParsingContext.addWarning("No embedded resource version");
+      } else if (valueModel != null) {
+         entityEntityValue.setVersion(entityValueVersion);
+      } // else valueModel == null means fully embedded Resource so version is its container's
+
+      // get types if any :
+      if (entityValueTypes == null || entityValueTypes.isEmpty()) {
+         // allowed
+         resourceParsingContext.addWarning("No embedded resource types");
+      } else {
+         entityEntityValue.setTypes(entityValueTypes); // TODO or no modelType, or remove modelName ??
+      }
+      
+      // parse other fields :
+      // TODO for what use, multiple update or even creation (rather flattened ?) ?? constraints ???
+      // TODO do it later to allow all-encompassing transaction ???
+      // clean by removing native fields : (TODO or clone first, ex. if immutable ??)
+      for (String resourceNativeJavaField : resourceNativeJavaFields) {
+         dataMap.remove(resourceNativeJavaField);
+      }
+
+      HashMap<String, Object> entityMap = new HashMap<String,Object>(dataMap.size());
+      entityMap.put(DCResource.KEY_TYPES, entityValueTypes);
+      if (entityValueUri != null) { // OR REQUIRED NOT NULL ??
+         entityMap.put(DCResource.KEY_URI, entityValueUri);
+      }
+      if (entityValueVersion != null) {
+         entityMap.put(DCResource.KEY_VERSION, entityValueVersion);
+      }
+      resourceToEntityFields(dataMap, entityMap, valueModelOrMixin.getGlobalFieldMap(),
+            resourceParsingContext, putRatherThanPatchMode);
+      return entityMap;
+      
+      /*resourceToEntityFields(dataMap, entityEntityValue.getProperties(),
+            valueModelOrMixin.getGlobalFieldMap(), resourceParsingContext, putRatherThanPatchMode);
+      // TODO TODO add entityEntityValue to graph ?! again, for what use :
+      // multiple update or even creation (rather flattened ?) ??
+      //embeddedEntitiesToAlsoUpdate.add(entityEntityValue);
+      // constraints ex. "update only if these fields have these values (in addition to version)" ???
+      // cache it in DCURI for ex. rendering returned value ??
+      // dcUri.setEntity(entityEntityValue);
+      
+      /////entityValue = dcUri.toString();
+      return entityEntityValue;*/
    }
 
 
@@ -575,24 +668,28 @@ public class ResourceEntityMapperService {
                resourcePropValue = new DateTime((Date) resourcePropValue, DateTimeZone.UTC);
                // NB. if not UTC, default timezone has a non-integer time shift
             }
-         } else if(entityPropName.contains("i18n")) {
-            List<?> dataList = (List<?>) resourcePropValue;
-            ArrayList<Object> tempList = new ArrayList<Object>();
-            
-            for(Object mapResourceElement : dataList) {
-               if(mapResourceElement instanceof Map<?, ?>) {
-                  Map<String, String> tempMap = new HashMap<String, String>();
-                  
-                  @SuppressWarnings("unchecked")
-                  Map<String, String> mapResourceItem = (Map<String, String>) mapResourceElement;
-                  tempMap.put("@language", mapResourceItem.get("l"));
-                  tempMap.put("@value", mapResourceItem.get("v"));
-                  tempList.add(tempMap);
-               } else {
-                  //Error
+         } else if(entityPropName.contains("i18n")) { // TODO NOOOO rather using DCField
+            Exchange exchange = cxfJaxrsApiProvider.getExchange();
+            if (exchange != null // else not called through REST)
+                  && true) {
+               List<?> dataList = (List<?>) resourcePropValue;
+               ArrayList<Object> tempList = new ArrayList<Object>();
+               
+               for(Object mapResourceElement : dataList) {
+                  if(mapResourceElement instanceof Map<?, ?>) {
+                     Map<String, String> tempMap = new HashMap<String, String>();
+                     
+                     @SuppressWarnings("unchecked")
+                     Map<String, String> mapResourceItem = (Map<String, String>) mapResourceElement;
+                     tempMap.put("@language", mapResourceItem.get("l"));
+                     tempMap.put("@value", mapResourceItem.get("v"));
+                     tempList.add(tempMap);
+                  } else {
+                     logger.error("i18n value list element is not a map but " + mapResourceElement);
+                  }
                }
+               resourcePropValue = tempList;
             }
-            resourcePropValue = tempList;
          }
          resourceProps.put(entityPropName, resourcePropValue);
       }

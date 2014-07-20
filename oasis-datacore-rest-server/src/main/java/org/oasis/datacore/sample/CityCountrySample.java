@@ -8,6 +8,7 @@ import org.joda.time.DateTimeZone;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
+import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCResourceField;
@@ -27,6 +28,7 @@ public class CityCountrySample extends DatacoreSampleBase {
    public static String COUNTRY_MODEL_NAME = "sample.city.country";
    public static String CITY_MODEL_NAME = "sample.city.city";
    public static String POI_MODEL_NAME = "sample.city.pointOfInterest";
+   public static String CITYLEGALINFO_MIXIN_NAME = "sample.city.city.legalInfo";
 
    @Override
    public void buildModels(List<DCModelBase> modelsToCreate) {
@@ -48,11 +50,20 @@ public class CityCountrySample extends DatacoreSampleBase {
       cityModel.addField(new DCField("city:populationCount", "int", false, 50));
       cityModel.addField(new DCField("city:founded", "date", false, 0));
          
+      // i18n sample :
       cityModel.addField(new DCI18nField("i18n:name", 100));
+      // more complete Resource sample (may be used also as embedded referenced Resource) :
       cityModel.addField(new DCListField("city:pointsOfInterest",
             new DCResourceField("zzz", POI_MODEL_NAME))); // TODO
 
-      modelsToCreate.addAll(Arrays.asList((DCModelBase) poiModel, cityModel, countryModel));
+      // embedded Resource (map mixin) sample :
+      DCMixin cityLegalInfoMixin = new DCMixin(CITYLEGALINFO_MIXIN_NAME);
+      cityLegalInfoMixin.addField(new DCField("cityli:legalInfo1", "string"));
+      cityLegalInfoMixin.addField(new DCField("cityli:legalInfo2", "string"));
+      cityModel.addField(new DCResourceField("city:legalInfo", CITYLEGALINFO_MIXIN_NAME));
+      ///cityModel.addMixin(cityLegalInfoMixin);
+
+      modelsToCreate.addAll(Arrays.asList((DCModelBase) poiModel, cityModel, countryModel, cityLegalInfoMixin));
    }
 
    public void fillData() {
@@ -109,6 +120,20 @@ public class CityCountrySample extends DatacoreSampleBase {
       londonCity = postDataInType(londonCity);
       torinoCity = postDataInType(torinoCity);
       moscowCity = postDataInType(moscowCity);
+      
+      // embedded referenced Resources sample :
+      DCResource tourEiffelPoi = resourceService.create(POI_MODEL_NAME, "France/Paris/TourEiffel").set("n:name", "Tour Eiffel");
+      DCResource louvresPoi = resourceService.create(POI_MODEL_NAME, "France/Paris/Louvres").set("n:name", "Louvres");
+      DCResource parisCity = resourceService.create(CITY_MODEL_NAME, "France/Paris")
+            .set("n:name", "Paris").set("city:inCountry", franceCountry.getUri())
+            .set("city:populationCount", 1000000).set("city:legalInfo",
+                  resourceService.create(CITYLEGALINFO_MIXIN_NAME, "France/Paris/city:legalInfo")
+                  .set("cityli:legalInfo1", "Some Paris legal info"))
+            .set("city:pointsOfInterest", DCResource.listBuilder()
+                  .add(tourEiffelPoi).add(louvresPoi).build()); // .toMap()
+      tourEiffelPoi = postDataInType(tourEiffelPoi);
+      louvresPoi = postDataInType(louvresPoi);
+      parisCity = postDataInType(parisCity);
       
    }
 }

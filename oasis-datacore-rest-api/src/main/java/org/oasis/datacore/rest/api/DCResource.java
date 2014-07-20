@@ -44,16 +44,20 @@ import com.wordnik.swagger.annotations.ApiModelProperty;
 @JsonAutoDetect(fieldVisibility = Visibility.NONE, getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE)
 public class DCResource {
    
+   public static final String KEY_URI = "@id";
+   public static final String KEY_TYPES = "@type";
+   public static final String KEY_VERSION = "o:version";
+   
    @ApiModelProperty(value = "URI", position=0, required=true)
-   @JsonProperty("@id")
+   @JsonProperty(KEY_URI)
    private String uri;
    @ApiModelProperty(value = "version", position=1, notes="The server's up-to-date version must "
          + "be provided (save when creating it), otherwise it will fail due to optimistic locking.")
-   @JsonProperty("o:version")
+   @JsonProperty(KEY_VERSION)
    private Long version;
 
    /** types : model (first one) plus type mixins */
-   @JsonProperty("@type")
+   @JsonProperty(KEY_TYPES)
    private List<String> types;
    //@JsonProperty
    //private String type; // or this ? in addition to uri ? or model ?!? test conflict !
