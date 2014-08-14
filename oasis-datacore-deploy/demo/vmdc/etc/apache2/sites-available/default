@@ -30,6 +30,7 @@
    SSLEngine On
    SSLCertificateKeyFile /etc/ssl/private/ozwillo-preprod.key
    SSLCertificateFile /etc/ssl/private/ozwillo-preprod-cert.pem
+   SSLCertificateChainFile /etc/ssl/private/globalsign-ca.pem
 
    # Based on https://wiki.mozilla.org/Security/Server_Side_TLS - consider as global configuration
    SSLProtocol all -SSLv2
