@@ -56,6 +56,9 @@ import au.com.bytecode.opencsv.CSVReader;
  * * as always, please check choices made for : Model/Mixin & field names, uri format,
  * overall modelling (perimeter of each Model and Mixin, links between them, types of fields)
  *  - TODO CSI especially for the ateco fields : look up "ateco rdf" in google and look in ex. http://www.w3c.it/papers/RDF.pdf
+ * * if everything is OK, start using those Models in your demo. This means writing code that
+ * first creates new Resources in them. For this, copy / paste / adapt to your language of choice
+ * code from fillData(), whose comments say all that must be taken care of.
  * 
  * @author mdutoo
  *
@@ -87,6 +90,7 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
    }
    
    
+   /** Modelling methodology step 1 */
    public void doInitModel1FlatM() {
       /////////////////////////////////////////////////////////
       // 0. select data of your application to share, 
@@ -195,7 +199,8 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
          ;
    }
 
-   
+
+   /** Modelling methodology step 2 */
    public void doInitModel2ExternalizeAsMixins() {
       
       /////////////////////////////////////////////////////////
@@ -257,6 +262,9 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
    }
 
    
+   /**
+    * Defines Models
+    */
    @Override
    public void buildModels(List<DCModelBase> modelsToCreate) {
       // 2. find out which Models already exist, including "this" ex. economicalActivity,
@@ -408,6 +416,10 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
    }
 
 
+   /**
+    * Inits reference Data (i.e. that is not sample data)
+    * @throws Exception
+    */
    public void doInitReferenceData() throws Exception {
       List<DCResource> resourcesToPost = new ArrayList<DCResource>();
       
@@ -487,6 +499,9 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
    }
 
 
+   /**
+    * Fills sample data for EconomicalActivity sample
+    */
    public void doInitSampleDataEconomicalActivity() {
       List<DCResource> resourcesToPost = new ArrayList<DCResource>();
       
@@ -613,7 +628,10 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
       }
    }
    
-   
+
+   /**
+    * Fills sample data for CityPlanning sample
+    */
    public void doInitSampleDataCityPlanning() {
       
       //////////////////////////////////////////////
