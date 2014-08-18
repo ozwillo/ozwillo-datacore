@@ -31,9 +31,31 @@ import au.com.bytecode.opencsv.CSVReader;
 
 
 /**
- * Used by tests & demo, as well as "datacorisation" / Model design methodology draft.
+ * Draft of Provto-provided CityPlanning and EconomicalActivity Models.
  * 
+ * Used by tests & demo, as well as "datacorisation" / Model design methodology draft.
  * TODO move this methodology to starter kit : on wiki, D2.2, playground...
+ * 
+ * Feedback to provider (Provto) :
+ * * problem with ATECO descriptions data :
+ *  - some provided ATECO descriptions are not among official ones (see below about
+ * dataset used) but seem to have been simplified. This is even more critical because
+ * they are used as linking id / foreign key instead of ATECO code which is not known
+ * in economical activity dataset. For instance :
+ * "Commercio al dettaglio di articoli sportivi e per il tempo libero"
+ * instead of
+ * "Commercio al dettaglio di articoli sportivi, biciclette e articoli per il tempo libero".
+ *  - ATECO descriptions often map to two codes. Of those, one seems to be a non-leaf
+ * category, but can it be removed ? (i.e. is it never used in the data ?)
+ * TODO CSI If you don't want to patch your data it's fine, but patch the data you send to the
+ * datacore and provide us with a cleaned up ATECO reference dataset.
+ * * dataset - ATECO descriptions ("!?ecoact:atecoDescription" field) :
+ * since none was provided, I've used http://www.vi.camcom.it/a_ITA_1834_1.html
+ * (from http://www3.istat.it/strumenti/definizioni/ateco/ ) to build
+ * oasis-datacore/oasis-datacore-rest-server/src/main/resources/samples/provto/economicalActivity/ateco_20081217.csv
+ * * as always, please check choices made for : Model/Mixin & field names, uri format,
+ * overall modelling (perimeter of each Model and Mixin, links between them, types of fields)
+ *  - TODO CSI especially for the ateco fields : look up "ateco rdf" in google and look in ex. http://www.w3c.it/papers/RDF.pdf
  * 
  * @author mdutoo
  *
