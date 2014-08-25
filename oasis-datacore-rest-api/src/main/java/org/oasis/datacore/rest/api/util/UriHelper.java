@@ -120,6 +120,9 @@ public class UriHelper {
     */
    public static String[] parseIri(String urlPathWithoutSlash) {
       int idSlashIndex = urlPathWithoutSlash.indexOf('/', typeIndexInType); // TODO use Pattern & DC_TYPE_PATH
+      if (idSlashIndex == -1) {
+         return new String[] { null, urlPathWithoutSlash };
+      }
       String modelType = urlPathWithoutSlash.substring(typeIndexInType, idSlashIndex);
       String id = urlPathWithoutSlash.substring(idSlashIndex + 1); // TODO useful ??
       return new String[] { modelType, id };
@@ -152,6 +155,9 @@ public class UriHelper {
          // NB. Datacore URIs should ALSO be URLs
          URI uriValue = new URI(stringUriValue).normalize(); // from ex. http://localhost:8180//dc/type//country/UK
          urlPathWithoutSlash = uriValue.getPath();
+         if (urlPathWithoutSlash == null) {
+            urlPathWithoutSlash = ""; // TODO constant
+         }
          if (urlPathWithoutSlash.length() != 0 && urlPathWithoutSlash.charAt(0) == '/') {
             urlPathWithoutSlash = urlPathWithoutSlash.substring(1); // ex. dc/type/country/UK
          }
