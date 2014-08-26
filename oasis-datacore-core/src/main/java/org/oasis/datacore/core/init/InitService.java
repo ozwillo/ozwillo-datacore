@@ -103,12 +103,15 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
       int order = initable.getOrder();
       if (this.initables.isEmpty()
             || order >= this.initables.get(this.initables.size() -1).getOrder()) {
+         // add as last if possible
          this.initables.add(initable);  
-      }
-      for (ListIterator<Initable> initableListIt = this.initables.listIterator(0); initableListIt.hasNext();) {
-         if (order < initableListIt.next().getOrder()) {
-            initableListIt.add(initable);
-            break;
+      } else {
+         // add at the right place in the list
+         for (ListIterator<Initable> initableListIt = this.initables.listIterator(0); initableListIt.hasNext();) {
+            if (order < initableListIt.next().getOrder()) {
+               initableListIt.add(initable);
+               break;
+            }
          }
       }
    }

@@ -18,24 +18,36 @@ import org.oasis.datacore.rest.api.DatacoreApi;
  */
 public class UriHelper {
 
+   public static final String URL_SAFE_CHARACTERS_REGEX = "0-9a-zA-Z\\$\\-_\\.\\+!\\*'\\(\\)";
+   /** IRI rule, other characters must be encoded. NB. : are required for ex. prefixed field names */
+   public static final String NOT_URL_SAFE_PATH_SEGMENT_OR_SLASH_CHARACTERS_REGEX = "[^"
+         + URL_SAFE_CHARACTERS_REGEX + ":@~&,;=/]";
+   /** model name & type best practice rule, other characters are forbidden */
+   public static final String NOT_URL_ALWAYS_SAFE_OR_COLON_CHARACTERS_REGEX =
+         "[^0-9a-zA-Z\\$\\-_\\.\\(\\)\\:]"; // not reserved +!*, not '
+   
    public static int typeIndexInType = DatacoreApi.DC_TYPE_PATH.length() + 1; // TODO use Pattern & DC_TYPE_PATH
    
    /** to detect whether relative (rather than absolute) uri
     groups are delimited by () see http://stackoverflow.com/questions/6865377/java-regex-capture-group
     URI scheme : see http://stackoverflow.com/questions/3641722/valid-characters-for-uri-schemes */
-   private static Pattern anyBaseUrlPattern = Pattern.compile("^([a-zA-Z][a-zA-Z0-9\\.\\-\\+]*)://[^/]+/"); // TODO or "^http[s]?://data\\.oasis-eu\\.org/" ?
-   private static Pattern multiSlashPattern = Pattern.compile("/+");
+   private static final Pattern anyBaseUrlPattern = Pattern.compile("^([a-zA-Z][a-zA-Z0-9\\.\\-\\+]*)://[^/]+/"); // TODO or "^http[s]?://data\\.oasis-eu\\.org/" ?
+   private static final Pattern multiSlashPattern = Pattern.compile("/+");
+   private static final Pattern notUrlAlwaysSafeCharactersPattern = Pattern.compile(NOT_URL_ALWAYS_SAFE_OR_COLON_CHARACTERS_REGEX);
+   private static final Pattern notIriSafeCharactersPattern = Pattern.compile(NOT_URL_SAFE_PATH_SEGMENT_OR_SLASH_CHARACTERS_REGEX);
    
 
    /**
     * Only for client, not used by server. Does new DCURI(...).toString()
     * and also checks syntax & normalizes URL.
-    * @param containerUrl
-    * @param modelType
-    * @param iri
+    * @param containerUrl ex. http://data.oasis-eu.org/dc/type
+    * @param modelType must not contain URL_ALWAYS_SAFE_CHARACTERS (best practice)
+    * @param iri (NB. characters outside URL_SAFE_PATH_SEGMENT_CHARACTERS will be encoded)
     * @return
+    * @throws IllegalArgumentException if bad URI or bad practice modelType
     */
    public static String buildUri(String containerUrl, String modelType, String iri) {
+      checkModelType(modelType);
       String uri = new DCURI(containerUrl, modelType, iri, false, false, false).toString();
       try {
          // cannonicalize
@@ -46,6 +58,27 @@ public class UriHelper {
       }
    }
    
+   /**
+    * @param modelType must not contain URL_ALWAYS_SAFE_CHARACTERS (best practice)
+    * @throws IllegalArgumentException otherwise
+    */
+   public static void checkModelType(String modelType) {
+      if (notUrlAlwaysSafeCharactersPattern.matcher(modelType).find()) {
+         throw new IllegalArgumentException("Model type does not follow best practice rule "
+               + " of not containing URL always safe or colon characters i.e. "
+               + NOT_URL_ALWAYS_SAFE_OR_COLON_CHARACTERS_REGEX);
+      }
+   }
+   
+   /**
+    * @param iri
+    * @return whether has any characters outside URL_SAFE_PATH_SEGMENT_AND_SLASH_CHARACTERS
+    * (not forbidden, but have to be encoded)
+    */
+   public static boolean hasNoIriForbiddenCharacters(String iri) {
+      return notIriSafeCharactersPattern.matcher(iri).find();
+   }
+
    /**
     * Adapts the given URI (URL) to the given container.
     * In given (endpoint URL) URI, replaces container URL part by the given one.
@@ -101,11 +134,7 @@ public class UriHelper {
       return new DCURI(urlContainer, iri[0], iri[1], isRelativeUri, false, false);
    }
    /**
-    * Parses any URI, even external ; shortcut to parseUri(uri, null)
-    * @param uri
-    * @return
-    * @throws MalformedURLException
-    * @throws URISyntaxException
+    * Parses any URI, even external ; shortcut to parseUri(uri, null).
     */
    public static DCURI parseUri(String uri) throws MalformedURLException, URISyntaxException {
       return parseUri(uri, null);
@@ -114,9 +143,11 @@ public class UriHelper {
    /**
     * To be called after a previous getUriNormalizedContainerAndPathWithoutSlash
     * to complete URI parsing.
-    * @param containerUrl used to build parsed DCURI
-    * @param urlPathWithoutSlash
-    * @return
+    * @param urlPathWithoutSlash iri to parse (NB. characters outside
+    * URL_SAFE_PATH_SEGMENT_CHARACTERS will be decoded)
+    * @return an array with modelType and (decoded) id
+    * @throws IllegalArgumentException if bad practice modelType (contains characters
+    * other than URL_ALWAYS_SAFE_CHARACTERS)
     */
    public static String[] parseIri(String urlPathWithoutSlash) {
       int idSlashIndex = urlPathWithoutSlash.indexOf('/', typeIndexInType); // TODO use Pattern & DC_TYPE_PATH
@@ -124,6 +155,7 @@ public class UriHelper {
          return new String[] { null, urlPathWithoutSlash };
       }
       String modelType = urlPathWithoutSlash.substring(typeIndexInType, idSlashIndex);
+      checkModelType(modelType);
       String id = urlPathWithoutSlash.substring(idSlashIndex + 1); // TODO useful ??
       return new String[] { modelType, id };
    }
