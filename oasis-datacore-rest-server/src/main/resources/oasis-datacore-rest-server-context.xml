@@ -190,6 +190,9 @@
    </jaxrs:server>
    
    
+   <!-- Allows to resolve spring properties placeholders -->
+   <bean id="springPlaceholderResolver" class="org.oasis.datacore.rest.server.SpringPlaceholderResolver"/>
+   
    <!-- SWAGGER - this scans the classes for resources -->
    <bean id="swaggerConfig" class="com.wordnik.swagger.jaxrs.config.BeanConfig">
       <property name="resourcePackage" value="org.oasis.datacore.rest.api"/>
@@ -197,8 +200,12 @@
       <property name="basePath" value="${datacoreApiServer.baseUrl}"/>
       <property name="title" value="Datacore Resource API"/>
       <property name="description">
-         <bean class="org.apache.commons.io.IOUtils" factory-method="toString">
-            <constructor-arg value="classpath:swagger/dc/description.html" type="java.io.InputStream" />
+         <bean factory-bean="springPlaceholderResolver" factory-method="resolveEmbeddedValue">
+            <constructor-arg type="java.lang.String" >
+               <bean class="org.apache.commons.io.IOUtils" factory-method="toString">
+                  <constructor-arg value="classpath:swagger/dc/description.html" type="java.io.InputStream" />
+               </bean>
+            </constructor-arg>
          </bean>
       </property>
       <property name="contact" value="http://www.oasis-eu.org"/>

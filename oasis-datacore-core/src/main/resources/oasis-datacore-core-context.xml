@@ -24,6 +24,7 @@
 
    <!-- Default mongo bean name is 'mongo'
    TODO externalize conf, change it in tests & prod
+   NB. most of the mongo conf is done on client side !
    NB. no socket timeout because would NOT stop the query on the mongo server see #23 -->
    <mongo:mongo id="mongo" host="${oasis.datacore.mongodb.host}" port="${oasis.datacore.mongodb.port}">
       <mongo:options 
@@ -88,7 +89,7 @@
    NB. ReadPreference is not available here but on MongoTemplate -->
    <mongo:db-factory id="mongoDbFactory" dbname="${oasis.datacore.mongodb.dbname}"
       mongo-ref="mongo"
-      write-concern="#{T(com.mongodb.WriteConcern).ACKNOWLEDGED}"/><!-- which differs from string "ACKNOWEDLGED" WriteConcern
+      write-concern="#{T(com.mongodb.WriteConcern).ACKNOWLEDGED}" username="#{null}"/><!-- which differs from string "ACKNOWEDLGED" WriteConcern
       see http://stackoverflow.com/questions/17865270/error-handling-with-spring-data-and-mongo-java-driver -->
       <!-- TODO in prod (& test it),
       auth :

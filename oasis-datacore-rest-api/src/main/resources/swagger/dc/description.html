@@ -5,81 +5,7 @@
  TODO rather using templating (through JAXRS providers) ?? ex. handlebars.js like Atol,
  see https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/view/HandlebarsBodyWriter.java
  -->
- <script type="text/javascript">
-$(function() {
-   /*window.datacore = new SwaggerApi({ url: '/api-docs', success: function() {
-      // TODO display status
-   }};*/
-});
-function findDataByType(relativeUrl) {
-   var l = '/dc/type/'.length;
-   var tq = relativeUrl.substring(l);
-   var i = tq.indexOf('?');
-   window.t = i == -1 ? tq : tq.substring(0, i);
-   window.q = i == -1 ? '' : tq.substring(i + 1);
-   swaggerUi.api.dc.findDataInType({type:window.t, '#queryParameters':window.q,
-       Authorization:'Basic YWRtaW46YWRtaW4='}, function(data) {
-           var prettyJson = JSON.stringify(eval(data.content.data), null, '\t').replace(/\n/g, '<br>');
-           $('.mydata').html(prettyJson);
-        });
-   /*window.datacore = new SwaggerApi({ url: '/api-docs',
-      success: function() {
-         if(datacore.ready === true) {
-            datacore.apis.dc.findDataInType({type:window.t, '#queryParameters':window.q,
-            	   Authorization:'Basic YWRtaW46YWRtaW4='}, function(data) {
-               var prettyJson = JSON.stringify(eval(data.content.data), null, '\t').replace(/\n/g, '<br>');
-               $('.mydata').html(prettyJson);
-            });
-         }
-      }
-   });*/
-   return false;
-}
-function getData(relativeUrl) {
-   var l = '/dc/type/'.length;
-   var ti = relativeUrl.substring(l);
-   var i = ti.indexOf('/', l);
-   window.t = ti.substring(0, i);
-   window.iri = ti.substring(i + 1);
-   swaggerUi.api.dc.getData({type:window.t, iri:window.iri,
-	   'If-None-Match':-1, Authorization:'Basic YWRtaW46YWRtaW4='}, function(data) {
-           var prettyJson = JSON.stringify(eval('[' + data.content.data + ']'), null, '\t').replace(/\n/g, '<br>');
-           $('.mydata').html(prettyJson);
-        });
-   /*window.datacore = new SwaggerApi({ url: '/api-docs', success: function() {
-      if(datacore.ready === true) {
-         datacore.apis.dc.getData({type:window.t, iri:window.iri, 'If-None-Match':-1,
-            Authorization:'Basic YWRtaW46YWRtaW4='}, function(data) {
-               var prettyJson = JSON.stringify(eval('[' + data.content.data + ']'), null, '\t').replace(/\n/g, '<br>');
-               $('.mydata').html(prettyJson);
-            });
-         }
-      }
-   });*/
-   return false;
-}
-function findDataByTypeRdf(relativeUrl) {
-   var l = '/dc/type/'.length;
-   var tq = relativeUrl.substring(l);
-   var i = tq.indexOf('?');
-   window.t = i == -1 ? tq : tq.substring(0, i);
-   window.q = i == -1 ? '' : tq.substring(i + 1);
-   swaggerUi.api.dc.findDataInType({type:window.t, '#queryParameters':window.q,
-       Authorization:'Basic YWRtaW46YWRtaW4='}, {responseContentType:'text/x-nquads'}, function(data) {
-           var prettyText = data.content.data; $('.mydata').text(prettyText);
-        });
-   /*window.datacore = new SwaggerApi({ url: '/api-docs', success: function() {
-      if(datacore.ready === true) {
-         datacore.apis.dc.findDataInType({type:window.t, '#queryParameters':window.q,
-            Authorization:'Basic YWRtaW46YWRtaW4='}, {responseContentType:'text/x-nquads'}, function(data) {
-               var prettyText = data.content.data; $('.mydata').text(prettyText);
-            });
-         }
-      }
-   });*/
-   return false;
-}
- </script>
+ 
 Allows to manage (CRUD) and find Data Resources and their Models.
 <br/><br/>
 &nbsp;&nbsp;- <b>Data Resources</b> are handled in <a href="http://json-ld.org/">JSON-LD</a>-like 
@@ -90,87 +16,89 @@ playground</a>) and with <b>W3C LDP</b> (Linked Data Platform, see
 future collection filtering (<a href="http://www.w3.org/2012/ldp/wiki/LDPNext">1</a>, 
 <a href="http://lists.w3.org/Archives/Public/public-ldp-wg/2012Dec/0030.html">2</a>)
 -inspired finders etc.). <b>Have a look at existing Resources, at</b> 
-<a href="/dc/type/!pli:city_0" onMouseOver="this.style.backgroundColor='#FFFE55'" onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+<a href="/dc/type/pli:city_0" class="dclink" onclick="
 javascript:return findDataByType($(this).attr('href'));
-">/dc/type/!pli:city_0</a> for instance for resources in the 
-<span style="font-family: Consolas,'Liberation Mono',Menlo,Courier,monospace; background-color: #f8f8f8; border: 1px solid #ddd; border-radius: 3px;">
-!pli:city_0</span> Model type (which is the version 0 of the !pli:city Model). 
+">/dc/type/pli:city_0</a> for instance for resources in the 
+<span class="dcjsonline">
+pli:city_0</span> Model type (which is the version 0 of the pli:city Model). 
 In addition to the simpler default native pure JSON format, "true" JSON-LD formats and semantic web formats (such as 
 <a href="http://en.wikipedia.org/wiki/Resource_Description_Framework">RDF</a>, see 
-<a href="/dc/type/!pli:city_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+<a href="/dc/type/pli:city_0" class="dclink" onclick="
 javascript:return findDataByTypeRdf($(this).attr('href'));
 ">example</a>) are available. 
 <br/><br/>
 &nbsp;&nbsp;- <b>Data Models</b> describe what kinds of Data Resources are allowed in a 
 <a href="http://json-schema.org/">JSON Schema</a>-like format (see 
 <a href="http://jsonschema.net/">jsonschema.net playground</a>) with 
-<span style="font-family: Consolas,'Liberation Mono',Menlo,Courier,monospace; background-color: #f8f8f8; border: 1px solid #ddd; border-radius: 3px;">
+<span class="dcjsonline">
 string, boolean, int, float, long, double, date, map, list, i18n, resource
 </span> fields grouped in reusable <b>Mixin</b> types. 
-<b>Have a look at known Models at</b> <a href="/dc/type/dcmo:model_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+<b>Have a look at known Models at</b> <a href="/dc/type/dcmo:model_0" class="dclink" onclick="
 javascript:return findDataByType($(this).attr('href'));
-">/dc/type/dcmo:model_0</a> and Mixins at <a href="/dc/type/dcmi:mixin_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+">/dc/type/dcmo:model_0</a> and Mixins at <a href="/dc/type/dcmi:mixin_0" class="dclink" onclick="
 javascript:return findDataByType($(this).attr('href'));
 ">/dc/type/dcmi:mixin_0</a> (<b>beta</b>, see full Model definitions at <u>/dc/model</u>), 
 in their own metamodel where they may be queried as Resources. 
 This allows to know in which Model types a given kind of Resources can be queried, for instance :
 <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <a href="/dc/type/dcmo:model_0?dcmo:globalMixins=!pl:place_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <a href="/dc/type/dcmo:model_0?dcmo:globalMixins=pl:place_0" class="dclink" onclick="
 javascript:return findDataByType($(this).attr('href'));
-">dcmo:globalMixins=!pl:place_0</a> : lists Models that describe a location i.e. have a pl:shape WKS point, 
+">dcmo:globalMixins=pl:place_0</a> : lists Models that describe a location i.e. have a pl:shape WKS point, 
 such as : 
-<a href="/dc/type/dcmo:model_0/!co:company_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+<a href="/dc/type/dcmo:model_0/co:company_0" class="dclink" onclick="
 javascript:return getData($(this).attr('href'));
-">!co:company_0</a>, 
+">co:company_0</a>, 
 whose WKS can then be retrieved, for instance by 
-GET <a href="/dc/type/!co:company_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+GET <a href="/dc/type/co:company_0" class="dclink" onclick="
 javascript:return findDataByType($(this).attr('href'));
-">/dc/type/!co:company_0</a> .
+">/dc/type/co:company_0</a> .
 <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <a href="/dc/type/dcmo:model_0?dcmo:globalFields.dcmf:name=!plo:name" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <a href="/dc/type/dcmo:model_0?dcmo:globalFields.dcmf:name=plo:name" class="dclink" onclick="
 javascript:return findDataByType($(this).attr('href'));
-">dcmo:globalFields.dcmf:name=!plo:name</a> : lists Models that "officially" have a country 
+">dcmo:globalFields.dcmf:name=plo:name</a> : lists Models that "officially" have a country 
 (i.e. having the "official" field for a country in OASIS Datacore), and that can therefore be queried on that, 
 such as : 
-<a href="/dc/type/dcmo:model_0/!plo:country_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+<a href="/dc/type/dcmo:model_0/plo:country_0" class="dclink" onclick="
 javascript:return getData($(this).attr('href'));
-">!plo:country_0</a>, 
-<a href="/dc/type/dcmo:model_0/!pli:city_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+">plo:country_0</a>, 
+<a href="/dc/type/dcmo:model_0/pli:city_0" class="dclink" onclick="
 javascript:return getData($(this).attr('href'));
-">!pli:city_0</a>, 
-<a href="/dc/type/dcmo:model_0/!co:company_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+">pli:city_0</a>, 
+<a href="/dc/type/dcmo:model_0/co:company_0" class="dclink" onclick="
 javascript:return getData($(this).attr('href'));
-">!co:company_0</a>, 
-<a href="/dc/type/dcmo:model_0/!cityareauseit:urbanAreaDestinationOfUse_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+">co:company_0</a>, 
+<a href="/dc/type/dcmo:model_0/cityareauseit:urbanAreaDestinationOfUse_0" class="dclink" onclick="
 javascript:return getData($(this).attr('href'));
-">!cityareauseit:urbanAreaDestinationOfUse_0</a>, 
-<a href="/dc/type/dcmo:model_0/!cityarea:cityArea_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+">cityareauseit:urbanAreaDestinationOfUse_0</a>, 
+<a href="/dc/type/dcmo:model_0/cityarea:cityArea_0" class="dclink" onclick="
 javascript:return getData($(this).attr('href'));
-">!cityarea:cityArea_0</a> , 
+">cityarea:cityArea_0</a> , 
 which can then be queried by country, for instance by 
-GET <a href="/dc/type/!plo:country_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+GET <a href="/dc/type/plo:country_0" class="dclink" onclick="
 javascript:return findDataByType($(this).attr('href'));
-">/dc/type/!plo:country_0</a>, 
-GET <a href="/dc/type/!pli:city_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+">/dc/type/plo:country_0</a>, 
+GET <a href="/dc/type/pli:city_0" class="dclink" onclick="
 javascript:return findDataByType($(this).attr('href'));
-">/dc/type/!pli:city_0</a>, 
-GET <a href="/dc/type/!co:company_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+">/dc/type/pli:city_0</a>, 
+GET <a href="/dc/type/co:company_0" class="dclink" onclick="
 javascript:return findDataByType($(this).attr('href'));
-">/dc/type/!co:company_0</a>, 
-GET <a href="/dc/type/!cityareauseit:urbanAreaDestinationOfUse_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+">/dc/type/co:company_0</a>, 
+GET <a href="/dc/type/cityareauseit:urbanAreaDestinationOfUse_0" class="dclink" onclick="
 javascript:return findDataByType($(this).attr('href'));
-">/dc/type/!cityareauseit:urbanAreaDestinationOfUse_0</a> 
-and GET <a href="/dc/type/!cityarea:cityArea_0" onMouseOver="this.style.backgroundColor='#FFFE55'"onMouseOut="this.style.backgroundColor='#fdf5cc'" style="background-color:#fdf5cc; border-radius:6px; border:1px solid #777777; padding:0px 4px;" onclick="
+">/dc/type/cityareauseit:urbanAreaDestinationOfUse_0</a> 
+and GET <a href="/dc/type/cityarea:cityArea_0" class="dclink" onclick="
 javascript:return findDataByType($(this).attr('href'));
-">/dc/type/!cityarea:cityArea_0</a>.
+">/dc/type/cityarea:cityArea_0</a>.
 <br/><br/>
 <a href="https://github.com/pole-numerique/oasis-datacore/wiki">See wiki</a> for further 
 examples, FAQ, how to & common use cases, cookbook (writing clients...) and full documentation.
 <br/><br/>
 <p>
-<button onclick="javascript:document.getElementById('mydata').innerHTML = ''">reset</button><br/>
+<span class="json dcjsonline">GET http://data.oasis-eu.org<input type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 550px"></span>
+<button onclick="javascript:return findData($('.myurl').val());">go</button>
+<button onclick="javascript:return setUrl('');">reset</button><br/>
 <div class="block response_body">
-<pre class="json" style="font-family: Consolas,'Liberation Mono',Menlo,Courier,monospace; background-color: #f8f8f8; border: 1px solid #ddd; border-radius: 3px; max-height: 400px; overflow-y: auto;"><code id="mydata" class="mydata"></code></pre>
+<pre class="json dcjsonarea"><code id="mydata" class="mydata"></code></pre>
 </div>
 </p>
 <p></p>
@@ -180,11 +108,23 @@ examples, FAQ, how to & common use cases, cookbook (writing clients...) and full
 and for container URL <a href="${datacoreApiServer.containerUrl}">${datacoreApiServer.containerUrl}</a> 
 (URL that must be used to build Datacore Data resource URIs).
 <br/><br/>
-<b>URIs</b> of Datacore Data resource are in the form $containerUrl/dc/type/$type/$iri, where 
+<b>URIs</b> that uniquely identify Datacore Data resource are in the form
+<span class="dcjsonline">$containerUrl/dc/type/$type/$iri</span>, where 
 $containerUrl is unique for a container (ex. http://data.oasis-eu.org), $type is 
 among available model types and $iri is the resource's Internal Resource Identifier (IRI). 
-IRIs have 3 constraints : they must be valid URL endings, unique (not enforced yet), 
+<br/><br/>
+&nbsp;&nbsp;- IRIs have 3 constraints : they must be valid URL endings, unique (not enforced yet), 
 and if possible readable and representative of the resource.
+<br/><br/>
+&nbsp;&nbsp;- URIs must be <a href="http://perishablepress.com/stop-using-unsafe-characters-in-urls/">
+valid URLs</a> i.e. non safe characters (beyond <span class="dcjsonline">[0-9a-zA-Z]$-_.+!*'()</span>
+including reserved characters <span class="dcjsonline">$&+,/:;=?@</span>
+<a href="http://blog.lunatech.com/2009/02/03/what-every-web-developer-must-know-about-url-encoding">
+outside of their purpose</a> such as '?' within <span class="dcjsonline">$type</span>)
+must be encoded, and it's bad practice for model names to contain some.<br/><br/>
+&nbsp;&nbsp;- URIs of embedded Resources (as sub Resource within another top level Resource)
+are by default <span class="dcjsonline">$containerUrl/dc/type/$subResourceType/$resourceIri/$subResourceJsonPath</span>,
+but can be something else if parsing is defined consistently within $subResourceType.
 <br/><br/>
 Using operations where type of data is provided in URL usually improves performances : 
 '*inType' methods are faster, finder queries with type even more.
@@ -209,3 +149,20 @@ for a few users without password, see available ones in
 configuration</a>.
 <br/>&nbsp;&nbsp;- Datacore API's Swagger UI allows to provide said Authorization header, 
 with a default value that logs as admin in dev mode.
+<br/><br/>
+<strong>Server configuration:</strong>
+<pre><code>
+## Other (or all) known Datacores (comma-separated container URLs)
+datacoreApiServer.knownDatacoreContainerUrls=${datacoreApiServer.knownDatacoreContainerUrls}
+
+## Query :
+## default maximum number of documents to scan when fulfilling a query, overriden by
+## DCFields', themselves limited by DCModel's. 0 means no limit (for tests), else ex.
+## 1000 (secure default), 100000 (on query-only nodes using secondary & timeout)... 
+## http://docs.mongodb.org/manual/reference/operator/meta/maxScan/
+datacoreApiServer.query.maxScan=${datacoreApiServer.query.maxScan}
+## default maximum start position
+datacoreApiServer.query.maxStart=${datacoreApiServer.query.maxStart}
+## default maximum number of documents returned
+datacoreApiServer.query.maxLimit=${datacoreApiServer.query.maxLimit}
+</code></pre>

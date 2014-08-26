@@ -1,0 +1,24 @@
+a.dclink {
+   background-color:#fdf5cc;
+   border-radius:6px;
+   border:1px solid #777777;
+   padding:0px 4px;
+}
+a.dclink:hover {
+   background-color:#FFFE55;
+}
+/* needs to override .swagger-ui-wrap on pre code */
+.swagger-ui-wrap .dcjsonarea {
+   font-family: Consolas,'Liberation Mono',Menlo,Courier,monospace;
+   background-color: #f8f8f8;
+   border: 1px solid #ddd;
+   border-radius: 3px;
+   max-height: 400px;
+   overflow-y: auto;
+}
+.dcjsonline {
+	font-family: Consolas,'Liberation Mono',Menlo,Courier,monospace;
+	background-color: #f8f8f8;
+	border: 1px solid #ddd;
+	border-radius: 3px;
+}
