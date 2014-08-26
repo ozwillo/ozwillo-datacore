@@ -133,13 +133,18 @@ public class UriService {
       String[] iri = UriHelper.parseIri(urlPathWithoutSlash/*, refModel*/); // TODO LATER cached model ref ?! what for ?
       String uriType = iri[0];
       if (modelType != null) {
-         if (!modelType.equals(uriType)) {
+         if (uriType == null) {
+            uriType = modelType;
+         } else if (!modelType.equals(uriType)) {
             //if (!modelService.hasType(refEntity, ((DCResourceField) dcField).getTypeConstraints())) {
             throw new BadUriException("URI resource model type " + uriType
                   + " does not match provided expected one " + modelType, stringUri);
          }
+      } else if (uriType == null) {
+         throw new BadUriException("At least one of expected or provided URI "
+               + "resource model type must be provided", stringUri);
       }
-      return new DCURI(urlContainer, iri[0], iri[1], isRelativeUri, isExternalDatacoreUri, false);
+      return new DCURI(urlContainer, uriType, iri[1], isRelativeUri, isExternalDatacoreUri, false);
    }
    
 }

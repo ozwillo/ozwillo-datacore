@@ -58,9 +58,13 @@ public abstract class DCModelBase {
       return globalMixinMap;
    }
    /** computed cache ; TODO LATER trigger reset, handle Model version (upgrade) */
-   public Set<String> getGlobalMixinNameSet() {
+   public Set<String> getGlobalMixinNames() {
       checkGlobalCaches();
       return globalMixinMap.keySet();
+   }
+   public Collection<DCModelBase> getGlobalMixins() {
+      checkGlobalCaches();
+      return globalMixinMap.values();
    }
    /** computed cache ; TODO LATER trigger reset, handle Model version (upgrade) */
    public Map<String, DCField> getGlobalFieldMap() {
@@ -70,7 +74,7 @@ public abstract class DCModelBase {
 
    /** works on computed cache ; TODO LATER trigger reset, handle Model version (upgrade) */
    public boolean hasMixin(String name) {
-      return this.getGlobalMixinNameSet().contains(name);
+      return this.getGlobalMixinNames().contains(name);
    }
    /** works on computed cache ; TODO LATER trigger reset, handle Model version (upgrade) */
    public DCField getGlobalField(String name) {

@@ -34,6 +34,21 @@ import org.springframework.data.mongodb.core.mapping.Field;
 public class DCEntity implements Comparable<DCEntity>, Serializable {
    private static final long serialVersionUID = -6529766074319438866L;
 
+   public static final String KEY_URI = "_uri";
+   public static final String KEY_V = "_v";
+   public static final String KEY_T = "_t";
+   public static final String KEY_P = "_p";
+
+   public static final String KEY_AR = "_ar";
+   public static final String KEY_R = "_r";
+   public static final String KEY_W = "_w";
+   public static final String KEY_O = "_o";
+
+   public static final String KEY_CR_AT = "_crAt";
+   public static final String KEY_CR_BY = "_crBy";
+   public static final String KEY_CH_AT = "_chAt";
+   public static final String KEY_CH_BY = "_chBy";
+
    protected final static Logger LOG = LoggerFactory.getLogger(DCEntity.class
          .getCanonicalName());
 
@@ -47,17 +62,17 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    private String id; // TODO or ObjectId ??
    /** for optimistic locking */
    @Version
-   @Field("_v")
+   @Field(KEY_V)
    private Long version;
    @Indexed(unique = true) // NB. created in DatacoreSampleBase since Spring not in a single collection
    //@Id
-   @Field("_uri")
+   @Field(KEY_URI)
    private String uri; // TODO Q not obligatory if embedded ? or then only sub-uri ??
    // TODO Q also rdf:type, because collection = use case != rdf:type ? or even several types ???
    /** TODO Q OR NOT because stays the same in a collection (see query uses) ?? (not indexed for the same reason)
     * and only @Transient and filled by service / dao or lifecycle event ??
     * TODO LATER rather direct reference filled etc. ? */
-   @Field("_mdln") // TODO _t ?
+   @Field("_mdln") // TODO _t ? or it is rather the source / branch / responsible owner ??
    private String modelName;
    /*@Transient
    private DCResourceModel model;*/ // TODO have a transient reference to model in entity ?? fill it in lifecycle event ??? AND / OR baseType ?
@@ -66,7 +81,7 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
     * TODO Q rather _ts, _a, _m ?? or only as key of submap ?!?
     * TODO LATER rather direct references filled etc. ?
     */
-   @Field("_t")
+   @Field(KEY_T)
    // TODO index if used to discriminate ex. polymorphism
    private List<String> types;
 
@@ -74,13 +89,13 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    // http://maciejwalkowiak.pl/blog/2013/05/24/auditing-entities-in-spring-data-mongodb/
    // timestamps : TODO required ?
    @CreatedDate
-   @Field("_crAt")
+   @Field(KEY_CR_AT)
    // TODO Q index ?
    private DateTime created;
    // keep names short
    // http://stackoverflow.com/questions/5916080/what-are-naming-conventions-for-mongodb
    @LastModifiedDate
-   @Field("_chAt")
+   @Field(KEY_CH_AT)
    @Indexed // NB. created in DatacoreSampleBase since Spring not in a single collection
    private DateTime lastModified;
 
@@ -91,19 +106,19 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
     * .blogspot.fr/2013/03/part-2-persistence-layer-with-mongo-db.html
     */
    @CreatedBy
-   @Field("_crBy")
+   @Field(KEY_CR_BY)
    private String createdBy;
    // keep names short
    // http://stackoverflow.com/questions/5916080/what-are-naming-conventions-for-mongodb
    @LastModifiedBy
-   @Field("_chBy")
+   @Field(KEY_CH_BY)
    // TODO Q index ?
    private String lastModifiedBy;
    
    /** TODO Q rather store properties at root (using lifecycle event) ?
     * not really required for storage efficiency if renamed "_p", TODO Q maybe index size ??
     * TODO dates are loaded as Date and not Joda DateTime */
-   @Field("_p")
+   @Field(KEY_P)
    private Map<String,Object> properties;
    //private Map<String,DCEntityValueBase> properties;
    //private ArrayList<HashMap<String,Object>> propertiesList; // TODO OPT alternate value properties ?
@@ -129,17 +144,17 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
     * his read permission or if he also independently had a read permission.
     * Alternative : allow several same values by storing as list, but there is still
     * as much requiring to be stored. */
-   @Field("_ar")
+   @Field(KEY_AR)
    @Indexed // NB. created in DatacoreSampleBase since Spring not in a single collection
    private Set<String> allReaders;
    /** ONLY REQUIRED IF MASS W & O OPERATIONS but otherwise still need to be stored somewhere */
-   @Field("_r")
+   @Field(KEY_R)
    private Set<String> readers;
    /** ONLY REQUIRED IF MASS W & O OPERATIONS but otherwise still need to be stored somewhere */
-   @Field("_w")
+   @Field(KEY_W)
    private Set<String> writers;
    /** ONLY REQUIRED IF MASS W & O OPERATIONS but otherwise still need to be stored somewhere */
-   @Field("_o")
+   @Field(KEY_O)
    // For now NOT indexed, "my documents" has to be found using business / modeled DCFields
    private Set<String> owners;
    

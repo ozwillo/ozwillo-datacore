@@ -54,9 +54,12 @@ public class CityCountrySample extends DatacoreSampleBase {
       cityModel.addField(new DCI18nField("i18n:name", 100));
       // more complete Resource sample (may be used also as embedded referenced Resource) :
       cityModel.addField(new DCListField("city:pointsOfInterest",
-            new DCResourceField("zzz", POI_MODEL_NAME))); // TODO
+            new DCResourceField("zzz", POI_MODEL_NAME))); // sample of
+      // embedded referencing Resource (city:pointsOfInterest) using POI model :
+      // numéro de version, uri atteignable
+      // BUT BEWARE may not be up to date (see version) nor complete (TODO mixins deriving from models i.e. less fields BUT with same uri i.e. vue)
 
-      // embedded Resource (map mixin) sample :
+      // embedded Resource (map mixin) sample : pas de numéro de version, uri pas utilisable
       DCMixin cityLegalInfoMixin = new DCMixin(CITYLEGALINFO_MIXIN_NAME);
       cityLegalInfoMixin.addField(new DCField("cityli:legalInfo1", "string"));
       cityLegalInfoMixin.addField(new DCField("cityli:legalInfo2", "string"));

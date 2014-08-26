@@ -177,7 +177,7 @@ public class ResourceService {
       resourceTypes.clear(); /// TODO else re-added
       if (/*resourceTypes.isEmpty()*/true) { // NB. can't be null ; TODO or always ?? because in DCResource.create()...
          resourceTypes.add(modelType);
-         resourceTypes.addAll(dcModel.getGlobalMixinNameSet());
+         resourceTypes.addAll(dcModel.getGlobalMixinNames());
       } // else TODO better add missing ones, or allow them if optional...
       // pre parse hooks (before parsing, to give them a chance to still patch resource ex. auto set uri & id / iri)
       // TODO better as 2nd pass / within parsing ?? or rather on entity ????
@@ -247,7 +247,7 @@ public class ResourceService {
       //resourceParsingContext.setEmbeddedEntitiesToAlsoUpdate(embeddedEntitiesToAlsoUpdate);
       resourceEntityMapperService.resourceToEntityFields(dataProps, dataEntity.getProperties(),
             dcModel.getGlobalFieldMap(), resourceParsingContext,
-            putRatherThanPatchMode); // TODO dcModel.getFieldNames(), abstract DCModel-DCMapField ??
+            putRatherThanPatchMode, true); // TODO dcModel.getFieldNames(), abstract DCModel-DCMapField ??
       
       if (resourceParsingContext.hasErrors()) {
          String msg = DCResourceParsingContext.formatParsingErrorsMessage(resourceParsingContext, detailedErrorsMode);

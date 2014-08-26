@@ -83,6 +83,10 @@ public class DCQueryParsingContext extends DCResourceParsingContext {
    }
 
    
+   /**
+    * 
+    * @param sortEnum if null, does nothing
+    */
    public void addSort(QueryOperatorsEnum sortEnum) {
       if (sortEnum != null) {
          switch (sortEnum) {

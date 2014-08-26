@@ -54,8 +54,8 @@ public class DCContributionModel extends DCModel {
 		return delegate.getGlobalMixinMap();
 	}
 
-	public Set<String> getGlobalMixinNameSet() {
-		return delegate.getGlobalMixinNameSet();
+	public Set<String> getGlobalMixinNames() {
+		return delegate.getGlobalMixinNames();
 	}
 
 	public Map<String, DCField> getGlobalFieldMap() {

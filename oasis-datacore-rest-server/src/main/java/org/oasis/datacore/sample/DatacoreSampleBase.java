@@ -8,15 +8,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.PostConstruct;
 import javax.ws.rs.WebApplicationException;
 
 import org.oasis.datacore.contribution.service.ContributionService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
-import org.oasis.datacore.core.init.InitService;
-import org.oasis.datacore.core.init.Initable;
+import org.oasis.datacore.core.init.InitableBase;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
@@ -66,13 +64,10 @@ import com.mongodb.DBCollection;
  * @author mdutoo
  *
  */
-public abstract class DatacoreSampleBase implements Initable/*implements ApplicationListener<ContextRefreshedEvent> */{
+public abstract class DatacoreSampleBase extends InitableBase/*implements ApplicationListener<ContextRefreshedEvent> */{
 
    private static final Logger logger = LoggerFactory.getLogger(DatacoreSampleBase.class);
    
-   @Autowired
-   private InitService initService;
-
    @Autowired
    protected MockAuthenticationService mockAuthenticationService;
 
@@ -125,11 +120,6 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
    public int getOrder() {
       return 1000;
    }
-
-   @PostConstruct
-   public void register() {
-      initService.register(this);
-   }
    
    /*@Override
    public void onApplicationEvent(ContextRefreshedEvent event) {
@@ -137,7 +127,7 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
    }*/
    //@PostConstruct // NOO deadlock, & same for ApplicationContextAware
    @Override
-   public void init() {
+   protected void doInit() {
       mockAuthenticationService.loginAs("admin");
       try {
          List<DCModelBase> modelsToCreate = new ArrayList<DCModelBase>();
@@ -464,12 +454,12 @@ public abstract class DatacoreSampleBase implements Initable/*implements Applica
       }
       
       // generating static indexes
-      coll.ensureIndex(new BasicDBObject("_uri", 1), null, true);
-      coll.ensureIndex(new BasicDBObject("_ar", 1)); // for query security
-      coll.ensureIndex(new BasicDBObject("_chAt", 1)); // for default order
+      coll.ensureIndex(new BasicDBObject(DCEntity.KEY_URI, 1), null, true);
+      coll.ensureIndex(new BasicDBObject(DCEntity.KEY_AR, 1)); // for query security
+      coll.ensureIndex(new BasicDBObject(DCEntity.KEY_CH_AT, 1)); // for default order
       
       // generating field indices
-      ensureFieldIndices(coll, "_p.", model.getGlobalFieldMap().values());
+      ensureFieldIndices(coll, DCEntity.KEY_P + ".", model.getGlobalFieldMap().values());
       
       return collectionAlreadyExists;
    }

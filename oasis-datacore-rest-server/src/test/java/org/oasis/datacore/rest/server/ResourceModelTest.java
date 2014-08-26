@@ -110,11 +110,11 @@ public class ResourceModelTest {
       Assert.assertTrue(mixins != null && !mixins.isEmpty());
 
       List<DCResource> arePlaceModels = datacoreApiClient.findDataInType("dcmo:model_0",
-            new QueryParameters().add("dcmo:globalMixins", "!pl:place_0"), null, 10);
+            new QueryParameters().add("dcmo:globalMixins", "pl:place_0"), null, 10);
       Assert.assertTrue(arePlaceModels != null && !arePlaceModels.isEmpty());
 
       List<DCResource> haveCountryModels = datacoreApiClient.findDataInType("dcmo:model_0",
-            new QueryParameters().add("dcmo:globalFields.dcmf:name", "!plo:name"), null, 10);
+            new QueryParameters().add("dcmo:globalFields.dcmf:name", "plo:name"), null, 10);
       Assert.assertTrue(haveCountryModels != null && !haveCountryModels.isEmpty());
       
       /*

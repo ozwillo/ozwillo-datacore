@@ -45,9 +45,10 @@ public class ResourceEntityMapperService {
    private static Set<String> resourceNativeJavaFields = new HashSet<String>();
    static {
       // TODO rather using Enum, see BSON$RegexFlag
-      resourceNativeJavaFields.add("uri");
-      resourceNativeJavaFields.add("version");
-      resourceNativeJavaFields.add("types");
+      resourceNativeJavaFields.add(DCResource.KEY_URI);
+      resourceNativeJavaFields.add(DCResource.KEY_VERSION);
+      resourceNativeJavaFields.add(DCResource.KEY_TYPES);
+      // (at top level) computed ones :
       resourceNativeJavaFields.add("created");
       resourceNativeJavaFields.add("lastModified");
       resourceNativeJavaFields.add("createdBy");
@@ -180,7 +181,7 @@ public class ResourceEntityMapperService {
          Map<String, Object> dataMap = (Map<String,Object>) resourceValue;
          HashMap<String, Object> entityMap = new HashMap<String,Object>(dataMap.size());
          resourceToEntityFields(dataMap, entityMap, ((DCMapField) dcField).getMapFields(),
-               resourceParsingContext, putRatherThanPatchMode);
+               resourceParsingContext, putRatherThanPatchMode, false);
          entityValue = entityMap;
          
       } else if ("list".equals(dcField.getType())) {
@@ -503,10 +504,6 @@ public class ResourceEntityMapperService {
       // parse other fields :
       // TODO for what use, multiple update or even creation (rather flattened ?) ?? constraints ???
       // TODO do it later to allow all-encompassing transaction ???
-      // clean by removing native fields : (TODO or clone first, ex. if immutable ??)
-      for (String resourceNativeJavaField : resourceNativeJavaFields) {
-         dataMap.remove(resourceNativeJavaField);
-      }
 
       HashMap<String, Object> entityMap = new HashMap<String,Object>(dataMap.size());
       entityMap.put(DCResource.KEY_TYPES, entityValueTypes);
@@ -516,8 +513,12 @@ public class ResourceEntityMapperService {
       if (entityValueVersion != null) {
          entityMap.put(DCResource.KEY_VERSION, entityValueVersion);
       }
+      // TODO also handle other native fields (ex. copy computed ones ex. created) ??
+      // NOT FOR NOW hard to copy computed ones after save...
+      
+      // checking values against expected sub Model :
       resourceToEntityFields(dataMap, entityMap, valueModelOrMixin.getGlobalFieldMap(),
-            resourceParsingContext, putRatherThanPatchMode);
+            resourceParsingContext, putRatherThanPatchMode, false);
       return entityMap;
       
       /*resourceToEntityFields(dataMap, entityEntityValue.getProperties(),
@@ -607,7 +608,7 @@ public class ResourceEntityMapperService {
          Map<String, Object> entityMap, Map<String, DCField> mapFields,
          // TODO mapFieldNames ; orderedMap ? abstract Field-Model ??
          DCResourceParsingContext resourceParsingContext,
-         boolean putRatherThanPatchMode) {
+         boolean putRatherThanPatchMode, boolean isTopLevel) {
       
       // gathering required fields :
       // TODO DCFields, cache & for mixins
@@ -621,7 +622,12 @@ public class ResourceEntityMapperService {
       
       // handling each value :
       for (String key : resourceMap.keySet()) {
-         if (!mapFields.containsKey(key)) {
+         if (!isTopLevel && resourceNativeJavaFields.contains(key)) {
+            // skip native fields in subResource case :
+            // (they are handled above at top or in subResourceXXX())
+            continue;
+            
+         } else if (!mapFields.containsKey(key)) {
             resourceParsingContext.addError("Unknown field " + key);
             continue;
          }

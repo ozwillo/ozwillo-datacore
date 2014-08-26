@@ -30,10 +30,10 @@ import org.springframework.stereotype.Component;
 public class IgnCityhallSample extends DatacoreSampleBase {
 
    // .bdparcellaire
-   public static final String IGN_COMMUNE = "ign.commune";
-   public static final String IGN_DEPARTEMENT = "ign.departement";
-   public static final String IGN_CANTON = "ign.canton";
-   public static final String IGN_ARRONDISSEMENT = "ign.arrondissement";
+   public static final String IGN_COMMUNE = "ign.commune"; // SCH OUI ET COMCOM
+   public static final String IGN_DEPARTEMENT = "ign.departement"; // SCH OUI
+   public static final String IGN_CANTON = "ign.canton"; // SCH NON
+   public static final String IGN_ARRONDISSEMENT = "ign.arrondissement"; // SCH NON
    public static final String IGN_DIVISION = "ign.division"; // Cadastrale
    public static final String IGN_LOCALISANT = "ign.localisant"; // Parcellaire
    public static final String IGN_PARCELLE = "ign.parcelle";

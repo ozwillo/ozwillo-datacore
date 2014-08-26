@@ -806,9 +806,10 @@ public class DatacoreApiServerTest {
       // should not fail : query has no non indexed field
       Assert.assertEquals(2, resources.size());
       // limiting maxScan to less than document nb :
-      ldpEntityQueryServiceImpl.setMaxScan(1);
+      ldpEntityQueryServiceImpl.setMaxScan(1
+            *2); // must handle default sort on _chAt
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-            new QueryParameters(), null, null);
+            new QueryParameters().add("debug", "true"), null, null);
       // should not fail : query has no non indexed field
       Assert.assertEquals(1, resources.size());
 
@@ -817,7 +818,8 @@ public class DatacoreApiServerTest {
       try {
          // unquoted equals (empty)
          resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-               new QueryParameters().add("city:founded", nonExistingFoundedDate), null, 10);
+               new QueryParameters().add("city:founded", nonExistingFoundedDate
+                     + "+"), null, 10); // adding sort to remove default sort on _chAt
          //Assert.assertEquals(0, resources.size());
          //Assert.assertEquals(postedBordeauxCityData.getUri(), resources.get(0).getUri());
          Assert.fail("Should have raised exception because query on non indexed field reached "
@@ -837,19 +839,31 @@ public class DatacoreApiServerTest {
       datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "France"));
       DCResource bordeauxCityData = datacoreApiClient.postDataInType(buildCityData("Bordeaux", "France", 10000000, false));
 
-      // requiring index
-      ldpEntityQueryServiceImpl.setMaxScan(1);
-
       // unquoted equals (empty)
-      List<DCResource> resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-            new QueryParameters().add("_uri", londonCityData.getUri()), null, 10);
+      List<DCResource> explainResult = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add(DCResource.KEY_URI,  ">=" + londonCityData.getUri()
+                  + "+") // adding sort in >= operator to remove default sort on _chAt
+            .add("debug", "true"), null, 10);
+      @SuppressWarnings("unchecked")
+      Map<String, String> explain = (Map<String,String>) explainResult.get(0).get("explain");
+      Assert.assertTrue(((String) explain.get("cursor")).startsWith("BtreeCursor _uri_1"));
+      @SuppressWarnings("unchecked")
+      List<Map<String, Object>> resources = (List<Map<String,Object>>) explainResult.get(0).get("results");
       Assert.assertEquals(1, resources.size());
-      Assert.assertEquals(londonCityData.getUri(), resources.get(0).getUri());
+      Assert.assertEquals(londonCityData.getUri(), resources.get(0).get(DCResource.KEY_URI));
       
-      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-            new QueryParameters().add("_uri", bordeauxCityData.getUri()), null, 10);
-      Assert.assertEquals(1, resources.size());
-      Assert.assertEquals(bordeauxCityData.getUri(), resources.get(0).getUri());
+      explainResult = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add(DCResource.KEY_DCMODIFIED, bordeauxCityData.getLastModified().toString())
+            // NB. there is a sort on _chAt by default !
+            .add("debug", "true"), null, 10);
+      @SuppressWarnings("unchecked")
+      Map<String, String> explain2 = (Map<String,String>) explainResult.get(0).get("explain");
+      Assert.assertTrue(((String) explain2.get("cursor")).startsWith("BtreeCursor _chAt"));
+      @SuppressWarnings("unchecked")
+      List<Map<String, Object>> resources2 = (List<Map<String,Object>>) explainResult.get(0).get("results");
+      Assert.assertEquals(1, resources2.size());
+      Assert.assertEquals(bordeauxCityData.getLastModified(),
+            ResourceParsingHelper.parseDate((String) resources2.get(0).get(DCResource.KEY_DCMODIFIED)));
    }
    
    @Test
@@ -875,7 +889,8 @@ public class DatacoreApiServerTest {
       /*
        * i18n, looking up in any language
        */
-      QueryParameters params = new QueryParameters().add("i18n:name.v", "Moscow");
+      QueryParameters params = new QueryParameters().add("i18n:name.v", "Moscow")
+            .add("i18n:name.v", "+"); // to override default sort on _chAt which could blur results
       //params.add("debug", "true");
       List<DCResource> resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             params, null, 10);
@@ -910,7 +925,8 @@ public class DatacoreApiServerTest {
       /*
        * i18n, looking up in a particular language
        */    
-      langParams.add("i18n:name.v", "Moscow");
+      langParams.add("i18n:name.v", "Moscow")
+         .add("i18n:name.v", "+"); // to override default sort on _chAt which could blur results
       explainRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME, langParams, null, 10);
       @SuppressWarnings("unchecked")
       Map<String,String> explain3 = (Map<String,String>) explainRes.get(0).get("explain");

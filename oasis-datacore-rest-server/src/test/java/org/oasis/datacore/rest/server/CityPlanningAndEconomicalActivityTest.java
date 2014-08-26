@@ -101,22 +101,22 @@ public class CityPlanningAndEconomicalActivityTest {
 
    @Test
    public void testProvto() {
-      Assert.assertNotNull(modelAdminService.getModel("!coita:ateco_0"));
-      List<DCResource> atecos = datacoreApiClient.findDataInType("!coita:ateco_0", null, null, 10);
+      Assert.assertNotNull(modelAdminService.getModel("coita:ateco_0"));
+      List<DCResource> atecos = datacoreApiClient.findDataInType("coita:ateco_0", null, null, 10);
       Assert.assertTrue(atecos != null && !atecos.isEmpty());
 
-      Assert.assertNotNull(modelAdminService.getModel("!co:company_0"));
-      List<DCResource> companies = datacoreApiClient.findDataInType("!co:company_0", null, null, 10);
+      Assert.assertNotNull(modelAdminService.getModel("co:company_0"));
+      List<DCResource> companies = datacoreApiClient.findDataInType("co:company_0", null, null, 10);
       Assert.assertTrue(companies != null && !companies.isEmpty());
 
-      Assert.assertNotNull(modelAdminService.getModel("!plo:country_0"));
-      List<DCResource> italia = datacoreApiClient.findDataInType("!plo:country_0",
-            new QueryParameters().add("!plo:name_i18n.v", "Italia"), null, 10);
+      Assert.assertNotNull(modelAdminService.getModel("plo:country_0"));
+      List<DCResource> italia = datacoreApiClient.findDataInType("plo:country_0",
+            new QueryParameters().add("plo:name_i18n.v", "Italia"), null, 10);
       Assert.assertTrue(italia != null && !italia.isEmpty());
 
-      Assert.assertNotNull(modelAdminService.getModel("!pli:city_0"));
-      List<DCResource> torino = datacoreApiClient.findDataInType("!pli:city_0",
-            new QueryParameters().add("!pli:name_i18n.v", "Torino"), null, 10);
+      Assert.assertNotNull(modelAdminService.getModel("pli:city_0"));
+      List<DCResource> torino = datacoreApiClient.findDataInType("pli:city_0",
+            new QueryParameters().add("pli:name_i18n.v", "Torino"), null, 10);
       Assert.assertTrue(torino != null && !torino.isEmpty());
       
       /*

@@ -47,6 +47,11 @@ public class DCResource {
    public static final String KEY_URI = "@id";
    public static final String KEY_TYPES = "@type";
    public static final String KEY_VERSION = "o:version";
+
+   public static final String KEY_DCCREATED = "dc:created";
+   public static final String KEY_DCMODIFIED = "dc:modified";
+   public static final String KEY_DCCREATOR = "dc:creator";
+   public static final String KEY_DCCONTRIBUTOR = "dc:contributor";
    
    @ApiModelProperty(value = "URI", position=0, required=true)
    @JsonProperty(KEY_URI)
@@ -66,13 +71,13 @@ public class DCResource {
    private transient String id; // TODO or iri ? transient not required... ? in addition to uri ?? test conflict !
 
    // creation / last modified date, author ? (readonly !)
-   @JsonProperty("dc:created")
+   @JsonProperty(KEY_DCCREATED)
    private DateTime created;
-   @JsonProperty("dc:modified")
+   @JsonProperty(KEY_DCMODIFIED)
    private DateTime lastModified;
-   @JsonProperty("dc:creator")
+   @JsonProperty(KEY_DCCREATOR)
    private String createdBy;
-   @JsonProperty("dc:contributor")
+   @JsonProperty(KEY_DCCONTRIBUTOR)
    private String lastModifiedBy;
    
    /** Other (business) properties. They are of the types supported by JSON (on Jackson) :

@@ -77,6 +77,7 @@ public class ValueParsingService {
    
    /**
     * Eager parsing, notably to be used to parse query criteria.
+    * Parses either from JSON (ex. strings or quoted) or mere string (ex. string are unquoted)
     * 
     * If fieldTypeEnum (operator's if any, else field's) is a string primitive (ex. string, resource),
     * tries to unquote and returns string ;
@@ -105,7 +106,7 @@ public class ValueParsingService {
          int valueLength = value.length();
          if (valueLength > 1 && value.charAt(0) == '\"' && value.charAt(valueLength -1) == '\"') {
             // first, trying JSON case (to get a string enclosed in quotes, double quote it)
-            return value.substring(1, valueLength - 1);
+            value = value.substring(1, valueLength - 1);
          }
          // else no JSON : return string value as is
          return parseStringPrimitiveValueFromString(value); //return value;
@@ -115,9 +116,9 @@ public class ValueParsingService {
          // they MUST be parsed AS JSON (i.e. quoted string)
          int valueLength = value.length();
          if (valueLength <= 1 || value.charAt(0) != '\"' || value.charAt(valueLength -1) != '\"') {
-            value = quote(value);
+            value = quote(value); // quote if not yet
          } // else assuming JSON case
-         return parseStringSerializedPrimitiveValueFromString(fieldTypeEnum, value);
+         return parseStringSerializedPrimitiveValueFromJSON(fieldTypeEnum, value);
       }
       
       try {
@@ -157,7 +158,7 @@ public class ValueParsingService {
    /**
     * 
     * @param dcFieldTypeEnum
-    * @param value
+    * @param stringValue
     * @return
     * @throws ResourceParsingException
     */
@@ -169,9 +170,10 @@ public class ValueParsingService {
          // guessing is too hard / faulty with Datacore types (and can't switch on null)
          throw new ResourceParsingException("Field type must be provided");
       }
-      
+
       // first try shortcuts :
       switch (fieldTypeEnum) {
+      // string primitives :
       //if (DCFieldTypeEnum.stringPrimitiveTypes.contains(fieldTypeEnum)) {
       case STRING:
       case RESOURCE:
@@ -185,6 +187,8 @@ public class ValueParsingService {
                   + "from unquoted string but is quoted (maybe doubly ?) : " + stringValue);
          }*/
          //stringValue = quote(stringValue);
+      // string serialized primitives :
+      //if (DCFieldTypeEnum.stringSerializedPrimitiveTypes.contains(fieldTypeEnum)) {
       case DATE:
          return parseDateFromString(stringValue);
       case LONG:
@@ -206,14 +210,25 @@ public class ValueParsingService {
       }
    }
    
+   /**
+    * @param stringValue can be returned "as is"
+    * @return
+    */
    public Object parseStringPrimitiveValueFromString(String stringValue) {
       return stringValue;
    }
    
-   public Object parseStringSerializedPrimitiveValueFromString(
+   /**
+    * 
+    * @param fieldTypeEnum
+    * @param stringValue
+    * @return
+    * @throws ResourceParsingException
+    */
+   public Object parseStringSerializedPrimitiveValueFromJSON(
          DCFieldTypeEnum fieldTypeEnum, String stringValue) throws ResourceParsingException {
       try {
-         return parseValueFromJSONInternal(fieldTypeEnum, quote(stringValue));
+         return parseValueFromJSONInternal(fieldTypeEnum, stringValue);
          
       } catch (IOException ioex) {
          // else error
@@ -278,7 +293,8 @@ public class ValueParsingService {
 
    private String quote(String stringValue) {
       //return "\"" + stringValue + "\"";
-      StringBuilder sb = new StringBuilder('\"');
+      StringBuilder sb = new StringBuilder(stringValue.length() + 2);
+      sb.append('\"');
       sb.append(stringValue);
       sb.append('\"');
       return sb.toString();

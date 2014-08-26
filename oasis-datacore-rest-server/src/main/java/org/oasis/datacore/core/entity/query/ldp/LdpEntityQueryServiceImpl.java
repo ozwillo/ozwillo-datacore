@@ -19,6 +19,7 @@ import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCSecurity;
 import org.oasis.datacore.core.security.DCUserImpl;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
+import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.server.MonitoringLogServiceImpl;
 import org.oasis.datacore.rest.server.cxf.CxfJaxrsApiProvider;
 import org.oasis.datacore.rest.server.parsing.model.DCQueryParsingContext;
@@ -63,9 +64,12 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    private static Map<String,DCField> dcEntityIndexedFields = new HashMap<String,DCField>();
    static {
       // TODO rather using Enum, see BSON$RegexFlag
-      dcEntityIndexedFields.put("_uri", new DCField("_uri", "string", true, 100000));
-      //dcEntityIndexedFields.add("_allReaders"); // don't allow to look it up
-      dcEntityIndexedFields.put("_changedAt", new DCField("_chAt", "date", true, 100000));
+      dcEntityIndexedFields.put(DCResource.KEY_URI, new DCField(DCEntity.KEY_URI, "string", true, 100000));
+      //dcEntityIndexedFields.put(DCResource.KEY_DCCREATED, new DCField(DCEntity.KEY_CR_AT, "date", true, 100000)); // LATER ?
+      //dcEntityIndexedFields.put(DCResource.KEY_DCCREATOR, new DCField(DCEntity.KEY_CH_BY, "string", true, 100000)); // LATER ?
+      dcEntityIndexedFields.put(DCResource.KEY_DCMODIFIED, new DCField(DCEntity.KEY_CH_AT, "date", true, 100000));
+      //dcEntityIndexedFields.put(DCResource.KEY_DCCONTRIBUTOR, new DCField(DCEntity.KEY_CH_BY, "string", true, 100000)); // LATER ?
+      //dcEntityIndexedFields.put("o:allReaders", new DCListField(DCEntity.KEY_AR... // don't allow to look it up
    }
 
    /** default maximum number of documents to scan when fulfilling a query, overriden by
@@ -264,7 +268,9 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          }
          
          // TODO (mongo)operator for error & in parse ?
-         String entityFieldPath = (isDcEntityIndexedField) ? fieldPath : "_p." + fieldPath; // almost the same fieldPath for mongodb (?)
+         String entityFieldPath = (isDcEntityIndexedField) ?
+               dcField.getName() // mapping @id to _uri etc.
+               : "_p." + fieldPath; // almost the same fieldPath for mongodb
 
          queryParsingContext.enterCriteria(entityFieldPath, values.size());
          try  {
@@ -328,6 +334,8 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       DCModel dcModel = queryParsingContext.peekModel();
       
       // compute overall maxScan :
+      // (BEWARE it is NOT the max amount of doc returned because sorts or multiple
+      // criteria can eat some scans)
       int maxScan = this.maxScan;
       if (queryParsingContext.getAggregatedQueryLimit() > maxScan) {
          // allow at least enough scan for expected results
@@ -377,7 +385,9 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       if (maxScan != 0 && queryParsingContext.isHasNoIndexedField()) {
          // (if maxScan == 0 it is infinite and its limit can't be reached)
          if (foundEntities.size() < springMongoQuery.getLimit()
-               && ((int) cursorProvider.getQueryExplain().get("nscannedObjects")) == maxScan) {
+               && ((int) cursorProvider.getQueryExplain().get("nscanned")) == maxScan) {
+            // NB. and not nscannedObjects which may be lower because some scans have been eaten
+            // by sorts, multiple criteria etc. see http://docs.mongodb.org/manual/reference/method/cursor.explain/
             throw new QueryException("Query with non indexed fields has reached maxScan (" + maxScan
                   + ") before document limit (found " + foundEntities.size() + "<" + springMongoQuery.getLimit()
                   + ") , meaning some documents can't be found without prohibitive cost. "
@@ -404,5 +414,5 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    public void setMaxLimit(int maxLimit) {
       this.maxLimit = maxLimit;
    }
-  
+
 }
