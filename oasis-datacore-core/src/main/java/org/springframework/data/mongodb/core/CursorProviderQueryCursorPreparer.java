@@ -28,7 +28,7 @@ public class CursorProviderQueryCursorPreparer extends QueryCursorPreparer {
 
    public CursorProviderQueryCursorPreparer(MongoTemplate mongoTemplate,
          Query query, boolean doExplainQuery, int maxScan) {
-      mongoTemplate.super(query);
+      mongoTemplate.super(query, null);
       this.doExplainQuery = doExplainQuery;
       this.maxScan = maxScan;
    }

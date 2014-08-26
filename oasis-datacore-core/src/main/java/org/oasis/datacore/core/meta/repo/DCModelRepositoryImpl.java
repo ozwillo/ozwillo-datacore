@@ -13,12 +13,15 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
 
 /**
- * Custom coded queries are impl'd here
+ * Custom coded queries are impl'd here.
+ * WARNING impl class has to be named after interface class and not
+ * custom interface class, see
+ * http://stackoverflow.com/questions/17035419/spring-data-mongodb-custom-implementation-propertyreferenceexception
  * 
  * @author mdutoo
  *
  */
-public class DCModelRepositoryCustomImpl implements DCModelRepositoryCustom {
+public class DCModelRepositoryImpl implements DCModelRepositoryCustom {
 
    @Autowired
    private MongoOperations mgo;

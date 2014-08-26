@@ -114,13 +114,13 @@
 
 		<!-- spring IoC -->
 		<!-- spring.version>3.2.4.RELEASE</spring.version -->
-		<spring.version>3.1.4.RELEASE</spring.version><!-- brought by spring data's -->
+		<spring.version>3.2.10.RELEASE</spring.version><!-- brought by spring data's ; older : 3.1.4.RELEASE -->
 		<cglib.version>2.2.2</cglib.version>
 
 		<!-- spring data on mongodb -->
-		<spring-data-mongodb.version>1.2.3.RELEASE</spring-data-mongodb.version><!-- 
-			WARNING depends on spring 3.1.4.RELEASE -->
-		<mongodb.version>2.11.2</mongodb.version>
+		<spring-data-mongodb.version>1.5.2.RELEASE</spring-data-mongodb.version><!-- 
+			WARNING depends on spring 3.2.10.RELEASE --><!-- older : 1.2.3.RELEASE with spring 3.1.4.RELEASE -->
+		<mongodb.version>2.12.1</mongodb.version><!-- supports MongoDB 2.6 ; older : 2.11.2 -->
 		<joda-time.version>2.1</joda-time.version><!-- from Jackson -->
 
 		<!-- spring data on neo4j (TODO for Social Graph mock ?!?) -->
@@ -139,7 +139,7 @@
 		<jaxrs.version>2.0-m10</jaxrs.version><!-- from CXF ; rather than 2.0, 
 			else ClassNotFoundException: javax.ws.rs.client.ClientException -->
 
-		<ehcache.version>2.7.4</ehcache.version><!-- for client-side cache -->
+		<ehcache.version>2.7.4</ehcache.version><!-- for client-side cache ; spring's version -->
       
       <guava.version>14.0.1</guava.version><!-- for ImmutableMap/List(.Builder),
       also used by MITRE OpenIdConnect & Swagger (in 13.0.1, 11.0.2) -->
@@ -157,7 +157,7 @@
       <!-- spring security & al : BEWARE,
       * security core 3.1.4 depends on aop, beans, expression 3.0.7 (others are 3.1.4)
       * security config 3.1.4 depends on aop, beans 3.0.7 (others are 3.1.4)
-      * security oauth2 3.1.4 depends on beans, webmvc 3.1.2 security web 3.1.3 (others are 3.1.4)
+      * security oauth2 1.0.5 depends on beans, webmvc 3.1.2 security web 3.1.3 (others are 3.1.4)
       * security web 3.1.4 on core, context, beans, expression, aop, web, jdbc 3.0.7 (though not used)
       so version of aop, beans, expression, webmvc, security web must be forced to 3.1.4
       in dependencyManagement even if not used !!
@@ -357,6 +357,11 @@
 				<artifactId>spring-context</artifactId>
 				<version>${spring.version}</version>
 			</dependency>
+         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context-support</artifactId><!-- for EHCache support classes http://stackoverflow.com/questions/13956224/spring-3-2-and-cache-abstraction-missing-ehcache-implementation -->
+            <version>${spring.version}</version>
+         </dependency>
 			<dependency>
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-test</artifactId>

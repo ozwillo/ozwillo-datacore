@@ -48,6 +48,10 @@
          <groupId>org.springframework</groupId>
          <artifactId>spring-context</artifactId>
       </dependency>
+         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context-support</artifactId><!-- for EHCache support classes http://stackoverflow.com/questions/13956224/spring-3-2-and-cache-abstraction-missing-ehcache-implementation -->
+         </dependency>
       <dependency>
          <groupId>org.springframework</groupId>
          <artifactId>spring-test</artifactId>

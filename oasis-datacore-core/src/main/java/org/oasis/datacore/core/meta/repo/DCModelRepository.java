@@ -19,7 +19,7 @@ import org.springframework.data.mongodb.repository.Query;
 public interface DCModelRepository extends MongoRepository<DCEntity, String>,
       DCModelRepositoryCustom {
 
-   @Query("{ _id:?0.id }")
+   @Query("{ '_id' : '?0.id' }")
    public DCEntity getTheSame(DCEntity account);
    
 }
