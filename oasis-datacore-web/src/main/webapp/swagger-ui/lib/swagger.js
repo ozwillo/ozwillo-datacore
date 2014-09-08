@@ -776,7 +776,7 @@
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         param = _ref[_i];
         if (param.paramType === "header") {
-          if (args[param.name]) {
+          if (typeof args[param.name] !== 'undefined') { // OASIS PATCH if 0 ; old : if (args[param.name]) {
             params.headers[param.name] = args[param.name];
           }
         }
