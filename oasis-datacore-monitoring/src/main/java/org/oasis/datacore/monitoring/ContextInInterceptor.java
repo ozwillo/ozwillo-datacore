@@ -3,7 +3,10 @@ package org.oasis.datacore.monitoring;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import org.apache.cxf.common.logging.LogUtils;
 import org.apache.cxf.interceptor.Fault;
 import org.apache.cxf.message.Exchange;
 import org.apache.cxf.message.Message;
@@ -13,12 +16,14 @@ import org.apache.cxf.phase.Phase;
 import org.apache.cxf.phase.PhaseInterceptorChain;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.JaxrsApiProvider;
+import org.oasis.datacore.rest.server.cxf.ArrayServerInInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 
 public class ContextInInterceptor extends AbstractPhaseInterceptor<Message> {
+   private static final Logger LOG = LogUtils.getLogger(ContextInInterceptor.class);
 
    @Autowired
    @Qualifier("datacore.cxfJaxrsApiProvider")
@@ -45,7 +50,7 @@ public class ContextInInterceptor extends AbstractPhaseInterceptor<Message> {
             ex.put("dc.uri", jaxrsApiProvider.getRequestUri());
             ex.put("dc.query", jaxrsApiProvider.getQueryParameters());
          } catch(Exception e) {
-
+            LOG.log(Level.SEVERE, "Error while setting monitoring context", e);
          }
       }
 
@@ -62,7 +67,9 @@ public class ContextInInterceptor extends AbstractPhaseInterceptor<Message> {
             Object resource = objs.get(0);
             if(resource instanceof ArrayList<?>) {
                ArrayList<DCResource> dcRes = (ArrayList<DCResource>) resource;
-               ex.put("dc.req.model", dcRes.get(0).getModelType());
+               if (!dcRes.isEmpty()) {
+                  ex.put("dc.req.model", dcRes.get(0).getModelType());
+               }
             }
          }
       }
