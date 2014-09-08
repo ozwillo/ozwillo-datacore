@@ -63,6 +63,7 @@ public class HistorizationServiceImpl implements HistorizationService {
 			DCEntity historyEntity = new DCEntity(entity);
 			// NB. cloning else updates version and OptimisticLockingException at actual createOrUpdate !!
 			mongoOperations.insert(historyEntity, historizationModel.getCollectionName());
+			historyEntity.setCachedModel(historizationModel); // in case accessed later outside
 		}
 		
 	}
@@ -88,7 +89,7 @@ public class HistorizationServiceImpl implements HistorizationService {
 		if(originalModel != null) {
 			String historizationModelName = originalModel.getName() + HISTORIZATION_COLLECTION_SUFFIX;
 			DCModel historizationModel = new DCModel(historizationModelName);
-			for(DCField originalField : originalModel.getFieldMap().values()) {
+			for(DCField originalField : originalModel.getGlobalFieldMap().values()) {
 				historizationModel.addField(originalField);
 			}
 			dataModelServiceImpl.addModel(historizationModel);
@@ -131,7 +132,7 @@ public class HistorizationServiceImpl implements HistorizationService {
 			throw new HistorizationException("The historization model of : " + originalModel.getName() + " dont exist, you must activate historization on your model before requesting historized resources");
 		}
 		DCEntity dataEntity = mongoOperations.findOne(new Query(new Criteria("_uri").is(uri).and("_v").is(version)), DCEntity.class, historizationModel.getCollectionName());
-	    
+		dataEntity.setCachedModel(historizationModel);
 		return dataEntity;
 	    
 	}

@@ -127,21 +127,21 @@ public class ContributionServiceImpl implements ContributionService {
 					listExceptionMessage.add(" - Resource " + tmpResource.getUri() + " has not the same model than the contribution");
 				}
 				
-			   int contributionFieldNb = 0; // TODO rm NOT REQUIRED
+			   /*int contributionFieldNb = 0; // TODO rm NOT REQUIRED
 			   // TODO rm NOT REQUIRED : resourceService will check it anyway
 					for(String key : tmpResource.getProperties().keySet()) {
 						if(key != null && !"".equals(key)) {
 						   if (key.startsWith("odc:")) {
 						      contributionFieldNb++;
-						   } else if(dcModel.getField(key) == null) {
+						   } else if(dcModel.getGlobalField(key) == null) {
 								listExceptionMessage.add("Resource#Field : " + tmpResource.getUri() + "#" + key + " is not in the destination model");
 							}
 						}
 					}
-			   // TODO rm NOT REQUIRED
-            if(tmpResource.getProperties().size() - contributionFieldNb != dcModel.getFieldMap().size()) {
+			   // TODO rm NOT REQUIRED, not true for new Resources without generated contrib id etc.
+            if(tmpResource.getProperties().size() - contributionFieldNb != dcModel.getGlobalFieldMap().size()) {
                listExceptionMessage.add(" - Resource " + tmpResource.getUri() + " has not the same number of fields than the model");
-            }
+            }*/
 			}
 			
 		}
