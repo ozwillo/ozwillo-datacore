@@ -3,18 +3,13 @@ package org.oasis.datacore.sample;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
 
-import org.apache.commons.codec.binary.Base64;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCI18nField;
@@ -65,7 +60,7 @@ import au.com.bytecode.opencsv.CSVReader;
  *
  */
 @Component
-public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase {
+public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleMethodologyBase {
    
    /** to be able to build a full uri, to avoid using ResourceService */
    ///@Value("${datacoreApiClient.baseUrl}") 
@@ -74,25 +69,16 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
    @Value("${datacoreApiServer.containerUrl}")
    private String containerUrl;
    
-
+   
    @Override
-   public void fillData() {
-      try {
-         doInitReferenceData();
-      } catch (WebApplicationException waex) {
-         throw new RuntimeException("HTTP " + waex.getResponse().getStatus()
-               + " web app error initing reference data :\n" + waex.getResponse().getStringHeaders() + "\n"
-               + ((waex.getResponse().getEntity() != null) ? waex.getResponse().getEntity() + "\n\n" : ""), waex);
-      } catch (Exception e) {
-         throw new RuntimeException(e);
-      }
-      doInitSampleDataEconomicalActivity();
-      doInitSampleDataCityPlanning();
+   public void doOSelectPerimeter() {
+      
    }
    
-   
-   /** Modelling methodology step 1 */
-   public void doInitModel1FlatM() {
+
+   // see doc in overriden
+   @Override
+   public void do1DesignFlatModel() {
       /////////////////////////////////////////////////////////
       // 0. select data of your application to share, 
       // - either data required by interoperability with other applications
@@ -201,8 +187,9 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
    }
 
 
-   /** Modelling methodology step 2 */
-   public void doInitModel2ExternalizeAsMixins() {
+   // see doc in overriden
+   @Override
+   public void do2ExternalizeModelAsMixins() {
       
       /////////////////////////////////////////////////////////
       // 1.c extract said groups out of it as Mixins (i.e. reusable & referenced parts.
@@ -262,12 +249,10 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
          ;
    }
 
-   
-   /**
-    * Defines Models
-    */
+
+   // see doc in overriden
    @Override
-   public void buildModels(List<DCModelBase> modelsToCreate) {
+   public void do2CreateModels(List<DCModelBase> modelsToCreate) {
       // 2. find out which Models already exist, including "this" ex. economicalActivity,
       // and reconcile with them :
       // - reuse existing fields ; if format is different, then if bijective convert them on the fly,
@@ -397,11 +382,9 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
    }
 
 
-   /**
-    * Inits reference Data (i.e. that is not sample data)
-    * @throws Exception
-    */
-   public void doInitReferenceData() throws Exception {
+   // see doc in overriden
+   @Override
+   public void do3FillReferenceData() throws Exception {
       List<DCResource> resourcesToPost = new ArrayList<DCResource>();
       
       //////////////////////////////////////////////
@@ -480,6 +463,13 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
    }
 
 
+   // see doc in overriden
+   @Override
+   public void do4FillSampleData() {
+      doInitSampleDataEconomicalActivity();
+      doInitSampleDataCityPlanning();
+   }
+   
    /**
     * Fills sample data for EconomicalActivity sample
     */
@@ -741,99 +731,6 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleBase 
       
       // Examples of regular use :
       // see unit test CityPlanningAndEconomicalActivityTest
-   }
-
-
-   
-   public static String generateId(String tooComplicatedId) {
-      try {
-         return new String(Base64.encodeBase64( // else unreadable
-               MessageDigest.getInstance("MD5").digest(tooComplicatedId.getBytes("UTF-8"))), "UTF-8");
-      } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
-         // should not happen
-         // TODO log
-         throw new RuntimeException(e);
-      }
-   }
-
-
-   public static DCMixin createReferencingMixin(DCModel model, String ... embeddedFieldNames) {
-      return createReferencingMixin(model, null, null, true, embeddedFieldNames);
-   }
-   /**
-    * modelName_ref_0 (rather than modelName_0_ref, or modelName_0_ref_0)
-    * because referencing mixin are strictly derived from models,
-    * and its major version is auto derived because of its resource fields
-    * pointing to majorVersioned models.
-    * (HOWEVER this is a big constraint, because a new major version / model implies
-    * new major versions / models in all resources indirectly linking to it,
-    * so should rather add new fields OR VERSION THEM, OR VERSION MIXINS BUT NOT MODELS
-    * (which is the same as having contributions from different sources / branches in the same Model)
-    * and have new clients update new ones but also update them from older ones
-    * changed by old clients)
-    * NB. source model(s) are known by the resourceType resource fields pointing to them
-    * TODO extract as helper
-    * @param model
-    * @param copyReferencingMixins
-    * @param embeddedFieldNames
-    * @return
-    */
-   public static DCMixin createReferencingMixin(DCModel model,
-         DCMixin optInheritedReferencingMixin, DCMixin optDescendantMixin,
-         boolean copyReferencingMixins, String ... embeddedFieldNames) {
-      String refMixinNameRoot;
-      
-      // parsing model name TODO lifecycle
-      String[] modelType = model.getName().split("_", 2); // TODO better
-      String modelName = (modelType.length == 2) ? modelType[0] : model.getName();
-      String modelVersionIfAny = (modelType.length == 2) ? modelType[1] : null;
-      String modelNameWithVersionIfAny = model.getName();
-      
-      // parsing mixin name TODO lifecycle
-      if (optDescendantMixin != null) {
-         String[] optDescendantMixinType = optDescendantMixin.getName().split("_", 2); // TODO better
-         String optDescendantMixinName = (optDescendantMixinType.length == 2) ?
-               optDescendantMixinType[0] : optDescendantMixin.getName();
-         String optDescendantMixinVersionIfAny = (optDescendantMixinType.length == 2) ?
-               optDescendantMixinType[1] : null;
-         refMixinNameRoot = optDescendantMixinName;
-      } else {
-         //refMixinNameRoot = modelNameWithVersionIfAny
-         refMixinNameRoot = modelName;
-      }
-      
-      String mixinVersion = "_0"; // has to be defined explicitly,
-      // rather than ((modelVersionIfAny != null) ? "_" + modelVersionIfAny : "")
-      DCMixin referencingMixin = (DCMixin) new DCMixin(refMixinNameRoot + "_ref" + mixinVersion);
-      
-      if (copyReferencingMixins) {
-         // copy referencing mixins :
-         Collection<DCModelBase> referencingMixins;
-         if (optInheritedReferencingMixin == null) {
-            referencingMixins = model.getGlobalMixins();
-         } else  {
-            referencingMixins = new ArrayList<DCModelBase>(optInheritedReferencingMixin.getGlobalMixins());
-            referencingMixins.add(optInheritedReferencingMixin);
-         }
-         for (DCModelBase mixin : referencingMixins) {
-            if (mixin.getName().endsWith("_ref_" + mixin.getVersion())) { // TODO lifecycle
-               referencingMixin.addMixin(mixin);
-            }
-         }
-      }
-      
-      // add embedded & copied fields :
-      for (String embeddedFieldName : embeddedFieldNames) {
-         referencingMixin.addField(model.getGlobalField(embeddedFieldName));
-      }
-      
-      // add actual resource reference field (if not yet in an inheriting mixin) :
-      DCField existingField = referencingMixin.getGlobalField(modelName);
-      if (existingField == null
-            || !modelNameWithVersionIfAny.equals(existingField.getType())) {
-         referencingMixin.addField(new DCResourceField(modelName, modelNameWithVersionIfAny, true, 100));
-      }
-      return referencingMixin;
    }
    
 }
