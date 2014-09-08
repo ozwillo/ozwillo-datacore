@@ -68,11 +68,11 @@ public class ETagClientOutInterceptor extends AbstractPhaseInterceptor<Message> 
             if (cachedResourceWrapper != null) {
                DCResource cachedResource = (DCResource) cachedResourceWrapper.get();
                if (cachedResource != null) {
-                  String etag = cachedResource.getVersion().toString();
-                  if (cachedResource != null
-                        && cachedResource.getVersion() != null) { // TODO should not happen
+                  Long cachedResourceVersion = cachedResource.getVersion();
+                  if (cachedResourceVersion != null) {
+                     String etag = cachedResourceVersion.toString();
                      CxfMessageHelper.setHeader(clientOutRequestMessage, HttpHeaders.IF_NONE_MATCH, etag);
-                  }
+                  } // else degraded way of asking to always receive full Resource 
                } // else cached null, but if server still has null it costs nothing
                // to send it back, so no ETag support in this case
             } // else no cache, optimization not possible, don't send etag header
@@ -92,9 +92,17 @@ public class ETagClientOutInterceptor extends AbstractPhaseInterceptor<Message> 
             if (cachedResourceWrapper != null) {
                DCResource cachedResource = (DCResource) cachedResourceWrapper.get();
                String etag = cachedResource.getVersion().toString();
-               if (cachedResource != null
-                     && cachedResource.getVersion() != null) { // TODO should not happen
-                  CxfMessageHelper.setHeader(clientOutRequestMessage, HttpHeaders.IF_MATCH, etag);
+               if (cachedResource != null) {
+                  if (cachedResource.getVersion() != null) { // TODO should not happen
+                     CxfMessageHelper.setHeader(clientOutRequestMessage, HttpHeaders.IF_MATCH, etag);
+                  } else { // trying to delete probably non existing Resource (without version)
+                     throw new Fault(new ClientException( // or any non-Fault exception, else blocks in
+                           // abstractClient.checkClientException() (waits for missing response code)
+                           // see http://stackoverflow.com/questions/8316354/cxf-ws-interceptor-stop-processing-respond-with-fault
+                           "Resource to delete should have a non null version, "
+                           + "otherwise it does (probably) not exist"),
+                           Fault.FAULT_CODE_CLIENT);
+                  }
                }
             } else {
                throw new Fault(

@@ -1,5 +1,7 @@
 package org.oasis.datacore.rest.client;
 
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import javax.ws.rs.BadRequestException;
@@ -149,7 +151,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
     */
    @CachePut(value={"org.oasis.datacore.rest.api.DCResource"}, key="#resource.uri") // after invocation
    @Override
-   public DCResource putDataInType(DCResource resource) {
+   public DCResource putDataInType(DCResource resource) throws ClientException {
       String modelType = resource.getModelType(); // NB. if null lets server explode
       String id = resource.getId();
       if (id == null) {
@@ -157,8 +159,8 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
          // TODO rather make id transient ? or auto set id on unmarshall ??
          try { 
             id = UriHelper.parseUri(resource.getUri(), this.containerUrl).getId();
-         } catch (Exception e) {
-            throw new RuntimeException(e);
+         } catch (MalformedURLException | URISyntaxException e) {
+            throw new ClientException("Bad Resource URI " + resource.getUri(), e);
          }
       }
       return this.putDataInType(resource, modelType, id); // TODO or parse id from uri ??
@@ -205,7 +207,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
    //@Cacheable(value={"org.oasis.datacore.rest.api.DCResource"}, key="buildUri(#modelType, #iri)")
    // so NOT Cacheable because returning from cache is triggered from HTTP 304 reponse (complex caching decision)
    @Override
-   public DCResource getData(final DCResource resource) {
+   public DCResource getData(final DCResource resource) throws ClientException {
       try { 
          final DCURI dcUri = UriHelper.parseUri(resource.getUri(), this.containerUrl);
          return new AbstractCachedGetDataPerformer() {
@@ -214,8 +216,8 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
                return delegate.getData(dcUri.getType(), dcUri.getId(), resource.getVersion());
             }
          }.performCachedGetData(resource.getUri());
-      } catch (Exception e) {
-         throw new RuntimeException(e);
+      } catch (MalformedURLException | URISyntaxException e) {
+         throw new ClientException("Bad Resource URI " + resource.getUri(), e);
       }
    }
 
@@ -309,7 +311,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
     * @see org.oasis.datacore.rest.client.DatacoreCachedClient#deleteData(org.oasis.datacore.rest.api.DCResource)
     */
    @Override
-   public void deleteData(DCResource resource) {
+   public void deleteData(DCResource resource) throws ClientException {
       String modelType = resource.getModelType(); // NB. if null lets server explode
       String id = resource.getId();
       if (id == null) {
@@ -317,11 +319,12 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
          // TODO rather make id transient ? or auto set id on unmarshall ??
          try { 
             id = UriHelper.parseUri(resource.getUri(), this.containerUrl).getId();
-         } catch (Exception e) {
-            throw new RuntimeException(e);
+         } catch (MalformedURLException | URISyntaxException e) {
+            throw new ClientException("Bad Resource URI " + resource.getUri(), e);
          }
       }
       this.deleteData(modelType, id, resource.getVersion());
+      resource.setVersion(null); // doesn't exist anymore
    }
 
    /**
@@ -435,7 +438,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
    @Override
    public List<DCResource> findDataInType(String modelType, UriInfo uriInfo, Integer start, Integer limit, boolean debug) {
       //return delegate.findDataInType(type, uriInfo, start, limit, sort); // TODO cache ??
-      throw new ClientException("Use rather findDataInType(String queryParams ...) on client side");
+      throw new UnsupportedOperationException("Use rather findDataInType(String queryParams ...) on client side");
    }
 
    /* (non-Javadoc)
