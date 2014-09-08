@@ -29,6 +29,7 @@ public class CitizenKinElectionModelInitializer extends DatacoreSampleBase {
     public void buildModels(List<DCModelBase> modelsToCreate) {
 
         DCModel model = new DCModel(CITIZENKIN_PROCEDURE_ELECTORAL_ROLL_REGISTRATION);
+        model.setDocumentation(""); // TODO
 
         model.addField(new DCField("nom_de_famille", STRING_TYPE, true, 0));
         model.addField(new DCField("nom_d_usage", STRING_TYPE, false, 0));

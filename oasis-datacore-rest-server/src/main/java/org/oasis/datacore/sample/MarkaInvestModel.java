@@ -42,6 +42,7 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 	public void buildModels(List<DCModelBase> modelsToCreate) {
 				
 		DCModel companyModel = new DCModel(COMPANY_MODEL_NAME);
+		companyModel.setDocumentation(""); // TODO
 		companyModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
 		companyModel.addField(new DCField("name", DCFieldTypeEnum.STRING.getType(), true, 100));
 		companyModel.addField(new DCResourceField("field", FIELD_MODEL_NAME));
@@ -57,6 +58,7 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		listModel.add(companyModel);
 		
 		DCModel fieldModel = new DCModel(FIELD_MODEL_NAME);
+		fieldModel.setDocumentation(""); // TODO
 		fieldModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
 		fieldModel.addField(new DCField("name", DCFieldTypeEnum.STRING.getType(), true, 100));
 		fieldModel.setContributable(true);
@@ -64,11 +66,13 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		listModel.add(fieldModel);
 
 		DCModel sectorModel = new DCModel(SECTOR_MODEL_NAME);
+		sectorModel.setDocumentation(""); // TODO
 		sectorModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
 		sectorModel.addField(new DCField("name", DCFieldTypeEnum.STRING.getType(), true, 100));
 		listModel.add(sectorModel);
 		
 		DCModel countryModel = new DCModel(COUNTRY_MODEL_NAME);
+		countryModel.setDocumentation(""); // TODO
 		countryModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
 		countryModel.addField(new DCField("name", DCFieldTypeEnum.STRING.getType(), true, 100));
 		countryModel.addField(new DCField("lat", DCFieldTypeEnum.FLOAT.getType()));
@@ -78,6 +82,7 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		listModel.add(countryModel);
 		
 		DCModel cityModel = new DCModel(CITY_MODEL_NAME);
+		cityModel.setDocumentation(""); // TODO
 		cityModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
 		cityModel.addField(new DCField("name", DCFieldTypeEnum.STRING.getType(), true, 100));
 		cityModel.addField(new DCField("population", DCFieldTypeEnum.INTEGER.getType()));
@@ -89,6 +94,7 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		listModel.add(cityModel);
 		
 		DCModel userModel = new DCModel(USER_MODEL_NAME);
+		userModel.setDocumentation(""); // TODO
 		userModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
 		userModel.addField(new DCField("firstName", DCFieldTypeEnum.STRING.getType(), true, 100));
 		userModel.addField(new DCField("lastName", DCFieldTypeEnum.STRING.getType(), true, 100));
@@ -99,6 +105,7 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		listModel.add(userModel);
 		
 		DCModel investorModel = new DCModel(INVESTOR_MODEL_NAME);
+		investorModel.setDocumentation(""); // TODO
 		investorModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
 		investorModel.addField(new DCResourceField("user", USER_MODEL_NAME, true, 100));
 		investorModel.addField(new DCListField("types", new DCResourceField("type", INVESTOR_TYPE_MODEL_NAME)));
@@ -107,17 +114,20 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		listModel.add(investorModel);
 		
 		DCModel investorTypeModel = new DCModel(INVESTOR_TYPE_MODEL_NAME);
+		investorTypeModel.setDocumentation(""); // TODO
 		investorTypeModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
 		investorTypeModel.addField(new DCField("code", DCFieldTypeEnum.STRING.getType(), true, 100));
 		investorTypeModel.addField(new DCField("description", DCFieldTypeEnum.STRING.getType()));
 		listModel.add(investorTypeModel);
 		
 		DCModel costModel = new DCModel(COST_TYPE_MODEL_NAME);
+		costModel.setDocumentation(""); // TODO
 		costModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
 		costModel.addField(new DCField("name", DCFieldTypeEnum.STRING.getType(), true, 100));
 		listModel.add(costModel);
 		
 		DCModel plannedInvestmentAssistanceRequestModel = new DCModel(INVESTMENT_ASSISTANCE_REQUEST_MODEL_NAME);
+		plannedInvestmentAssistanceRequestModel.setDocumentation(""); // TODO
 		plannedInvestmentAssistanceRequestModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
 		plannedInvestmentAssistanceRequestModel.addField(new DCListField("sectors", new DCResourceField("sector", SECTOR_MODEL_NAME)));
 		plannedInvestmentAssistanceRequestModel.addField(new DCResourceField("company", COMPANY_MODEL_NAME));
