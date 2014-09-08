@@ -145,6 +145,9 @@ public class IgnCityhallSample extends DatacoreSampleBase {
       //DCResource departement01 = resourceService.create(IGN_DEPARTEMENT, "01")
       DCResource departement01 = DCResource.create(null, IGN_DEPARTEMENT)
             .set("nom", "AIN").set("departementCode", 01);
+      departement01 = /*datacoreApiClient.*/postDataInType(departement01); // BEFORE creating
+      // communes ex. communeLaiz else their departement01 URI would be null
+      
       DCResource communeLaiz = resourceService.create(IGN_COMMUNE, "203")
             .set("communeNom", "LAIZ").set("arrondissementCode", 2).set("communeCode", 203).set("cantonCode", 27)
             .set("departementCode", 01).set("departement", departement01.getUri())
@@ -155,22 +158,26 @@ public class IgnCityhallSample extends DatacoreSampleBase {
             .set("departementCode", 01).set("departement", departement01.getUri())
             .set("statutAdministratif", 6).set("population", 20).set("surface", 2601)
             .set("longitudeDMS", +55535).set("latitudeDMS", 461124);
-      
-      departement01 = /*datacoreApiClient.*/postDataInType(departement01);
       communeLaiz = /*datacoreApiClient.*/postDataInType(communeLaiz);
       communePeron = /*datacoreApiClient.*/postDataInType(communePeron);
 
+      
       DCResource departement72 = resourceService.create(IGN_DEPARTEMENT, "72")
             .set("nom", "").set("departementCode", 72);
+      departement72 = /*datacoreApiClient.*/postDataInType(departement72);
+      
       DCResource communeBousse = resourceService.create(IGN_COMMUNE, "044")
             .set("communeNom", "BOUSSE").set("arrondissementCode", 1).set("communeCode", 044).set("cantonCode", 17)
             .set("departementCode", 72).set("departement", departement72.getUri())
             .set("statutAdministratif", 6).set("population", 4).set("surface", 1202)
             .set("longitudeDMS", -00332).set("latitudeDMS", 474613);
+      communeBousse = /*datacoreApiClient.*/postDataInType(communeBousse);
+      
       DCResource parcelleBousse389arrdt = resourceService.create(IGN_ARRONDISSEMENT, "04401")
             .set("commune", communeBousse.getUri()).set("arrondissementCode", 1)
             .set("communeAbsorbeeCode", 0).set("arrondissementNom", "1er arrondissement"); // 000
       copy(parcelleBousse389arrdt, departement72);
+      departement72 = /*datacoreApiClient.*/postDataInType(departement72); // resave after copy
       DCResource parcelleBousse389 = resourceService.create(IGN_PARCELLE, "0389").set("numeroParcelle", 389)  // ?
             .set("sectionCadastrale", "0B").set("feuilleCadastrale", 1);
       /*      .set("departementCode", 01).set("commune", communeLaiz.getUri())
@@ -181,9 +188,8 @@ public class IgnCityhallSample extends DatacoreSampleBase {
       .addField(new DCField("feuilleCadastrale", "int", true, 100)) // feuille
       .addField(new DCField("numeroParcelle", "int", true, 100)); // numero*/
       copy(parcelleBousse389, communeBousse);
+      communeBousse = /*datacoreApiClient.*/postDataInType(communeBousse); // resave after copy
       copy(parcelleBousse389, parcelleBousse389arrdt);
-      departement72 = /*datacoreApiClient.*/postDataInType(departement72);
-      communeBousse = /*datacoreApiClient.*/postDataInType(communeBousse);
       parcelleBousse389arrdt = /*datacoreApiClient.*/postDataInType(parcelleBousse389arrdt);
       parcelleBousse389 = /*datacoreApiClient.*/postDataInType(parcelleBousse389);
    }
