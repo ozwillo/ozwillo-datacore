@@ -5,7 +5,13 @@
  TODO rather using templating (through JAXRS providers) ?? ex. handlebars.js like Atol,
  see https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/view/HandlebarsBodyWriter.java
  -->
- 
+
+<script type="text/javascript">
+function getContainerUrl() {
+   return "${datacoreApiServer.containerUrl}";
+}
+</script>
+
 Allows to manage (CRUD) and find Data Resources and their Models.
 <br/><br/>
 &nbsp;&nbsp;- <b>Data Resources</b> are handled in <a href="http://json-ld.org/">JSON-LD</a>-like 
@@ -126,7 +132,26 @@ must be encoded, and it's bad practice for model names to contain some.<br/><br/
 are by default <span class="dcjsonline">$containerUrl/dc/type/$subResourceType/$resourceIri/$subResourceJsonPath</span>,
 but can be something else if parsing is defined consistently within $subResourceType.
 <br/><br/>
-Using operations where type of data is provided in URL usually improves performances : 
+<b>Values</b> are formatted in JSON as follows :
+<br/><br/>
+&nbsp;&nbsp;- <span class="dcjsonline">date</span> as <a href="http://en.wikipedia.org/wiki/ISO_8601">ISO8601</a>
+such as <span class="dcjsonline">"2014-01-08T09:31:19.062Z"</span>, <span class="dcjsonline">"2014-01-08T10:31:19.062+01:00"</span>.
+Put your (data or application) timezone in your dates so that they can be shared across the world while staying readable for your local use case.
+<br/><br/>
+&nbsp;&nbsp;- <span class="dcjsonline">long</span> and <span class="dcjsonline">double</span> as string
+<br/><br/>
+&nbsp;&nbsp;- <span class="dcjsonline">i18n</span> as a list of translation objects (like JSONLD), for instance :
+<span class="dcjsonline">[{"v": "Torino", "l": "it"}, {"v": "Turin","l": "fr"}]</span>.
+It allows language-agnostic lookups such as 
+<a href="/dc/type/pli:city_0?pli:name_i18n.v=Torino" class="dclink" onclick="
+javascript:return findDataByType($(this).attr('href'));
+">/dc/type/pli:city_0?pli:name_i18n.v=Torino</a>
+, but also language-scoped lookups such as
+<a href="#" class="dclink" onclick="
+javascript:return findDataByType($(this).text());
+">/dc/type/pli:city_0?pli:name_i18n=$elemMatch{"v":"Torino","l":"it"}</a>
+<br/><br/>
+<b>Operations</b> where type of data is provided in URL are usually more efficient : 
 '*inType' methods are faster, finder queries with type even more.
 <br/><br/>
 <strong>WARNING</strong> Swagger UI has some limitations (but not other HTTP clients) :
@@ -150,7 +175,7 @@ configuration</a>.
 <br/>&nbsp;&nbsp;- Datacore API's Swagger UI allows to provide said Authorization header, 
 with a default value that logs as admin in dev mode.
 <br/><br/>
-<strong>Server configuration:</strong>
+<strong>This server's configuration:</strong>
 <pre><code>
 ## Other (or all) known Datacores (comma-separated container URLs)
 datacoreApiServer.knownDatacoreContainerUrls=${datacoreApiServer.knownDatacoreContainerUrls}

@@ -150,23 +150,36 @@ function setError(errorMsg) {
 	document.getElementById('mydata').innerHTML = errorMsg;
 	return false;
 }
-function findDataByType(relativeUrl) {
-   setUrl(relativeUrl);
-   var l = '/dc/type/'.length;
+function findDataByType(relativeUrl, success, error) {
+   var resourceTypeAndQuery = relativeUrl.replace(/^\/*dc\/type\/*/, "");
+   var cleanedRelativeUrl = "/dc/type/" + resourceTypeAndQuery; // also works if no dc/type in relativeUrl
+   setUrl(cleanedRelativeUrl);
+   var i = resourceTypeAndQuery.indexOf("?");
+   // decodeURIComponent
+   var modelType = i == -1 ? resourceTypeAndQuery : resourceTypeAndQuery.substring(0, i);
+   var query = i == -1 ? "" : resourceTypeAndQuery.substring(i + 1);
+   /*var l = '/dc/type/'.length;
    var tq = relativeUrl.substring(l);
    var i = tq.indexOf('?');
    window.t = i == -1 ? tq : tq.substring(0, i);
-   window.q = i == -1 ? '' : tq.substring(i + 1);
-   swaggerUi.api.dc.findDataInType({type:window.t, '#queryParameters':window.q,
-       Authorization:'Basic YWRtaW46YWRtaW4='}, function(data) {
-    	   var resources = eval(data.content.data);
-    	   var prettyJson = toolifyDcList(resources, null, null, null, 0);
-           ///var prettyJson = JSON.stringify(resources, null, '\t').replace(/\n/g, '<br>');
-           ///prettyJson = toolifyDcResourceJson(prettyJson);
-           $('.mydata').html(prettyJson);
-        }, function(error) {
-        	setError(error._body._body);
-        });
+   window.q = i == -1 ? '' : tq.substring(i + 1);*/
+   swaggerUi.api.dc.findDataInType({type:modelType, '#queryParameters':query,
+         Authorization:'Basic YWRtaW46YWRtaW4='},
+      function(data) {
+         var resources = eval(data.content.data);
+         var prettyJson = toolifyDcList(resources, null, null, null, 0);
+         ///var prettyJson = JSON.stringify(resources, null, '\t').replace(/\n/g, '<br>');
+         ///prettyJson = toolifyDcResourceJson(prettyJson);
+         $('.mydata').html(prettyJson);
+         if (success) {
+            success(resources);
+         }
+      }, function(data) {
+         setError(data._body._body);
+         if (error) {
+            error(data);
+         }
+      });
    /*window.datacore = new SwaggerApi({ url: '/api-docs',
       success: function() {
          if(datacore.ready === true) {
@@ -180,23 +193,35 @@ function findDataByType(relativeUrl) {
    });*/
    return false;
 }
-function getData(relativeUrl) {
-   setUrl(relativeUrl);
-   var l = '/dc/type/'.length;
+function getData(relativeUrl, success, error) {
+   var resourceIri = relativeUrl.replace(/^\/*dc\/type\/*/, "");
+   var cleanedRelativeUrl = "/dc/type/" + resourceIri; // also works if no dc/type in relativeUrl
+   setUrl(cleanedRelativeUrl);
+   // decodeURIComponent
+   var modelType = resourceIri.substring(0, resourceIri.indexOf("/"));
+   var resourceId = resourceIri.substring(resourceIri.indexOf("/") + 1);
+   /*var l = '/dc/type/'.length;
    var ti = relativeUrl.substring(l);
    var i = ti.indexOf('/', l);
    window.t = ti.substring(0, i);
-   window.iri = ti.substring(i + 1);
-   swaggerUi.api.dc.getData({type:window.t, iri:window.iri,
-	   'If-None-Match':-1, Authorization:'Basic YWRtaW46YWRtaW4='}, function(data) {
-    	   var resource = eval('[' + data.content.data + ']')[0];
-    	   var prettyJson = toolifyDcResource(resource, 0);
-           //var prettyJson = JSON.stringify(resource, null, '\t').replace(/\n/g, '<br>');
-           //prettyJson = toolifyDcResourceJson(prettyJson);
-           $('.mydata').html(prettyJson);
-        }, function(error) {
-        	setError(error._body._body);
-        });
+   window.iri = ti.substring(i + 1);*/
+   swaggerUi.api.dc.getData({type:modelType, iri:resourceId,
+         'If-None-Match':-1, Authorization:'Basic YWRtaW46YWRtaW4='},
+      function(data) {
+         var resource = eval('[' + data.content.data + ']')[0];
+         var prettyJson = toolifyDcResource(resource, 0);
+         //var prettyJson = JSON.stringify(resource, null, '\t').replace(/\n/g, '<br>');
+         //prettyJson = toolifyDcResourceJson(prettyJson);
+         $('.mydata').html(prettyJson);
+         if (success) {
+        	 success(resource);
+         }
+      }, function(data) {
+         setError(data._body._body);
+         if (error) {
+        	 error(data);
+         }
+      });
    /*window.datacore = new SwaggerApi({ url: '/api-docs', success: function() {
       if(datacore.ready === true) {
          datacore.apis.dc.getData({type:window.t, iri:window.iri, 'If-None-Match':-1,
@@ -209,27 +234,40 @@ function getData(relativeUrl) {
    });*/
    return false;
 }
-function findData(relativeUrl) {
+function findData(relativeUrl, success, error) {
 	if (relativeUrl.indexOf('?') != -1
-			|| relativeUrl.indexOf('/', '/dc/type/'.length) == -1) { // none (or last position(s) ??)
-		return findDataByType(relativeUrl);
+			|| relativeUrl.replace(/^\/*dc\/type\/*/, "").indexOf('/') == -1) { // none (or last position(s) ??)
+		return findDataByType(relativeUrl, success, error);
 	}
-	return getData(relativeUrl);
+	return getData(relativeUrl, success, error);
 }
-function findDataByTypeRdf(relativeUrl) {
-   setUrl(relativeUrl);
-   var l = '/dc/type/'.length;
+function findDataByTypeRdf(relativeUrl, success, error) {
+   var resourceTypeAndQuery = relativeUrl.replace(/^\/*dc\/type\/*/, "");
+   var cleanedRelativeUrl = "/dc/type/" + resourceTypeAndQuery; // also works if no dc/type in relativeUrl
+   setUrl(cleanedRelativeUrl);
+   var i = resourceTypeAndQuery.indexOf("?");
+   // decodeURIComponent
+   var modelType = i == -1 ? resourceTypeAndQuery : resourceTypeAndQuery.substring(0, i);
+   var query = i == -1 ? "" : resourceTypeAndQuery.substring(i + 1);
+   /*var l = '/dc/type/'.length;
    var tq = relativeUrl.substring(l);
    var i = tq.indexOf('?');
    window.t = i == -1 ? tq : tq.substring(0, i);
-   window.q = i == -1 ? '' : tq.substring(i + 1);
-   swaggerUi.api.dc.findDataInType({type:window.t, '#queryParameters':window.q,
-       Authorization:'Basic YWRtaW46YWRtaW4='}, {responseContentType:'text/x-nquads'}, function(data) {
-           var prettyText = data.content.data;
-           $('.mydata').text(prettyText);
-        }, function(error) {
-        	setError(error._body._body);
-        });
+   window.q = i == -1 ? '' : tq.substring(i + 1);*/
+   swaggerUi.api.dc.findDataInType({type:modelType, '#queryParameters':query,
+         Authorization:'Basic YWRtaW46YWRtaW4='}, {responseContentType:'text/x-nquads'},
+      function(data) {
+         var prettyText = data.content.data;
+         $('.mydata').text(prettyText);
+         if (success) {
+            success(data.content.data);
+         }
+      }, function(data) {
+         setError(data._body._body);
+         if (error) {
+            error(data);
+         }
+      });
    /*window.datacore = new SwaggerApi({ url: '/api-docs', success: function() {
       if(datacore.ready === true) {
          datacore.apis.dc.findDataInType({type:window.t, '#queryParameters':window.q,
@@ -241,3 +279,104 @@ function findDataByTypeRdf(relativeUrl) {
    });*/
    return false;
 }
+
+
+//////////////////////////////////////////////////:
+// WRITE
+
+function postAllDataInType(relativeUrl, resources, success, error) {
+   var modelType = relativeUrl.replace(/^\/*dc\/type\/*/, "");
+   var cleanedRelativeUrl = "/dc/type/" + modelType; // also works if no dc/type in relativeUrl
+   setUrl(cleanedRelativeUrl);
+   // decodeURIComponent
+   /*var l = '/dc/type/'.length;
+   var tq = relativeUrl.substring(l);
+   var i = tq.indexOf('?');
+   window.t = i == -1 ? tq : tq.substring(0, i);
+   window.q = i == -1 ? '' : tq.substring(i + 1);*/
+   swaggerUi.api.dc.postAllDataInType({type:modelType, body:resources,
+         Authorization:'Basic YWRtaW46YWRtaW4='},
+      function(data) {
+         var resResources = eval(data.content.data);
+         var prettyJson = toolifyDcList(resResources, null, null, null, 0);
+         ///var prettyJson = JSON.stringify(resResources, null, '\t').replace(/\n/g, '<br>');
+         ///prettyJson = toolifyDcResourceJson(prettyJson);
+         $('.mydata').html(prettyJson);
+         if (success) {
+    	     success(resources);
+         }
+      },
+      function(data) {
+         setError(data._body._body);
+         if (error) {
+            error(data);
+         }
+         /*if (error._body._body.indexOf("already existing") != -1) { // TODO better
+          findDataByType(relativeUrl, callback);
+         }*/
+      });
+   return false;
+}
+// NB. no postDataInType in swagger (js) API (because would be a JAXRS conflict)
+// postDataInType would only differ on swaggerUi.api.dc.postDataInType function, TODO better & also for put
+// TODO putDataInType and use it...
+
+function deleteDataInType(resource, success, error) {
+   var uri = resource["@id"];
+   var resourceIri = uri.replace(/^\/*dc\/type\/*/, "");
+   var cleanedRelativeUrl = "/dc/type/" + resourceIri; // also works if no dc/type in relativeUrl
+   setUrl(cleanedRelativeUrl);
+   // decodeURIComponent
+   var modelType = resourceIri.substring(0, resourceIri.indexOf("/"));
+   var resourceId = resourceIri.substring(resourceIri.indexOf("/") + 1);
+   /*var relativeUrl = uri.substring(uri.indexOf("/dc/type/"));
+   setUrl(relativeUrl);
+   var l = '/dc/type/'.length;
+   var ti = relativeUrl.substring(l);
+   var i = ti.indexOf('/', l);
+   window.t = ti.substring(0, i);
+   window.iri = ti.substring(i + 1);*/
+   swaggerUi.api.dc.deleteData({type:modelType, iri:resourceId,
+         'If-Match':resource["o:version"], Authorization:'Basic YWRtaW46YWRtaW4='},
+      function(data) {
+         var resource = eval('[' + data.content.data + ']')[0];
+         var prettyJson = toolifyDcResource(resource, 0);
+         //var prettyJson = JSON.stringify(resource, null, '\t').replace(/\n/g, '<br>');
+         //prettyJson = toolifyDcResourceJson(prettyJson);
+         $('.mydata').html(prettyJson);
+         if (success) {
+            success(resource);
+         }
+      },
+      function(data) {
+         setError(data._body._body);
+         if (error) {
+            error(data);
+         }
+      });
+   return false;
+}
+
+function postAllData(resources, success, error) {
+   swaggerUi.api.dc.postAllData({body:resources,
+         Authorization:'Basic YWRtaW46YWRtaW4='},
+      function(data) {
+         var resResources = eval(data.content.data);
+         var prettyJson = toolifyDcList(resResources, null, null, null, 0);
+         ///var prettyJson = JSON.stringify(resResources, null, '\t').replace(/\n/g, '<br>');
+         ///prettyJson = toolifyDcResourceJson(prettyJson);
+         $('.mydata').html(prettyJson);
+         if (success) {
+            success(resources);
+         }
+      }, function(data) {
+         setError(data._body._body);
+         /*if (data._body._body.indexOf("already existing") != -1) { // TODO better
+            findDataByType(relativeUrl, callback);
+         }*/
+         if (error) {
+            error(data);
+         }
+      });
+    return false;
+ }
