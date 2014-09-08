@@ -55,6 +55,7 @@ public class DataModelServiceImpl implements DCModelService {
 	  modelMap.put(dcModel.getName(), dcModel);  
    }
    
+   /** ONLY TO CREATE DERIVED MODELS ex. Contribution, TODO LATER rather change their name ?!? */
    public void addModel(DCModel dcModel, String name) {
 	   modelMap.put(name, dcModel);
    }

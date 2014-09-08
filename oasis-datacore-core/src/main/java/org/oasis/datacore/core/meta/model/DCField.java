@@ -6,6 +6,8 @@ import com.google.common.collect.ImmutableSet;
 
 
 /**
+ * TODO LATER inherits DCNamedBase .getName() common with DCModelBase for fieldOrMixins ?
+ * 
  * TODO readonly : setters only for tests, LATER admin using another (inheriting) model ?!?
  * don't use this object for List or Maps (use DCListField and DCMapField)
  * @author mdutoo
@@ -14,7 +16,7 @@ import com.google.common.collect.ImmutableSet;
 public class DCField {
 
    private String name; // TODO also longName / displayName (i18n'd ??), description (/ help), sampleValues list ?
-   /** string, boolean, int, float, long, double, date, map, list, resource, i18n ? geoloc ???
+   /** string, boolean, int, float, long, double, date, map, list, resource, i18n ; geoloc ???
     * default is string */
    private String type = "string"; // TODO enum ?!? "text" ?
    /** Is a non-null value required ? defaults to false */
@@ -25,6 +27,8 @@ public class DCField {
     * TODO LATER replace by indexed & maxScan fields OR rename to resourceJoinQueryLimit
     * OR add business fields "hotterRatherThanColder", "smallSetOfValuesRatherThanBigOne" */
    private int queryLimit = 0;
+   /** set on a POST/PUT Resource if not provided */
+   private Object defaultValue = null;
    
    // TODO also :
    // * default rights for Model ?! (or even Mixin ? Field ???)
@@ -59,6 +63,12 @@ public class DCField {
       this.name = name;
       this.type = type;
    }
+   /** NB. if there can be defaultValue then the field is not required ! */
+   public DCField(String name, String type, Object defaultValue, int queryLimit) {
+      this(name, type);
+      this.defaultValue = defaultValue;
+      this.queryLimit = queryLimit;
+   }
    /** to be used in inheriting classes only, to skip constraint on type */
    protected DCField(String name, String type, boolean required, int queryLimit,
          boolean superConstructor) {
@@ -87,6 +97,9 @@ public class DCField {
    public int getQueryLimit() {
       return queryLimit;
    }
+   public Object getDefaultValue() {
+      return defaultValue;
+   }
    
    /**
     * TODO better (ObjectMapper ??)
@@ -114,6 +127,10 @@ public class DCField {
 
    public void setQueryLimit(int queryLimit) {
       this.queryLimit = queryLimit;
+   }
+   
+   public void setDefaultValue(Object defaultValue) {
+      this.defaultValue = defaultValue;
    }
    
 }

@@ -89,6 +89,7 @@ public class QueryParsingServiceImpl implements QueryParsingService {
          break;
 
       case ELEM_MATCH:
+         // (for now tested in the case of i18n)
          // parsing using the latest upmost list field :
          // TODO WARNING the first element in the array must be selective, because all documents
          // containing it are scanned
@@ -97,7 +98,8 @@ public class QueryParsingServiceImpl implements QueryParsingService {
             throw new ResourceParsingException("$elemMatch criteria value should be JSON parsed as LinkedHashMap !");
          }
          DCField listElementField = ((DCListField) dcField).getListElementField(); // has been checked before
-         if (!(DCFieldTypeEnum.MAP.equals(DCFieldTypeEnum.getEnumFromStringType(listElementField.getType())))) {
+         //if (!(DCFieldTypeEnum.MAP.equals(DCFieldTypeEnum.getEnumFromStringType(listElementField.getType())))) {
+         if (!(listElementField instanceof DCMapField)) { // allows i18n also
             throw new ResourceParsingException("$elemMatch criteria value should be on list whose elements are maps !");
          }
          Map<String, DCField> listElementMapFields = ((DCMapField) listElementField).getMapFields(); // has been checked before
@@ -268,7 +270,8 @@ public class QueryParsingServiceImpl implements QueryParsingService {
       if (queryOperatorsEnum.isListSpecificOperator()) {
          // if list-specific operator ex. $all, field must be a list
          // (and its element field compatible with query value, but that is checked later)
-         if (!DCFieldTypeEnum.LIST.equals(dcFieldTypeEnum)) {
+         //if (!DCFieldTypeEnum.LIST.equals(dcFieldTypeEnum)) {
+         if (!(dcField instanceof DCListField)) { // allows i18n also
             throw new ResourceParsingException("Field of type " + dcField.getType()
                   + " is not compatible with operator " + queryOperatorsEnum.name()
                   + " : list-specific operators only apply to list fields !");

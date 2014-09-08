@@ -7,6 +7,7 @@ import java.util.Stack;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.oasis.datacore.core.meta.model.DCField;
+import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCModel;
 
 
@@ -39,31 +40,52 @@ public class DCResourceParsingContext {
     * @param model
     * @param uri
     */
-   public DCResourceParsingContext(DCModel model, String uri) {
-      this.enter(model, uri);
+   public DCResourceParsingContext(DCModel model, String id) {
+      this.enter(model, id);
    }
    
    public DCResourceValue peekResourceValue() {
       return this.resourceValueStack.peek();
    }
    
-   public void enter(DCModel model, String uri) {
-      this.resourceValueStack.add(new DCResourceValue(model.getName(), null, uri));
+   public void enter(DCModel model, String id) {
+      ///this.resourceValueStack.add(new DCResourceValue(model.getName() + '[' + id + ']', null, id));
+      this.resourceValueStack.add(new DCResourceValue(null, null, model.getName() + '[' + id + ']'));
    }
-   
+
+   /**
+    * For within list only
+    * @param field list element field
+    * @param value
+    * @param index
+    */
+   public void enter(DCField field, Object value, long index) {
+      // TODO LATER OPT less context for performance unless enabled in request context ?
+      DCResourceValue previousResourceValue = null;
+      if (!this.resourceValueStack.isEmpty()) {
+         previousResourceValue = this.resourceValueStack.peek();
+      }
+      this.resourceValueStack.add(new DCResourceValue(previousResourceValue, field,  value, index));
+   }
    public void enter(DCField field, Object value) {
       String fullValuedPath;
+      DCResourceValue previousResourceValue = null;
       if (this.resourceValueStack.isEmpty()) {
          fullValuedPath = "Missing root model name";
       } else {
          // TODO LATER OPT less context for performance unless enabled in request context ?
-         DCResourceValue previousResourceValue = this.resourceValueStack.peek();
-         fullValuedPath = previousResourceValue.getFullValuedPath() + "/" + field.getName();
+         previousResourceValue = this.resourceValueStack.peek();
+         /*fullValuedPath = previousResourceValue.getFullValuedPath() + "/";
+         if (previousResourceValue.getField() == null
+               || !"list".equals(previousResourceValue.getField().getType())) {
+            fullValuedPath = previousResourceValue.getFullValuedPath() + "/" + field.getName();
+         } // else list element field with useless name
          if (!(value instanceof List<?> || value instanceof Map<?,?>)) {
-            fullValuedPath += "[='" + ((value == null) ? "null" : value) + "']";
-         }
+            fullValuedPath += "[" + ((value == null) ? "null" : ((value instanceof String) ?
+                  "'" + value + "'" : value)) + "]";
+         }*/
       }
-      this.resourceValueStack.add(new DCResourceValue(fullValuedPath, field,  value));
+      this.resourceValueStack.add(new DCResourceValue(previousResourceValue, field,  value));
    }
    public void exit() {
       this.resourceValueStack.pop();
@@ -128,7 +150,8 @@ public class DCResourceParsingContext {
             + resourceParsingContext.getWarnings().size() + " warnings) " : "")
             + ".\nErrors:");
       for (ResourceParsingLog error : resourceParsingContext.getErrors()) {
-         sb.append("\n   - in context ");
+         //sb.append("\n   - in context "); // too long
+         sb.append("\n - ");
          sb.append(error.getFieldFullPath());
          sb.append(" : ");
          sb.append(error.getMessage());

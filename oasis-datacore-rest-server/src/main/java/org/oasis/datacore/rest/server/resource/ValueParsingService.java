@@ -2,9 +2,12 @@ package org.oasis.datacore.rest.server.resource;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.lang.ClassUtils;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 import org.oasis.datacore.rest.api.util.ResourceParsingHelper;
 import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
@@ -12,11 +15,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 
 
 /**
+ * TODO rather ValueService
+ * 
  * This class provides Datacore field value parsing for 2 purpose :
  * * eager parsing of query criteria values
  * * parsing Resource field (property) values that are non-native
@@ -34,6 +40,9 @@ public class ValueParsingService {
    @Qualifier("datacoreApiServer.objectMapper")
    public ObjectMapper mapper;
 
+   
+   ////////////////////////////////////////////////////////////////
+   // parsing from string :
 
    /**
     * Parses value according to given field type.
@@ -298,6 +307,58 @@ public class ValueParsingService {
       sb.append(stringValue);
       sb.append('\"');
       return sb.toString();
+   }
+   
+   
+   ////////////////////////////////////////////////////////////////
+   // serializing to string :
+   
+   /**
+    * Used for model serialization for now only
+    * @param value
+    * @param fieldTypeEnum
+    * @return
+    * @throws ResourceParsingException TODO rather ConversionException ?!?
+    */
+   public String valueToString(Object value/*, DCFieldTypeEnum fieldTypeEnum*/) throws ResourceParsingException {
+      if (value == null) {
+         return null;
+      }
+      if (value instanceof Date) {
+         if (!(value instanceof DateTime)) {
+            // TODO better in mongo persistence
+            return new DateTime((Date) value, DateTimeZone.UTC).toString();
+            // NB. if not UTC, default timezone has a non-integer time shift
+         }
+         return value.toString();
+      } else {
+         Class<? extends Object> valueClass = value.getClass();
+         if (valueClass.isPrimitive() || ClassUtils.wrapperToPrimitive(valueClass) != null) {
+            // see http://stackoverflow.com/questions/709961/determining-if-an-object-is-of-primitive-type
+            return value.toString(); // TODO or quoted for string-likes ? including Long & Double ?
+         }
+      }
+      /*switch (fieldTypeEnum) {
+      case STRING:
+      case RESOURCE:
+         return (String) value; // or quoted ?
+      case BOOLEAN:
+      case INTEGER:
+      case FLOAT:
+         return value.toString();
+      case DOUBLE:
+      case LONG:
+         return value.toString(); // or quoted ?
+      case DATE:
+         return value.toString(); // TODO Date case ? (TimeZone ??) or quoted ?
+      default:
+      }*/
+      // list (including i18n) or map :
+      try {
+         return mapper.writer().writeValueAsString(value);
+      } catch (JsonProcessingException jpex) {
+         throw new ResourceParsingException("JSON error while writing value to string : " + value, jpex);
+      }
    }
    
 }

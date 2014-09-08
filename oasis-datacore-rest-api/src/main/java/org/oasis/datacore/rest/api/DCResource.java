@@ -34,6 +34,22 @@ import com.wordnik.swagger.annotations.ApiModelProperty;
  * 
  * A Datacore data Resource.
  * This class is the Java support for producing JSON-LD-like JSON out of Datacore data.
+ * Values are formatted as follows :
+ * - dates as ISO8601 ex. "2014-01-08T09:31:19.062Z", "2014-01-08T10:31:19.062+01:00".
+ * Put your timezone in your dates so that they can be shared across the world while
+ * staying readable for your local use case.
+ * - long and double as string
+ * - i18n as a map of translations (like JSONLD) :
+ *    [
+        {
+          "v": "The Republic",
+          "l": "en"
+        },
+        {
+          "v": "La République",
+          "l": "fr"
+        }
+      ]
  * 
  * TODO patch date support by Jackson else Caused by: com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException: Unrecognized field "weekOfWeekyear" (class org.joda.time.DateTime)
  *  
@@ -52,6 +68,11 @@ public class DCResource {
    public static final String KEY_DCMODIFIED = "dc:modified";
    public static final String KEY_DCCREATOR = "dc:creator";
    public static final String KEY_DCCONTRIBUTOR = "dc:contributor";
+
+   public static final String KEY_I18N_LANGUAGE = "l";
+   public static final String KEY_I18N_LANGUAGE_JSONLD = "@language";
+   public static final String KEY_I18N_VALUE = "v";
+   public static final String KEY_I18N_VALUE_JSONLD = "@value";
    
    @ApiModelProperty(value = "URI", position=0, required=true)
    @JsonProperty(KEY_URI)

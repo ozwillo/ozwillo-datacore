@@ -238,6 +238,7 @@ public class DatacoreApiServerTest {
 
       DCResource cityData = buildCityData(city, country, 10000000, false);
       DCResource postedLondonCityData = datacoreApiClient.postDataInType(cityData, CityCountrySample.CITY_MODEL_NAME);
+      // test int field :
       Assert.assertNotNull(postedLondonCityData);
       Assert.assertEquals(cityData.getProperties().get("city:populationCount"),
             postedLondonCityData.getProperties().get("city:populationCount"));
@@ -245,6 +246,8 @@ public class DatacoreApiServerTest {
       Assert.assertNotNull(gottenLondonCityData);
       Assert.assertEquals(cityData.getProperties().get("city:populationCount"),
             postedLondonCityData.getProperties().get("city:populationCount"));
+      // test default value :
+      Assert.assertEquals(false, postedLondonCityData.getProperties().get("city:isComCom"));
       
       try {
          datacoreApiClient.postDataInType(cityData, CityCountrySample.CITY_MODEL_NAME);
@@ -885,6 +888,8 @@ public class DatacoreApiServerTest {
    @Test
    public void testI18n() {
       cityCountrySample.initData();
+      String moscowCityUri = UriHelper.buildUri(this.containerUrl,
+            CityCountrySample.CITY_MODEL_NAME, "Russia/Moscow");
       
       /*
        * i18n, looking up in any language
@@ -895,43 +900,103 @@ public class DatacoreApiServerTest {
       List<DCResource> resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             params, null, 10);
       Assert.assertEquals(1, resources.size());
-      //Assert.assertEquals(moscowCityData.getUri(), resources.get(0).getUri());
+      Assert.assertEquals(moscowCityUri, resources.get(0).getUri());
       //Assert.assertEquals(moscowCityData.get("i18Name"), resources.get(0).get("i18Name"));
+      
+      // TODO LATER i18n, default lookup (on value)
+      /*resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("i18n:name", "Moscow"), null, 10);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(moscowCityUri, resources.get(0).getUri());*/
    
+      // checking used index
       params.add("debug", "true");
       List<DCResource> explainRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             params, null, 10);
       Assert.assertEquals(1, explainRes.size());
       @SuppressWarnings("unchecked")
       Map<String, String> explain = (Map<String,String>) explainRes.get(0).get("explain");
-      Assert.assertTrue("Should have used index on i18n", ((String) explain
+      Assert.assertTrue("Should have used index on i18n v", ((String) explain
             .get("cursor")).startsWith("BtreeCursor _p.i18n:name.v"));
       
       /*
        * i18n, looking for a particular language
        */    
       QueryParameters langParams = new QueryParameters().add("i18n:name.l", "ru");
-      List<DCResource> langResources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             langParams, null, 10);
-      Assert.assertEquals(1, langResources.size());
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(moscowCityUri, resources.get(0).getUri());
       
+      // checking (not) used index
       langParams.add("debug", "true");
       explainRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME, langParams, null, 10);
       @SuppressWarnings("unchecked")
       Map<String,String> explain2 = (Map<String,String>) explainRes.get(0).get("explain");
       Assert.assertFalse("Should not have used index on i18n", ((String) explain2
-            .get("cursor")).startsWith("BtreeCursor _p.i18n:name.v"));
+            .get("cursor")).startsWith("BtreeCursor _p.i18n:name"));
 
       /*
-       * i18n, looking up in a particular language
+       * i18n, looking up in a given language
        */    
-      langParams.add("i18n:name.v", "Moscow")
+      langParams.add("i18n:name.v", "Moskva")
          .add("i18n:name.v", "+"); // to override default sort on _chAt which could blur results
       explainRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME, langParams, null, 10);
       @SuppressWarnings("unchecked")
       Map<String,String> explain3 = (Map<String,String>) explainRes.get(0).get("explain");
-      Assert.assertTrue("Should have used index on i18n", ((String) explain3
+      Assert.assertTrue("Should have used index on i18n v", ((String) explain3
             .get("cursor")).startsWith("BtreeCursor _p.i18n:name.v"));
+      // checking that found using $elemMatch
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("i18n:name", "$elemMatch{\"v\":\"Moskva\",\"l\":\"ru\"}"), null, 10);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(moscowCityUri, resources.get(0).getUri());
+      // checking used index
+      explainRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("i18n:name", "$elemMatch{\"v\":\"Moskva\",\"l\":\"ru\"}")
+            .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
+            .add("debug", "true"), null, 10);
+      @SuppressWarnings("unchecked")
+      Map<String,String> explain4 = (Map<String,String>) explainRes.get(0).get("explain");
+      Assert.assertTrue("Should have used index on i18n v", ((String) explain4
+            .get("cursor")).startsWith("BtreeCursor _p.i18n:name.v"));
+      // checking that not found in wrong language using $elemMatch
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("i18n:name", "$elemMatch{\"v\":\"Moscow\",\"l\":\"ru\"}"), null, 10);
+      Assert.assertEquals(0, resources.size());
+      // TODO LATER checking that not found in wrong language
+      /*resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("i18n:name.v", "Moscow").add("i18n:name.l", "ru"), null, 10);
+      Assert.assertEquals(0, resources.size());*/
+
+      // i18n, JSONLD-style lookup on value
+      QueryParameters jsonldParams = new QueryParameters().add("i18n:name.@value", "Moscow")
+            .add("i18n:name.@value", "+"); // to override default sort on _chAt which could blur results
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            jsonldParams, null, 10);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(moscowCityUri, resources.get(0).getUri());
+      // TODO LATER
+      /*// checking that found using $elemMatch
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("i18n:name", "$elemMatch{\"@value\":\"Moskva\",\"@language\":\"ru\"}"), null, 10);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(moscowCityUri, resources.get(0).getUri());
+      // checking that not found in wrong language using $elemMatch
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("i18n:name", "$elemMatch{\"@value\":\"Moscow\",\"@language\":\"ru\"}"), null, 10);
+      Assert.assertEquals(0, resources.size());
+      // checking that not found in wrong language
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("i18n:name.@value", "Moscow").add("i18n:name.@language", "ru"), null, 10);
+      Assert.assertEquals(0, resources.size());*/
+
+      // i18n, JSONLD-style lookup in a given language
+      jsonldParams.add("i18n:name.@language", "en");
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            jsonldParams, null, 10);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(moscowCityUri, resources.get(0).getUri());
    }
    
    @Test

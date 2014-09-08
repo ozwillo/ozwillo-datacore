@@ -1,5 +1,8 @@
 package org.oasis.datacore.sample;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -10,6 +13,7 @@ import java.util.Map;
 
 import javax.ws.rs.WebApplicationException;
 
+import org.apache.commons.codec.binary.Base64;
 import org.oasis.datacore.contribution.service.ContributionService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.query.QueryException;
@@ -24,6 +28,7 @@ import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
+import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.core.security.mock.MockAuthenticationService;
 import org.oasis.datacore.historization.exception.HistorizationException;
 import org.oasis.datacore.historization.service.impl.HistorizationServiceImpl;
@@ -65,8 +70,8 @@ import com.mongodb.DBCollection;
  *
  */
 public abstract class DatacoreSampleBase extends InitableBase/*implements ApplicationListener<ContextRefreshedEvent> */{
-
-   private static final Logger logger = LoggerFactory.getLogger(DatacoreSampleBase.class);
+   
+   protected final Logger logger = LoggerFactory.getLogger(getClass());
    
    @Autowired
    protected MockAuthenticationService mockAuthenticationService;
@@ -400,6 +405,12 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
    // Resource collection & index creation
    // TODO move
    
+   /**
+    * TODO LATER drop obsolete indexes
+    * @param model
+    * @param deleteCollectionsFirst
+    * @return
+    */
    public boolean ensureCollectionAndIndices(DCModel model, boolean deleteCollectionsFirst) {
       if (deleteCollectionsFirst) {
          // cleaning data first
@@ -454,7 +465,8 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
       }
       
       // generating static indexes
-      coll.ensureIndex(new BasicDBObject(DCEntity.KEY_URI, 1), null, true);
+      // NB. if already exist, won't do anything http://docs.mongodb.org/manual/reference/method/db.collection.ensureIndex/
+      coll.ensureIndex(new BasicDBObject(DCEntity.KEY_URI, 1), null, true); // TODO dropDups ??
       coll.ensureIndex(new BasicDBObject(DCEntity.KEY_AR, 1)); // for query security
       coll.ensureIndex(new BasicDBObject(DCEntity.KEY_CH_AT, 1)); // for default order
       
@@ -474,6 +486,7 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
       String prefixedGlobalFieldName = prefix + globalField.getName();
       if (globalField.getQueryLimit() > 0) {
          coll.ensureIndex(prefixedGlobalFieldName);
+         // TODO LATER remove obsolete indexes 
       }
       switch (DCFieldTypeEnum.getEnumFromStringType(globalField.getType())) {
       case LIST:
@@ -485,6 +498,7 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
          // TODO WARNING : single map field can't be indexed !!!
          ensureFieldIndices(coll, prefixedGlobalFieldName + ".", mapFields.values());
          break;
+      // TODO LATER index subresource as Map !!
       case I18N:
          DCField listI18nField = ((DCI18nField) globalField);
          DCField map = ((DCListField) listI18nField).getListElementField();
@@ -531,6 +545,10 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
       }
    }
 
+   
+   /////////////////////////////////////////////////////////////////////:
+   //
+   
    /***
     * helper method to build new DCResources FOR TESTING ; 
     * copies the given Resource's field that are among the given modelOrMixins
@@ -575,6 +593,101 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
    }
    public DCResource copy(DCResource THIS, DCResource source) {
       return copy(THIS, source, (DCModelBase[]) null);
+   }
+   
+   
+   /////////////////////////////////////////////////////////////////////
+   // Helpers for building Models, TODO move
+   
+   public static String generateId(String tooComplicatedId) {
+      try {
+         return new String(Base64.encodeBase64( // else unreadable
+               MessageDigest.getInstance("MD5").digest(tooComplicatedId.getBytes("UTF-8"))), "UTF-8");
+      } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+         // should not happen
+         // TODO log
+         throw new RuntimeException(e);
+      }
+   }
+
+
+   public static DCMixin createReferencingMixin(DCModel model, String ... embeddedFieldNames) {
+      return createReferencingMixin(model, null, null, true, embeddedFieldNames);
+   }
+   /**
+    * modelName_ref_0 (rather than modelName_0_ref, or modelName_0_ref_0)
+    * because referencing mixin are strictly derived from models,
+    * and its major version is auto derived because of its resource fields
+    * pointing to majorVersioned models.
+    * (HOWEVER this is a big constraint, because a new major version / model implies
+    * new major versions / models in all resources indirectly linking to it,
+    * so should rather add new fields OR VERSION THEM, OR VERSION MIXINS BUT NOT MODELS
+    * (which is the same as having contributions from different sources / branches in the same Model)
+    * and have new clients update new ones but also update them from older ones
+    * changed by old clients)
+    * NB. source model(s) are known by the resourceType resource fields pointing to them
+    * TODO extract as helper
+    * @param model
+    * @param copyReferencingMixins
+    * @param embeddedFieldNames
+    * @return
+    */
+   public static DCMixin createReferencingMixin(DCModel model,
+         DCMixin optInheritedReferencingMixin, DCMixin optDescendantMixin,
+         boolean copyReferencingMixins, String ... embeddedFieldNames) {
+      String refMixinNameRoot;
+      
+      // parsing model name TODO lifecycle
+      String[] modelType = model.getName().split("_", 2); // TODO better
+      String modelName = (modelType.length == 2) ? modelType[0] : model.getName();
+      String modelVersionIfAny = (modelType.length == 2) ? modelType[1] : null;
+      String modelNameWithVersionIfAny = model.getName();
+      
+      // parsing mixin name TODO lifecycle
+      if (optDescendantMixin != null) {
+         String[] optDescendantMixinType = optDescendantMixin.getName().split("_", 2); // TODO better
+         String optDescendantMixinName = (optDescendantMixinType.length == 2) ?
+               optDescendantMixinType[0] : optDescendantMixin.getName();
+         String optDescendantMixinVersionIfAny = (optDescendantMixinType.length == 2) ?
+               optDescendantMixinType[1] : null;
+         refMixinNameRoot = optDescendantMixinName;
+      } else {
+         //refMixinNameRoot = modelNameWithVersionIfAny
+         refMixinNameRoot = modelName;
+      }
+      
+      String mixinVersion = "_0"; // has to be defined explicitly,
+      // rather than ((modelVersionIfAny != null) ? "_" + modelVersionIfAny : "")
+      DCMixin referencingMixin = (DCMixin) new DCMixin(refMixinNameRoot + "_ref" + mixinVersion);
+      
+      if (copyReferencingMixins) {
+         // copy referencing mixins :
+         Collection<DCModelBase> referencingMixins;
+         if (optInheritedReferencingMixin == null) {
+            referencingMixins = model.getGlobalMixins();
+         } else  {
+            referencingMixins = new ArrayList<DCModelBase>(optInheritedReferencingMixin.getGlobalMixins());
+            referencingMixins.add(optInheritedReferencingMixin);
+         }
+         for (DCModelBase mixin : referencingMixins) {
+            if (mixin.getName().endsWith("_ref_" + mixin.getVersion())) { // TODO lifecycle
+               referencingMixin.addMixin(mixin);
+            }
+         }
+      }
+      
+      // add embedded & copied fields :
+      for (String embeddedFieldName : embeddedFieldNames) {
+         referencingMixin.addField(model.getGlobalField(embeddedFieldName));
+      }
+      
+      // add actual resource reference field (if not yet in an inheriting mixin) :
+      DCField existingField = referencingMixin.getGlobalField(modelName);
+      if (existingField == null
+            || !modelNameWithVersionIfAny.equals(existingField.getType())) {
+         referencingMixin.addField(new DCResourceField(modelName, modelNameWithVersionIfAny, true, 100));
+      }
+      return referencingMixin;
    }
    
 }

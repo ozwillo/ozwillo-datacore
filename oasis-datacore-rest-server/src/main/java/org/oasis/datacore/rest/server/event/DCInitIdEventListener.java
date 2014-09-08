@@ -24,7 +24,7 @@ public class DCInitIdEventListener extends DCResourceEventListener implements DC
    /**
     * helper to create it programmatically (in tests...)
     * @param modelType if not null, inited ; else must be set and inited afterwards
-    * (that's auto done when doin model/mixin.addListener(resourceListener)
+    * (that's auto done when doing model/mixin.addListener(resourceListener)
     * @param idFieldName TODO prevent null
     */
    public DCInitIdEventListener(String modelType, String idFieldName) {

@@ -63,7 +63,11 @@ public class EventService {
             }
             throw aoeex;
          } catch (Exception e) {
-            logger.warn("Error while event " + event + " handled by listener " + listener);
+            logger.warn("Error while event " + event + " handled by listener "
+                  + listener + " : " + e.getMessage());
+            if (logger.isDebugEnabled()) {
+               logger.debug("   details : ", e);
+            }
          }
       }
    }
@@ -71,6 +75,7 @@ public class EventService {
 
    /**
     * Resource event-specific trigger
+    * TODO move to ResourceEventService (better than ResourceService) ?
     * @param aboutToEventType
     * @param resource
     * @throws ResourceException when a triggered listener aborted it with a ResourceException cause
@@ -81,6 +86,7 @@ public class EventService {
    }
    /**
     * Resource event-specific trigger
+    * TODO move to ResourceEventService (better than ResourceService) ?
     * @param aboutToEventType
     * @param resource
     * @param previousResource

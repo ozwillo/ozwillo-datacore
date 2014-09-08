@@ -7,6 +7,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+
+/**
+ * TODO LATER inherits DCNamedBase .getName() common with DCField for fieldOrMixins ?
+ * 
+ * @author mdutoo
+ *
+ */
 public abstract class DCModelBase {
 
    private String name;
@@ -48,6 +55,7 @@ public abstract class DCModelBase {
       return documentation;
    }
    
+   /** TODO rename getLocalField(), use rather getGlobalField (local fields only here) */
    public DCField getField(String name) {
       return fieldMap.get(name);
    }
@@ -59,12 +67,15 @@ public abstract class DCModelBase {
    }
    /** computed cache ; TODO LATER trigger reset, handle Model version (upgrade) */
    public Set<String> getGlobalMixinNames() {
-      checkGlobalCaches();
-      return globalMixinMap.keySet();
+      return getGlobalMixinMap().keySet();
    }
+   /** computed cache ; TODO LATER trigger reset, handle Model version (upgrade) */
    public Collection<DCModelBase> getGlobalMixins() {
-      checkGlobalCaches();
-      return globalMixinMap.values();
+      return getGlobalMixinMap().values();
+   }
+   /** computed cache ; TODO LATER trigger reset, handle Model version (upgrade) */
+   public Collection<DCField> getGlobalFields() {
+      return getGlobalFieldMap().values();
    }
    /** computed cache ; TODO LATER trigger reset, handle Model version (upgrade) */
    public Map<String, DCField> getGlobalFieldMap() {
@@ -124,27 +135,35 @@ public abstract class DCModelBase {
       return version;
    }
 
-   /** TODO make it unmodifiable */
+   /** TODO rename getLocalFieldNames(), TODO make it unmodifiable */
    public Set<String> getFieldNames() {
       return fieldMap.keySet();
    }
+   /** TODO rename getLocalFields() */
    public Collection<DCField> getFields() {
       return fieldMap.values();
    }
-   /** TODO make it unmodifiable */
+   /** TODO rename getLocalFieldMap(), TODO make it unmodifiable */
    public Map<String, DCField> getFieldMap() {
       return fieldMap;
    }
 
+   /** TODO rename getLocalMixinNames() */
    public Set<String> getMixinNames() {
       return mixinMap.keySet();
    }
+   /** TODO rename getLocalMixins() */
    public Collection<DCModelBase> getMixins() {
       return mixinMap.values();
    }
-   /** TODO make it unmodifiable */
+   /** TODO rename getLocalMixinMap(), TODO make it unmodifiable */
    public Map<String,DCModelBase> getMixinMap() {
       return mixinMap;
+   }
+   
+   /** to be able to know the override order when storing it to Resources and back */
+   public List<Object> getFieldAndMixins() {
+      return fieldAndMixins;
    }
 
    /** TODO make it unmodifiable */

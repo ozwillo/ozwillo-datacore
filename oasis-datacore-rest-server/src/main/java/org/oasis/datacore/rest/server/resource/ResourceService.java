@@ -217,6 +217,10 @@ public class ResourceService {
                }
             }*/
          } else {
+            if (!isCreation) {
+               throw new ResourceObsoleteException("Trying to update missing resource "
+                     + "(to rather create it, provide no version or < 0)", resource);
+            }
             if (!canCreate) {
                throw new ResourceNotFoundException("Data resource doesn't exist (forbidden in PUT)", resource);
             }
@@ -230,19 +234,22 @@ public class ResourceService {
          dataEntity = new DCEntity();
          dataEntity.setCachedModel(dcModel); // TODO or in DCEntityService ?
          dataEntity.setUri(stringUri);
-      } else if (putRatherThanPatchMode) {
-         dataEntity.getProperties().clear();
-      } // else reuse existing entity as base : PATCH-like behaviour
+         // NB. null version
+      } else {
+         dataEntity.setVersion(version);
+         if (putRatherThanPatchMode) {
+            dataEntity.getProperties().clear();
+         } // else reuse existing entity as base : PATCH-like behaviour
+      }
 
       Map<String, Object> dataProps = resource.getProperties();
       
       dataEntity.setModelName(dcModel.getName()); // TODO LATER2 check that same (otherwise ex. external approvable contrib ??)
-      dataEntity.setVersion(version);
       ///dataEntity.setId(stringUri); // NOO "invalid Object Id" TODO better
       dataEntity.setTypes(resource.getTypes()); // TODO or no modelType, or remove modelName ??
       
       // parsing resource according to model :
-      DCResourceParsingContext resourceParsingContext = new DCResourceParsingContext(dcModel, stringUri);
+      DCResourceParsingContext resourceParsingContext = new DCResourceParsingContext(dcModel, uri.getId());
       //List<DCEntity> embeddedEntitiesToAlsoUpdate = new ArrayList<DCEntity>(); // TODO embeddedEntitiesToAlsoUpdate ??
       //resourceParsingContext.setEmbeddedEntitiesToAlsoUpdate(embeddedEntitiesToAlsoUpdate);
       resourceEntityMapperService.resourceToEntityFields(dataProps, dataEntity.getProperties(),
@@ -285,7 +292,8 @@ public class ResourceService {
             entityService.update(dataEntity);
          } catch (OptimisticLockingFailureException olfex) {
             throw new ResourceObsoleteException("Trying to update data resource "
-                  + "without up-to-date version but " + dataEntity.getVersion(), resource);
+                  + "without up-to-date version but " + resource.getVersion(), resource);
+            // and not dataEntity.getVersion() which had already to be incremented by Spring
          } catch (NonTransientDataAccessException ntdaex) {
             // unexpected, so rethrowing runtime ex (will be wrapped in 500 server error)
             throw ntdaex;

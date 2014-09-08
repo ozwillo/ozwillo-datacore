@@ -95,9 +95,13 @@ public class ResourceEntityMapperService {
       
       Object entityValue;
       if (resourceValue == null) {
-         if (!dcField.isRequired() && !"string".equals(dcField.getType())) { // TODO ? for all ?! or only for MapField ??
-            throw new ResourceParsingException("map Field value is not a JSON Object : " + resourceValue);
+         if (dcField.isRequired()) {
+            throw new ResourceParsingException("required Field value is null");
          }
+         // accepting null (for non required fields) if only to allow to remove / clear values
+         // TODO rather enforce even non required list & maps to be inited to empty ??
+         // defaulting (usually null ; NB. there are only values provided in resources here) :
+         ///entityValue = dcField.getDefaultValue(); // NO rather only if value not provided
          entityValue = null;
          
       } else if ("string".equals(dcField.getType())) {
@@ -195,7 +199,7 @@ public class ResourceEntityMapperService {
          for (Object resourceItem : dataList) {
             Object entityItem;
             try {
-               resourceParsingContext.enter(listElementField, listElementField);
+               resourceParsingContext.enter(listElementField, resourceItem, i);
                entityItem = resourceToEntityValue(resourceItem, listElementField,
                      resourceParsingContext, putRatherThanPatchMode);
             } catch (ResourceParsingException rpex) {
@@ -222,13 +226,13 @@ public class ResourceEntityMapperService {
             if(resourceItem instanceof Map<?, ?>) {
                @SuppressWarnings("unchecked")
                Map<String, Object> mapResourceItem = (Map<String,Object>) resourceItem;
-               Object i18nLanguage = mapResourceItem.get(DCI18nField.KEY_LANGUAGE); // native DC Resource support
+               Object i18nLanguage = mapResourceItem.get(DCResource.KEY_I18N_LANGUAGE); // native DC Resource support
                if (i18nLanguage == null) {
-                  i18nLanguage = mapResourceItem.get("@language"); // JSON-LD support
+                  i18nLanguage = mapResourceItem.get(DCResource.KEY_I18N_LANGUAGE_JSONLD); // JSON-LD support (required when JSONLD-supported format ex. RDF)
                }
-               Object i18nValue = mapResourceItem.get(DCI18nField.KEY_VALUE); // native DC Resource support
+               Object i18nValue = mapResourceItem.get(DCResource.KEY_I18N_VALUE); // native DC Resource support
                if (i18nValue == null) {
-                  i18nValue = mapResourceItem.get("@value"); // JSON-LD support
+                  i18nValue = mapResourceItem.get(DCResource.KEY_I18N_VALUE_JSONLD); // JSON-LD support (required when JSONLD-supported format ex. RDF)
                }
 
                if (!(i18nLanguage instanceof String)) {
@@ -387,7 +391,8 @@ public class ResourceEntityMapperService {
             
          } else {
             // unknown type for resource value : to help debug model design, add error to context
-            throw new ResourceParsingException("Unknown Field type " + dcField.getType());
+            throw new ResourceParsingException("Unknown resource Field value "
+                  + "(should be string, Map or DCResource) :" + resourceValue);
          }
          
       } else {
@@ -450,6 +455,7 @@ public class ResourceEntityMapperService {
    
          // checking that it exists :
          entityEntityValue = entityService.getByUri(dcUri.toString(), valueModel);
+         // TODO TODO
          
       } else {
          // assuming fully embedded Resource, similar to new entity
@@ -542,7 +548,8 @@ public class ResourceEntityMapperService {
     * TODO LATER OPT2 also private resources, with autn/z according to knownWebContainers.
     * @param dcUri
     * @param resourceParsingContext
-    * @throws ResourceParsingException
+    * @throws ResourceParsingException containing full uri because it is not fully
+    * said in containing resource
     */
    public void checkWebHttpUrl(DCURI dcUri, DCResourceParsingContext resourceParsingContext)
          throws ResourceParsingException {
@@ -551,7 +558,7 @@ public class ResourceEntityMapperService {
          httpUrl = dcUri.toURI().toURL();
       } catch (MalformedURLException | URISyntaxException ex) {
          // already tested, should not happen
-         throw new ResourceParsingException("Unexpected error checking referenced public HTTP URL", ex);
+         throw new ResourceParsingException("Unexpected error checking referenced public HTTP URL " + dcUri, ex);
       }
       try {
          HttpURLConnection httpConn = (HttpURLConnection) httpUrl.openConnection();
@@ -565,28 +572,28 @@ public class ResourceEntityMapperService {
             return; // OK
          case 404 :
             throw new ResourceParsingException("Referenced external web resource not found "
-                  + "at its URI " + dcUri.toString());
+                  + "at its URI " + dcUri);
          case 410 :
             throw new ResourceParsingException("Referenced external web resource gone "
-                  + "at its URI " + dcUri.toString());
+                  + "at its URI " + dcUri);
          case 401 :
          case 403 :
             resourceParsingContext.addWarning("Referenced external web resource is private "
-                  + "at its URI " + dcUri.toString() + ", check not supported yet");
+                  + "at its URI " + dcUri + ", check not supported yet");
             break;
          }
          if (responseCode % 100 == 5) {
             resourceParsingContext.addWarning("Can't check referenced external web resource URI "
-                  + "because returns server error " + responseCode);
+                  + dcUri + "because returns server error " + responseCode);
          } else {
             // including 2 which should not happen
             resourceParsingContext.addWarning("Referenced external web resource URI "
-                  + "returns unexpected code " + responseCode);
+                  + dcUri + "returns unexpected code " + responseCode);
          }
       } catch (IOException ex) {
          // ProtocolException because of "HEAD" so should not happen
          resourceParsingContext.addWarning("Can't check referenced external web resource "
-               + "because IO error ", ex);
+               + dcUri + "because IO error ", ex);
       }
    }
 
@@ -613,10 +620,13 @@ public class ResourceEntityMapperService {
       // gathering required fields :
       // TODO DCFields, cache & for mixins
       Set<String> missingRequiredFieldNames = new HashSet<String>();
+      Set<DCField> missingDefaultFields = new HashSet<DCField>();
       for (String key : mapFields.keySet()) {
          DCField dcField = mapFields.get(key);
          if (dcField.isRequired()) {
             missingRequiredFieldNames.add(key);
+         } else if (dcField.getDefaultValue() != null) {
+            missingDefaultFields.add(dcField);
          }
       }
       
@@ -628,7 +638,10 @@ public class ResourceEntityMapperService {
             continue;
             
          } else if (!mapFields.containsKey(key)) {
-            resourceParsingContext.addError("Unknown field " + key);
+            Object value = resourceMap.get(key);
+            resourceParsingContext.addError("Unknown field " + key
+                  + "[" + ((value == null) ? "null" : ((value instanceof String) ?
+                        "'" + value + "'" : value)) + "]");
             continue;
          }
          
@@ -651,6 +664,10 @@ public class ResourceEntityMapperService {
             resourceParsingContext.exit();
          }
       }
+
+      for (DCField defaultDcField : missingDefaultFields) { // set default values :
+         entityMap.put(defaultDcField.getName(), defaultDcField.getDefaultValue());
+      }
       
       if (!missingRequiredFieldNames.isEmpty()) {
          resourceParsingContext.addError("Some Fields are missing : " + missingRequiredFieldNames); 
@@ -660,46 +677,16 @@ public class ResourceEntityMapperService {
    
    
    
+   /**
+    * Special handling :
+    * - non-JODA Dates made JODA
+    * - if within JSONLD REST Exchange, converts i18n map keys to JSONLD
+    * @param entity must have its model cached
+    * @return
+    */
    public DCResource entityToResource(DCEntity entity) {
-      Map<String, Object> resourceProps = new HashMap<String,Object>(entity.getProperties().size());
-      // TODO better for properties (especially aspects ?!!)
-      Map<String, Object> entityProps = entity.getProperties();
-      for (String entityPropName : entity.getProperties().keySet()) { // or iterate on fields ?
-         Object resourcePropValue = entityProps.get(entityPropName);
-         /*if (resourcePropValue instanceof DCEntity) {
-            
-         } else */if (resourcePropValue instanceof Date) {
-            if (!(resourcePropValue instanceof DateTime)) {
-               // TODO better in mongo persistence
-               resourcePropValue = new DateTime((Date) resourcePropValue, DateTimeZone.UTC);
-               // NB. if not UTC, default timezone has a non-integer time shift
-            }
-         } else if(entityPropName.contains("i18n")) { // TODO NOOOO rather using DCField
-            Exchange exchange = cxfJaxrsApiProvider.getExchange();
-            if (exchange != null // else not called through REST)
-                  && true) {
-               List<?> dataList = (List<?>) resourcePropValue;
-               ArrayList<Object> tempList = new ArrayList<Object>();
-               
-               for(Object mapResourceElement : dataList) {
-                  if(mapResourceElement instanceof Map<?, ?>) {
-                     Map<String, String> tempMap = new HashMap<String, String>();
-                     
-                     @SuppressWarnings("unchecked")
-                     Map<String, String> mapResourceItem = (Map<String, String>) mapResourceElement;
-                     tempMap.put("@language", mapResourceItem.get("l"));
-                     tempMap.put("@value", mapResourceItem.get("v"));
-                     tempList.add(tempMap);
-                  } else {
-                     logger.error("i18n value list element is not a map but " + mapResourceElement);
-                  }
-               }
-               resourcePropValue = tempList;
-            }
-         }
-         resourceProps.put(entityPropName, resourcePropValue);
-      }
-      DCResource resource = new DCResource(resourceProps);
+      DCResource resource = new DCResource(entityToResourceProps(
+            entity.getProperties(), entity.getCachedModel().getGlobalFieldMap()));
       resource.setUri(entity.getUri());
       //resource.setId(entity.getIri()); // TODO ??
       /*ArrayList<String> types = new ArrayList<String>(entity.getTypes().size() + 1);
@@ -718,6 +705,124 @@ public class ResourceEntityMapperService {
       return resource;
    }
    
+   /**
+    * 
+    * @param entityProperties
+    * @param map
+    * @return
+    */
+   private Map<String, Object> entityToResourceProps(
+         Map<String, Object> entityProperties, Map<String, DCField> dcFieldMap) {
+      Map<String, Object> resourceProps = new HashMap<String,Object>(
+            entityProperties.size()); // (copy because resource != entity)
+      // iterating only over existing values (not to provide any others)  :
+      for (String fieldName : entityProperties.keySet()) {
+         DCField dcField = dcFieldMap.get(fieldName);
+         if (dcField == null) {
+            // may be a native field, has to be handled above as subresource
+            continue;
+         }
+         Object resourcePropValue = entityToResourceProp(entityProperties.get(fieldName), dcField);
+         if (resourcePropValue != null) {
+            resourceProps.put(fieldName, resourcePropValue);
+         }
+      }
+      return resourceProps;
+   }
+
+
+   /**
+    * Special handling :
+    * - non-JODA Dates made JODA
+    * - if within JSONLD REST Exchange, converts i18n map keys to JSONLD
+    * @param entityPropValue
+    * @param dcField
+    * @return
+    */
+   private Object entityToResourceProp(Object entityPropValue, DCField dcField) {
+      if (entityPropValue == null) {
+         return entityPropValue;
+      }
+      switch (dcField.getType()) {
+      case "date" :
+         if (!(entityPropValue instanceof DateTime)) {
+            // TODO better in mongo persistence
+            entityPropValue = new DateTime((Date) entityPropValue, DateTimeZone.UTC);
+            // NB. if not UTC, default timezone has a non-integer time shift
+         }
+         return entityPropValue;
+      case "i18n" :
+         Exchange exchange = cxfJaxrsApiProvider.getExchange();
+         if (exchange != null // else not called through REST)
+               && true) {
+            // TODO better in REST stack ex. CXF interceptor ?!?
+            @SuppressWarnings("unchecked")
+            List<Object> entityI18nPropValue = (List<Object>) entityPropValue;
+            ArrayList<Object> resourceI18nPropValue = new ArrayList<Object>();
+            
+            for (Object mapResourceElement : entityI18nPropValue) {
+               if(mapResourceElement instanceof Map<?, ?>) {
+                  Map<String, String> tempMap = new HashMap<String, String>();
+                  
+                  @SuppressWarnings("unchecked")
+                  Map<String, String> mapResourceItem = (Map<String, String>) mapResourceElement;
+                  tempMap.put("@language", mapResourceItem.get("l"));
+                  tempMap.put("@value", mapResourceItem.get("v"));
+                  resourceI18nPropValue.add(tempMap);
+               } else {
+                  logger.error("i18n value list element is not a map but " + mapResourceElement);
+               }
+            }
+            entityPropValue = resourceI18nPropValue;
+         }
+         return entityPropValue;
+      case "map" :
+         @SuppressWarnings("unchecked")
+         Map<String, Object> entityPropMapValue = (Map<String, Object>) entityPropValue;
+         return entityToResourceProps(entityPropMapValue,
+               ((DCMapField) dcField).getMapFields());
+      case "list" :
+         DCField dcListElementField = ((DCListField) dcField).getListElementField();
+         @SuppressWarnings("unchecked")
+         List<Object> entityListPropValue = (List<Object>) entityPropValue;
+         ArrayList<Object> resourceListPropValue = new ArrayList<Object>();
+         
+         for (Object entityListElement : entityListPropValue) {
+            resourceListPropValue.add(entityToResourceProp(entityListElement, dcListElementField));
+         }
+         return resourceListPropValue;
+      case "resource" :
+         if (entityPropValue instanceof String) {
+            return entityPropValue;
+         } else if (entityPropValue instanceof Map<?,?>) {
+            String resourceType = ((DCResourceField) dcField).getResourceType();
+            DCModelBase mixinOrModel = modelService.getMixin(resourceType);
+            if (mixinOrModel == null) {
+               mixinOrModel = modelService.getModel(resourceType);
+            }
+            if (mixinOrModel == null) {
+               throw new IllegalArgumentException("Can't find mixin or model "
+                     + resourceType + " referenced by subresource field "
+                     + dcField.getName()); // TODO better log error & report
+            }
+            @SuppressWarnings("unchecked")
+            Map<String, Object> subentityValue = (Map<String, Object>) entityPropValue;
+            Map<String, Object> subresourceValue = entityToResourceProps(
+                  subentityValue, mixinOrModel.getGlobalFieldMap());
+            subresourceValue.put(DCResource.KEY_URI, subentityValue.get(DCResource.KEY_URI)); // TODO DCEntity.KEY_URI... 
+            subresourceValue.put(DCResource.KEY_VERSION, subentityValue.get(DCResource.KEY_VERSION)); // TODO DCEntity.KEY_V...
+            subresourceValue.put(DCResource.KEY_TYPES, subentityValue.get(DCResource.KEY_TYPES)); // TODO DCEntity.KEY_T...
+            // TODO other native fields : changedAt...
+            return subresourceValue;
+         } else if (entityPropValue instanceof DCEntity) {
+            // TODO LATER
+         }
+      default :
+         return entityPropValue;
+      }
+   }
+
+
    public List<DCResource> entitiesToResources(List<DCEntity> entities) {
       ArrayList<DCResource> datas = new ArrayList<DCResource>(entities.size());
       for (DCEntity entity : entities) {

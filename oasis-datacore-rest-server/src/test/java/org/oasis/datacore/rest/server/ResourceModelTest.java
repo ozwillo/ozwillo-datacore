@@ -1,7 +1,13 @@
 package org.oasis.datacore.rest.server;
 
 import java.util.List;
+import java.util.Map;
 
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.NotFoundException;
+
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -11,13 +17,18 @@ import org.junit.runners.MethodSorters;
 import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
+import org.oasis.datacore.core.meta.model.DCField;
+import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.security.EntityPermissionService;
 import org.oasis.datacore.core.security.mock.MockAuthenticationService;
+import org.oasis.datacore.model.resource.ModelResourceMappingService;
 import org.oasis.datacore.rest.api.DCResource;
+import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.client.QueryParameters;
 import org.oasis.datacore.rest.server.event.EventService;
 import org.oasis.datacore.rest.server.resource.ResourceService;
+import org.oasis.datacore.sample.CityCountrySample;
 import org.oasis.datacore.sample.ResourceModelIniter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -83,7 +94,9 @@ public class ResourceModelTest {
    private DataModelServiceImpl modelAdminService; // TODO rm refactor
 
    @Autowired
-   private ResourceModelIniter ResourceModelIniter;
+   private ResourceModelIniter resourceModelIniter;
+   @Autowired
+   private ModelResourceMappingService mrMappingService;
    
    
    /**
@@ -100,7 +113,7 @@ public class ResourceModelTest {
    }
 
    @Test
-   public void testResourceModel() {
+   public void testResourceModel() throws Exception {
       Assert.assertNotNull(modelAdminService.getModel("dcmo:model_0"));
       List<DCResource> models = datacoreApiClient.findDataInType("dcmo:model_0", null, null, 10);
       Assert.assertTrue(models != null && !models.isEmpty());
@@ -116,7 +129,7 @@ public class ResourceModelTest {
       List<DCResource> haveCountryModels = datacoreApiClient.findDataInType("dcmo:model_0",
             new QueryParameters().add("dcmo:globalFields.dcmf:name", "plo:name"), null, 10);
       Assert.assertTrue(haveCountryModels != null && !haveCountryModels.isEmpty());
-      
+
       /*
       cityPlanningAndEconomicalActivitySample.init();
       
@@ -142,5 +155,127 @@ public class ResourceModelTest {
       */
    }
    
+   @Test
+   public void testResourceModelUpdateThroughREST() throws Exception {
+      // put in initial state (delete stuff) in case test was aborted :
+      modelAdminService.getModel(CityCountrySample.CITY_MODEL_NAME)
+         .getField("city:founded").setRequired(false);
+      
+      // change a model on client side, post it and check that ResourceService parsing changes :
+      // (while testing java to resource methods and back)
+      // checking that putting a Resource without city:founded is for now OK
+      DCResource villeurbanneCity = resourceService.create(CityCountrySample.CITY_MODEL_NAME, "France/Villeurbanne")
+            .set("n:name", "Villeurbanne").set("city:inCountry", getFranceCountry().getUri());
+      deleteExisting(villeurbanneCity);
+      
+      villeurbanneCity = datacoreApiClient.postDataInType(villeurbanneCity);
+      Assert.assertNotNull(villeurbanneCity);
+      // getting model and changing it
+      DCResource cityModelResource = datacoreApiClient.getData("dcmo:model_0", CityCountrySample.CITY_MODEL_NAME);
+      @SuppressWarnings("unchecked")
+      Map<String,DCField> cityModelFields = mrMappingService.propsToFields(
+            (List<Map<String, Object>>) cityModelResource.get("dcmo:fields"));
+      DCField cityFoundedField = cityModelFields.get("city:founded");
+      Assert.assertTrue(!cityFoundedField.isRequired());
+      cityFoundedField.setRequired(true);
+      cityModelResource.set("dcmo:fields", resourceModelIniter.fieldsToProps(cityModelFields,
+            mrMappingService.buildFieldUriPrefix(UriHelper.parseUri(cityModelResource.getUri()))));
+      try {
+      // updating model & check that changed
+      cityModelResource = datacoreApiClient.putDataInType(cityModelResource);
+      @SuppressWarnings("unchecked")
+      Map<String,DCField> cityModelFields1 = mrMappingService.propsToFields(
+            (List<Map<String, Object>>) cityModelResource.get("dcmo:fields"));
+      Assert.assertTrue(cityModelFields1.get("city:founded").isRequired());
+      // checking that DCModel has been updated :
+      DCModel cityModel = modelAdminService.getModel(CityCountrySample.CITY_MODEL_NAME);
+      Assert.assertNotNull(cityModel);
+      Assert.assertTrue(cityModel.getField("city:founded").isRequired());
+      // checking that putting a Resource without city:founded is now forbidden
+      try {
+         datacoreApiClient.putDataInType(villeurbanneCity);
+         Assert.fail("Should not be able to update a Resource without a now required field");
+      } catch (BadRequestException brex) {
+         Assert.assertTrue(true);
+      }
+      // but that it works with it
+      villeurbanneCity.set("city:founded", new DateTime(-6000, 4, 1, 0, 0, DateTimeZone.UTC));
+      villeurbanneCity = datacoreApiClient.putDataInType(villeurbanneCity);
+      Assert.assertNotNull(villeurbanneCity);
+      } finally {
+         // putting it back in default state
+         cityFoundedField.setRequired(false);
+         cityModelResource.set("dcmo:fields", resourceModelIniter.fieldsToProps(cityModelFields,
+               mrMappingService.buildFieldUriPrefix(UriHelper.parseUri(cityModelResource.getUri()))));
+         cityModelResource = datacoreApiClient.putDataInType(cityModelResource);
+         deleteExisting(villeurbanneCity);
+      }
+   }
+
+   /** puts back in initial state */
+   private void deleteExisting(DCResource villeurbanneCity) {
+      try {
+         DCResource existingVilleurbanneCity = datacoreApiClient.getData(villeurbanneCity);
+         // if already exists, delete it first :
+         datacoreApiClient.deleteData(existingVilleurbanneCity); // and not villeurbanneCity,
+         // else could keep its city;founded value
+      } catch (NotFoundException nfex) {
+         // expected the first time
+      }
+   }
+
+   @Test
+   public void testResourceModelCreateAndIndex() throws Exception {
+      String newName =  "sample.city.city_1";
+      // put in initial state (delete stuff) in case test was aborted :
+      mgo.dropCollection(newName);
+      modelAdminService.removeModel(newName);
+      
+      // now post it as new model with other name, and check
+      // that uri index is there to ensure unicity :
+      DCModel newCityModel = null;
+      DCResource newVilleurbanneCity = null;
+      try {
+      DCResource newCityModelResource = datacoreApiClient
+            .getData("dcmo:model_0", CityCountrySample.CITY_MODEL_NAME);;
+      newCityModelResource.setVersion(null);
+      newCityModelResource.setUri(newCityModelResource.getUri().replace("sample.city.city", newName));
+      newCityModelResource.set("dcmo:name", newName);
+      newCityModelResource = datacoreApiClient.postDataInType(newCityModelResource);
+      // checking that DCModel has been updated :
+      newCityModel = modelAdminService.getModel(newName);
+      Assert.assertNotNull(newCityModel);
+      // POSTing a new Resource in it :
+      newVilleurbanneCity = resourceService.create(newName, "France/Villeurbanne")
+            .set("n:name", "Villeurbanne").set("city:inCountry", getFranceCountry().getUri());
+      deleteExisting(newVilleurbanneCity);
+      
+      newVilleurbanneCity = datacoreApiClient.postDataInType(newVilleurbanneCity);
+      Assert.assertNotNull(newVilleurbanneCity);
+      Assert.assertEquals(1, datacoreApiClient.findDataInType(newName, null, 0, 10).size());
+      // attempt to rePOST it as a new Resource should fail :
+      DCResource newNewVilleurbanneCity = newVilleurbanneCity;
+      newNewVilleurbanneCity.setVersion(null);
+      try {
+         datacoreApiClient.postDataInType(newNewVilleurbanneCity);
+         Assert.fail("URI unique index should forbid rePOSTing an existing Resource");
+      } catch (BadRequestException brex) {
+         Assert.assertTrue(true);
+      }
+      } finally {
+         // putting back to default state :
+         if (newCityModel != null) {
+            mgo.dropCollection(newCityModel.getName());
+            modelAdminService.removeModel(newCityModel.getName());
+         }
+         if (newVilleurbanneCity != null) {
+            deleteExisting(newVilleurbanneCity);
+         }
+      }
+   }
+
+   private DCResource getFranceCountry() {
+      return datacoreApiClient.getData(CityCountrySample.COUNTRY_MODEL_NAME, "France"); 
+   }
 
 }

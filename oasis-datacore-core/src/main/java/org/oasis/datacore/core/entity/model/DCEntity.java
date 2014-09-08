@@ -56,19 +56,22 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    protected static final int COMPARE_EQUALS = 0;
    protected static final int COMPARE_GREATER = 1;
 
-   /** TODO replace it by URI (unique save across versions / approvable / diffs) */
+   /** (CANT replace it by URI because not valid ObjectId
+    * (though interesting : unique save across versions / approvable / diffs) */
    @Id // _id ; BEWARE this field must be removed before the uri field can be annotated
    // by @Id, because Spring has an inclination towards using any existing id field first !!
    private String id; // TODO or ObjectId ??
-   /** for optimistic locking */
+   /** for optimistic locking ; NB. for Spring 0 == new so no -1 !! ; default to null i.e. new */
    @Version
    @Field(KEY_V)
-   private Long version;
+   private Long version = null;
    @Indexed(unique = true) // NB. created in DatacoreSampleBase since Spring not in a single collection
-   //@Id
+   /** NB. could not be a valid ObjectId
+    * TODO Q not obligatory if embedded ? or then only sub-uri ??
+    * TODO Q contains rdf:type, because collection = use case != rdf:type ? or even several types ???
+    * TODO Q contains containerUrl, if we were to have local copies of remote federated datacores ???? */
    @Field(KEY_URI)
-   private String uri; // TODO Q not obligatory if embedded ? or then only sub-uri ??
-   // TODO Q also rdf:type, because collection = use case != rdf:type ? or even several types ???
+   private String uri;
    /** TODO Q OR NOT because stays the same in a collection (see query uses) ?? (not indexed for the same reason)
     * and only @Transient and filled by service / dao or lifecycle event ??
     * TODO LATER rather direct reference filled etc. ? */
@@ -158,7 +161,8 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    // For now NOT indexed, "my documents" has to be found using business / modeled DCFields
    private Set<String> owners;
    
-   /** request-scoped cache built in resourceToEntity or else getEntity */
+   /** request-scoped cache built in resourceToEntity
+    * or else getEntity & LDP service findDataInType()'s executeMongoDbQuery */
    @Transient
    private transient DCModel cachedModel;
    
@@ -201,7 +205,8 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    }
 
    public boolean isNew() {
-      return this.getId() == null;
+      //return this.getId() == null;
+      return this.getVersion() == null; // Spring's
    }
 
    public int compareTo(DCEntity o) {
@@ -279,8 +284,16 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
       return version;
    }
 
+   /**
+    * sets to null if < 0 (for Spring)
+    * @param version
+    */
    public void setVersion(Long version) {
-      this.version = version;
+      if (version != null && version < 0) {
+         this.version = null;
+      } else {
+         this.version = version;
+      }
    }
 
    public String getModelName() {

@@ -23,7 +23,7 @@ public class DCQueryParsingContext extends DCResourceParsingContext {
    private int aggregatedQueryLimit = 0;
    private boolean hasNoIndexedField = false;
    
-   public DCQueryParsingContext(DCModel model, String uri) {
+   public DCQueryParsingContext(DCModel model) {
       super(model, null);
    }
    

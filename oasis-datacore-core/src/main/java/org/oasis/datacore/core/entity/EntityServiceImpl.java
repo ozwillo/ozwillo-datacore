@@ -50,6 +50,10 @@ public class EntityServiceImpl implements EntityService {
     */
    @Override
    public void create(DCEntity dataEntity) throws DuplicateKeyException, NonTransientDataAccessException {
+      Long version = dataEntity.getVersion();
+      if (version != null && version >= 0) { // version < 0 not allowed (though it is in Resources)
+         throw new OptimisticLockingFailureException("Trying to create entity with version");
+      }
       String collectionName = getModel(dataEntity).getCollectionName(); // TODO for view Models or weird type names ?!?
       
       // security : checking type default rights
@@ -71,7 +75,7 @@ public class EntityServiceImpl implements EntityService {
       //entityService.findById(uri, type/collectionName); // TODO
       //dataEntity = dataRepo.findOne(uri); // NO can't be used because can't specify collection
       //dataEntity = mgo.findById(uri, DCEntity.class, collectionName);
-      DCEntity dataEntity = mgo.findOne(new Query(new Criteria("_uri").is(uri)), DCEntity.class, collectionName);
+      DCEntity dataEntity = mgo.findOne(new Query(new Criteria(DCEntity.KEY_URI).is(uri)), DCEntity.class, collectionName);
       if (dataEntity != null) {
          dataEntity.setCachedModel(dcModel);
       }
@@ -97,7 +101,7 @@ public class EntityServiceImpl implements EntityService {
       //entityService.findById(uri, type/collectionName); // TODO
       //dataEntity = dataRepo.findOne(uri); // NO can't be used because can't specify collection
       //dataEntity = mgo.findById(uri, DCEntity.class, collectionName);
-      Criteria criteria = new Criteria("_uri").is(uri).and("_v").is(version); // TODO or parse Long ??
+      Criteria criteria = new Criteria(DCEntity.KEY_URI).is(uri).and(DCEntity.KEY_V).is(version); // TODO or parse Long ??
       long count = mgo.count(new Query(criteria), collectionName);
       // NB. efficient because should not be more than 1 ; or TODO LATER or better execute ?
       return count != 0;
@@ -109,6 +113,9 @@ public class EntityServiceImpl implements EntityService {
    @Override
    public void update(DCEntity dataEntity) throws OptimisticLockingFailureException,
          NonTransientDataAccessException {
+      if (dataEntity.getVersion() == null) { // (version < 0 not allowed, could be checked but won't be found anyway)
+         throw new OptimisticLockingFailureException("Trying to update entity without version >= 0");
+      }
       String collectionName = getModel(dataEntity).getCollectionName(); // TODO for view Models or weird type names ?!?
       
       // security : checking rights
@@ -133,7 +140,7 @@ public class EntityServiceImpl implements EntityService {
       // and fail if not, but in Mongo & REST spirit it's enough to merely ensure that
       // it doesn't exist at the end
       
-      Query query = new Query(Criteria.where("_uri").is(dataEntity.getUri()).and("_v").is(dataEntity.getVersion())
+      Query query = new Query(Criteria.where(DCEntity.KEY_URI).is(dataEntity.getUri()).and(DCEntity.KEY_V).is(dataEntity.getVersion())
             /*.and("_w").in(currentUserRoles)*/);
       mgo.remove(query, collectionName);
       // NB. obviously won't conflict / throw MongoDataIntegrityViolationException

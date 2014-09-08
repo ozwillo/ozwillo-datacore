@@ -24,7 +24,7 @@ public interface EntityService {
     * Creates a new entity.
     * Uses transient cached model if any.
     * TODO rights
-    * @param dataEntity
+    * @param dataEntity without version (< 0 not allowed, though it is in DCResource)
     * @param dcModel
     * @throws DuplicateKeyException if already exists
     * @throws NonTransientDataAccessException other, unexpected storage error
@@ -71,7 +71,7 @@ public interface EntityService {
    /**
     * Updates given entity.
     * Uses transient cached model if any.
-    * @param dataEntity must exist and its ACLs be in sync with saved ones
+    * @param dataEntity must exist with version >= 0 and its ACLs be in sync with saved ones
     * @param dcModel
     * @throws OptimisticLockingFailureException if not up to date
     * @throws NonTransientDataAccessException other, unexpected storage error

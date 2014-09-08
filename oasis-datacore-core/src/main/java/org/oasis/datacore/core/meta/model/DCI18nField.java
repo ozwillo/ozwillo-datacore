@@ -1,5 +1,13 @@
 package org.oasis.datacore.core.meta.model;
 
+
+/**
+ * i18n field, as a list of l to v maps
+ * NB. "required" field has no meaning here (would be within a given language and even then...)
+ * TODO default language (in various contexts / scopes ex. model, request)
+ * @author mdutoo
+ *
+ */
 public class DCI18nField extends DCListField {
    
    public static final String KEY_LANGUAGE = "l";

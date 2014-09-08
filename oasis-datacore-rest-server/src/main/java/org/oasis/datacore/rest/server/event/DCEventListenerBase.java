@@ -4,6 +4,8 @@ import javax.annotation.PostConstruct;
 
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.rest.server.resource.UriService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 
@@ -19,6 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public abstract class DCEventListenerBase implements DCEventListener {
 
+   protected final Logger logger = LoggerFactory.getLogger(getClass());
+   
    /** ex. for Resource event listeners, modelType ; null means all events */
    private String topic = null;
    

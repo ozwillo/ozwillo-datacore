@@ -13,6 +13,7 @@ import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.mongodb.DatacoreMongoTemplate;
 import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.meta.model.DCField;
+import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCModel;
@@ -112,7 +113,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       //monitoringLogServiceImpl.postLog(modelType, "findDataInType");
 
       // parsing query parameters criteria according to model :
-      DCQueryParsingContext queryParsingContext = new DCQueryParsingContext(dcModel, null);
+      DCQueryParsingContext queryParsingContext = new DCQueryParsingContext(dcModel);
       parseQueryParameters(params, queryParsingContext);
       if (queryParsingContext.hasErrors()) {
          String msg = DCResourceParsingContext.formatParsingErrorsMessage(queryParsingContext, detailedErrorsMode);
@@ -136,7 +137,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       if (sort == null) {
          // TODO sort by default : configured in model (last modified date, uri,
          // iri?, types?, owners? other fields...)
-         sort = new Sort(Direction.DESC, "_chAt"); // new Sort(Direction.ASC, "_uri")...
+         sort = new Sort(Direction.DESC, DCEntity.KEY_CH_AT); // new Sort(Direction.ASC, "_uri")...
       }
       
       Query springMongoQuery = new Query(queryParsingContext.getCriteria())
@@ -149,6 +150,11 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
                + "\n   in collection " + dcModel.getCollectionName()
                + " from Model " + dcModel.getName() + " and parameters: " + params
                + "\n   with result nb " + foundEntities.size());
+      }
+      
+      // setting cached model for future mapping to resource :
+      for (DCEntity foundEntity : foundEntities) {
+         foundEntity.setCachedModel(dcModel);
       }
       return foundEntities;
    }
@@ -170,14 +176,21 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          if (fieldPathElements.length == 0) {
             continue; // should not happen
          }
+
+         StringBuilder entityFieldPathSb;
+         
+         // handling DCEntity native (indexed) fields :
          String topFieldPathElement = fieldPathElements[0];
          boolean isDcEntityIndexedField = false;
          DCField dcField = dcEntityIndexedFields.get(topFieldPathElement);
          if (dcField != null) {
             isDcEntityIndexedField = true;
+            entityFieldPathSb = new StringBuilder(dcField.getName()); // mapping @id to _uri etc.
          } else {
             dcField = dcModel.getGlobalField(topFieldPathElement);
-         }
+            entityFieldPathSb = new StringBuilder("_p."); // almost the same fieldPath for mongodb
+            entityFieldPathSb.append(topFieldPathElement);
+            
          if (dcField == null) {
             queryParsingContext.addError("In type " + dcModel.getName() + ", can't find field with path elements "
                   + Arrays.asList(fieldPathElements) + " : can't find field for first path element "
@@ -186,6 +199,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          }
          
          // finding the leaf field
+         // TODO submethod with throw ex
          
 //         // finding the latest higher list field :
 //         DCListField dcListField = null;
@@ -199,54 +213,46 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          // loop on path elements for finding the leaf field :
          for (int i = 1; i < fieldPathElements.length; i++) {
             String fieldPathElement = fieldPathElements[i];
+            
+            entityFieldPathSb.append(".");
+            
             if ("map".equals(dcField.getType())) {
-               dcField = ((DCMapField) dcField).getMapFields().get(fieldPathElement);
-               if (dcField == null) {
-                  queryParsingContext.addError("In type " + dcModel.getName() + ", can't find field with path elements"
-                        + Arrays.asList(fieldPathElements) + ": can't go below " + i + "th path element "
-                        + fieldPathElement + ", because field is unkown");
-                  continue parameterLoop;
-               }
+               dcField = handleMapField(dcField, fieldPathElement,
+                     queryParsingContext, entityFieldPathSb, fieldPathElements, i);
+               
             } else if ("list".equals(dcField.getType())) {
                do {
                  dcField = ((DCListField) dcField).getListElementField();
                  //If we have a map in a list (for i18n)
                  if("map".equals(dcField.getType())) {
-                    dcField = ((DCMapField) dcField).getMapFields().get(fieldPathElement);
-                    if (dcField == null) {
-                       queryParsingContext.addError("In type " + dcModel.getName() + ", can't find field with path elements"
-                             + Arrays.asList(fieldPathElements) + ": can't go below " + i + "th path element "
-                             + fieldPathElement + ", because field is unkown");
-                       continue parameterLoop;
-                    }
+                    dcField = handleMapField(dcField, fieldPathElement,
+                          queryParsingContext, entityFieldPathSb, fieldPathElements, i);
+                 } else {
+                    entityFieldPathSb.append(fieldPathElement);
                  }
                  // TODO TODO check that indexed (or set low limit) ??
-               } while ("list".equals(dcField.getType()));
-            } else if ("resource".equals(dcField.getType())) {
+               } while (dcField != null && "list".equals(dcField.getType()));
+               
+            } else if ("resource".equals(dcField.getType())) { // TODO noooooooooooo embedded / subresource
                queryParsingContext.addError("Found criteria requiring join : in type " + dcModel.getName() + ", field "
                      + fieldPath + " (" + i + "th in field path elements " + Arrays.asList(fieldPathElements)
                      + ") can't be done in findDataInType, do it rather on client side");
                continue parameterLoop; // TODO boum
+               
             } else if ("i18n".equals(dcField.getType())) {
-               do {
-                  dcField = ((DCListField) dcField).getListElementField();
-                  //If we have a map in a list (for i18n)
-                  if("map".equals(dcField.getType())) {
-                     dcField = ((DCMapField) dcField).getMapFields().get(fieldPathElement);
-                     if (dcField == null) {
-                        queryParsingContext.addError("In type " + dcModel.getName() + ", can't find field with path elements"
-                              + Arrays.asList(fieldPathElements) + ": can't go below " + i + "th path element "
-                              + fieldPathElement + ", because field is unkown");
-                        continue parameterLoop;
-                     }
-                  }
-                  // TODO TODO check that indexed (or set low limit) ??
-                } while ("list".equals(dcField.getType()));
+               dcField = handleI18nField(dcField, fieldPathElement,
+                     queryParsingContext, entityFieldPathSb, fieldPathElements, i);
+               // TODO TODO check that indexed (or set low limit) ??
+               
             } else {
                queryParsingContext.addError("In type " + dcModel.getName() + ", can't find field with path elements"
                      + Arrays.asList(fieldPathElements) + ": can't go below " + i + "th element " 
-                     + fieldPathElement + ", because field is neither map nor list but " + dcField.getType());
+                     + fieldPathElement + ", because field type is neither map nor list nor i18n but " + dcField.getType());
                continue parameterLoop; // TODO boum
+            }
+            
+            if (dcField == null) {
+               continue parameterLoop;
             }
 
 //            if ("list".equals(dcField.getType())) {
@@ -261,18 +267,24 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
 //            }
          }
          
+         // handling leaf fields :
+         // TODO LATER i18n default : (CONFLICTS WITH $elemMatch)
+         /*if ("i18n".equals(dcField.getType())) {
+            // by default, search on an i18n field searches on the value (and not the language) :
+            dcField = handleI18nField(dcField, DCI18nField.KEY_VALUE,
+                  queryParsingContext, entityFieldPathSb, fieldPathElements, 0);
+         }*/
+         
+         }
+         
          List<String> values = params.get(fieldPath);
          if (values == null || values.isEmpty()) {
             queryParsingContext.addError("Missing value for parameter " + fieldPath);
             continue; // should not happen
          }
-         
-         // TODO (mongo)operator for error & in parse ?
-         String entityFieldPath = (isDcEntityIndexedField) ?
-               dcField.getName() // mapping @id to _uri etc.
-               : "_p." + fieldPath; // almost the same fieldPath for mongodb
 
-         queryParsingContext.enterCriteria(entityFieldPath, values.size());
+         String entityFieldPath = entityFieldPathSb.toString();
+         queryParsingContext.enterCriteria(entityFieldPath , values.size());
          try  {
             // parsing multiple values (of a field that is mentioned several times) :
             // (such as {limit=[10], founded=[>"-0143-04-01T00:00:00.000Z", <"-0043-04-02T00:00:00.000Z"]})
@@ -296,7 +308,67 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       }
    }
 
-   
+   /**
+    * 
+    * @param dcField
+    * @param fieldPathElement
+    * @param queryParsingContext
+    * @param entityFieldPathSb appends fieldPathElement to it
+    * @param fieldPathElements for error logging
+    * @param i for error logging ; if 0 changed to fieldPathElements.length - 1
+    * @return null if error
+    */
+   private DCField handleMapField(DCField dcField, String fieldPathElement,
+         DCQueryParsingContext queryParsingContext, StringBuilder entityFieldPathSb,
+         String[] fieldPathElements, int i) {
+      DCField subDcField = ((DCMapField) dcField).getMapFields().get(fieldPathElement);
+      if (subDcField == null) {
+         queryParsingContext.addError("In type " + queryParsingContext.peekModel().getName()
+               + ", can't find field with path elements"
+               + Arrays.asList(fieldPathElements) + ": can't go below "
+               + ((i == 0) ? fieldPathElements.length - 1 : i) + "th path element "
+               + fieldPathElement + ", because field is unkown. Allowed fields are "
+               + ((DCMapField) dcField).getMapFields().keySet());
+      }
+      String entityFieldPathElement = fieldPathElement;
+      entityFieldPathSb.append(entityFieldPathElement);
+      return subDcField;
+   }
+
+   /**
+    * 
+    * @param dcField
+    * @param fieldPathElement
+    * @param queryParsingContext
+    * @param entityFieldPathSb appends fieldPathElement to it
+    * @param fieldPathElements for error logging
+    * @param i for error logging ; if 0 changed to fieldPathElements.length - 1
+    * @return
+    */
+   private DCField handleI18nField(DCField dcField, String fieldPathElement,
+         DCQueryParsingContext queryParsingContext,
+         StringBuilder entityFieldPathSb, String[] fieldPathElements, int i) {
+      // translating to mongo if needed :
+      String entityFieldPathElement;
+      switch (fieldPathElement) {
+      case DCResource.KEY_I18N_VALUE_JSONLD :
+         entityFieldPathElement = DCI18nField.KEY_VALUE;
+         break;
+      case DCResource.KEY_I18N_LANGUAGE_JSONLD :
+         entityFieldPathElement = DCI18nField.KEY_LANGUAGE;
+         break;
+      default :
+         entityFieldPathElement = fieldPathElement;
+      }
+      // "list of map"-like handling :
+      // (leaf field : i18n is obligatorily a list of map of strings)
+      dcField = ((DCListField) dcField).getListElementField();
+      dcField = handleMapField(dcField, entityFieldPathElement,
+            queryParsingContext, entityFieldPathSb, fieldPathElements, i);
+      return dcField;
+   }
+
+
    private boolean addSecurityIfNotGuestForbidden(DCQueryParsingContext queryParsingContext) {
       // TODO Q how to make all tests still work : null case ? other prop ? disable it ??
       // TODO better : in SecurityQueryEnricher ? rather in (Query)ParsingContext ?!?
