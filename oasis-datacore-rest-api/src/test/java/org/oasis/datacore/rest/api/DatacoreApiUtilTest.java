@@ -21,7 +21,7 @@ public class DatacoreApiUtilTest {
    public void testDate() throws Exception {
       // preparing
       DatacoreObjectMapper mapper = new DatacoreObjectMapper();
-      DateTime testDate1 = new DateTime(); // 014-01-08T10:31:19.062+01:00
+      DateTime testDate1 = new DateTime(); // 2014-01-08T10:31:19.062+01:00
       String testDate1StringWithLocale = mapper.writer().writeValueAsString(testDate1); // "2014-01-08T10:31:19.062+01:00"
       DateTime testDate1ReadGMT = mapper.reader(DateTime.class).readValue(testDate1StringWithLocale); // 2014-01-08T09:31:19.062Z
       // or could directly create date with GMT locale
