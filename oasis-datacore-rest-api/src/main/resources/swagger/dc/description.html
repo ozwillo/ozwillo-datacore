@@ -12,7 +12,7 @@ function getContainerUrl() {
 }
 </script>
 
-Allows to manage (CRUD) and find Data Resources and their Models.
+Allows to manage (CRUD) and find Data Resources and their Models using JSON/HTTP REST calls.
 <br/><br/>
 &nbsp;&nbsp;- <b>Data Resources</b> are handled in <a href="http://json-ld.org/">JSON-LD</a>-like 
 (implicit context) format (see also <a href="http://json-ld.org/playground/index.html">
@@ -26,7 +26,7 @@ future collection filtering (<a href="http://www.w3.org/2012/ldp/wiki/LDPNext">1
 javascript:return findDataByType($(this).attr('href'));
 ">/dc/type/pli:city_0</a> for instance for resources in the 
 <span class="dcjsonline">
-pli:city_0</span> Model type (which is the version 0 of the pli:city Model). 
+pli:city_0</span> Model type (meaning version 0 of the pli:city Model). 
 In addition to the simpler default native pure JSON format, "true" JSON-LD formats and semantic web formats (such as 
 <a href="http://en.wikipedia.org/wiki/Resource_Description_Framework">RDF</a>, see 
 <a href="/dc/type/pli:city_0" class="dclink" onclick="
@@ -34,7 +34,7 @@ javascript:return findDataByTypeRdf($(this).attr('href'));
 ">example</a>) are available. 
 <br/><br/>
 &nbsp;&nbsp;- <b>Data Models</b> describe what kinds of Data Resources are allowed in a 
-<a href="http://json-schema.org/">JSON Schema</a>-like format (see 
+<a href="http://json-schema.org/">JSON Schema</a>-like structure (see 
 <a href="http://jsonschema.net/">jsonschema.net playground</a>) with 
 <span class="dcjsonline">
 string, boolean, int, float, long, double, date, map, list, i18n, resource
@@ -43,8 +43,8 @@ string, boolean, int, float, long, double, date, map, list, i18n, resource
 javascript:return findDataByType($(this).attr('href'));
 ">/dc/type/dcmo:model_0</a> and Mixins at <a href="/dc/type/dcmi:mixin_0" class="dclink" onclick="
 javascript:return findDataByType($(this).attr('href'));
-">/dc/type/dcmi:mixin_0</a> (<b>beta</b>, see full Model definitions at <u>/dc/model</u>), 
-in their own metamodel where they may be queried as Resources. 
+">/dc/type/dcmi:mixin_0</a>, 
+in their own metamodel where they may be drafted, published (<b>upcoming</b>) and queried as Resources. 
 This allows to know in which Model types a given kind of Resources can be queried, for instance :
 <br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <a href="/dc/type/dcmo:model_0?dcmo:globalMixins=pl:place_0" class="dclink" onclick="
@@ -100,7 +100,7 @@ javascript:return findDataByType($(this).attr('href'));
 examples, FAQ, how to & common use cases, cookbook (writing clients...) and full documentation.
 <br/><br/>
 <p>
-<span class="json dcjsonline">GET http://data.oasis-eu.org<input type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 550px"></span>
+<span class="json dcjsonline">GET ${datacoreApiServer.baseUrl}<input type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 550px"></span>
 <button onclick="javascript:return findData($('.myurl').val());">go</button>
 <button onclick="javascript:return setUrl('');">reset</button><br/>
 <div class="block response_body">
@@ -114,6 +114,23 @@ examples, FAQ, how to & common use cases, cookbook (writing clients...) and full
 and for container URL <a href="${datacoreApiServer.containerUrl}">${datacoreApiServer.containerUrl}</a> 
 (URL that must be used to build Datacore Data resource URIs).
 <br/><br/>
+<b>To add your own data</b> using REST calls, you must first define or reuse the appropriate business-specific Models.
+You can do both using the <a href="./import.html">Import UI</a> (includes OpenElec sample), or using Java (see
+<a href="https://github.com/pole-numerique/oasis-datacore/tree/master/oasis-datacore-rest-server/src/main/java/org/oasis/datacore/sample">
+Provto sample</a>), or do it any other way that still follows the
+<a href="https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-server/src/main/java/org/oasis/datacore/sample/DatacoreSampleMethodologyBase.java">
+methodology</a>. Basically, this means :
+provide a denormalized extract of your data, define Models for it, group related fields together in Mixins,
+define their ID definition policy and link them using resource fields, define referencing mixin fields and default values,
+find out which Models already exist and reconcile with them (or do it beforehands).
+<br/><br/>
+<b>To use it from your own business application,</b> use the JSON/HTTP client of your own business application's platform
+and / or of your choice to call the Datacore API server using REST JSON/HTTP calls. See
+<a href="https://github.com/pole-numerique/oasis-datacore/blob/master/README.md">README</a> for details on alternatives
+(the Datacore CXF Java client, any other Java JAXRS-compatible client, swagger.js in javascript, swagger codegen in any other language).
+<br/><br/>
+
+<h1>Details</h1>
 <b>URIs</b> that uniquely identify Datacore Data resource are in the form
 <span class="dcjsonline">$containerUrl/dc/type/$type/$iri</span>, where 
 $containerUrl is unique for a container (ex. http://data.oasis-eu.org), $type is 
