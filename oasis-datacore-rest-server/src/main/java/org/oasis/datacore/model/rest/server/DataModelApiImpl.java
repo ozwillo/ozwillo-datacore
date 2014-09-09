@@ -18,7 +18,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
-@Path("dc/model") // relative path among other OASIS services
+
+/**
+ * @obsolete Models are rather made available as REST Datacore Resources in their own metamodel.
+ * @author mdutoo
+ *
+ */
+///@Path("dc/model") // OBSOLETE, COMMENTED relative path among other OASIS services
 @Consumes(MediaType.APPLICATION_JSON) // TODO finer media type ex. +oasis-datacore ??
 @Produces(MediaType.APPLICATION_JSON)
 ///@Component("datacore.model.apiImpl") // else can't autowire Qualified ; TODO @Service ?
