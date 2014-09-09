@@ -10,6 +10,7 @@ import java.util.Map;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
+import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCResourceField;
@@ -61,7 +62,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
    @Override
    public void buildModels(List<DCModelBase> modelsToCreate) {
       
-      DCModel fieldModel = (DCModel) new DCModel("dcmf:field_0")
+      DCMixin fieldModel = (DCMixin) new DCMixin("dcmf:field_0") // and not DCModel : fields exist within model & mixins
          .addField(new DCField("dcmf:name", "string", true, 100))
          .addField(new DCField("dcmf:type", "string", true, 100))
          .addField(new DCField("dcmf:required", "boolean")) // defaults to false, indexing would bring not much
@@ -81,8 +82,8 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addField(new DCField("dcmf:internalName", "string", false, 100))
       ;
 
-      // Mixins (or only as names ??) model and at the same time modelBase :
-      DCModel mixinModel = (DCModel) new DCModel("dcmi:mixin_0")
+      // Mixins (or only as names ??) model and at the same time modelBase (or in same collection ?) :
+      DCModel mixinModel = (DCModel) new DCModel("dcmi:mixin_0") // and not DCMixin, they must be introspectable
          .addField(new DCField("dcmo:name", "string", true, 100))
          .addField(new DCField("dcmo:majorVersion", "long", true, 100)) // don't index and rather lookup on URI ??
          // NB. Resource version is finer but NOT the minorVersion of the majorVersion
