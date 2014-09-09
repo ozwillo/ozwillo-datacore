@@ -125,9 +125,11 @@
       <constructor-arg><ref bean="datacoreApiServer.objectMapper"/></constructor-arg>
    </bean>
    
-   <!-- Json-ld Provider-->
+   <!-- Json-ld Provider :
+   server-side, using server's objectMapper -->
    <bean id="datacoreApiServer.JsonLdJavaRdfProvider" class="org.oasis.datacore.rest.api.util.JsonLdJavaRdfProvider">
-      <property name="objectMapper" ><bean class="org.oasis.datacore.rest.api.binding.DatacoreObjectMapper"/></property>
+      <property name="objectMapper"><ref bean="datacoreApiServer.objectMapper"/></property>
+      <property name="clientSide" value="false"/>
    </bean>
 
    <!-- provider configuration helping supporting POST of single DCResource.

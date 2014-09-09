@@ -16,6 +16,7 @@ import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryServiceImpl;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.binding.DatacoreObjectMapper;
+import org.oasis.datacore.rest.api.util.JsonLdJavaRdfProvider;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.client.QueryParameters;
@@ -34,7 +35,7 @@ import com.github.jsonldjava.utils.JsonUtils;
 
 
 /**
- * Tests CXF client with mock server : simple get / post / put version & cache
+ * Tests innards of JSONLD conversion mechanics, for whole testing see DatacoreApiServerRdfTest
  * 
  * @author mdutoo
  *
@@ -81,6 +82,11 @@ public class DatacoreApiServerJsonLdTest {
    
    @Autowired
    private CityCountrySample cityCountrySample;
+   
+   /** to test its internals ; must be the client-side instance */
+   @Autowired
+   @Qualifier("datacoreApi.JsonLdJavaRdfProvider")
+   private JsonLdJavaRdfProvider jsonLdJavaRdfProvider;
    
    
    @Before
@@ -138,6 +144,10 @@ public class DatacoreApiServerJsonLdTest {
       return cityResource;
    }
 
+   /**
+    * Not a real test, only a prototype
+    * @throws Exception
+    */
    @Test
    public void testProto() throws Exception {
       // query all - no resource
@@ -200,6 +210,44 @@ public class DatacoreApiServerJsonLdTest {
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters(), null, null);
       Assert.assertEquals(2, resources.size());*/
+   }
+
+   
+   /**
+    * Tests innards of conversion mechanics
+    * @throws Exception
+    */
+   @Test
+   public void jsonldConversionTest() throws Exception {
+      cityCountrySample.initData();
+      
+      QueryParameters params = new QueryParameters().add("i18n:name.v", "Moscow");
+      //params.add("debug", "true");
+      List<DCResource> resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            params, null, 10);
+      Assert.assertEquals(1, resources.size());
+      
+      Object jsonObject = jsonLdJavaRdfProvider.toJsonldJsonObject(resources);
+      
+      // Create a context JSON map containing prefixes and definitions
+      Map<String, String> context = jsonLdJavaRdfProvider.buildDefaultDatacoreJsonldContext();
+      // Create an instance of JsonLdOptions with the standard JSON-LD options
+      JsonLdOptions options = new JsonLdOptions();
+      ///options.set
+      // Customise options...
+      // Call whichever JSONLD function you want! (e.g. compact)
+      Map<String, Object> compact = JsonLdProcessor.frame(jsonObject, context, options);
+      String compactString = JsonUtils.toPrettyString(compact);
+      ///System.out.println(compactString);
+      Assert.assertTrue(compactString.contains("@graph"));
+      Assert.assertTrue(compactString.contains("\"@language\" : \"ru\""));
+      
+      options.format = "text/turtle";
+      String turtlefRdf = (String) JsonLdProcessor.toRDF(jsonObject, options);
+      Assert.assertTrue(turtlefRdf.startsWith("<http://data-test.oasis-eu.org/dc/type/sample.city.city/Russia/Moscow> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <sample.city.city> ;"));
+      Assert.assertTrue(turtlefRdf.contains("<city:populationCount> 10000000"));
+      Assert.assertTrue(turtlefRdf.contains("\"Moskva\"@ru"));
+      ///System.out.println(JsonUtils.toPrettyString(turtlefRdf));
    }
    
 }

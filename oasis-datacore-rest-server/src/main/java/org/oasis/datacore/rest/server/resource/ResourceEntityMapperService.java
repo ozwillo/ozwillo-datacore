@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.cxf.message.Exchange;
+import org.apache.cxf.message.Message;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.oasis.datacore.core.entity.EntityService;
@@ -35,6 +36,7 @@ import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -754,8 +756,9 @@ public class ResourceEntityMapperService {
       case "i18n" :
          Exchange exchange = cxfJaxrsApiProvider.getExchange();
          if (exchange != null // else not called through REST)
-               && true) {
-            // TODO better in REST stack ex. CXF interceptor ?!?
+               && !MediaType.APPLICATION_JSON.isCompatibleWith(
+                     MediaType.valueOf((String) exchange.getInMessage().get(Message.ACCEPT_CONTENT_TYPE)))) {
+            // TODO better : all JSONLD-backed content types ex. nquads, see JsonLdJavaRdfProvider
             @SuppressWarnings("unchecked")
             List<Object> entityI18nPropValue = (List<Object>) entityPropValue;
             ArrayList<Object> resourceI18nPropValue = new ArrayList<Object>();

@@ -34,10 +34,9 @@ import com.github.jsonldjava.impl.NQuadRDFParser;
 import com.github.jsonldjava.utils.JsonUtils;
 
 
-/*
- * Media Types defined in DatacoreApi
+/**
+ * NB. Media Types defined in DatacoreApi
  */
-
 @Provider
 @Consumes({MediaType.APPLICATION_JSON, DatacoreMediaType.APPLICATION_NQUADS,
    DatacoreMediaType.APPLICATION_TURTLE, DatacoreMediaType.APPLICATION_JSONLD,
@@ -48,6 +47,8 @@ import com.github.jsonldjava.utils.JsonUtils;
 public class JsonLdJavaRdfProvider implements MessageBodyReader<Object>, MessageBodyWriter<Object> {
 
    private static final Logger logger = LoggerFactory.getLogger(JsonLdJavaRdfProvider.class);
+   
+   private boolean clientSide = true;
    
    /** wired by Spring XML ; should normally be DatacoreObjectMapper */
    private ObjectMapper objectMapper;
@@ -76,52 +77,24 @@ public class JsonLdJavaRdfProvider implements MessageBodyReader<Object>, Message
 
 
    @Override
-   public void writeTo(Object t, Class<?> type,
+   public void writeTo(Object oneOrMoreResources, Class<?> type,
          java.lang.reflect.Type genericType, Annotation[] annotations,
          MediaType mediaType, MultivaluedMap<String, Object> httpHeaders,
          OutputStream entityStream) throws IOException, WebApplicationException {
       
-      /*String acceptedMediaTypeString = (String) httpHeaders.getFirst(HttpHeaders.ACCEPT);
-      MediaType acceptedMediaType = acceptedMediaTypeString == null || acceptedMediaTypeString.isEmpty()
-            ? MediaType.APPLICATION_JSON_TYPE : MediaType.valueOf(acceptedMediaTypeString);*/
       if (!isWriteable(type, genericType, annotations, mediaType)) {
          // should never be reached
          throw new WebApplicationException(Response.serverError().entity(
                "JsonLdJavaRdfProvider can't handle media type " + mediaType).build());
       }
       
-      /*
-      if (acceptedMediaType.isCompatible(MediaType.APPLICATION_JSON_TYPE)) {
-         // default
-         objectMapper.writer().writeValue(entityStream, t);
-         return;
-      }
-      
-      if (!(acceptedMediaType.isCompatible(MediaType.valueOf("application/json+ld"))
-            || acceptedMediaType.isCompatible(DatacoreMediaType.APPLICATION_NQUADS_TYPE))) {
-         throw new WebApplicationException(Response.serverError().entity(
-               "JsonLdJavaRdfProvider can't handle "
-               + "accepted media type " + acceptedMediaTypeString).build());
-      }
-      */
-      
       try {
-         String json = objectMapper.writeValueAsString(t); // TODO improve that !
-         // if we're writing a client request, prepare DCResource JSON for JSON-LD : 
-         json = json.replaceAll("\"l\"", "\"@language\"" )// TODO TODOOOOOOOOOOOOOOOOOOOOOOOO improve that !!
-               .replaceAll("\"v\"", "\"@value\"");
+         Object jsonObject = toJsonldJsonObject(oneOrMoreResources);
          
-         Object jsonObject = JsonUtils.fromInputStream(new ByteArrayInputStream(json.getBytes()));
-         
-         // Create a context JSON map containing prefixes and definitions
-         Map<String,String> context = new HashMap<String,String>();
-         // Customise context...
-         context.put("dc", "http://dc");
-         context.put("i18n:name", "{\"@container\": \"@language\"}");
+         // Build default Datacore JSONLD context (JSON map containing prefixes and definitions) :
+         Map<String,String> context = buildDefaultDatacoreJsonldContext();
          // Create an instance of JsonLdOptions with the standard JSON-LD options
          JsonLdOptions options = new JsonLdOptions();
-         ///options.set
-         // Customise options...
          Object res = jsonObject;
 
          String format = mediaType.getParameters().get(DatacoreMediaType.APPLICATION_JSONLD_FORMAT_PARAM);
@@ -130,7 +103,6 @@ public class JsonLdJavaRdfProvider implements MessageBodyReader<Object>, Message
          if(mediaType.isCompatible(DatacoreMediaType.APPLICATION_JSONLD_TYPE)) {
             if(DatacoreMediaType.JSONLD_COMPACT.equals(format)) {
                res = JsonLdProcessor.compact(jsonObject, context, options);
-               //System.out.println(JsonUtils.toPrettyString(compact));
             } else if(DatacoreMediaType.JSONLD_FLATTEN.equals(format)) {
                res = JsonLdProcessor.flatten(jsonObject, context, options);
             } else if(DatacoreMediaType.JSONLD_EXPAND.equals(format)) {
@@ -146,13 +118,7 @@ public class JsonLdJavaRdfProvider implements MessageBodyReader<Object>, Message
                   || "turtle".equals(format) || "ttl".equals(format)) {
                options.format = "text/turtle";
                res = JsonLdProcessor.toRDF(jsonObject, options);
-            } else if(format == null
-                  || mediaType.isCompatible(MediaType.TEXT_PLAIN_TYPE) || "text/plain".equals(format)
-                  || mediaType.isCompatible(DatacoreMediaType.APPLICATION_NQUADS_TYPE)
-                  || mediaType.isCompatible(DatacoreMediaType.APPLICATION_NTRIPLES_TYPE)
-                  || "nquads".equals(format) || "nq".equals(format) || "nt".equals(format)
-                  || "ntriples".equals(format)) {
-               //System.out.println("Generating Nquads Report");
+            } else if (isNquadsMediaType(mediaType, format)) {
                options.format = "application/nquads";
                res = JsonLdProcessor.toRDF(jsonObject, options);
             }
@@ -162,34 +128,43 @@ public class JsonLdJavaRdfProvider implements MessageBodyReader<Object>, Message
       } catch(IOException | JsonLdError ioe) {
          //Problem with json ld fall back to normal execution
          logger.error("Error while outputting JSONLD-based format (RDF etc.)", ioe);
-         objectMapper.writer().writeValue(entityStream, t);
+         objectMapper.writer().writeValue(entityStream, oneOrMoreResources);
          return;
       }
-      
-      
-      
-/*
-      String json = objectMapper.writeValueAsString(t);
-      Object jsonObject = JsonUtils.fromInputStream(new ByteArrayInputStream(json.getBytes()));
-      // Create a context JSON map containing prefixes and definitions
-      Map<String, String> context = new HashMap<String, String>();
+   }
+
+
+   /**
+    * Builds default Datacore JSONLD context (JSON map containing prefixes and definitions)
+    * @return
+    */
+   public Map<String, String> buildDefaultDatacoreJsonldContext() {
+      Map<String,String> context = new HashMap<String,String>();
       context.put("dc", "http://dc");
       context.put("i18n:name", "{\"@container\": \"@language\"}");
-      // Create an instance of JsonLdOptions with the standard JSON-LD options
-      JsonLdOptions options = new JsonLdOptions();
-      //options.setExpandContext(context);
-      options.format = "application/nquads";
+      return context;
+   }
 
-      String nquadsRdf = null;
-      try {
-         nquadsRdf = (String) JsonLdProcessor.toRDF(jsonObject, options);
-      } catch (JsonLdError e) {
-         e.printStackTrace();
+
+   public boolean isNquadsMediaType(MediaType mediaType, String format) {
+      return format == null
+            || mediaType.isCompatible(MediaType.TEXT_PLAIN_TYPE) || "text/plain".equals(format)
+            || mediaType.isCompatible(DatacoreMediaType.APPLICATION_NQUADS_TYPE)
+            || mediaType.isCompatible(DatacoreMediaType.APPLICATION_NTRIPLES_TYPE)
+            || "nquads".equals(format) || "nq".equals(format) || "nt".equals(format)
+            || "ntriples".equals(format);
+   }
+   
+   public Object toJsonldJsonObject(Object t) throws IOException {
+      String json = objectMapper.writeValueAsString(t);
+      if (clientSide) {
+         // if we're writing a client request, prepare DCResource JSON for JSON-LD : 
+         json = json.replaceAll("\"l\"", "\"@language\"" )
+               .replaceAll("\"v\"", "\"@value\"");
+         // TODO better : visit resource and rebuild its (possibly immutable) props the right way...
       }
-
-      InputStream rdfStream = IOUtils.toInputStream(nquadsRdf);
-      IOUtils.copy(rdfStream, entityStream);
-      */
+      Object jsonObject = JsonUtils.fromInputStream(new ByteArrayInputStream(json.getBytes()));
+      return jsonObject;
    }
 
 
@@ -201,7 +176,7 @@ public class JsonLdJavaRdfProvider implements MessageBodyReader<Object>, Message
          return false;
       }
 
-      return mediaType.isCompatible(MediaType.valueOf("application/json+ld")) // TODO constant
+      return mediaType.isCompatible(MediaType.valueOf(DatacoreMediaType.APPLICATION_JSONLD))
             || mediaType.isCompatible(DatacoreMediaType.APPLICATION_NQUADS_TYPE);
    }
 
@@ -263,14 +238,14 @@ public class JsonLdJavaRdfProvider implements MessageBodyReader<Object>, Message
       return objectMapper.reader(DCResource.class) // TODO rather type but if list after handling single value array like in interceptor
             .readValue(json);
    }
-
-   public ObjectMapper getObjectMapper() {
-      return objectMapper;
-   }
-
+   
 
    public void setObjectMapper(ObjectMapper objectMapper) {
       this.objectMapper = objectMapper;
+   }
+   
+   public void setClientSide(boolean clientSide) {
+      this.clientSide = clientSide;
    }
 
 }

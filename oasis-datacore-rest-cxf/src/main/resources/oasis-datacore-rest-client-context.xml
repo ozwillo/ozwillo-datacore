@@ -42,9 +42,10 @@
    
    <context:component-scan base-package="org.oasis.datacore.rest.api.util"/>
    
-   <!-- Json-ld Provider-->
+   <!-- Json-ld Provider :
+   client-side, with its own objectMapper so that it doesn't depend on the server-->
    <bean id="datacoreApi.JsonLdJavaRdfProvider" class="org.oasis.datacore.rest.api.util.JsonLdJavaRdfProvider">
-      <property name="objectMapper" ><bean class="org.oasis.datacore.rest.api.binding.DatacoreObjectMapper"/></property>
+      <property name="objectMapper"><bean class="org.oasis.datacore.rest.api.binding.DatacoreObjectMapper"/></property>
    </bean>
 
    <!-- Client sample CXF Bus

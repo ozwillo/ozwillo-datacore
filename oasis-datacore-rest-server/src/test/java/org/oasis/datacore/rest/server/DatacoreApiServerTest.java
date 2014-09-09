@@ -1,7 +1,5 @@
 package org.oasis.datacore.rest.server;
 
-import java.io.ByteArrayInputStream;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,7 +18,6 @@ import org.oasis.datacore.core.entity.EntityQueryService;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryServiceImpl;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.rest.api.DCResource;
-import org.oasis.datacore.rest.api.binding.DatacoreObjectMapper;
 import org.oasis.datacore.rest.api.util.ResourceParsingHelper;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
@@ -33,10 +30,6 @@ import org.springframework.cache.Cache;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import com.github.jsonldjava.core.JsonLdOptions;
-import com.github.jsonldjava.core.JsonLdProcessor;
-import com.github.jsonldjava.utils.JsonUtils;
 
 
 /**
@@ -997,45 +990,9 @@ public class DatacoreApiServerTest {
             jsonldParams, null, 10);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(moscowCityUri, resources.get(0).getUri());
-   }
-   
-   @Test
-   public void jsonldConversionTest() throws Exception {
-      cityCountrySample.initData();
       
-      QueryParameters params = new QueryParameters().add("i18n:name.v", "Moscow");
-      //params.add("debug", "true");
-      List<DCResource> resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-            params, null, 10);
-      Assert.assertEquals(1, resources.size());
-      
-      DatacoreObjectMapper dcObjectMapper = new DatacoreObjectMapper();
-      String json = dcObjectMapper.writeValueAsString(resources);
-      
-      Object jsonObject = JsonUtils.fromInputStream(new ByteArrayInputStream(json.getBytes()));
-      
-      // Create a context JSON map containing prefixes and definitions
-      Map<String, String> context = new HashMap<String, String>();
-      // Customise context...
-      context.put("dc", "http://dc");
-      context.put("i18n:name", "{\"@container\": \"@language\"}");
-      // Create an instance of JsonLdOptions with the standard JSON-LD options
-      JsonLdOptions options = new JsonLdOptions();
-      ///options.set
-      // Customise options...
-      // Call whichever JSONLD function you want! (e.g. compact)
-      Map<String, Object> compact = JsonLdProcessor.frame(jsonObject, context, options);
-      String compactString = JsonUtils.toPrettyString(compact);
-      ///System.out.println(compactString);
-      Assert.assertTrue(compactString.contains("@graph"));
-      Assert.assertTrue(compactString.contains("\"@language\" : \"ru\""));
-      
-      options.format = "text/turtle";
-      String turtlefRdf = (String) JsonLdProcessor.toRDF(jsonObject, options);
-      Assert.assertTrue(turtlefRdf.startsWith("<http://data-test.oasis-eu.org/dc/type/sample.city.city/Russia/Moscow> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <sample.city.city> ;"));
-      Assert.assertTrue(turtlefRdf.contains("<city:populationCount> 10000000"));
-      Assert.assertTrue(turtlefRdf.contains("\"Moskva\"@ru"));
-      ///System.out.println(JsonUtils.toPrettyString(turtlefRdf));
+      // must not contain JSONLD-only i18n syntax :
+      Assert.assertTrue(!resources.toString().contains("@language"));
    }
 
 }
