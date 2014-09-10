@@ -4,12 +4,12 @@ class datacore::java::java(
 
     exec {
       "Get Java":
-        command => "/usr/bin/wget --no-check-certificate --no-cookies --header \"Cookie: oraclelicense=accept-securebackup-cookie\" ${java_http} -O /tmp/jdk-8-linux-x64.tar.gz",
+        command => "/usr/bin/wget --no-check-certificate --no-cookies --header \"Cookie: oraclelicense=accept-securebackup-cookie\" ${java_http} -O /home/oasis/upload/jdk-8-linux-x64.tar.gz",
         timeout => 0;
       "Create dir":
         command => "/bin/mkdir -p /usr/lib/jvm";
       "Untar java":
-        command => "/bin/tar xfz /tmp/jdk-8-linux-x64.tar.gz -C /usr/lib/jvm",
+        command => "/bin/tar /home/oasis/upload/jdk-8-linux-x64.tar.gz -C /usr/lib/jvm",
         timeout => 0,
         require => Exec['Get Java', 'Create dir'];
       "Rename java dir":
