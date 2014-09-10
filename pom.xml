@@ -192,7 +192,8 @@
 		<module>oasis-datacore-web</module>
 		<!-- TODO mocks ex. Social Graph ? -->
 		<!-- TODO features ex. approval workflow, RDF/SPARQL, backend UI ?? -->
-                <!-- module>oasis-datacore-kernel-client</module --><!-- TODO reactivate when doesn't call atol outside integration tests -->
+      <module>oasis-datacore-kernel-client</module><!-- TODO re-enable tests with atol demo
+      WITHIN integration tests and once auth is OK again -->
       <module>oasis-datacore-monitoring</module>
   </modules>
 
