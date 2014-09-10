@@ -362,14 +362,14 @@
         	  var value = resourceRow[internalFieldName];
         }*/
         if (rInd % 1000 == 0 || rInd == resultsData.length - 1) {
-           $('.resourceRowCounter').html("Handled " + rInd + " rows");
+           $('.resourceRowCounter').html("Handled <a href=\"#importedJsonFromCsv\">" + rInd + " rows</a>");
         }
 	  }
 
       ///var results = eval('[' + data.content.data + ']')[0];
       //var prettyJson = toolifyDcResource(results, 0);
       var resourcesPrettyJson = JSON.stringify(resources, null, '\t').replace(/\n/g, '<br>');
-      $('.importedModelsFromCsv').html(resourcesPrettyJson);
+      $('.importedResourcesFromCsv').html(resourcesPrettyJson);
 
       /*var resourceArray = Object.keys(resources).map(function(v) { return resources[v]; });
       postAllData(JSON.stringify(resourceArray, null, null),
@@ -377,22 +377,35 @@
                console.log("Successfully posted " + resourceArray.length + " resources.");
             });*/
       var postedImportedDataNb = 0;
-      var postedImportedDataInErrorNb = 0;
+      var postedImportedDataErrors = [];
+      var postedImportedDataErrorHtml = "";
       function importedDataPosted(resourceOrData) {
          postedImportedDataNb++;
-         if (typeof resourcesOrData === 'string') {
-            postedImportedDataInErrorNb++;
+         if (typeof resourceOrData === 'object' && typeof resourceOrData["_headers"] === 'object') {
+        	   postedImportedDataErrors.push([ resourceOrData._body._body, resourceOrData.request._body ]);
+            var requestBodyHtml;
+            try {
+               requestBodyHtml = toolifyDcListOrResource(eval(resourceOrData.request._body._data));
+               // NB. no need of wrapping by [...] and taking [0] because always there
+            } catch (ex) {
+               requestBodyHtml = resourceOrData.request._body;
+            }
+        	   postedImportedDataErrorHtml += "<p>-&nbsp;" + resourceOrData._body._body
+        	         + " :<br/>" + requestBodyHtml + "<p/>";
          }
          if (true/*postedImportedDataNb % 1000 == 0 || postedImportedDataNb > resources.length - 10*/) {
-            $('.resourceCounter').html("Posted " + postedImportedDataNb
-                  + " resources (" + postedImportedDataInErrorNb + " errors)");
+            $('.resourceCounter').html("Posted <a href=\"#importedResourcesFromCsv\">" + postedImportedDataNb
+                  + " resources</a> (<a href=\"#mydata\">" + postedImportedDataErrors.length + " errors</a>)");
+            if (postedImportedDataErrors.length != 0) {
+               $('.mydata').html(postedImportedDataErrorHtml);
+            }
          }
          if (postedImportedDataNb === resources.length) {
-            if (postedImportedDataInErrorNb == 0) {
+            if (postedImportedDataErrors.length == 0) {
         	      console.log("INFO Successfully posted " + postedImportedDataNb + " resources.");
             } else {
         	      console.log("WARNING Posted " + postedImportedDataNb + " resources with "
-        	            + postedImportedDataInErrorNb + " errors.");
+        	            + postedImportedDataErrors.length + " errors.");
             }
          }
       };
@@ -729,7 +742,7 @@
         ///var results = eval('[' + data.content.data + ']')[0];
         //var prettyJson = toolifyDcResource(results, 0);
         var mixinsPrettyJson = JSON.stringify(mixins, null, '\t').replace(/\n/g, '<br>');
-        $('.importedModelsFromCsv').html(mixinsPrettyJson);
+        $('.importedResourcesFromCsv').html(mixinsPrettyJson);
 
         callback(mixins, mixinNameToFieldNameTree);
       }
@@ -755,7 +768,7 @@
 	              var updatedModelInErrorNb = 0;
 	              function fillDataWhenAllModelsUpdated(resourcesOrData) {
 	            	  updatedModelNb++;
-	            	  if (typeof resourcesOrData === 'string') {
+	            	  if (typeof resourcesOrData === 'object' && typeof resourcesOrData["_headers"] === 'object') {
 	                    updatedModelInErrorNb++;
 	            	  }
 	            	  if (updatedModelNb % 1000 == 0 || updatedModelNb == mixins.length - 1) {
@@ -879,21 +892,30 @@ Resource row limit : <input type="text" class="resourceRowLimit" value="50" styl
 <br/><br/>
 <span class="json dcjsonarea resourceRowCounter">Handled no resource row yet</span>&nbsp;&nbsp;
 <span class="json dcjsonarea resourceCounter">Posted no resource yet</span>
+
+<br/><br/>
 <br/><br/>
 <button onclick="javascript:return importModelAndResources();"><b>import</b></button>
 &nbsp;(clicking button with no file selected uses OpenElec sample files)
+<br/><br/>
+<b>WARNING if Resources that depend on others are not imported, click button again</b>
+(because for now Resources are not imported all at once nor ordered according to their dependencies).
+<br/><br/>
+To get more info about import errors, for now open your browser's javascript console.
 
 <br/><br/>
 <br/><br/>
 <b>CSV rows :</b>
+<a name="importedJsonFromCsv"/>
 <div class="block response_body">
 <pre class="json dcjsonarea"><code id="importedJsonFromCsv" class="importedJsonFromCsv"></code></pre><!-- dcjsonarea -->
 </div>
 
 <br/><br/>
 <b>Resources :</b>
+<a name="importedResourcesFromCsv"/>
 <div class="block response_body">
-<pre class="json dcjsonarea"><code id="importedModelsFromCsv" class="importedModelsFromCsv"></code></pre><!-- dcjsonarea -->
+<pre class="json dcjsonarea"><code id="importedResourcesFromCsv" class="importedResourcesFromCsv"></code></pre><!-- dcjsonarea -->
 </div>
 <br/><br/>
 

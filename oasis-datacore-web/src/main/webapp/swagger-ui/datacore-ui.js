@@ -64,7 +64,8 @@ function toolifyDcResource(resource, depth) { // or map
 	   res += lineBreak(subDepth);
 	   var value = resource[key];
 	   //resource[key] = toolifyDcResourceValue(value, key, modelType, resource);
-	   res += toolifyDcResourceFieldAndColon(value, key, modelType, resource) + toolifyDcResourceValue(value, key, modelType, resource, subDepth);
+      res += toolifyDcResourceFieldAndColon(value, key, modelType, resource)
+            + toolifyDcResourceValue(value, key, modelType, resource, subDepth);
    }
    if (!first) {
 	   // at least one (should !)
@@ -135,6 +136,13 @@ function toolifyDcResourceValue(value, key, modelType, resource, depth) {
 		}
 	} // 'number', 'boolean'(?) : nothing to do ; TODO others (date) ??
 	return JSON.stringify(value, null, '\t');
+}
+function toolifyDcListOrResource(valuesOrResource) {
+   if (typeof valuesOrResource.length !== 'undefined') { // array (=== 'object not enough)
+      return toolifyDcList(valuesOrResource, null, null, null, 0);
+   } else {
+      return toolifyDcResource(valuesOrResource, 0);
+   }
 }
 function setUrl(relativeUrl) {
    if (relativeUrl == null || relativeUrl == "") {
