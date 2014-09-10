@@ -16,9 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 
 /**
- * Inits from Resource and replaces DCModel
+ * Inits from Resource and replaces DCModel (or removes it)
  * TODO TODO also at startup !!
  * TODO LATER checks BEFOREHANDS for update compatibility, else abort using AbortOperationEventException
+ * TODO LATER also update models (& mixins) that reuse the updated one, and abort on delete !
  * TODO move most to ModelResourceMappingService & Model(Admin)Service !
  * 
  * @author mdutoo
@@ -46,13 +47,71 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
       switch (event.getType()) {
       case DCResourceEvent.CREATED :
       case DCResourceEvent.UPDATED :
-         break;
-      default :
+         DCResourceEvent re = (DCResourceEvent) event;
+         DCResource r = re.getResource();
+         handleModelResourceCreatedOrUpdated(r);
+         // TODO if (used as) mixin, do it also for all impacted models (& mixins) !
+         return;
+      case DCResourceEvent.DELETED :
+         re = (DCResourceEvent) event;
+         r = re.getResource();
+         String typeName = (String) r.get("dcmo:name");
+         // TODO check that is not used as mixin in any other models (& mixins) !
+         handleModelResourceDeleted(typeName);
          return;
       }
-      DCResourceEvent re = (DCResourceEvent) event;
-      DCResource r = re.getResource();
+   }
 
+   /** TODO move to DCModelService */
+   public void createOrUpdate(DCModelBase modelOrMixin) throws AbortOperationEventException {
+      // replacing it :
+      // TODO TODO RATHER ALL AT ONCE to avoid
+      // * having an inconsistent set of models when ResourceService parses Resources
+      // * and having one model that refers to another that is not yet there compute its caches too early
+      // * AND HAVING OBSOLETE INDEXES !
+      DCModelBase previousModel = dataModelService.getMixin(modelOrMixin.getName());
+
+      String aboutToEventType;
+      if (previousModel == null) {
+         // new model
+         aboutToEventType = ModelDCEvent.ABOUT_TO_CREATE;
+      } else {
+         // TODO also update all impacted models !!
+         aboutToEventType = ModelDCEvent.ABOUT_TO_UPDATE;
+      }
+
+      try {
+         eventService.triggerEvent(new ModelDCEvent(aboutToEventType,
+               ModelDCEvent.MODEL_DEFAULT_BUSINESS_DOMAIN, modelOrMixin, previousModel));
+      } catch (Throwable e) {
+         // TODO abort to say error to client ?
+         // TODO save state in model or wrapper stored in mongo ?? log all events in mongo ???
+         // TODO try to restore previousDocument ???
+         throw new AbortOperationEventException("Aborting as asked for in aboutTo event "
+               + "of model or mixin " + modelOrMixin, e);
+      }
+      
+      if (isModel) {
+         dataModelService.addModel((DCModel) modelOrMixin);
+      } else {
+         dataModelService.addMixin(modelOrMixin);
+      }
+      
+      String doneEventType = (previousModel == null) ?
+            ModelDCEvent.CREATED : ModelDCEvent.UPDATED;
+      try {
+         eventService.triggerEvent(new ModelDCEvent(doneEventType,
+               ModelDCEvent.MODEL_DEFAULT_BUSINESS_DOMAIN, modelOrMixin, previousModel));
+      } catch (Throwable e) {
+         // TODO abort to say error to client ?
+         // TODO save state in model or wrapper stored in mongo ?? log all events in mongo ???
+         // TODO try to restore previousDocument ???
+         throw new AbortOperationEventException("Aborting as asked for in done event "
+               + "of model or mixin " + modelOrMixin, e);
+      }
+   }
+
+   private void handleModelResourceCreatedOrUpdated(DCResource r) throws AbortOperationEventException {
       // TODO check non required fields : required queryLimit openelec maxScan resourceType
       DCModelBase modelOrMixin;
       String typeName = (String) r.get("dcmo:name");
@@ -76,39 +135,16 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
       createOrUpdate(modelOrMixin);
    }
 
-   public void createOrUpdate(DCModelBase modelOrMixin) throws AbortOperationEventException {
-      // replacing it :
-      // TODO TODO RATHER ALL AT ONCE to avoid
-      // * having an inconsistent set of models when ResourceService parses Resources
-      // * and having one model that refers to another that is not yet there compute its caches too early
-      // * AND HAVING OBSOLETE INDEXES !
-      DCModelBase previousModel = isModel ? dataModelService.getModel(modelOrMixin.getName())
-            : dataModelService.getMixin(modelOrMixin.getName());
-
-      String aboutToEventType = (previousModel == null) ?
-            ModelDCEvent.ABOUT_TO_CREATE : ModelDCEvent.ABOUT_TO_UPDATE;
-      try {
-         eventService.triggerEvent(new ModelDCEvent(aboutToEventType,
-               ModelDCEvent.MODEL_DEFAULT_BUSINESS_DOMAIN, modelOrMixin, previousModel));
-      } catch (Throwable e) {
-         // TODO abort to say error to client ?
-         // TODO save state in model or wrapper stored in mongo ?? log all events in mongo ???
-         // TODO try to restore previousDocument ???
-         throw new AbortOperationEventException("Aborting as asked for in aboutTo event "
-               + "of model or mixin " + modelOrMixin, e);
-      }
-      
+   private void handleModelResourceDeleted(String typeName) throws AbortOperationEventException {
+      DCModelBase modelOrMixin = dataModelService.getMixin(typeName);
       if (isModel) {
-         dataModelService.addModel((DCModel) modelOrMixin);
+         dataModelService.removeModel(typeName);
       } else {
-         dataModelService.addMixin(modelOrMixin);
+         dataModelService.removeMixin(typeName);
       }
-      
-      String doneEventType = (previousModel == null) ?
-            ModelDCEvent.CREATED : ModelDCEvent.UPDATED;
       try {
-         eventService.triggerEvent(new ModelDCEvent(doneEventType,
-               ModelDCEvent.MODEL_DEFAULT_BUSINESS_DOMAIN, modelOrMixin, previousModel));
+         eventService.triggerEvent(new ModelDCEvent(ModelDCEvent.DELETED,
+               ModelDCEvent.MODEL_DEFAULT_BUSINESS_DOMAIN, modelOrMixin, null));
       } catch (Throwable e) {
          // TODO abort to say error to client ?
          // TODO save state in model or wrapper stored in mongo ?? log all events in mongo ???

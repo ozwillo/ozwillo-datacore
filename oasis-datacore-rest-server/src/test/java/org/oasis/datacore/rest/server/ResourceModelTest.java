@@ -212,12 +212,15 @@ public class ResourceModelTest {
       }
    }
 
-   /** puts back in initial state */
-   private void deleteExisting(DCResource villeurbanneCity) {
+   /** puts back in initial state ; TODO in base helper */
+   public void deleteExisting(DCResource resource) {
+      if (resource == null) {
+         return;
+      }
       try {
-         DCResource existingVilleurbanneCity = datacoreApiClient.getData(villeurbanneCity);
+         DCResource existingResource = datacoreApiClient.getData(resource);
          // if already exists, delete it first :
-         datacoreApiClient.deleteData(existingVilleurbanneCity); // and not villeurbanneCity,
+         datacoreApiClient.deleteData(existingResource); // and not resource,
          // else could keep its city;founded value
       } catch (NotFoundException nfex) {
          // expected the first time
@@ -227,17 +230,25 @@ public class ResourceModelTest {
    @Test
    public void testResourceModelCreateAndIndex() throws Exception {
       String newName =  "sample.city.city_1";
-      // put in initial state (delete stuff) in case test was aborted :
+      /*// put in initial state (delete stuff) in case test was aborted :
       mgo.dropCollection(newName);
-      modelAdminService.removeModel(newName);
+      modelAdminService.removeModel(newName);*/
+      // putting back to default state, in case test was aborted :
+      /*if (newVilleurbanneCity != null) {
+         deleteExisting(newVilleurbanneCity);
+      }*/
+      try {
+         deleteExisting(datacoreApiClient.getData("dcmo:model_0", newName));
+      } catch (NotFoundException nfex) {
+         // expected the first time
+      }
       
       // now post it as new model with other name, and check
       // that uri index is there to ensure unicity :
       DCModel newCityModel = null;
       DCResource newVilleurbanneCity = null;
-      try {
       DCResource newCityModelResource = datacoreApiClient
-            .getData("dcmo:model_0", CityCountrySample.CITY_MODEL_NAME);;
+            .getData("dcmo:model_0", CityCountrySample.CITY_MODEL_NAME);
       newCityModelResource.setVersion(null);
       newCityModelResource.setUri(newCityModelResource.getUri().replace("sample.city.city", newName));
       newCityModelResource.set("dcmo:name", newName);
@@ -245,10 +256,11 @@ public class ResourceModelTest {
       // checking that DCModel has been updated :
       newCityModel = modelAdminService.getModel(newName);
       Assert.assertNotNull(newCityModel);
+      Assert.assertNotNull(modelAdminService.getMixin(newName)); // and that also available among reusable mixins
       // POSTing a new Resource in it :
       newVilleurbanneCity = resourceService.create(newName, "France/Villeurbanne")
             .set("n:name", "Villeurbanne").set("city:inCountry", getFranceCountry().getUri());
-      deleteExisting(newVilleurbanneCity);
+      deleteExisting(newVilleurbanneCity); // putting back in initial state if necessary
       
       newVilleurbanneCity = datacoreApiClient.postDataInType(newVilleurbanneCity);
       Assert.assertNotNull(newVilleurbanneCity);
@@ -262,15 +274,17 @@ public class ResourceModelTest {
       } catch (BadRequestException brex) {
          Assert.assertTrue(true);
       }
-      } finally {
-         // putting back to default state :
-         if (newCityModel != null) {
-            mgo.dropCollection(newCityModel.getName());
-            modelAdminService.removeModel(newCityModel.getName());
-         }
-         if (newVilleurbanneCity != null) {
-            deleteExisting(newVilleurbanneCity);
-         }
+      
+      // putting back to default state, while checking delete :
+      datacoreApiClient.deleteData(newCityModelResource);
+      Assert.assertNull(modelAdminService.getModel(newName));
+      Assert.assertNull(modelAdminService.getMixin(newName)); // checked that also removed
+      Assert.assertFalse(mgo.collectionExists(newName)); // check that dropped
+      try {
+         datacoreApiClient.getData(newNewVilleurbanneCity);
+         Assert.fail("resource should have been deleted along with model");
+      } catch (NotFoundException nfex) {
+         Assert.assertTrue(true);
       }
    }
 

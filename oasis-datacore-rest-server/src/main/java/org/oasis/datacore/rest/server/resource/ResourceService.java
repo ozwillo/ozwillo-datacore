@@ -313,11 +313,19 @@ public class ResourceService {
       return resource;
    }
    
-   
 
-
+   /**
+    * 
+    * @param uri
+    * @param modelType
+    * @param version
+    * @return
+    * @throws ResourceTypeNotFoundException
+    * @throws ResourceNotFoundException
+    * @throws ResourceException if asked to abort from within triggered event
+    */
    public DCResource getIfVersionDiffers(String uri, String modelType, Long version)
-         throws ResourceTypeNotFoundException, ResourceNotFoundException {
+         throws ResourceTypeNotFoundException, ResourceNotFoundException, ResourceException {
       DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
       if (dcModel == null) {
          throw new ResourceTypeNotFoundException(modelType, null, null, null);
@@ -338,11 +346,22 @@ public class ResourceService {
          // https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/apps/ApplicationDirectoryResource.java
       }
       DCResource resource = resourceEntityMapperService.entityToResource(entity);
+      
+      eventService.triggerResourceEvent(DCResourceEvent.Types.READ, resource);
       return resource;
    }
 
+   /**
+    * 
+    * @param uri
+    * @param modelType
+    * @return
+    * @throws ResourceTypeNotFoundException
+    * @throws ResourceNotFoundException
+    * @throws ResourceException if asked to abort from within triggered event
+    */
    public DCResource get(String uri, String modelType)
-         throws ResourceTypeNotFoundException, ResourceNotFoundException {
+         throws ResourceTypeNotFoundException, ResourceNotFoundException, ResourceException {
       DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
       if (dcModel == null) {
          throw new ResourceTypeNotFoundException(modelType, null, null, null);
@@ -358,7 +377,9 @@ public class ResourceService {
       }
       DCResource resource = resourceEntityMapperService.entityToResource(entity);
 
-      //Log to AuditLog Endpoint
+      eventService.triggerResourceEvent(DCResourceEvent.Types.READ, resource);
+      
+      //Log to AuditLog Endpoint TODO rather using event
       //monitoringLogServiceImpl.postLog(modelType, "Resource:Get");
 
       return resource;
@@ -370,8 +391,10 @@ public class ResourceService {
     * @param modelType
     * @param version
     * @throws ResourceTypeNotFoundException
+    * @throws ResourceException if asked to abort from within triggered event
     */
-   public void delete(String uri, String modelType, Long version) throws ResourceTypeNotFoundException {
+   public void delete(String uri, String modelType, Long version)
+         throws ResourceTypeNotFoundException, ResourceException {
 	   
       DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
       if (dcModel == null) {
@@ -387,10 +410,13 @@ public class ResourceService {
     	  throw new RuntimeException("Cannot get uri or version or model, cannot evaluate permissions");
       }
       
-      if(dataEntity != null && version.equals(dataEntity.getVersion())) {
-    	  entityService.deleteByUriId(dataEntity);
+      if(dataEntity != null && version.equals(dataEntity.getVersion())) {   
+         DCResource resource = resourceEntityMapperService.entityToResource(dataEntity);
+         eventService.triggerResourceEvent(DCResourceEvent.Types.ABOUT_TO_DELETE, resource);
+    	   entityService.deleteByUriId(dataEntity);
+         eventService.triggerResourceEvent(DCResourceEvent.Types.DELETED, resource);
       } else {
-    	  throw new EntityNotFoundException();
+    	   throw new EntityNotFoundException();
       }
    }
 

@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 
 /**
- * Updates index etc. once model or mixin has been updated
+ * Updates collection & index etc. once model or mixin has been updated (or drops them) 
  * 
  * @author mdutoo
  *
@@ -37,15 +37,19 @@ public class ModelDCListener extends DCEventListenerBase implements DCEventListe
       switch (event.getType()) {
       case ModelDCEvent.CREATED :
       case ModelDCEvent.UPDATED :
+         ModelDCEvent me = (ModelDCEvent) event;
+         DCModelBase modelOrMixin = me.getModel(); // TODO or get it from name since now persisted ???
+         if (modelOrMixin instanceof DCModel) {
+            modelIndexService.ensureCollectionAndIndices((DCModel) modelOrMixin, false);
+         }
          break;
-      default :
-         return;
-      }
-      ModelDCEvent me = (ModelDCEvent) event;
-      DCModelBase modelOrMixin = me.getModel(); // TODO or get it from name since now persisted ???
-      
-      if (modelOrMixin instanceof DCModel) {
-         modelIndexService.ensureCollectionAndIndices((DCModel) modelOrMixin, false);
+      case ModelDCEvent.DELETED :
+         me = (ModelDCEvent) event;
+         modelOrMixin = me.getModel(); // TODO or get it from name since now persisted ???
+         if (modelOrMixin instanceof DCModel) {
+            modelIndexService.cleanModels(modelOrMixin);
+         }
+         break;
       }
    }
 

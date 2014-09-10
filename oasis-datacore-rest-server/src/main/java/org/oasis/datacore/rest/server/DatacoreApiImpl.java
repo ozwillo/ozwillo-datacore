@@ -271,6 +271,8 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
          throw new NotFoundException();
          // rather than NO_CONTENT ; like Atol ex. deleteApplication in
          // https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/apps/ApplicationDirectoryResource.java
+      } catch (ResourceException e) { // asked to abort from within triggered event
+         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).type(MediaType.TEXT_PLAIN).build());
       }
 
       // ETag caching :
@@ -338,6 +340,8 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       } catch (EntityNotFoundException e) {
     	  throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
                   .entity("Resource (model:iri:version) " + modelType + ":" + iri + ":" + version + " does not exist").type(MediaType.TEXT_PLAIN).build());
+      } catch (ResourceException e) { // asked to abort from within triggered event
+         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).type(MediaType.TEXT_PLAIN).build());
       }
 
       throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT).build());

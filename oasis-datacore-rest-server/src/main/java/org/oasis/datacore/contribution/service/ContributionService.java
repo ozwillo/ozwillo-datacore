@@ -21,6 +21,14 @@ public interface ContributionService {
 	
 	public List<DCResource> get(String modelType, String contributionId);
 	
-	public boolean remove(String modelType, String contributionId) throws ResourceTypeNotFoundException;
+	/**
+	 * 
+	 * @param modelType
+	 * @param contributionId
+	 * @return
+	 * @throws ResourceTypeNotFoundException
+    * @throws ResourceException if asked to abort from within triggered event
+	 */
+	public boolean remove(String modelType, String contributionId) throws ResourceTypeNotFoundException, ResourceException;
 	
 }

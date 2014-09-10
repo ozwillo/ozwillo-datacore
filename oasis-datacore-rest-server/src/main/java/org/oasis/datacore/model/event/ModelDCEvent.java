@@ -22,7 +22,7 @@ public class ModelDCEvent extends DCEvent {
    //public static final String ABOUT_TO_BUILD = MODEL_PREFIX + "aboutToBuild";
    public static final String ABOUT_TO_CREATE = MODEL_PREFIX + "aboutToCreate";
    public static final String CREATED = MODEL_PREFIX + "created";
-   //public static final String READ = MODEL_PREFIX + "read";
+   public static final String READ = MODEL_PREFIX + "read";
    public static final String ABOUT_TO_UPDATE = MODEL_PREFIX + "aboutToUpdate";
    public static final String UPDATED = MODEL_PREFIX + "updated";
    public static final String ABOUT_TO_DELETE = MODEL_PREFIX + "aboutToDelete";

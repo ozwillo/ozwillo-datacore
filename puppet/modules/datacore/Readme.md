@@ -1,6 +1,6 @@
 # puppet-oasis-datacore
 
-Puppet module to install a Datacore. Also installs : Java JDK 7, Apache, maven, fit, sudo, ssh, wget for setup.
+Puppet module to install a Datacore. Also installs : Java JDK 7, Apache, maven, git, sudo, ssh, wget for setup.
 
 ### Configuration
 

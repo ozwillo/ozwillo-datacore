@@ -243,7 +243,8 @@ public class ContributionServiceImpl implements ContributionService {
 	
 
 	@Override
-	public boolean remove(String modelType, String contributionId) throws ResourceTypeNotFoundException {
+	public boolean remove(String modelType, String contributionId)
+	      throws ResourceTypeNotFoundException, ResourceException {
 		
 		DCModel model = null;
 

@@ -26,6 +26,7 @@ public class DataModelServiceImpl implements DCModelService {
    public DCModel getModel(String type) {
       return modelMap.get(type);
    }
+   // includes models (?)
    @Override
    public DCModelBase getMixin(String type) {
       return mixinMap.get(type);
@@ -42,6 +43,7 @@ public class DataModelServiceImpl implements DCModelService {
       return this.modelMap.values();
    }
 
+   // includes models (?)
    @Override
    public Collection<DCModelBase> getMixins() {
       return this.mixinMap.values();
@@ -52,7 +54,8 @@ public class DataModelServiceImpl implements DCModelService {
    // admin / update methods
 
    public void addModel(DCModel dcModel) {
-	  modelMap.put(dcModel.getName(), dcModel);  
+	   modelMap.put(dcModel.getName(), dcModel);
+	   addMixin(dcModel);
    }
    
    /** ONLY TO CREATE DERIVED MODELS ex. Contribution, TODO LATER rather change their name ?!? */
@@ -62,6 +65,7 @@ public class DataModelServiceImpl implements DCModelService {
    
    public void removeModel(String name) {
 	   modelMap.remove(name);
+      removeMixin(name);
    }
    
    public Map<String, DCModel> getModelMap() {
@@ -74,6 +78,10 @@ public class DataModelServiceImpl implements DCModelService {
 
    public void addMixin(DCModelBase mixin) {
       mixinMap.put(mixin.getName(), mixin);
+   }
+   
+   public void removeMixin(String name) {
+      mixinMap.remove(name);
    }
    
    public Map<String, DCModelBase> getMixinMap() {

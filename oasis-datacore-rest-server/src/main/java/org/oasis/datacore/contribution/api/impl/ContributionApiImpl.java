@@ -15,6 +15,7 @@ import org.oasis.datacore.contribution.rest.api.DCContribution;
 import org.oasis.datacore.contribution.service.ContributionService;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
 import org.oasis.datacore.rest.api.DCResource;
+import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.oasis.datacore.rest.server.resource.ResourceTypeNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -87,8 +88,10 @@ public class ContributionApiImpl implements ContributionApi {
 		
 		try {
 			contributionService.remove(modelType, contributionId);
-		} catch (ResourceTypeNotFoundException e) {
-			throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity("Contribution wasn't found, does it exist ?").type(MediaType.TEXT_PLAIN).build());
+      } catch (ResourceTypeNotFoundException e) {
+         throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).entity("Contribution wasn't found, does it exist ?").type(MediaType.TEXT_PLAIN).build());
+		} catch (ResourceException e) { // asked to abort from within triggered event
+			throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).type(MediaType.TEXT_PLAIN).build());
 		}
 		
 		throw new WebApplicationException(Response.status(Response.Status.OK).entity("Contribution has been removed").type(MediaType.TEXT_PLAIN).build());

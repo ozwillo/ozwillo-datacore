@@ -1,7 +1,7 @@
 name 'oasis-datacore'
 version '0.0.3'
 source ''
-author 'Victor Voisin'
+author 'Victor Voisin, Marc Dutoo'
 description 'Install Oasis datacore'
 summary 'Oasis Datacore'
 license 'MIT'
