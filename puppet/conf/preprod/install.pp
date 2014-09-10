@@ -10,6 +10,7 @@ if($mongo) {
   class { 'mongodb':
     package_name  => 'mongodb-org',
     package_ensure => '2.6.4',
+    old_servicename => 'mongod', # renamed (from mongodb) in 2.6.x on debian https://github.com/echocat/puppet-mongodb/issues/45
     logdir       => '/var/log/mongodb/'
   }
   
