@@ -1,0 +1,30 @@
+{
+  "name": "oasis-datacore",
+  "version": "0.0.3",
+  "author": "Open Wide",
+  "license": "Licensed under MIT",
+  "summary": "Oasis Datacore",
+  "source": "https://github.com/pole-numerique/oasis-datacore/",
+  "project_page": "(https://github.com/pole-numerique/oasis-datacore/wiki/module)",
+  "issues_url": "",
+  "tags": ["OASIS", "MongoDB"],
+  "operatingsystem_support": [
+    {
+      "operatingsystem": "Debian",
+      "operatingsystemrelease": [
+        "6",
+        "7"
+      ]
+    },
+    {
+      "operatingsystem": "Ubuntu",
+      "operatingsystemrelease": [
+        "12.04",
+        "14.04"
+      ]
+    }
+   ],
+  "dependencies": [
+    { "name": "dwerder/mongodb", "version_requirement": ">=3.4.0" }
+  ]
+}
