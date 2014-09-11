@@ -100,7 +100,7 @@
 
 		<oasis-datacore.version>1.0-SNAPSHOT</oasis-datacore.version>
 
-		<java.version>1.7</java.version>
+		<java.version>1.8</java.version>
 
 		<!-- testing : -->
 		<junit.version>4.11</junit.version><!-- 4.11 solves method execution order 
