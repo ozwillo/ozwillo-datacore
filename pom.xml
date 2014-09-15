@@ -120,7 +120,7 @@
 		<!-- spring data on mongodb -->
 		<spring-data-mongodb.version>1.5.2.RELEASE</spring-data-mongodb.version><!-- 
 			WARNING depends on spring 3.2.10.RELEASE --><!-- older : 1.2.3.RELEASE with spring 3.1.4.RELEASE -->
-		<mongodb.version>2.12.1</mongodb.version><!-- supports MongoDB 2.6 ; older : 2.11.2 -->
+		<mongodb.version>2.12.3</mongodb.version><!-- supports MongoDB 2.6 ; older : 2.11.2 -->
 		<joda-time.version>2.1</joda-time.version><!-- from Jackson -->
 
 		<!-- spring data on neo4j (TODO for Social Graph mock ?!?) -->
