@@ -86,18 +86,14 @@
    
    <!-- Make sure db-factory uses the configured mongo and not always 127.0.0.1:27017.
    http://stackoverflow.com/questions/16744260/spring-data-mongo-seems-to-ignore-host-in-xml-configuration 
-   NB. ReadPreference is not available here but on MongoTemplate -->
+   NB. ReadPreference is not available here but on MongoTemplate
+   BEWARE T(com.mongodb.WriteConcern).ACKNOWLEDGED differs from string "ACKNOWLEDGED" WriteConcern,
+   see http://stackoverflow.com/questions/17865270/error-handling-with-spring-data-and-mongo-java-driver-->
    <mongo:db-factory id="mongoDbFactory" dbname="${oasis.datacore.mongodb.dbname}"
       mongo-ref="mongo"
-      write-concern="#{T(com.mongodb.WriteConcern).ACKNOWLEDGED}" username="#{null}"/><!-- which differs from string "ACKNOWEDLGED" WriteConcern
-      see http://stackoverflow.com/questions/17865270/error-handling-with-spring-data-and-mongo-java-driver -->
-      <!-- TODO in prod (& test it),
-      auth :
-      username="${oasis.datacore.mongodb.username}"
-      password="${oasis.datacore.mongodb.password}"
-      write-concern :
-      REPLICA_ACKNOWLEDGED (and not FSYNCED or JOURNALED)
-      -->
+      write-concern="#{T(com.mongodb.WriteConcern).valueOf(&quot;${oasis.datacore.mongodb.writeConcern}&quot;)}"
+      username="#{${oasis.datacore.mongodb.username}}"
+      password="#{${oasis.datacore.mongodb.password}}"/>
 
    <!-- Mongo Template.
    Referenced components (mappingConverter...) have to be specified if they are custom
@@ -116,7 +112,7 @@
             <constructor-arg name="j" value="true" /><!- wait for journaled ->
          </bean>
       </property -->
-      <property name="readPreference" value="${oasis.datacore.mongodb.readPreference}"/>
+      <property name="readPreference" value="#{${oasis.datacore.mongodb.readPreference}}"/>
    </bean>
    <mongo:repositories base-package="org.oasis.datacore.core" /><!-- TODO -->
 
