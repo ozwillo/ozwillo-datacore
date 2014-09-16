@@ -2,7 +2,6 @@ package org.oasis.datacore.core.init;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ListIterator;
 
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.slf4j.Logger;
@@ -101,19 +100,13 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
 
    public void register(Initable initable) {
       int order = initable.getOrder();
-      if (this.initables.isEmpty()
-            || order >= this.initables.get(this.initables.size() -1).getOrder()) {
-         // add as last if possible
-         this.initables.add(initable);  
-      } else {
-         // add at the right place in the list
-         for (ListIterator<Initable> initableListIt = this.initables.listIterator(0); initableListIt.hasNext();) {
-            if (order < initableListIt.next().getOrder()) {
-               initableListIt.add(initable);
-               break;
-            }
-         }
+      int i = this.initables.size() - 1;
+      for (; i >= 0; i--) {
+    	  if (order >= this.initables.get(i).getOrder()) {
+    		  break;
+    	  }
       }
+      this.initables.add(i + 1, initable);
    }
 
 }
