@@ -202,13 +202,6 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          String modelName = (modelType.length == 2) ? modelType[0] : modelResourceName;
          String modelVersionIfAny = (modelType.length == 2) ? modelType[1] : null;
          String modelNameWithVersionIfAny = modelResourceName;
-         if ("dcmf:field".equals(modelName)
-               || "dcmo:model".equals(modelName)
-               || "dcmi:mixin".equals(modelName)) {
-            // for now non-recursive metaModel can't be posted,
-            // LATER do it to document it (what is queriable etc.)
-            continue;
-         }
          /*datacoreApiClient.*/postDataInType(resource);
       }
    }
