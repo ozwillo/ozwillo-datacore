@@ -202,6 +202,32 @@ public class DCResource {
       return new ImmutableList.Builder<Object>();
    }
    
+   /** mutable map, to help update / enrich props
+    * TODO outside in utils */
+   public static class MapBuilder<K,V> {
+      private Map<K,V> map;
+      public MapBuilder(Map<K,V> map) {
+         this.map = map;
+      }
+      public MapBuilder() {
+         this.map = new HashMap<K,V>();
+      }
+      public MapBuilder(int initialCapacity) {
+         this.map = new HashMap<K,V>(initialCapacity);
+      }
+      public MapBuilder<K, V> put(K key, V value) {
+         this.map.put(key, value);
+         return this;
+      }
+      public MapBuilder<K, V> putAll(Map<K,V> map) {
+         this.map.putAll(map);
+         return this;
+      }
+      public Map<K, V> build() {
+         return map;
+      }
+   }
+   
 
    /**
     * shortcut method

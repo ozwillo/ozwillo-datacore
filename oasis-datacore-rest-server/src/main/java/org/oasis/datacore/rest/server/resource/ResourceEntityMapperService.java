@@ -144,20 +144,7 @@ public class ResourceEntityMapperService {
       } else if ("long".equals(dcField.getType())) {
          // Javascript has no long : http://javascript.about.com/od/reference/g/rlong.htm
          // so supported through String instead (or Integer as fallback)
-         if (!(resourceValue instanceof String)) {
-            if (resourceValue instanceof Long) {
-               entityValue = (Long) resourceValue; // can only happen if called locally, NOT remotely through jackson
-            } else if (resourceValue instanceof Integer) {
-               entityValue = new Long((Integer) resourceValue);
-               resourceParsingContext.addWarning("long Field value is a JSON integer : " + resourceValue
-                     + ", which allowed as fallback but should rather be a JSON long");
-            } else {
-               // other types ex. Double, float are wrong
-               throw new ResourceParsingException("long Field value is not a string : " + resourceValue);
-            }
-         } else {
-            entityValue = valueParsingService.parseLongFromString((String) resourceValue);
-         }
+         entityValue = valueParsingService.parseLong(resourceValue, resourceParsingContext);
          
       } else if ("double".equals(dcField.getType())) {
          if (!(resourceValue instanceof Double)) {
@@ -651,6 +638,7 @@ public class ResourceEntityMapperService {
          
          Object resourceValue = resourceMap.get(key);
          DCField dcField = mapFields.get(key); // TODO DCModel.getField(key)
+         missingDefaultFields.remove(dcField); // (and not only if null value, to allow setting null value)
          try {
             resourceParsingContext.enter(dcField, resourceValue);
             Object entityValue = resourceToEntityValue(resourceValue, dcField,

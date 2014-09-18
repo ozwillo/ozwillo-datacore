@@ -1,7 +1,6 @@
 package org.oasis.datacore.model.event;
 
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
-import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.model.resource.ModelResourceMappingService;
@@ -45,10 +44,24 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
    @Override
    public void handleEvent(DCEvent event) throws AbortOperationEventException {
       switch (event.getType()) {
-      case DCResourceEvent.CREATED :
-      case DCResourceEvent.UPDATED :
+      case DCResourceEvent.ABOUT_TO_BUILD :
          DCResourceEvent re = (DCResourceEvent) event;
          DCResource r = re.getResource();
+         try {
+            mrMappingService.toModelOrMixin(r, isModel); // enriches r with fields computed by DCModelBase
+         } catch (ResourceParsingException rpex) {
+            // abort else POSTer won't know that his model can't be used (to POST resources)
+            throw new AbortOperationEventException(rpex);
+         } catch (Throwable t) {
+            // abort else POSTer won't know that his model can't be used (to POST resources)
+            throw new AbortOperationEventException("Unknown error while converting "
+                  + "or enriching to model or mixin, aborting POSTing resource", t);
+         }
+         return;
+      case DCResourceEvent.CREATED :
+      case DCResourceEvent.UPDATED :
+         re = (DCResourceEvent) event;
+         r = re.getResource();
          handleModelResourceCreatedOrUpdated(r);
          // TODO if (used as) mixin, do it also for all impacted models (& mixins) !
          return;
@@ -112,27 +125,17 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
    }
 
    private void handleModelResourceCreatedOrUpdated(DCResource r) throws AbortOperationEventException {
-      // TODO check non required fields : required queryLimit openelec maxScan resourceType
-      DCModelBase modelOrMixin;
-      String typeName = (String) r.get("dcmo:name");
-      if (isModel) {
-         DCModel model = new DCModel(typeName);
-         modelOrMixin = model;
-         // NB. collectionName is deduced from typeName
-         model.setMaxScan((int) r.get("dcmo:maxScan"));
-         model.setHistorizable((boolean) r.get("dcmo:isHistorizable"));
-         model.setContributable((boolean) r.get("dcmo:isContributable"));
-      } else {
-         modelOrMixin = new DCMixin(typeName);
-      }
-
       try {
-         mrMappingService.resourceToModelOrMixin(modelOrMixin, r);
+         DCModelBase modelOrMixin = mrMappingService.toModelOrMixin(r, isModel);
+         createOrUpdate(modelOrMixin);
       } catch (ResourceParsingException rpex) {
+         // abort else POSTer won't know that his model can't be used (to POST resources)
          throw new AbortOperationEventException(rpex);
+      } catch (Throwable t) {
+         // abort else POSTer won't know that his model can't be used (to POST resources)
+         throw new AbortOperationEventException("Unknown error while converting "
+               + "or enriching to model or mixin, aborting POSTing resource", t);
       }
-      
-      createOrUpdate(modelOrMixin);
    }
 
    private void handleModelResourceDeleted(String typeName) throws AbortOperationEventException {

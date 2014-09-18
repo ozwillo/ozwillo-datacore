@@ -11,6 +11,7 @@ import org.joda.time.DateTimeZone;
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 import org.oasis.datacore.rest.api.util.ResourceParsingHelper;
 import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
+import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -275,6 +276,27 @@ public class ValueParsingService {
       } catch (IllegalArgumentException e) {
          throw new ResourceParsingException("date Field value is not "
                + "an ISO 8601 Date-formatted string : " + stringValue, e);
+      }
+   }
+
+
+   public Long parseLong(Object resourceValue, DCResourceParsingContext resourceParsingContext)
+         throws ResourceParsingException {
+      if (!(resourceValue instanceof String)) {
+         if (resourceValue instanceof Long) {
+            return (Long) resourceValue; // can only happen if called locally, NOT remotely through jackson
+         } else if (resourceValue instanceof Integer) {
+            if (resourceParsingContext != null) {
+               resourceParsingContext.addWarning("long Field value is a JSON integer : " + resourceValue
+                     + ", which allowed as fallback but should rather be a JSON long");
+            }
+            return new Long((Integer) resourceValue);
+         } else {
+            // other types ex. Double, float are wrong
+            throw new ResourceParsingException("long Field value is not a string : " + resourceValue);
+         }
+      } else {
+         return this.parseLongFromString((String) resourceValue);
       }
    }
 

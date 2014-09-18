@@ -23,7 +23,6 @@ import org.oasis.datacore.core.security.EntityPermissionService;
 import org.oasis.datacore.core.security.mock.MockAuthenticationService;
 import org.oasis.datacore.model.resource.ModelResourceMappingService;
 import org.oasis.datacore.rest.api.DCResource;
-import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.client.QueryParameters;
 import org.oasis.datacore.rest.server.event.EventService;
@@ -94,9 +93,10 @@ public class ResourceModelTest {
    private DataModelServiceImpl modelAdminService; // TODO rm refactor
 
    @Autowired
-   private ResourceModelIniter resourceModelIniter;
-   @Autowired
    private ModelResourceMappingService mrMappingService;
+   /** TODO rm merge */
+   @Autowired
+   private ResourceModelIniter mrMappingService1;
    
    
    /**
@@ -172,14 +172,11 @@ public class ResourceModelTest {
       Assert.assertNotNull(villeurbanneCity);
       // getting model and changing it
       DCResource cityModelResource = datacoreApiClient.getData("dcmo:model_0", CityCountrySample.CITY_MODEL_NAME);
-      @SuppressWarnings("unchecked")
-      Map<String,DCField> cityModelFields = mrMappingService.propsToFields(
-            (List<Map<String, Object>>) cityModelResource.get("dcmo:fields"));
-      DCField cityFoundedField = cityModelFields.get("city:founded");
-      Assert.assertTrue(!cityFoundedField.isRequired());
-      cityFoundedField.setRequired(true);
-      cityModelResource.set("dcmo:fields", resourceModelIniter.fieldsToProps(cityModelFields,
-            mrMappingService.buildFieldUriPrefix(UriHelper.parseUri(cityModelResource.getUri()))));
+      DCModel clientCityModel = (DCModel) mrMappingService.toModelOrMixin(cityModelResource, true);
+      DCField clientCityFoundedField = clientCityModel.getField("city:founded");
+      Assert.assertTrue(!clientCityFoundedField.isRequired());
+      clientCityFoundedField.setRequired(true);
+      mrMappingService1.modelOrMixinToResource(clientCityModel, cityModelResource); // mrMappingService1.modelToResource(clientCityModel)
       try {
       // updating model & check that changed
       cityModelResource = datacoreApiClient.putDataInType(cityModelResource);
@@ -204,9 +201,8 @@ public class ResourceModelTest {
       Assert.assertNotNull(villeurbanneCity);
       } finally {
          // putting it back in default state
-         cityFoundedField.setRequired(false);
-         cityModelResource.set("dcmo:fields", resourceModelIniter.fieldsToProps(cityModelFields,
-               mrMappingService.buildFieldUriPrefix(UriHelper.parseUri(cityModelResource.getUri()))));
+         clientCityFoundedField.setRequired(false);
+         mrMappingService1.modelOrMixinToResource(clientCityModel, cityModelResource); // mrMappingService1.modelToResource(clientCityModel)
          cityModelResource = datacoreApiClient.putDataInType(cityModelResource);
          deleteExisting(villeurbanneCity);
       }

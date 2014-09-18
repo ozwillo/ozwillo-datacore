@@ -27,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 
 /**
@@ -65,8 +64,8 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       DCMixin fieldModel = (DCMixin) new DCMixin("dcmf:field_0") // and not DCModel : fields exist within model & mixins
          .addField(new DCField("dcmf:name", "string", true, 100))
          .addField(new DCField("dcmf:type", "string", true, 100))
-         .addField(new DCField("dcmf:required", "boolean")) // defaults to false, indexing would bring not much
-         .addField(new DCField("dcmf:queryLimit", "int")) // defaults to 0, indexing would bring not much
+         .addField(new DCField("dcmf:required", "boolean", (Object) false, 0)) // defaults to false, indexing would bring not much
+         .addField(new DCField("dcmf:queryLimit", "int", 0, 0)) // defaults to 0, indexing would bring not much ??
          // list :
          .addField(new DCResourceField("dcmf:listElementField", "dcmf:field_0"))
          // map :
@@ -110,8 +109,8 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addMixin(mixinModel)
          .addField(new DCField("dcmo:collectionName", "string", true, 100))
          .addField(new DCField("dcmo:maxScan", "int", 0, 0)) // not "required"
-         .addField(new DCField("dcmo:isHistorizable", "boolean", true, 100))
-         .addField(new DCField("dcmo:isContributable", "boolean", true, 100))
+         .addField(new DCField("dcmo:isHistorizable", "boolean", (Object) false, 100))
+         .addField(new DCField("dcmo:isContributable", "boolean", (Object) false, 100))
          ;
       metaModel.setDocumentation("id = name + '_' + version"); // TODO LATER rathter '/' separator
       /*ignCommuneModel.setDocumentsetDocumentationation("{ \"uri\": \"http://localhost:8180/dc/type/country/France\", "
@@ -207,7 +206,8 @@ public class ResourceModelIniter extends DatacoreSampleBase {
    }
 
 
-   private DCResource modelToResource(DCModel model) throws ResourceParsingException {
+   /** TODO move to ModelResourceMappingService */
+   public DCResource modelToResource(DCModel model) throws ResourceParsingException {
       // filling model's provided props :
       DCResource modelResource = DCResource.create(null, "dcmo:model_0")
             .set("dcmo:name", model.getName())
@@ -230,7 +230,8 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       return modelResource;
    }
 
-   private DCResource mixinToResource(DCModelBase mixinModel) {
+   /** TODO move to ModelResourceMappingService */
+   public DCResource mixinToResource(DCModelBase mixinModel) {
       // filling model's provided props :
       final DCResource modelResource = DCResource.create(null, "dcmi:mixin_0")
             .set("dcmo:name", mixinModel.getName())
@@ -248,7 +249,8 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       return modelResource;
    }
 
-   private void modelOrMixinToResource(DCModelBase model, DCResource modelResource) throws ResourceParsingException {
+   /** TODO move to ModelResourceMappingService */
+   public void modelOrMixinToResource(DCModelBase model, DCResource modelResource) throws ResourceParsingException {
       // still fill other props, including uri-depending ones :
       DCURI dcUri;
       try {
@@ -257,7 +259,11 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          throw new RuntimeException(e);
       }
       String fieldUriPrefix = mrMappingService.buildFieldUriPrefix(dcUri);
-      modelResource.set("dcmo:fields", fieldsToProps(model.getFieldMap(), fieldUriPrefix));
+      // allow to enrich existing fields' props :
+      @SuppressWarnings("unchecked")
+      List<Map<String, Object>> existingFieldsProps = (List<Map<String, Object>>) modelResource.get("dcmo:fields");
+      modelResource.set("dcmo:fields", fieldsToProps(model.getFieldMap(),
+            fieldUriPrefix, existingFieldsProps));
       
       ImmutableList.Builder<Object> mixinsPropBuilder = DCResource.listBuilder();
       for (DCModelBase mixin : model.getMixins()) {
@@ -280,7 +286,8 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       // caches (so that they can be queried for introspection as well) :
       modelResource.set("dcmo:globalMixins",
             new ArrayList<String>(model.getGlobalMixinNames())); // TODO order
-      modelResource.set("dcmo:globalFields", fieldsToProps(model.getGlobalFieldMap(), fieldUriPrefix));
+      modelResource.set("dcmo:globalFields", fieldsToProps(model.getGlobalFieldMap(),
+            fieldUriPrefix, null)); // computed, so don't enrich existing props
       
       // filling company's resource props and missing referencing Mixin props : 
       // - by building URI from known id/iri if no missing referencing Mixin prop,
@@ -350,26 +357,46 @@ public class ResourceModelIniter extends DatacoreSampleBase {
     * @throws ResourceParsingException */
    // TODO move to ModelResourceMappingService & modelAdminService.addModel() !
    public ImmutableList<Object> fieldsToProps(Map<String, DCField> mapFields,
-         String fieldUriPrefix) throws ResourceParsingException {
+         String fieldUriPrefix, List<Map<String, Object>> existingFieldsProps) throws ResourceParsingException {
       ImmutableList.Builder<Object> fieldsPropBuilder = DCResource.listBuilder();
       for (String fieldName : mapFields.keySet()) { // NB. ordered
          DCField field = mapFields.get(fieldName);
-         fieldsPropBuilder.add(fieldToProps(field, fieldUriPrefix));
+         Map<String,Object> existingFieldProps = (existingFieldsProps != null)
+               ? findFieldProps(fieldName, existingFieldsProps) : null;
+         fieldsPropBuilder.add(fieldToProps(field, fieldUriPrefix, existingFieldProps));
       }
       return fieldsPropBuilder.build();
    }
    
+   private Map<String,Object> findFieldProps(String fieldName,
+         List<Map<String, Object>> existingFieldsProps) {
+      for (Map<String, Object> existingFieldProps : existingFieldsProps) {
+         if (fieldName.equals(existingFieldProps.get("dcmf:name"))) {
+            return existingFieldProps;
+         }
+      }
+      return null;
+   }
+
    /** public for tests 
+    * @param existingProps 
     * @throws ResourceParsingException */
    // TODO move to ModelResourceMappingService & modelAdminService.addModel() !
-   public ImmutableMap<String, Object> fieldToProps(DCField field,
-         String fieldUriPrefix) throws ResourceParsingException {
+   public /*Immutable*/Map<String, Object> fieldToProps(DCField field,
+         String fieldUriPrefix, Map<String,Object> existingProps) throws ResourceParsingException {
       // building (dummy ?) field uri :
       //String uri = aboveUri + '/' + field.getName();
       // NO TODO pb uri must be of its own type and not its container's
       String fieldUri = fieldUriPrefix + '/' + field.getName();
       // TODO also for lists : /i
-      ImmutableMap.Builder<String, Object> fieldPropBuilder = DCResource.propertiesBuilder()
+      //ImmutableMap.Builder<String, Object> fieldPropBuilder = DCResource.propertiesBuilder();
+      DCResource.MapBuilder<String, Object> fieldPropBuilder;
+      if (existingProps != null) {
+         fieldPropBuilder = new DCResource.MapBuilder<String,Object>(existingProps);
+      } else {
+         fieldPropBuilder = new DCResource.MapBuilder<String,Object>();
+      }
+      fieldPropBuilder
             //.put("@id", field.getName().replaceAll(":", "__")
             //      .replaceAll("[!?]", "")) // relative (?), TODO TODO better solution for '!' start
             .put("@id", fieldUri)
@@ -387,13 +414,19 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       case "map" :
          // NB. including DCI18nField's submap
          DCMapField mapField = (DCMapField) field;
+         @SuppressWarnings("unchecked")
+         List<Map<String,Object>> existingMapFieldProps = (existingProps != null)
+               ? (List<Map<String,Object>>) existingProps.get("dcmf:mapFields") : null;
          fieldPropBuilder.put("dcmf:mapFields",
-               fieldsToProps(mapField.getMapFields(), fieldUri));
+               fieldsToProps(mapField.getMapFields(), fieldUri, existingMapFieldProps));
          break;
       case "list" :
       case "i18n" :
-         fieldPropBuilder.put("dcmf:listElementField",
-               fieldToProps(((DCListField) field).getListElementField(), fieldUri));
+         @SuppressWarnings("unchecked")
+         Map<String,Object> existingListElementFieldProps = (existingProps != null)
+            ? (Map<String,Object>) existingProps.get("dcmf:listElementField") : null;
+         fieldPropBuilder.put("dcmf:listElementField", fieldToProps(
+               ((DCListField) field).getListElementField(), fieldUri, existingListElementFieldProps));
          break;
       case "resource" :
          fieldPropBuilder.put("dcmf:resourceType", ((DCResourceField) field).getResourceType());
