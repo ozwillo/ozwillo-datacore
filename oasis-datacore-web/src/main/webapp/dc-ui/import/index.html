@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Datacore Import UI</title>
+  <link href='//fonts.googleapis.com/css?family=Droid+Sans:400,700' rel='stylesheet' type='text/css'/>
+  <link href='../css/highlight.default.css' media='screen' rel='stylesheet' type='text/css'/>
+  <link href='../css/screen.css' media='screen' rel='stylesheet' type='text/css'/>
+  <link href='../common/css/datacore-ui.css' rel='stylesheet' type='text/css'/>
+  <script type="text/javascript" src="../lib/shred.bundle.js" /></script>  
+  <script src='../lib/jquery-1.8.0.min.js' type='text/javascript'></script>
+  <script src='../lib/jquery.slideto.min.js' type='text/javascript'></script>
+  <script src='../lib/jquery.wiggle.min.js' type='text/javascript'></script>
+  <script src='../lib/jquery.ba-bbq.min.js' type='text/javascript'></script>
+  <script src='../lib/handlebars-1.0.0.js' type='text/javascript'></script>
+  <script src='../lib/underscore-min.js' type='text/javascript'></script>
+  <script src='../lib/backbone-min.js' type='text/javascript'></script>
+  <script src='../lib/swagger.js' type='text/javascript'></script>
+  <script src='../swagger-ui.js' type='text/javascript'></script>
+  <script src='../lib/highlight.7.3.pack.js' type='text/javascript'></script>
+  <script src='../common/lib/datacore-ui.js' type='text/javascript'></script>
+  <script src='lib/papaparse.js' type='text/javascript'></script>
+  <script src='lib/moment-with-locales.min.js' type='text/javascript'></script>
+  <script src='lib/datacore-import.js' type='text/javascript'></script>
+  <script type="text/javascript">
+  
+   function buildUrl(base, url) {
+     var parts;
+     console.log("base is " + base);
+     parts = base.split("/");
+     base = parts[0] + "//" + parts[2];
+     if (url.indexOf("/") === 0) {
+       return base + url;
+     } else {
+       return base + "/" + url;
+     }
+   }
+     
+   var inited = false; // OASIS
+    $(function () {
+      if (inited) { // OASIS
+         return; // OASIS else called at EACH reload including each CSV parsing !! 
+      } // OASIS
+      
+      var options = {
+            url: "/api-docs", // OASIS
+            supportedSubmitMethods: ['get', 'post', 'put', 'delete'] // OASIS TODO PATCH ?!?
+          };
+      if (options.url.indexOf("http") !== 0) {
+         options.url = buildUrl(window.location.href.toString(), options.url);
+      }
+      ///this.headerView.update(options.url);
+      var dcApi = new SwaggerApi(options.url, this.options);
+      dcApi.build();
+      window.dcApi = dcApi;
+
+      $('pre code').each(function(i, e) {hljs.highlightBlock(e)});
+      
+      var baseUrl = buildUrl(window.location.href.toString(), "");
+      $('.baseUrl').html(baseUrl);
+  });
+
+  </script>
+</head>
+
+<body>
+
+<div id="dc-ui-container" class="dc-ui-wrap">
+<div class="info_title">Datacore Import UI</div>
+
+<br/><br/>
+<div style="display: inline-block; font-weight: bold; width: 150px;">Models :</div>
+<br/><br/>
+<input type="file" class="modelFile"/>&nbsp;&nbsp;
+samples :
+<a href="samples/openelec/oasis-donnees-metiers-openelec.csv">OpenElec v1 models</a>,
+<a href="samples/geohier/geo_model.csv">Geo Hierarchy v1 models</a>
+<br/><br/>
+<span class="json dcjsonarea modelRowCounter">Handled no model row yet</span>&nbsp;&nbsp;
+<span class="json dcjsonarea modelCounter">Posted no model yet</span>
+
+<br/><br/>
+<br/><br/>
+<div style="display: inline-block; font-weight: bold; width: 150px;">Data :</div>
+<br/><br/>
+Resource row limit : <input type="text" class="resourceRowLimit" value="50" style="width: 50px"/>
+<br/><br/>
+<input type="file" class="resourceFile"/>&nbsp;&nbsp;
+samples :
+<a href="samples/openelec/electeur_v26010_sample.csv">OpenElec v1 data</a>,
+<a href="samples/geohier/geo_data_samplefrit.csv">Geo Hierarchy v1 data</a>
+<br/><br/>
+<span class="json dcjsonarea resourceRowCounter">Handled no resource row yet</span>&nbsp;&nbsp;
+<span class="json dcjsonarea resourceCounter">Posted no resource yet</span>
+
+<br/><br/>
+<br/><br/>
+<button onclick="javascript:return importModelAndResources();"><b>import</b></button>
+&nbsp;(clicking button with no file selected uses OpenElec sample files)
+<br/><br/>
+<b>WARNING if Resources that depend on others are not imported, click button again</b>
+(because for now Resources are not imported all at once nor ordered according to their dependencies).
+<br/><br/>
+To get more info about import errors, for now open your browser's javascript console.
+
+<br/><br/>
+<br/><br/>
+<b>CSV rows :</b>
+<div class="block response_body">
+<pre class="json dcjsonarea"><code id="importedJsonFromCsv" class="importedJsonFromCsv"></code></pre><!-- dcjsonarea -->
+</div>
+
+<br/><br/>
+<a id="importedResourcesFromCsv"></a>
+<b>Resources :</b>
+<div class="block response_body">
+<pre class="json dcjsonarea"><code id="importedResourcesFromCsv" class="importedResourcesFromCsv"></code></pre><!-- dcjsonarea -->
+</div>
+<br/><br/>
+
+<a id="datacoreResources"></a>
+<b>Datacore :</b>
+<br/>
+<span class="json dcjsonline">GET </span>
+<span class="json dcjsonline baseUrl">${datacoreApiServer.baseUrl}</span>
+<input spantype="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 527px; display: inline;">
+<button onclick="javascript:return findData($('.myurl').val());">go</button>
+<button onclick="javascript:return setUrl('');" style="float: right;">reset</button><br/>
+<div class="block response_body">
+<a id="mydata"></a><!-- displays a short error message in red -->
+<pre class="json dcjsonarea"><code id="mydata" class="mydata"></code></pre>
+</div>
+<br/><br/>
+
+</div>
+
+</body>
+
+</html>

@@ -1,8 +1,5 @@
-$(function() {
-   /*window.datacore = new SwaggerApi({ url: '/api-docs', success: function() {
-      // TODO display status
-   }};*/
-});
+//var containerUrl = "http://data.oasis-eu.org/"; // rather auto defined in description.html
+
 function toolifyDcResourceJson(prettyDcResourceJson) {
    prettyDcResourceJson = prettyDcResourceJson.replace(/\"http:\/\/data\.oasis-eu\.org\/dc\/type\/([^\/]+)\/([^\"]+)\"/g,
       '"http://data.oasis-eu.org/dc/type/'
@@ -171,7 +168,7 @@ function findDataByType(relativeUrl, success, error) {
    var i = tq.indexOf('?');
    window.t = i == -1 ? tq : tq.substring(0, i);
    window.q = i == -1 ? '' : tq.substring(i + 1);*/
-   swaggerUi.api.dc.findDataInType({type:modelType, '#queryParameters':query,
+   dcApi.dc.findDataInType({type:modelType, '#queryParameters':query,
          Authorization:'Basic YWRtaW46YWRtaW4='},
       function(data) {
          var resources = eval(data.content.data);
@@ -213,7 +210,7 @@ function getData(relativeUrl, success, error) {
    var i = ti.indexOf('/', l);
    window.t = ti.substring(0, i);
    window.iri = ti.substring(i + 1);*/
-   swaggerUi.api.dc.getData({type:modelType, iri:resourceId,
+   dcApi.dc.getData({type:modelType, iri:resourceId,
          'If-None-Match':-1, Authorization:'Basic YWRtaW46YWRtaW4='},
       function(data) {
          var resource = eval('[' + data.content.data + ']')[0];
@@ -262,7 +259,7 @@ function findDataByTypeRdf(relativeUrl, success, error) {
    var i = tq.indexOf('?');
    window.t = i == -1 ? tq : tq.substring(0, i);
    window.q = i == -1 ? '' : tq.substring(i + 1);*/
-   swaggerUi.api.dc.findDataInType({type:modelType, '#queryParameters':query,
+   dcApi.dc.findDataInType({type:modelType, '#queryParameters':query,
          Authorization:'Basic YWRtaW46YWRtaW4='}, {responseContentType:'text/x-nquads'},
       function(data) {
          var prettyText = data.content.data;
@@ -302,7 +299,7 @@ function postAllDataInType(relativeUrl, resources, success, error) {
    var i = tq.indexOf('?');
    window.t = i == -1 ? tq : tq.substring(0, i);
    window.q = i == -1 ? '' : tq.substring(i + 1);*/
-   swaggerUi.api.dc.postAllDataInType({type:modelType, body:resources,
+   dcApi.dc.postAllDataInType({type:modelType, body:resources,
          Authorization:'Basic YWRtaW46YWRtaW4='},
       function(data) {
          var resResources = eval(data.content.data);
@@ -326,7 +323,7 @@ function postAllDataInType(relativeUrl, resources, success, error) {
    return false;
 }
 // NB. no postDataInType in swagger (js) API (because would be a JAXRS conflict)
-// postDataInType would only differ on swaggerUi.api.dc.postDataInType function, TODO better & also for put
+// postDataInType would only differ on dcApi.dc.postDataInType function, TODO better & also for put
 // TODO putDataInType and use it...
 
 function deleteDataInType(resource, success, error) {
@@ -344,7 +341,7 @@ function deleteDataInType(resource, success, error) {
    var i = ti.indexOf('/', l);
    window.t = ti.substring(0, i);
    window.iri = ti.substring(i + 1);*/
-   swaggerUi.api.dc.deleteData({type:modelType, iri:resourceId,
+   dcApi.dc.deleteData({type:modelType, iri:resourceId,
          'If-Match':resource["o:version"], Authorization:'Basic YWRtaW46YWRtaW4='},
       function(data) {
          var resource = eval('[' + data.content.data + ']')[0];
@@ -366,7 +363,7 @@ function deleteDataInType(resource, success, error) {
 }
 
 function postAllData(resources, success, error) {
-   swaggerUi.api.dc.postAllData({body:resources,
+   dcApi.dc.postAllData({body:resources,
          Authorization:'Basic YWRtaW46YWRtaW4='},
       function(data) {
          var resResources = eval(data.content.data);

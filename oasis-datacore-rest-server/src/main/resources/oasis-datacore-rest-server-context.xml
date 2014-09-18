@@ -150,7 +150,7 @@
          <ref bean="datacore.contribution.apiImpl" /> 
          <ref bean="swagger.resourceJSON" />
          <bean class="org.oasis.datacore.rest.server.RootRedirectResource">
-            <property name="targetUri" value="${datacoreApiServer.baseUrl}swagger-ui/index.html"/>
+            <property name="targetUri" value="${datacoreApiServer.baseUrl}dc-ui/index.html"/>
          </bean>
       </jaxrs:serviceBeans>
       <jaxrs:providers>

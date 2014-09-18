@@ -1,0 +1,6 @@
+geo_Country:Name,geo_Country:NAME,geo_Country:idIso,geo_Country:idStat,geo_Country:idNational,geo_Country:statisticalInstitute,geo_Region:Name,geo_Region:NAME,geo_Region:idIso,geo_Region:idStat,geo_Region:idNational,geo_Province:Name,geo_Province:NAME,geo_Province:idIso,geo_Province:idStat,geo_Province:idNational,geo_City:Name,geo_City:NAME,geo_City:idIso,geo_City:idStat,geo_City:idNational,geo_City:fiscalCode,geo_City:postalCode
+France,FRANCE,FR,FRA,,,Rhône-Alpes,RHONE-ALPES,RH,FR-RH,69,Rhône,RHONE,FR-69,69,69,Lyon,LYON,,69xxx,,,69000
+France,FRANCE,FR,FRA,,,Rhône-Alpes,RHONE-ALPES,RH,FR-RH,69,Rhône,RHONE,FR-69,69,69,Lyon,LYON,,69xxx,,,69001
+France,FRANCE,FR,FRA,,,Rhône-Alpes,RHONE-ALPES,RH,FR-RH,69,Rhône,RHONE,FR-69,69,69,Lyon,LYON,,69xxx,,,69002
+Italy,ITALY,IT,ITALIA,,,Abruzzo,ABRUZZO,IT-65,,,L'Aquila,L'AQUILA,IT-AQ,,AQ,Acciano,ACCIANO,,066001,,A018,67020
+Italy,ITALY,IT,ITALIA,,,Abruzzo,ABRUZZO,IT-65,,,L'Aquila,L'AQUILA,IT-AQ,,AQ,Aielli,AIELLI,,066002,,A100,67041

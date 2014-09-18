@@ -7,9 +7,8 @@
  -->
 
 <script type="text/javascript">
-function getContainerUrl() {
-   return "${datacoreApiServer.containerUrl}";
-}
+var containerUrl = "${datacoreApiServer.containerUrl}";
+var baseUrl = "${datacoreApiServer.baseUrl}";
 </script>
 
 Allows to manage (CRUD) and find Data Resources and their Models using JSON/HTTP REST calls.
@@ -116,7 +115,7 @@ and for container URL <a href="${datacoreApiServer.containerUrl}">${datacoreApiS
 (URL that must be used to build Datacore Data resource URIs).
 <br/><br/>
 <b>To add your own data</b> using REST calls, you must first define or reuse the appropriate business-specific Models.
-You can do both using the <a href="./import.html">Import UI</a> (includes OpenElec sample), or using Java (see
+You can do both using the <a href="./import">Import UI</a> (includes OpenElec sample), or using Java (see
 <a href="https://github.com/pole-numerique/oasis-datacore/tree/master/oasis-datacore-rest-server/src/main/java/org/oasis/datacore/sample">
 Provto sample</a>), or do it any other way that still follows the
 <a href="https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-server/src/main/java/org/oasis/datacore/sample/DatacoreSampleMethodologyBase.java">
@@ -195,6 +194,9 @@ with a default value that logs as admin in dev mode.
 <br/><br/>
 <strong>This server's configuration:</strong>
 <pre><code>
+## Development mode (also allows to set system property datacore.dropdb=true ex. in maven)
+datacore.devmode=${datacore.devmode}
+
 ## Other (or all) known Datacores (comma-separated container URLs)
 datacoreApiServer.knownDatacoreContainerUrls=${datacoreApiServer.knownDatacoreContainerUrls}
 
@@ -208,4 +210,7 @@ datacoreApiServer.query.maxScan=${datacoreApiServer.query.maxScan}
 datacoreApiServer.query.maxStart=${datacoreApiServer.query.maxStart}
 ## default maximum number of documents returned
 datacoreApiServer.query.maxLimit=${datacoreApiServer.query.maxLimit}
+
+## Kernel Configuration
+kernel.baseUrl=${kernel.baseUrl}
 </code></pre>

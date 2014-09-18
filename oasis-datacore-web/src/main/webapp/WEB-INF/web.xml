@@ -25,7 +25,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 
 	<servlet-mapping>
 		<servlet-name>default</servlet-name><!-- mapping to static resources servlet -->
-		<url-pattern>/swagger-ui/*</url-pattern><!-- path mapping to swagger UI 
+		<url-pattern>/dc-ui/*</url-pattern><!-- path mapping to UI (playground, swagger, import...) 
 			in swagger-ui subdirectory. Alternative would be file extension-driven mapping 
 			to (swagger files in) root directory. -->
 	</servlet-mapping>

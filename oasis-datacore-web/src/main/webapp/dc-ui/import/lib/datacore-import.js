@@ -1,28 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Datacore Import UI</title>
-  <link href='//fonts.googleapis.com/css?family=Droid+Sans:400,700' rel='stylesheet' type='text/css'/>
-  <link href='css/highlight.default.css' media='screen' rel='stylesheet' type='text/css'/>
-  <link href='css/screen.css' media='screen' rel='stylesheet' type='text/css'/>
-  <link href='css/datacore-ui.css' rel='stylesheet' type='text/css'/>
-  <script type="text/javascript" src="lib/shred.bundle.js" /></script>  
-  <script src='lib/jquery-1.8.0.min.js' type='text/javascript'></script>
-  <script src='lib/jquery.slideto.min.js' type='text/javascript'></script>
-  <script src='lib/jquery.wiggle.min.js' type='text/javascript'></script>
-  <script src='lib/jquery.ba-bbq.min.js' type='text/javascript'></script>
-  <script src='lib/handlebars-1.0.0.js' type='text/javascript'></script>
-  <script src='lib/underscore-min.js' type='text/javascript'></script>
-  <script src='lib/backbone-min.js' type='text/javascript'></script>
-  <script src='lib/swagger.js' type='text/javascript'></script>
-  <script src='swagger-ui.js' type='text/javascript'></script>
-  <script src='lib/highlight.7.3.pack.js' type='text/javascript'></script>
-  <script src='datacore-ui.js' type='text/javascript'></script>
-  <script src='papaparse.js' type='text/javascript'></script>
-  <script src='moment-with-locales.min.js' type='text/javascript'></script>
-  <script type="text/javascript">
-
-  //var containerUrl = "http://data.oasis-eu.org"; // rather use getContainerUrl() from description.html
+  var containerUrl = "http://data.oasis-eu.org/"; // rather auto defined in description.html NOO REQUIRES SwaggerUi
   
   function trimIfAnyElseNull(value) {
      if (typeof value === 'string') {
@@ -218,8 +194,20 @@
                + " :<br/>" + requestBodyHtml + "<p/>";
       }
       if (true/*importStateRes.postedNb % 1000 == 0 || importStateRes.postedNb > importStateRes.toBePostedNb - 10*/) {
-         counter.html("Posted <a href=\"#importedResourcesFromCsv\">" + importStateRes.postedNb
-               + " " + kind + "s</a> (<a href=\"#mydata\">" + importStateRes.errors.length + " errors</a>)");
+         var msg = "Posted <a href=\"#importedResourcesFromCsv\">" + importStateRes.postedNb
+               + " " + kind + "s</a> (";
+         if (importStateRes.errors.length === 0) {
+            msg += "no error";
+            msg += "), <a href=\"#datacoreResources\">browse them</a>";
+         } else {
+            msg += "<a href=\"#datacoreResources\">" + importStateRes.errors.length + " error"
+            if (importStateRes.errors.length !== 1) {
+               msg += "s";
+            }
+            msg += "</a>";
+            msg += ")";
+         }
+         counter.html(msg);
          if (importStateRes.errors.length != 0) {
             $('.mydata').html(importStateRes.errorHtml);
          }
@@ -455,7 +443,7 @@
             id = resourceRow["inseeville"] + '/' + resourceRow["numero_electeur"]; // TODO TODO !!! in second pass ??
          }
          
-         var uri = getContainerUrl() + "dc/type/" + typeName + "/" + id;
+         var uri = containerUrl + "dc/type/" + typeName + "/" + id;
          var existingResource = resources[uri];
          // TODO TODO subresource case
          if (typeof existingResource === 'undefined') {
@@ -547,7 +535,7 @@
      }
 
       $('.resourceRowCounter').html("Handled <a href=\"#importedJsonFromCsv\">" + rInd
-            + " rows</a> (<a href=\"#mydata\">" + importState.data.errors.length + " errors</a>)");
+            + " rows</a> (<a href=\"#datacoreResources\">" + importState.data.errors.length + " errors</a>)");
       if (importState.data.errors.length != 0) {
          //$('.mydata').html(
          $('.importedResourcesFromCsv').html("<b>Errors :</b><br/>"
@@ -557,7 +545,8 @@
          
       } else {
          // display full resources only if no errors to display :
-         var resourcesPrettyJson = JSON.stringify(resources, null, '\t').replace(/\n/g, '<br>');
+         //var resourcesPrettyJson = JSON.stringify(resources, null, '\t').replace(/\n/g, '<br>');
+         var resourcesPrettyJson = toolifyDcResource(resources, 0);
          $('.importedResourcesFromCsv').html(resourcesPrettyJson);
       }
       
@@ -585,7 +574,7 @@
             var resourceIri = data.request.path.replace(/^\/*dc\/type\/*/, "");
             var modelType = decodeURIComponent(resourceIri.substring(0, resourceIri.indexOf("/")));
             var resourceId = decodeURIComponent(resourceIri.substring(resourceIri.indexOf("/") + 1));
-            var upToDateResourceUri = getContainerUrl() + "dc/type/" + modelType + "/" + resourceId;
+            var upToDateResourceUri = containerUrl + "dc/type/" + modelType + "/" + resourceId;
             var upToDateResource = resources[upToDateResourceUri];
             postAllDataInType(modelType, JSON.stringify([ upToDateResource ], null, null),
                   importedDataPosted, importedDataPosted);
@@ -611,7 +600,6 @@
             complete: function(results) {
                console.log("Remote file parsed!", results);
                ///var results = eval('[' + data.content.data + ']')[0];
-               //var prettyJson = toolifyDcResource(results, 0);
                var prettyJson = JSON.stringify(results.data, null, '\t').replace(/\n/g, '<br>');
                $('.importedJsonFromCsv').html(prettyJson);
                // TODO handle errors...
@@ -674,7 +662,7 @@
       if ($(".resourceFile").val() != "") {
          $(".resourceFile").parse({ config : resourceParsingConf });
       } else {
-         Papa.parse("./electeur_v26010_sample.csv?reload="
+         Papa.parse("samples/openelec/electeur_v26010_sample.csv?reload="
                + new Date().getTime(), resourceParsingConf); // to prevent browser caching
       }
    }
@@ -682,7 +670,7 @@
    function importField(fieldRow, fieldName, mixin, mixinTypeName, importState) {
       var field = mixin["dcmo:fields"][fieldName];
       if (typeof field === 'undefined') {
-         var fieldUri = getContainerUrl() + "dc/type/dcmf:field_0/"
+         var fieldUri = containerUrl + "dc/type/dcmf:field_0/"
                + mixinTypeName + "/" + fieldName; // TODO sub sub resource
          var fieldDataType = fieldRow["Data type"];
          var fieldType = importState.typeMap[fieldDataType.toLowerCase()];
@@ -821,7 +809,7 @@
            if (typeof mixin == 'undefined') {
               mixin = {
                  "dcmo:name" : mixinName,
-                 "@id" : getContainerUrl() + "dc/type/" + mixinTypeName,
+                 "@id" : containerUrl + "dc/type/" + mixinTypeName,
                  // more init :
                  "dcmo:majorVersion" : importState.mixinMajorVersion,
                  "dcmo:fields" : {},
@@ -836,7 +824,7 @@
                         "mixin" : mixinName }); // setting up another loop on fields
                   loopMaxIndex++; // allowing the loop no matter what
                   mixinTypeName = "dcmo:model_0/" + mixinName;
-                  mixin["@id"] = getContainerUrl() + "dc/type/" + mixinTypeName;
+                  mixin["@id"] = containerUrl + "dc/type/" + mixinTypeName;
                   mixin["dcmo:fields"] = {};
                } else {
                   isModel = isModel || hasBeenModel;
@@ -968,7 +956,8 @@
         
         ///var results = eval('[' + data.content.data + ']')[0];
         //var prettyJson = toolifyDcResource(results, 0);
-        var mixinsPrettyJson = JSON.stringify(modelOrMixinArray, null, '\t').replace(/\n/g, '<br>');
+        //var mixinsPrettyJson = JSON.stringify(modelOrMixinArray, null, '\t').replace(/\n/g, '<br>');
+        var mixinsPrettyJson = toolifyDcResource(modelOrMixinArray, 0);
         $('.importedResourcesFromCsv').html(mixinsPrettyJson);
 
       callback(importState);
@@ -1089,7 +1078,7 @@
       if ($(".modelFile").val() != "") {
          $(".modelFile").parse({ config : modelParsingConf });
       } else {
-         Papa.parse("./oasis-donnees-metiers-openelec.csv?reload="
+         Papa.parse("samples/openelec/oasis-donnees-metiers-openelec.csv?reload="
                + new Date().getTime(), modelParsingConf); // to prevent browser caching
       }
 
@@ -1097,111 +1086,3 @@
       });
       return false;
    }
-
-   var inited = false; // OASIS
-    $(function () {
-      if (inited) { // OASIS
-         return; // OASIS else called at EACH reload including each CSV parsing !! 
-      } // OASIS
-      window.swaggerUi = new SwaggerUi({
-      url: "/api-docs", // OASIS
-      dom_id: "swagger-ui-container",
-      supportedSubmitMethods: ['get', 'post', 'put', 'delete'], // OASIS TODO PATCH ?!?
-      onComplete: function(swaggerApi, swaggerUi){
-        if(console) {
-          console.log("Loaded SwaggerUI")
-        }
-        $('pre code').each(function(i, e) {hljs.highlightBlock(e)});
-        
-        // OASIS :
-        //importModelAndResources();
-        //fillData();
-      },
-      onFailure: function(data) {
-        if(console) {
-          console.log("Unable to Load SwaggerUI");
-          console.log(data);
-        }
-      },
-      docExpansion: "list" // OASIS rather than none, full see https://github.com/wordnik/swagger-ui
-    });
-
-    $('#input_apiKey').change(function() {
-      var key = $('#input_apiKey')[0].value;
-      console.log("key: " + key);
-      if(key && key.trim() != "") {
-        console.log("added key " + key);
-        window.authorizations.add("key", new ApiKeyAuthorization("api_key", key, "query"));
-      }
-    })
-    window.swaggerUi.load();
-  });
-
-  </script>
-</head>
-
-<body>
-
-<div id="dc-ui-container" class="dc-ui-wrap">
-<div class="info_title">Datacore Import UI</div>
-
-<br/><br/>
-<b>Models :</b>
-<br/><br/>
-<input type="file" class="modelFile"/>&nbsp;&nbsp;
-<a href="./oasis-donnees-metiers-openelec.csv">OpenElec sample models</a>
-<br/><br/>
-<span class="json dcjsonarea modelRowCounter">Handled no model row yet</span>&nbsp;&nbsp;
-<span class="json dcjsonarea modelCounter">Posted no model yet</span>
-
-<br/><br/>
-<br/><br/>
-<b>Data :</b>
-<br/><br/>
-Resource row limit : <input type="text" class="resourceRowLimit" value="50" style="width: 50px"/>
-<br/><br/>
-<input type="file" class="resourceFile"/>&nbsp;&nbsp;
-<a href="./electeur_v26010_sample.csv">OpenElec sample data</a>
-<br/><br/>
-<span class="json dcjsonarea resourceRowCounter">Handled no resource row yet</span>&nbsp;&nbsp;
-<span class="json dcjsonarea resourceCounter">Posted no resource yet</span>
-
-<br/><br/>
-<br/><br/>
-<button onclick="javascript:return importModelAndResources();"><b>import</b></button>
-&nbsp;(clicking button with no file selected uses OpenElec sample files)
-<br/><br/>
-<b>WARNING if Resources that depend on others are not imported, click button again</b>
-(because for now Resources are not imported all at once nor ordered according to their dependencies).
-<br/><br/>
-To get more info about import errors, for now open your browser's javascript console.
-
-<br/><br/>
-<br/><br/>
-<b>CSV rows :</b>
-<a name="importedJsonFromCsv"/>
-<div class="block response_body">
-<pre class="json dcjsonarea"><code id="importedJsonFromCsv" class="importedJsonFromCsv"></code></pre><!-- dcjsonarea -->
-</div>
-
-<br/><br/>
-<b>Resources :</b>
-<a name="importedResourcesFromCsv"/>
-<div class="block response_body">
-<pre class="json dcjsonarea"><code id="importedResourcesFromCsv" class="importedResourcesFromCsv"></code></pre><!-- dcjsonarea -->
-</div>
-<br/><br/>
-
-</div>
-
-<div id="message-bar" class="swagger-ui-wrap">
-  &nbsp;
-</div>
-
-<div id="swagger-ui-container" class="swagger-ui-wrap"><!-- style="display:none;" -->
-
-</div>
-
-</body>
-
-</html>
