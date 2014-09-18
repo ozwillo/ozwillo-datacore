@@ -25,81 +25,122 @@
   //var containerUrl = "http://data.oasis-eu.org"; // rather use getContainerUrl() from description.html
   
   function trimIfAnyElseNull(value) {
-	  if (typeof value === 'string') {
+     if (typeof value === 'string') {
         value = value.trim();
         if (value.length == 0) {
            return null;
         }
         return value;
-	  }
+     }
      return null;
   }
    // on csv value only
    function setTrimIfAny(fields, fieldName, value) {
-	   if (typeof value !== 'undefined') {
-	      //if (value.length != 0) {
-	      value = value.trim();
-	      var existingValue = fields[fieldName];
-	      if (value.length != 0 && (typeof existingValue === 'undefined' || existingValue == null)) {
-	         fields[fieldName] = value;
-	      }
+      if (typeof value !== 'undefined') {
+         //if (value.length != 0) {
+         value = value.trim();
+         var existingValue = fields[fieldName];
+         if (value.length != 0 && (typeof existingValue === 'undefined' || existingValue == null)) {
+            fields[fieldName] = value;
+         }
       }
    }
   
    function identity(s) {
-	   return s;
+      return s;
    }
    var defaultCsvDateFormat = "YYYYMMDD" + "Z"; // TODO in model csv ?!
    var defaultTimezone = "+01:00"; // fr summer timezone ; TODO winter hour !!
    var convertMap = {
       "date" : function(stringValue) { return moment(stringValue + defaultTimezone,
-    	   defaultCsvDateFormat).format("YYYY-MM-DDTHH:mm:ssZ"); }, // rather than .toISOString()
-    	   // which converts dates to GMT and don't preserve timezone, see http://momentjs.com/docs/
+          defaultCsvDateFormat).format("YYYY-MM-DDTHH:mm:ssZ"); }, // rather than .toISOString()
+          // which converts dates to GMT and don't preserve timezone, see http://momentjs.com/docs/
       "resource" : identity, // NOT subresource
       // numbers : see http://stackoverflow.com/questions/5450012/how-to-convert-a-string-to-long-in-javascript
-      "boolean" : function(stringValue) { return "true" === stringValue },
+      "boolean" : function(stringValue) {
+         return typeof stringValue === 'string' && "true" === stringValue.trim().toLowerCase();
+      },
       "int" : function(stringValue) { return parseInt(stringValue, 10); },
       "float" : parseFloat,
       "long" : identity, // javascript has no long, though int ones could be parsed
-      "double" : identity // idem
-      // TODO i18n (list of maps), list (not here : map, subresource)
+      "double" : identity, // idem
+      "list" : function(stringValue, mixinField) {
+         var values = [];
+         var stringValues = stringValue.split(",");
+         var listElementField = mixinField["dcmf:listElementField"];
+         for (var svInd in stringValues) {
+            values.push(convertValue(stringValues[svInd], listElementField));
+         }
+         return values;
+      }
+      // TODO i18n (list of maps) (not here : map, subresource)
    }
-	        
+           
    function convertValue(stringValue, mixinField) {
-	   var stringValueType = typeof stringValue;
-	   if (stringValueType === 'undefined' || stringValue == null) {
-		   return null; // TODO raise error, shouldn't happen in CSV !(?)
-	   }
-	   if ("string" === mixinField["dcmf:type"]) {
-	 	  return stringValue;
-	   }
-	   // else trim before parsing :
-	   stringValue = stringValue.trim();
+      var stringValueType = typeof stringValue;
+      if (stringValueType === 'undefined' || stringValue == null) {
+         return null; // TODO raise error, shouldn't happen in CSV !(?)
+      }
+      var fieldType = mixinField["dcmf:type"];
+      if ("string" === fieldType) {
+         return stringValue;
+      }
+      // else trim before parsing :
+      stringValue = stringValue.trim();
       if (stringValue.length == 0) {
          return null;
       }
-      var convertFunction = convertMap[mixinField["dcmf:type"]];
+      var convertFunction = convertMap[fieldType];
       if (convertFunction === 'undefined') { // TODO error
-         return "ERROR unknown type " + mixinField["dcmf:type"] + " for value " + stringValue;
+         return "ERROR unknown type " + fieldType + " for value " + stringValue;
       }
-      return convertFunction(stringValue);
+      return convertFunction(stringValue, mixinField);
    }
    
-   function setDefaultValueIfAny(resource, mixinField, value) {
-	   var defaultStringValue = mixinField["dcmf:defaultStringValue"];
-	   if (typeof defaultStringValue !== 'undefined') {
+   function setDefaultValueIfAny(resource, mixinField) {
+      var defaultStringValue = mixinField["dcmf:defaultStringValue"];
+      if (typeof defaultStringValue !== 'undefined') {
+         // set default value when not among imported fields (no internalName) :
+         if (defaultStringValue.charAt(0) == "\"" && defaultStringValue.charAt(defaultStringValue.length - 1) == "\"") {
+            // handling Datacore server-serialized stringValue :
+            defaultStringValue = defaultStringValue.substring(1, defaultStringValue.length - 1);
+         }
+         resource[mixinField["dcmf:name"]] = convertValue(defaultStringValue, mixinField);
+         return true;
+      }
+      return false;
+   }
+   
+   /*function setValueOrDefaultIfAny(resource, mixinField, stringValue) {
+      var value = convertValue(stringValue, mixinField);
+      if (value != null) {
+         resource[mixinField["dcmf:name"]] = value;
+         return value;
+      }
+      var defaultStringValue = mixinField["dcmf:defaultStringValue"];
+      if (typeof defaultStringValue !== 'undefined') {
          // set default value when not among imported fields (no internalName) :
          resource[mixinField["dcmf:name"]] = convertValue(defaultStringValue, mixinField);
          return true;
       }
-	   return false;
+      return false;
+   }*/
+   
+   function contains(a, obj) {
+      var i = a.length;
+      while (i--) {
+         if (a[i] === obj) {
+            return true;
+         }
+      }
+      return false;
    }
    
    function findField(fieldName, mixinFields) {
       for (var fInd in mixinFields) {
          var field = mixinFields[fInd];
          if (field["dcmf:name"] === fieldName) {
-        	   return field;
+              return field;
          }
       }
       return null;
@@ -115,122 +156,235 @@
       return null;
    }
    
+   function hasMixin(modelOrMixinResourceOrName, mixinName, importState) {
+      var modelOrMixinResource = (typeof modelOrMixinResourceOrName === 'string') ?
+            findMixin(modelOrMixinResourceOrName, importState.data.involvedMixins) : modelOrMixinResourceOrName;
+      return contains(modelOrMixinResource["dcmo:globalMixins"], mixinName);
+   }
+   
+   function mergeValue(existingResource, key, newValue, mixin) {
+      if (typeof newValue === 'undefined' || newValue == null
+            || typeof newValue === 'string' && newValue.length == 0) {
+         return; // no new value to merge
+      }
+      var existingValue = existingResource[key];
+      if (typeof existingValue === 'undefined' || existingValue == null
+            || typeof newValue === 'string' && existingValue.length == 0) {
+         existingResource[key] = newValue; // TODO more empty, conflicts
+         return;
+      }
+      var field = findField(key, mixin["dcmo:globalFields"]);
+      if (field["dcmf:type"] === 'list') {
+         var existingList = existingResource[key];
+         if (newValue instanceof Array) {
+            for (var nvInd in newValue) {
+               var newValueElt = newValue[nvInd];
+               if (!contains(existingList, newValueElt)) { // TODO better for non primitive values...
+                  existingList.push(newValueElt);
+               }
+            }
+         } else if (!contains(existingList, newValue)) { // TODO better for non primitive values...
+            existingList.push(newValue);
+         }
+      } else if (field != null && existingValue === convertValue(field['dcmf:defaultStringValue'], field)) { // (null ex. if @type)
+         existingResource[key] = newValue; // allow to override default value
+      }
+   }
+   
+   function mergeStringValueOrDefaultIfAny(existingResource, key, newStringValue, mixin) {
+      var mergeField = findField(key, mixin["dcmo:globalFields"]);
+      var newValue = convertValue(newStringValue, mergeField);
+      if (newValue === null) {
+         var defaultStringValue = mergeField["dcmf:defaultStringValue"];
+         if (typeof defaultStringValue !== 'undefined') {
+            newValue = convertValue(defaultStringValue, mergeField);
+         }
+      }
+      mergeValue(existingResource, key, newValue, mixin);
+   }
+
+   function importedResourcePosted(resourceOrData, importStateRes, importState, kind, counter, success, error) {
+      importStateRes.postedNb++;
+      if (typeof resourceOrData === 'object' && typeof resourceOrData["_headers"] === 'object') {
+         importStateRes.errors.push([ resourceOrData._body._body, resourceOrData.request._body ]);
+         var requestBodyHtml;
+         try {
+            requestBodyHtml = toolifyDcListOrResource(eval(resourceOrData.request._body._data));
+            // NB. no need of wrapping by [...] and taking [0] because always there
+         } catch (ex) {
+            requestBodyHtml = resourceOrData.request._body;
+         }
+         importStateRes.errorHtml += "<p>-&nbsp;" + resourceOrData._body._body
+               + " :<br/>" + requestBodyHtml + "<p/>";
+      }
+      if (true/*importStateRes.postedNb % 1000 == 0 || importStateRes.postedNb > importStateRes.toBePostedNb - 10*/) {
+         counter.html("Posted <a href=\"#importedResourcesFromCsv\">" + importStateRes.postedNb
+               + " " + kind + "s</a> (<a href=\"#mydata\">" + importStateRes.errors.length + " errors</a>)");
+         if (importStateRes.errors.length != 0) {
+            $('.mydata').html(importStateRes.errorHtml);
+         }
+      }
+      if (importStateRes.postedNb === importStateRes.toBePostedNb) {
+         if (importStateRes.errors.length == 0) {
+            console.log("INFO Successfully posted " + importStateRes.postedNb + " " + kind + "s.");
+            if (typeof success !== 'undefined') {
+               success(importState);
+            }
+         } else {
+            console.log("WARNING Posted " + importStateRes.postedNb + " "+ kind
+                  + "s with " + importStateRes.errors.length + " errors.");
+            if (typeof error !== 'undefined') {
+               error(importState);
+            }
+         }
+      }
+   }
+   
    // pathInFieldNameTree for log only
-   function csvRowToDataResource(mixin, involvedMixins, resourceRow,
-         fieldNameTree, mixinNameToFieldNameTree, pathInFieldNameTree, resources,
-         modelTypeToRowResources) {
-	   var typeName = mixin["dcmo:name"];
+   function csvRowToDataResource(mixin, resourceRow,
+         fieldNameTree, pathInFieldNameTree,
+         modelTypeToRowResources, importState) {
+      var resources = importState.data["resources"];
+      var typeName = mixin["dcmo:name"];
       var resource;
       if (modelTypeToRowResources != null) {
-    	   resource = modelTypeToRowResources[typeName];
+            resource = modelTypeToRowResources[typeName];
          if (typeof resource === 'undefined') {
             resource = {};
          }
       } else {
          resource = {};
       }
-      var hasValue = false;
-      ///var fieldNameTree = mixinNameToFieldNameTree[typeName];
-      var mixinFields = mixin["dcmo:fields"];
-      
-      for (var fInd in mixinFields) {
+      var mixinHasValue = false;
+      var mixinFields = mixin["dcmo:globalFields"];
+      var enrichedModelOrMixinFieldMap = importState.model.modelOrMixins[typeName]["dcmo:globalFields"]; // for import-specific data lookup
+
+      for (var fieldName in enrichedModelOrMixinFieldMap) {
+         var mixinField = enrichedModelOrMixinFieldMap[fieldName];
+      /*for (var fInd in mixinFields) {
          var mixinField = mixinFields[fInd];
-         var fieldName = mixinField["dcmf:name"];
+         var fieldName = mixinField["dcmf:name"];*/
          if (typeof resource[fieldName] !== 'undefined') {
-        	   continue; // skipping, value already found in this row
+            continue; // skipping, value already found in this row
          }
-      ///for (var fieldName in fieldNameTree) {
+         
          var subFieldNameTree = fieldNameTree[fieldName];
-    	   var mixinField = findField(fieldName, mixinFields);
+         /*var mixinField = findField(fieldName, mixinFields);*/
+         var enrichedModelOrMixinField = enrichedModelOrMixinFieldMap[fieldName]; // allows lookup of import-only conf
          // TODO if map (??) or (sub!)resource, recurse !
-        	
+           
          /*if (typeName === "elec:Canton_0" && fieldName === "elec_Canton:ID") {
-        	   console.log("canton");
+              console.log("canton");
          }*/
          var resourceType = mixinField["dcmf:resourceType"];
-         if (subFieldNameTree != null) { // resource tree // typeof mixinField["dcmf:type"] !== 'resource'
-        	//if (mixinField["dcmf:type"] === "resource") {
-            var resourceMixin = findMixin(resourceType, involvedMixins);
+         if (subFieldNameTree != null) { // typeof mixinField["dcmf:type"] !== 'resource'
+            // resource tree : looking for value in an (indirectly) referenced resource
+            //if (mixinField["dcmf:type"] === "resource") {
+            var resourceMixin = findMixin(resourceType, importState.data["involvedMixins"]);
             if (typeof resourceMixin === 'undefined') {
-               console.log("ERROR can't find resource field referenced mixin " +
-                     + resourceType + " among involved mixins");
+               importState.data.errors.push({ errorType : "unknownReferencedMixin", referencedMixin : resourceType,
+                     message : "ERROR can't find resource field referenced mixin " +
+                     + resourceType + " among involved mixins" });
             } else {
                // (sub)resource field values might be provided, let's look for them
-               var subresource = csvRowToDataResource(resourceMixin, involvedMixins, resourceRow,
-                     subFieldNameTree, mixinNameToFieldNameTree,
-                     pathInFieldNameTree + "." + fieldName, resources, null);
+               var subresource = csvRowToDataResource(resourceMixin, resourceRow,
+                     subFieldNameTree, pathInFieldNameTree + "." + fieldName, null, importState);
                if (true) { // resource ; TODO TODO better is subresource ; typeof value !== 'undefined' && value != null && value.length != 0
-                   resource[fieldName] = subresource["@id"]; // uri
+                  resource[fieldName] = subresource["@id"]; // uri
                } else { // subresource
-               	resource[fieldName] = subresource;
+                  resource[fieldName] = subresource;
                }
             }
-            
-         } else if (typeof mixinField["dcmf:internalName"] !== 'undefined') { // including if (non sub)resource uri
-            var value = resourceRow[mixinField["dcmf:internalName"]];
-            if (typeof value === 'undefined') {
-               console.log("ERROR can't find column '" + mixinField["dcmf:internalName"]
-                     + "' for field " + fieldName + " in mixin " + typeName);
-               // TODO abort !
-            } else {
-               resource[fieldName] = convertValue(value, mixinField);
-               if (resource[fieldName] == null || resource[fieldName].length == 0) {
-                  // set default value when among imported fields but empty :
-            	   setDefaultValueIfAny(resource, mixinField, value);
-               }
-               hasValue = true; // allow to import null value
-            }
-            
-         } else if (typeof resourceType !== 'undefined' && modelTypeToRowResources != null) { // trying auto linking
-        	   var rowResource = modelTypeToRowResources[resourceType];
-            if (typeof rowResource !== 'undefined') {
-               var uri = rowResource["@id"];
-            	if (typeof uri !== 'undefined') { // avoiding incomplete rowResource
-                  if (true) { // resource ; TODO TODO better is subresource ; typeof value !== 'undefined' && value != null && value.length != 0
-                     resource[fieldName] = uri;
-                  } else { // subresource
-                     resource[fieldName] = rowResource;
-                  }
-                  hasValue = true;
-            	} // else rowResource id is still incomplete
-            } // else rowResource not yet parsed
             
          } else {
+            // looking for local value :
+            // (including if (non sub)resource uri)
+            // in column mixinField["dcmf:internalName"] or else fieldName
+            
+            var value;
+            var fieldInternalName = (typeof enrichedModelOrMixinField === 'undefined') ?
+                  null : enrichedModelOrMixinField["dcmf:internalName"]; // NB. this import-specific conf has been enriched in refreshed involvedMixins' global fields
+            var unknownFieldInternalName = typeof fieldInternalName === 'undefined' || fieldInternalName == null;
+            if (!unknownFieldInternalName) {
+               value = resourceRow[fieldInternalName];
+               if (typeof value === 'undefined') { // look in fieldName column as failback
+                  value = resourceRow[fieldName];
+               }
+            } else { // look in fieldName column
+               value = resourceRow[fieldName];
+            }
+            if (typeof value !== 'undefined') {
+               value = convertValue(value, mixinField);
+               resource[fieldName] = value;
+               if (value == null || typeof value === 'string' && value.length == 0) { // TODO better empty
+                  // set default value when among imported fields but empty :
+                  setDefaultValueIfAny(resource, mixinField);
+               }
+               // else allow to import null value
+            } else if (!unknownFieldInternalName) {
+               importState.data.warnings.push({ warningType : "noColumnForFieldInternalName",
+                     mixin : typeName, field : fieldName, fieldInternalName : fieldInternalName,
+                     errorMessage : "Can't find column '" + fieldInternalName
+                     + "' (field internal name) nor '" + fieldName
+                     + "' for field " + fieldName + " in mixin " + typeName });
+            }
+         }
+            
+         if (typeof value === 'undefined') {
+            if (typeof resourceType !== 'undefined' && modelTypeToRowResources != null) { // trying auto linking
+               var rowResource = modelTypeToRowResources[resourceType];
+               if (typeof rowResource !== 'undefined') {
+                  var uri = rowResource["@id"];
+                  if (typeof uri !== 'undefined') { // avoiding incomplete rowResource
+                     if (true) { // resource ; TODO TODO better is subresource ; typeof value !== 'undefined' && value != null && value.length != 0
+                        value = uri;
+                     } else { // subresource
+                        value = rowResource;
+                     }
+                     resource[fieldName] = value;
+                  } // else rowResource id may still be incomplete
+               } // else rowResource not yet parsed
+            }
+         }
+         
+         if (typeof value !== 'undefined') {
+            mixinHasValue = true;
+         } else {
             // set default value when not among imported fields (no internalName) :
-            hasValue = setDefaultValueIfAny(resource, mixinField, value) || hasValue;
+            mixinHasValue = setDefaultValueIfAny(resource, mixinField) || mixinHasValue;
          }
       }
       
-      if (hasValue && typeof resource["@id"] === 'undefined') {
+      if (mixinHasValue && typeof resource["@id"] === 'undefined') {
          // create or update resource :
-        	
+           
          if (modelTypeToRowResources != null) {
             modelTypeToRowResources[typeName] = resource; // in case not yet there
          }
-        	
-        	 // build id :
+           
+         // build id :
          var id = null;
          // out of fields
          var indexToValue = {};
-         for (var ifInd in mixinFields) {
-            var idField = mixinFields[ifInd];
-            var indexInId = idField["dcmf:indexInId"];
+         for (var idFieldName in enrichedModelOrMixinFieldMap) {
+            var idField = enrichedModelOrMixinFieldMap[idFieldName];
+            var indexInId = idField["dcmf:indexInId"]; // NB. this import-specific conf has been enriched in refreshed involvedMixins' global fields
             if (typeof indexInId === 'number') {
-               var idFieldName = idField["dcmf:name"];
+               ///var idFieldName = idField["dcmf:name"];
                var idValue = resource[idFieldName];
                if (typeof idValue === 'undefined' || idValue === null || idValue === "") {
                   //console.log("Missing value for id field " + idFieldName
-                	//      + ", clearing others (" + Object.keys(indexToValue).length
-                	//      + ") ; below " + pathInFieldNameTree + " in :");
+                   //      + ", clearing others (" + Object.keys(indexToValue).length
+                   //      + ") ; below " + pathInFieldNameTree + " in :");
                   //console.log(resource);
                   return resource; // without adding it to uri'd resources
                }
                if (typeof idField["dcmf:resourceType"] !== 'undefined') { // getting ref'd resource id
-            	   var uri;
-            	   if (typeof idValue === 'string') { // resource
-            		   uri = idValue;
-            	   } else { // subresource
-            	      uri = idValue["@id"];
+                  var uri;
+                  if (typeof idValue === 'string') { // resource
+                     uri = idValue;
+                  } else { // subresource
+                     uri = idValue["@id"];
                      if (typeof uri === 'undefined') {
                         //console.log("Missing uri for resource id field " + idFieldName
                         //      + ", clearing others (" + Object.keys(indexToValue).length
@@ -241,19 +395,51 @@
                   }
                   var iri = uri.replace(/^.*\/\/*dc\/type\/*/, ""); //uri.substring(uri.indexOf("/dc/type/") + 9);
                   idValue = iri.substring(iri.indexOf("/") + 1);
+                  indexToValue[indexInId] = {idValue : idValue, uri : uri };
+               } else {
+                  indexToValue[indexInId] = {idValue : idValue };
                }
-               indexToValue[indexInId] = idValue;
             }
          }
-        	for (var idValueIndex in indexToValue) {
-        	   var idValue = indexToValue[idValueIndex];
-        	   if (id === null) {
-        		   id = idValue;
-        	   } else {
-               id += "/" + idValue;
-     	      }
+         var ancestors = null;
+         if (typeof mixin["dcmo:collectionName"] !== "undefined" // only if model
+               && contains(mixin["dcmo:globalMixins"], "o:Ancestor_0")) {
+            ancestors = [];
          }
-        	//id = join(indexToValue, '/');
+         for (var idValueIndex in indexToValue) {
+            var idValueElt = indexToValue[idValueIndex];
+            if (id === null) {
+               id = idValueElt.idValue;
+            } else {
+               id += "/" + idValueElt.idValue;
+            }
+            
+            // also computing ancestors :
+            if (ancestors !== null && typeof idValueElt.uri !== 'undefined') {
+               var ancestor = resources[idValueElt.uri];
+               // TODO check if ancestor not known (ex. string resource reference...)
+               if (typeof ancestor === 'undefined') {
+                  ancestors = null;
+                  importState.data.errors.push({ errorType : "cantFindAncestorAmongParsedResources",
+                        resource : resource, ancestorUri : idValueElt.uri });
+               } else if (!hasMixin(ancestor["@type"][0], "o:Ancestor_0", importState)) {
+                  ancestors = null;
+                  importState.data.errors.push({ errorType : "ancestorHasNotAncestorMixin",
+                     resource : resource, ancestor : ancestor });
+               } else {
+                  var ancestorAncestors = ancestor["o:ancestors"];
+                  if (typeof ancestorAncestors === 'undefined') {
+                     ancestors = null;
+                     importState.data.errors.push({ errorType : "ancestorHasNotDefinedAncestors",
+                        resource : resource, ancestor : ancestor });
+                  }
+                  for (var aInd in ancestorAncestors) {
+                     ancestors.push(ancestorAncestors[aInd]);
+                  }
+               }
+            }
+         }
+           //id = join(indexToValue, '/');
          if (id === null) { // scripted id
             var idGenJs = mixin["dcmo:idGenJs"];
             if (typeof idGenJs === 'string' && idGenJs.length != 0) {
@@ -262,9 +448,11 @@
             }
          }
          if (id === null) { // CUSTOM
-        	   console.log("WARNING no conf for id, using custom gen - in mixin "
-                  + typeName + " and resourceRow " + resourceRow);
-        	   id = resourceRow["inseeville"] + '/' + resourceRow["numero_electeur"]; // TODO TODO !!! in second pass ??
+            importState.data.warnings.push({ warningType : "noConfForId",
+                  mixin : typeName, row : resourceRow,
+                  message : "No conf for id, using custom gen - in mixin "
+                  + typeName + " and resourceRow " + resourceRow });
+            id = resourceRow["inseeville"] + '/' + resourceRow["numero_electeur"]; // TODO TODO !!! in second pass ??
          }
          
          var uri = getContainerUrl() + "dc/type/" + typeName + "/" + id;
@@ -274,26 +462,17 @@
             resource["@id"] = uri;
             //resource["o:version"] = -1;
             resource["@type"] = [ typeName ];
+            if (ancestors !== null) {
+               ancestors.push(uri); // itself
+               resource["o:ancestors"] = ancestors;
+            }
+            // adding it :
             resources[uri] = resource;
             return resource;
          } else {
             // merge (this mixin's found values) over existing resource :
             for (var key in resource) { // works for fields but also native fields ex. modified...
-               var existingValue = existingResource[key];
-               var value = resource[key];
-               if (typeof value === 'undefined' || value == null
-                     || typeof value === 'string' && value.length != 0) {
-            	   continue; // no new value to merge
-               }
-               if (typeof existingValue === 'undefined' || existingValue == null
-                     || typeof value === 'string' && existingValue.length == 0) {
-                  existingResource[key] = value; // TODO more empty, conflicts
-                  continue;
-               }
-               var field = findField(key, mixin["dcmo:fields"]); // TODO even inherited dcmo:globalFields
-               if (field != null && existingValue === convertValue(field['dcmf:defaultStringValue'], field)) { // (null ex. if @type)
-            	   existingResource[key] = value; // allow to override default value
-               }
+               mergeValue(existingResource, key, resource[key], mixin); // merge new value in existing resource
             }
             if (modelTypeToRowResources != null) {
                modelTypeToRowResources[typeName] = existingResource;
@@ -303,112 +482,90 @@
       }
       return resource;
    }
-	        
-  function csvToData(resultsData, internalFieldNames, mixinNameToFieldNameTree, involvedMixins) {
-	  //internalFieldTo
-	  
-     var typeMajorVersion = 0; // TODO better
-	  var resources = {};
-	  for (var rInd in resultsData) {
+           
+   function csvToData(resultsData, importState) {
+      var internalFieldNames = importState.data.internalFieldNames;
+      var mixinNameToFieldNameTree = importState.model.mixinNameToFieldNameTree;
+      var involvedMixins = importState.data.involvedMixins;
+      var resources = importState.data.resources;
+      for (var rInd in resultsData) {
         console.log("row " + rInd);//
-		  // TODO by push / step
-		  var resourceRow = resultsData[rInd];
-		  var modelTypeToRowResources = {};
+        ///var importStateRowData = {};
+        ///importState.data.push(importStateRowData);
+        // TODO by push / step
+        var resourceRow = resultsData[rInd];
+        var modelTypeToRowResources = {};
         
-		  // mixins loop :
+        // mixins loop :
         var missingIdFieldResourceOrMixins;
-        var previousMissingIdFieldResourceOrMixins = [];
+        var previousMissingIdFieldResourceOrMixinNb = -1;
         var loopIndex = 0;
         do {
            missingIdFieldResourceOrMixins = []; // NB. fastest way to empty an array
            //console.log("row mixins loop " + loopIndex + " " + missingIdFieldResourceOrMixins);//
         
         for (var mInd in involvedMixins) {
-        	  // for each mixin, find its values in the current row :
-        	  var mixin = involvedMixins[mInd];
-        	  var typeName = mixin["dcmo:name"];
-        	  ///if (typeName !== "elec:Elector_0") continue; // TODO TODO
-        	  
-        	  var importedResource = csvRowToDataResource(mixin, involvedMixins, resourceRow,
-        	        mixinNameToFieldNameTree[typeName], mixinNameToFieldNameTree,
-        	        typeName, resources, modelTypeToRowResources);
-        	  
-        	  if (importedResource == null) {
-              //console.log("gzzk null " + typeName);//
-        	     missingIdFieldResourceOrMixins.push(typeName);
-        	  } else if (typeof importedResource["@id"] === 'undefined') {
-        		  //console.log("gzzk uri should be undefined : " + importedResource["@id"]);//
-        		  //console.log(JSON.stringify(importedResource, null, null));//
-        		  missingIdFieldResourceOrMixins.push(importedResource);
-        	  }
+             // for each mixin, find its values in the current row :
+             var mixin = involvedMixins[mInd];
+             var typeName = mixin["dcmo:name"];
+             ///if (typeName !== "elec:Elector_0") continue; // TODO TODO
+             
+             var importedResource = csvRowToDataResource(mixin, resourceRow,
+                   mixinNameToFieldNameTree[typeName],
+                   typeName, modelTypeToRowResources, importState);
+             
+             if (importedResource == null) {
+                missingIdFieldResourceOrMixins.push(typeName);
+             } else if (typeof importedResource["@id"] === 'undefined') {
+                //console.log("gzzk uri should be undefined : " + importedResource["@id"]);//
+                //console.log(JSON.stringify(importedResource, null, null));//
+                missingIdFieldResourceOrMixins.push(importedResource);
+             }
         }
 
            if (missingIdFieldResourceOrMixins.length // size equality enough if involvedMixins don't change
-        	           == previousMissingIdFieldResourceOrMixins.length || loopIndex > 20) {
-              console.log("csvToData loop aborted, still missing id fields in resources :");
-              for (var midfmInd in missingIdFieldResourceOrMixins) {
-                 console.log(missingIdFieldResourceOrMixins[midfmInd]);
-              }
-              console.log("   in resourceRow " + JSON.stringify(resourceRow, null, null));
+                      == previousMissingIdFieldResourceOrMixinNb || loopIndex > 20) {
+              importState.data.errors.push({ errorType : "missingIdFields",
+                 resources : missingIdFieldResourceOrMixins, row : resourceRow });
+              console.log("csvToData loop aborted, still missing id fields in resources :\n"
+                    + JSON.stringify(missingIdFieldResourceOrMixins, null, "\t")
+                    + "\n   in resourceRow :\n" + JSON.stringify(resourceRow, null, null));
               //console.log("   with resources " + JSON.stringify(resources, null, null));
               break;
            }
-           previousMissingIdFieldResourceOrMixins = missingIdFieldResourceOrMixins;
+           previousMissingIdFieldResourceOrMixinNb = missingIdFieldResourceOrMixins.length;
            loopIndex++;
         
         } while (missingIdFieldResourceOrMixins.length != 0);
+
+        ///importStateRowData["loops"] = loopIndex + 1;
+        ////importStateRowData["errors"] = errors;
         
-        /*for (var internalFieldName in resourceRow) {
-        	  var value = resourceRow[internalFieldName];
-        }*/
-        if (rInd % 1000 == 0 || rInd == resultsData.length - 1) {
+        if (rInd % 1000 == 0) {
            $('.resourceRowCounter').html("Handled <a href=\"#importedJsonFromCsv\">" + rInd + " rows</a>");
         }
-	  }
+     }
 
-      ///var results = eval('[' + data.content.data + ']')[0];
-      //var prettyJson = toolifyDcResource(results, 0);
-      var resourcesPrettyJson = JSON.stringify(resources, null, '\t').replace(/\n/g, '<br>');
-      $('.importedResourcesFromCsv').html(resourcesPrettyJson);
-
-      /*var resourceArray = Object.keys(resources).map(function(v) { return resources[v]; });
-      postAllData(JSON.stringify(resourceArray, null, null),
-            function(resources) {
-               console.log("Successfully posted " + resourceArray.length + " resources.");
-            });*/
-      var postedImportedDataNb = 0;
-      var postedImportedDataErrors = [];
-      var postedImportedDataErrorHtml = "";
+      $('.resourceRowCounter').html("Handled <a href=\"#importedJsonFromCsv\">" + rInd
+            + " rows</a> (<a href=\"#mydata\">" + importState.data.errors.length + " errors</a>)");
+      if (importState.data.errors.length != 0) {
+         //$('.mydata').html(
+         $('.importedResourcesFromCsv').html("<b>Errors :</b><br/>"
+               + JSON.stringify(importState.data.errors, null, '\t').replace(/\n/g, '<br>')
+               + "<br/><br/><b>Warnings :</b><br/>"
+               + JSON.stringify(importState.data.warnings, null, '\t').replace(/\n/g, '<br>'));
+         
+      } else {
+         // display full resources only if no errors to display :
+         var resourcesPrettyJson = JSON.stringify(resources, null, '\t').replace(/\n/g, '<br>');
+         $('.importedResourcesFromCsv').html(resourcesPrettyJson);
+      }
+      
       function importedDataPosted(resourceOrData) {
-         postedImportedDataNb++;
-         if (typeof resourceOrData === 'object' && typeof resourceOrData["_headers"] === 'object') {
-        	   postedImportedDataErrors.push([ resourceOrData._body._body, resourceOrData.request._body ]);
-            var requestBodyHtml;
-            try {
-               requestBodyHtml = toolifyDcListOrResource(eval(resourceOrData.request._body._data));
-               // NB. no need of wrapping by [...] and taking [0] because always there
-            } catch (ex) {
-               requestBodyHtml = resourceOrData.request._body;
-            }
-        	   postedImportedDataErrorHtml += "<p>-&nbsp;" + resourceOrData._body._body
-        	         + " :<br/>" + requestBodyHtml + "<p/>";
-         }
-         if (true/*postedImportedDataNb % 1000 == 0 || postedImportedDataNb > resources.length - 10*/) {
-            $('.resourceCounter').html("Posted <a href=\"#importedResourcesFromCsv\">" + postedImportedDataNb
-                  + " resources</a> (<a href=\"#mydata\">" + postedImportedDataErrors.length + " errors</a>)");
-            if (postedImportedDataErrors.length != 0) {
-               $('.mydata').html(postedImportedDataErrorHtml);
-            }
-         }
-         if (postedImportedDataNb === resources.length) {
-            if (postedImportedDataErrors.length == 0) {
-        	      console.log("INFO Successfully posted " + postedImportedDataNb + " resources.");
-            } else {
-        	      console.log("WARNING Posted " + postedImportedDataNb + " resources with "
-        	            + postedImportedDataErrors.length + " errors.");
-            }
-         }
-      };
+         importedResourcePosted(resourceOrData, importState.data, importState,
+               "resource", $('.resourceCounter'));
+      }
+      importState.data["toBePostedNb"] = importState.data.resources.length;
       for (var uri in resources) {
          // TODO mass version update !
          var relativeUrl = uri.substring(uri.indexOf("/dc/type/"));
@@ -431,7 +588,7 @@
             var upToDateResourceUri = getContainerUrl() + "dc/type/" + modelType + "/" + resourceId;
             var upToDateResource = resources[upToDateResourceUri];
             postAllDataInType(modelType, JSON.stringify([ upToDateResource ], null, null),
-            		importedDataPosted, importedDataPosted);
+                  importedDataPosted, importedDataPosted);
          });
       }
   }
@@ -443,10 +600,10 @@
       }
       return 50;
    }
-   function fillData(mixinNameToFieldNameTree) {
+   function fillData(importState) {
       $('.resourceRowCounter').html("");
       $('.resourceCounter').html("");
-	   //console.log("fillData");//
+      //console.log("fillData");//
       var resourceParsingConf = {
             download: true,
             header: true,
@@ -459,195 +616,245 @@
                $('.importedJsonFromCsv').html(prettyJson);
                // TODO handle errors...
                 
-               var internalFieldNames = results.meta.fields;
+               var dataColumnNames = results.meta.fields;
+               var involvedMixins = importState.data["involvedMixins"];
+               importState.data["dataColumnNames"] = dataColumnNames;
+               var prefixedDataColumnNames = [];
+               for (var dcnInd in dataColumnNames) {
+                  var dataColumnName = dataColumnNames[dcnInd];
+                  if (dataColumnName.indexOf(':') != -1) {
+                     prefixedDataColumnNames.push(dataColumnName);
+                  }
+               }
                findDataByType("/dc/type/dcmo:model_0?dcmo:fields.dcmf:internalName=$in"
-                     + JSON.stringify(internalFieldNames, null, null), function(resources) {
-                  csvToData(results.data, internalFieldNames, mixinNameToFieldNameTree, resources);
+                     + JSON.stringify(importState.data["dataColumnNames"], null, null), function(internalNameMixinsFound) {
+                     for (var inmInd in internalNameMixinsFound) {
+                    	   involvedMixins.push(internalNameMixinsFound[inmInd]);
+                     }
+            	      findDataByType("/dc/type/dcmo:model_0?dcmo:fields.dcmf:name=$in"
+                           + JSON.stringify(prefixedDataColumnNames, null, null), function(fieldNameMixinsFound) {
+                           for (var fnmInd in fieldNameMixinsFound) {
+                              involvedMixins.push(fieldNameMixinsFound[fnmInd]);
+                           }
+
+                           // enriching modelOrMixins shortcuts with import-specific info ex. internalName at global level :
+                           // TODO LATER also local
+                           for (var imInd in involvedMixins) {
+                              var involvedMixin = involvedMixins[imInd];
+                              var modelOrMixin = importState.model.modelOrMixins[involvedMixin["dcmo:name"]];
+                              // global mixins :
+                              modelOrMixin["dcmo:globalMixins"] = involvedMixin["dcmo:globalMixins"];
+                              // global fields :
+                              var involvedMixinFieldArray = involvedMixin["dcmo:globalFields"];
+                              var modelOrMixinLocalFieldMap = modelOrMixin["dcmo:fields"];
+                              var enrichedModelOrMixinFieldMap = {};
+                              importState.model.modelOrMixins[involvedMixin["dcmo:name"]]["dcmo:globalFields"] = enrichedModelOrMixinFieldMap;
+                              for (var fInd in involvedMixinFieldArray) {
+                                 var involvedMixinField = involvedMixinFieldArray[fInd];
+                                 var fieldName = involvedMixinField["dcmf:name"];
+                                 var enrichedModelOrMixinField = modelOrMixinLocalFieldMap[fieldName];
+                                 if (typeof enrichedModelOrMixinField !== 'undefined') {
+                                    // let's enrich the refreshed involvedMixin with import data it doesn't know about :
+                                    for (var fieldKey in enrichedModelOrMixinField) {
+                                       if (typeof involvedMixinField[fieldKey] === 'undefined') { // ex. "dcmf:internalName"
+                                          involvedMixinField[fieldKey] = enrichedModelOrMixinField[fieldKey];
+                                       }
+                                    }
+                                 } // else ex. field not local
+                                 // let's add it as global fields in the modelOrMixin shortcuts :
+                                 enrichedModelOrMixinFieldMap[fieldName] = involvedMixinField;
+                              }
+                           }
+                           
+                           csvToData(results.data, importState);
+                     });
                });
-         }
+            }
       }
       if ($(".resourceFile").val() != "") {
-          $(".resourceFile").parse({ config : resourceParsingConf });
-       } else {
-          Papa.parse("./electeur_v26010_sample.csv?reload="
-                + new Date().getTime(), resourceParsingConf); // to prevent browser caching
-       }
+         $(".resourceFile").parse({ config : resourceParsingConf });
+      } else {
+         Papa.parse("./electeur_v26010_sample.csv?reload="
+               + new Date().getTime(), resourceParsingConf); // to prevent browser caching
+      }
    }
   
-   function importField(fieldRow, fieldName, mixin,
-         mixinTypeName, mixinMajorVersion, domainPrefix, typeMap) {
-       var field = mixin["dcmo:fields"][fieldName];
-       if (typeof field == 'undefined') {
-          var fieldUri = getContainerUrl() + "dc/type/dcmf:field_0/"
-             + mixinTypeName + "/" + fieldName; // TODO sub sub resource
-          var fieldDataType = fieldRow["Data type"];
-          var fieldType = typeMap[fieldDataType];
-          if (typeof fieldType === 'undefined') {
-             fieldType = "resource";
-          }
-          field = {
-             "dcmf:name" : fieldName, // TODO prefix, case
-             "@id" : fieldUri,
-             "o:version" : 0, // TODO top level's ?
-             "@type" : [ "dcmf:field_0" ], // TODO version, default one ?
-             "dcmf:type" : fieldType, // TODO map
-             // more init :
-             "dcmf:required" : true, // TODO
-             "dcmf:queryLimit" : 100 // TODO
-          }; // TODO prefixes, case, version
-          
-          mixin["dcmo:fields"][fieldName] = field;
-          
-          if (fieldType === "resource") {
-             var resourceType = domainPrefix + ":" + fieldDataType + "_" + mixinMajorVersion; // TODO case
-             field["dcmf:resourceType"] = resourceType;
-          }
-          // TODO trim...
-          // TODO checks...
-          // TODO also format ex. date
-       } // else TODO (LATER) conflicts & merge...
+   function importField(fieldRow, fieldName, mixin, mixinTypeName, importState) {
+      var field = mixin["dcmo:fields"][fieldName];
+      if (typeof field === 'undefined') {
+         var fieldUri = getContainerUrl() + "dc/type/dcmf:field_0/"
+               + mixinTypeName + "/" + fieldName; // TODO sub sub resource
+         var fieldDataType = fieldRow["Data type"];
+         var fieldType = importState.typeMap[fieldDataType.toLowerCase()];
+         if (typeof fieldType === 'undefined') {
+            fieldType = "resource";
+         }
+         var fieldOrListField = {
+               "dcmf:name" : fieldName, // TODO prefix, case
+               "@id" : fieldUri,
+               "o:version" : 0, // TODO top level's ?
+               "@type" : [ "dcmf:field_0" ], // TODO version, default one ?
+               "dcmf:type" : fieldType, // TODO map
+         }; // TODO prefixes, case, version
+         
+         if (fieldType === "resource") {
+            fieldOrListField["dcmf:resourceType"] = buildMixinName(fieldDataType, importState); // TODO case
+         }
+         if (convertMap["boolean"](fieldRow["Multiple"])) {
+            field = {
+                  "dcmf:name" : fieldName, // TODO prefix, case
+                  "@id" : fieldUri,
+                  "o:version" : 0, // TODO top level's ?
+                  "@type" : [ "dcmf:field_0" ], // TODO version, default one ?
+                  "dcmf:type" : "list",
+                  "dcmf:listElementField" : fieldOrListField
+            }; // TODO prefixes, case, version
+         } else {
+            field = fieldOrListField;
+         }
+         // adding it :
+         mixin["dcmo:fields"][fieldName] = field;
+         // TODO trim...
+         // TODO checks...
+         // TODO also format ex. date
+      } // else TODO (LATER) conflicts & merge...
 
-       // for app.js / openelec (NOT required) :
-       var description = trimIfAnyElseNull(fieldRow["Description"]);
-       var precision = trimIfAnyElseNull(fieldRow["Precision"]);
-       if (description != null || precision != null) {
-          var doc = "";
-          if (description != null) {
-             doc += description;
-             if (precision != null) {
-                doc += " " + precision;
-             }
-          } else {
-             doc += precision;
-          }
-          var existingDoc = field["dcmf:documentation"];
-          if (typeof existingDoc === 'undefined' || existingDoc == null) {
-             field["dcmf:documentation"] = doc;
-          }
-       }
-       if (!field["dcmf:isInMixinRef"]) {
-          field["dcmf:isInMixinRef"] = fieldRow["isInMixinRef"] === "true" // TODO : compute ??
-       }
-       var indexInIdString = trimIfAnyElseNull(fieldRow["indexInId"]);
-       if (indexInIdString !== null) {
-          if (typeof field["dcmf:indexInId"] === 'undefined' || field["dcmf:indexInId"] == null) {
-             field["dcmf:indexInId"] = new Number(indexInIdString); // TODO : compute
-          }
-       }
-       setTrimIfAny(field, "dcmf:defaultStringValue", fieldRow["defaultValue"]); // TODO for other apps...
-       setTrimIfAny(field, "dcmf:internalName", fieldRow["Internal field name"]); // TODO for other apps...
-       // TODO if 'undefined' throw bad import conf
-       
-       return field;
-   }
-  
-   // callback(mixins, mixinNameToFieldNameTree)
-   function csvToModel(resultsData, callback) {
-      // CUSTOM
-      var domainPrefix = "elec";
+      // more init :
+      if (field["dcmf:type"] === "list") {
+         var listElementField = field["dcmf:listElementField"];
+         mergeStringValueOrDefaultIfAny(listElementField, "dcmf:required", fieldRow["required"],
+               importState.metamodel["dcmf:field_0"]); // meaningless for list but required by ModelResourceMappingService for now
+         mergeStringValueOrDefaultIfAny(listElementField, "dcmf:queryLimit", fieldRow["queryLimit"], importState.metamodel["dcmf:field_0"]);
+      }
+      if (fieldRow["Internal field name"].trim() == "code_departement_naissance") {
+         console.log("zou");
+      }
+      mergeStringValueOrDefaultIfAny(field, "dcmf:required", fieldRow["required"], importState.metamodel["dcmf:field_0"]);
+      mergeStringValueOrDefaultIfAny(field, "dcmf:queryLimit", fieldRow["queryLimit"],
+            importState.metamodel["dcmf:field_0"]); // meaningless for list but required by ModelResourceMappingService for now
+      mergeStringValueOrDefaultIfAny(field, "dcmf:isInMixinRef", fieldRow["isInMixinRef"],
+            importState.metamodel["dcmf:field_0"]); // meaningless for list but required by ModelResourceMappingService for now
+      mergeStringValueOrDefaultIfAny(field, "dcmf:indexInId", fieldRow["indexInId"], importState.metamodel["dcmf:field_0"]);
+      mergeStringValueOrDefaultIfAny(field, "dcmf:defaultStringValue", fieldRow["defaultValue"], importState.metamodel["dcmf:field_0"]);
+      mergeStringValueOrDefaultIfAny(field, "dcmf:internalName",
+            fieldRow["Internal field name"].trim(), // else can't find ex. "code_departement_naissance " !!
+            importState.metamodel["dcmf:field_0"]);
       
-      var typeMap = { // TODO more
-           "String" : "string",
-           "Integer" : "int",
-           "Date" : "date",
-           "date" : "date"
-        };
-        var mixinMajorVersion = 0; // TODO better
+      // for app.js / openelec (NOT required) :
+      var description = trimIfAnyElseNull(fieldRow["Description"]);
+      var precision = trimIfAnyElseNull(fieldRow["Precision"]);
+      if (description != null || precision != null) {
+         var doc = "";
+         if (description != null) {
+            doc += description;
+            if (precision != null) {
+               doc += " " + precision;
+            }
+         } else {
+            doc += precision;
+         }
+         var existingDoc = field["dcmf:documentation"];
+         if (typeof existingDoc === 'undefined' || existingDoc == null) {
+            field["dcmf:documentation"] = doc;
+         }
+      }
+      /*if (!field["dcmf:isInMixinRef"]) {
+         field["dcmf:isInMixinRef"] = fieldRow["isInMixinRef"] === "true" // TODO : compute ??
+      }
+      var indexInIdString = trimIfAnyElseNull(fieldRow["indexInId"]);
+      if (indexInIdString !== null) {
+         if (typeof field["dcmf:indexInId"] === 'undefined' || field["dcmf:indexInId"] == null) {
+            field["dcmf:indexInId"] = new Number(indexInIdString); // TODO : compute
+         }
+      }
+      setTrimIfAny(field, "dcmf:defaultStringValue", fieldRow["defaultValue"]); // TODO for other apps...
+      setTrimIfAny(field, "dcmf:internalName", fieldRow["Internal field name"]); // TODO for other apps...
+      // TODO if 'undefined' throw bad import conf
+      */
+      return field;
+   }
+   
+   function buildMixinName(mixinName, importState) {
+      if (typeof mixinName === 'undefined' || mixinName === null || mixinName.length === 0) {
+         return null; // skipping empty line
+      }
+      // TODO case
+      if (mixinName.indexOf(":") == -1) {
+         mixinName = importState.domainPrefix + ":" + mixinName; // NO . else KO in query (and tree path parsing)
+      }
+      if (mixinName.indexOf("_") == -1) {
+          mixinName = mixinName + "_" + importState.mixinMajorVersion; // NO . else KO in query (and tree path parsing)
+      }
+      return mixinName;
+   }
+   
+   // callback(mixins, mixinNameToFieldNameTree)
+   function csvToModel(resultsData, importState, callback) {
+      var mixinNameToFieldNameTree = importState.model.mixinNameToFieldNameTree;
+      var mixins = importState.model.modelOrMixins;
         
-        var mixinNameToFieldNameTree = {};
-        var mixins = {};
+      var errors;
+      var loopMaxIndex = 20;
+      var loopIndex = -1;
+      do {
+         errors = [];
+         if (loopIndex > loopMaxIndex) {
+            break;
+         }
+         loopIndex++;
         
-        var foundMissingDeclaration;
-        var loopIndex = -1;
-        do {
-           foundMissingDeclaration = false;
-           if (loopIndex > 20) {
-        	     break;
-           }
-           loopIndex++;
         
-        // first pass - fields :
-        /*for (var fInd in resultsData) {
-           var fieldRow = resultsData[fInd];
-           var mixinShortName = fieldRow["Mixin"];
-           if (typeof mixinShortName === 'undefined' || mixinShortName === null || mixinShortName.length === 0) {
-        	     continue; // skipping empty line
-           }
-
-           var fieldPath = fieldRow["Field name"];
-           var fieldPathElements = fieldPath.split("."); // at least one
-           if (fieldPathElements.length !== 1) {
-        	     continue; // skipping non first pass lines
-           }
-           
-           //var mixinPrefix = "elec_" + mixinShortName; // TODO
-           var mixinName = domainPrefix + ":" + mixinShortName + "_" + mixinMajorVersion; // TODO case ; buildMixinName()
-           var mixinTypeName = "dcmo:model_0/" + mixinName;
-           var mixin = mixins[mixinName];
-           var mixinUri = getContainerUrl() + "dc/type/" + mixinTypeName;
-           if (typeof mixin == 'undefined') {
-              mixin = {
-                 "dcmo:name" : mixinName,
-                 "@id" : mixinUri,
-                 // more init :
-                 "dcmo:majorVersion" : mixinMajorVersion,
-                 "dcmo:documentation" : "", // TODO required
-                 "dcmo:fields" : {}
-              };
-              mixins[mixinName] = mixin;
-           }
-
-           // last field path element :
-        	  var fieldName = fieldPathElements[fieldPathElements.length - 1];
-           // will be filled once field is built
-        	  
-           var field = importField(fieldRow, fieldName, mixin,
-        	        mixinTypeName, mixinMajorVersion, domainPrefix, typeMap);
-
-           var fieldName = field["dcmf:name"];
-           
-           // TODO also mixins, resource links & sub...
-        }*/
-
-        // second pass - import plan (& internalName) :
+        // import plan (& internalName) :
         fieldsLoop : for (var fInd in resultsData) {
            var fieldRow = resultsData[fInd];
-           var mixinShortName = fieldRow["Mixin"];
-           if (typeof mixinShortName === 'undefined' || mixinShortName === null || mixinShortName.length === 0) {
+           var mixinName = buildMixinName(fieldRow["Mixin"], importState); // TODO case
+           if (mixinName === null) {
               continue; // skipping empty line
            }
 
            var fieldPath = fieldRow["Field name"];
            var fieldPathElements = fieldPath.split("."); // at least one
-           /*if (fieldPathElements.length === 1) {
-              continue; // skipping non second pass lines
-           }*/
            
-           //var mixinPrefix = "elec_" + mixinShortName; // TODO
-           var mixinName = domainPrefix + ":" + mixinShortName + "_" + mixinMajorVersion; // TODO case ; buildMixinName()
-           var mixinTypeName = "dcmo:model_0/" + mixinName;
            var mixin = mixins[mixinName];
-           var mixinUri = getContainerUrl() + "dc/type/" + mixinTypeName;
+           var isModel = !convertMap["boolean"](fieldRow["Is Mixin"]);
+           var mixinTypeName = ((isModel) ? "dcmo:model_0" : "dcmi:mixin_0") + "/" + mixinName;
            if (typeof mixin == 'undefined') {
               mixin = {
                  "dcmo:name" : mixinName,
-                 "@id" : mixinUri,
+                 "@id" : getContainerUrl() + "dc/type/" + mixinTypeName,
                  // more init :
-                 "dcmo:majorVersion" : mixinMajorVersion,
-                 "dcmo:documentation" : "", // TODO required
+                 "dcmo:majorVersion" : importState.mixinMajorVersion,
                  "dcmo:fields" : {},
-                 
-                 // for models only :
-                 "dcmo:collectionName" : mixinName, // TODO build DCModel out of it !!
-                 "dcmo:isHistorizable" : false, // TODO
-                 "dcmo:isContributable" : false // TODO
               };
               mixins[mixinName] = mixin;
+            } else {
+               var hasBeenModel = typeof mixin["dcmo:collectionName"] !== 'undefined';
+               if (isModel && !hasBeenModel) {
+                  mergeStringValueOrDefaultIfAny(mixin, "dcmo:collectionName", mixinName, importState.metamodel["dcmo:model_0"]); // marks it as model
+                  // uris of mixin & fields are false and must be reset and recomputed in another loop :
+                  errors.push({ errorType : "modelWasThoughtToBeMixinAndMustBeReparsed",
+                        "mixin" : mixinName }); // setting up another loop on fields
+                  loopMaxIndex++; // allowing the loop no matter what
+                  mixinTypeName = "dcmo:model_0/" + mixinName;
+                  mixin["@id"] = getContainerUrl() + "dc/type/" + mixinTypeName;
+                  mixin["dcmo:fields"] = {};
+               } else {
+                  isModel = isModel || hasBeenModel;
+               }
+            }
+           mergeStringValueOrDefaultIfAny(mixin, "dcmo:documentation", fieldRow["documentation"], importState.metamodel["dcmi:mixin_0"]); // TODO required
+           mergeStringValueOrDefaultIfAny(mixin, "dcmo:mixins", fieldRow["Has Mixins"], importState.metamodel["dcmi:mixin_0"]);
+           mergeStringValueOrDefaultIfAny(mixin, "dcmo:fieldAndMixins", fieldRow["fieldAndMixins"], importState.metamodel["dcmi:mixin_0"]);
+           // TODO any other DCMixin field
+           if (isModel) {
+              // for models only :
+              mergeStringValueOrDefaultIfAny(mixin, "dcmo:maxScan", fieldRow["maxScan"], importState.metamodel["dcmo:model_0"]);
+              mergeStringValueOrDefaultIfAny(mixin, "dcmo:isHistorizable", fieldRow["isHistorizable"], importState.metamodel["dcmo:model_0"]);
+              mergeStringValueOrDefaultIfAny(mixin, "dcmo:isContributable", fieldRow["isContributable"], importState.metamodel["dcmo:model_0"]);
+              // TODO any other DCModel field
            }
 
            // filling import plan :
-           ///var rootMixinName = (fieldPathElements.length == 1) ? mixinName : "elec:Elector_0"; // TODO TODO
-           ///var rootMixinName = "elec:Elector_0"; // TODO mixinName;
            var rootMixinName = mixinName;
            var fieldNameTreeCur = mixinNameToFieldNameTree[rootMixinName];
            if (typeof fieldNameTreeCur === 'undefined') {
@@ -657,7 +864,7 @@
            for (var i = 0; i < fieldPathElements.length - 1 ; i++) {
               var fieldName = fieldPathElements[i];
               if (fieldName.indexOf(":") == -1) {
-                 var fieldMixinPrefix = mixin["dcmo:name"].replace(":", "_").replace("_" + mixinMajorVersion, ""); // TODO better domainPrefix + "_" + mixinShortName; // NO . else KO in query (and tree path parsing)
+                 var fieldMixinPrefix = mixin["dcmo:name"].replace(":", "_").replace("_" + importState.mixinMajorVersion, ""); // TODO better domainPrefix + "_" + mixinShortName; // NO . else KO in query (and tree path parsing)
                  fieldName = fieldMixinPrefix + ":" + fieldName; // buildFieldName()
               }
               // TODO fieldName from this short name
@@ -665,14 +872,17 @@
               var subField = mixin["dcmo:fields"][fieldName];
               if (typeof subField === 'undefined') {
                  // TODO error field must be defined in first pass NOO TODO TODO TODO TODO
-                 foundMissingDeclaration = true; // setting up another loop on fields
+                 errors.push({ errorType : "missingSubFields", mixin : rootMixinName, field : fieldPath,
+                       intermediateMixin : mixin, subfield : fieldName }); // setting up another loop on fields
                  continue fieldsLoop;
               }
               var subFieldResourceType = subField["dcmf:resourceType"];
               mixin = mixins[subFieldResourceType];
               if (typeof mixin === 'undefined') {
                  // TODO error mixin must be defined in first pass NOO TODO TODO TODO TODO
-                 foundMissingDeclaration = true; // setting up another loop on fields
+                 errors.push({ errorType : "missingReferencedMixins", mixin : rootMixinName,
+                       field : fieldPath, intermediateMixin : mixin, subfield : fieldName,
+                       resourceType : subFieldResourceType }); // setting up another loop on fields
                  continue fieldsLoop;
               }
               // following the link in the import plan :
@@ -686,13 +896,12 @@
            // last field path element :
            var fieldName = fieldPathElements[fieldPathElements.length - 1];
            if (fieldName.indexOf(":") == -1) {
-        	     var fieldMixinPrefix = mixin["dcmo:name"].replace(":", "_").replace("_" + mixinMajorVersion, ""); // TODO better ; NO "." else KO in query (and tree path parsing)
+              var fieldMixinPrefix = mixin["dcmo:name"].replace(":", "_").replace("_" + importState.mixinMajorVersion, ""); // TODO better ; NO "." else KO in query (and tree path parsing)
               fieldName = fieldMixinPrefix + ":" + fieldName; // buildFieldName()
            }
            // will be filled once field is built
            
-           var field = importField(fieldRow, fieldName, mixin,
-                 mixinTypeName, mixinMajorVersion, domainPrefix, typeMap);
+           var field = importField(fieldRow, fieldName, mixin, mixinTypeName, importState);
            
            var fieldName = field["dcmf:name"];
            if (typeof fieldNameTreeCur[fieldName] !== 'object') { // ex. 'undefined'
@@ -702,9 +911,10 @@
            // TODO also mixins, resource links & sub...
         }
         
-        } while (foundMissingDeclaration);
+      } while (errors.length != 0);
 
-        $('.modelRowCounter').html("Handled " + Object.keys(mixins).length + " model rows in " + loopIndex + " loops");
+      importState.model["loops"] = loopIndex + 1;
+      importState.model["errors"] = errors;
         
         // CUSTOM or import models (and not fields)
         // TODO OR RATHER binding than script ??!
@@ -713,108 +923,168 @@
         //mixins["elec:Elector_0"]["dcmo:idGenJs"] = "'fr' + '/' + r['elec:City_0:CityINSEECode'] + '/' + r['elec_Elector:ElectorNumberInTheCity']";
         //mixins["elec:PollingStation_0"]["dcmo:idGenJs"] = "r['elec_PollingStation:PollingStationID']";
         //mixins["elec:Street_0"]["dcmo:idGenJs"] = ""; // NOOO mixin ; TODO id (?)
-        mixins["elec:City_0"]["dcmo:idGenJs"] = "'/' + r['elec_City:CityINSEECode'] + '/' + r['elec_City:CityName']";
+        if (typeof mixins["elec:City_0"] !== 'undefined') mixins["elec:City_0"]["dcmo:idGenJs"] = "'/' + r['elec_City:CityINSEECode'] + '/' + r['elec_City:CityName']";
         //mixins["elec:Department_0"]["dcmo:idGenJs"] = ""; // link only
-        mixins["elec:Country_0"]["dcmo:idGenJs"] = "'fr'"; // NOOO foreigners
+        if (typeof mixins["elec:Country_0"] !== 'undefined') mixins["elec:Country_0"]["dcmo:idGenJs"] = "'fr'"; // NOOO foreigners
         
-        // fields to array, plus fieldAndMixins :
+        // making arrays of fields, fieldAndMixins, mixins :
+        var modelOrMixinArray = [];
+        var mixinArray = [];
+        var modelArray = [];
         for (var mInd in mixins) {
             var mixin = mixins[mInd];
+            
+            // copy mixin to array element :
+            var modelOrMixinArrayElt = {};
+            for (var key in mixin) {
+               modelOrMixinArrayElt[key] = mixin[key];
+            }
+            if (typeof mixin["dcmo:collectionName"] === 'undefined') {
+               mixinArray.push(modelOrMixinArrayElt);
+            } else {
+               modelArray.push(modelOrMixinArrayElt);
+            }
+            modelOrMixinArray.push(modelOrMixinArrayElt);
+            
             var fieldAndMixinNames = []; // fieldAndMixins (orders their overrides)
+            for (var mKey in mixin["dcmo:mixins"]) {
+               var mixinName = mixin["dcmo:mixins"][mKey];
+               fieldAndMixinNames.push(mixinName);
+            }
             var fieldArray = [];
-            for (var fKey in mixin["dcmo:fields"]) {
-               var field = mixin["dcmo:fields"][fKey];
-            	fieldArray.push(field);
-            	fieldAndMixinNames.push(field["dcmf:name"]);
+            for (var fieldName in mixin["dcmo:fields"]) {
+               var field = mixin["dcmo:fields"][fieldName];
+               fieldArray.push(field);
+               fieldAndMixinNames.push(fieldName);
             }
             // TOOO LATER also mixins in fieldAndMixinNames
-            mixin["dcmo:fields"] = fieldArray;
-            mixin["dcmo:fieldAndMixins"] = fieldAndMixinNames;
+            modelOrMixinArrayElt["dcmo:fields"] = fieldArray;
+            modelOrMixinArrayElt["dcmo:fieldAndMixins"] = fieldAndMixinNames;
+            mixin["dcmo:fieldAndMixins"] = fieldAndMixinNames; // enriching
         }
-
-        // mixins to array :
-        var mixinArray = [];
-        for (var mKey in mixins) {
-           mixinArray.push(mixins[mKey]);
-        }
-        mixins = mixinArray;
+        importState.model["modelOrMixinArray"] = modelOrMixinArray;
+        importState.model["mixinArray"] = mixinArray;
+        importState.model["modelArray"] = modelArray;
         
         ///var results = eval('[' + data.content.data + ']')[0];
         //var prettyJson = toolifyDcResource(results, 0);
-        var mixinsPrettyJson = JSON.stringify(mixins, null, '\t').replace(/\n/g, '<br>');
+        var mixinsPrettyJson = JSON.stringify(modelOrMixinArray, null, '\t').replace(/\n/g, '<br>');
         $('.importedResourcesFromCsv').html(mixinsPrettyJson);
 
-        callback(mixins, mixinNameToFieldNameTree);
+      callback(importState);
+   }
+   
+   function refreshAndSchedulePost(modelOrMixinArray, relativeTypeUrl, postedCallback) {
+      for (var mInd in modelOrMixinArray) {
+         var mixin = modelOrMixinArray[mInd];
+         // posting one at a time rather than all at once because version has
+         // to be refreshed and it is easier to do it in sync this way
+         var uri = mixin["@id"];
+         var relativeUrl = uri.substring(uri.indexOf("/dc/type/"));
+         getData(relativeUrl, function (resource) {
+            // updating existing resource : 
+            // NB. can't access "mixin" variable because has been changed since call is async
+            var upToDateMixin = findMixin(resource["dcmo:name"], modelOrMixinArray);
+            upToDateMixin["o:version"] = resource["o:version"];
+            postAllDataInType(relativeTypeUrl, JSON.stringify([ upToDateMixin ], null, null),
+                  postedCallback, postedCallback);
+         }, function (data) {
+            // creating new resource :
+            var relativeUrl = data.request.path
+            var resourceIri = relativeUrl.substring(relativeUrl.indexOf("/dc/type/") + "/dc/type/".length);
+            var typeName = decodeURIComponent(resourceIri.substring(resourceIri.indexOf("/") + 1)); // else "elec%3ADepartment_0" ; AND NOT decodeURI
+            var upToDateMixin = findMixin(typeName, modelOrMixinArray);
+            postAllDataInType(relativeTypeUrl, JSON.stringify([ upToDateMixin ], null, null),
+                  postedCallback, postedCallback);
+         });
       }
-
+   }
+   
    function importModelAndResources() {
       $('.modelRowCounter').html("");
       $('.modelCounter').html("");
       inited = true;
+      
+      var importState = {
+            // CUSTOM
+            typeMap : { // TODO more
+                  "string" : "string",
+                  "integer" : "int",
+                  "date" : "date",
+                  "list" : "list"
+            },
+            domainPrefix : "elec",
+            mixinMajorVersion : 0, // TODO better
+            metamodel : {},
+            model : {
+               modelOrMixins : {}, // NOOOO MUST NOT BE USED outside of csvToModel because have no global fields, rather use .data.involvedMixins
+               mixinNameToFieldNameTree : {},
+               modelOrMixinArray : null, // MUST NOT BE USED outside of csvToModel because have no global fields, rather use .data.involvedMixins
+               mixinArray : null, // MUST NOT BE USED outside of csvToModel because have no global fields, rather use .data.involvedMixins
+               modelArray : null, // MUST NOT BE USED outside of csvToModel because have no global fields, rather use .data.involvedMixins
+               loops : 0,
+               toBePostedNb : 0,
+               postedNb : 0,
+               warnings : [],
+               errors : [],
+               errorHtml : ""
+            },
+            data : {
+               dataColumnNames : null,
+               involvedMixins : [],
+               resources : {},
+               toBePostedNb : 0,
+               postedNb : 0,
+               warnings : [],
+               errors : [],
+               errorHtml : ""
+            }
+      }
+      
+      findDataByType("/dc/type/dcmo:model_0?dcmo:name=$regexdcm.*", function (resources) {
+         for (var mmInd in resources) {
+            var modelResource = resources[mmInd];
+            importState["metamodel"][modelResource["dcmo:name"]] = modelResource;
+         }
+         findDataByType("/dc/type/dcmi:mixin_0?dcmo:name=$regexdcm.*", function (resources) {
+            for (var mmInd in resources) {
+               var mixinResource = resources[mmInd];
+               importState["metamodel"][mixinResource["dcmo:name"]] = mixinResource;
+            }
+         
+         
       var modelParsingConf = {
          download: true,
          header: true,
          //preview: 3, // TODO !
          complete: function(results) {
-            //console.log("Remote file parsed!", results);//
-            ///var results = eval('[' + data.content.data + ']')[0];
-            //var prettyJson = toolifyDcResource(results, 0);
             var prettyJson = JSON.stringify(results.data, null, '\t').replace(/\n/g, '<br>');
             $('.importedJsonFromCsv').html(prettyJson);
-            // TODO handle errors...
             
-            csvToModel(results.data, function (mixins, mixinNameToFieldNameTree) {
-              var updatedModelNb = 0;
-	              var updatedModelInErrorNb = 0;
-	              function fillDataWhenAllModelsUpdated(resourcesOrData) {
-	            	  updatedModelNb++;
-	            	  if (typeof resourcesOrData === 'object' && typeof resourcesOrData["_headers"] === 'object') {
-	                    updatedModelInErrorNb++;
-	            	  }
-	            	  if (updatedModelNb % 1000 == 0 || updatedModelNb == mixins.length - 1) {
-	            	     $('.modelCounter').html("Posted " + updatedModelNb
-	                          + " models (" + updatedModelInErrorNb + " errors)");
-	                 }
-	            	  if (updatedModelNb === mixins.length) {
-	            	     if (updatedModelInErrorNb == 0) {
-	            		     console.log("INFO Successfully updated " + updatedModelNb + " models");
-	            	     } else {
-	                       console.log("ERROR updated " + updatedModelNb + " models with "
-	                             + updatedModelInErrorNb + " errors.");
-	            	     }
-                       fillData(mixinNameToFieldNameTree);
-	            	  }
-	              };
-	              for (var mInd in mixins) {
-	                 var mixin = mixins[mInd];
-	                 // posting one at a time rather than all at once because version has
-	                 // to be refreshed and it is easier to do it in sync this way
-                    var uri = mixin["@id"];
-                    var relativeUrl = uri.substring(uri.indexOf("/dc/type/"));
-	                 getData(relativeUrl, function (resource) {
-	                    // updating existing resource : 
-	                	  // NB. can't access "mixin" variable because has been changed since call is async
-	                    var upToDateMixin = findMixin(resource["dcmo:name"], mixins);
-	                	  upToDateMixin["o:version"] = resource["o:version"];
-	                    postAllDataInType('/dc/type/dcmo:model_0', JSON.stringify([ upToDateMixin ], null, null),
-	                		     fillDataWhenAllModelsUpdated, fillDataWhenAllModelsUpdated);
-	                 }, function (data) {
-	                    // creating new resource :
-	                    var relativeUrl = data.request.path
-	                    var resourceIri = relativeUrl.substring(relativeUrl.indexOf("/dc/type/") + "/dc/type/".length);
-	                    var typeName = decodeURIComponent(resourceIri.substring(resourceIri.indexOf("/") + 1)); // else "elec%3ADepartment_0" ; AND NOT decodeURI
-	                    var upToDateMixin = findMixin(typeName, mixins);
-	                    postAllDataInType('/dc/type/dcmo:model_0', JSON.stringify([ upToDateMixin ], null, null),
-	                          fillDataWhenAllModelsUpdated, fillDataWhenAllModelsUpdated);
-	                 });
-	              }
-                 /*postAllDataInType('/dc/type/dcmo:model_0', JSON.stringify(mixins, null, null),
-                       function(resources) {
-                          fillData(resources, mixinNameToFieldNameTree);
-                       });*/
-	        	  });
-	        }
-	      };
+            csvToModel(results.data, importState, function (importState) {
+               var mixins = importState.model.modelOrMixins;
+               var message = "Handled " + Object.keys(mixins).length + " models or mixins in "
+                     + importState.model.loops + " loops";
+               if (importState.model.errors.length != 0) {
+                  message += ". Aborting, please patch errors:<br/>"
+                        + JSON.stringify(importState.model.errors, null, '\t');
+               }
+               $('.modelRowCounter').html(message);
+               if (importState.model.errors.length != 0) {
+                  return; // aborting
+               }
+               
+               function fillDataWhenAllModelsUpdated(resourcesOrData) {
+                  importedResourcePosted(resourcesOrData, importState.model, importState,
+                        "models or mixin", $('.modelCounter'), fillData);
+               };
+
+               importState.model["toBePostedNb"] = importState.model.modelOrMixinArray.length;
+               refreshAndSchedulePost(importState.model.mixinArray, '/dc/type/dcmi:mixin_0', fillDataWhenAllModelsUpdated);
+               refreshAndSchedulePost(importState.model.modelArray, '/dc/type/dcmo:model_0', fillDataWhenAllModelsUpdated);
+            });
+         }
+      };
 
       if ($(".modelFile").val() != "") {
          $(".modelFile").parse({ config : modelParsingConf });
@@ -822,6 +1092,9 @@
          Papa.parse("./oasis-donnees-metiers-openelec.csv?reload="
                + new Date().getTime(), modelParsingConf); // to prevent browser caching
       }
+
+         });
+      });
       return false;
    }
 
@@ -885,7 +1158,7 @@
 <br/><br/>
 <b>Data :</b>
 <br/><br/>
-Resource row limit : <input type="text" class="resourceRowLimit" value="50" style="width:50px"/>
+Resource row limit : <input type="text" class="resourceRowLimit" value="50" style="width: 50px"/>
 <br/><br/>
 <input type="file" class="resourceFile"/>&nbsp;&nbsp;
 <a href="./electeur_v26010_sample.csv">OpenElec sample data</a>
