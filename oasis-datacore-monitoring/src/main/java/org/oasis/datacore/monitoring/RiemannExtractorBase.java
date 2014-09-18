@@ -104,10 +104,11 @@ abstract class RiemannExtractorBase implements InitializingBean {
       long time = (long) exchange.get("dc.duration");
       String desc = exchange.get("dc.method").toString();
       String model;
-      try {
-         model = exchange.get("dc.req.model").toString();
-      } catch(Exception e) {
-         model = "dc";
+      Object modelObject = exchange.get("dc.req.model");
+      if (modelObject != null) {
+         model = modelObject.toString();
+      } else {
+         model = "dcModelNotFound"; // happens when ex. bad containerUrl : http://data.oasis-eu.orgdc/type...
       }
             
       try {

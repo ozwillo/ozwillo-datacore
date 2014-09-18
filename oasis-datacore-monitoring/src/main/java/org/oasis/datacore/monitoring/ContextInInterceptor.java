@@ -1,8 +1,6 @@
 package org.oasis.datacore.monitoring;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -16,7 +14,6 @@ import org.apache.cxf.phase.Phase;
 import org.apache.cxf.phase.PhaseInterceptorChain;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.JaxrsApiProvider;
-import org.oasis.datacore.rest.server.cxf.ArrayServerInInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -67,7 +64,8 @@ public class ContextInInterceptor extends AbstractPhaseInterceptor<Message> {
             Object resource = objs.get(0);
             if(resource instanceof ArrayList<?>) {
                ArrayList<DCResource> dcRes = (ArrayList<DCResource>) resource;
-               if (!dcRes.isEmpty()) {
+               if (!dcRes.isEmpty()
+                     && dcRes.get(0) != null) { // happens when ex. bad containerUrl : http://data.oasis-eu.orgdc/type...
                   ex.put("dc.req.model", dcRes.get(0).getModelType());
                }
             }
