@@ -210,7 +210,7 @@ function getData(relativeUrl, success, error) {
    var i = ti.indexOf('/', l);
    window.t = ti.substring(0, i);
    window.iri = ti.substring(i + 1);*/
-   dcApi.dc.getData({type:modelType, iri:resourceId,
+   dcApi.dc.getData({type:modelType, __unencoded__iri:resourceId,
          'If-None-Match':-1, Authorization:'Basic YWRtaW46YWRtaW4='},
       function(data) {
          var resource = eval('[' + data.content.data + ']')[0];
@@ -229,7 +229,7 @@ function getData(relativeUrl, success, error) {
       });
    /*window.datacore = new SwaggerApi({ url: '/api-docs', success: function() {
       if(datacore.ready === true) {
-         datacore.apis.dc.getData({type:window.t, iri:window.iri, 'If-None-Match':-1,
+         datacore.apis.dc.getData({type:window.t, __unencoded__iri:window.iri, 'If-None-Match':-1,
             Authorization:'Basic YWRtaW46YWRtaW4='}, function(data) {
                var prettyJson = JSON.stringify(eval('[' + data.content.data + ']'), null, '\t').replace(/\n/g, '<br>');
                $('.mydata').html(prettyJson);
@@ -341,7 +341,7 @@ function deleteDataInType(resource, success, error) {
    var i = ti.indexOf('/', l);
    window.t = ti.substring(0, i);
    window.iri = ti.substring(i + 1);*/
-   dcApi.dc.deleteData({type:modelType, iri:resourceId,
+   dcApi.dc.deleteData({type:modelType, __unencoded__iri:resourceId,
          'If-Match':resource["o:version"], Authorization:'Basic YWRtaW46YWRtaW4='},
       function(data) {
          var resource = eval('[' + data.content.data + ']')[0];

@@ -821,6 +821,23 @@
       return this.path.replace("{format}", "xml");
     };
 
+    // OASIS HACK taken from https://github.com/wordnik/swagger-js/pull/87/files
+    // URL encodes the given path (rather than path element) i.e. doesn't encode slash
+    SwaggerOperation.prototype.encodePathParam = function(pathParam) {
+      var encParts, part, parts, _i, _len;
+      if (pathParam.indexOf("/") === -1) {
+        return encodeURIComponent(pathParam);
+      } else {
+        parts = pathParam.split("/");
+        encParts = [];
+        for (_i = 0, _len = parts.length; _i < _len; _i++) {
+          part = parts[_i];
+          encParts.push(encodeURIComponent(part));
+        }
+        return encParts.join("/");
+      }
+    };
+    
     SwaggerOperation.prototype.urlify = function(args) {
       var param, queryParams, reg, url, _i, _j, _len, _len1, _ref, _ref1;
       url = this.resource.basePath + this.pathJson();
@@ -830,7 +847,14 @@
         if (param.paramType === 'path') {
           if (args[param.name]) {
             reg = new RegExp('\{' + param.name + '[^\}]*\}', 'gi');
-            url = url.replace(reg, encodeURIComponent(args[param.name]));
+            // OASIS HACK start
+            if(param.name.substring(0,13) === "__unencoded__") { // OASIS HACK
+               // assume arg is a path and not a path element, so don't encode slash (but encode other chars) :
+               url = url.replace(reg, this.encodePathParam(args[param.name]));
+            } else {
+               url = url.replace(reg, encodeURIComponent(args[param.name]));
+            }
+            // OASIS HACK end
             delete args[param.name];
           } else {
             throw "" + param.name + " is a required path param.";
@@ -849,10 +873,11 @@
             
             // OASIS HACK start
             if(param.name.substring(0,1) == "#") { // OASIS HACK
-                queryParams += encodeURI(args[param.name]); // NOT encodeURIComponent because & and =
-                continue;
+               // assume arg is a query (and not a query param) i.e. don't encode & and = :
+               queryParams += encodeURI(args[param.name]); // NOT encodeURIComponent because & and =
+               continue;
             }
-        	// OASIS HACK end
+            // OASIS HACK end
             
             queryParams += encodeURIComponent(param.name) + '=' + encodeURIComponent(args[param.name]);
           }

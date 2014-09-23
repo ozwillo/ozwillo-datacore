@@ -137,7 +137,7 @@ public interface DatacoreClientApi extends DatacoreApi {
     * @param iri
     * @return
     */
-   @Path("/type/{type}/{iri:.+}") // :.+ to accept even /
+   @Path("/type/{type}/{__unencoded__iri:.+}") // :.+ to accept even /
    @GET
    @ApiOperation(value = "Get an existing data Resource.",
       notes = "Resource Model type and IRI (Internal Resource Identifier) are required. "
@@ -155,7 +155,7 @@ public interface DatacoreClientApi extends DatacoreApi {
    })
    DCResource getData(
          @ApiParam(value = "Model type to look up in", required = true) @PathParam("type") String modelType,
-         @ApiParam(value = "Type-relative resource id", required = true) @PathParam("iri") String iri)
+         @ApiParam(value = "Type-relative resource id", required = true) @PathParam("__unencoded__iri") String iri)
          throws NotFoundException;
 
    /**
@@ -168,7 +168,7 @@ public interface DatacoreClientApi extends DatacoreApi {
     * @param type
     * @param iri
     */
-   @Path("/type/{type}/{iri:.+}") // :.+ to accept even /
+   @Path("/type/{type}/{__unencoded__iri:.+}") // :.+ to accept even /
    @DELETE
    @ApiOperation(value = "Deletes an existing data Resource.",
       notes = "Resource Model type and IRI (Internal Resource Identifier) are required, "
@@ -185,7 +185,7 @@ public interface DatacoreClientApi extends DatacoreApi {
    })
    void deleteData(
          @ApiParam(value = "Model type to look up in", required = true) @PathParam("type") String modelType,
-         @ApiParam(value = "Type-relative resource id", required = true) @PathParam("iri") String iri)
+         @ApiParam(value = "Type-relative resource id", required = true) @PathParam("__unencoded__iri") String iri)
          throws BadRequestException, NotFoundException, ClientErrorException;
 
    /**
@@ -202,8 +202,8 @@ public interface DatacoreClientApi extends DatacoreApi {
     * @param uriInfo to take DCData fields from HTTP request parameters
     * @return
     */
-   //@Path("/type/{type}/{iri:.+}") // NB. :.+ to accept even / // TODO rather than :
-   @Path("/change/type/{type}/{iri:.+}")
+   //@Path("/type/{type}/{__unencoded__iri:.+}") // NB. :.+ to accept even / // TODO rather than :
+   @Path("/change/type/{type}/{__unencoded__iri:.+}")
    @GET
    @ApiOperation(value = "NOT IMPLEMENTED YET, (Testing only) udpates or deletes "
             + "an existing data Resource in the given type.",
@@ -229,7 +229,7 @@ public interface DatacoreClientApi extends DatacoreApi {
       })
    DCResource putPatchDeleteDataOnGet(
          @ApiParam(value = "Model type to update it in", required = true) @PathParam("type") String modelType,
-         @ApiParam(value = "Type-relative resource id", required = true) @PathParam("iri") String iri,
+         @ApiParam(value = "Type-relative resource id", required = true) @PathParam("__unencoded__iri") String iri,
          @ApiParam(value = "HTTP method to tunnel over", required = true,
          allowableValues="POST") @QueryParam("method") String method,
          @Context UriInfo uriInfo)

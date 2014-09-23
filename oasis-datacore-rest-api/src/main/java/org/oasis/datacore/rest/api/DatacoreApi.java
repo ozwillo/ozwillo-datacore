@@ -310,7 +310,7 @@ public interface DatacoreApi {
     * @param iri
     * @return
     */
-   @Path("/type/{type}/{iri:.+}") // :.+ to accept even /
+   @Path("/type/{type}/{__unencoded__iri:.+}") // :.+ to accept even /
    @PUT
    @PATCH
    @ApiOperation(value = "Updates an existing data Resource in the given type.",
@@ -339,7 +339,7 @@ public interface DatacoreApi {
    DCResource putDataInType(
          @ApiParam(value = "Data Resource to update", required = true) DCResource dcData,
          @ApiParam(value = "Model type to update it in", required = true) @PathParam("type") String modelType,
-         @ApiParam(value = "Type-relative resource id", required = true) @PathParam("iri") String iri)
+         @ApiParam(value = "Type-relative resource id", required = true) @PathParam("__unencoded__iri") String iri)
          throws BadRequestException, NotFoundException, ClientErrorException;
    
    /**
@@ -422,7 +422,7 @@ public interface DatacoreApi {
     * @param versionETag resource version provided as If-None-Match header
     * @return
     */
-   @Path("/type/{type}/{iri:.+}") // :.+ to accept even /
+   @Path("/type/{type}/{__unencoded__iri:.+}") // :.+ to accept even /
    @GET
    @ApiOperation(value = "Get an existing data Resource.",
       notes = "Resource Model type and IRI (Internal Resource Identifier) are required. "
@@ -447,7 +447,7 @@ public interface DatacoreApi {
    })
    DCResource getData(
          @ApiParam(value = "Model type to look up in", required = true) @PathParam("type") String modelType,
-         @ApiParam(value = "Type-relative resource id", required = true) @PathParam("iri") String iri,
+         @ApiParam(value = "Type-relative resource id", required = true) @PathParam("__unencoded__iri") String iri,
          @ApiParam(value = "Resource version", required = false) @HeaderParam(HttpHeaders.IF_NONE_MATCH) Long version)
          throws NotFoundException;
    
@@ -459,7 +459,7 @@ public interface DatacoreApi {
     * @param iri
     * @param versionETag resource version provided as If-Match header
     */
-   @Path("/type/{type}/{iri:.+}") // :.+ to accept even /
+   @Path("/type/{type}/{__unencoded__iri:.+}") // :.+ to accept even /
    @DELETE
    @ApiOperation(value = "Deletes an existing data Resource.",
       notes = "Resource Model type and IRI (Internal Resource Identifier) are required, "
@@ -483,7 +483,7 @@ public interface DatacoreApi {
    })
    void deleteData(
          @ApiParam(value = "Model type to look up in", required = true) @PathParam("type") String modelType,
-         @ApiParam(value = "Type-relative resource id", required = true) @PathParam("iri") String iri,
+         @ApiParam(value = "Type-relative resource id", required = true) @PathParam("__unencoded__iri") String iri,
          @ApiParam(value = "Resource version", required = false) @HeaderParam(HttpHeaders.IF_MATCH) Long version)
          throws BadRequestException, NotFoundException, ClientErrorException;
 
@@ -585,8 +585,8 @@ public interface DatacoreApi {
     * @param uriInfo to take DCData fields from HTTP request parameters
     * @return
     */
-   //@Path("/type/{type}/{iri:.+}") // NB. :.+ to accept even / // TODO rather than :
-   @Path("/change/type/{type}/{iri:.+}")
+   //@Path("/type/{type}/{__unencoded__iri:.+}") // NB. :.+ to accept even / // TODO rather than :
+   @Path("/change/type/{type}/{__unencoded__iri:.+}")
    @GET
    @ApiOperation(value = "NOT IMPLEMENTED YET, (Testing only) udpates or deletes "
             + "an existing data Resource in the given type.",
@@ -617,7 +617,7 @@ public interface DatacoreApi {
    })
    DCResource putPatchDeleteDataOnGet(
          @ApiParam(value = "Model type to update it in", required = true) @PathParam("type") String modelType,
-         @ApiParam(value = "Type-relative resource id", required = true) @PathParam("iri") String iri,
+         @ApiParam(value = "Type-relative resource id", required = true) @PathParam("__unencoded__iri") String iri,
          @ApiParam(value = "HTTP method to tunnel over", required = true,
          allowableValues="POST") @QueryParam("method") String method,
          @ApiParam(value = "Resource version", required = false) @PathParam(HttpHeaders.IF_MATCH) Long versionETag,
@@ -885,7 +885,7 @@ public interface DatacoreApi {
          throws BadRequestException, NotFoundException;
    
    
-   @Path("/h/{type}/{iri}/{version}")
+   @Path("/h/{type}/{__unencoded__iri}/{version}")
    @GET
    @ApiOperation(value = "Return a matching resource of the given iri and version.",
       			 notes = "Resources of a model can be historized by defining the isHistorizable field to true."
@@ -894,7 +894,7 @@ public interface DatacoreApi {
       					 + "e.g. if resource URI = http://data-test.oasis-eu.org/dc/type/sample.marka.company/1 and you want version = 0,"
       					 + "the parameters would be : "
       					 + " - type : sample.marka.company"
-      					 + " - iri : 1 (the URI is made like this : /dc/type/{type}/{IRI})"
+      					 + " - iri : 1 (the URI is made like this : /dc/type/{type}/{__unencoded__iri})"
       					 + " - version : 0 (or whatever version you need)",
       			 response = DCResource.class, position = 12)
    @ApiImplicitParams({
@@ -908,7 +908,7 @@ public interface DatacoreApi {
       @ApiResponse(code = 200, message = "OK : resource found and returned")
    })
    DCResource findHistorizedResource(@ApiParam(value = "Resource's model type", required = true) @PathParam("type") String modelType,
-		   							 @ApiParam(value = "Type-relative resource id", required = true) @PathParam("iri") String iri,
+		   							 @ApiParam(value = "Type-relative resource id", required = true) @PathParam("__unencoded__iri") String iri,
 		   							 @ApiParam(value = "Resource version", required = true) @PathParam("version") Integer version) throws BadRequestException, NotFoundException;
       
 }
