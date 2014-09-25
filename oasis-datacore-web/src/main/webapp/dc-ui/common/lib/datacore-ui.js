@@ -204,13 +204,10 @@ function getData(relativeUrl, success, error) {
    setUrl(cleanedRelativeUrl);
    // decodeURIComponent
    var modelType = resourceIri.substring(0, resourceIri.indexOf("/"));
-   var resourceId = resourceIri.substring(resourceIri.indexOf("/") + 1);
-   /*var l = '/dc/type/'.length;
-   var ti = relativeUrl.substring(l);
-   var i = ti.indexOf('/', l);
-   window.t = ti.substring(0, i);
-   window.iri = ti.substring(i + 1);*/
-   dcApi.dc.getData({type:modelType, __unencoded__iri:resourceId,
+   var decodedResourceId = decodeURI(resourceIri.substring(resourceIri.indexOf("/") + 1));
+   // NB. resourceId is encoded as URIs should be, BUT must be decoded before used as GET URI
+   // because swagger.js re-encodes (per path element because __unencoded__-prefixed per hack)
+   dcApi.dc.getData({type:modelType, __unencoded__iri:decodedResourceId,
          'If-None-Match':-1, Authorization:'Basic YWRtaW46YWRtaW4='},
       function(data) {
          var resource = eval('[' + data.content.data + ']')[0];
@@ -333,15 +330,10 @@ function deleteDataInType(resource, success, error) {
    setUrl(cleanedRelativeUrl);
    // decodeURIComponent
    var modelType = resourceIri.substring(0, resourceIri.indexOf("/"));
-   var resourceId = resourceIri.substring(resourceIri.indexOf("/") + 1);
-   /*var relativeUrl = uri.substring(uri.indexOf("/dc/type/"));
-   setUrl(relativeUrl);
-   var l = '/dc/type/'.length;
-   var ti = relativeUrl.substring(l);
-   var i = ti.indexOf('/', l);
-   window.t = ti.substring(0, i);
-   window.iri = ti.substring(i + 1);*/
-   dcApi.dc.deleteData({type:modelType, __unencoded__iri:resourceId,
+   var decodedResourceId = decodeURI(resourceIri.substring(resourceIri.indexOf("/") + 1));
+   // NB. resourceId is encoded as URIs should be, BUT must be decoded before used as GET URI
+   // because swagger.js re-encodes (per path element because __unencoded__-prefixed per hack)
+   dcApi.dc.deleteData({type:modelType, __unencoded__iri:decodedResourceId,
          'If-Match':resource["o:version"], Authorization:'Basic YWRtaW46YWRtaW4='},
       function(data) {
          var resource = eval('[' + data.content.data + ']')[0];
