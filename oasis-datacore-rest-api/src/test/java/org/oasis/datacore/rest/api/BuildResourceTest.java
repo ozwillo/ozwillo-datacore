@@ -1,15 +1,24 @@
 package org.oasis.datacore.rest.api;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.oasis.datacore.rest.api.util.UriHelper;
 
 public class BuildResourceTest {
 
-   private String containerUrl = "http://data.oasis-eu.org/";
+   private String containerUrlString = "http://data.oasis-eu.org/";
+   private URI containerUrl;
+   
+   @Before
+   public void init() throws URISyntaxException {
+      containerUrl = new URI(containerUrlString);
+   }
    
    @Test
    public void testBuild() {

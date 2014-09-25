@@ -1,6 +1,7 @@
 package org.oasis.datacore.rest.api;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -117,10 +118,24 @@ public class DCResource {
    }
    
    /** helper method to build new DCResources FOR TESTING
-    * TODO or in builder instance ? */
-   public static DCResource create(String containerUrl, String modelType, String id) {
+    * TODO or in builder instance ? 
+    * @throws URISyntaxException */
+   public static DCResource create(String containerUrl, String modelType, String id) throws URISyntaxException {
+      return DCResource.create(containerUrl, modelType, id, false);
+   }
+   public static DCResource create(URI containerUrl, String modelType, String id) {
+      return DCResource.create(containerUrl, modelType, id, false);
+   }
+   /** helper method to build new DCResources FOR TESTING
+    * TODO or in builder instance ? 
+    * @throws URISyntaxException */
+   public static DCResource create(String containerUrl, String modelType, String id,
+         boolean dontEncodePathElements) throws URISyntaxException {
+      return DCResource.create(new URI(containerUrl), modelType, id, false);
+   }
+   public static DCResource create(URI containerUrl, String modelType, String id, boolean dontEncodePathElements) {
       DCResource resource = new DCResource();
-      resource.setUri(UriHelper.buildUri(containerUrl, modelType, id));
+      resource.setUri(UriHelper.buildUri(containerUrl, modelType, id, dontEncodePathElements));
       resource.types.add(modelType); // TODO add mixins !?!
       resource.setId(id);
       return resource;
@@ -133,7 +148,8 @@ public class DCResource {
       resource.types.add(modelType); // TODO add mixins !?!
       return resource;
    }
-   /** helper method to build new DCResources FOR TESTING
+   /**
+    * helper method to build new DCResources FOR TESTING
     * TODO or in builder instance ?
     * @throws URISyntaxException 
     * @throws MalformedURLException */
@@ -142,16 +158,22 @@ public class DCResource {
       DCURI dcUri = UriHelper.parseUri(uri);
       String modelType = dcUri.getType();
       resource.getTypes().add(modelType);
-      resource.setUri(UriHelper.buildUri(dcUri.getContainer(), modelType, dcUri.getId()));
+      resource.setUri(UriHelper.buildUri(dcUri.getContainerUrl(), modelType, dcUri.getId()));
       return resource;
    }
    /**
+    * @deprecated rather pass a java.net.URI containerUrl
     * Helps set URI once props are set
     * @param containerUrl
     * @param id
     * @return
+    * @throws URISyntaxException 
     */
-   public DCResource setUriFromId(String containerUrl, String id) {
+   public DCResource setUriFromId(String containerUrl, String id) throws URISyntaxException {
+      this.setUri(UriHelper.buildUri(containerUrl, this.getTypes().get(0), id));
+      return this;
+   }
+   public DCResource setUriFromId(URI containerUrl, String id) {
       this.setUri(UriHelper.buildUri(containerUrl, this.getTypes().get(0), id));
       return this;
    }

@@ -1,5 +1,6 @@
 package org.oasis.datacore.rest.server;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +19,7 @@ import org.oasis.datacore.core.entity.EntityQueryService;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryServiceImpl;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.rest.api.DCResource;
+import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.util.ResourceParsingHelper;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
@@ -68,7 +70,10 @@ public class DatacoreApiServerTest {
    ///@Value("${datacoreApiClient.baseUrl}") 
    ///private String baseUrl; // useless
    @Value("${datacoreApiClient.containerUrl}") 
-   private String containerUrl;
+   private String containerUrlString;
+   @Value("#{new java.net.URI('${datacoreApiClient.containerUrl}')}")
+   //@Value("#{uriService.getContainerUrl()}")
+   private URI containerUrl;
 
    /** for testing purpose */
    @Autowired
@@ -136,7 +141,8 @@ public class DatacoreApiServerTest {
          Assert.fail("Creation should fail when referenced data doesn't exist");
       } catch (WebApplicationException waex) {
          Assert.assertTrue((waex.getResponse().getEntity() + "").contains(
-               this.containerUrl + "dc/type/" + CityCountrySample.COUNTRY_MODEL_NAME + "/UK")); // http://localhost:8180/
+               this.containerUrl + DatacoreApi.DC_TYPE_PATH
+               + CityCountrySample.COUNTRY_MODEL_NAME + "/UK")); // http://localhost:8180/
       }
    }
 
@@ -325,7 +331,8 @@ public class DatacoreApiServerTest {
       Assert.assertNotNull(data);
       Assert.assertNotNull(data.getVersion());
       long version = data.getVersion();
-      Assert.assertEquals(this.containerUrl + "dc/type/" + CityCountrySample.CITY_MODEL_NAME + "/UK/London", data.getUri()); // http://localhost:8180/
+      Assert.assertEquals(this.containerUrl + DatacoreApi.DC_TYPE_PATH
+            + CityCountrySample.CITY_MODEL_NAME + "/UK/London", data.getUri()); // http://localhost:8180/
       ///Assert.assertEquals(CityCountrySample.CITY_MODEL_NAME, data.getProperties().get("type"));
       ///Assert.assertEquals("UK/London", data.getProperties().get("iri"));
       
@@ -458,6 +465,26 @@ public class DatacoreApiServerTest {
          Assert.assertTrue(responseContent.contains(externalContainerUrl)
                && responseContent.contains("UnknownHostException"));
       }
+   }
+
+   @Test
+   public void testEncodedUri() {
+      String fourviereUnencodedName = "Basilique Notre-Dame de Fourvière";
+      DCResource fourvierePoi = DCResource.create(containerUrl, CityCountrySample.POI_MODEL_NAME,
+            "France/Lyon/" + fourviereUnencodedName).set("n:name", fourviereUnencodedName);
+      DCResource postedFourvierePoi = datacoreApiClient.postDataInType(fourvierePoi);
+      Assert.assertEquals(postedFourvierePoi.getUri(), fourvierePoi.getUri());
+      DCResource franceCountry = datacoreApiClient.postDataInType(DCResource.create(containerUrl,
+            CityCountrySample.COUNTRY_MODEL_NAME, "France").set("n:name", "France"));
+      DCResource lyonCity = DCResource.create(containerUrl, CityCountrySample.CITY_MODEL_NAME,
+            "France/Lyon").set("n:name", "Lyon").set("city:inCountry", franceCountry.getUri())
+            .set("city:populationCount", 500000);
+      lyonCity.set("city:pointsOfInterest", DCResource.listBuilder().add(fourvierePoi.getUri()).build());
+      // WARNING used as referenced rather than embedded resource as elsewhere in CityCountrySample !!!
+      DCResource postedLyonCity = datacoreApiClient.postDataInType(lyonCity);
+      @SuppressWarnings("unchecked")
+      String postedLyonCityPoi0Uri = ((List<String>) postedLyonCity.get("city:pointsOfInterest")).get(0);
+      Assert.assertEquals(postedLyonCityPoi0Uri, fourvierePoi.getUri());
    }
    
    /**
@@ -622,7 +649,8 @@ public class DatacoreApiServerTest {
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters(), null, null);
       Assert.assertEquals(1, resources.size());
-      Assert.assertEquals(this.containerUrl + "dc/type/" + CityCountrySample.CITY_MODEL_NAME + "/UK/London", resources.get(0).getUri()); // http://localhost:8180/
+      Assert.assertEquals(this.containerUrl + DatacoreApi.DC_TYPE_PATH
+            + CityCountrySample.CITY_MODEL_NAME + "/UK/London", resources.get(0).getUri()); // http://localhost:8180/
 
       // query all - two resource
       datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "France"));

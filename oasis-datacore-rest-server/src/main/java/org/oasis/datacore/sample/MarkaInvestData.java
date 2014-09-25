@@ -1,5 +1,6 @@
 package org.oasis.datacore.sample;
 
+import java.net.URI;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,7 +36,10 @@ public class MarkaInvestData extends DatacoreSampleBase {
 	private HashMap<String, List<DCResource>> mapData = new HashMap<String, List<DCResource>>();;
 	
 	@Value("${datacoreApiServer.containerUrl}")
-	private String containerUrl;
+   private String containerUrlString;
+   //@Value("#{new java.net.URI('${datacoreApiClient.containerUrl}')}")
+   @Value("#{uriService.getContainerUrl()}")
+   private URI containerUrl;
 	
 	@Value("#{new Boolean('${datacoreApiServer.enableMarkaSampleDataInsertionAtStartup}')}")
 	private Boolean enableMarkaSampleDataInsertionAtStartup;
@@ -287,14 +291,6 @@ public class MarkaInvestData extends DatacoreSampleBase {
 
 	public HashMap<String, List<DCResource>> getData() {
 		return mapData;
-	}
-
-	public String getContainerUrl() {
-		return containerUrl;
-	}
-
-	public void setContainerUrl(String containerUrl) {
-		this.containerUrl = containerUrl;
 	}
 
 	public Boolean getEnableMarkaSampleDataInsertionAtStartup() {

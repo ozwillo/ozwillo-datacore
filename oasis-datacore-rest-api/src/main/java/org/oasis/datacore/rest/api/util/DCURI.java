@@ -23,6 +23,9 @@ public class DCURI {
 
    /** Container base URL ex. http://data.oasis-eu.org/ . Protocol is assumed to be HTTP
     * (if HTTPS, there must be a redirection) */
+   private URI containerUrl;
+   /** String version of container base URL ex. http://data.oasis-eu.org/ . Protocol is assumed to be HTTP
+    * (if HTTPS, there must be a redirection) */
    private String container;
    /** Base Model type ex. "city.sample.city".
     * Corresponds to a type of use and a data governance configuration.
@@ -37,8 +40,13 @@ public class DCURI {
    private boolean isExternalWebUri;
    private boolean isExternalUri;
 
+   /** encoded */
    private String cachedStringUri = null;
+   private String cachedUnencodedStringUri = null;
+   /** normalized */
    private URI cachedUri = null;
+   /** unencoded ; i.e. /dc/type/[type]/[id] to help working with Java URIs */
+   private String cachedPath = null;
    
    
    public DCURI() {
@@ -48,14 +56,30 @@ public class DCURI {
     * Creates a new URI (Datacore or external)
     * @param container must not be null
     * @param type null for (unknown) external Web URI 
-    * @param id
+    * @param id unencoded
     * @param isRelativeUri
     * @param isExternalDatacoreUri
     * @param isExternalWebUri
+    * @throws URISyntaxException 
     */
    public DCURI(String container, String type, String id,
+         boolean isRelativeUri, boolean isExternalDatacoreUri, boolean isExternalWebUri) throws URISyntaxException {
+      this(new URI(container), type, id, isRelativeUri, isExternalDatacoreUri, isExternalWebUri);
+   }
+   /**
+    * Creates a new URI (Datacore or external)
+    * @param container must not be null
+    * @param type null for (unknown) external Web URI 
+    * @param id unencoded
+    * @param isRelativeUri
+    * @param isExternalDatacoreUri
+    * @param isExternalWebUri
+    * @throws URISyntaxException 
+    */
+   public DCURI(URI containerUrl, String type, String id,
          boolean isRelativeUri, boolean isExternalDatacoreUri, boolean isExternalWebUri) {
-      this.container = container;
+      this.containerUrl = containerUrl;
+      this.container = containerUrl.toString();
       this.type = type;
       this.id = id;
       this.isRelativeUri = isRelativeUri;
@@ -67,42 +91,94 @@ public class DCURI {
     * Creates a new Datacore URI
     * @param container must not be null
     * @param type null for (unknown) external Web URI 
-    * @param id
+    * @param id unencoded
     * @param isRelativeUri
     * @param isExternalDatacoreUri
     * @param isExternalWebUri
+    * @throws URISyntaxException 
     */
-   public DCURI(String container, String type, String id) {
+   public DCURI(String container, String type, String id) throws URISyntaxException {
+      this(container, type, id, false, false, false);
+   }
+   /**
+    * Creates a new Datacore URI
+    * @param container must not be null
+    * @param type null for (unknown) external Web URI 
+    * @param id unencoded
+    * @param isRelativeUri
+    * @param isExternalDatacoreUri
+    * @param isExternalWebUri
+    * @throws URISyntaxException 
+    */
+   public DCURI(URI container, String type, String id) {
       this(container, type, id, false, false, false);
    }
 
+   /**
+    * 
+    * @return unencoded
+    */
+   public String getPath() {
+      if (cachedPath != null) {
+         return cachedPath;
+      }
+      StringBuilder pathSb = new StringBuilder();
+      if (type != null) {
+         pathSb.append(DatacoreApi.DC_TYPE_PATH); // NB. front slash because none in baseUrl
+         pathSb.append(type); // ex. "city.sample.city"
+         pathSb.append('/');
+      } else {
+         // external URI : type not known because not parsable
+         pathSb.append('/');
+      }
+      pathSb.append(id); // ex. "London", "Lyon"...
+      cachedPath = pathSb.toString();
+      return cachedPath;
+   }
+   /**
+    * cached ; encodes path (including id) using java.net.URI
+    * @return
+    * @throws URISyntaxException
+    */
    public URI toURI() throws URISyntaxException {
       if (cachedUri == null) {
-         cachedUri = new URI(toString());
+         cachedUri = new URI(containerUrl.getScheme(), null,
+            containerUrl.getHost(), containerUrl.getPort(), getPath(), null, null).normalize();
       }
       return cachedUri;
    }
    /**
+    * cached ; built on toURI()
     * @return [container]dc/type/[type]/id
+    * @throws IllegalArgumentException if bad URI syntax
     */
    @Override
    public String toString() {
       if (cachedStringUri != null) {
          return cachedStringUri;
       }
-      StringBuilder sb = new StringBuilder(/*"http://"*/);
-      sb.append(container); // ex. http://data.oasis-eu.org/
-      if (type != null) {
-         sb.append(DatacoreApi.DC_TYPE_PATH); // NB. no front slash because in baseUrl
-         sb.append('/');
-         sb.append(type); // ex. "city.sample.city"
-         sb.append('/');
-      } // else external URI : type not known because not parsable
-      sb.append(id); // ex. "London", "Lyon"...
-      cachedStringUri = sb.toString();
+      try {
+         cachedStringUri = toURI().toString();
+      } catch (URISyntaxException urisex) {
+         throw new IllegalArgumentException("Bad URI syntax ", urisex);
+      }
       return cachedStringUri;
    }
-   
+   /**
+    * cached
+    * @return
+    */
+   public String toUnencodedString() {
+      if (cachedUnencodedStringUri != null) {
+         return cachedUnencodedStringUri;
+      }
+      cachedUnencodedStringUri = container + getPath();  // NB. container is ex. http://data.oasis-eu.org
+      return cachedUnencodedStringUri;
+   }
+
+   public URI getContainerUrl() {
+      return containerUrl;
+   }
    public String getContainer() {
       return container;
    }

@@ -1,5 +1,6 @@
 package org.oasis.datacore.rest.server;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -79,7 +80,10 @@ public class ResourceModelTest {
    ///@Value("${datacoreApiClient.baseUrl}") 
    ///private String baseUrl; // useless
    @Value("${datacoreApiClient.containerUrl}") 
-   private String containerUrl;
+   private String containerUrlString;
+   @Value("#{new java.net.URI('${datacoreApiClient.containerUrl}')}")
+   //@Value("#{uriService.getContainerUrl()}")
+   private URI containerUrl;
 
    /** for testing purpose, including of security */
    @Autowired

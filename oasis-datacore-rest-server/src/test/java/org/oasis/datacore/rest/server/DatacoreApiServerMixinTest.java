@@ -1,5 +1,6 @@
 package org.oasis.datacore.rest.server;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,6 +11,7 @@ import javax.ws.rs.BadRequestException;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -81,7 +83,10 @@ public class DatacoreApiServerMixinTest {
    ///@Value("${datacoreApiClient.baseUrl}") 
    ///private String baseUrl; // useless
    @Value("${datacoreApiClient.containerUrl}") 
-   private String containerUrl;
+   private String containerUrlString;
+   @Value("#{new java.net.URI('${datacoreApiClient.containerUrl}')}")
+   //@Value("#{uriService.getContainerUrl()}")
+   private URI containerUrl;
 
    /** for testing purpose, including of security */
    @Autowired
@@ -101,6 +106,12 @@ public class DatacoreApiServerMixinTest {
    
 
 
+   @Before
+   public void cleanDataAndCache() {
+      ignCityhallSample.cleanDataOfCreatedModels(); // (was already called but this first cleans up data)
+      altTourismPlaceAddressSample.cleanDataOfCreatedModels(); // (was already called but this first cleans up data)
+      datacoreApiClient.getCache().clear(); // to avoid side effects
+   }
    /**
     * Cleans up data of all Models
     */

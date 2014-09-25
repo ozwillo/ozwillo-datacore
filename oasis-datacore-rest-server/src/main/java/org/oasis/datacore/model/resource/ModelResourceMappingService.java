@@ -1,5 +1,6 @@
 package org.oasis.datacore.model.resource;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -35,8 +36,11 @@ public class ModelResourceMappingService {
    ///private String baseUrl; // useless
    /////@Value("${datacoreApiClient.containerUrl}") // DOESN'T WORK 
    @Value("${datacoreApiServer.containerUrl}")
-   private String containerUrl = "";
-
+   private String containerUrlString = "";
+   //@Value("#{new java.net.URI('{datacoreApiServer.containerUrl)}')}")
+   @Value("#{uriService.getContainerUrl()}")
+   private URI containerUrl = null;
+   
    @Autowired
    private DataModelServiceImpl dataModelService;
    @Autowired
@@ -63,7 +67,7 @@ public class ModelResourceMappingService {
    
    /** public for tests */
    public String buildFieldUriPrefix(DCURI dcUri) {
-      return new DCURI(dcUri.getContainer(), "dcmf:field_0",
+      return new DCURI(dcUri.getContainerUrl(), "dcmf:field_0",
             dcUri.getType() + '/' + dcUri.getId()).toString();
    }
    

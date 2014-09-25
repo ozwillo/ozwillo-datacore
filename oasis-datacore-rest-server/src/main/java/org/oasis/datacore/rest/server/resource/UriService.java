@@ -1,14 +1,18 @@
 package org.oasis.datacore.rest.server.resource;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
 import org.oasis.datacore.rest.api.util.DCURI;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.server.BadUriException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -19,27 +23,47 @@ import org.springframework.util.StringUtils;
  * @author mdutoo
  *
  */
-@Component
+@Component("uriService")
 public class UriService {
    
+   private final Logger logger = LoggerFactory.getLogger(getClass());
+         
    /** Base URL of this endpoint. If broker mode enabled, used to detect when to use it.. */
    @Value("${datacoreApiServer.baseUrl}") 
    private String baseUrl; // "http://" + "data-lyon-1.oasis-eu.org" + "/"
    /** Unique per container, defines it. To be able to build a full uri
     * (for GET, DELETE, possibly to build missing or custom / relative URI...) */
    @Value("${datacoreApiServer.containerUrl}")
-   private String containerUrl; // "http://" + "data.oasis-eu.org" + "/"
+   private String containerUrlString; // "http://" + "data.oasis-eu.org"
+   private URI containerUrl; // "http://" + "data.oasis-eu.org"
    /** Known (others or all) Datacore containers (comma-separated) */
    @Value("${datacoreApiServer.knownDatacoreContainerUrls}")
    private String knownDatacoreContainerUrls;
    /** Known (others or all) Datacore containers */
    //@Value("#{datacoreApiServer.knownDatacoreContainerUrlSet}") // NO looks up in datacoreApiServer object
-   private Set<String> knownDatacoreContainerUrlSet = null;
+   private Set<String> knownDatacoreContainerUrlStringSet = null;
+   private Set<URI> knownDatacoreContainerUrlSet = null;
 
 
    @PostConstruct
-   public void init() {
-      knownDatacoreContainerUrlSet = StringUtils.commaDelimitedListToSet(knownDatacoreContainerUrls);
+   public void init() throws URISyntaxException {
+      knownDatacoreContainerUrlStringSet = StringUtils.commaDelimitedListToSet(knownDatacoreContainerUrls);
+      knownDatacoreContainerUrlSet = (Set<URI>) knownDatacoreContainerUrlStringSet.stream()
+            .map(stringUrl -> {
+               try {
+                  return new URI(stringUrl);
+               } catch (URISyntaxException urisex) {
+                  logger.error("a knownDatacoreContainerUrl has bad URI syntax, skipping", urisex);
+                  return null;
+               }
+            }).filter(url -> url != null).collect(Collectors.toSet());
+      
+      try {
+         containerUrl = new URI(containerUrlString);
+      } catch (URISyntaxException urisex) {
+         logger.error("FATAL ERROR containerUrl has bad URI syntax, can't work !", urisex);
+         throw urisex;
+      }
    }
    
    
@@ -47,7 +71,11 @@ public class UriService {
       return baseUrl;
    }
 
-   public String getContainerUrl() {
+   public String getContainerUrlString() {
+      return containerUrlString;
+   }
+
+   public URI getContainerUrl() {
       return containerUrl;
    }
 
@@ -59,7 +87,7 @@ public class UriService {
     * @return
     */
    public String buildUri(String modelType, String id) {
-      return new DCURI(this.containerUrl, modelType, id).toString();
+      return UriHelper.buildUri(containerUrl, modelType, id);
    }
 
    /**
@@ -94,17 +122,20 @@ public class UriService {
          throw new BadUriException();
       }
       String[] containerAndPathWithoutSlash;
+      String urlContainerString;
+      URI urlContainer = null;
       try {
          containerAndPathWithoutSlash = UriHelper.getUriNormalizedContainerAndPathWithoutSlash(
-            stringUri, this.containerUrl, normalizeUrlMode, matchBaseUrlMode);
+            stringUri, this.containerUrlString, normalizeUrlMode, matchBaseUrlMode);
+         urlContainerString = containerAndPathWithoutSlash[0];
+         urlContainer = new URI((urlContainerString != null) ? urlContainerString : "");
       } catch (URISyntaxException usex) {
-         throw new BadUriException("Bad URI syntax", stringUri, usex);
+         throw new BadUriException("Bad URI syntax: " + usex.getMessage(), stringUri, usex);
       } catch (MalformedURLException muex) {
-         throw new BadUriException("Malformed URL", stringUri, muex);
+         throw new BadUriException("Malformed URL: " + muex.getMessage(), stringUri, muex);
       }
-      String urlContainer = containerAndPathWithoutSlash[0];
       
-      boolean isRelativeUri = urlContainer == null;
+      boolean isRelativeUri = !urlContainer.isAbsolute();
       boolean isExternalDatacoreUri = false;
       ///boolean isExternalWebUri = false;
       if (isRelativeUri) {

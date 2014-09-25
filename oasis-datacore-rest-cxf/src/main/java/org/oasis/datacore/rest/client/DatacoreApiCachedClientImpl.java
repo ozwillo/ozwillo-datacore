@@ -1,6 +1,7 @@
 package org.oasis.datacore.rest.client;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 
@@ -60,7 +61,10 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
    ///@Value("${datacoreApiClient.baseUrl}")
    ///private String baseUrl; // useless
    @Value("${datacoreApiClient.containerUrl}") //:http://data-test.oasis-eu.org/
-   private String containerUrl;
+   private String containerUrlString;
+   @Value("#{new java.net.URI('${datacoreApiClient.containerUrl}')}")
+   //@Value("#{uriService.getContainerUrl()}")
+   private URI containerUrl;
 
    /**
     * TODO in helper
@@ -158,7 +162,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
          // init id to make it easier to reuse POSTed & returned resources :
          // TODO rather make id transient ? or auto set id on unmarshall ??
          try { 
-            id = UriHelper.parseUri(resource.getUri(), this.containerUrl).getId();
+            id = UriHelper.parseUri(resource.getUri(), this.containerUrlString).getId();
          } catch (MalformedURLException | URISyntaxException e) {
             throw new ClientException("Bad Resource URI " + resource.getUri(), e);
          }
@@ -209,7 +213,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
    @Override
    public DCResource getData(final DCResource resource) throws ClientException {
       try { 
-         final DCURI dcUri = UriHelper.parseUri(resource.getUri(), this.containerUrl);
+         final DCURI dcUri = UriHelper.parseUri(resource.getUri(), this.containerUrlString);
          return new AbstractCachedGetDataPerformer() {
             @Override
             public DCResource doGetData() {
@@ -318,7 +322,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
          // init id to make it easier to reuse POSTed & returned resources :
          // TODO rather make id transient ? or auto set id on unmarshall ??
          try { 
-            id = UriHelper.parseUri(resource.getUri(), this.containerUrl).getId();
+            id = UriHelper.parseUri(resource.getUri(), this.containerUrlString).getId();
          } catch (MalformedURLException | URISyntaxException e) {
             throw new ClientException("Bad Resource URI " + resource.getUri(), e);
          }

@@ -20,7 +20,6 @@ import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.server.resource.ResourceNotFoundException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import au.com.bytecode.opencsv.CSVReader;
@@ -44,13 +43,6 @@ import au.com.bytecode.opencsv.CSVReader;
  */
 @Component
 public class OpenElecSample extends DatacoreSampleMethodologyBase {
-   
-   /** to be able to build a full uri, to avoid using ResourceService */
-   ///@Value("${datacoreApiClient.baseUrl}") 
-   ///private String baseUrl; // useless
-   /////@Value("${datacoreApiClient.containerUrl}") // DOESN'T WORK 
-   @Value("${datacoreApiServer.containerUrl}")
-   private String containerUrl;
    
 
    @Override

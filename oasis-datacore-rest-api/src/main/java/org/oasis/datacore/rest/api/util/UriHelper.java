@@ -1,9 +1,12 @@
 package org.oasis.datacore.rest.api.util;
 
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
+import java.net.URLDecoder;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,6 +21,8 @@ import org.oasis.datacore.rest.api.DatacoreApi;
  */
 public class UriHelper {
 
+   /** used to split id in order to encode its path elements if it's not disabled */
+   public static final String URL_PATH_SEPARATOR = "/";
    public static final String URL_SAFE_CHARACTERS_REGEX = "0-9a-zA-Z\\$\\-_\\.\\+!\\*'\\(\\)";
    /** IRI rule, other characters must be encoded. NB. : are required for ex. prefixed field names */
    public static final String NOT_URL_SAFE_PATH_SEGMENT_OR_SLASH_CHARACTERS_REGEX = "[^"
@@ -25,37 +30,89 @@ public class UriHelper {
    /** model name & type best practice rule, other characters are forbidden */
    public static final String NOT_URL_ALWAYS_SAFE_OR_COLON_CHARACTERS_REGEX =
          "[^0-9a-zA-Z\\$\\-_\\.\\(\\)\\:]"; // not reserved +!*, not '
-   
-   public static int typeIndexInType = DatacoreApi.DC_TYPE_PATH.length() + 1; // TODO use Pattern & DC_TYPE_PATH
-   
+
+   /** type index in dc/type */
+   public static final int typeIndexInType = DatacoreApi.DC_TYPE_PATH.length() -1; // TODO use Pattern & DC_TYPE_PATH
+
    /** to detect whether relative (rather than absolute) uri
     groups are delimited by () see http://stackoverflow.com/questions/6865377/java-regex-capture-group
     URI scheme : see http://stackoverflow.com/questions/3641722/valid-characters-for-uri-schemes */
-   private static final Pattern anyBaseUrlPattern = Pattern.compile("^([a-zA-Z][a-zA-Z0-9\\.\\-\\+]*)://[^/]+/"); // TODO or "^http[s]?://data\\.oasis-eu\\.org/" ?
+   private static final Pattern anyBaseUrlPattern = Pattern.compile("^([a-zA-Z][a-zA-Z0-9\\.\\-\\+]*)://[^/]+"); // TODO or "^http[s]?://data\\.oasis-eu\\.org/" ?
    private static final Pattern multiSlashPattern = Pattern.compile("/+");
+   private static final Pattern frontSlashesPattern = Pattern.compile("^/*");
    private static final Pattern notUrlAlwaysSafeCharactersPattern = Pattern.compile(NOT_URL_ALWAYS_SAFE_OR_COLON_CHARACTERS_REGEX);
    private static final Pattern notIriSafeCharactersPattern = Pattern.compile(NOT_URL_SAFE_PATH_SEGMENT_OR_SLASH_CHARACTERS_REGEX);
    
+   @SuppressWarnings("serial")
+   private static Set<String> allowedProtocolSet = new HashSet<String>() {{
+      add("http");
+      add("https");
+   }};
 
+   /**
+    * @deprecated rather pass a java.net.URI containerUrl
+    * Only for client, not used by server. Does new DCURI(...).toString()
+    * and also checks syntax & normalizes URL.
+    * @param containerUrl ex. http://data.oasis-eu.org/dc/type
+    * @param modelType must not contain URL_ALWAYS_SAFE_CHARACTERS (best practice)
+    * @param id (NB. unencoded, characters outside URL_SAFE_PATH_SEGMENT_CHARACTERS will be encoded)
+    * @return
+    * @throws URISyntaxException 
+    * @throws IllegalArgumentException if bad URI or bad practice modelType
+    */
+   public static String buildUri(String containerUrl, String modelType, String id) throws URISyntaxException {
+      return UriHelper.buildUri(new URI(containerUrl), modelType, id, false);
+   }
    /**
     * Only for client, not used by server. Does new DCURI(...).toString()
     * and also checks syntax & normalizes URL.
     * @param containerUrl ex. http://data.oasis-eu.org/dc/type
     * @param modelType must not contain URL_ALWAYS_SAFE_CHARACTERS (best practice)
-    * @param iri (NB. characters outside URL_SAFE_PATH_SEGMENT_CHARACTERS will be encoded)
+    * @param id (NB. unencoded, characters outside URL_SAFE_PATH_SEGMENT_CHARACTERS will be encoded)
     * @return
+    * @throws URISyntaxException 
     * @throws IllegalArgumentException if bad URI or bad practice modelType
     */
-   public static String buildUri(String containerUrl, String modelType, String iri) {
+   public static String buildUri(URI containerUrl, String modelType, String id) {
+      return UriHelper.buildUri(containerUrl, modelType, id, false);
+   }
+   /**
+    * Only for client, not used by server. Does new DCURI(...).toString()
+    * and also checks syntax & normalizes URL.
+    * @param containerUrl ex. http://data.oasis-eu.org/dc/type
+    * @param modelType must not contain URL_ALWAYS_SAFE_CHARACTERS (best practice)
+    * @param id (NB. unencoded, characters outside URL_SAFE_PATH_SEGMENT_CHARACTERS will be encoded,
+    * save if dontEncodePathElements
+    * @param dontEncodePathElements
+    * @return
+    * @throws URISyntaxException 
+    * @throws IllegalArgumentException if bad URI or bad practice modelType
+    */
+   public static String buildUri(URI containerUrl, String modelType, String id, boolean dontEncodePathElements) {
+      // TODO checkContainerUrl(containerUrl);
       checkModelType(modelType);
-      String uri = new DCURI(containerUrl, modelType, iri, false, false, false).toString();
-      try {
-         // cannonicalize
-         // TODO reuse getUriNormalizedContainerAndPathWithoutSlash's code...
-         return new URL(uri).toURI().normalize().toString();
-      } catch (MalformedURLException | URISyntaxException e) {
-         throw new IllegalArgumentException("Bad URL : " + uri, e);
+      DCURI dcUri = new DCURI(containerUrl, modelType, id, false, false, false);
+      if (dontEncodePathElements) {
+         return dcUri.toUnencodedString();
       }
+      /*if (!dontEncodePathElements) {
+         try {
+            id = slashPattern.splitAsStream(id).map(pathElt -> URLEncoder.encode(pathElt, "UTF-8"))
+                  .collect(Collectors.joining(URL_PATH_SEPARATOR));
+         } c   atch (UnsupportedEncodingException e) {
+            // never happens for UTF-8
+         }
+      }*/
+      /*try {
+         // encode & cannonicalize
+         // TODO reuse getUriNormalizedContainerAndPathWithoutSlash's code...
+         ///return new URL(uri).toURI().normalize().toString();
+         return new URI(containerUrl.getScheme(), null, containerUrl.getHost(), containerUrl.getPort(),
+               dcUri.getPath(), null, null).normalize().toString(); // NB. toURL() would only check if absolute
+      } catch (URISyntaxException e) {
+         throw new IllegalArgumentException("Bad URL : " + dcUri.toString(), e);
+      }*/
+      return dcUri.toString();
    }
    
    /**
@@ -80,10 +137,12 @@ public class UriHelper {
    }
 
    /**
+    * TODO replace by merely using URI to parse !
+    * LATER optimize with containerUrl cache...
     * Adapts the given URI (URL) to the given container.
     * In given (endpoint URL) URI, replaces container URL part by the given one.
-    * @param endpointUri ex. http://localhost:8080/dc/type/city.sample.country/France
-    * @param containerUrl must have ending slash
+    * @param endpointUri encoded ex. http://localhost:8080/dc/type/city.sample.country/France
+    * @param containerUrl must NOT have ending slash ; encoded
     * @return ex.http://data.oasis-eu.org/dc/type/city.sample.country/France
     * @throws URISyntaxException 
     * @throws MalformedURLException 
@@ -93,13 +152,15 @@ public class UriHelper {
       String[] containerAndPathWithoutSlash = getUriNormalizedContainerAndPathWithoutSlash(
             endpointUri, containerUrl, true, true);
       String urlPathWithoutSlash = containerAndPathWithoutSlash[1];
-      return containerUrl + urlPathWithoutSlash;
+      return containerUrl + URL_PATH_SEPARATOR + urlPathWithoutSlash;
    }
    
    /**
+    * TODO replace by merely using URI to parse !
+    * LATER optimize with containerUrl cache...
     * Parses any URI, even external
-    * @param uri
-    * @param containerUrl used only for relative URIs, which require it
+    * @param uri encoded
+    * @param containerUrl used only for relative URIs, which require it ; encoded
     * @return
     * @throws MalformedURLException
     * @throws URISyntaxException
@@ -109,7 +170,7 @@ public class UriHelper {
             uri, null, true, false);
       String urlContainer = containerAndPathWithoutSlash[0];
 
-      boolean isRelativeUri = urlContainer == null;
+      boolean isRelativeUri = urlContainer == null || urlContainer.isEmpty();
       ///boolean isExternalDatacoreUri = false;
       ///boolean isExternalWebUri = false;
       if (isRelativeUri) {
@@ -127,7 +188,14 @@ public class UriHelper {
          // doesn't know how to parse modelType out of containerAndPathWithoutSlash
          // TODO LATER knownWebContainerUrlSet allowing such parsing & auth schemes
          // therefore return :
-         return new DCURI(urlContainer, null, containerAndPathWithoutSlash[1], false, false, true);
+         String externalId = containerAndPathWithoutSlash[1];
+         try {
+            // decoding path remainder :
+            externalId = URLDecoder.decode(externalId, "UTF-8");
+         } catch (UnsupportedEncodingException e) {
+            // never happens for UTF-8
+         }
+         return new DCURI(urlContainer, null, externalId, false, false, true);
       }
       
       String[] iri = parseIri(containerAndPathWithoutSlash[1]);
@@ -135,6 +203,10 @@ public class UriHelper {
    }
    /**
     * Parses any URI, even external ; shortcut to parseUri(uri, null).
+    * @param uri encoded
+    * @return
+    * @throws MalformedURLException
+    * @throws URISyntaxException
     */
    public static DCURI parseUri(String uri) throws MalformedURLException, URISyntaxException {
       return parseUri(uri, null);
@@ -142,8 +214,8 @@ public class UriHelper {
    
    /**
     * To be called after a previous getUriNormalizedContainerAndPathWithoutSlash
-    * to complete URI parsing.
-    * @param urlPathWithoutSlash iri to parse (NB. characters outside
+    * to complete URI parsing. Does URL decode.
+    * @param urlPathWithoutSlash (encoded) iri to parse (NB. characters outside
     * URL_SAFE_PATH_SEGMENT_CHARACTERS will be decoded)
     * @return an array with modelType and (decoded) id
     * @throws IllegalArgumentException if bad practice modelType (contains characters
@@ -155,18 +227,33 @@ public class UriHelper {
          return new String[] { null, urlPathWithoutSlash };
       }
       String modelType = urlPathWithoutSlash.substring(typeIndexInType, idSlashIndex);
+      try {
+         // decoding path element :
+         modelType = URLDecoder.decode(modelType, "UTF-8");
+      } catch (UnsupportedEncodingException e) {
+         // never happens for UTF-8
+      }
       checkModelType(modelType);
       String id = urlPathWithoutSlash.substring(idSlashIndex + 1); // TODO useful ??
+      try {
+         // decoding path remainder :
+         id = URLDecoder.decode(id, "UTF-8");
+      } catch (UnsupportedEncodingException e) {
+         // never happens for UTF-8
+      }
       return new String[] { modelType, id };
    }
    
    /**
+    * TODO replace by merely using URI to parse !
+    * LATER optimize with containerUrl cache...
     * If normalizeUrlMode, checks it is an URI and if absolute checks it is an URL
     * with http or https protocol
     * Else if matchBaseUrlMode, uses pattern matching to split and normalize if
     * absolute checks it has an http or https protocol
-    * Else merely splits at the given containerUrl's length
-    * @param stringUriValue absolute ex. http://data.oasis-eu.org/dc//type/sample.marka.field//1
+    * Else merely splits at the given containerUrl's length.
+    * Does not URL decode.
+    * @param stringUriValue (encoded) absolute ex. http://data.oasis-eu.org/dc//type/sample.marka.field//1
     * or relative (then uses provided containerUrl) ex. type//sample.marka.field///1
     * @param containerUrl used only for default mode or if given URI is relative,
     * not used to check absolute URL
@@ -185,22 +272,23 @@ public class UriHelper {
 
       if (normalizeUrlMode) {
          // NB. Datacore URIs should ALSO be URLs
-         URI uriValue = new URI(stringUriValue).normalize(); // from ex. http://localhost:8180//dc/type//country/UK
-         urlPathWithoutSlash = uriValue.getPath();
-         if (urlPathWithoutSlash == null) {
-            urlPathWithoutSlash = ""; // TODO constant
-         }
-         if (urlPathWithoutSlash.length() != 0 && urlPathWithoutSlash.charAt(0) == '/') {
-            urlPathWithoutSlash = urlPathWithoutSlash.substring(1); // ex. dc/type/country/UK
-         }
+         URI uriValue = new URI(stringUriValue).normalize(); // unencodes ; from ex. http://localhost:8180//dc/type//country/UK
          if (uriValue.isAbsolute()) {
-            URL urlValue = uriValue.toURL(); // also checks protocol
+            /*URL urlValue = uriValue.toURL(); // also checks protocol
             if (!isHttpOrS(urlValue.getProtocol())) {
                throw new MalformedURLException("Datacore URIs should be HTTP(S)");
+            }*/
+            if (!allowedProtocolSet.contains(uriValue.getScheme())) {
+               throw new MalformedURLException("Datacore URIs should be HTTP(S) but is " + uriValue.getScheme());
             }
-            stringUriValue = urlValue.toString(); // ex. http://localhost:8180/dc/type/country/UK
-            uriBaseUrl = stringUriValue.substring(0, stringUriValue.length()
-                  - urlPathWithoutSlash.length()); // includes end slash
+         }
+         uriBaseUrl = new URI(uriValue.getScheme(), null, uriValue.getHost(), uriValue.getPort(),
+               null, null, null).toString(); // rather than substring, because stringUriValue
+         urlPathWithoutSlash = uriValue.toString().substring(uriBaseUrl.length());
+         // and not as follows else would already be decoded :
+         //urlPathWithoutSlash = uriValue.getPath(); // NB. unencoded !!
+         if (urlPathWithoutSlash.length() != 0 && urlPathWithoutSlash.charAt(0) == '/') {
+            urlPathWithoutSlash = urlPathWithoutSlash.substring(1); // ex. dc/type/country/UK
          }
          
          // else no parsed uriBaseUrl (so possibly no leading slash)
@@ -219,6 +307,7 @@ public class UriHelper {
                }
             }*/
             urlPathWithoutSlash = multiSlashPattern.matcher(stringUriValue).replaceAll("/"); // ex. dc/type/sample.marka.field/1
+            urlPathWithoutSlash = frontSlashesPattern.matcher(urlPathWithoutSlash).replaceAll("");
             // no parsed uriBaseUrl
             //uriBaseUrl = containerUrl; // DON'T set default, let caller decide (ex. rather baseUrl)
             
@@ -238,6 +327,7 @@ public class UriHelper {
             
             // replacing multi slash (i.e. normalizing)
             urlPathWithoutSlash = multiSlashPattern.matcher(urlPathWithoutSlash).replaceAll("/"); // ex. dc/type/sample.marka.field/1
+            urlPathWithoutSlash = frontSlashesPattern.matcher(urlPathWithoutSlash).replaceAll("");
          }
          
       } else {

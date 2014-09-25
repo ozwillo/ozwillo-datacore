@@ -1,5 +1,6 @@
 package org.oasis.datacore.rest.server;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +34,10 @@ public class HTTPOperationsTest {
 	protected DatacoreCachedClient api;
 
 	@Value("${datacoreApiClient.containerUrl}")
-	private String containerUrl;
+   private String containerUrlString;
+   @Value("#{new java.net.URI('${datacoreApiClient.containerUrl}')}")
+   //@Value("#{uriService.getContainerUrl()}")
+   private URI containerUrl;
 
 	@Autowired
 	private DataModelServiceImpl modelAdminService;

@@ -1,5 +1,6 @@
 package org.oasis.datacore.sample;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,7 +27,10 @@ public class BrandCarMotorcycleData extends DatacoreSampleBase {
 	private HashMap<String, List<DCResource>> mapData = new HashMap<String, List<DCResource>>();
 	
 	@Value("${datacoreApiServer.containerUrl}")
-	private String containerUrl;
+   private String containerUrlString;
+   //@Value("#{new java.net.URI('${datacoreApiClient.containerUrl}')}")
+   @Value("#{uriService.getContainerUrl()}")
+   private URI containerUrl;
 	
 	@Value("#{new Boolean('${datacoreApiServer.enableBrandSampleDataInsertionAtStartup}')}")
 	private Boolean enableBrandSampleDataInsertionAtStartup;
@@ -62,24 +66,24 @@ public class BrandCarMotorcycleData extends DatacoreSampleBase {
 		}
 	}
 
-	private DCResource buildBrand(String containerUrl, String name) {
-		DCResource brand = UnitTestHelper.buildResource(containerUrl, BrandCarMotorcycleModel.BRAND_MODEL_NAME, name);
+	private DCResource buildBrand(URI containerUrl, String name) {
+		DCResource brand = DCResource.create(containerUrl, BrandCarMotorcycleModel.BRAND_MODEL_NAME, name);
 		brand.setProperty("name", name);
 		return brand;
 	}
 
-	private DCResource buildCar(String containerUrl, DCResource brand, String model, int year) {
+	private DCResource buildCar(URI containerUrl, DCResource brand, String model, int year) {
 		String iri = UnitTestHelper.arrayToIri((String)brand.getProperties().get("name"), model, String.valueOf(year));
-		DCResource car = UnitTestHelper.buildResource(containerUrl, BrandCarMotorcycleModel.CAR_MODEL_NAME, iri);
+		DCResource car = DCResource.create(containerUrl, BrandCarMotorcycleModel.CAR_MODEL_NAME, iri);
 		car.setProperty("brand", brand.getUri());
 		car.setProperty("model", model);
 		car.setProperty("year", year);
 		return car;
 	}
 	
-	private DCResource buildMotorcycle(String containerUrl, DCResource brand, String model, int year, int hp) {
+	private DCResource buildMotorcycle(URI containerUrl, DCResource brand, String model, int year, int hp) {
 		String iri = UnitTestHelper.arrayToIri((String)brand.getProperties().get("name"), model, String.valueOf(year), String.valueOf(hp));
-		DCResource motorcycle = UnitTestHelper.buildResource(containerUrl, BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, iri);
+		DCResource motorcycle = DCResource.create(containerUrl, BrandCarMotorcycleModel.MOTORCYCLE_MODEL_NAME, iri);
 		motorcycle.setProperty("brand", brand.getUri());
 		motorcycle.setProperty("model", model);
 		motorcycle.setProperty("year", year);

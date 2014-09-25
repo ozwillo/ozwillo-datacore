@@ -1,5 +1,6 @@
 package org.oasis.datacore.sample;
 
+import java.net.URI;
 import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
@@ -31,7 +32,10 @@ public abstract class DatacoreSampleMethodologyBase extends DatacoreSampleBase {
    ///private String baseUrl; // useless
    /////@Value("${datacoreApiClient.containerUrl}") // DOESN'T WORK 
    @Value("${datacoreApiServer.containerUrl}")
-   private String containerUrl;
+   protected String containerUrlString;
+   //@Value("#{new java.net.URI('${datacoreApiClient.containerUrl}')}")
+   @Value("#{uriService.getContainerUrl()}")
+   protected URI containerUrl;
 
    @Override
    protected void buildModels(List<DCModelBase> models) {

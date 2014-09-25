@@ -118,7 +118,7 @@ import com.wordnik.swagger.annotations.ApiResponses;
 public interface DatacoreApi {
    
    public String QUERY_PARAMETERS = "#queryParameters";
-   public String DC_TYPE_PATH = "dc/type"; // TODO better from JAXRS annotations using reflection ?
+   public String DC_TYPE_PATH = "/dc/type/"; // TODO better from JAXRS annotations using reflection ?
 
    public String NATIVE_QUERY_COMMON_DOC = "'operator' (if any, else defaults to '=') can be in "
          + "logical, XML (most), MongoDB (all) or sometimes Java-like form, "

@@ -1,6 +1,7 @@
 package org.oasis.datacore.rest.server;
 
 import java.io.ByteArrayInputStream;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +71,10 @@ public class DatacoreApiServerJsonLdTest {
    ///@Value("${datacoreApiClient.baseUrl}") 
    ///private String baseUrl; // useless
    @Value("${datacoreApiClient.containerUrl}") 
-   private String containerUrl;
+   private String containerUrlString;
+   @Value("#{new java.net.URI('${datacoreApiClient.containerUrl}')}")
+   //@Value("#{uriService.getContainerUrl()}")
+   private URI containerUrl;
 
    /** for testing purpose */
    @Autowired

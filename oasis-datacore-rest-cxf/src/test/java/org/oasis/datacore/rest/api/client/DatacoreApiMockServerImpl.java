@@ -1,5 +1,6 @@
 package org.oasis.datacore.rest.api.client;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,7 +35,10 @@ public class DatacoreApiMockServerImpl extends JaxrsServerBase implements Dataco
    ///@Value("${datacoreApiClient.baseUrl}") 
    ///private String baseUrl; // useless
    @Value("${datacoreApiClient.containerUrl}") 
-   private String containerUrl;
+   private String containerUrlString;
+   @Value("#{new java.net.URI('${datacoreApiClient.containerUrl}')}")
+   //@Value("#{uriService.getContainerUrl()}")
+   private URI containerUrl;
    
    /** to be able to follow version for cache etc. tests */
    private long franceBordeauxCityVersion;

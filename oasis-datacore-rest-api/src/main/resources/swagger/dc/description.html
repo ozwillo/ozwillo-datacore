@@ -140,11 +140,11 @@ among available model types and $iri is the resource's Internal Resource Identif
 and if possible readable and representative of the resource.
 <br/><br/>
 &nbsp;&nbsp;- URIs must be <a href="http://perishablepress.com/stop-using-unsafe-characters-in-urls/">
-valid URLs</a> i.e. non safe characters (beyond <span class="dcjsonline">[0-9a-zA-Z]$-_.+!*'()</span>
+valid URLs</a> meaning that all non safe characters (beyond <span class="dcjsonline">[0-9a-zA-Z]$-_.+!*'()</span>
 including reserved characters <span class="dcjsonline">$&+,/:;=?@</span>
 <a href="http://blog.lunatech.com/2009/02/03/what-every-web-developer-must-know-about-url-encoding">
 outside of their purpose</a> such as '?' within <span class="dcjsonline">$type</span>)
-must be encoded, and it's bad practice for model names to contain some.<br/><br/>
+must be URL-encoded, and it's bad practice for model names to contain some.<br/><br/>
 &nbsp;&nbsp;- URIs of embedded Resources (as sub Resource within another top level Resource)
 are by default <span class="dcjsonline">$containerUrl/dc/type/$subResourceType/$resourceIri/$subResourceJsonPath</span>,
 but can be something else if parsing is defined consistently within $subResourceType.

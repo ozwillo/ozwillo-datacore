@@ -1,12 +1,8 @@
 package org.oasis.datacore.rest.api.util;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.ws.rs.WebApplicationException;
 
 import org.apache.commons.lang.StringUtils;
-import org.oasis.datacore.rest.api.DCResource;
 
 /**
  * Methods helping writing unit tests
@@ -15,15 +11,6 @@ import org.oasis.datacore.rest.api.DCResource;
  */
 
 public class UnitTestHelper {
-
-	public static DCResource buildResource(String containerUrl, String modelType, String iri) {
-		DCResource resource = new DCResource();
-		List<String> types = new ArrayList<String>();
-		types.add(modelType);
-		resource.setUri(UriHelper.buildUri(containerUrl, modelType, iri));
-		resource.setTypes(types);
-		return resource;
-	}
 	
 	public static String arrayToIri(String... array) {
 		String iri = "";

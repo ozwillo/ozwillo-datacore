@@ -42,7 +42,7 @@ public class ArrayServerInInterceptor extends AbstractPhaseInterceptor<Message> 
          + "requestIsJsonArray";
    
    private static final Pattern SLASH_DC_TYPE_PATTERN = Pattern.compile(
-         "/+" + DatacoreApi.DC_TYPE_PATH.replaceAll("/", "/+")); // "/?dc/+type"
+         "/*" + DatacoreApi.DC_TYPE_PATH.substring(1).replaceAll("/", "/+")); // "/?dc/+type"
    
    /** Used to peek in JSON stream to know whether root is an array or not.
     * NB. can't be autowired because may be used for mocks (and not only actual server impl) */

@@ -62,7 +62,7 @@ public class DatacoreApiCXFClientTest {
             resource != datacoreApiClient.getData("city", "UK/London"));
       Assert.assertNotNull(resource.getVersion());
       long version = resource.getVersion();
-      Assert.assertEquals(this.containerUrl + "dc/type/city/UK/London", resource.getUri());
+      Assert.assertEquals(this.containerUrl + "/dc/type/city/UK/London", resource.getUri());
       /*Assert.assertEquals("city", resource.getProperties().get("type"));
       Assert.assertEquals("UK/London", resource.getProperties().get("iri"));*/
       Assert.assertEquals("London", resource.getProperties().get("name"));
@@ -70,7 +70,7 @@ public class DatacoreApiCXFClientTest {
       Assert.assertTrue(inCountryFound instanceof Map<?,?>);
       @SuppressWarnings("unchecked")
       Map<String,Object> inCountry = (Map<String,Object>) inCountryFound;
-      Assert.assertEquals(this.containerUrl + "dc/type/country/UK", inCountry.get("@id"));
+      Assert.assertEquals(this.containerUrl + "/dc/type/country/UK", inCountry.get("@id"));
       Assert.assertEquals("UK", inCountry.get("name"));
       DCResource postedResource = datacoreApiClient.postDataInType(resource, "city");
       Assert.assertNotNull(postedResource);

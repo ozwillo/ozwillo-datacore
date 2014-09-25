@@ -1,5 +1,6 @@
 package org.oasis.datacore.rest.server;
 
+import java.net.URI;
 import java.util.List;
 
 import org.junit.After;
@@ -68,8 +69,11 @@ public class CityPlanningAndEconomicalActivityTest {
     * TODO rather client-side DCURI or rewrite uri in server */
    ///@Value("${datacoreApiClient.baseUrl}") 
    ///private String baseUrl; // useless
-   @Value("${datacoreApiClient.containerUrl}") 
-   private String containerUrl;
+   @Value("${datacoreApiClient.containerUrl}")
+   private String containerUrlString;
+   @Value("#{new java.net.URI('${datacoreApiClient.containerUrl}')}")
+   //@Value("#{uriService.getContainerUrl()}")
+   private URI containerUrl;
 
    /** for testing purpose, including of security */
    @Autowired
