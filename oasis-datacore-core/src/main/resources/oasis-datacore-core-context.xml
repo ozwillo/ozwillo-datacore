@@ -6,11 +6,11 @@
       xmlns:mongo="http://www.springframework.org/schema/data/mongo"
       xsi:schemaLocation=
       "http://www.springframework.org/schema/beans
-      http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+      http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
       http://www.springframework.org/schema/context
-      http://www.springframework.org/schema/context/spring-context-3.1.xsd
+      http://www.springframework.org/schema/context/spring-context-3.2.xsd
       http://www.springframework.org/schema/data/mongo
-      http://www.springframework.org/schema/data/mongo/spring-mongo-1.2.xsd">
+      http://www.springframework.org/schema/data/mongo/spring-mongo-1.5.xsd">
 
    <!-- default properties
    Lowest order takes precedence, here -1 to allow ex. to be overriden by test at -2. -->
@@ -23,7 +23,6 @@
 
 
    <!-- Default mongo bean name is 'mongo'
-   TODO externalize conf, change it in tests & prod
    NB. most of the mongo conf is done on client side !
    NB. no socket timeout because would NOT stop the query on the mongo server see #23 -->
    <mongo:mongo id="mongo" host="${oasis.datacore.mongodb.host}" port="${oasis.datacore.mongodb.port}">
@@ -46,7 +45,7 @@
             slave-ok="true"
             write-fsync="true" --><!-- FSYNCED -->
    </mongo:mongo>
-   <!-- mongo:mongo id="replicaSetMongo" replica-set="127.0.0.1:27017,localhost:27018"/ -->
+   <!-- mongo:mongo id="mongo" replica-set="127.0.0.1:27017,localhost:27018"/ -->
   
   
   <!-- DB -->

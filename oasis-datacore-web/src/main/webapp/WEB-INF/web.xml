@@ -7,7 +7,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 
 	<context-param>
 		<param-name>contextConfigLocation</param-name>
-		<param-value>classpath:oasis-datacore-rest-server-context.xml</param-value>
+		<param-value>classpath:oasis-datacore-deploy-context.xml</param-value>
 	</context-param>
 
 	<listener>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:p="http://www.springframework.org/schema/p"
+      xmlns:context="http://www.springframework.org/schema/context"
+      xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+      xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+      xmlns:cxf="http://cxf.apache.org/core"
+      xmlns:httpj="http://cxf.apache.org/transports/http-jetty/configuration"
+      xsi:schemaLocation=
+      "http://www.springframework.org/schema/beans
+      http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+      http://www.springframework.org/schema/context
+      http://www.springframework.org/schema/context/spring-context-3.2.xsd
+      http://www.springframework.org/schema/data/mongo
+      http://www.springframework.org/schema/data/mongo/spring-mongo-1.5.xsd
+      http://cxf.apache.org/core http://cxf.apache.org/schemas/core.xsd
+      http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd
+      http://cxf.apache.org/transports/http-jetty/configuration http://cxf.apache.org/schemas/configuration/http-jetty.xsd">
+
+   <import resource="classpath:oasis-datacore-rest-server-context.xml" />
+
+   <!-- PUT HERE YOUR OVERRIDES that can't go as mere props in properties file -->
+
+   <!-- MONGODB OVERRIDES -->
+   <!-- Default mongo bean name is 'mongo'
+   NB. most of the mongo conf is done on client side !
+   NB. no socket timeout because would NOT stop the query on the mongo server see #23 -->
+   <!-- default : -->
+   <!-- mongo:mongo id="mongo" host="${oasis.datacore.mongodb.host}" port="${oasis.datacore.mongodb.port}" >
+      <mongo:options 
+         connections-per-host="100"
+         threads-allowed-to-block-for-connection-multiplier="4"
+      / -->
+      <!-- suppl options : -->
+      <!-- mongo:options
+            write-number="1"
+            write-timeout="0"
+            write-fsync="false"
+            / -->
+            <!-- connections-per-host="8"
+            threads-allowed-to-block-for-connection-multiplier="4"
+            connect-timeout="1000"
+            max-wait-time="1500}"
+            auto-connect-retry="true"
+            socket-keep-alive="true"
+            socket-timeout="1500"
+            slave-ok="true"
+            write-fsync="true" --><!-- FSYNCED -->
+   <!-- /mongo:mongo -->
+   <!-- replica set : -->
+   <!-- mongo:mongo id="mongo" replica-set="${oasis.datacore.mongodb.replsetMembers}"/ -->
+   
+   <!-- CLIENT OVERRIDES -->
+   <!-- default : -->
+   <!-- http-conf:conduit name="*.http-conduit">
+      <http-conf:client ReceiveTimeout="${datacoreApiClient.responseTimeout}"
+         ConnectionTimeout="${datacoreApiClient.connectionTimeout}" />
+   </http-conf:conduit -->
+   <!-- proxy : -->
+   <!-- http-conf:conduit name="*.http-conduit">
+      <http-conf:client ProxyServer="localhost" ProxyServerPort="8082" ProxyServerType="HTTP" />
+   </http-conf:conduit -->
+   
+   <!-- SERVER OVERRIDES -->
+   <!-- server CXF Bus
+   All conf (features, properties, interceptors) is rather done on endpoints
+   to avoid them being overriden by another Bus imported from another project or in test. 
+   But if it is required, make sure it overrides the -client's if used together,
+   by importing it after the client's -->
+   <!-- cxf:bus>
+      <cxf:features>
+      </cxf:features>
+      <cxf:properties>
+      </cxf:properties>
+   </cxf:bus -->
+   
+</beans>
