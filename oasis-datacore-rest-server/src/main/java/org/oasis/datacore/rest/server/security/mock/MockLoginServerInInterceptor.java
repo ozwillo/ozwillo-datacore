@@ -8,7 +8,6 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.client.ClientException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.wsdl.extensions.http.HTTPOperation;
 
 import org.apache.cxf.common.logging.LogUtils;
 import org.apache.cxf.interceptor.Fault;
@@ -17,11 +16,12 @@ import org.apache.cxf.message.Message;
 import org.apache.cxf.phase.AbstractPhaseInterceptor;
 import org.apache.cxf.phase.Phase;
 import org.oasis.datacore.core.security.mock.MockAuthenticationService;
-import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.client.cxf.CxfMessageHelper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
+ * USED ONLY BY TESTS i.e. fails if devmode=falls
  * Logs in (without any check) as provided user available in conf'd UserDetailsService.
  * Done as CXF interceptor because looks in HTTP request.
  * 
@@ -31,6 +31,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 public class MockLoginServerInInterceptor extends AbstractPhaseInterceptor<Message> {
    private static final Logger LOG = LogUtils.getLogger(MockLoginServerInInterceptor.class);
+
+   @Value("${datacore.devmode}")
+   private boolean devmode;
    
    @Autowired
    private MockAuthenticationService mockAuthenticationService;
@@ -41,6 +44,10 @@ public class MockLoginServerInInterceptor extends AbstractPhaseInterceptor<Messa
 
    @Override
    public void handleMessage(Message serverInRequestMessage) throws Fault {
+      if (!devmode) {
+         throw new IllegalArgumentException(this.getClass().getName() + " must never be used when devmode=false");
+      }
+      
       String username = null;
       
       Map<String, List<String>> headers = CxfMessageHelper.getRequestHeaders(serverInRequestMessage);

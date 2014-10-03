@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
+	xsi:schemaLocation="
+      http://www.springframework.org/schema/beans
+      http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+      http://www.springframework.org/schema/context
+      http://www.springframework.org/schema/context/spring-context-3.1.xsd
+      http://www.springframework.org/schema/security
+      http://www.springframework.org/schema/security/spring-security.xsd
+      http://www.springframework.org/schema/security/oauth2
+      http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
+
+   <!-- context:property-placeholder location="classpath:oasis-datacore-security.properties,classpath:oasis-datacore-rest-api.properties,classpath:oasis-datacore-rest-server.properties,classpath*:oasis-datacore-deploy*.properties"
+      order="-1" ignore-unresolvable="true"/ -->
+
+
+   <!-- Spring Security permissions : -->
+   <security:global-method-security pre-post-annotations="enabled">
+      <security:expression-handler ref="datacore.entityExpressionHandler"/>
+   </security:global-method-security>
+   <!-- see :
+   http://www.disasterarea.co.uk/blog/protecting-service-methods-with-spring-security-annotations/
+   http://java.dzone.com/articles/writing-your-spring-security -->
+   <bean id="datacore.entityExpressionHandler" class="org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler">
+      <property name="permissionEvaluator" ref="datacore.entityPermissionEvaluator"/>
+   </bean>
+   <bean id="datacore.entityPermissionEvaluator" class="org.oasis.datacore.core.security.EntityPermissionEvaluator"/>
+   
+	<oauth:resource-server id="oauth2ProviderFilter" resource-id="oasis-datacore" token-services-ref="tokenServices" />
+	
+</beans>

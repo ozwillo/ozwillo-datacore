@@ -30,6 +30,17 @@
      <property name="authenticationManager" ref="org.springframework.security.authenticationManager"/>
      <!- property name="filterProcessesUrl" value="/j_spring_security_check"/ ->
    </bean -->
+	
+	
+	<!-- BASIC auth filter, on top of mock hardcoded user store : -->
+	<bean id="basicAuthenticationFilter" class="org.springframework.security.web.authentication.www.BasicAuthenticationFilter">
+	    <property name="authenticationManager" ref="datacore.AuthenticationManager" />
+	    <property name="authenticationEntryPoint" ref="authenticationEntryPoint" />
+	</bean>
+	
+	<bean id="authenticationEntryPoint" class="org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint">
+    	<property name="realmName" value="datacore" />
+	</bean>
 
 	<security:authentication-manager id="datacore.AuthenticationManager" erase-credentials="false"><!-- i.e. id="org.springframework.security.authenticationManager" -->
 	  <security:authentication-provider ref="proxyDaoAuthenticationProvider" /><!-- clientDetailsUserService -->
@@ -49,28 +60,5 @@
      <security:user name="contribution_user_1" password="contribution_user_1" authorities="model_readers_sample.marka.field" />
    </security:user-service>
    <!-- <security:user-service id="datacore.userDetailsService" /> -->
-
-	<!-- oauth:client-details-service id="clientDetailsService">
-		<oauth:client client-id="e64425f0-3b0a-44ab-b5bc-1f1c52b099f8"
-			authorized-grant-types="client_credentials,password,implicit"
-			authorities="ROLE_WRITE" secret="secret" />
-	</oauth:client-details-service>
-
-
-	<bean id="clientDetailsUserService"
-		class="org.springframework.security.oauth2.provider.client.ClientDetailsUserDetailsService">
-		<constructor-arg ref="clientDetailsService" />
-	</bean -->
-   
-   <security:global-method-security pre-post-annotations="enabled">
-      <security:expression-handler ref="datacore.entityExpressionHandler"/>
-   </security:global-method-security>
-   <!-- see :
-   http://www.disasterarea.co.uk/blog/protecting-service-methods-with-spring-security-annotations/
-   http://java.dzone.com/articles/writing-your-spring-security -->
-   <bean id="datacore.entityExpressionHandler" class="org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler">
-      <property name="permissionEvaluator" ref="datacore.entityPermissionEvaluator"/>
-   </bean>
-   <bean id="datacore.entityPermissionEvaluator" class="org.oasis.datacore.core.security.EntityPermissionEvaluator"/>
 
 </beans>

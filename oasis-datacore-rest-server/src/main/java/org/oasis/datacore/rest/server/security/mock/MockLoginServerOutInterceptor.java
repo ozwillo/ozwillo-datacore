@@ -7,9 +7,11 @@ import org.apache.cxf.interceptor.Fault;
 import org.apache.cxf.message.Message;
 import org.apache.cxf.phase.AbstractPhaseInterceptor;
 import org.apache.cxf.phase.Phase;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
+ * USED ONLY BY TESTS (not for now) i.e. fails if devmode=falls
  * Clears security context. Has to be called at the end of ALL requests received
  * by Datacore. 
  * Done as CXF interceptor because login is done as one.
@@ -21,13 +23,23 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 public class MockLoginServerOutInterceptor extends AbstractPhaseInterceptor<Message> {
    private static final Logger LOG = LogUtils.getLogger(MockLoginServerOutInterceptor.class);
+
+   @Value("${datacore.devmode}")
+   private boolean devmode;
    
    public MockLoginServerOutInterceptor() {
       super(Phase.POST_PROTOCOL);
+      
+      if (!devmode) {
+         throw new IllegalArgumentException(this.getClass().getName() + " must never be used when devmode=false");
+      }
    }
 
    @Override
    public void handleMessage(Message serverInRequestMessage) throws Fault {
+      if (!devmode) {
+         throw new IllegalArgumentException(this.getClass().getName() + " must never be used when devmode=false");
+      }
       SecurityContextHolder.clearContext();
    }
    

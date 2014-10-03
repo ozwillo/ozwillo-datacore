@@ -3,7 +3,6 @@ package org.oasis.datacore.model.rest.server;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
@@ -13,6 +12,7 @@ import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.model.rest.api.DataModelApi;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,7 +27,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 ///@Path("dc/model") // OBSOLETE, COMMENTED relative path among other OASIS services
 @Consumes(MediaType.APPLICATION_JSON) // TODO finer media type ex. +oasis-datacore ??
 @Produces(MediaType.APPLICATION_JSON)
-///@Component("datacore.model.apiImpl") // else can't autowire Qualified ; TODO @Service ?
+@Component("datacore.model.apiImpl") // else can't autowire Qualified ; not @Service (permissions rather on Resources around EntityService)
 public class DataModelApiImpl implements DataModelApi {
 
    @Autowired

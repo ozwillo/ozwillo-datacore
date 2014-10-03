@@ -18,8 +18,10 @@ import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.oasis.datacore.rest.server.resource.ResourceTypeNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 @Path("dc/c")
+@Component("datacore.contribution.apiImpl") // else can't autowire Qualified ; NOT @Service (permissions rather around EntityService)
 public class ContributionApiImpl implements ContributionApi {
 
 	@Autowired

@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.stereotype.Component;
 
 
 /**
@@ -68,7 +69,7 @@ import org.springframework.dao.DuplicateKeyException;
 @Path("dc") // relative path among other OASIS services
 /*@Consumes(MediaType.APPLICATION_JSON) // TODO finer media type ex. +oasis-datacore ??
 @Produces(MediaType.APPLICATION_JSON)*/
-///@Component("datacoreApiServer") // else can't autowire Qualified ; TODO @Service ?
+@Component("datacoreApiImpl") // else can't autowire Qualified ; NOT @Service (permissions rather around EntityService)
 public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
 
    private static final Logger logger = LoggerFactory.getLogger(DatacoreApiImpl.class);

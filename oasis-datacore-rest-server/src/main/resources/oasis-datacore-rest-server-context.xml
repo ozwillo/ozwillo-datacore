@@ -14,29 +14,28 @@
       http://cxf.apache.org/core http://cxf.apache.org/schemas/core.xsd
       http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd
       http://cxf.apache.org/transports/http-jetty/configuration http://cxf.apache.org/schemas/configuration/http-jetty.xsd">
-
-   <!-- default & overriding some properties (BEFORE import to take precedence over imported properties)
-   (overriding ones are at end of comma-separated location)
-   Lowest order takes precedence, here -1 to allow ex. to be overriden by test at -2, see
-   http://stackoverflow.com/questions/11645360/overriding-properties-in-spring-3-1-with-a-local-properties-file
-   However this doesn't work for -deploy*.properties, which has to be put instead in the same
-   property placeholder as -server.properties instead and after it to work.
-   Moreover without a first * after classpath (for jars ?) * doesn't work !
-   See also http://www.baeldung.com/2012/02/06/properties-with-spring/ -->
-   <context:property-placeholder location="classpath:oasis-datacore-rest-api.properties,classpath:oasis-datacore-rest-server.properties,classpath*:oasis-datacore-deploy*.properties"
-      order="-1" ignore-unresolvable="true"/><!-- so defaults to importing PropertyPlaceholder/*Resolver -->
    
-   <import resource="classpath:oasis-datacore-core-context.xml" />
+   <!-- Allows to resolve spring properties placeholders (for Swagger ?) -->
+   <bean id="springPlaceholderResolver" class="org.oasis.datacore.rest.server.SpringPlaceholderResolver"/>
    
-   <import resource="classpath:oasis-datacore-security-mock-context.xml" />  
-   <import resource="classpath:oasis-datacore-security-context.xml" />
-   <!-- reusing client for init of samples : -->
-   <import resource="classpath:oasis-datacore-rest-client-context.xml" />
-   <!-- Client for AuditLog API -->
-   <import resource="classpath:oasis-datacore-kernel-client-context.xml" />
-   <!-- Monitoring with Riemann -->
-   <import resource="classpath:oasis-datacore-monitoring-context.xml" />
-
+   
+   <!-- Server : -->
+   <!-- scanning for caching & context -->
+   <!-- context:component-scan base-package="org.oasis.datacore.rest.api" />
+   <context:component-scan base-package="org.oasis.datacore.rest.client" / -->
+   <context:component-scan base-package="org.oasis.datacore.rest.server" />
+   <context:component-scan base-package="org.oasis.datacore.server.parsing.service.impl" />
+   <context:component-scan base-package="org.oasis.datacore.model.resource" />
+   <context:component-scan base-package="org.oasis.datacore.model.rest.server" />
+   <context:component-scan base-package="org.oasis.datacore.rights.api.impl" />
+   <context:component-scan base-package="org.oasis.datacore.historization.service.impl" />
+   <context:component-scan base-package="org.oasis.datacore.contribution.service.impl" />
+   <context:component-scan base-package="org.oasis.datacore.contribution.api.impl" />
+   <context:component-scan base-package="org.oasis.datacore.sample" />
+   <context:annotation-config /><!-- actually auto enabled by previous line -->
+   
+   
+   <!-- REST : -->
    <import resource="classpath:META-INF/cxf/cxf.xml" />
    <!-- import resource="classpath:META-INF/cxf/cxf-extension-http-jetty.xml"/ -->
    <!-- would be for test server but NO : OldSpringSupport [WARN] Import of META-INF/cxf/cxf-extension-http-jetty.xml has been deprecated and is unnecessary-->
@@ -75,15 +74,6 @@
       </property ->
    </bean -->
 
-   <!-- for caching & context -->
-   <!-- context:component-scan base-package="org.oasis.datacore.rest.api" />
-   <context:component-scan base-package="org.oasis.datacore.rest.client" / -->
-   <context:component-scan base-package="org.oasis.datacore.rest.server" />
-   <context:component-scan base-package="org.oasis.datacore.model.rest.server" />
-   <context:component-scan base-package="org.oasis.datacore.model.resource" />
-   <context:component-scan base-package="org.oasis.datacore.sample" />
-   <context:annotation-config /><!-- actually auto enabled by previous line -->
-
    <!-- server CXF Bus
    All conf (features, properties, interceptors) is rather done on endpoints
    to avoid them being overriden by another Bus imported from another project or in test. 
@@ -99,25 +89,6 @@
    
    <!-- provides HTTP protocol info to JAXRS server impl -->
    <bean id="datacore.cxfJaxrsApiProvider" class="org.oasis.datacore.rest.server.cxf.CxfJaxrsApiProvider"/>
-   
-   
-   <!-- SWAGGER -->
-   <!-- Swagger API listing resource -->
-   <bean id="swagger.resourceJSON" class="com.wordnik.swagger.jaxrs.listing.ApiListingResourceJSON" />
-   <!-- Swagger writers -->
-   <bean id="swagger.resourceWriter" class="com.wordnik.swagger.jaxrs.listing.ResourceListingProvider" />
-   <bean id="swagger.apiWriter" class="com.wordnik.swagger.jaxrs.listing.ApiDeclarationProvider" />
-   
-   
-   <!-- apiImpls taken out to allow injection in test -->
-   <bean id="datacoreApiImpl" class="org.oasis.datacore.rest.server.DatacoreApiImpl"/>
-   <bean id="datacore.model.apiImpl" class="org.oasis.datacore.model.rest.server.DataModelApiImpl"/>
-   <bean id="datacore.rights.apiImpl" class="org.oasis.datacore.rights.api.impl.RightsApiImpl"/>
-   <bean id="datacore.contribution.apiImpl" class="org.oasis.datacore.contribution.api.impl.ContributionApiImpl"/>
-   
-   <bean id="queryParsingService" class="org.oasis.datacore.rest.server.parsing.service.impl.QueryParsingServiceImpl" />
-   <bean id="historizationService" class="org.oasis.datacore.historization.service.impl.HistorizationServiceImpl"/>
-   <bean id="contributionService" class="org.oasis.datacore.contribution.service.impl.ContributionServiceImpl"/>
    
    <!-- mapper taken out to configure it (allow to inject it in ArrayServerInInterceptor, register modules) -->
    <bean id="datacoreApiServer.objectMapper" class="org.oasis.datacore.rest.api.binding.DatacoreObjectMapper"/>
@@ -167,7 +138,6 @@
       </jaxrs:providers>
       <!-- Single value array POST handling interceptors (rather than whole bus) : -->
       <jaxrs:inInterceptors>
-		   <bean class="org.oasis.datacore.rest.server.security.mock.MockLoginServerInInterceptor"/><!-- TODO MOCK move -->
          <bean class="org.oasis.datacore.rest.server.cxf.ArrayServerInInterceptor">
             <property name="objectMapper"><ref bean="datacoreApiServer.objectMapper"/></property>
          </bean>
@@ -178,7 +148,6 @@
          <bean class="org.oasis.datacore.rest.server.cxf.ArrayServerOutInterceptor"/>
          <bean class="org.oasis.datacore.monitoring.TimeComputerOutInterceptor"/>
          <bean class="org.oasis.datacore.monitoring.SendEventsInterceptor"/>
-         <!-- <bean class="org.oasis.datacore.rest.server.security.mock.MockLoginServerOutInterceptor"/> --><!-- TODO MOCK move -->
       </jaxrs:outInterceptors>
       <!-- TODO also autn --><!-- bean id="authorizationFilter" class="com.bar.providers.AuthorizationRequestHandler"/ -->
       <jaxrs:features>
@@ -191,30 +160,5 @@
          </entry>
       </jaxrs:properties>
    </jaxrs:server>
-   
-   
-   <!-- Allows to resolve spring properties placeholders -->
-   <bean id="springPlaceholderResolver" class="org.oasis.datacore.rest.server.SpringPlaceholderResolver"/>
-   
-   <!-- SWAGGER - this scans the classes for resources -->
-   <bean id="swaggerConfig" class="com.wordnik.swagger.jaxrs.config.BeanConfig">
-      <property name="resourcePackage" value="org.oasis.datacore.rest.api"/>
-      <property name="version" value="1.0.0"/>
-      <property name="basePath" value="${datacoreApiServer.baseUrl}"/>
-      <property name="title" value="Datacore Resource API"/>
-      <property name="description">
-         <bean factory-bean="springPlaceholderResolver" factory-method="resolveEmbeddedValue">
-            <constructor-arg type="java.lang.String" >
-               <bean class="org.apache.commons.io.IOUtils" factory-method="toString">
-                  <constructor-arg value="classpath:swagger/dc/description.html" type="java.io.InputStream" />
-               </bean>
-            </constructor-arg>
-         </bean>
-      </property>
-      <property name="contact" value="http://www.oasis-eu.org"/>
-      <property name="license" value="Apache 2.0 License"/><!-- TODO LGPL ??? -->
-      <property name="licenseUrl" value="http://www.apache.org/licenses/LICENSE-2.0.html"/>
-      <property name="scan" value="true"/>
-   </bean>
    
 </beans>

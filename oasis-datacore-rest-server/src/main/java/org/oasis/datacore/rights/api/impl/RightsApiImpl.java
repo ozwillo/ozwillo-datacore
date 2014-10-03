@@ -22,8 +22,10 @@ import org.oasis.datacore.rights.enumeration.RightsActionType;
 import org.oasis.datacore.rights.rest.api.DCRights;
 import org.oasis.datacore.rights.rest.api.RightsApi;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 @Path("dc/r")
+@Component("datacore.rights.apiImpl") // else can't autowire Qualified ; NOT @Service (permissions rather around EntityService)
 public class RightsApiImpl implements RightsApi {
 
 	@Autowired

@@ -12,7 +12,6 @@ import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.security.EntityPermissionService;
-import org.oasis.datacore.core.security.mock.MockAuthenticationService;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
 import org.oasis.datacore.historization.exception.HistorizationException;
 import org.oasis.datacore.historization.service.HistorizationService;
@@ -51,9 +50,6 @@ public class ResourceService {
    private EntityService entityService;
    
    /** to put creator as owner */
-   @Autowired
-   private MockAuthenticationService authenticationService;
-   
    @Autowired
    @Qualifier("datacoreSecurityServiceImpl")
    private DatacoreSecurityService datacoreSecurityService;

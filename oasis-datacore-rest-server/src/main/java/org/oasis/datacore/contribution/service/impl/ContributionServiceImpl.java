@@ -34,7 +34,9 @@ import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.rest.server.resource.ResourceTypeNotFoundException;
 import org.oasis.datacore.rest.server.resource.UriService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+@Component("datacore.contributionService") // else can't autowire Qualified ; NOT @Service (permissions rather around EntityService)
 public class ContributionServiceImpl implements ContributionService {
 	
 	@Autowired

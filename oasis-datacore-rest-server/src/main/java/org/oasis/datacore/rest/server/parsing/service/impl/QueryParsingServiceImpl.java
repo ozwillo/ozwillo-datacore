@@ -19,9 +19,11 @@ import org.oasis.datacore.rest.server.parsing.service.QueryParsingService;
 import org.oasis.datacore.rest.server.resource.ValueParsingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 @Service
+@Component("datacore.queryParsingService") // else can't autowire Qualified ; NOT @Service (permissions rather around EntityService)
 public class QueryParsingServiceImpl implements QueryParsingService {
 
    @Autowired

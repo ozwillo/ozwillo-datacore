@@ -15,26 +15,10 @@
 
    <context:property-placeholder location="classpath:oasis-datacore-security.properties,classpath:oasis-datacore-rest-api.properties,classpath:oasis-datacore-rest-server.properties,classpath*:oasis-datacore-deploy*.properties"
       order="-1" ignore-unresolvable="true"/>
-
-	<oauth:resource-server id="oauth2ProviderFilter" resource-id="oasis-datacore" token-services-ref="tokenServices" />
 	
-	<security:http pattern="/dc/**" entry-point-ref="oauthAuthenticationEntryPoint" access-decision-manager-ref="accessDecisionManager" authentication-manager-ref="authenticationManager" create-session="never">
-		<security:intercept-url pattern="/**" access="SCOPE_DATACORE, IS_AUTHENTICATED_FULLY" />
-		<security:custom-filter position="BASIC_AUTH_FILTER" ref="basicAuthenticationFilter" />
-		<security:custom-filter ref="oauth2ProviderFilter" after="BASIC_AUTH_FILTER" /> <!--  before="PRE_AUTH_FILTER" -->
-		<security:access-denied-handler ref="oauthAccessDeniedHandler" />
-	</security:http>
 	
-	<bean id="basicAuthenticationFilter" class="org.springframework.security.web.authentication.www.BasicAuthenticationFilter">
-	    <property name="authenticationManager" ref="datacore.AuthenticationManager" />
-	    <property name="authenticationEntryPoint" ref="authenticationEntryPoint" />
-	</bean>
-	
-	<bean id="authenticationEntryPoint" class="org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint">
-    	<property name="realmName" value="datacore" />
-	</bean>
-	
-     <security:authentication-manager id="authenticationManager">
+	<!-- Spring Security OAuth2 filter : -->
+   <security:authentication-manager id="authenticationManager">
 		<security:authentication-provider user-service-ref="clientDetailsUserService" />
 	</security:authentication-manager>
 

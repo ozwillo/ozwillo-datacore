@@ -25,7 +25,7 @@
    <!-- import resource="classpath:oasis-datacore-rest-client-context.xml" / -->
    
    <!-- server definition (AFTER client to override ex. its bus !) -->
-   <import resource="classpath:oasis-datacore-rest-server-context.xml" />
+   <import resource="classpath:oasis-datacore-deploy-context.xml" />
    
  <!-- Used to record requests with JMeter -->  
  <!-- http-conf:conduit name="http://localhost:8081/.*"-->
@@ -36,4 +36,58 @@
  </http-conf:conduit>
 -->
 
+   <!-- OVERRIDE to add MockLoginInterceptors (required by tests) : -->
+   <!-- Spring configuration for Datacore API CXF server -->
+   <jaxrs:server id="datacoreApiServer" address="${datacoreApiServer.jaxrsBaseUrl}"
+         staticSubresourceResolution="true"><!-- optimization since no JAXRS annotations on impls,
+         see http://cxf.apache.org/docs/jax-rs-basics.html#JAX-RSBasics-Staticresolutionofsubresources -->
+      <jaxrs:serviceBeans>
+         <ref bean="datacoreApiImpl"/>
+         <ref bean="datacore.model.apiImpl"/>
+         <ref bean="datacore.rights.apiImpl" /> 
+         <ref bean="datacore.contribution.apiImpl" /> 
+         <ref bean="swagger.resourceJSON" />
+         <bean class="org.oasis.datacore.rest.server.RootRedirectResource">
+            <property name="targetUri" value="${datacoreApiServer.baseUrl}/dc-ui/index.html"/>
+         </bean>
+      </jaxrs:serviceBeans>
+      <jaxrs:providers>
+         <ref bean="datacoreApiServer.jacksonJsonProvider"/>
+         <ref bean="datacoreApiServer.JsonLdJavaRdfProvider"/>
+         <!-- to add to response error message built out of exception (ex. if WebApplicationException not thrown explicity) :
+         (see http://cxf.apache.org/docs/jax-rs-basics.html#JAX-RSBasics-CustomizingdefaultWebApplicationExceptionmapper ) -->
+         <!-- bean class="org.apache.cxf.jaxrs.impl.WebApplicationExceptionMapper">
+            <property name="addMessageToResponse" value="true"/>
+         </bean -->
+         <bean class="org.oasis.datacore.rest.server.security.AccessDeniedExceptionMapper"/><!-- to HTTP 403 -->
+         <ref bean="swagger.resourceWriter" />
+         <ref bean="swagger.apiWriter" />
+      </jaxrs:providers>
+      <!-- Single value array POST handling interceptors (rather than whole bus) : -->
+      <jaxrs:inInterceptors>
+		   <bean class="org.oasis.datacore.rest.server.security.mock.MockLoginServerInInterceptor"/><!-- OVERRIDE added -->
+         <bean class="org.oasis.datacore.rest.server.cxf.ArrayServerInInterceptor">
+            <property name="objectMapper"><ref bean="datacoreApiServer.objectMapper"/></property>
+         </bean>
+         <bean class="org.oasis.datacore.monitoring.TimeTaggerInInterceptor"/>
+         <bean class="org.oasis.datacore.monitoring.ContextInInterceptor"/>
+      </jaxrs:inInterceptors>
+      <jaxrs:outInterceptors>
+         <bean class="org.oasis.datacore.rest.server.cxf.ArrayServerOutInterceptor"/>
+         <bean class="org.oasis.datacore.monitoring.TimeComputerOutInterceptor"/>
+         <bean class="org.oasis.datacore.monitoring.SendEventsInterceptor"/>
+         <!-- <bean class="org.oasis.datacore.rest.server.security.mock.MockLoginServerOutInterceptor"/> --><!-- TODO MOCK move -->
+      </jaxrs:outInterceptors>
+      <!-- TODO also autn --><!-- bean id="authorizationFilter" class="com.bar.providers.AuthorizationRequestHandler"/ -->
+      <jaxrs:features>
+         <cxf:logging/>
+      </jaxrs:features>
+      <jaxrs:properties>
+         <!-- Prevents logging WebApplicationException not HTTP 400 or 500 -->
+         <entry key="org.apache.cxf.logging.FaultListener">
+            <bean class="org.oasis.datacore.rest.server.cxf.ClientServerErrorFaultListener"/>
+         </entry>
+      </jaxrs:properties>
+   </jaxrs:server>
+   
 </beans>

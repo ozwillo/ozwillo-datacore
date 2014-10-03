@@ -12,14 +12,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 
 /**
  * Provides resource history features
  *
  */
-@Service
+@Component("datacore.historizationService") // else can't autowire Qualified ; NOT @Service (permissions rather around EntityService)
 public class HistorizationServiceImpl implements HistorizationService {
 
 	@Autowired
