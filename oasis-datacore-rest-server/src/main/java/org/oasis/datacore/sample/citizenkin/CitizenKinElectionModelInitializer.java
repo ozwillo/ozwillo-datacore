@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class CitizenKinElectionModelInitializer extends DatacoreSampleBase {
 
-    public static final String CITIZENKIN_PROCEDURE_ELECTORAL_ROLL_REGISTRATION = "citizenkin:electoral_roll_registration";
+    public static final String CITIZENKIN_PROCEDURE_ELECTORAL_ROLL_REGISTRATION = "citizenkin:electoral_roll_registration_0";
 
     public static final String STRING_TYPE = DCFieldTypeEnum.STRING.getType();
     public static final String DATE_TYPE = DCFieldTypeEnum.DATE.getType();

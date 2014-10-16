@@ -16,7 +16,7 @@ import java.util.List;
 @Component
 public class CitizenKinEnvironmentalIncidentsModelInitializer extends DatacoreSampleBase {
 
-    public static final String CITIZENKIN_PROCEDURE_ENVIRONMENTAL_INCIDENTS_DECLARATION = "citizenkin:environmental-incidents";
+    public static final String CITIZENKIN_PROCEDURE_ENVIRONMENTAL_INCIDENTS_DECLARATION = "citizenkin:environmental-incidents_0";
 
     public static final String STRING_TYPE = DCFieldTypeEnum.STRING.getType();
     public static final String DATE_TYPE = DCFieldTypeEnum.DATE.getType();
