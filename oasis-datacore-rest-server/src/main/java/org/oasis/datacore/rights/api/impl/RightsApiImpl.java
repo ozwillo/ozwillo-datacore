@@ -17,10 +17,10 @@ import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.security.EntityPermissionService;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
-import org.oasis.datacore.rest.server.resource.UriService;
 import org.oasis.datacore.rights.enumeration.RightsActionType;
 import org.oasis.datacore.rights.rest.api.DCRights;
 import org.oasis.datacore.rights.rest.api.RightsApi;
+import org.oasis.datacore.server.uri.UriService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

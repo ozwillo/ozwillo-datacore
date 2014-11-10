@@ -1,4 +1,4 @@
-package org.oasis.datacore.core.security.oauth2;
+package org.oasis.datacore.server.security.oauth2;
 
 import java.util.Collection;
 

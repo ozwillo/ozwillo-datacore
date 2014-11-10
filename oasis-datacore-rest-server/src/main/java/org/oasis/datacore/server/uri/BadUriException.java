@@ -1,4 +1,4 @@
-package org.oasis.datacore.rest.server;
+package org.oasis.datacore.server.uri;
 
 public class BadUriException extends Exception {
    private static final long serialVersionUID = -6207977393297305406L;

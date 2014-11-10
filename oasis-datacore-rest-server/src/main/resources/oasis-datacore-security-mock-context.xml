@@ -5,11 +5,11 @@
 	xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
 	xsi:schemaLocation="
       http://www.springframework.org/schema/beans
-      http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+      http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
       http://www.springframework.org/schema/context
-      http://www.springframework.org/schema/context/spring-context-3.1.xsd
+      http://www.springframework.org/schema/context/spring-context-3.2.xsd
       http://www.springframework.org/schema/security
-      http://www.springframework.org/schema/security/spring-security.xsd
+      http://www.springframework.org/schema/security/spring-security-3.1.xsd
       http://www.springframework.org/schema/security/oauth2
       http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 
@@ -53,7 +53,7 @@
    <!-- <bean id="datacore.userDetailsService" class="org.oasis.datacore.core.security.MockUserDetailsServiceImpl" /> -->
    <security:user-service id="datacore.userDetailsService">
      <security:user name="guest" password="guest" authorities="guest" /><!-- or is guest group fictive ??? -->
-     <security:user name="admin" password="admin" authorities="admin" /><!-- guest is superfluous -->
+     <security:user name="admin" password="admin" authorities="admin,u_john,tutor_jim,rm_altTourism.place.SofiaMonastery_readers" /><!-- TODO onlye admin ; guest is superfluous -->
      <security:user name="john" password="john" authorities="u_john,tutor_jim,rm_altTourism.place.SofiaMonastery_readers,guest" /><!-- ROLE_USER, ROLE_ADMIN -->
      <security:user name="jim" password="jim" authorities="u_jim,rm_altTourism.place.SofiaMonastery_writers,model_resource_creator_altTourism.place,guest,sample.marka.country.readers" /><!-- most useful ones first... -->
      <security:user name="bob" password="bob" authorities="u_bob,model_resource_admin_sample.marka.city,model_admin_sample.marka.company" />

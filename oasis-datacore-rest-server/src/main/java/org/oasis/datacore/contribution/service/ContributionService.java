@@ -9,9 +9,9 @@ import org.oasis.datacore.contribution.exception.ContributionWithNoModelExceptio
 import org.oasis.datacore.contribution.exception.ContributionWithoutResourcesException;
 import org.oasis.datacore.contribution.rest.api.DCContribution;
 import org.oasis.datacore.rest.api.DCResource;
-import org.oasis.datacore.rest.server.BadUriException;
 import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.oasis.datacore.rest.server.resource.ResourceTypeNotFoundException;
+import org.oasis.datacore.server.uri.BadUriException;
 
 public interface ContributionService {
 

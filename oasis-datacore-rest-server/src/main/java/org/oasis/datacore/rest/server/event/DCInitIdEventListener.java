@@ -2,7 +2,7 @@ package org.oasis.datacore.rest.server.event;
 
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.DCURI;
-import org.oasis.datacore.rest.server.BadUriException;
+import org.oasis.datacore.server.uri.BadUriException;
 
 
 /**

@@ -1,4 +1,4 @@
-package org.oasis.datacore.core.security.oauth2;
+package org.oasis.datacore.server.security.oauth2;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -10,6 +10,8 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.oasis.datacore.playground.security.TokenEncrypter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -56,6 +58,10 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 	private String clientSecret;
 
 	private ObjectMapper mapper = new ObjectMapper();
+	
+	/** [OASIS] */
+   @Autowired
+   private TokenEncrypter tokenEncrypter;
 
 	public RemoteTokenServices() {
 		restTemplate = new RestTemplate();
@@ -91,6 +97,7 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 	}
 
 	public OAuth2Authentication loadAuthentication(String accessToken) throws AuthenticationException {
+	   accessToken = tokenEncrypter.decrypt(accessToken); // [OASIS]
 
 		MultiValueMap<String, String> formData = new LinkedMultiValueMap<String, String>();
 		formData.add("token", accessToken);
@@ -130,7 +137,7 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 		return new OAuth2Authentication(clientAuthentication, userAuthentication);
 	}
 
-	private Authentication getUserAuthentication(Map<String, Object> map, Set<String> scope) {
+   private Authentication getUserAuthentication(Map<String, Object> map, Set<String> scope) {
 		
 		Set<GrantedAuthority> userAuthorities = new HashSet<GrantedAuthority>();
 		
@@ -167,6 +174,13 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 		}
 	}
 
+	/**
+	 * Calls OASIS Kernel checkTokenEndpointUrl i.e. /a/tokeninfo to check token
+	 * @param path
+	 * @param formData
+	 * @param headers
+	 * @return
+	 */
 	private Map<String, Object> postForMap(String path, MultiValueMap<String, String> formData, HttpHeaders headers) {
 		if (headers.getContentType() == null) {
 			headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);

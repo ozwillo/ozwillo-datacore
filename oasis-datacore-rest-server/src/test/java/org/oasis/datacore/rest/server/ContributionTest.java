@@ -26,6 +26,7 @@ import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.oasis.datacore.rest.server.resource.ResourceTypeNotFoundException;
 import org.oasis.datacore.sample.MarkaInvestData;
 import org.oasis.datacore.sample.MarkaInvestModel;
+import org.oasis.datacore.server.uri.BadUriException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;

@@ -5,21 +5,33 @@
 	xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
 	xsi:schemaLocation="
       http://www.springframework.org/schema/beans
-      http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+      http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
       http://www.springframework.org/schema/context
-      http://www.springframework.org/schema/context/spring-context-3.1.xsd
+      http://www.springframework.org/schema/context/spring-context-3.2.xsd
       http://www.springframework.org/schema/security
-      http://www.springframework.org/schema/security/spring-security.xsd
+      http://www.springframework.org/schema/security/spring-security-3.1.xsd
       http://www.springframework.org/schema/security/oauth2
       http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
 
    <!-- context:property-placeholder location="classpath:oasis-datacore-security.properties,classpath:oasis-datacore-rest-api.properties,classpath:oasis-datacore-rest-server.properties,classpath*:oasis-datacore-deploy*.properties"
       order="-1" ignore-unresolvable="true"/ -->
+   
+   
+   <!-- no login entry point since playground is not protected (?????) -->
+	<bean id="oauthAuthenticationEntryPoint" class="org.springframework.security.oauth2.provider.error.OAuth2AuthenticationEntryPoint">
+		<property name="realmName" value="datacore" />
+	</bean>
+   
+   <!-- login, must be first see http://www.baeldung.com/security-none-filters-none-access-permitAll -->
+	<!-- security:http name="org.springframework.security.filterChains.login" pattern="/dc/login*" security="none" / -->
 
-
-   <!-- Spring Security web filterChain : -->	
-	<!-- NB. couldmaybe be overriden (name="org.springframework.security.filterChains") but not its filters  -->
-	<security:http name="org.springframework.security.filterChains" pattern="/dc/**" entry-point-ref="oauthAuthenticationEntryPoint" access-decision-manager-ref="accessDecisionManager" authentication-manager-ref="authenticationManager" create-session="never">
+   <!-- Spring Security web filterChain : -->
+	<!-- NB. could maybe be overriden (name="org.springframework.security.filterChains") but not its filters  -->
+	<security:http name="org.springframework.security.filterChains" entry-point-ref="oauthAuthenticationEntryPoint" access-decision-manager-ref="accessDecisionManager" authentication-manager-ref="authenticationManager" create-session="never">
+		<security:intercept-url pattern="/dc/playground/login*" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<security:intercept-url pattern="/dc/playground/token*" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<security:intercept-url pattern="/api-docs/**" access="IS_AUTHENTICATED_ANONYMOUSLY" /><!-- TOOO DEVMODE ONLY else 401 : undefined http://localhost:8080/api-docs -->
+		<security:intercept-url pattern="/dc-ui/**" access="IS_AUTHENTICATED_ANONYMOUSLY" /><!-- TOOO DEVMODE ONLY else 401 : undefined http://localhost:8080/api-docs -->
 		<security:intercept-url pattern="/**" access="SCOPE_DATACORE, IS_AUTHENTICATED_FULLY" />
 		<security:custom-filter position="BASIC_AUTH_FILTER" ref="basicAuthenticationFilter" /><!-- TOOO DEVMODE ONLY -->
 		<security:custom-filter ref="oauth2ProviderFilter" after="BASIC_AUTH_FILTER" /> <!--  before="PRE_AUTH_FILTER" -->

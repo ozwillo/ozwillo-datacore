@@ -23,7 +23,8 @@
    <!-- scanning for caching & context -->
    <!-- context:component-scan base-package="org.oasis.datacore.rest.api" />
    <context:component-scan base-package="org.oasis.datacore.rest.client" / -->
-   <context:component-scan base-package="org.oasis.datacore.rest.server" />
+   <context:component-scan base-package="org.oasis.datacore.rest.server" /><!-- old -->
+   <context:component-scan base-package="org.oasis.datacore.server" /><!-- new, for now only OAuth2 -->
    <context:component-scan base-package="org.oasis.datacore.server.parsing.service.impl" />
    <context:component-scan base-package="org.oasis.datacore.model.resource" />
    <context:component-scan base-package="org.oasis.datacore.model.rest.server" />
@@ -32,6 +33,7 @@
    <context:component-scan base-package="org.oasis.datacore.contribution.service.impl" />
    <context:component-scan base-package="org.oasis.datacore.contribution.api.impl" />
    <context:component-scan base-package="org.oasis.datacore.sample" />
+   <context:component-scan base-package="org.oasis.datacore.playground" /><!-- login... -->
    <context:annotation-config /><!-- actually auto enabled by previous line -->
    
    
@@ -118,11 +120,10 @@
          <ref bean="datacoreApiImpl"/>
          <ref bean="datacore.model.apiImpl"/>
          <ref bean="datacore.rights.apiImpl" /> 
-         <ref bean="datacore.contribution.apiImpl" /> 
+         <ref bean="datacore.contribution.apiImpl" />
+         <ref bean="datacore.rest.loginResource" /> 
          <ref bean="swagger.resourceJSON" />
-         <bean class="org.oasis.datacore.rest.server.RootRedirectResource">
-            <property name="targetUri" value="${datacoreApiServer.baseUrl}/dc-ui/index.html"/>
-         </bean>
+         <ref bean="datacore.rest.statusResource" />
       </jaxrs:serviceBeans>
       <jaxrs:providers>
          <ref bean="datacoreApiServer.jacksonJsonProvider"/>

@@ -27,12 +27,12 @@ import org.oasis.datacore.core.meta.model.contribution.DCContributionMixin;
 import org.oasis.datacore.core.meta.model.contribution.DCContributionModel;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
 import org.oasis.datacore.rest.api.DCResource;
-import org.oasis.datacore.rest.server.BadUriException;
 import org.oasis.datacore.rest.server.resource.ResourceEntityMapperService;
 import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.rest.server.resource.ResourceTypeNotFoundException;
-import org.oasis.datacore.rest.server.resource.UriService;
+import org.oasis.datacore.server.uri.BadUriException;
+import org.oasis.datacore.server.uri.UriService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
