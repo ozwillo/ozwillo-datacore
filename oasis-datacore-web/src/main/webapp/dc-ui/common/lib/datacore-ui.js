@@ -155,6 +155,23 @@ function setError(errorMsg) {
 	document.getElementById('mydata').innerHTML = errorMsg;
 	return false;
 }
+
+// see http://stackoverflow.com/questions/13353352/use-this-javascript-to-load-cookie-into-variable
+function readCookie(key) {
+   var result;
+   return (result = new RegExp('(?:^|; )' + encodeURIComponent(key) + '=([^;]*)').exec(document.cookie)) ? (result[1]) : null;
+}
+function deleteCookie(key) {
+   document.cookie = encodeURIComponent(key) + '=; Path=/; expires=' + new Date(-1).toGMTString();
+}
+function getAuthHeader() {
+   var authCookie = readCookie("authorization");
+   if (authCookie && authCookie.length != 0) {
+      return authCookie;
+   }
+   return 'Basic YWRtaW46YWRtaW4=';
+}
+
 function findDataByType(relativeUrl, success, error) {
    var resourceTypeAndQuery = relativeUrl.replace(/^\/*dc\/type\/*/, "");
    var cleanedRelativeUrl = "/dc/type/" + resourceTypeAndQuery; // also works if no dc/type in relativeUrl
@@ -169,7 +186,7 @@ function findDataByType(relativeUrl, success, error) {
    window.t = i == -1 ? tq : tq.substring(0, i);
    window.q = i == -1 ? '' : tq.substring(i + 1);*/
    dcApi.dc.findDataInType({type:modelType, '#queryParameters':query,
-         Authorization:'Basic YWRtaW46YWRtaW4='},
+         Authorization:getAuthHeader()},
       function(data) {
          var resources = eval(data.content.data);
          var prettyJson = toolifyDcList(resources, null, null, null, 0);
@@ -189,7 +206,7 @@ function findDataByType(relativeUrl, success, error) {
       success: function() {
          if(datacore.ready === true) {
             datacore.apis.dc.findDataInType({type:window.t, '#queryParameters':window.q,
-            	   Authorization:'Basic YWRtaW46YWRtaW4='}, function(data) {
+            	   Authorization:getAuthHeader()}, function(data) {
                var prettyJson = JSON.stringify(eval(data.content.data), null, '\t').replace(/\n/g, '<br>');
                $('.mydata').html(prettyJson);
             });
@@ -208,7 +225,7 @@ function getData(relativeUrl, success, error) {
    // NB. resourceId is encoded as URIs should be, BUT must be decoded before used as GET URI
    // because swagger.js re-encodes (per path element because __unencoded__-prefixed per hack)
    dcApi.dc.getData({type:modelType, __unencoded__iri:decodedResourceId,
-         'If-None-Match':-1, Authorization:'Basic YWRtaW46YWRtaW4='},
+         'If-None-Match':-1, Authorization:getAuthHeader()},
       function(data) {
          var resource = eval('[' + data.content.data + ']')[0];
          var prettyJson = toolifyDcResource(resource, 0);
@@ -227,7 +244,7 @@ function getData(relativeUrl, success, error) {
    /*window.datacore = new SwaggerApi({ url: '/api-docs', success: function() {
       if(datacore.ready === true) {
          datacore.apis.dc.getData({type:window.t, __unencoded__iri:window.iri, 'If-None-Match':-1,
-            Authorization:'Basic YWRtaW46YWRtaW4='}, function(data) {
+            Authorization:getAuthHeader()}, function(data) {
                var prettyJson = JSON.stringify(eval('[' + data.content.data + ']'), null, '\t').replace(/\n/g, '<br>');
                $('.mydata').html(prettyJson);
             });
@@ -257,7 +274,7 @@ function findDataByTypeRdf(relativeUrl, success, error) {
    window.t = i == -1 ? tq : tq.substring(0, i);
    window.q = i == -1 ? '' : tq.substring(i + 1);*/
    dcApi.dc.findDataInType({type:modelType, '#queryParameters':query,
-         Authorization:'Basic YWRtaW46YWRtaW4='}, {responseContentType:'text/x-nquads'},
+         Authorization:getAuthHeader()}, {responseContentType:'text/x-nquads'},
       function(data) {
          var prettyText = data.content.data;
          $('.mydata').text(prettyText);
@@ -273,7 +290,7 @@ function findDataByTypeRdf(relativeUrl, success, error) {
    /*window.datacore = new SwaggerApi({ url: '/api-docs', success: function() {
       if(datacore.ready === true) {
          datacore.apis.dc.findDataInType({type:window.t, '#queryParameters':window.q,
-            Authorization:'Basic YWRtaW46YWRtaW4='}, {responseContentType:'text/x-nquads'}, function(data) {
+            Authorization:getAuthHeader()}, {responseContentType:'text/x-nquads'}, function(data) {
                var prettyText = data.content.data; $('.mydata').text(prettyText);
             });
          }
@@ -297,7 +314,7 @@ function postAllDataInType(relativeUrl, resources, success, error) {
    window.t = i == -1 ? tq : tq.substring(0, i);
    window.q = i == -1 ? '' : tq.substring(i + 1);*/
    dcApi.dc.postAllDataInType({type:modelType, body:resources,
-         Authorization:'Basic YWRtaW46YWRtaW4='},
+         Authorization:getAuthHeader()},
       function(data) {
          var resResources = eval(data.content.data);
          var prettyJson = toolifyDcList(resResources, null, null, null, 0);
@@ -334,7 +351,7 @@ function deleteDataInType(resource, success, error) {
    // NB. resourceId is encoded as URIs should be, BUT must be decoded before used as GET URI
    // because swagger.js re-encodes (per path element because __unencoded__-prefixed per hack)
    dcApi.dc.deleteData({type:modelType, __unencoded__iri:decodedResourceId,
-         'If-Match':resource["o:version"], Authorization:'Basic YWRtaW46YWRtaW4='},
+         'If-Match':resource["o:version"], Authorization:getAuthHeader()},
       function(data) {
          var resource = eval('[' + data.content.data + ']')[0];
          var prettyJson = toolifyDcResource(resource, 0);
@@ -356,7 +373,7 @@ function deleteDataInType(resource, success, error) {
 
 function postAllData(resources, success, error) {
    dcApi.dc.postAllData({body:resources,
-         Authorization:'Basic YWRtaW46YWRtaW4='},
+         Authorization:getAuthHeader()},
       function(data) {
          var resResources = eval(data.content.data);
          var prettyJson = toolifyDcList(resResources, null, null, null, 0);

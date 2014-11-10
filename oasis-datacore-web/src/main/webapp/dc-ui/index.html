@@ -19,6 +19,32 @@
   <script src='lib/highlight.7.3.pack.js' type='text/javascript'></script>
   <script src='common/lib/datacore-ui.js' type='text/javascript'></script>
   <script type="text/javascript">
+    function initUserInfo() {
+       var userinfo;
+       var userinfoString = readCookie('userinfo');
+       if (userinfoString && userinfoString !== null) {
+          userinfo = JSON.parse(userinfoString);
+          if (!userinfo || userinfo === null) {
+             console.log('Unable to parse userinfo ' + userinfoString);
+          }
+          $('#logout').show();
+       } else {
+          userinfo = {
+                nickname : 'Administrator',
+                sub_groups : 'admin,u_john,tutor_jim,rm_altTourism.place.SofiaMonastery_readers',
+                test : true
+          };
+          $('#logout').hide();
+       }
+       var welcomeHtml = 'Welcome <span style="text-decoration:underline;" title="'
+          + ((userinfo.sub_groups) ? 'groups: ' + userinfo.sub_groups : 'no groups') + '">'
+          + userinfo.nickname + '</span>'
+          + ((userinfo.test) ? ' (test account)' : '')
+          + ((userinfo.email) ? ' (' + userinfo.email + ')' : '')
+          + ((userinfo.test) ? ' - <a href="/dc/playground/login">login</a>' : '');
+       $('#userinfo').html(welcomeHtml);
+    }
+    
     $(function () {
       window.swaggerUi = new SwaggerUi({
       url: "/api-docs", // OASIS
@@ -40,17 +66,26 @@
       docExpansion: "list" // OASIS rather than none, full see https://github.com/wordnik/swagger-ui
     });
 
-    $('#input_apiKey').change(function() {
+    /*$('#input_apiKey').change(function() {
       var key = $('#input_apiKey')[0].value;
       console.log("key: " + key);
       if(key && key.trim() != "") {
         console.log("added key " + key);
         window.authorizations.add("key", new ApiKeyAuthorization("api_key", key, "query"));
       }
-    })
+    })*/
     window.swaggerUi.load();
-  });
 
+    initUserInfo();
+    
+   $('#logout').on('click', function(e) {
+      e.preventDefault();
+      deleteCookie('authorization');
+      deleteCookie('userinfo');
+      initUserInfo();
+      ///return false;
+   });
+  });
   </script>
 </head>
 
@@ -60,7 +95,7 @@
     <a id="logo" href="http://swagger.wordnik.com">swagger</a>
 
     <form id='api_selector'>
-      <div class='input icon-btn'>
+      <!-- div class='input icon-btn'>
         <img id="show-pet-store-icon" src="images/pet_store_api.png" title="Show Swagger Petstore Example Apis">
       </div>
       <div class='input icon-btn'>
@@ -68,10 +103,17 @@
       </div>
       <div class='input'><input placeholder="http://example.com/api" id="input_baseUrl" name="baseUrl" type="text"/></div>
       <div class='input'><input placeholder="api_key" id="input_apiKey" name="apiKey" type="text"/></div>
-      <div class='input'><a id="explore" href="#">Explore</a></div>
+      <div class='input'><a id="explore" href="#">Explore</a></div --><!-- [OASIS] -->
+      <div class='input' id="userinfo"></div>
+      <div class='input'><a id="logout" href="#">logout</a></div>
     </form>
+    
   </div>
 </div>
+
+<!-- div id="dc-ui-container" class="dc-ui-wrap">
+<div class="info_title">Datacore Import UI</div>
+</div -->
 
 <div id="message-bar" class="swagger-ui-wrap">
   &nbsp;
