@@ -56,7 +56,7 @@
     
     function initDcConfReplacements() {
        for (var key in dcConf) {
-          $(".dcConf_" + key).html(dcConf[key]);
+          $(".dcConf_" + key).html("" + dcConf[key]); // converting to string first
           $(".dcConf_" + key + "_link").html('<a href="' + dcConf[key] + '">' + dcConf[key] + '</a>');
        }
     }
