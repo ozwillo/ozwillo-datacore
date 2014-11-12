@@ -6,11 +6,6 @@
  see https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/view/HandlebarsBodyWriter.java
  -->
 
-<script type="text/javascript">
-var containerUrl = "${datacoreApiServer.containerUrl}";
-var baseUrl = "${datacoreApiServer.baseUrl}";
-</script>
-
 Allows to manage (CRUD) and find Data Resources and their Models using JSON/HTTP REST calls.
 <br/><br/>
 &nbsp;&nbsp;- <b>Data Resources</b> are handled in <a href="http://json-ld.org/">JSON-LD</a>-like 
@@ -100,7 +95,7 @@ examples, FAQ, how to & common use cases, cookbook (writing clients...) and full
 <br/><br/>
 <p>
 <a name="mydata"/>
-<span class="json dcjsonline">GET ${datacoreApiServer.baseUrl}<input type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 550px"></span>
+<span class="json dcjsonline">GET <span class="dcConf_baseUrl">NOT INITED</span><input type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 550px"></span>
 <button onclick="javascript:return findData($('.myurl').val());">go</button>
 <button onclick="javascript:return setUrl('');">reset</button><br/>
 <div class="block response_body">
@@ -109,9 +104,9 @@ examples, FAQ, how to & common use cases, cookbook (writing clients...) and full
 </p>
 <p></p>
 <p></p>
-<b>This endpoint</b> has for base URL <a href="${datacoreApiServer.baseUrl}">${datacoreApiServer.baseUrl}</a> 
+<b>This endpoint</b> has for base URL <span class="dcConf_baseUrl_link">NOT INITED</span> 
 (URL that must be called by clients using HTTP) 
-and for container URL <a href="${datacoreApiServer.containerUrl}">${datacoreApiServer.containerUrl}</a> 
+and for container URL <span class="dcConf_containerUrl_link">NOT INITED</span> 
 (URL that must be used to build Datacore Data resource URIs).
 <br/><br/>
 <b>To add your own data</b> using REST calls, you must first define or reuse the appropriate business-specific Models.
@@ -195,22 +190,28 @@ with a default value that logs as admin in dev mode.
 <strong>This server's configuration:</strong>
 <pre><code>
 ## Development mode (also allows to set system property datacore.dropdb=true ex. in maven)
-datacore.devmode=${datacore.devmode}
+datacore.devmode=<span class="dcConf_devmode">NOT INITED</span>
+
+## Shard Endpoint - full URL (for clients...)
+datacoreApiServer.baseUrl=<span class="dcConf_baseUrl">NOT INITED</span>
+
+## Container - default URL (for URIs...)
+datacoreApiServer.containerUrl=<span class="dcConf_containerUrl">NOT INITED</span>
 
 ## Other (or all) known Datacores (comma-separated container URLs)
-datacoreApiServer.knownDatacoreContainerUrls=${datacoreApiServer.knownDatacoreContainerUrls}
+datacoreApiServer.knownDatacoreContainerUrls=<span class="dcConf_knownDatacoreContainerUrls">NOT INITED</span>
 
 ## Query :
 ## default maximum number of documents to scan when fulfilling a query, overriden by
 ## DCFields', themselves limited by DCModel's. 0 means no limit (for tests), else ex.
 ## 1000 (secure default), 100000 (on query-only nodes using secondary & timeout)... 
 ## http://docs.mongodb.org/manual/reference/operator/meta/maxScan/
-datacoreApiServer.query.maxScan=${datacoreApiServer.query.maxScan}
+datacoreApiServer.query.maxScan=<span class="dcConf_queryMaxScan">NOT INITED</span>
 ## default maximum start position
-datacoreApiServer.query.maxStart=${datacoreApiServer.query.maxStart}
+datacoreApiServer.query.maxStart=<span class="dcConf_queryMaxStart">NOT INITED</span>
 ## default maximum number of documents returned
-datacoreApiServer.query.maxLimit=${datacoreApiServer.query.maxLimit}
+datacoreApiServer.query.maxLimit=<span class="dcConf_queryMaxLimit">NOT INITED</span>
 
 ## Kernel Configuration
-kernel.baseUrl=${kernel.baseUrl}
+kernel.baseUrl=<span class="dcConf_kernelBaseUrl">NOT INITED</span>
 </code></pre>

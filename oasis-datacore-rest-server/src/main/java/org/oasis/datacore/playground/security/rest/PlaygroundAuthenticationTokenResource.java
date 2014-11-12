@@ -23,19 +23,16 @@ import org.apache.cxf.jaxrs.client.WebClient;
 import org.apache.cxf.jaxrs.ext.form.Form;
 import org.oasis.datacore.playground.security.TokenEncrypter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 /**
- * Resource that redirects root GET to a given (absolute or relative) target URI.
+ * Resource that handles playground's OASIS OAuth2 token exchange.
  * 
- * as in https://github.com/pole-numerique/oasis/blob/master/HOWTO/login.md
- * TODO
- * * redirect browser to https://oasis-demo.atolcd.com/a/auth?response_type=code&client_id=29ef97c0-bb33-4f96-be22-3fd480e05d5f&scope=openid%20datacore&redirect_uri=https://portal.oasis-eu.org/callback
+ * OASIS OAuth2 is done as in https://github.com/pole-numerique/oasis/blob/master/HOWTO/login.md
+ * * (see *Login*java) redirect browser to https://oasis-demo.atolcd.com/a/auth?response_type=code&client_id=29ef97c0-bb33-4f96-be22-3fd480e05d5f&scope=openid%20datacore&redirect_uri=https://portal.oasis-eu.org/callback
  * + TODO LATER state and nonce randoms : provide and check at the end
  * * then handle browser redirect to https://portal.oasis-eu.org/callback?code=eyJpZCI6IjA2MzBhNGRjLThhMWYtNDdkNi05NDY3LWU1N2NmNzM0ZDE3Yy9mUTNoY05nWmpvLWdhejFuUU9RME9nIiwiaWF0IjoxNDE1MjcyNDM3NzQ0LCJleHAiOjE0MTUyNzI0OTc3NDR9
  * to get token, by POST to  
@@ -53,69 +50,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author mdutoo
  *
  */
-@Path("dc/playground")
-@Component("datacore.rest.loginResource") // else can't autowire Qualified
-public class PlaygroundAuthenticationResource {
-
-   private static final String RESPONSE_ACCESS_TOKEN = "access_token";
-   private static final String BEARER_AUTH_PREFIX = "Bearer ";
+@Path("dc/playground/token")
+@Component("datacore.playground.tokenResource") // else can't autowire Qualified
+public class PlaygroundAuthenticationTokenResource extends PlaygroundAuthenticationResourceBase {
    
-   @Value("${accounts.authEndpointUrl}")
-   private String accountsLoginEndpointUrl; // = "https://accounts.oasis-eu.org/a/login"; // TODO rm
-   @Value("${datacorePlayground.scopes}")
-   private String playgroundScopes; // = "openid%20datacore%20profile%20email"; // also profile email to get any user infos
-   @Value("${datacoreOAuthTokenService.client_id}")
-   private String datacoreOAuthClientId; // = "dc"; // = "portal"; // TODO rm
-   @Value("${datacoreApiServer.baseUrl}")
-   private String datacoreApiServerBaseUrl;
-   @Value("${datacoreOAuthTokenService.client_secret}")
-   private String datacoreOAuthClientSecret; // = "UJ6mN9Q5SFU6EtVT9zAODkx26U+8eptUDHZgeuVQ1vQ"; // = "1pimkXJiEEDQr1rA89V39SFSqt779weBJqYAhgJ7kX4"; // TODO rm
-   @Value("${accounts.tokenEndpointUrl}")
-   private String accountsTokenEndpointUrl; // = "https://accounts.oasis-eu.org/a/token"; // TODO rm
-   @Value("${datacorePlayground.tokenExchangeRedirectUrl}")
-   private String playgroundTokenExchangeRedirectUrl; // = "https://data.oasis-eu.org/dc/playground/token"; // = https://portal.oasis-eu.org/callback // TODO rm
-   @Value("${datacorePlayground.uiUrl}")
-   private String playgroundUiUrl; // = "http://localhost:8080/dc-ui/index.html"; // TODO rm
-   @Value("${datacore.devmode}")
-   private boolean devmode;
-   @Value("${kernel.userInfoEndpointUrl}")
-   private String kernelUserInfoEndpointUrl; // = "https://kernel.oasis-eu.org/a/userinfo"; // TODO rm
-   //@Value("${datacorePlayground.cookie.secure}")
-   // WARNING #{!datacore.devmode} doesn't work because of Spring EL bug when resolving dotted pathes
-   // see http://georgovassilis.blogspot.fr/2013/11/spring-value-and-resolving-property.html
-   private boolean cookieSecure; // requires HTTPS see https://www.owasp.org/index.php/SecureFlag
-   @Value("${datacorePlayground.cookie.maxAge}")
-   private int cookieMaxAge; // = 3600; // tokens last 1 hour
    @Autowired
    private TokenEncrypter tokenEncrypter;
-   private ObjectMapper jsonNodeMapper = new ObjectMapper();
-   /** cache */
-   private String loginRedirectUri = null;
    
    @PostConstruct
    protected void init() {
       cookieSecure = !devmode; // cookie secure requires HTTPS see https://www.owasp.org/index.php/SecureFlag
-      
-      String state = "a"; // TODO LATER
-      String nonce = "a"; // TODO LATER
-      loginRedirectUri = accountsLoginEndpointUrl + "?response_type=code&client_id=" + datacoreOAuthClientId
-            + "&state=" + state + "&nonce=" + nonce
-            + "&scope=" + playgroundScopes + "&redirect_uri=" + playgroundTokenExchangeRedirectUrl;
    }
 
    @GET
-   @Path("login")
-   public void redirectToKernelLogin() {
-      try {
-         throw new WebApplicationException(Response.seeOther(new URI(this.loginRedirectUri)).build());
-      } catch (URISyntaxException usex) {
-         throw new WebApplicationException(usex, Response.serverError()
-               .entity("Redirection target " + this.loginRedirectUri + " should be an URI").build());
-      }
-   }
-
-   @GET
-   @Path("token")
+   @Path("")
    public void handleKernelCodeRedirectAndExchangeForToken(
          @QueryParam("code") String code, @QueryParam("state") String state)
                throws BadRequestException, ClientErrorException, InternalServerErrorException {
@@ -244,7 +192,7 @@ public class PlaygroundAuthenticationResource {
          // or + 
       } catch (URISyntaxException usex) {
          throw new WebApplicationException(usex, Response.serverError()
-               .entity("Redirection target " + datacoreApiServerBaseUrl + " should be an URI").build());
+               .entity("Redirection target " + baseUrl + " should be an URI").build());
       }
    }
    

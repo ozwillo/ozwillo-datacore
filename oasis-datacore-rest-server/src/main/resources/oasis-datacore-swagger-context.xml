@@ -42,13 +42,14 @@
       <property name="basePath" value="${datacoreApiServer.baseUrl}"/>
       <property name="title" value="Datacore Resource API"/>
       <property name="description">
-         <bean factory-bean="springPlaceholderResolver" factory-method="resolveEmbeddedValue">
-            <constructor-arg type="java.lang.String" >
+         <!-- 20141112 TODO no more need to resolve placeholders (done in ajax) -->
+         <!-- bean factory-bean="springPlaceholderResolver" factory-method="resolveEmbeddedValue">
+            <constructor-arg type="java.lang.String"  -->
                <bean class="org.apache.commons.io.IOUtils" factory-method="toString">
                   <constructor-arg value="classpath:swagger/dc/description.html" type="java.io.InputStream" />
                </bean>
-            </constructor-arg>
-         </bean>
+            <!-- /constructor-arg>
+         </bean -->
       </property>
       <property name="contact" value="http://www.oasis-eu.org"/>
       <property name="license" value="Apache 2.0 License"/><!-- TODO LGPL ??? -->

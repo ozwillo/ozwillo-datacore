@@ -6,6 +6,8 @@ import javax.ws.rs.core.Response;
 
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 /**
  * Resource that returns 200 if Datacore is operational, else 503 if HAProxy
@@ -16,8 +18,10 @@ import org.springframework.stereotype.Component;
  *
  */
 @Path("/dc/status")
-@Component("datacore.rest.statusResource") // else can't autowire Qualified
+@Component("datacore.server.statusResource") // else can't autowire Qualified
 public class StatusResource {
+   
+   private ObjectMapper jsonNodeMapper = new ObjectMapper();
 
    /**
     * TODO fill and return lazily cached Status
@@ -25,7 +29,7 @@ public class StatusResource {
     */
    @GET
    public Response getStatus() {
-      return Response.ok().build();
+      return Response.ok().build(); // TODO LATER .entity(jsonNodeMapper.map(new State(...)))
    }
    
 }

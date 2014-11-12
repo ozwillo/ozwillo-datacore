@@ -121,9 +121,11 @@
          <ref bean="datacore.model.apiImpl"/>
          <ref bean="datacore.rights.apiImpl" /> 
          <ref bean="datacore.contribution.apiImpl" />
-         <ref bean="datacore.rest.loginResource" /> 
+         <ref bean="datacore.playground.loginResource" />
+         <ref bean="datacore.playground.tokenResource" />
+         <ref bean="datacore.playground.configurationResource" />
+         <ref bean="datacore.server.statusResource" />
          <ref bean="swagger.resourceJSON" />
-         <ref bean="datacore.rest.statusResource" />
       </jaxrs:serviceBeans>
       <jaxrs:providers>
          <ref bean="datacoreApiServer.jacksonJsonProvider"/>

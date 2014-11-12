@@ -29,8 +29,9 @@
 	      use-expressions="true"><!- else Unsupported configuration attributes: [permitAll], see http://stackoverflow.com/questions/3388779/websphere-unsupported-configuration-attributes-permitall-using-spring -->
 		<security:intercept-url pattern="/dc/playground/login*" access="IS_AUTHENTICATED_ANONYMOUSLY" />
 		<security:intercept-url pattern="/dc/playground/token*" access="IS_AUTHENTICATED_ANONYMOUSLY" />
-		<!-- security:intercept-url pattern="/api-docs/**" access="IS_AUTHENTICATED_ANONYMOUSLY" / --><!-- TOOO DEVMODE ONLY else 401 : undefined http://localhost:8080/api-docs -->
-		<!-- security:intercept-url pattern="/dc-ui/**" access="IS_AUTHENTICATED_ANONYMOUSLY" / --><!-- TOOO DEVMODE ONLY else 401 : undefined http://localhost:8080/api-docs -->
+		<security:intercept-url pattern="/api-docs/**" access="IS_AUTHENTICATED_ANONYMOUSLY" /><!-- TOOO LATER in prod add cookie check auth filter instead #47, DEVMODE ONLY else 401 : undefined http://localhost:8080/api-docs -->
+		<security:intercept-url pattern="/dc-ui/**" access="IS_AUTHENTICATED_ANONYMOUSLY" /><!-- TOOO LATER in prod add cookie check auth filter instead #47, DEVMODE ONLY else 401 : undefined http://localhost:8080/api-docs -->
+		<security:intercept-url pattern="/dc/playground/configuration*" access="IS_AUTHENTICATED_ANONYMOUSLY" /><!-- TOOO LATER in prod add cookie check auth filter, DEVMODE ONLY else 401 : undefined http://localhost:8080/api-docs -->
 		<security:intercept-url pattern="/**" access="SCOPE_DATACORE, IS_AUTHENTICATED_FULLY" />
 		<!-- security:custom-filter position="BASIC_AUTH_FILTER" ref="basicAuthenticationFilter" / --><!-- TOOO DEVMODE ONLY -->
 		<security:custom-filter ref="oauth2ProviderFilter" after="BASIC_AUTH_FILTER" /> <!--  before="PRE_AUTH_FILTER" -->
