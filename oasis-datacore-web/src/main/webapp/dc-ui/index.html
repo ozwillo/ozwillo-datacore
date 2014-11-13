@@ -86,7 +86,10 @@
 
    $(function () {
       // getting dc playground conf ex. devmode :
-      $.ajax({url:"/dc/playground/configuration",success:function(result){
+      $.ajax({
+         url:"/dc/playground/configuration",
+         headers: { Authorization:getAuthHeader() },
+         success:function(result){
          window.dcConf = JSON.parse(result);
          console.log("conf", dcConf);
        

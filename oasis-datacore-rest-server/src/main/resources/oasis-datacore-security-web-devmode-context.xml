@@ -36,12 +36,11 @@
 		<security:intercept-url pattern="/dc/playground/login*" access="IS_AUTHENTICATED_ANONYMOUSLY" />
 		<security:intercept-url pattern="/dc/playground/token*" access="IS_AUTHENTICATED_ANONYMOUSLY" />
 		
-		<!-- DEVMODE ONLY Datacore playground UI anonymous access :
-		else 401 : undefined http://localhost:8080/api-docs
-		TOOO LATER in prod add cookie check auth filter instead #47 -->
-		<security:intercept-url pattern="/dc/playground/configuration*" access="IS_AUTHENTICATED_ANONYMOUSLY" />
-		<security:intercept-url pattern="/api-docs/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
-		<security:intercept-url pattern="/dc-ui/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<!-- TODO LATER DEVMODE ONLY Datacore playground UI anonymous access :
+		else 401 : undefined http://localhost:8080/api-docs -->
+		<!-- NB. /dc/playground/configuration is called with auth (from ajax) even in devmode -->
+		<security:intercept-url pattern="/api-docs/**" access="IS_AUTHENTICATED_ANONYMOUSLY" /><!-- TODO LATER rather hack swagger to call with auth (from ajax), or add cookie check auth filter instead #47 -->
+		<security:intercept-url pattern="/dc-ui/**" access="IS_AUTHENTICATED_ANONYMOUSLY" /><!-- TOOO LATER rather add cookie check auth filter instead #47 -->
 		
 		<!-- Datacore protection : -->
 		<security:intercept-url pattern="/dc/**" access="SCOPE_DATACORE, IS_AUTHENTICATED_FULLY" /><!-- DEVMODE ONLY protect API use (not required outside devmode) -->
