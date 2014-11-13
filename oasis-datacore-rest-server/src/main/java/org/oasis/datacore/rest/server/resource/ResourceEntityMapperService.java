@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.ws.rs.core.MediaType;
+
 import org.apache.cxf.message.Exchange;
 import org.apache.cxf.message.Message;
 import org.joda.time.DateTime;
@@ -37,7 +39,6 @@ import org.oasis.datacore.server.uri.UriService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -744,28 +745,38 @@ public class ResourceEntityMapperService {
          return entityPropValue;
       case "i18n" :
          Exchange exchange = cxfJaxrsApiProvider.getExchange();
-         if (exchange != null // else not called through REST)
-               && !MediaType.APPLICATION_JSON.isCompatibleWith(
-                     MediaType.valueOf((String) exchange.getInMessage().get(Message.ACCEPT_CONTENT_TYPE)))) {
-            // TODO better : all JSONLD-backed content types ex. nquads, see JsonLdJavaRdfProvider
-            @SuppressWarnings("unchecked")
-            List<Object> entityI18nPropValue = (List<Object>) entityPropValue;
-            ArrayList<Object> resourceI18nPropValue = new ArrayList<Object>();
-            
-            for (Object mapResourceElement : entityI18nPropValue) {
-               if(mapResourceElement instanceof Map<?, ?>) {
-                  Map<String, String> tempMap = new HashMap<String, String>();
-                  
-                  @SuppressWarnings("unchecked")
-                  Map<String, String> mapResourceItem = (Map<String, String>) mapResourceElement;
-                  tempMap.put("@language", mapResourceItem.get("l"));
-                  tempMap.put("@value", mapResourceItem.get("v"));
-                  resourceI18nPropValue.add(tempMap);
-               } else {
-                  logger.error("i18n value list element is not a map but " + mapResourceElement);
+         if (exchange != null) { // else not called through REST
+            String acceptContentType = (String) exchange.getInMessage().get(Message.ACCEPT_CONTENT_TYPE);
+            if (acceptContentType != null) {
+               int indexOfComma = acceptContentType.indexOf(',');
+               if (indexOfComma != -1) {
+                  // there are actually several, let's only check the first one :
+                  // (this is an optimization, the actual content type is chosen later in content negociation)
+                  acceptContentType = acceptContentType.substring(0, indexOfComma);
                }
             }
-            entityPropValue = resourceI18nPropValue;
+            if (!MediaType.APPLICATION_JSON_TYPE.isCompatible(MediaType.valueOf(acceptContentType))) {
+               // for all formats (including especially JSONLD & RDF ones), convert to JSONLD :
+               // TODO better : all JSONLD-backed content types ex. nquads, see JsonLdJavaRdfProvider
+               @SuppressWarnings("unchecked")
+               List<Object> entityI18nPropValue = (List<Object>) entityPropValue;
+               ArrayList<Object> resourceI18nPropValue = new ArrayList<Object>();
+               
+               for (Object mapResourceElement : entityI18nPropValue) {
+                  if(mapResourceElement instanceof Map<?, ?>) {
+                     Map<String, String> tempMap = new HashMap<String, String>();
+                     
+                     @SuppressWarnings("unchecked")
+                     Map<String, String> mapResourceItem = (Map<String, String>) mapResourceElement;
+                     tempMap.put("@language", mapResourceItem.get("l"));
+                     tempMap.put("@value", mapResourceItem.get("v"));
+                     resourceI18nPropValue.add(tempMap);
+                  } else {
+                     logger.error("i18n value list element is not a map but " + mapResourceElement);
+                  }
+               }
+               entityPropValue = resourceI18nPropValue;
+            } // else for (native) JSON format only keep l & v
          }
          return entityPropValue;
       case "map" :
