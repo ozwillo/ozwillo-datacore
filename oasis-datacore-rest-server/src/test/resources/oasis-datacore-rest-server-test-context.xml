@@ -45,11 +45,13 @@
          <ref bean="datacoreApiImpl"/>
          <ref bean="datacore.model.apiImpl"/>
          <ref bean="datacore.rights.apiImpl" /> 
-         <ref bean="datacore.contribution.apiImpl" /> 
+         <ref bean="datacore.contribution.apiImpl" />
+         <ref bean="datacore.server.rootRedirectResource" />
+         <ref bean="datacore.server.statusResource" />
+         <ref bean="datacore.playground.loginResource" />
+         <ref bean="datacore.playground.tokenResource" />
+         <ref bean="datacore.playground.configurationResource" />
          <ref bean="swagger.resourceJSON" />
-         <bean class="org.oasis.datacore.rest.server.RootRedirectResource">
-            <property name="targetUri" value="${datacoreApiServer.baseUrl}/dc-ui/index.html"/>
-         </bean>
       </jaxrs:serviceBeans>
       <jaxrs:providers>
          <ref bean="datacoreApiServer.jacksonJsonProvider"/>

@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
  *
  */
 @Path("/")
-@Component("datacore.rest.rootRedirectResource") // else can't autowire Qualified
+@Component("datacore.server.rootRedirectResource") // else can't autowire Qualified
 public class RootRedirectResource extends RedirectResourceBase {
 
    @Value("${datacoreApiServer.baseUrl}/dc-ui/index.html")

@@ -1,11 +1,17 @@
 package org.oasis.datacore.rest.server;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 
@@ -27,9 +33,20 @@ public class StatusResource {
     * TODO fill and return lazily cached Status
     * @return
     */
+   @Path("")
    @GET
    public Response getStatus() {
-      return Response.ok().build(); // TODO LATER .entity(jsonNodeMapper.map(new State(...)))
+      Map<String,Object> statusMap = new HashMap<String,Object>();
+      //statusMap.put("mongodb", true); // TOOD LATER compute & cache
+      //statusMap.put("kernel", true);
+      try {
+         return Response.ok().entity(jsonNodeMapper.writer().writeValueAsString(statusMap)).build();
+      } catch (JsonProcessingException jpex) {
+         throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+               .entity("Error writing status as JSON ("
+                     + statusMap + ") : " + jpex.getMessage())
+                     .type(MediaType.TEXT_PLAIN).build());
+      }
    }
    
 }
