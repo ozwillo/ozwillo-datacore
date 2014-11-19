@@ -1,6 +1,8 @@
 package org.oasis.datacore.rest.server.resource;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,6 +45,11 @@ import org.springframework.stereotype.Component;
 @Component // TODO @Service ??
 public class ResourceService {
 
+   // default conf : (TODO LATER might be conf'd in prop file or even request headers)
+   private boolean detailedErrorsMode = true;
+   private boolean matchBaseUrlMode = true;
+   private boolean normalizeUrlMode = true;
+   
    @Autowired
    private UriService uriService;
    @Autowired
@@ -140,9 +147,9 @@ public class ResourceService {
       // by getting result with outMessage.getContent(Object.class), see ServiceInvokerInterceptor.handleMessage() l.78
       // conf :
       // TODO header or param...
-      boolean detailedErrorsMode = true;
-      boolean matchBaseUrlMode = true;
-      boolean normalizeUrlMode = true;
+      ///boolean detailedErrorsMode = true;
+      ///boolean matchBaseUrlMode = true;
+      ///boolean normalizeUrlMode = true;
 
       boolean isCreation = true;
 
@@ -243,7 +250,7 @@ public class ResourceService {
       
       dataEntity.setModelName(dcModel.getName()); // TODO LATER2 check that same (otherwise ex. external approvable contrib ??)
       ///dataEntity.setId(stringUri); // NOO "invalid Object Id" TODO better
-      dataEntity.setTypes(resource.getTypes()); // TODO or no modelType, or remove modelName ??
+      dataEntity.setTypes(buildResourceTypes(resource, dcModel)); // TODO or no modelType, or remove modelName ??
       
       // parsing resource according to model :
       DCResourceParsingContext resourceParsingContext = new DCResourceParsingContext(dcModel, uri.getId());
@@ -311,6 +318,52 @@ public class ResourceService {
    }
    
 
+   /**
+    * Shortcut to buildResourceTypes(DCResource resource, DCModel dcModel)
+    * @param resource
+    * @return model name (taken from URI), then all its mixins (including inherited models),
+    * then any additional resource type
+    * @throws BadUriException 
+    * @throws ResourceTypeNotFoundException 
+    */
+   public List<String> buildResourceTypes(DCResource resource) throws BadUriException, ResourceTypeNotFoundException {
+      DCURI uri = uriService.normalizeAdaptCheckTypeOfUri(resource.getUri(),
+            null, normalizeUrlMode, matchBaseUrlMode);
+      return buildResourceTypes(resource, uri.getType());
+   }
+   /**
+    * Shortcut to buildResourceTypes(DCResource resource, DCModel dcModel)
+    * @param resource
+    * @param modelType
+    * @return model name, then all its mixins (including inherited models),
+    * then any additional resource type
+    * @throws ResourceTypeNotFoundException 
+    */
+   public List<String> buildResourceTypes(DCResource resource, String modelType) throws ResourceTypeNotFoundException {
+      DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
+      if (dcModel == null) {
+         throw new ResourceTypeNotFoundException(modelType, null, null, resource);
+      }
+      return buildResourceTypes(resource, dcModel);
+   }
+   /**
+    * 
+    * @param resource
+    * @param dcModel
+    * @return model name, then all its mixins (including inherited models),
+    * then any additional resource type
+    */
+   public List<String> buildResourceTypes(DCResource resource, DCModel dcModel) {
+      Set<String> modelMixinNames = dcModel.getGlobalMixinNames(); // NB. ordered
+      LinkedHashSet<String> types = new LinkedHashSet<String>(modelMixinNames.size() + 1);
+      types.add(dcModel.getName());
+      types.addAll(modelMixinNames);
+      types.addAll(resource.getTypes()); // NB. insertion order is <i>not</i> affected if an element is <i>re-inserted</i> into the set
+      return new ArrayList<String>(types);
+      //return resource.getTypes();
+   }
+
+   
    /**
     * 
     * @param uri

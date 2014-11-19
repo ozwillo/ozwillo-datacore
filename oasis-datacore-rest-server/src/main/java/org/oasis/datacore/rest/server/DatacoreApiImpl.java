@@ -26,11 +26,11 @@ import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelService;
+import org.oasis.datacore.core.request.DCRequestContextProvider;
 import org.oasis.datacore.historization.exception.HistorizationException;
 import org.oasis.datacore.historization.service.HistorizationService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
-import org.oasis.datacore.rest.api.binding.DatacoreObjectMapper;
 import org.oasis.datacore.rest.api.util.DCURI;
 import org.oasis.datacore.rest.server.cxf.CxfJaxrsApiProvider;
 import org.oasis.datacore.rest.server.cxf.JaxrsServerBase;
@@ -76,6 +76,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
    private static final Logger logger = LoggerFactory.getLogger(DatacoreApiImpl.class);
 
    private boolean strictPostMode = false;
+
    
    @Autowired
    private ResourceService resourceService;
@@ -98,9 +99,9 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
 
    @Autowired
    private CxfJaxrsApiProvider cxfJaxrsApiProvider;
-
-   // TODO TODOOOOOOOOOOOOOOOOOOOOOOOO improve that !!
-   DatacoreObjectMapper dcObjectMapper = new DatacoreObjectMapper();
+   @Autowired
+   ///@Qualifier("datacore.cxfJaxrsApiProvider")
+   protected DCRequestContextProvider requestContextProvider; // TODO use it
 
    
    public DCResource postDataInType(DCResource resource, String modelType) {

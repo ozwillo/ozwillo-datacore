@@ -18,7 +18,10 @@ import org.springframework.beans.factory.annotation.Autowired;
  * Inits from Resource and replaces DCModel (or removes it)
  * TODO TODO also at startup !!
  * TODO LATER checks BEFOREHANDS for update compatibility, else abort using AbortOperationEventException
- * TODO LATER also update models (& mixins) that reuse the updated one, and abort on delete !
+ * TODO LATER also update models (& mixins) that reuse the updated one
+ * (DispatchModelUpdateListener that on ModelDCEvent.UPDATED looks for inheriting models and recreates
+ * them, OR BETTER (transactional ??) sync task engine that avoids doing it in the wrong order
+ * or even merges tasks) , and abort on delete !
  * TODO move most to ModelResourceMappingService & Model(Admin)Service !
  * 
  * @author mdutoo

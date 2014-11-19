@@ -106,15 +106,40 @@ public class UriService {
     * * by internalPostDataInType on root posted URI (where type is known and that can be relative)
     * * to check referenced URIs and URIs post/put/patch where type is not known (and are never relative)
     * @param stringUriValue
-    * @param modelType if any should already have been checked and should be same as uri's if not relative
+    * @param expectedModelType if any should already have been checked,
+    * if relative is required and used to build URI
     * @param normalizeUrlMode
     * @param replaceBaseUrlMode
     * @return
     * @throws BadUriException if missing (null), malformed, syntax,
     * Datacore URI's and given modelType don't match
     */
-   public DCURI normalizeAdaptCheckTypeOfUri(String stringUri, String modelType,
+   public DCURI normalizeAdaptCheckTypeOfUri(String stringUri, String expectedModelType,
          boolean normalizeUrlMode, boolean matchBaseUrlMode) throws BadUriException {
+      return normalizeAdaptCheckTypeOfUri(stringUri, expectedModelType,
+            normalizeUrlMode, matchBaseUrlMode, false);
+   }
+   /**
+    * DON'T USE IT allows to ensureExpectedModelType which was historically the case
+    * but is incompatible with openly typed links, ex. a (Geo)Ancestor-typed link
+    * should allow City as well as Country model types.
+    * 
+    * Parses container, if known (Datacore) parses model type and checks it and parses id.
+    * Used
+    * * by internalPostDataInType on root posted URI (where type is known and that can be relative)
+    * * to check referenced URIs and URIs post/put/patch where type is not known (and are never relative)
+    * @param stringUriValue
+    * @param expectedModelType if any should already have been checked and should be same as uri's
+    * if matchExpectedModelType and not relative, if relative is required and used to build URI
+    * @param normalizeUrlMode
+    * @param replaceBaseUrlMode
+    * @param matchExpectedModelType 
+    * @return
+    * @throws BadUriException if missing (null), malformed, syntax,
+    * Datacore URI's and given modelType don't match
+    */
+   public DCURI normalizeAdaptCheckTypeOfUri(String stringUri, String expectedModelType,
+         boolean normalizeUrlMode, boolean matchBaseUrlMode, boolean ensureExpectedModelType) throws BadUriException {
       if (stringUri == null || stringUri.length() == 0) {
          // TODO LATER2 accept empty uri and build it according to model type (governance)
          // for now, don't support it :
@@ -162,13 +187,13 @@ public class UriService {
       // check URI model type : against provided one if any, otherwise against known ones
       String[] iri = UriHelper.parseIri(urlPathWithoutSlash/*, refModel*/); // TODO LATER cached model ref ?! what for ?
       String uriType = iri[0];
-      if (modelType != null) {
+      if (expectedModelType != null) {
          if (uriType == null) {
-            uriType = modelType;
-         } else if (!modelType.equals(uriType)) {
+            uriType = expectedModelType;
+         } else if (ensureExpectedModelType && !expectedModelType.equals(uriType)) {
             //if (!modelService.hasType(refEntity, ((DCResourceField) dcField).getTypeConstraints())) {
             throw new BadUriException("URI resource model type " + uriType
-                  + " does not match provided expected one " + modelType, stringUri);
+                  + " does not match provided expected one " + expectedModelType, stringUri);
          }
       } else if (uriType == null) {
          throw new BadUriException("At least one of expected or provided URI "

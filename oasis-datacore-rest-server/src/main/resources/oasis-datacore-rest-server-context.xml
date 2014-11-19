@@ -89,9 +89,6 @@
    </cxf:bus>
    
    
-   <!-- provides HTTP protocol info to JAXRS server impl -->
-   <bean id="datacore.cxfJaxrsApiProvider" class="org.oasis.datacore.rest.server.cxf.CxfJaxrsApiProvider"/>
-   
    <!-- mapper taken out to configure it (allow to inject it in ArrayServerInInterceptor, register modules) -->
    <bean id="datacoreApiServer.objectMapper" class="org.oasis.datacore.rest.api.binding.DatacoreObjectMapper"/>
    <bean id="datacoreApiServer.jacksonJsonProvider" class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider">
