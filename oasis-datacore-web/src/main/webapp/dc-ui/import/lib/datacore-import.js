@@ -1,5 +1,10 @@
   var containerUrl = "http://data.oasis-eu.org/"; // rather auto defined in description.html NOO REQUIRES SwaggerUi
   
+  // first four letters of model import file
+  function buildModelDomainPrefix(modelFileName) {
+     return modelFileName.substring(modelFileName.lastIndexOf('/') + 1, 3).toLowerCase();
+  }
+  
   function trimIfAnyElseNull(value) {
      if (typeof value === 'string') {
         value = value.trim();
@@ -354,7 +359,7 @@
                fieldHasValue = true;
             }
             
-         } else {
+         } else if (!fieldHasValue) {
             // looking for local value :
             // (including if (non sub)resource uri)
             // in column mixinField["importconf:internalName"] or else fieldName
@@ -1111,10 +1116,11 @@
                   "date" : "date",
                   "list" : "list"
             },
-            domainPrefix : "elec",
+            domainPrefix : 'elec', // first three letters of model import file, changed on file select by UI calling buildModelDomainPrefix()
             mixinMajorVersion : 0, // TODO better
             metamodel : {},
             model : {
+               fileName : '', // set below
                modelOrMixins : {}, // NOOOO MUST NOT BE USED outside of csvToModel because have no global fields, rather use .data.involvedMixins
                mixinNameToFieldNameTree : {},
                fieldNamesWithInternalNameMap : {}, // used as set to get all models or mixins that are imported
@@ -1129,6 +1135,7 @@
                errorHtml : ""
             },
             data : {
+               fileName : '', // set below
                dataColumnNames : null,
                involvedMixins : [],
                resources : {},
@@ -1185,10 +1192,14 @@
          }
       };
 
-      if ($(".modelFile").val() != "") {
+
+      importState.domainPrefix = $(".domainPrefix").val(); // changed by UI on model file select to its first three letters, else elec
+      importState.model.fileName = $(".modelFile").val();
+      if (importState.model.fileName !== "") {
          $(".modelFile").parse({ config : modelParsingConf });
       } else {
-         Papa.parse("samples/openelec/oasis-donnees-metiers-openelec.csv?reload="
+         importState.model.fileName = "samples/openelec/oasis-donnees-metiers-openelec.csv";
+         Papa.parse(importState.model.fileName + "?reload="
                + new Date().getTime(), modelParsingConf); // to prevent browser caching
       }
 

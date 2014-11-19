@@ -57,6 +57,12 @@
       
       var baseUrl = buildUrl(window.location.href.toString(), "");
       $('.baseUrl').html(baseUrl);
+      
+      $('.modelFile').change(function(e){
+         $in=$(this);
+         ///$in.next().html($in.val());
+         $('.domainPrefix').val(buildModelDomainPrefix($in.val()));
+      });
   });
 
   </script>
@@ -69,6 +75,9 @@
 
 <br/><br/>
 <div style="display: inline-block; font-weight: bold; width: 150px;">Models :</div>
+<br/><br/>
+<span title="Used to generate model prefixes">Model domain prefix</span> :
+<input type="text" class="domainPrefix" value="elec" style="width: 50px"/>
 <br/><br/>
 <input type="file" class="modelFile"/>&nbsp;&nbsp;
 samples :
