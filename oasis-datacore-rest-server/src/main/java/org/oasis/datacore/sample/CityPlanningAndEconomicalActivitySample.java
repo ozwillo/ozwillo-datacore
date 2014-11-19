@@ -162,7 +162,7 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleMetho
          
          // about destination of use :
          .addField(new DCField("cityarea:destinationOfUse_normalizedCode", "string", true, 100)) // COD_N "1,1", "2.4", "6", "6,32"
-         .addField(new DCField("cityarea:destinationOfUse_description", "strin", true, 100)) // ex. "rezidentiale consolidato"
+         .addField(new DCField("cityarea:destinationOfUse_description", "string", true, 100)) // ex. "rezidentiale consolidato"
          .addField(new DCField("cityarea:destinationOfUse_sigla", "float", true, 100)) // non-standardized, decided internally by its city ; R2 R9 M1...
          // + city of use to differentiate sigla
          // => to be extracted to another Model, meaning we'll add its uri/id :
