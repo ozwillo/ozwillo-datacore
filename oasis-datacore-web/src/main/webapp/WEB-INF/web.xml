@@ -29,6 +29,10 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 			in swagger-ui subdirectory. Alternative would be file extension-driven mapping 
 			to (swagger files in) root directory. -->
 	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>default</servlet-name><!-- mapping to static resources servlet -->
+		<url-pattern>/favicon.ico</url-pattern>
+	</servlet-mapping>
 
 	<servlet-mapping>
 		<servlet-name>CXFServlet</servlet-name>
