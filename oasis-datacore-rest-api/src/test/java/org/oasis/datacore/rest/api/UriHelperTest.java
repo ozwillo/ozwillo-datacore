@@ -107,14 +107,11 @@ public class UriHelperTest {
    }
    
    @Test
-   public void testBuildUri() throws Exception {  
+   public void testSafeCharacters() throws Exception {
       String modelType = "alt.tourism.placeKind";
-      
-      // test OK on always characters in modelType ($-_.())
-      String uri = UriHelper.buildUri(containerUrl, modelType + "$", "hotel");
-      Assert.assertEquals(containerUrl + DatacoreApi.DC_TYPE_PATH + modelType + "$/hotel", uri);
 
-      // test fails on bad practice modelType (characters beyond $-_.())
+      // test fails on bad practice modelType (characters beyond $-_.() AND +!*'
+      // i.e. reserved $&+,/:;=?@ & unsafe  "<>#%{}|\^~[]`)
       try {
          UriHelper.buildUri(containerUrl, modelType + "?", "hotel");
          Assert.fail("? should be bad practice in modelType");
@@ -122,7 +119,51 @@ public class UriHelperTest {
          Assert.assertTrue(true);
       }
       
+      // test OK on always characters in modelType ($-_.())
+      String uri = UriHelper.buildUri(containerUrl, modelType + "$", "hotel");
+      Assert.assertEquals(containerUrl + DatacoreApi.DC_TYPE_PATH + modelType + "$/hotel", uri);
+
+      // same on ':'
+      modelType = "geo:City_0";
+      uri = UriHelper.buildUri(containerUrl, modelType, "FR/Paris");
+      Assert.assertTrue(uri.contains(modelType));
+      
+      // same on all safe chars
+      String safeChars = "$-_.()" + "+!*'";
+      uri = UriHelper.buildUri(containerUrl, modelType, safeChars);
+      Assert.assertTrue(uri.contains(safeChars));
+      
       // TODO check unsafe characters are encoded in iri
+   }
+
+   
+   @Test
+   public void testEncodedCharacters() throws Exception {
+      String modelType = "geo:CityGroup_0";
+      
+      // test that reserved chars are not encoded in path (except obviously ?)
+      String uri = UriHelper.buildUri(containerUrl, modelType, "FR/CC les Châteaux"); // "http://data.oasis-eu.org/dc/type/geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
+      Assert.assertEquals(containerUrl + DatacoreApi.DC_TYPE_PATH + modelType + "/FR/CC%20les%20Ch%C3%A2teaux", uri);
+      String reservedChars = "$&+,/:;=@"; // NOT ?
+      uri = UriHelper.buildUri(containerUrl, modelType, reservedChars);
+      for (int i = 0; i < reservedChars.length(); i++) {
+         char reservedChar = reservedChars.charAt(i);
+         Assert.assertTrue(uri.contains(reservedChar + ""));
+      }
+      
+      // test that unsafe chars are encoded in path
+      uri = UriHelper.buildUri(containerUrl, modelType, "FR/CC les Châteaux"); // "http://data.oasis-eu.org/dc/type/geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
+      Assert.assertEquals(containerUrl + DatacoreApi.DC_TYPE_PATH + modelType + "/FR/CC%20les%20Ch%C3%A2teaux", uri);
+      String unsafeChars = " \"<>#%{}|\\^[]`"; // NOT ~ ?!!
+      uri = UriHelper.buildUri(containerUrl, modelType, unsafeChars);
+      for (int i = 0; i < unsafeChars.length(); i++) {
+         char unsafeChar = unsafeChars.charAt(i);
+         if (unsafeChar == '%') {
+            continue; // can't be tested this way
+         }
+         Assert.assertTrue(!uri.contains(unsafeChar + ""));
+      }
+      
    }
    
 }

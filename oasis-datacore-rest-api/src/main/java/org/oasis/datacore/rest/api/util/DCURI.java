@@ -142,8 +142,12 @@ public class DCURI {
     */
    public URI toURI() throws URISyntaxException {
       if (cachedUri == null) {
-         cachedUri = new URI(containerUrl.getScheme(), null,
+         // ex. (decoded) path = "/dc/type/geo:CityGroup_0/FR/CC les Châteaux"
+         URI escapedUri = new URI(containerUrl.getScheme(), null,
             containerUrl.getHost(), containerUrl.getPort(), getPath(), null, null).normalize();
+         // ex. escapedUri = http://data.oasis-eu.org/dc/type/geo:CityGroup_0/FR/CC%20les%20Châteaux
+         cachedUri = new URI(escapedUri.toASCIIString()); // else UTF-8 ex. â not encoded
+         // ex. cachedUri = http://data.oasis-eu.org/dc/type/geo:CityGroup_0/FR/CC%20les%20Ch%C3%A2teaux
       }
       return cachedUri;
    }
@@ -174,6 +178,17 @@ public class DCURI {
       }
       cachedUnencodedStringUri = container + getPath();  // NB. container is ex. http://data.oasis-eu.org
       return cachedUnencodedStringUri;
+   }
+   @Override
+   public boolean equals(Object o) {
+      if (o == null || !(o instanceof DCURI)) {
+         return false;
+      }
+      return this.toString().equals(o.toString());
+   }
+   @Override
+   public int hashCode() {
+      return toString().hashCode();
    }
 
    public URI getContainerUrl() {
