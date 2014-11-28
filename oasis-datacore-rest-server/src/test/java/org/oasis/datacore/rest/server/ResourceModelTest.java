@@ -30,7 +30,6 @@ import org.oasis.datacore.rest.client.QueryParameters;
 import org.oasis.datacore.rest.server.event.EventService;
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.sample.CityCountrySample;
-import org.oasis.datacore.sample.ResourceModelIniter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -99,9 +98,6 @@ public class ResourceModelTest {
 
    @Autowired
    private ModelResourceMappingService mrMappingService;
-   /** TODO rm merge */
-   @Autowired
-   private ResourceModelIniter mrMappingService1;
    
    
    /**
@@ -177,7 +173,7 @@ public class ResourceModelTest {
       DCField clientCityFoundedField = clientCityModel.getField("city:founded");
       Assert.assertTrue(!clientCityFoundedField.isRequired());
       clientCityFoundedField.setRequired(true);
-      mrMappingService1.modelFieldsAndMixinsToResource(clientCityModel, cityModelResource); // mrMappingService1.modelToResource(clientCityModel)
+      mrMappingService.modelFieldsAndMixinsToResource(clientCityModel, cityModelResource); // mrMappingService1.modelToResource(clientCityModel)
       try {
       // updating model & check that changed
       cityModelResource = datacoreApiClient.putDataInType(cityModelResource);
@@ -203,7 +199,7 @@ public class ResourceModelTest {
       } finally {
          // putting it back in default state
          clientCityFoundedField.setRequired(false);
-         mrMappingService1.modelFieldsAndMixinsToResource(clientCityModel, cityModelResource); // mrMappingService1.modelToResource(clientCityModel)
+         mrMappingService.modelFieldsAndMixinsToResource(clientCityModel, cityModelResource); // mrMappingService1.modelToResource(clientCityModel)
          cityModelResource = datacoreApiClient.putDataInType(cityModelResource);
          deleteExisting(villeurbanneCity);
       }
