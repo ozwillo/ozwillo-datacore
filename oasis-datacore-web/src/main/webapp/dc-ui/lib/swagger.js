@@ -826,17 +826,30 @@
     SwaggerOperation.prototype.encodePathParam = function(pathParam) {
       var encParts, part, parts, _i, _len;
       if (pathParam.indexOf("/") === -1) {
-        return encodeURIComponent(pathParam);
+        ///return encodeURIComponent(pathParam);
+        return encodeUriPathComponent(pathParam);
       } else {
         parts = pathParam.split("/");
         encParts = [];
         for (_i = 0, _len = parts.length; _i < _len; _i++) {
           part = parts[_i];
-          encParts.push(encodeURIComponent(part));
+          ///encParts.push(encodeURIComponent(part));
+          encParts.push(encodeUriPathComponent(part));
         }
         return encParts.join("/");
       }
     };
+    var safeCharsRegexString = "0-9a-zA-Z" + "\\$\\-_\\.\\+!\\*'\\(\\)"; // "$-_.()" + "+!*'";
+    var reservedCharsRegexString = "$&+,/:;=@" + "~"; // NOT ? and besides ~ is not encoded by Java URI
+    var pathComponentSafeCharsRegex = new RegExp('[' + safeCharsRegexString + reservedCharsRegexString + ']');
+    function encodeUriPathComponent(pathCpt) {
+       var res = '';
+       for (var cInd in pathCpt) {
+          var c = pathCpt[cInd];
+          res += pathComponentSafeCharsRegex.test(c) ? c : encodeURIComponent(c);
+       }
+       return res;
+    }
     
     SwaggerOperation.prototype.urlify = function(args) {
       var param, queryParams, reg, url, _i, _j, _len, _len1, _ref, _ref1;
@@ -850,9 +863,11 @@
             // OASIS HACK start
             if(param.name.substring(0,13) === "__unencoded__") { // OASIS HACK
                // assume arg is a path and not a path element, so don't encode slash (but encode other chars) :
+               //url = url.replace(reg, this.encodePathParam(args[param.name]));
                url = url.replace(reg, this.encodePathParam(args[param.name]));
             } else {
-               url = url.replace(reg, encodeURIComponent(args[param.name]));
+               //url = url.replace(reg, encodeURIComponent(args[param.name]));
+               url = url.replace(reg, encodeUriPathComponent(args[param.name]));
             }
             // OASIS HACK end
             delete args[param.name];
