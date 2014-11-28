@@ -16,6 +16,13 @@
 
 
 	<dependencies>
+
+      <!-- Datacore Common -->
+      <dependency>
+        <groupId>org.oasis.datacore</groupId>
+        <artifactId>oasis-datacore-common</artifactId><!-- brings DCRequestContext -->
+      </dependency>
+      
       <!-- logging : using slf4j / log4j 
       slf4j/logback (log4j successor) more recent, but log4j backend easier with spring & for single conf file
       why http://stackoverflow.com/questions/2533614/what-are-the-latest-options-in-java-logging-frameworks

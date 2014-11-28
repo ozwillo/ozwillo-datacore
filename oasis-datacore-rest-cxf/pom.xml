@@ -19,6 +19,12 @@
 
 	<dependencies>
 
+      <!-- Datacore Common -->
+      <dependency>
+        <groupId>org.oasis.datacore</groupId>
+        <artifactId>oasis-datacore-common</artifactId><!-- brings DCRequestContext -->
+      </dependency>
+
       <!-- Datacore REST API -->
       <dependency>
         <groupId>org.oasis.datacore</groupId>
