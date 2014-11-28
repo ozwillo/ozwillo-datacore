@@ -184,6 +184,7 @@
 	<modules>
 		<!-- module>oasis-datacore-test</module -->
 		<!-- module>oasis-datacore-samples</module -->
+		<module>oasis-datacore-common</module>
 		<module>oasis-datacore-core</module><!-- TODO -api (PermissionDataService 
 			to be called by Social Graph, or in -rest ?), -impl ? -->
 		<module>oasis-datacore-rest-api</module>
@@ -294,6 +295,11 @@
 				<artifactId>oasis-datacore-samples</artifactId>
 				<version>${oasis-datacore.version}</version>
 			</dependency>
+	      <dependency>
+	        <groupId>org.oasis.datacore</groupId>
+	        <artifactId>oasis-datacore-common</artifactId><!-- brings DCRequestContext -->
+				<version>${oasis-datacore.version}</version>
+	      </dependency>
 			<dependency>
 				<groupId>org.oasis.datacore</groupId>
 				<artifactId>oasis-datacore-core</artifactId>
