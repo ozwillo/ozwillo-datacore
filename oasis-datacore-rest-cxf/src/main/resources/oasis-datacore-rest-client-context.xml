@@ -17,6 +17,8 @@
       http://cxf.apache.org/transports/http/configuration http://cxf.apache.org/schemas/configuration/http-conf.xsd
       http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache-3.2.xsd">
 
+   <import resource="classpath:oasis-datacore-common-context.xml" />
+   
    <import resource="classpath:META-INF/cxf/cxf.xml" />
    <!-- import resource="classpath:META-INF/cxf/cxf-extension-http-jetty.xml"/ -->
    <!-- would be for test server but NO : OldSpringSupport [WARN] Import of META-INF/cxf/cxf-extension-http-jetty.xml has been deprecated and is unnecessary-->
@@ -43,6 +45,8 @@
    <context:annotation-config /><!-- actually auto enabled by previous line -->
    
    <context:component-scan base-package="org.oasis.datacore.rest.api.util"/>
+   
+   <context:component-scan base-package="org.oasis.datacore.rest.server.cxf"/><!--  for DatacoreCxfJaxrsApiProvider -->
    
    <!-- Json-ld Provider :
    client-side, with its own objectMapper so that it doesn't depend on the server-->
@@ -99,6 +103,7 @@
       <jaxrs:outInterceptors>
          <bean class="org.oasis.datacore.rest.client.cxf.QueryParametersClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.ETagClientOutInterceptor"/>
+         <bean class="org.oasis.datacore.rest.client.cxf.ProjectClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.mock.MockLoginClientOutInterceptor"/><!-- TODO mock -->
       </jaxrs:outInterceptors>
       <!-- jaxrs:inInterceptors>
@@ -132,6 +137,7 @@
       <jaxrs:outInterceptors>
          <bean class="org.oasis.datacore.rest.client.cxf.QueryParametersClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.ETagClientOutInterceptor"/>
+         <bean class="org.oasis.datacore.rest.client.cxf.ProjectClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.mock.MockLoginClientOutInterceptor"/><!-- TODO mock -->
       </jaxrs:outInterceptors>
       <jaxrs:features>
@@ -154,6 +160,7 @@
       <jaxrs:outInterceptors>
          <bean class="org.oasis.datacore.rest.client.cxf.QueryParametersClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.ETagClientOutInterceptor"/>
+         <bean class="org.oasis.datacore.rest.client.cxf.ProjectClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.mock.MockLoginClientOutInterceptor"/><!-- TODO mock -->
       </jaxrs:outInterceptors>
       <jaxrs:features>

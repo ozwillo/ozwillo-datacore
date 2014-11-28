@@ -207,7 +207,8 @@ public class IgnCityhallSample extends DatacoreSampleBase {
       ignParcelleModel.addMixin(cityhallIgnParcelleMixin); // NB. doesn't change the Model version ?!?!?!
       ///modelAdminService.addModel(ignParcelleModel); // LATER re-add...
       
-      modelsToCreate.addAll(Arrays.asList(ignParcelleModel, cityhallIgnParcelleMixin));
+      // NB. for now mixins must be added BEFORE models they're added to !!!
+      modelsToCreate.addAll(Arrays.asList(cityhallIgnParcelleMixin, ignParcelleModel));
    }
    
    public void buildModelsCityhallIgnV2Inheritance(List<DCModelBase> modelsToCreate) {

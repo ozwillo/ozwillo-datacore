@@ -24,9 +24,9 @@ import org.oasis.datacore.core.entity.EntityQueryService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
-import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.ModelNotFoundException;
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
-import org.oasis.datacore.core.request.DCRequestContextProvider;
 import org.oasis.datacore.historization.exception.HistorizationException;
 import org.oasis.datacore.historization.service.HistorizationService;
 import org.oasis.datacore.rest.api.DCResource;
@@ -99,9 +99,6 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
 
    @Autowired
    private CxfJaxrsApiProvider cxfJaxrsApiProvider;
-   @Autowired
-   ///@Qualifier("datacore.cxfJaxrsApiProvider")
-   protected DCRequestContextProvider requestContextProvider; // TODO use it
 
    
    public DCResource postDataInType(DCResource resource, String modelType) {
@@ -428,12 +425,6 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
          explainSwitch = true;
       }
       
-      DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
-      if (dcModel == null) {
-         throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
-             .entity("Unknown model type " + modelType).type(MediaType.TEXT_PLAIN).build());
-      }
-      
       // TODO request priority : privilege INDEXED (Queriable) fields for query & sort !!!
       
       MultivaluedMap<String, String> params = uriInfo.getQueryParameters(true);
@@ -445,7 +436,10 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       // of parsed queries
       List<DCEntity> foundEntities;
       try {
-         foundEntities = ldpEntityQueryService.findDataInType(dcModel, params, start, limit);
+         foundEntities = ldpEntityQueryService.findDataInType(modelType, params, start, limit);
+      } catch (ModelNotFoundException mnfex) {
+         throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
+               .entity(mnfex.getMessage()).type(MediaType.TEXT_PLAIN).build());
       } catch (QueryException qex) {
          throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
                .entity(qex.getMessage()).type(MediaType.TEXT_PLAIN).build());
@@ -480,6 +474,9 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       List<DCEntity> entities;
       try {
          entities = this.entityQueryService.queryInType(modelType, query, language);
+      } catch (ModelNotFoundException e) {
+         throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
+               .entity("Unknown Model type " + e.getModelType()).type(MediaType.TEXT_PLAIN).build());
       } catch (QueryException qex) {
          throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
                .entity(qex.getMessage()).type(MediaType.TEXT_PLAIN).build());
@@ -518,7 +515,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
 
 		String uri = uriService.buildUri(modelType, iri);
 		
-		DCModel dcModel = modelService.getModel(modelType);
+		DCModelBase dcModel = modelService.getModelBase(modelType);
 		if (dcModel == null) {
 			throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST).entity("Unknown Model type " + modelType).type(MediaType.TEXT_PLAIN).build());
 		}

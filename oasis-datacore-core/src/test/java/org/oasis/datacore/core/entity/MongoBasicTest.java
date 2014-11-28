@@ -29,7 +29,7 @@ import com.mongodb.MongoClient;
  *
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = { "classpath:oasis-datacore-core-context.xml" })
+@ContextConfiguration(locations = { "classpath:oasis-datacore-core-test-context.xml" })
 @FixMethodOrder // else random since java 7
 public class MongoBasicTest {
    

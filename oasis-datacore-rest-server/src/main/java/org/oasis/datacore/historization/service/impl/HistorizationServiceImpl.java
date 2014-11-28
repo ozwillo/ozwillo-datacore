@@ -3,8 +3,8 @@ package org.oasis.datacore.historization.service.impl;
 import org.apache.commons.lang.StringUtils;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
-import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.historization.exception.HistorizationException;
 import org.oasis.datacore.historization.service.HistorizationService;
@@ -41,10 +41,10 @@ public class HistorizationServiceImpl implements HistorizationService {
 	 * TODO LATER could be on DCResource than DCEntity IF DCResource.cachedEntity !
 	 */
 	@Override
-	public void historize(DCEntity entity, DCModel model) throws HistorizationException {
+	public void historize(DCEntity entity, DCModelBase model) throws HistorizationException {
 		
 		if(isHistorizable(model) && entity != null) {
-			DCModel historizationModel = getHistorizationModel(model);
+		   DCModelBase historizationModel = getOrCreateHistorizationModel(model);
 			
 			// Before inserting we search if the entity already exist in the historized model
 			// We check by URI
@@ -69,9 +69,9 @@ public class HistorizationServiceImpl implements HistorizationService {
 	}
 
 	@Override
-	public DCModel getHistorizationModel(DCModel originalModel) throws HistorizationException {
+	public DCModelBase getOrCreateHistorizationModel(DCModelBase originalModel) throws HistorizationException {
 		if(originalModel != null) {
-			DCModel historizationModel = dcModelService.getModel(originalModel.getName() + HISTORIZATION_COLLECTION_SUFFIX);
+		   DCModelBase historizationModel = getHistorizationModel(originalModel);
 			if(historizationModel != null) {
 				return historizationModel;
 			} else {
@@ -82,16 +82,28 @@ public class HistorizationServiceImpl implements HistorizationService {
 		}
 		
 	}
+
+   @Override
+   public DCModelBase getHistorizationModel(DCModelBase originalModel) throws HistorizationException {
+      if(originalModel == null) {
+         throw new HistorizationException("Original model cannot be null");
+      }
+      return dcModelService.getModelBase(originalModel.getName() + HISTORIZATION_COLLECTION_SUFFIX);
+   }
 	
 	
-	public DCModel createHistorizationModel(DCModel originalModel) throws HistorizationException {
+	// TODO persist to resource
+	public DCModelBase createHistorizationModel(DCModelBase originalModel) throws HistorizationException {
 				
 		if(originalModel != null) {
 			String historizationModelName = originalModel.getName() + HISTORIZATION_COLLECTION_SUFFIX;
-			DCModel historizationModel = new DCModel(historizationModelName);
-			for(DCField originalField : originalModel.getGlobalFieldMap().values()) {
-				historizationModel.addField(originalField);
-			}
+			DCModelBase historizationModel = new DCModel(historizationModelName,
+			      originalModel.getPointOfViewAbsoluteName());
+			historizationModel.addMixin(originalModel);
+         //historizationModel.setStorage(true); // & inherited model must have "a" storage
+         //historizationModel.setInstanciable(true);
+         historizationModel.setDefinition(false); // does not change inherited definition
+			//historizationModel.setHistorizable(false); // TODO prevent changes
 			dataModelServiceImpl.addModel(historizationModel);
 			return historizationModel;
 		} else {
@@ -100,7 +112,7 @@ public class HistorizationServiceImpl implements HistorizationService {
 		
 	}
 	
-	public boolean isHistorizable(DCModel model) throws HistorizationException {
+	public boolean isHistorizable(DCModelBase model) throws HistorizationException {
 		
 		if(model != null) {
 			return model.isHistorizable();
@@ -111,7 +123,7 @@ public class HistorizationServiceImpl implements HistorizationService {
 	}
 
 	@Override
-	public DCEntity getHistorizedEntity(String uri, int version, DCModel originalModel) throws HistorizationException {
+	public DCEntity getHistorizedEntity(String uri, int version, DCModelBase originalModel) throws HistorizationException {
 		
 		if(StringUtils.isEmpty(uri)) {
 			throw new HistorizationException("URI must not be null or empty");
@@ -127,7 +139,7 @@ public class HistorizationServiceImpl implements HistorizationService {
 			return null;
 		}
 		
-		DCModel historizationModel = getHistorizationModel(originalModel);
+		DCModelBase historizationModel = getOrCreateHistorizationModel(originalModel);
 		if(historizationModel == null) {
 			throw new HistorizationException("The historization model of : " + originalModel.getName() + " dont exist, you must activate historization on your model before requesting historized resources");
 		}
@@ -138,7 +150,7 @@ public class HistorizationServiceImpl implements HistorizationService {
 	}
 
 	@Override
-	public String getHistorizedCollectionNameFromOriginalModel(DCModel originalModel) throws HistorizationException {
+	public String getHistorizedCollectionNameFromOriginalModel(DCModelBase originalModel) throws HistorizationException {
 		
 		if(originalModel != null && originalModel.isHistorizable()) {
 			return originalModel.getName() + HISTORIZATION_COLLECTION_SUFFIX;

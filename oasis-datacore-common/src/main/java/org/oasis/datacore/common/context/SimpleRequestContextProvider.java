@@ -72,14 +72,14 @@ public class SimpleRequestContextProvider implements DCRequestContextProvider {
       inited = true;
    }
 
-   public void execInContext() {
+   public void execInContext(Map<String, Object> requestContext) {
       if (SimpleRequestContextProvider.requestContext.get() != null) {
          throw new RuntimeException("There already is a context, clear it first");
       }
       try {
-         /*if (requestContext == null) {
+         if (requestContext == null) {
             requestContext = new HashMap<String, Object>();
-         }*/
+         }
          SimpleRequestContextProvider.requestContext.set(new HashMap<String, Object>());
          
          this.executeInternal();

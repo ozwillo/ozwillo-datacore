@@ -83,7 +83,7 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
    
    @Override
    public void onApplicationEvent(ContextRefreshedEvent event) {
-      if (modelAdminService.getModelMap().isEmpty() && enabled) {
+      if (/*modelAdminService.getModels().isEmpty() && */enabled) { // TODO TODO rather main/testModels.isEmpty() && 
          // NB. to rebootstrap, first empty models !
 
          if (initables != null) {

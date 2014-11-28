@@ -54,8 +54,8 @@ public class MarkaInvestData extends DatacoreSampleBase {
    }
 
    @Override
-   public HashSet<DCModel> getCreatedModels() {
-      return markaInvestModel.getCreatedModels();
+   public HashSet<DCModelBase> getCreatedStorageModels() {
+      return markaInvestModel.getCreatedStorageModels();
    }
 	
 	@Override

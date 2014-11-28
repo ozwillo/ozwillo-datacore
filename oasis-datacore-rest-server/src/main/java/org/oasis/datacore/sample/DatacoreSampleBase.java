@@ -6,7 +6,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +25,6 @@ import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCMixin;
-import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.core.security.mock.MockAuthenticationService;
@@ -46,6 +44,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
 
+import com.google.common.collect.ImmutableMap;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 
@@ -110,7 +109,7 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
    @Autowired
    private ContributionService contributionService;
 
-   protected HashSet<DCModel> models = new HashSet<DCModel>();
+   protected HashSet<DCModelBase> storageModels = new HashSet<DCModelBase>();
 
    
    
@@ -234,16 +233,17 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
       return true;
    }*/
 
-   public HashSet<DCModel> getCreatedModels() {
-      return this.models;
+   /** should only be storage */
+   public HashSet<DCModelBase> getCreatedStorageModels() {
+      return this.storageModels;
    }
    // for tests
    public void cleanCreatedModels() {
-      for (DCModel model : this.getCreatedModels()) {
-         mgo.dropCollection(model.getCollectionName()); // delete data
+      for (DCModelBase model : this.getCreatedStorageModels()) {
+         mgo.dropCollection(model.getCollectionName()); // delete data ; should only be storage
          modelAdminService.removeModel(model.getName()); // remove model
       }
-      this.models.clear();
+      this.storageModels.clear();
    }
    public void cleanModels(DCModelBase ... models) {
       cleanModels(Arrays.asList(models));
@@ -251,14 +251,17 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
    public void cleanModels(List<DCModelBase> models) {
       List<DCModelBase> toBeRemovedModels = new ArrayList<DCModelBase>(models.size());
       for (DCModelBase model : models) {
-         toBeRemovedModels.add(getCreatedModel(model.getName()));
-         if (model instanceof DCModel) {
-            DCModel dcModel = (DCModel) model;
-            mgo.dropCollection(dcModel.getCollectionName()); // delete data
+         String modelType = model.getName();
+         toBeRemovedModels.add(getCreatedModel(modelType));
+         ///DCProject project = modelAdminService.getProject(model.getProjectName());
+         ///DCModelBase storageModel = project.getStorageModel(modelType);
+         if (model.isStorage()) {
+            mgo.dropCollection(model.getCollectionName()); // delete data // storageModel.getAbsoluteName()
             
-            if (dcModel.isHistorizable()) {
+            // TODO LATER make historizable & contributable more than storage models !
+            if (model.isHistorizable()) {
                try {
-                  String historizationCollectionName = historizationService.getHistorizedCollectionNameFromOriginalModel(dcModel);
+                  String historizationCollectionName = historizationService.getHistorizedCollectionNameFromOriginalModel(model);
                   //mgo.remove(new Query(), historizationCollectionName);
                   mgo.dropCollection(historizationCollectionName);
                } catch (HistorizationException e) {
@@ -267,7 +270,7 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
                }
             }
             
-            if (dcModel.isContributable()) {
+            if (model.isContributable()) {
                String contributionCollectionName = model.getName() + ".c"; // TODO TODOOOOOO move
                //mgo.remove(new Query(), historizationCollectionName);
                mgo.dropCollection(contributionCollectionName);
@@ -276,11 +279,11 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
             modelAdminService.removeModel(model.getName()); // remove model
          }
       }
-      this.models.removeAll(toBeRemovedModels); // clean sampleBase state
+      this.storageModels.removeAll(toBeRemovedModels); // clean sampleBase state
    }
 
    public void cleanDataOfCreatedModels() {
-      for (DCModel model : this.getCreatedModels()) {
+      for (DCModelBase model : this.getCreatedStorageModels()) {
          cleanDataOfCreatedModel(model);
       }
    }
@@ -289,29 +292,36 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
    }
    public void cleanDataOfCreatedModels(List<DCModelBase> models) {
       for (DCModelBase model : models) {
-         if (model instanceof DCModel) {
-            cleanDataOfCreatedModel((DCModel) model);
+         if (model.isStorage()) {
+            cleanDataOfCreatedModel(model);
          }
       }
    }
-   public void cleanDataOfCreatedModel(DCModel model) {
+   /** should be only on storage models */
+   public void cleanDataOfCreatedModel(DCModelBase storageModel) {
       // delete (rather than drop & recreate !) : 
-      mgo.remove(new Query(), model.getCollectionName());
+      mgo.remove(new Query(), storageModel.getCollectionName());
 
-      if (model.isHistorizable()) {
+      // TODO LATER make historizable & contributable more than storage models !
+      if (storageModel.isHistorizable()) {
          try {
-            DCModel historizedModel = historizationService.getHistorizationModel(model);
+            DCModelBase historizedModel = historizationService.getHistorizationModel(storageModel);
             if (historizedModel == null) {
-               historizedModel = historizationService.createHistorizationModel(model); // TODO ??????
+               historizedModel = historizationService.createHistorizationModel(storageModel); // TODO ??????
             }
             mgo.remove(new Query(), historizedModel.getCollectionName());
          } catch (HistorizationException e) {
-            throw new RuntimeException("Historization init error of Model " + model.getName(), e);
+            throw new RuntimeException("Historization init error of Model " + storageModel.getName(), e);
          }
       }
       
-      if (model.isContributable()) {
-         String contributionCollectionName = model.getName() + ".c"; // TODO TODOOOOOO move
+      if (storageModel.isContributable()) {
+         String contributionCollectionName = storageModel.getName() + ".c"; // TODO TODOOOOOO move
+         mgo.remove(new Query(), contributionCollectionName);
+      }
+      
+      if (storageModel.isContributable()) {
+         String contributionCollectionName = storageModel.getName() + ".c"; // TODO TODOOOOOO move
          mgo.remove(new Query(), contributionCollectionName);
       }
    }
@@ -324,7 +334,7 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
             return model;
          }
       }
-      for (DCModelBase model : this.models) {
+      for (DCModelBase model : this.storageModels) {
          if (model.getName().equals(modelType)) {
             return model;
          }
@@ -332,7 +342,7 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
       return null;
    }
    private DCModelBase getCreatedModel(String modelType) {
-      for (DCModelBase model : this.models) {
+      for (DCModelBase model : this.storageModels) {
          if (model.getName().equals(modelType)) {
             return model;
          }
@@ -342,15 +352,15 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
    
    
    protected boolean hasSomeModelsWithoutResource() {
-      for (DCModel model : this.models) {
+      for (DCModelBase model : this.storageModels) {
+         String modelType = model.getName();
          try {
-            List<DCEntity> resources = ldpEntityQueryService.findDataInType(model,
-                  new HashMap<String,List<String>>(0), 0, 1);
+            List<DCEntity> resources = ldpEntityQueryService.findDataInType(modelType, null, 0, 1);
             if (resources == null || resources.isEmpty()) {
                return true;
             }
          } catch (QueryException e) {
-            throw new RuntimeException("Init error of resources of model " + model.getName(), e);
+            throw new RuntimeException("Init error of resources of model " + modelType, e);
          }
       }
       return false;
@@ -379,22 +389,20 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
     * @param modelOrMixin
     * @return collectionAlreadyExists
     */
-   protected boolean createModel(DCModelBase modelOrMixin, boolean deleteCollectionsFirst) {
-      if (modelOrMixin instanceof DCModel) {
-         DCModel model = (DCModel) modelOrMixin;
+   protected boolean createModel(DCModelBase model, boolean deleteCollectionsFirst) {
+      if (model.isStorage()) {
          if (deleteCollectionsFirst) {
             modelAdminService.removeModel(model.getName());
-            models.remove(getCreatedModel(model.getName()));
+            storageModels.remove(getCreatedModel(model.getName()));
          }
          // adding model
          modelAdminService.addModel(model);
-         models.add(model);
+         storageModels.add(model);
          
          return ensureCollectionAndIndices(model, deleteCollectionsFirst);
          
       } else { // mixin
-         DCMixin mixin = (DCMixin) modelOrMixin;
-         modelAdminService.addMixin(mixin);
+         modelAdminService.addMixin(model);
          return true;
       }
    }
@@ -411,7 +419,7 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
     * @param deleteCollectionsFirst
     * @return
     */
-   public boolean ensureCollectionAndIndices(DCModel model, boolean deleteCollectionsFirst) {
+   public boolean ensureCollectionAndIndices(DCModelBase model, boolean deleteCollectionsFirst) {
       if (deleteCollectionsFirst) {
          // cleaning data first
          mgo.dropCollection(model.getCollectionName());
@@ -430,32 +438,48 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
       return collectionAlreadyExists;
    }
 
-   public boolean ensureHistorizedCollectionAndIndices(DCModel model, boolean deleteCollectionsFirst) {
-      DCModel historizedModel;
+   public boolean ensureHistorizedCollectionAndIndices(DCModelBase model, boolean deleteCollectionsFirst) {
+      DCModelBase historizedModel;
       try {
-         historizedModel = historizationService.createHistorizationModel(model);
+         ///historizedModel = historizationService.getOrCreateHistorizationModel(model);
+         historizedModel = historizationService.getHistorizationModel(model);
+         if (historizedModel == null) {
+            historizedModel = historizationService.createHistorizationModel(model);
+         }
          if (deleteCollectionsFirst) {
             // cleaning data first
             mgo.dropCollection(historizedModel.getCollectionName());
          }
-         return ensureCollectionAndIndices(historizedModel);
+         
+         boolean res = ensureGenericCollectionAndIndices(historizedModel);
+         // compound index on uri & version :
+         mgo.getCollection(model.getCollectionName()).
+            ensureIndex(new BasicDBObject(new ImmutableMap.Builder<String, Object>()
+                  .put(DCEntity.KEY_URI, 1).put(DCEntity.KEY_V, 1).build()), null, true);
+         return res;
       } catch (HistorizationException e) {
          throw new RuntimeException("Historization init error of Model " + model.getName(), e);
       }
    }
 
-   public boolean ensureContributedCollectionAndIndices(DCModel model, boolean deleteCollectionsFirst) {
-      //contributiondModel = contributionService.createContributionModel(model); // TODO TODOOO
+   public boolean ensureContributedCollectionAndIndices(DCModelBase model, boolean deleteCollectionsFirst) {
+      //contributionModel = contributionService.createContributionModel(model); // TODO TODOOO
       if (deleteCollectionsFirst) {
          // cleaning data first
          String contributionCollectionName = model.getName() + ".c"; // TODO TODOOOOOO move
          mgo.dropCollection(contributionCollectionName);
       }
+      // TODO TODOOOOO compound index on uri and contributor / organization ?!
       return false; // ensureCollectionAndIndices(historizedModel); // TODO TODOOOO
    }
 
-   
-   private boolean ensureCollectionAndIndices(DCModel model) {
+   private boolean ensureCollectionAndIndices(DCModelBase model) {
+      boolean res = ensureGenericCollectionAndIndices(model);
+      mgo.getCollection(model.getCollectionName()).
+         ensureIndex(new BasicDBObject(DCEntity.KEY_URI, 1), null, true); // TODO dropDups ??
+      return res;
+   }
+   private boolean ensureGenericCollectionAndIndices(DCModelBase model) {
       DBCollection coll;
       boolean collectionAlreadyExists = mgo.collectionExists(model.getCollectionName()); 
       if (collectionAlreadyExists) {
@@ -466,7 +490,7 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
       
       // generating static indexes
       // NB. if already exist, won't do anything http://docs.mongodb.org/manual/reference/method/db.collection.ensureIndex/
-      coll.ensureIndex(new BasicDBObject(DCEntity.KEY_URI, 1), null, true); // TODO dropDups ??
+      //coll.ensureIndex(new BasicDBObject(DCEntity.KEY_URI, 1), null, true); // TODO dropDups ?? ; DONE OUTSIDE
       coll.ensureIndex(new BasicDBObject(DCEntity.KEY_AR, 1)); // for query security
       coll.ensureIndex(new BasicDBObject(DCEntity.KEY_CH_AT, 1)); // for default order
       
@@ -562,7 +586,7 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
          /*for (Object modelOrMixin : source.getProperties().keySet()) {
             
          }*/
-         DCModel sourceModel = modelAdminService.getModel(source.getModelType()); // TODO service
+         DCModelBase sourceModel = modelAdminService.getModelBase(source.getModelType()); // TODO service
          modelOrMixins = new DCModelBase[] { sourceModel };
          /*int sourceTypeNb = sourceTypes.size();
          // TODO or only mail Model (and its own mixins) ?
@@ -576,7 +600,7 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
             modelOrMixins = modelOrMixinList.toArray(new DCModelBase[sourceTypeNb]);
          }*/
       }
-      DCModel thisModel = modelAdminService.getModel(THIS.getModelType()); // TODO service
+      DCModelBase thisModel = modelAdminService.getModelBase(THIS.getModelType()); // TODO service
       for (DCModelBase modelOrMixin : modelOrMixins) {
          boolean hasModelOrMixin = thisModel.getName().equals(modelOrMixin.getName())
                /*|| modelAdminService.hasMixin(THIS, modelOrMixin)*/; // TODO service
@@ -611,7 +635,7 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
    }
 
 
-   public static DCMixin createReferencingMixin(DCModel model, String ... embeddedFieldNames) {
+   public static DCMixin createReferencingMixin(DCModelBase model, String ... embeddedFieldNames) {
       return createReferencingMixin(model, null, null, true, embeddedFieldNames);
    }
    /**
@@ -632,7 +656,7 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
     * @param embeddedFieldNames
     * @return
     */
-   public static DCMixin createReferencingMixin(DCModel model,
+   public static DCMixin createReferencingMixin(DCModelBase model,
          DCMixin optInheritedReferencingMixin, DCMixin optDescendantMixin,
          boolean copyReferencingMixins, String ... embeddedFieldNames) {
       String refMixinNameRoot;
@@ -658,7 +682,8 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
       
       String mixinVersion = "_0"; // has to be defined explicitly,
       // rather than ((modelVersionIfAny != null) ? "_" + modelVersionIfAny : "")
-      DCMixin referencingMixin = (DCMixin) new DCMixin(refMixinNameRoot + "_ref" + mixinVersion);
+      DCMixin referencingMixin = (DCMixin) new DCMixin(refMixinNameRoot + "_ref" + mixinVersion,
+            model.getPointOfViewAbsoluteName());
       
       if (copyReferencingMixins) {
          // copy referencing mixins :

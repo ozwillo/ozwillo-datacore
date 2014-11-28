@@ -1,5 +1,8 @@
 package org.oasis.datacore.core.meta.model;
 
+import org.oasis.datacore.core.meta.pov.DCPointOfView;
+import org.oasis.datacore.core.meta.pov.DCProject;
+
 
 /**
  * TODO extends shared DCFieldsBase without getCollectionName()
@@ -19,9 +22,24 @@ public class DCMixin extends DCModelBase {
    public DCMixin() {
       super();
    }
-
+   
+   /** @obsolete */
    public DCMixin(String name) {
-      super(name);
+      this(name, DCProject.OASIS_MAIN);
    }
+
+   /*public DCMixin(String name, DCPointOfView ... pointOfViews) {
+      super(name, pointOfViews);
+   }*/
+
+   public DCMixin(String name, DCPointOfView pointOfView) {
+      this(name, pointOfView.getName());
+   }
+   public DCMixin(String name, String pointOfViewAbsoluteName) {
+      super(name, pointOfViewAbsoluteName);
+      this.setStorage(false);
+      this.setInstanciable(false);
+   }
+
 
 }

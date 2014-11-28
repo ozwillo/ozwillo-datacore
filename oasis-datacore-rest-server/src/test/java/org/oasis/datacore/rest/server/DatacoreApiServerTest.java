@@ -24,6 +24,8 @@ import org.oasis.datacore.rest.api.util.ResourceParsingHelper;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.client.QueryParameters;
+import org.oasis.datacore.rest.server.resource.mapping.ExternalDatacoreLinkedResourceChecker;
+import org.oasis.datacore.rest.server.resource.mapping.LocalDatacoreLinkedResourceChecker;
 import org.oasis.datacore.sample.CityCountrySample;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -75,6 +77,12 @@ public class DatacoreApiServerTest {
    //@Value("#{uriService.getContainerUrl()}")
    private URI containerUrl;
 
+   // to switch between tests
+   @Autowired
+   private LocalDatacoreLinkedResourceChecker localDatacoreLinkedResourceChecker;
+   @Autowired
+   private ExternalDatacoreLinkedResourceChecker externalDatacoreLinkedResourceChecker;
+
    /** for testing purpose */
    @Autowired
    @Qualifier("datacoreApiImpl") 
@@ -121,7 +129,8 @@ public class DatacoreApiServerTest {
          datacoreApiClient.postDataInType(londonCityData, CityCountrySample.CITY_MODEL_NAME);
          Assert.fail("POST creation in strict mode should not be allowed when version provided");
       } catch (WebApplicationException waex) {
-         Assert.assertTrue((waex.getResponse().getEntity() + "").toLowerCase().contains("strict"));
+         String responseContent = String.valueOf(waex.getResponse().getEntity());
+         Assert.assertTrue(responseContent.toLowerCase().contains("strict"));
       } finally {
          datacoreApiImpl.setStrictPostMode(oldStrictPostMode);
       }
@@ -138,26 +147,52 @@ public class DatacoreApiServerTest {
       DCResource londonCityData = buildCityData("London", "UK", 10000000, false);
       try {
          datacoreApiClient.postDataInType(londonCityData, CityCountrySample.CITY_MODEL_NAME);
-         Assert.fail("Creation should fail when referenced data doesn't exist");
+         Assert.fail("Creation should fail when no referenced data URI");
       } catch (WebApplicationException waex) {
-         Assert.assertTrue((waex.getResponse().getEntity() + "").contains(
-               this.containerUrl + DatacoreApi.DC_TYPE_PATH
-               + CityCountrySample.COUNTRY_MODEL_NAME + "/UK")); // http://localhost:8180/
+         String responseContent = String.valueOf(waex.getResponse().getEntity());
+         Assert.assertTrue(responseContent.contains("Can't find data")
+               && responseContent.contains(londonCityData.getUri()));
       }
    }
 
    @Test
-   public void testCreateFailWithWrongLocalReferenceModel() {
+   public void testCreateFailWithoutReferencedDataModel() {
       checkNoResource(CityCountrySample.CITY_MODEL_NAME, "UK/London");
 
       DCResource londonCityData = buildCityData("London", "UK", 10000000, false);
-      londonCityData.set("city:inCountry", londonCityData.getUri());
+      String nonExistingModelDataUri = this.containerUrl + DatacoreApi.DC_TYPE_PATH
+            + "NonExistingModel" + "/NonExistingResourceId";
+      londonCityData.set("city:inCountry", nonExistingModelDataUri);
       try {
          datacoreApiClient.postDataInType(londonCityData, CityCountrySample.CITY_MODEL_NAME);
-         Assert.fail("Creation should fail when referenced data is of the wrong (here, same) model");
-      } catch (BadRequestException brex) {
-         String responseContent = String.valueOf(brex.getResponse().getEntity());
-         Assert.assertTrue(responseContent.contains(CityCountrySample.CITY_MODEL_NAME + " does not match"));
+         Assert.fail("Creation should fail when no referenced data URI model");
+      } catch (WebApplicationException waex) {
+         String responseContent = String.valueOf(waex.getResponse().getEntity());
+         Assert.assertTrue(responseContent.contains("model does not exist")
+               && responseContent.contains(nonExistingModelDataUri));
+      }
+   }
+   
+   @Test
+   public void testCreateFailWithoutExistingReferencedData() {
+      checkNoResource(CityCountrySample.CITY_MODEL_NAME, "UK/London");
+
+      DCResource londonCityData = buildCityData("London", "UK", 10000000, false);
+      DCResource ukCountryData = buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "UK");
+      londonCityData.set("city:inCountry", ukCountryData.getUri()); // type is not even checked
+      try {
+         datacoreApiClient.postDataInType(londonCityData, CityCountrySample.CITY_MODEL_NAME);
+         Assert.fail("Creation should fail when referenced data doesn't exist");
+      } catch (WebApplicationException waex) {
+         String responseContent = String.valueOf(waex.getResponse().getEntity());
+         if (!localDatacoreLinkedResourceChecker.checkLinkedResourceExists()) {
+            Assert.assertTrue(responseContent.contains(
+                  this.containerUrl + DatacoreApi.DC_TYPE_PATH
+                  + CityCountrySample.COUNTRY_MODEL_NAME + "/UK")); // http://localhost:8180/
+         } else {
+            Assert.assertTrue(responseContent.contains("Can't find data")
+                  && responseContent.contains(londonCityData.getUri()));
+         }
       }
    }
 
@@ -185,7 +220,13 @@ public class DatacoreApiServerTest {
                + "is of the wrong (here, same) model");
       } catch (BadRequestException brex) {
          String responseContent = String.valueOf(brex.getResponse().getEntity());
-         Assert.assertTrue(responseContent.contains(CityCountrySample.CITY_MODEL_NAME + " does not match"));
+         if (!externalDatacoreLinkedResourceChecker.checkLinkedResourceExists()) {
+            Assert.assertTrue(responseContent.contains("no compatible type")
+                  && responseContent.contains(CityCountrySample.CITY_MODEL_NAME));
+         } else {
+            Assert.assertTrue(responseContent.contains("Can't find data")
+                  && responseContent.contains(londonCityData.getUri()));
+         }
       }
    }
 
@@ -316,6 +357,30 @@ public class DatacoreApiServerTest {
    @Test
    public void testCreateSample() {
       cityCountrySample.initData(); // NB. re-cleans
+   }
+
+   @Test
+   public void testCreateFailWithWrongLocalReferenceModel() {
+      DCResource doverCityData = testCreate("UK", "Dover", 80000);
+      /*checkNoResource(CityCountrySample.CITY_MODEL_NAME, "UK/Dover");
+      DCResource doverCityData = buildCityData("Dover", "UK", 10000000, false);
+      doverCityData = datacoreApiClient.postDataInType(doverCityData, CityCountrySample.CITY_MODEL_NAME);*/
+      checkNoResource(CityCountrySample.CITY_MODEL_NAME, "UK/London");
+      DCResource londonCityData = buildCityData("London", "UK", 10000000, false);
+      londonCityData.set("city:inCountry", doverCityData.getUri());
+      // NB. Dover Resource must exist else top is not even checked
+      try {
+         datacoreApiClient.postDataInType(londonCityData, CityCountrySample.CITY_MODEL_NAME);
+         Assert.fail("Creation should fail when referenced data is of the wrong (here, same) model");
+      } catch (BadRequestException brex) {
+         String responseContent = String.valueOf(brex.getResponse().getEntity());
+         if (!localDatacoreLinkedResourceChecker.checkLinkedResourceExists()) {
+            Assert.assertTrue(responseContent.contains(CityCountrySample.CITY_MODEL_NAME + " does not match"));
+         } else {
+            Assert.assertTrue(responseContent.contains("no compatible type")
+                  && responseContent.contains(CityCountrySample.CITY_MODEL_NAME));
+         }
+      }
    }
 
    /**

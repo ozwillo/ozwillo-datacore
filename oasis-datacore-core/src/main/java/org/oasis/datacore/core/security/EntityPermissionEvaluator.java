@@ -6,6 +6,7 @@ import java.util.Set;
 import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -69,7 +70,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
          return true;
       }
       
-      DCModel model = entityModelService.getModel(dataEntity);
+      DCModelBase model = entityModelService.getModel(dataEntity);
       if (model == null) {
          throw new RuntimeException("Unknown model for " + dataEntity);
       }

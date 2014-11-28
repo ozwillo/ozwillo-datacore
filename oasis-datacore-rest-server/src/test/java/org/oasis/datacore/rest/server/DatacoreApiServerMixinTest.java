@@ -21,7 +21,6 @@ import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
-import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.security.EntityPermissionService;
 import org.oasis.datacore.core.security.mock.MockAuthenticationService;
@@ -39,6 +38,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 
 /**
@@ -166,7 +169,7 @@ public class DatacoreApiServerMixinTest {
 
       ignCityhallSample.fillDataIgn();
 
-      DCModelBase ignParcelleModel = modelAdminService.getModel(IgnCityhallSample.IGN_PARCELLE);
+      DCModelBase ignParcelleModel = modelAdminService.getModelBase(IgnCityhallSample.IGN_PARCELLE);
       Assert.assertEquals("numeroParcelle field should be original one",
             100, ignParcelleModel.getGlobalField("numeroParcelle").getQueryLimit());
 
@@ -174,7 +177,7 @@ public class DatacoreApiServerMixinTest {
       ignCityhallSample.buildModelsCityhallIgnV1Mixin(modelsCityhallIgnV1Mixin);
       ignCityhallSample.initModels(modelsCityhallIgnV1Mixin);
 
-      ignParcelleModel = modelAdminService.getModel(IgnCityhallSample.IGN_PARCELLE);
+      ignParcelleModel = modelAdminService.getModelBase(IgnCityhallSample.IGN_PARCELLE);
       Assert.assertEquals("numeroParcelle field should be overriding Cityhall Mixin's",
             101, ignParcelleModel.getGlobalField("numeroParcelle").getQueryLimit());
 
@@ -182,7 +185,7 @@ public class DatacoreApiServerMixinTest {
       ignCityhallSample.buildModelsCityhallIgnV2Inheritance(modelsCityhallIgnV2Inheritance);
       ignCityhallSample.initModels(modelsCityhallIgnV2Inheritance);
 
-      DCModelBase cityhallIgnParcelleModel = modelAdminService.getModel(IgnCityhallSample.CITYHALL_IGN_PARCELLE);
+      DCModelBase cityhallIgnParcelleModel = modelAdminService.getModelBase(IgnCityhallSample.CITYHALL_IGN_PARCELLE);
       Assert.assertEquals("numeroParcelle field should be Cityhall Mixin's overriding original one copied / inherited using Mixin",
             102, cityhallIgnParcelleModel .getGlobalField("numeroParcelle").getQueryLimit());
       
@@ -235,7 +238,7 @@ public class DatacoreApiServerMixinTest {
       }
       
       // step 2 - now adding mixin
-      modelAdminService.getModel(AltTourismPlaceAddressSample.MY_APP_PLACE)
+      modelAdminService.getModelBase(AltTourismPlaceAddressSample.MY_APP_PLACE)
          .addMixin(modelAdminService.getMixin(AltTourismPlaceAddressSample.OASIS_ADDRESS));
       ///modelAdminService.addModel(myAppPlaceAddress); // LATER re-add...
 
@@ -302,7 +305,7 @@ public class DatacoreApiServerMixinTest {
       }
          
       // step 2 - now adding mixin
-      modelAdminService.getModel(AltTourismPlaceAddressSample.ALTTOURISM_PLACE)
+      modelAdminService.getModelBase(AltTourismPlaceAddressSample.ALTTOURISM_PLACE)
          .addMixin(modelAdminService.getMixin(AltTourismPlaceAddressSample.OASIS_ADDRESS));
       ///modelAdminService.addModel(altTourismPlace); // LATER re-add...
 
@@ -326,7 +329,7 @@ public class DatacoreApiServerMixinTest {
       // OR specify user in HTTP
       
       // check model defaults
-      DCModel altTourismPlaceModel = modelServiceImpl.getModel(AltTourismPlaceAddressSample.ALTTOURISM_PLACE);
+      DCModelBase altTourismPlaceModel = modelServiceImpl.getModelBase(AltTourismPlaceAddressSample.ALTTOURISM_PLACE);
       Assert.assertTrue(altTourismPlaceModel.getSecurity().isGuestReadable());
       Assert.assertTrue(altTourismPlaceModel.getSecurity().isAuthentifiedReadable());
       Assert.assertTrue(altTourismPlaceModel.getSecurity().isAuthentifiedWritable());
@@ -341,8 +344,9 @@ public class DatacoreApiServerMixinTest {
       authenticationService.loginAs("guest");
 
       // check that find allowed as guest
-      List<DCEntity> allowedMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel,
-            new HashMap<String,List<String>>() {{ put("name", new ArrayList<String>() {{ add("Sofia_Monastery"); }}); }}, 0, 10);
+      List<DCEntity> allowedMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel.getName(),
+            new ImmutableMap.Builder<String, List<String>>().put("name",
+                  new ImmutableList.Builder<String>().add("Sofia_Monastery").build()).build(), 0, 10);
       Assert.assertTrue("query filtering should have allowed it because authentified",
             allowedMonasteryRes != null && allowedMonasteryRes.size() == 1);
       List<DCResource> allowedMonasteryClientRes = datacoreApiClient.findDataInType(AltTourismPlaceAddressSample.ALTTOURISM_PLACE,
@@ -518,8 +522,9 @@ public class DatacoreApiServerMixinTest {
       
       // check that not found anymore as guest
       authenticationService.loginAs("guest");
-      List<DCEntity> forbiddenMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel,
-            new HashMap<String,List<String>>() {{ put("name", new ArrayList<String>() {{ add("Sofia_Monastery"); }}); }}, 0, 10);
+      List<DCEntity> forbiddenMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel.getName(),
+            new ImmutableMap.Builder<String, List<String>>().put("name",
+                  new ImmutableList.Builder<String>().add("Sofia_Monastery").build()).build(), 0, 10);
       Assert.assertTrue("query filtering should have forbidden authentified model",
             forbiddenMonasteryRes == null || forbiddenMonasteryRes.isEmpty());
       List<DCResource> forbiddenMonasteryClientRes = datacoreApiClient.findDataInType(AltTourismPlaceAddressSample.ALTTOURISM_PLACE,
@@ -533,8 +538,9 @@ public class DatacoreApiServerMixinTest {
       authenticationService.loginAs("john");
 
       // check that found because authentified
-      allowedMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel,
-            new HashMap<String,List<String>>() {{ put("name", new ArrayList<String>() {{ add("Sofia_Monastery"); }}); }}, 0, 10);
+      allowedMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel.getName(),
+            new ImmutableMap.Builder<String, List<String>>().put("name",
+                  new ImmutableList.Builder<String>().add("Sofia_Monastery").build()).build(), 0, 10);
       Assert.assertTrue("query filtering should have allowed it because authentified",
             allowedMonasteryRes != null && allowedMonasteryRes.size() == 1);
       allowedMonasteryClientRes = datacoreApiClient.findDataInType(AltTourismPlaceAddressSample.ALTTOURISM_PLACE,
@@ -592,8 +598,9 @@ public class DatacoreApiServerMixinTest {
       altTourismPlaceModel.getSecurity().setAuthentifiedReadable(false);
       
       // check that not found because in not yet set reader group
-      forbiddenMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel,
-            new HashMap<String,List<String>>() {{ put("name", new ArrayList<String>() {{ add("Sofia_Monastery"); }}); }}, 0, 10);
+      forbiddenMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel.getName(),
+            new ImmutableMap.Builder<String, List<String>>().put("name",
+                  new ImmutableList.Builder<String>().add("Sofia_Monastery").build()).build(), 0, 10);
       Assert.assertTrue("query filtering should have forbidden it because in not yet set reader group",
             forbiddenMonasteryRes == null || forbiddenMonasteryRes.isEmpty());
       forbiddenMonasteryClientRes = datacoreApiClient.findDataInType(AltTourismPlaceAddressSample.ALTTOURISM_PLACE,
@@ -660,7 +667,7 @@ public class DatacoreApiServerMixinTest {
       authenticationService.loginAs("admin");
       DCEntity altTourismPlaceSofiaMonasteryEntity = entityService.getByUri(altTourismPlaceSofiaMonastery.getUri(), altTourismPlaceModel);
       entityPermissionService.setReaders(altTourismPlaceSofiaMonasteryEntity,
-            new HashSet<String>() {{ add("rm_altTourism.place.SofiaMonastery_readers"); }});
+            new ImmutableSet.Builder<String>().add("rm_altTourism.place.SofiaMonastery_readers").build());
       entityService.update(altTourismPlaceSofiaMonasteryEntity);
       // get with updated version :
       altTourismPlaceSofiaMonasteryPosted = datacoreApiClient.getData(AltTourismPlaceAddressSample.ALTTOURISM_PLACE, "Sofia_Monastery");
@@ -675,8 +682,9 @@ public class DatacoreApiServerMixinTest {
       Authentication authentication = new TestingAuthenticationToken("john", "pass", "group");
       sc.setAuthentication(authentication);
       SecurityContextHolder.setContext(sc);*/
-      allowedMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel,
-            new HashMap<String,List<String>>() {{ put("name", new ArrayList<String>() {{ add("Sofia_Monastery"); }}); }}, 0, 10);
+      allowedMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel.getName(),
+            new ImmutableMap.Builder<String, List<String>>().put("name",
+                  new ImmutableList.Builder<String>().add("Sofia_Monastery").build()).build(), 0, 10);
       Assert.assertTrue("query filtering should have allowed it because in reader group",
             allowedMonasteryRes != null && allowedMonasteryRes.size() == 1);
       allowedMonasteryClientRes = datacoreApiClient.findDataInType(AltTourismPlaceAddressSample.ALTTOURISM_PLACE,
@@ -771,7 +779,7 @@ public class DatacoreApiServerMixinTest {
       // set writer rights
       authenticationService.loginAs("admin");
       entityPermissionService.setWriters(altTourismPlaceSofiaMonasteryEntity,
-            new HashSet<String>() {{ add("rm_altTourism.place.SofiaMonastery_writers"); }});
+            new ImmutableSet.Builder<String>().add("rm_altTourism.place.SofiaMonastery_writers").build());
       entityService.update(altTourismPlaceSofiaMonasteryEntity);
       // get with updated version :
       altTourismPlaceSofiaMonasteryPosted = datacoreApiClient.getData(AltTourismPlaceAddressSample.ALTTOURISM_PLACE, "Sofia_Monastery");

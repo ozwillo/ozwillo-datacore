@@ -1,7 +1,7 @@
 package org.oasis.datacore.core.entity;
 
 import org.oasis.datacore.core.entity.model.DCEntity;
-import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -42,7 +42,7 @@ public interface EntityService {
     * @throws NonTransientDataAccessException other, unexpected storage error
     */
    @PostAuthorize("hasPermission(returnObject, 'read')")
-   DCEntity getByUri(String uri, DCModel dcModel) throws NonTransientDataAccessException;
+   DCEntity getByUri(String uri, DCModelBase dcModel) throws NonTransientDataAccessException;
 
    /**
     * Unprotected read to be used only for update purpose (to get ex. right ACL lists) ;
@@ -53,7 +53,7 @@ public interface EntityService {
     * @return
     * @throws NonTransientDataAccessException
     */
-   DCEntity getByUriUnsecured(String uri, DCModel dcModel) throws NonTransientDataAccessException;
+   DCEntity getByUriUnsecured(String uri, DCModelBase dcModel) throws NonTransientDataAccessException;
    
    /**
     * Used for more efficient If-None-Match=versionETag conditional GET :
@@ -66,7 +66,7 @@ public interface EntityService {
     * @return null if given version matches
     * @throws NonTransientDataAccessException other, unexpected storage error
     */
-   boolean isUpToDate(String uri, DCModel dcModel, Long version) throws NonTransientDataAccessException;
+   boolean isUpToDate(String uri, DCModelBase dcModel, Long version) throws NonTransientDataAccessException;
 
    /**
     * Updates given entity.

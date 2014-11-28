@@ -18,21 +18,25 @@ import javax.ws.rs.core.MediaType;
 import org.apache.cxf.message.Message;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.oasis.datacore.common.context.DCRequestContextProviderFactory;
+import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
-import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.model.DCResourceField;
-import org.oasis.datacore.core.request.DCRequestContextProvider;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.DCURI;
+import org.oasis.datacore.rest.client.cxf.CxfMessageHelper;
 import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
+import org.oasis.datacore.rest.server.resource.mapping.EmbeddedResourceTypeChecker;
+import org.oasis.datacore.rest.server.resource.mapping.ExternalDatacoreLinkedResourceChecker;
+import org.oasis.datacore.rest.server.resource.mapping.LocalDatacoreLinkedResourceChecker;
 import org.oasis.datacore.server.uri.BadUriException;
 import org.oasis.datacore.server.uri.UriService;
 import org.slf4j.Logger;
@@ -49,24 +53,6 @@ public class ResourceEntityMapperService {
    /** Checks that linked Resource external web URI returns HTTP 200 (LATER check JSONLD & types ??) */
    @Value("${datacoreApiServer.checkExternalWebUri}")
    private boolean checkExternalWebUri = true;
-   /** LATER will check that linked Resource external Datacore URI returns HTTP 200 & types */
-   @Value("${datacoreApiServer.checkExternalDatacoreUri}")
-   private boolean checkExternalDatacoreUri = false;
-   /** Checks that linked Resource exists locally, WARNING prevents circular references for now */
-   @Value("${datacoreApiServer.checkLocalDatacoreLinkedResource}")
-   private boolean checkLocalDatacoreLinkedResource = true;
-   /** Checks that linked Resource exists locally and its types are compliant (with resource field type) */
-   @Value("${datacoreApiServer.checkLocalDatacoreLinkedResourceTypes}")
-   private boolean checkLocalDatacoreLinkedResourceTypes = false;
-   /** Checks that linked Resource URI's model's types are compliant (with resource field type) */
-   @Value("${datacoreApiServer.checkLocalDatacoreLinkedResourceModelTypes}")
-   private boolean checkLocalDatacoreLinkedResourceModelTypes = true;
-   /** Checks that sub Resource types are compliant (with resource field type) */
-   @Value("${datacoreApiServer.checkSubResourceTypes}")
-   private boolean checkSubResourceTypes = false;
-   /** Checks that sub Resource URI's model's types are compliant (with resource field type) */
-   @Value("${datacoreApiServer.checkSubResourceModelTypes}")
-   private boolean checkSubResourceModelTypes = true;
    
    private static Set<String> resourceNativeJavaFields = new HashSet<String>();
    static {
@@ -92,12 +78,25 @@ public class ResourceEntityMapperService {
    @Autowired
    private DCModelService modelService;
    
+   /** for setting up model caches of embedded referencing resources */
+   @Autowired
+   private EntityModelService entityModelService;
+   
    @Autowired
    private ValueParsingService valueParsingService;
+   
+   @Autowired
+   private LocalDatacoreLinkedResourceChecker localDatacoreLinkedResourceChecker;
+   @Autowired
+   private ExternalDatacoreLinkedResourceChecker externalDatacoreLinkedResourceChecker;
+   @Autowired
+   private EmbeddedResourceTypeChecker embeddedResourceTypeChecker;
 
    /** to know whether expected output is semantic (JSON-LD, RDF) */
    @Autowired
-   protected DCRequestContextProvider requestContextProvider;
+   ///@Qualifier("datacore.cxfJaxrsApiProvider")
+   //protected DCRequestContextProvider requestContextProvider;
+   protected DCRequestContextProviderFactory requestContextProviderFactory;
    
    /**
     * Does 3 things :
@@ -210,7 +209,7 @@ public class ResourceEntityMapperService {
          for (Object resourceItem : dataList) {
             Object entityItem;
             try {
-               resourceParsingContext.enter(listElementField, resourceItem, i);
+               resourceParsingContext.enter(null, null, listElementField, resourceItem, i);
                entityItem = resourceToEntityValue(resourceItem, listElementField,
                      resourceParsingContext, putRatherThanPatchMode);
             } catch (ResourceParsingException rpex) {
@@ -291,62 +290,19 @@ public class ResourceEntityMapperService {
             if (dcUri.isExternalWebUri()) {
                if (checkExternalWebUri) {
                   checkWebHttpUrl(dcUri, resourceParsingContext);
+                  // TODO rather externalDatacoreWebUriChecker ?!
                }
             } else {
                // Datacore URI (local or external)
                
-               // check type :
-               // TODO more mixins / aspects / type constraints
-               DCModel refModel = modelService.getModel(dcUri.getType()); // TODO LATER from cached model ref in DCURI
-               // NB. type has been checked in uriService above
-               /*if (!dcUri.getType().equals(((DCResourceField) dcField).getResourceType())) {
-               //if (!modelService.hasType(refEntity, ((DCResourceField) dcField).getTypeConstraints())) {
-                  throw new ResourceParsingException("Target resource referenced by resource Field of URI value "
-                        + dcUri + " is not of required type " + ((DCResourceField) dcField).getResourceType());
-                  // does not match type constraints TODO
-               }*/
-               
                // checking that it exists :
                if (dcUri.isExternalDatacoreUri()) {
-                  if (checkExternalDatacoreUri) {
-                     // TODO LATER OPT check using (dynamic ??) CXF Datacore client that propagates auth
-                     // TODO LATER OPT2 store and check also version, to allow consistent references ??
-                     throw new UnsupportedOperationException("Not implemented yet");
-                  }
+                  externalDatacoreLinkedResourceChecker.check(dcUri, dcResourceField);
                   
                } else {
                   // local Datacore URI
-                  DCEntity linkedEntity = null;
-                  if (checkLocalDatacoreLinkedResource || checkLocalDatacoreLinkedResourceTypes) {
-                     // (without rights ; only in checkMode, otherwise only warning)
-                     linkedEntity = entityService.getByUriUnsecured(dcUri.toString(), refModel);
-                     if (linkedEntity == null) {
-                        // TODO rather still allow update / only warning ? & add /check API keeping it as error ??
-                        throw new ResourceParsingException("Can't find data of resource type " + refModel.getName()
-                              + " referenced by resource Field of URI value " + dcUri.toString());
-                     }
-                  }
-
-                  if (checkLocalDatacoreLinkedResourceTypes) {
-                     // check linked Resource model type using linkedEntity's types :
-                     List<String> linkedResourceTypes = linkedEntity.getTypes(); // TODO rather Set
-                     if (!linkedResourceTypes.contains(dcResourceField.getResourceType())) { // TODO isCompatibleWith
-                        throw new ResourceParsingException("Resource " + dcUri + " is linked in "
-                              + dcResourceField.getResourceType() + "-typed \"" + dcResourceField.getName()
-                              + "\" field but has no compatible type but only " + linkedResourceTypes);
-                     }
-                     
-                  } else if (checkLocalDatacoreLinkedResourceModelTypes) {
-                     // check linked Resource model type using its URI :
-                     Set<String> linkedUriModelTypes = refModel.getGlobalMixinNames();
-                     if (!refModel.getName().equals(dcResourceField.getResourceType()) &&
-                           !linkedUriModelTypes.contains(dcResourceField.getResourceType())) { // TODO isCompatibleWith
-                        throw new ResourceParsingException("Resource " + dcUri + " is linked in "
-                              + dcResourceField.getResourceType() + "-typed \"" + dcResourceField.getName()
-                              + "\" field but its model " +  refModel.getName()
-                              + " has no compatible type but only (in addition to itself) "
-                              + linkedUriModelTypes);
-                     }
+                  if (!resourceParsingContext.hasEmbeddedUri(dcUri)) { // for now only in case of o:Ancestor self reference
+                     localDatacoreLinkedResourceChecker.check(dcUri, dcResourceField);
                   }
                }
             }
@@ -473,35 +429,50 @@ public class ResourceEntityMapperService {
          // TODO LATER OPT2 or as local copy of an existing external resource ???
       }
 
+      resourceParsingContext.addEmbeddedUri(dcUri);
+
       // check type :
       // 2 cases : 1. embedded referencing / partially copied Resource = Model, 2. fully embedded Resource / typed map = Mixins
       // TODO more mixins / aspects / type constraints
-      DCModel valueModel = modelService.getModel(dcUri.getType()); // TODO LATER from cached model ref in DCURI
+      DCModelBase valueModelOrMixin = modelService.getModelBase(dcUri.getType()); // TODO LATER from cached model ref in DCURI
+      // TODO rather :
+      ///DCModel valueModel = (DCModel) embeddedResourceTypeChecker
+      ///      .checkUriModel(dcUri, dcResourceField); // NB. cast checked within
       
-      // NB. type has been checked in uriService above
-      /*if (!dcUri.getType().equals(((DCResourceField) dcField).getResourceType())) {
-      //if (!modelService.hasType(refEntity, ((DCResourceField) dcField).getTypeConstraints())) {
-         throw new ResourceParsingException("Target resource referenced by resource Field of URI value "
-               + dcUri + " is not of required type " + ((DCResourceField) dcField).getResourceType());
-         // does not match type constraints TODO
-      }*/
-      DCModelBase valueModelOrMixin = valueModel;
       DCEntity entityEntityValue = null;
-      if (valueModel != null) {
+      if (valueModelOrMixin == null) {
+         throw new ResourceParsingException("Can't find Model with type " + dcUri.getType()
+               + " for Embedded resource wth uri " + dcUri.toString());
+         
+      } else if (!valueModelOrMixin.isDefinition()) {
+         // NOO ex. if data-level project fork
+         //throw new ResourceParsingException("Can't use a non-Definition Model "
+         //      + "as embedded resource Model, but such is " + valueModelOrMixin
+         //      + " Model used for Embedded resource wth uri " + dcUri.toString());
+         
+      } else if (valueModelOrMixin.isInstanciable()) {
          // embedded referencing Resource
    
          // checking that it exists :
-         entityEntityValue = entityService.getByUri(dcUri.toString(), valueModel);
+         entityEntityValue = entityService.getByUri(dcUri.toString(), valueModelOrMixin);
+         if (entityEntityValue == null) {
+            throw new ResourceParsingException("Can't find Resource with uri " + dcUri.toString()
+                  + " referenced by embedded referencing (because its Model " + valueModelOrMixin
+                  + " is Instanciable) Resource as embedded resource Model");
+         }
          // TODO TODO
          
       } else {
          // assuming fully embedded Resource, similar to new entity
-         valueModelOrMixin = modelService.getMixin(entityValueTypes.get(0));
-         if (valueModelOrMixin == null) {
-            throw new ResourceParsingException("Can't find Mixin " + valueModelOrMixin
-                  + " nor Model " + dcUri.getType() + " for Embedded resource wth uri "
-                  + dcUri.toString());
-         }
+         valueModelOrMixin = modelService.getMixin(entityValueTypes.get(0)); // ?? NB. does also model
+         // ALLOWS EX. /dc/type/city/Paris/townhall embedded resource of mixin type townhall
+         // TODO TODO better with polymorphic storage (rather DCModel.getStorageModel() than inherited) & contextual point of view
+         // ex. of alias URI : /dc/type/city/FR/Valence#townhall or /dc/type/city/FR-Valence/townhall
+         // NB. processing /dc/type/townhall/FR-Valence-townhall URI : get townhall model,
+         // is not storage so get storage i.e. city model, in it TODO how to find townhall ??
+         // (/dc/type/townhall/FR-Valence#townhall wouldn't be consistent)
+         // possible with id building policy & better URI parsing !
+         
       }
          
       // TODO TODO provide refEntity in model (ex. DCResourceValue) OR IN GRAPH,
@@ -516,9 +487,9 @@ public class ResourceEntityMapperService {
          }
          entityEntityValue = new DCEntity();
          entityEntityValue.setUri(dcUri.toString());
-         if (valueModel != null) {
-            entityEntityValue.setCachedModel(valueModel); // TODO or in DCEntityService ?
-            entityEntityValue.setModelName(valueModel.getName()); // TODO LATER2 check that same (otherwise ex. external approvable contrib ??)
+         if (valueModelOrMixin.isInstanciable()) {
+            entityModelService.getModel(entityEntityValue); // setup model caches
+            ///entityEntityValue.setModelName(valueModel.getName()); // TODO LATER2 check that same (otherwise ex. external approvable contrib ??)
          } // else fully embedded subresource
          // NB. no version yet
          
@@ -531,7 +502,7 @@ public class ResourceEntityMapperService {
       if (entityValueVersion == null) {
          // allowed (NB. but then can't update ??!!)
          resourceParsingContext.addWarning("No embedded resource version");
-      } else if (valueModel != null) {
+      } else if (valueModelOrMixin.isInstanciable()) {
          entityEntityValue.setVersion(entityValueVersion);
       } // else valueModel == null means fully embedded Resource so version is its container's
 
@@ -544,26 +515,7 @@ public class ResourceEntityMapperService {
       }
 
       // check sub Resource type :
-      if (checkSubResourceTypes) {
-         // check linked Resource model type using linkedEntity's types :
-         List<String> linkedResourceTypes = entityEntityValue.getTypes(); // TODO rather Set
-         if (!linkedResourceTypes.contains(dcResourceField.getResourceType())) { // TODO isCompatibleWith
-            throw new ResourceParsingException("sub Resource " + dcUri + " is embedded in "
-                  + dcResourceField.getResourceType() + "-typed \"" + dcResourceField.getName()
-                  + "\" field but has no compatible type but only " + linkedResourceTypes);
-         }
-      } else if (checkSubResourceModelTypes) {
-         // check linked Resource model type using its URI :
-         Set<String> linkedUriModelTypes = valueModelOrMixin.getGlobalMixinNames();
-         if (!valueModelOrMixin.getName().equals(dcResourceField.getResourceType()) &&
-               !linkedUriModelTypes.contains(dcResourceField.getResourceType())) { // TODO isCompatibleWith
-            throw new ResourceParsingException("sub Resource " + dcUri + " is embedded in "
-                  + dcResourceField.getResourceType() + "-typed \"" + dcResourceField.getName()
-                  + "\" field but its model (or main mixin ??) " +  valueModelOrMixin.getName()
-                  + " has no compatible type but only (in addition to itself) "
-                  + linkedUriModelTypes);
-         }
-      }
+      embeddedResourceTypeChecker.checkTyping(dcUri, dcResourceField, valueModelOrMixin, entityEntityValue.getTypes());
       
       // parse other fields :
       // TODO for what use, multiple update or even creation (rather flattened ?) ?? constraints ???
@@ -709,7 +661,7 @@ public class ResourceEntityMapperService {
          DCField dcField = mapFields.get(key); // TODO DCModel.getField(key)
          missingDefaultFields.remove(dcField); // (and not only if null value, to allow setting null value)
          try {
-            resourceParsingContext.enter(dcField, resourceValue);
+            resourceParsingContext.enter(null, null, dcField, resourceValue);
             Object entityValue = resourceToEntityValue(resourceValue, dcField,
                   resourceParsingContext, putRatherThanPatchMode);
             entityMap.put(key, entityValue);
@@ -811,8 +763,9 @@ public class ResourceEntityMapperService {
          }
          return entityPropValue;
       case "i18n" :
-         Map<String, Object> requestContext = requestContextProvider.getRequestContext(); // should never be null
-         String acceptContentType = (String) requestContext.get(Message.ACCEPT_CONTENT_TYPE);
+         Map<String, Object> requestContext = requestContextProviderFactory.getRequestContext(); // should never be null
+         String acceptContentType = CxfMessageHelper.getHeaderString(requestContext, Message.ACCEPT_CONTENT_TYPE);
+         // NB. rather than inMessage.get(Message.ACCEPT_CONTENT_TYPE) because none in client out case
          if (acceptContentType != null) { // else not called through REST
             int indexOfComma = acceptContentType.indexOf(',');
             if (indexOfComma != -1) {
@@ -864,10 +817,7 @@ public class ResourceEntityMapperService {
             return entityPropValue;
          } else if (entityPropValue instanceof Map<?,?>) {
             String resourceType = ((DCResourceField) dcField).getResourceType();
-            DCModelBase mixinOrModel = modelService.getMixin(resourceType);
-            if (mixinOrModel == null) {
-               mixinOrModel = modelService.getModel(resourceType);
-            }
+            DCModelBase mixinOrModel = modelService.getMixin(resourceType); // does also model
             if (mixinOrModel == null) {
                throw new IllegalArgumentException("Can't find mixin or model "
                      + resourceType + " referenced by subresource field "

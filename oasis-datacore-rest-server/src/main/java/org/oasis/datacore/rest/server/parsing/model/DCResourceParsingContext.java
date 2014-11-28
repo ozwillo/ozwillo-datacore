@@ -1,14 +1,14 @@
 package org.oasis.datacore.rest.server.parsing.model;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Stack;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.oasis.datacore.core.meta.model.DCField;
-import org.oasis.datacore.core.meta.model.DCListField;
-import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCModelBase;
+import org.oasis.datacore.rest.api.util.DCURI;
 
 
 /**
@@ -23,6 +23,7 @@ import org.oasis.datacore.core.meta.model.DCModel;
 public class DCResourceParsingContext {
    
    protected Stack<DCResourceValue> resourceValueStack = new Stack<DCResourceValue>(); // TODO or of String only ??
+   protected HashSet<DCURI> embeddedUriSet = new HashSet<DCURI>();
 
    // TODO or same list, with error level in Log and boolean hasError ?!?
    private List<ResourceParsingLog> errors = null;
@@ -40,17 +41,34 @@ public class DCResourceParsingContext {
     * @param model
     * @param uri
     */
-   public DCResourceParsingContext(DCModel model, String id) {
-      this.enter(model, id);
+   public DCResourceParsingContext(DCModelBase model, DCModelBase storageModel, DCURI uri) {
+      this.addEmbeddedUri(uri);
+      this.enter(model, storageModel, uri);
+   }
+   
+   public DCModelBase peekModel() {
+      return this.resourceValueStack.peek().getModel();
+   }
+   
+   public DCModelBase peekStorageModel() {
+      return this.resourceValueStack.peek().getStorageModel();
+   }
+   
+   public boolean hasEmbeddedUri(DCURI dcUri) {
+      return embeddedUriSet.contains(dcUri);
+   }
+   
+   public void addEmbeddedUri(DCURI dcUri) {
+      embeddedUriSet.add(dcUri);
+   }
+   
+   public void enter(DCModelBase model, DCModelBase storageModel, DCURI uri) {
+      ///this.resourceValueStack.add(new DCResourceValue(model.getName() + '[' + id + ']', null, id));
+      this.resourceValueStack.add(new DCResourceValue(null, model, storageModel, null, uri));
    }
    
    public DCResourceValue peekResourceValue() {
       return this.resourceValueStack.peek();
-   }
-   
-   public void enter(DCModel model, String id) {
-      ///this.resourceValueStack.add(new DCResourceValue(model.getName() + '[' + id + ']', null, id));
-      this.resourceValueStack.add(new DCResourceValue(null, null, model.getName() + '[' + id + ']'));
    }
 
    /**
@@ -59,15 +77,25 @@ public class DCResourceParsingContext {
     * @param value
     * @param index
     */
-   public void enter(DCField field, Object value, long index) {
+   public void enter(DCModelBase model, DCModelBase storageModel, DCField field, Object value, long index) {
       // TODO LATER OPT less context for performance unless enabled in request context ?
       DCResourceValue previousResourceValue = null;
       if (!this.resourceValueStack.isEmpty()) {
          previousResourceValue = this.resourceValueStack.peek();
       }
-      this.resourceValueStack.add(new DCResourceValue(previousResourceValue, field,  value, index));
+      if ("resource".equals(field.getType())) {
+         /*if (value instanceof String) {
+            throw new RuntimeException("If remote resource, pass its URI as DCURI rather than String");
+         } else if (value instanceof DCURI) {
+            ///storageModel = null; // TODO
+         } else {
+            // embedded resource
+            ///embeddedUriSet.add(e);
+         }*/
+      }
+      this.resourceValueStack.add(new DCResourceValue(previousResourceValue, model, storageModel, field,  value, index));
    }
-   public void enter(DCField field, Object value) {
+   public void enter(DCModelBase model, DCModelBase storageModel, DCField field, Object value) {
       String fullValuedPath;
       DCResourceValue previousResourceValue = null;
       if (this.resourceValueStack.isEmpty()) {
@@ -85,7 +113,17 @@ public class DCResourceParsingContext {
                   "'" + value + "'" : value)) + "]";
          }*/
       }
-      this.resourceValueStack.add(new DCResourceValue(previousResourceValue, field,  value));
+      if ("resource".equals(field.getType())) {
+         /*if (value instanceof String) {
+            throw new RuntimeException("If remote resource, pass its URI as DCURI rather than String");
+         } else if (value instanceof DCURI) {
+            ///storageModel = null; // TODO
+         } else {
+            // embedded resource
+            ///embeddedUriSet.add(e);
+         }*/
+      }
+      this.resourceValueStack.add(new DCResourceValue(previousResourceValue, model, storageModel, field,  value));
    }
    public void exit() {
       this.resourceValueStack.pop();

@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
@@ -23,6 +22,9 @@ import org.oasis.datacore.rest.server.resource.ResourceNotFoundException;
 import org.springframework.stereotype.Component;
 
 import au.com.bytecode.opencsv.CSVReader;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 
 /**
@@ -348,7 +350,7 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleMetho
       DCMixin placeShapeMixin = (DCMixin) new DCMixin("pls:placeShape_0") // LATER ONCE GIS will allow to look among all shapes
          .addField(new DCField("pls:geo", "string", true, 100)); // shape of the area ; WKS 
 
-      DCMixin cityAreaItDCMixin = (DCMixin) new DCMixin("cityareait:italianCityArea_0") // (cityPlanning) OR cityArea, urbanArea
+      DCMixin cityAreaItMixin = (DCMixin) new DCMixin("cityareait:italianCityArea_0") // (cityPlanning) OR cityArea, urbanArea
       /*ignCommuneModel.setDocumentsetDocumentationation("{ \"uri\": \"http://localhost:8180/dc/type/country/France\", "
             + "\"name\": \"France\" }");*/
          
@@ -365,12 +367,17 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleMetho
          
          // about urban area ;
          .addMixin(placeShapeMixin) // shape of the urban area ; WKS ; the only available id
-         .addMixin(cityAreaItDCMixin)
+         .addMixin(cityAreaItMixin)
          ;
       cityAreaModel.setDocumentation("id = !pli:city + '/' + hash(id)");
       
-      modelsToCreate.addAll(Arrays.asList((DCModelBase) atecoModel, countryModel, cityModel, companyModel, // TODO also Mixins ???
-            italianUrbanAreaDestinationOfUseModel, cityAreaModel));
+      // NB. for now mixins must be added BEFORE models they're added to !!!
+      modelsToCreate.addAll(Arrays.asList((DCModelBase) atecoModel, atecoReferencingMixin,
+            countryModel, countryReferencingMixin,
+            italianCityMixin, cityModel, cityReferencingMixin, italianCityReferencingMixin,
+            placeMixin, italianCompanyMixin, companyModel,
+            italianUrbanAreaDestinationOfUseModel, italianUrbanAreaDestinationOfUseReferencingMixin,
+            placeShapeMixin, cityAreaItMixin, cityAreaModel));
    }
 
 
@@ -514,8 +521,9 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleMetho
                   (String) company.get("plo:name") + '/' + (String) company.get("pli:name")));
 
             // NB. ateco Model has to be filled at "install" time else code is not known
-            List<DCEntity> atecos = ldpEntityQueryService.findDataInType(modelAdminService.getModel("coita:ateco_0"), new HashMap<String,List<String>>() {{
-                     put("coita:atecoDescription", new ArrayList<String>() {{ add((String) company.get("coita:atecoDescription")); }}); }}, 0, 1);
+            List<DCEntity> atecos = ldpEntityQueryService.findDataInType("coita:ateco_0",
+                  new ImmutableMap.Builder<String, List<String>>().put("coita:atecoDescription",
+                        new ImmutableList.Builder<String>().add((String) company.get("coita:atecoDescription")).build()).build(), 0, 1);
             DCResource ateco;
             if (atecos != null && !atecos.isEmpty()) {
                ateco = resourceEntityMapperService.entityToResource(atecos.get(0));

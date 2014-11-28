@@ -14,6 +14,7 @@ import javax.ws.rs.core.Response;
 import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.security.EntityPermissionService;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
@@ -47,7 +48,7 @@ public class RightsApiImpl implements RightsApi {
 
 		preMergeVerification(RightsActionType.ADD, modelType, iri, version, dcRights.getWriters(), dcRights.getReaders(), dcRights.getOwners());
 
-		DCModel model = modelService.getModel(modelType);
+		DCModelBase model = modelService.getModelBase(modelType);
 
 		if (model == null) {
 			throw new NotFoundException(Response.status(Response.Status.NOT_FOUND).entity("Model " + modelType + " was not found").type(MediaType.TEXT_PLAIN).build());
@@ -72,7 +73,7 @@ public class RightsApiImpl implements RightsApi {
 
 		preMergeVerification(RightsActionType.REMOVE, modelType, iri, version, dcRights.getWriters(), dcRights.getReaders(), dcRights.getOwners());
 
-		DCModel model = modelService.getModel(modelType);
+		DCModelBase model = modelService.getModelBase(modelType);
 
 		if (model == null) {
 			throw new NotFoundException(Response.status(Response.Status.NOT_FOUND).entity("Model " + modelType + " was not found").type(MediaType.TEXT_PLAIN).build());
@@ -101,7 +102,7 @@ public class RightsApiImpl implements RightsApi {
 
 		preMergeVerification(RightsActionType.FLUSH, modelType, iri, version, null, null, null);
 		
-		DCModel model = modelService.getModel(modelType);
+		DCModelBase model = modelService.getModelBase(modelType);
 		
 		if(model == null) {
 			throw new NotFoundException(Response.status(Response.Status.NOT_FOUND).entity("Model " + modelType + " was not found").type(MediaType.TEXT_PLAIN).build());
@@ -126,7 +127,7 @@ public class RightsApiImpl implements RightsApi {
 		
 		preMergeVerification(null, modelType, iri, version, null, null, null);
 		
-		DCModel model = modelService.getModel(modelType);
+		DCModelBase model = modelService.getModelBase(modelType);
 		
 		if(model == null) {
 			throw new NotFoundException(Response.status(Response.Status.NOT_FOUND).entity("Model " + modelType + " was not found").type(MediaType.TEXT_PLAIN).build());
@@ -198,7 +199,7 @@ public class RightsApiImpl implements RightsApi {
 			throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST).entity("IRI must be defined").type(MediaType.TEXT_PLAIN).build());
 		}
 		
-		DCModel model = modelService.getModel(modelType);
+		DCModelBase model = modelService.getModelBase(modelType);
 		
 		if(model == null) {
 			throw new NotFoundException(Response.status(Response.Status.NOT_FOUND).entity("Model " + modelType + " was not found").type(MediaType.TEXT_PLAIN).build());

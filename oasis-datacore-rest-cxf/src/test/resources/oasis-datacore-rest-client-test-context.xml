@@ -22,8 +22,8 @@
    <import resource="classpath:oasis-datacore-rest-client-context.xml" />
    
    
-   <!-- provides HTTP protocol info to JAXRS server impl -->
-   <bean id="datacore.cxfJaxrsApiProvider" class="org.oasis.datacore.rest.server.cxf.CxfJaxrsApiProvider"/>
+   <!-- provides HTTP protocol info to JAXRS server impl NOO already instantiated for client side also -->
+   <!-- bean id="datacore.cxfJaxrsApiProvider" class="org.oasis.datacore.rest.server.cxf.CxfJaxrsApiProvider"/ -->
    
    <!-- injected in ArrayServerInInterceptor -->
    <bean id="datacoreApiCXFTestMockServer.objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper"/>

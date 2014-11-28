@@ -31,6 +31,7 @@ import org.oasis.datacore.rest.client.cxf.CxfMessageHelper;
 
 /**
  * Provides HTTP protocol info to JAXRS / CXF server impl.
+ * LATER refactor it in a separate generic project depending only on CXF
  * 
  * @author mdutoo
  *
@@ -66,8 +67,8 @@ public class CxfJaxrsApiProvider implements JaxrsApiProvider {
    }
 
    public Exchange getExchange() {
-      return (PhaseInterceptorChain.getCurrentMessage() == null) ? null
-            :PhaseInterceptorChain.getCurrentMessage().getExchange();
+      return (PhaseInterceptorChain.getCurrentMessage() == null) ? null :
+            PhaseInterceptorChain.getCurrentMessage().getExchange();
    }
 
    @Override

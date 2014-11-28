@@ -2,16 +2,13 @@ package org.oasis.datacore.rest.server.parsing.model;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
 
-import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 public class DCQueryParsingContext extends DCResourceParsingContext {
-
-   private Stack<DCModel> modelStack;
    
    // TODO privilege indexed fields !!!!!!!!!!
    private Criteria criteria = new Criteria();
@@ -23,30 +20,8 @@ public class DCQueryParsingContext extends DCResourceParsingContext {
    private int aggregatedQueryLimit = 0;
    private boolean hasNoIndexedField = false;
    
-   public DCQueryParsingContext(DCModel model) {
-      super(model, null);
-   }
-   
-   public DCModel peekModel() {
-      return this.modelStack.peek();
-   }
-
-   @Override
-   public void enter(DCModel model, String uri) {
-      super.enter(model, uri);
-      if (modelStack == null) {
-         modelStack = new Stack<DCModel>();
-         // NB. can't be done in declaration else can't be called in constructor
-      }
-      this.modelStack.push(model);
-   }
-
-   @Override
-   public void exit() {
-      super.exit();
-      if ("resource".equals(this.resourceValueStack.peek().getField().getType())) {
-         this.modelStack.pop();
-      }
+   public DCQueryParsingContext(DCModelBase model, DCModelBase storageModel) {
+      super(model, storageModel, null);
    }
    
    public void enterCriteria(String entityFieldPath, int criteriaNb) {

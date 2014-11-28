@@ -16,13 +16,14 @@ public class DCContributionModel extends DCModel {
 	
 	private final static String CONTRIBUTION_COLLECTION_SUFFIX = ".c";
 	
-	private DCModel delegate;
+	private DCModelBase delegate;
 
-	public DCContributionModel(DCModel delegate) {
+	public DCContributionModel(DCModelBase delegate) {
+	   // TODO update with projects & pointOfView
 		this.delegate = delegate;
-		this.delegate.addMixin(new DCContributionMixin());
+		this.delegate.addMixin(new DCContributionMixin()); // TODO TODO wrong !!
 		this.setHistorizable(false);
-		this.setSecurity(new DCContributionSecurity(this.getSecurity()));
+		this.setSecurity(new DCContributionSecurity(delegate.getSecurity()));
 	}
 
 	@Override

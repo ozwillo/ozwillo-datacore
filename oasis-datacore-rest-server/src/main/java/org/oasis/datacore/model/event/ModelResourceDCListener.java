@@ -1,7 +1,6 @@
 package org.oasis.datacore.model.event;
 
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
-import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.model.resource.ModelResourceMappingService;
 import org.oasis.datacore.rest.api.DCResource;
@@ -10,7 +9,7 @@ import org.oasis.datacore.rest.server.event.DCEvent;
 import org.oasis.datacore.rest.server.event.DCEventListener;
 import org.oasis.datacore.rest.server.event.DCResourceEvent;
 import org.oasis.datacore.rest.server.event.DCResourceEventListener;
-import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
+import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 
@@ -33,8 +32,6 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
    private DataModelServiceImpl dataModelService;
    @Autowired
    private ModelResourceMappingService mrMappingService;
-   
-   private boolean isModel;
 
    public ModelResourceDCListener() {
       super();
@@ -51,10 +48,10 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
          DCResourceEvent re = (DCResourceEvent) event;
          DCResource r = re.getResource();
          try {
-            mrMappingService.toModelOrMixin(r, isModel); // enriches r with fields computed by DCModelBase
-         } catch (ResourceParsingException rpex) {
+            mrMappingService.toModelOrMixin(r); // enriches r with fields computed by DCModelBase
+         } catch (ResourceException rex) {
             // abort else POSTer won't know that his model can't be used (to POST resources)
-            throw new AbortOperationEventException(rpex);
+            throw new AbortOperationEventException(rex);
          } catch (Throwable t) {
             // abort else POSTer won't know that his model can't be used (to POST resources)
             throw new AbortOperationEventException("Unknown error while converting "
@@ -74,6 +71,7 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
          String typeName = (String) r.get("dcmo:name");
          // TODO check that is not used as mixin in any other models (& mixins) !
          handleModelResourceDeleted(typeName);
+         // TODO if (used as) mixin, do it also for all impacted models (& mixins) !
          return;
       }
    }
@@ -85,7 +83,7 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
       // * having an inconsistent set of models when ResourceService parses Resources
       // * and having one model that refers to another that is not yet there compute its caches too early
       // * AND HAVING OBSOLETE INDEXES !
-      DCModelBase previousModel = dataModelService.getMixin(modelOrMixin.getName());
+      DCModelBase previousModel = dataModelService.getModelBase(modelOrMixin.getName());
 
       String aboutToEventType;
       if (previousModel == null) {
@@ -97,6 +95,7 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
       }
 
       try {
+         // let's update storage (index...) :
          eventService.triggerEvent(new ModelDCEvent(aboutToEventType,
                ModelDCEvent.MODEL_DEFAULT_BUSINESS_DOMAIN, modelOrMixin, previousModel));
       } catch (Throwable e) {
@@ -107,11 +106,8 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
                + "of model or mixin " + modelOrMixin, e);
       }
       
-      if (isModel) {
-         dataModelService.addModel((DCModel) modelOrMixin);
-      } else {
-         dataModelService.addMixin(modelOrMixin);
-      }
+      // let's actually register the DCModel :
+      dataModelService.addModel(modelOrMixin);
       
       String doneEventType = (previousModel == null) ?
             ModelDCEvent.CREATED : ModelDCEvent.UPDATED;
@@ -129,11 +125,11 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
 
    private void handleModelResourceCreatedOrUpdated(DCResource r) throws AbortOperationEventException {
       try {
-         DCModelBase modelOrMixin = mrMappingService.toModelOrMixin(r, isModel);
+         DCModelBase modelOrMixin = mrMappingService.toModelOrMixin(r);
          createOrUpdate(modelOrMixin);
-      } catch (ResourceParsingException rpex) {
+      } catch (ResourceException rex) {
          // abort else POSTer won't know that his model can't be used (to POST resources)
-         throw new AbortOperationEventException(rpex);
+         throw new AbortOperationEventException(rex);
       } catch (Throwable t) {
          // abort else POSTer won't know that his model can't be used (to POST resources)
          throw new AbortOperationEventException("Unknown error while converting "
@@ -142,12 +138,14 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
    }
 
    private void handleModelResourceDeleted(String typeName) throws AbortOperationEventException {
-      DCModelBase modelOrMixin = dataModelService.getMixin(typeName);
-      if (isModel) {
+      DCModelBase modelOrMixin = dataModelService.getModelBase(typeName);
+      /*if (isModel) {
          dataModelService.removeModel(typeName);
       } else {
          dataModelService.removeMixin(typeName);
-      }
+      }*/
+      dataModelService.removeModel(typeName);
+      
       try {
          eventService.triggerEvent(new ModelDCEvent(ModelDCEvent.DELETED,
                ModelDCEvent.MODEL_DEFAULT_BUSINESS_DOMAIN, modelOrMixin, null));
@@ -158,12 +156,6 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
          throw new AbortOperationEventException("Aborting as asked for in done event "
                + "of model or mixin " + modelOrMixin, e);
       }
-   }
-
-   @Override
-   public void setTopic(String topic) {
-      super.setTopic(topic);
-      isModel = "dcmo:model_0".equals(topic);
    }
 
 }

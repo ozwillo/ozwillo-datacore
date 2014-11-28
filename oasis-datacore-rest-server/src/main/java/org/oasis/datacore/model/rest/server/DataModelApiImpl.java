@@ -1,5 +1,6 @@
 package org.oasis.datacore.model.rest.server;
 
+import java.util.Collection;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
@@ -37,7 +38,7 @@ public class DataModelApiImpl implements DataModelApi {
    
    @Override
    public String findModel() {
-      Map<String, DCModel> models = this.modelQueryService.getModelMap();
+      Collection<DCModel> models = this.modelQueryService.getModels(); // TODO TODO Map, or remove
       
       // using custom writer for pretty print :
       ObjectWriter writer = this.mapper.writer().withDefaultPrettyPrinter(); // TODO or global ?

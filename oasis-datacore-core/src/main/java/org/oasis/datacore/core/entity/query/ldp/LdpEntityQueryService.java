@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.query.QueryException;
-import org.oasis.datacore.core.meta.model.DCModel;
 
 /**
  * Internal interface that is used by DatacoreApiImpl and LATER by possible LdpQueryEngine
@@ -18,7 +17,10 @@ import org.oasis.datacore.core.meta.model.DCModel;
  */
 public interface LdpEntityQueryService {
 
-   List<DCEntity> findDataInType(DCModel dcModel, Map<String, List<String>> params,
+   List<DCEntity> findDataInType(String modelType, Map<String, List<String>> params,
          Integer start, Integer limit) throws QueryException;
-
+   
+   public int getMaxStart();
+   public int getMaxLimit();
+   public int getMaxScan();
 }

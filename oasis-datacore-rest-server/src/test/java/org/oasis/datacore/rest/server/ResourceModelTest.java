@@ -20,6 +20,7 @@ import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.security.EntityPermissionService;
 import org.oasis.datacore.core.security.mock.MockAuthenticationService;
 import org.oasis.datacore.model.resource.ModelResourceMappingService;
@@ -118,13 +119,9 @@ public class ResourceModelTest {
 
    @Test
    public void testResourceModel() throws Exception {
-      Assert.assertNotNull(modelAdminService.getModel("dcmo:model_0"));
+      Assert.assertNotNull(modelAdminService.getModelBase("dcmo:model_0"));
       List<DCResource> models = datacoreApiClient.findDataInType("dcmo:model_0", null, null, 10);
       Assert.assertTrue(models != null && !models.isEmpty());
-
-      Assert.assertNotNull(modelAdminService.getModel("dcmi:mixin_0"));
-      List<DCResource> mixins = datacoreApiClient.findDataInType("dcmi:mixin_0", null, null, 10);
-      Assert.assertTrue(mixins != null && !mixins.isEmpty());
 
       List<DCResource> arePlaceModels = datacoreApiClient.findDataInType("dcmo:model_0",
             new QueryParameters().add("dcmo:globalMixins", "pl:place_0"), null, 10);
@@ -162,7 +159,7 @@ public class ResourceModelTest {
    @Test
    public void testResourceModelUpdateThroughREST() throws Exception {
       // put in initial state (delete stuff) in case test was aborted :
-      modelAdminService.getModel(CityCountrySample.CITY_MODEL_NAME)
+      modelAdminService.getModelBase(CityCountrySample.CITY_MODEL_NAME)
          .getField("city:founded").setRequired(false);
       
       // change a model on client side, post it and check that ResourceService parsing changes :
@@ -176,11 +173,11 @@ public class ResourceModelTest {
       Assert.assertNotNull(villeurbanneCity);
       // getting model and changing it
       DCResource cityModelResource = datacoreApiClient.getData("dcmo:model_0", CityCountrySample.CITY_MODEL_NAME);
-      DCModel clientCityModel = (DCModel) mrMappingService.toModelOrMixin(cityModelResource, true);
+      DCModel clientCityModel = (DCModel) mrMappingService.toModelOrMixin(cityModelResource);
       DCField clientCityFoundedField = clientCityModel.getField("city:founded");
       Assert.assertTrue(!clientCityFoundedField.isRequired());
       clientCityFoundedField.setRequired(true);
-      mrMappingService1.modelOrMixinToResource(clientCityModel, cityModelResource); // mrMappingService1.modelToResource(clientCityModel)
+      mrMappingService1.modelFieldsAndMixinsToResource(clientCityModel, cityModelResource); // mrMappingService1.modelToResource(clientCityModel)
       try {
       // updating model & check that changed
       cityModelResource = datacoreApiClient.putDataInType(cityModelResource);
@@ -189,7 +186,7 @@ public class ResourceModelTest {
             (List<Map<String, Object>>) cityModelResource.get("dcmo:fields"));
       Assert.assertTrue(cityModelFields1.get("city:founded").isRequired());
       // checking that DCModel has been updated :
-      DCModel cityModel = modelAdminService.getModel(CityCountrySample.CITY_MODEL_NAME);
+      DCModelBase cityModel = modelAdminService.getModelBase(CityCountrySample.CITY_MODEL_NAME);
       Assert.assertNotNull(cityModel);
       Assert.assertTrue(cityModel.getField("city:founded").isRequired());
       // checking that putting a Resource without city:founded is now forbidden
@@ -206,7 +203,7 @@ public class ResourceModelTest {
       } finally {
          // putting it back in default state
          clientCityFoundedField.setRequired(false);
-         mrMappingService1.modelOrMixinToResource(clientCityModel, cityModelResource); // mrMappingService1.modelToResource(clientCityModel)
+         mrMappingService1.modelFieldsAndMixinsToResource(clientCityModel, cityModelResource); // mrMappingService1.modelToResource(clientCityModel)
          cityModelResource = datacoreApiClient.putDataInType(cityModelResource);
          deleteExisting(villeurbanneCity);
       }
@@ -245,7 +242,7 @@ public class ResourceModelTest {
       
       // now post it as new model with other name, and check
       // that uri index is there to ensure unicity :
-      DCModel newCityModel = null;
+      DCModelBase newCityModel = null;
       DCResource newVilleurbanneCity = null;
       DCResource newCityModelResource = datacoreApiClient
             .getData("dcmo:model_0", CityCountrySample.CITY_MODEL_NAME);
@@ -254,7 +251,7 @@ public class ResourceModelTest {
       newCityModelResource.set("dcmo:name", newName);
       newCityModelResource = datacoreApiClient.postDataInType(newCityModelResource);
       // checking that DCModel has been updated :
-      newCityModel = modelAdminService.getModel(newName);
+      newCityModel = modelAdminService.getModelBase(newName);
       Assert.assertNotNull(newCityModel);
       Assert.assertNotNull(modelAdminService.getMixin(newName)); // and that also available among reusable mixins
       // POSTing a new Resource in it :
@@ -277,7 +274,7 @@ public class ResourceModelTest {
       
       // putting back to default state, while checking delete :
       datacoreApiClient.deleteData(newCityModelResource);
-      Assert.assertNull(modelAdminService.getModel(newName));
+      Assert.assertNull(modelAdminService.getModelBase(newName));
       Assert.assertNull(modelAdminService.getMixin(newName)); // checked that also removed
       Assert.assertFalse(mgo.collectionExists(newName)); // check that dropped
       try {

@@ -1,7 +1,7 @@
 package org.oasis.datacore.historization.service;
 
 import org.oasis.datacore.core.entity.model.DCEntity;
-import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.historization.exception.HistorizationException;
 
 /**
@@ -28,14 +28,16 @@ public interface HistorizationService {
 	 * @param model
 	 * @return
 	 */
-	public void historize(DCEntity entity, DCModel model) throws HistorizationException;
+	public void historize(DCEntity entity, DCModelBase model) throws HistorizationException;
 	
 	/**
 	 * Get the model where originalModel historization is stored
 	 * @param originalModel
 	 * @return
 	 */
-	public DCModel getHistorizationModel(DCModel originalModel) throws HistorizationException;
+	public DCModelBase getOrCreateHistorizationModel(DCModelBase originalModel) throws HistorizationException;
+
+   public DCModelBase getHistorizationModel(DCModelBase originalModel) throws HistorizationException;
 	
 	/**
 	 * Create an historization model from an original model (it's a full copy of original model with only the name that differs : prefix "_h_" + name())
@@ -43,7 +45,7 @@ public interface HistorizationService {
 	 * @return
 	 * @throws HistorizationException
 	 */
-	public DCModel createHistorizationModel(DCModel originalModel) throws HistorizationException;
+	public DCModelBase createHistorizationModel(DCModelBase originalModel) throws HistorizationException;
 	
 	/**
 	 * 
@@ -51,7 +53,7 @@ public interface HistorizationService {
 	 * @return
 	 * @throws HistorizationException
 	 */
-	public boolean isHistorizable(DCModel model) throws HistorizationException;
+	public boolean isHistorizable(DCModelBase model) throws HistorizationException;
 	
 	/**
 	 * Returns an historized entity matching uri AND version.
@@ -67,13 +69,13 @@ public interface HistorizationService {
 	 * @return
 	 * @throws HistorizationException
 	 */
-	public DCEntity getHistorizedEntity(String uri, int version, DCModel originalModel) throws HistorizationException;
+	public DCEntity getHistorizedEntity(String uri, int version, DCModelBase originalModel) throws HistorizationException;
 	
 	/**
 	 * Return the mongo collection name of the historized model (if original model is historizable)
 	 * @param originalModel
 	 * @return
 	 */
-	public String getHistorizedCollectionNameFromOriginalModel(DCModel originalModel) throws HistorizationException;
+	public String getHistorizedCollectionNameFromOriginalModel(DCModelBase originalModel) throws HistorizationException;
 	
 }

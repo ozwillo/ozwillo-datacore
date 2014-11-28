@@ -16,33 +16,31 @@ import org.apache.cxf.message.Message;
  */
 public class CxfMessageHelper {
    
-   public static String getUri(Message clientOutRequestMessage) {
+   public static String getUri(Map<String, Object> clientOutRequestMessage) {
       return (String) clientOutRequestMessage.get(Message.REQUEST_URI);
    }
    
-   public static Object getJaxrsParameter(Message clientOutRequestMessage, String name) {
+   public static Object getJaxrsParameter(Map<String, Object> clientOutRequestMessage, String name) {
       @SuppressWarnings("unchecked")
       Map<String,Object> jaxrsParameters = (Map<String, Object>) clientOutRequestMessage.get("jaxrs.template.parameters");
       return jaxrsParameters.get(name);
    }
 
-   public static Map<Object, Object> getRequestContext(Message message) {
+   /*public static Map<Object, Object> getRequestContext(Message message) {
       Message clientOutRequestMessage = message.getExchange().getOutMessage(); // in case of inMessage
       Map<?,?> invocationContext = (Map<?,?>) clientOutRequestMessage.get(Message.INVOCATION_CONTEXT);
       @SuppressWarnings("unchecked")
       Map<Object,Object> requestContext = (Map<Object,Object>) invocationContext.get("RequestContext");
-      /*OperationResourceInfo ori = (OperationResourceInfo) requestContext.get("org.apache.cxf.jaxrs.model.OperationResourceInfo");
-      method = ori.getAnnotatedMethod();*/
       return requestContext;
-   }
+   }*/
 
-   public static void setHeader(Message clientOutRequestMessage, String name, String value) {
+   public static void setHeader(Map<String, Object> clientOutRequestMessage, String name, String value) {
       ArrayList<String> headerList = new ArrayList<String>(1);
       headerList.add(value);
       getRequestHeaders(clientOutRequestMessage).put(name, headerList); // (though HTTP headers are case-insensitive per spec)
    }
 
-   public static Map<String, List<String>> getRequestHeaders(Message clientOutRequestMessage) {
+   public static Map<String, List<String>> getRequestHeaders(Map<String, Object> clientOutRequestMessage) {
       @SuppressWarnings("unchecked")
       Map<String, List<String>> requestHeaders = (Map<String, List<String>>) clientOutRequestMessage.get(Message.PROTOCOL_HEADERS);
       if (requestHeaders == null) {
@@ -60,8 +58,11 @@ public class CxfMessageHelper {
     * @param header ex. HttpHeaders.ETAG
     * @return
     */
-   public static String getHeaderString(Message clientInResponseMessage, String header) {
+   public static String getHeaderString(Map<String, Object> clientInResponseMessage, String header) {
       Map<?,?> httpHeaders = (Map<?, ?>) clientInResponseMessage.get("org.apache.cxf.message.Message.PROTOCOL_HEADERS");
+      if (httpHeaders == null) {
+         return null; // to avoid npex, if applied without REST context ex. in ResourceEntityMapping toResources()
+      }
       @SuppressWarnings("unchecked")
       List<String> httpHeaderList = (List<String>) httpHeaders.get(header);
       if (httpHeaderList != null && httpHeaderList.size() != 0) {

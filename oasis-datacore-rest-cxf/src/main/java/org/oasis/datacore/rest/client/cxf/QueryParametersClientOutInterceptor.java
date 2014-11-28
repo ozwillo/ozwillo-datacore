@@ -40,9 +40,9 @@ public class QueryParametersClientOutInterceptor extends AbstractPhaseIntercepto
             // setting it everywhere :
             clientOutRequestMessage.put(Message.REQUEST_URI, uri);
             clientOutRequestMessage.put(Message.ENDPOINT_ADDRESS, uri);
-            Map<Object,Object> requestContext = CxfMessageHelper.getRequestContext(clientOutRequestMessage);
+            /*Map<Object,Object> requestContext = CxfMessageHelper.getRequestContext(clientOutRequestMessage);
             requestContext.put(Message.REQUEST_URI, uri);
-            requestContext.put(Message.ENDPOINT_ADDRESS, uri);
+            requestContext.put(Message.ENDPOINT_ADDRESS, uri);*/ // TODO rm
             Exchange messageExchange = clientOutRequestMessage.getExchange();
             messageExchange.put(Message.REQUEST_URI, uri);
             messageExchange.put(Message.ENDPOINT_ADDRESS, uri);

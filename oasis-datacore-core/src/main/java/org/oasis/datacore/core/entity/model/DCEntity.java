@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.joda.time.DateTime;
 import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.CreatedBy;
@@ -80,12 +81,12 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    /*@Transient
    private DCResourceModel model;*/ // TODO have a transient reference to model in entity ?? fill it in lifecycle event ??? AND / OR baseType ?
    /**
-    * types : type mixins plus model
+    * types : type mixins plus model,
+    * TODO must be indexed if (used to discriminate i.e.) polymorphic collection
     * TODO Q rather _ts, _a, _m ?? or only as key of submap ?!?
     * TODO LATER rather direct references filled etc. ?
     */
    @Field(KEY_T)
-   // TODO index if used to discriminate ex. polymorphism
    private List<String> types;
 
    // more auditing see
@@ -164,7 +165,13 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    /** request-scoped cache built in resourceToEntity
     * or else getEntity & LDP service findDataInType()'s executeMongoDbQuery */
    @Transient
-   private transient DCModel cachedModel;
+   private transient DCModelBase cachedModel;
+   /** request-scoped cache built in resourceToEntity */
+   @Transient
+   private transient DCModelBase cachedStorageModel;
+   /** request-scoped cache built in resourceToEntity */
+   @Transient
+   private transient DCModelBase cachedDefinitionModel;
    
    public DCEntity() {
       
@@ -188,7 +195,7 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
       this.setReaders(dcEntity.getReaders());
       this.setWriters(dcEntity.getWriters());
       this.setOwners(dcEntity.getOwners());
-      //this.setCachedModel(dcEntity.getCachedModel()); // not copying model in case of derived model ex. historization
+      // NB. not copying model caches in case of derived model ex. historization
       this.properties = new HashMap<String, Object>(dcEntity.properties.size());
       //this.properties = new HashMap<String, DCEntityValueBase>(dcEntity.properties.size());
       for (String key : dcEntity.properties.keySet()) {
@@ -387,12 +394,36 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
       this.owners = owners;
    }
 
-   public DCModel getCachedModel() {
+   public DCModelBase getCachedModel() {
       return cachedModel;
    }
 
-   public void setCachedModel(DCModel cachedModel) {
+   public void setCachedModel(DCModelBase cachedModel) {
       this.cachedModel = cachedModel;
+   }
+
+   /*public DCStorage getCachedStorage() {
+      return cachedStorage;
+   }
+
+   public void setCachedStorage(DCStorage cachedStorage) {
+      this.cachedStorage = cachedStorage;
+   }*/
+
+   public DCModelBase getCachedStorageModel() {
+      return cachedStorageModel;
+   }
+
+   public void setCachedStorageModel(DCModelBase cachedStorageModel) {
+      this.cachedStorageModel = cachedStorageModel;
+   }
+
+   public DCModelBase getCachedDefinitionModel() {
+      return cachedDefinitionModel;
+   }
+
+   public void setCachedDefinitionModel(DCModelBase cachedDefinitionModel) {
+      this.cachedDefinitionModel = cachedDefinitionModel;
    }
 
 }

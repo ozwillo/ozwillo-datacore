@@ -8,7 +8,8 @@ import java.util.Map;
 import org.joda.time.DateTime;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.model.DCURI;
-import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.DataModelServiceImpl;
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.NonTransientDataAccessException;
@@ -39,11 +40,9 @@ public class EntityServiceImpl implements EntityService {
    // NB. MongoTemplate would be required to check last operation result, but we rather use WriteConcerns
    @Autowired
    private EntityModelService entityModelService;
-
-
-   private DCModel getModel(DCEntity dataEntity) {
-      return entityModelService.getModel(dataEntity);
-   }
+   @Autowired
+   private DataModelServiceImpl projectService; // TODO projectService ?!
+   
    
    /* (non-Javadoc)
     * @see org.oasis.datacore.core.entity.DCEntityService#create(org.oasis.datacore.core.entity.model.DCEntity)
@@ -54,7 +53,7 @@ public class EntityServiceImpl implements EntityService {
       if (version != null && version >= 0) { // version < 0 not allowed (though it is in Resources)
          throw new OptimisticLockingFailureException("Trying to create entity with version");
       }
-      String collectionName = getModel(dataEntity).getCollectionName(); // TODO for view Models or weird type names ?!?
+      String collectionName = entityModelService.getCollectionName(dataEntity); // TODO for view Models or weird type names ?!?
       
       // security : checking type default rights
       // TODO using annotated hasPermission
@@ -70,8 +69,8 @@ public class EntityServiceImpl implements EntityService {
     * @see org.oasis.datacore.core.entity.DCEntityService#getByUri(java.lang.String, org.oasis.datacore.core.meta.model.DCModel)
     */
    @Override
-   public DCEntity getByUri(String uri, DCModel dcModel) throws NonTransientDataAccessException {
-      String collectionName = dcModel.getCollectionName(); // TODO for view Models or weird type names ?!?
+   public DCEntity getByUri(String uri, DCModelBase dcModel) throws NonTransientDataAccessException {
+      String collectionName = entityModelService.getCollectionName(dcModel); // TODO for view Models or weird type names ?!?
       //entityService.findById(uri, type/collectionName); // TODO
       //dataEntity = dataRepo.findOne(uri); // NO can't be used because can't specify collection
       //dataEntity = mgo.findById(uri, DCEntity.class, collectionName);
@@ -83,7 +82,7 @@ public class EntityServiceImpl implements EntityService {
    }
 
    @Override
-   public DCEntity getByUriUnsecured(String uri, DCModel dcModel) throws NonTransientDataAccessException {
+   public DCEntity getByUriUnsecured(String uri, DCModelBase dcModel) throws NonTransientDataAccessException {
       return getByUri(uri, dcModel);
    }
    
@@ -91,13 +90,13 @@ public class EntityServiceImpl implements EntityService {
     * @see org.oasis.datacore.core.entity.DCEntityService#isUpToDate(java.lang.String, org.oasis.datacore.core.meta.model.DCModel, java.lang.Long)
     */
    @Override
-   public boolean isUpToDate(String uri, DCModel dcModel, Long version)
+   public boolean isUpToDate(String uri, DCModelBase dcModel, Long version)
          throws NonTransientDataAccessException {
       if (version == null || version < 0) {
          return false;
       }
       
-      String collectionName = dcModel.getCollectionName(); // TODO for view Models or weird type names ?!?
+      String collectionName = entityModelService.getCollectionName(dcModel);
       //entityService.findById(uri, type/collectionName); // TODO
       //dataEntity = dataRepo.findOne(uri); // NO can't be used because can't specify collection
       //dataEntity = mgo.findById(uri, DCEntity.class, collectionName);
@@ -116,7 +115,7 @@ public class EntityServiceImpl implements EntityService {
       if (dataEntity.getVersion() == null) { // (version < 0 not allowed, could be checked but won't be found anyway)
          throw new OptimisticLockingFailureException("Trying to update entity without version >= 0");
       }
-      String collectionName = getModel(dataEntity).getCollectionName(); // TODO for view Models or weird type names ?!?
+      String collectionName = entityModelService.getCollectionName(dataEntity); // TODO for view Models or weird type names ?!?
       
       // security : checking rights
       /*if (dataEntity.getWriters().intersect(currentUserRoles).isEmpty() || (getOwners())) {
@@ -134,7 +133,7 @@ public class EntityServiceImpl implements EntityService {
    @Override
    public void deleteByUriId(DCEntity dataEntity) throws NonTransientDataAccessException {
 	   
-	   String collectionName = getModel(dataEntity).getCollectionName(); // TODO for view Models or weird type names ?!?
+	   String collectionName = entityModelService.getCollectionName(dataEntity); // TODO for view Models or weird type names ?!?
       
       // NB. could first check 1. that uri exists & has version and 2. user has write rights
       // and fail if not, but in Mongo & REST spirit it's enough to merely ensure that
@@ -170,7 +169,7 @@ public class EntityServiceImpl implements EntityService {
 			throw new RuntimeException("Entity cannot be null while changing rights");
 		}
 		
-		String collectionName = getModel(dataEntity).getCollectionName();
+		String collectionName = entityModelService.getCollectionName(dataEntity);
 		mgo.save(dataEntity, collectionName);
 		
 	}

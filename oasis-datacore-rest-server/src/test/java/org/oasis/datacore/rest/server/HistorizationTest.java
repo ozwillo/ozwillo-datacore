@@ -16,6 +16,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.security.mock.MockAuthenticationService;
 import org.oasis.datacore.historization.service.HistorizationService;
 import org.oasis.datacore.rest.api.DCResource;
@@ -205,8 +206,8 @@ public class HistorizationTest {
 
 	private void truncateModel(String type) {
 		if (type != null && !StringUtils.isEmpty(type)) {
-			DCModel dcModel = modelAdminService.getModel(type);
-			if (dcModel != null) {
+         DCModelBase dcModel = modelAdminService.getModelBase(type);
+         if (dcModel != null) { // && dcModel.isInstanciable()
 				mongoOperations.remove(new Query(), dcModel.getCollectionName());
 			}
 		} else {

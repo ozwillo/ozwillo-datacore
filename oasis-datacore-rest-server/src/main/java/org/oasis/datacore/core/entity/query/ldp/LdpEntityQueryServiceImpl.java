@@ -9,14 +9,17 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.cxf.message.Exchange;
+import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.mongodb.DatacoreMongoTemplate;
 import org.oasis.datacore.core.entity.query.QueryException;
+import org.oasis.datacore.core.meta.ModelNotFoundException;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
-import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCModelBase;
+import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.model.DCSecurity;
 import org.oasis.datacore.core.security.DCUserImpl;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
@@ -34,6 +37,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.CursorProviderQueryCursorPreparer;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
 
@@ -73,18 +77,29 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       //dcEntityIndexedFields.put("o:allReaders", new DCListField(DCEntity.KEY_AR... // don't allow to look it up
    }
 
+   @Value("${datacoreApiServer.query.detailedErrorsMode}")
+   private boolean detailedErrorsMode = true;
+   
    /** default maximum number of documents to scan when fulfilling a query, overriden by
     * DCFields', themselves limited by DCModel's. 0 means no limit (for tests), else ex.
     * 1000 (secure default), 100000 (on query-only nodes using secondary & timeout)... 
     * http://docs.mongodb.org/manual/reference/operator/meta/maxScan/ */
    @Value("${datacoreApiServer.query.maxScan}")
    private int maxScan;
-   /** default maximum start position : 500... */
+   /** TODO BETTER ELSE CANT PAGINATE default maximum start position : 500... */
    @Value("${datacoreApiServer.query.maxStart}")
    private int maxStart;
    /** default maximum number of documents returned : 100... */
    @Value("${datacoreApiServer.query.maxLimit}")
    private int maxLimit;
+
+   /** to get storage model */
+   @Autowired
+   private DCModelService modelService;
+
+   /** to fill entity's models cache */
+   @Autowired
+   private EntityModelService entityModelService;
    
    @Autowired
    @Qualifier("datacoreSecurityServiceImpl")
@@ -105,15 +120,28 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
 
    
    @Override
-   public List<DCEntity> findDataInType(DCModel dcModel, Map<String, List<String>> params,
+   public List<DCEntity> findDataInType(String modelType, Map<String, List<String>> params,
          Integer start, Integer limit) throws QueryException {
-      boolean detailedErrorsMode = true; // TODO
-
+      ///boolean detailedErrorsMode = true; // TODO also conf from context
+      
+      DCModelBase model = modelService.getModelBase(modelType); // NB. if used from JAXRS, modelType can't be null thanks to JAXRS
+      if (model == null) {
+         throw new ModelNotFoundException(modelType, modelService.getProject(), "Unknown model type");
+      }
+      DCModelBase storageModel = modelService.getStorageModel(modelType); // TODO cache, in context ?
+      if (storageModel == null) {
+         throw new ModelNotFoundException(modelType, modelService.getProject(), "Unknown storage model for model type");
+      }
+      
+      if (params == null) {
+         params = new HashMap<String,List<String>>(0);
+      }
+      
       //Log to AuditLog Endpoint
       //monitoringLogServiceImpl.postLog(modelType, "findDataInType");
 
       // parsing query parameters criteria according to model :
-      DCQueryParsingContext queryParsingContext = new DCQueryParsingContext(dcModel);
+      DCQueryParsingContext queryParsingContext = new DCQueryParsingContext(model, storageModel);
       parseQueryParameters(params, queryParsingContext);
       if (queryParsingContext.hasErrors()) {
          String msg = DCResourceParsingContext.formatParsingErrorsMessage(queryParsingContext, detailedErrorsMode);
@@ -127,10 +155,10 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       }
       
       // adding paging & sorting :
-      if (start > 500) {
+      if (start > maxStart) {
          start = maxStart; // max, else prefer ranged query ; TODO or error message ?
       }
-      if (limit > 50) {
+      if (limit > maxLimit) {
          limit = maxLimit; // max, else prefer ranged query ; TODO or error message ?
       }
       Sort sort = queryParsingContext.getSort();
@@ -147,21 +175,23 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       
       if (logger.isDebugEnabled()) {
          logger.debug("Done Spring Mongo query: " + springMongoQuery
-               + "\n   in collection " + dcModel.getCollectionName()
-               + " from Model " + dcModel.getName() + " and parameters: " + params
+               + "\n   in collection " + storageModel.getCollectionName()
+               + " from Model " + model.getName() + " and parameters: " + params
                + "\n   with result nb " + foundEntities.size());
       }
       
       // setting cached model for future mapping to resource :
+      // POLY NOO might differ, & also storageModel
       for (DCEntity foundEntity : foundEntities) {
-         foundEntity.setCachedModel(dcModel);
+         ///foundEntity.setCachedModel(dcModel);
+         entityModelService.getModel(foundEntity);
       }
       return foundEntities;
    }
 
    
    private void parseQueryParameters(Map<String, List<String>> params, DCQueryParsingContext queryParsingContext) {
-      DCModel dcModel = queryParsingContext.peekModel();
+      DCModelBase dcModel = queryParsingContext.peekModel();
       
       parameterLoop : for (String fieldPath : params.keySet()) {
          if (findConfParams.contains(fieldPath)) {
@@ -403,7 +433,12 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    
    private List<DCEntity> executeMongoDbQuery(Query springMongoQuery,
          DCQueryParsingContext queryParsingContext) throws QueryException {
-      DCModel dcModel = queryParsingContext.peekModel();
+      DCModelBase model = queryParsingContext.peekModel();
+      DCModelBase storageModel = queryParsingContext.peekStorageModel();
+      if (!model.getName().equals(storageModel.getName())) {
+         // adding criteria on model type when storage larger than model :
+         springMongoQuery.addCriteria(new Criteria(DCEntity.KEY_T).is(model.getName()));
+      }
       
       // compute overall maxScan :
       // (BEWARE it is NOT the max amount of doc returned because sorts or multiple
@@ -413,10 +448,10 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          // allow at least enough scan for expected results
          maxScan = queryParsingContext.getAggregatedQueryLimit();
       }
-      if (dcModel.getMaxScan() > 0) {
+      if (storageModel.getMaxScan() > 0) {
          // limit maxScan : take smallest
-         maxScan = (maxScan > dcModel.getMaxScan()) ?
-               dcModel.getMaxScan() : maxScan;
+         maxScan = (maxScan > storageModel.getMaxScan()) ?
+               storageModel.getMaxScan() : maxScan;
       }
 
       boolean debug = false;
@@ -434,7 +469,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
             springMongoQuery, doExplainQuery, maxScan);
       // TODO LATER mongo 2.6 maxTimeMs() http://docs.mongodb.org/manual/reference/method/cursor.maxTimeMS/#cursor.maxTimeMS
 
-      String collectionName = dcModel.getCollectionName(); // TODO LATER for polymorphism...
+      String collectionName = storageModel.getCollectionName(); // TODO LATER for polymorphism...
       List<DCEntity> foundEntities = mgo.find(springMongoQuery, DCEntity.class, collectionName, cursorProvider);
       
       if (debug) {
@@ -471,6 +506,18 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       return foundEntities;
    }
 
+
+   public int getMaxScan() {
+      return maxScan;
+   }
+
+   public int getMaxStart() {
+      return maxStart;
+   }
+
+   public int getMaxLimit() {
+      return maxLimit;
+   }
    
    /** for tests */
    public void setMaxScan(int maxScan) {

@@ -52,8 +52,8 @@ public class BrandCarMotorcycleData extends DatacoreSampleBase {
    }
 
    @Override
-   public HashSet<DCModel> getCreatedModels() {
-      return brandCarMotorcycleModel.getCreatedModels();
+   public HashSet<DCModelBase> getCreatedStorageModels() {
+      return brandCarMotorcycleModel.getCreatedStorageModels();
    }
       
 	@Override

@@ -7,12 +7,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.EntityNotFoundException;
-
 import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
-import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
+import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.core.security.EntityPermissionService;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
 import org.oasis.datacore.historization.exception.HistorizationException;
@@ -152,26 +151,35 @@ public class ResourceService {
       ///boolean normalizeUrlMode = true;
 
       boolean isCreation = true;
+      
+      DCProject project = modelService.getProject(); // TODO TODO explode if none 
 
       if (resource == null) {
-         throw new ResourceException("No data (modelType = " + modelType + ")", null);
+         throw new ResourceException("No data (modelType = " + modelType + ")", null, project);
       }
       
       Long version = resource.getVersion();
       if (version != null && version >= 0) { // version < 0 means new
          if (!canUpdate) {
             throw new ResourceException("Version is forbidden in POSTed data resource "
-                  + "to create in strict POST mode", resource);
+                  + "to create in strict POST mode", resource, project);
          } else {
             isCreation = false;
          }
       } else if (!canCreate) {
-         throw new ResourceException("Version of data resource to update is required in PUT", resource);
+         throw new ResourceException("Version of data resource to update is required in PUT",
+               resource, project);
       }
       
-      DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
+      DCModelBase dcModel = modelService.getModelBase(modelType); // NB. type can't be null thanks to JAXRS
       if (dcModel == null) {
-         throw new ResourceTypeNotFoundException(modelType, null, null, resource);
+         throw new ResourceTypeNotFoundException(modelType,
+               null, null, resource, project);
+      }
+      DCModelBase storageModel = modelService.getStorageModel(modelType); // TODO cache, in context ?
+      if (storageModel == null) {
+         throw new ResourceTypeNotFoundException(modelType,
+               "Unknown storage model for model type", null, resource, project);
       }
       modelType = dcModel.getName(); // normalize ; TODO useful ?
       
@@ -194,7 +202,7 @@ public class ResourceService {
       
       if (uri.isExternalUri()) {
          // TODO or maybe also allow this endpoint's baseUrl ??
-         throw new ExternalResourceException(uri, null, null, resource);
+         throw new ExternalResourceException(uri, null, null, resource, project);
          // TODO LATER OPT or true broker mode, i.e. this Datacore acts as proxy of another ?
       }
 
@@ -206,7 +214,7 @@ public class ResourceService {
             if (!canUpdate) {
                // already exists, but only allow creation
                throw new ResourceException("Already exists at uri (forbidden in strict POST mode) :\n"
-                           + dataEntity.toString(), resource); // TODO TODO security check access first !!!
+                           + dataEntity.toString(), resource, project); // TODO TODO security check access first !!!
             }/* else {
                // HTTP ETag checking (provided in an If-Match header) :
                // NB. DISABLED FOR NOW because will be checked at db save time anyway
@@ -223,10 +231,11 @@ public class ResourceService {
          } else {
             if (!isCreation) {
                throw new ResourceObsoleteException("Trying to update missing resource "
-                     + "(to rather create it, provide no version or < 0)", resource);
+                     + "(to rather create it, provide no version or < 0)", resource, project);
             }
             if (!canCreate) {
-               throw new ResourceNotFoundException("Data resource doesn't exist (forbidden in PUT)", resource);
+               throw new ResourceNotFoundException("Data resource doesn't exist (forbidden in PUT)",
+                     resource, project);
             }
          }
       }
@@ -253,7 +262,8 @@ public class ResourceService {
       dataEntity.setTypes(buildResourceTypes(resource, dcModel)); // TODO or no modelType, or remove modelName ??
       
       // parsing resource according to model :
-      DCResourceParsingContext resourceParsingContext = new DCResourceParsingContext(dcModel, uri.getId());
+      DCResourceParsingContext resourceParsingContext =
+            new DCResourceParsingContext(dcModel, storageModel, uri);
       //List<DCEntity> embeddedEntitiesToAlsoUpdate = new ArrayList<DCEntity>(); // TODO embeddedEntitiesToAlsoUpdate ??
       //resourceParsingContext.setEmbeddedEntitiesToAlsoUpdate(embeddedEntitiesToAlsoUpdate);
       resourceEntityMapperService.resourceToEntityFields(dataProps, dataEntity.getProperties(),
@@ -262,7 +272,7 @@ public class ResourceService {
       
       if (resourceParsingContext.hasErrors()) {
          String msg = DCResourceParsingContext.formatParsingErrorsMessage(resourceParsingContext, detailedErrorsMode);
-         throw new ResourceException(msg, resource);
+         throw new ResourceException(msg, resource, project);
       } // else TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
 
       // pre save hooks
@@ -283,7 +293,7 @@ public class ResourceService {
             // detected by unique index on _uri
             // TODO unicity across shards : index not sharded so also handle duplicates a posteriori
             throw new ResourceAlreadyExistsException("Trying to create already existing "
-                  + "data resource." , resource);
+                  + "data resource." , resource, project);
          } catch (NonTransientDataAccessException ntdaex) {
             // unexpected, so rethrowing runtime ex (will be wrapped in 500 server error)
             throw ntdaex;
@@ -296,7 +306,7 @@ public class ResourceService {
             entityService.update(dataEntity);
          } catch (OptimisticLockingFailureException olfex) {
             throw new ResourceObsoleteException("Trying to update data resource "
-                  + "without up-to-date version but " + resource.getVersion(), resource);
+                  + "without up-to-date version but " + resource.getVersion(), resource, project);
             // and not dataEntity.getVersion() which had already to be incremented by Spring
          } catch (NonTransientDataAccessException ntdaex) {
             // unexpected, so rethrowing runtime ex (will be wrapped in 500 server error)
@@ -326,10 +336,11 @@ public class ResourceService {
     * @throws BadUriException 
     * @throws ResourceTypeNotFoundException 
     */
-   public List<String> buildResourceTypes(DCResource resource) throws BadUriException, ResourceTypeNotFoundException {
+   public List<String> buildResourceTypes(DCResource resource, DCProject project)
+         throws BadUriException, ResourceTypeNotFoundException {
       DCURI uri = uriService.normalizeAdaptCheckTypeOfUri(resource.getUri(),
             null, normalizeUrlMode, matchBaseUrlMode);
-      return buildResourceTypes(resource, uri.getType());
+      return buildResourceTypes(resource, uri.getType(), project);
    }
    /**
     * Shortcut to buildResourceTypes(DCResource resource, DCModel dcModel)
@@ -339,10 +350,11 @@ public class ResourceService {
     * then any additional resource type
     * @throws ResourceTypeNotFoundException 
     */
-   public List<String> buildResourceTypes(DCResource resource, String modelType) throws ResourceTypeNotFoundException {
-      DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
+   public List<String> buildResourceTypes(DCResource resource, String modelType, DCProject project)
+         throws ResourceTypeNotFoundException {
+      DCModelBase dcModel = modelService.getModelBase(modelType); // NB. type can't be null thanks to JAXRS
       if (dcModel == null) {
-         throw new ResourceTypeNotFoundException(modelType, null, null, resource);
+         throw new ResourceTypeNotFoundException(modelType, null, null, resource, project);
       }
       return buildResourceTypes(resource, dcModel);
    }
@@ -353,7 +365,7 @@ public class ResourceService {
     * @return model name, then all its mixins (including inherited models),
     * then any additional resource type
     */
-   public List<String> buildResourceTypes(DCResource resource, DCModel dcModel) {
+   public List<String> buildResourceTypes(DCResource resource, DCModelBase dcModel) {
       Set<String> modelMixinNames = dcModel.getGlobalMixinNames(); // NB. ordered
       LinkedHashSet<String> types = new LinkedHashSet<String>(modelMixinNames.size() + 1);
       types.add(dcModel.getName());
@@ -376,9 +388,10 @@ public class ResourceService {
     */
    public DCResource getIfVersionDiffers(String uri, String modelType, Long version)
          throws ResourceTypeNotFoundException, ResourceNotFoundException, ResourceException {
-      DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
+      DCProject project = modelService.getProject(); // TODO explode if none 
+      DCModelBase dcModel = modelService.getModelBase(modelType); // NB. type can't be null thanks to JAXRS
       if (dcModel == null) {
-         throw new ResourceTypeNotFoundException(modelType, null, null, null);
+         throw new ResourceTypeNotFoundException(modelType, null, null, null, project);
       }
       modelType = dcModel.getName(); // normalize ; TODO useful ?
       
@@ -391,7 +404,7 @@ public class ResourceService {
       entity = entityService.getByUri(uri, dcModel);
       if (entity == null) {
          //return Response.noContent().build();
-         throw new ResourceNotFoundException("No resource with uri " + uri, null);
+         throw new ResourceNotFoundException("No resource with uri", uri, null, project);
          // rather than NO_CONTENT ; like Atol ex. deleteApplication in
          // https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/apps/ApplicationDirectoryResource.java
       }
@@ -412,16 +425,16 @@ public class ResourceService {
     */
    public DCResource get(String uri, String modelType)
          throws ResourceTypeNotFoundException, ResourceNotFoundException, ResourceException {
-      DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
+      DCProject project = modelService.getProject(); // TODO explode if none 
+      DCModelBase dcModel = modelService.getModelBase(modelType); // NB. type can't be null thanks to JAXRS
       if (dcModel == null) {
-         throw new ResourceTypeNotFoundException(modelType, null, null, null);
+         throw new ResourceTypeNotFoundException(modelType, null, null, null, project);
       }
-      modelType = dcModel.getName(); // normalize ; TODO useful ?
       
       DCEntity entity = entityService.getByUri(uri, dcModel);
       if (entity == null) {
          //return Response.noContent().build();
-         throw new ResourceNotFoundException("No resource with uri " + uri, null);
+         throw new ResourceNotFoundException("No resource with uri", uri, null, project);
          // rather than NO_CONTENT ; like Atol ex. deleteApplication in
          // https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/apps/ApplicationDirectoryResource.java
       }
@@ -445,38 +458,42 @@ public class ResourceService {
     */
    public void delete(String uri, String modelType, Long version)
          throws ResourceTypeNotFoundException, ResourceException {
+      DCProject project = modelService.getProject(); // TODO explode if none 
 	   
-      DCModel dcModel = modelService.getModel(modelType); // NB. type can't be null thanks to JAXRS
+      DCModelBase dcModel = modelService.getModelBase(modelType); // NB. type can't be null thanks to JAXRS
       if (dcModel == null) {
-         throw new ResourceTypeNotFoundException(modelType, null, null, null);
+         throw new ResourceTypeNotFoundException(modelType, null, null, null, project);
       }
       modelType = dcModel.getName(); // normalize ; TODO useful ?
       
       DCEntity dataEntity = null;
       
-      if (uri != null && version != null && dcModel != null) {
+      if (uri != null && version != null) {
     	  dataEntity = entityService.getByUriUnsecured(uri, dcModel);
       } else {
-    	  throw new RuntimeException("Cannot get uri or version or model, cannot evaluate permissions");
+         // NB. uri & version can't be null if used from JAXRS
+    	  throw new ResourceNotFoundException("Cannot get uri or version, cannot evaluate permissions",
+    	        uri, null, project);
       }
       
-      if(dataEntity != null && version.equals(dataEntity.getVersion())) {   
-         DCResource resource = resourceEntityMapperService.entityToResource(dataEntity);
-         eventService.triggerResourceEvent(DCResourceEvent.Types.ABOUT_TO_DELETE, resource);
-    	   entityService.deleteByUriId(dataEntity);
-         eventService.triggerResourceEvent(DCResourceEvent.Types.DELETED, resource);
-      } else {
-    	   throw new EntityNotFoundException();
+      if (dataEntity == null || !version.equals(dataEntity.getVersion())) {
+         throw new ResourceNotFoundException(null, uri, null, project);
       }
+      
+      DCResource resource = resourceEntityMapperService.entityToResource(dataEntity);
+      eventService.triggerResourceEvent(DCResourceEvent.Types.ABOUT_TO_DELETE, resource);
+ 	   entityService.deleteByUriId(dataEntity);
+      eventService.triggerResourceEvent(DCResourceEvent.Types.DELETED, resource);
    }
 
-   public void historizeResource(DCResource resource, DCEntity dataEntity, DCModel dcModel) throws ResourceException {
+   public void historizeResource(DCResource resource, DCEntity dataEntity, DCModelBase dcModel) throws ResourceException {
+      DCProject project = modelService.getProject(); // TODO explode if none 
       try {
          historizationService.historize(dataEntity, dcModel);
       } catch (HistorizationException hex) {
-         throw new ResourceException("Error while historizing", hex, resource);
+         throw new ResourceException("Error while historizing", hex, resource, project);
       } catch (Exception ex) {
-        throw new ResourceException("Unknown error while historizing", ex, resource);
+        throw new ResourceException("Unknown error while historizing", ex, resource, project);
       }
    }
 }

@@ -58,7 +58,7 @@ public class EventService {
          try {
             listener.handleEvent(event);
          } catch (AbortOperationEventException aoeex) {
-            if (aoeex.getCause() != null && aoeex.getMessage() == null) {
+            if (aoeex.isWrapperException()) {
                throw aoeex.getCause();
             }
             throw aoeex;

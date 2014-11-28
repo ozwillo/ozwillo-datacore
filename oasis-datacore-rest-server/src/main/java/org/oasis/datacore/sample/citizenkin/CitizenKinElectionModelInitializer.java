@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.oasis.datacore.core.meta.model.*;
+import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.sample.DatacoreSampleBase;
 import org.springframework.stereotype.Component;
 
@@ -29,7 +30,8 @@ public class CitizenKinElectionModelInitializer extends DatacoreSampleBase {
     @Override
     public void buildModels(List<DCModelBase> modelsToCreate) {
 
-        DCModel model = new DCModel(CITIZENKIN_PROCEDURE_ELECTORAL_ROLL_REGISTRATION);
+        DCModel model = new DCModel(CITIZENKIN_PROCEDURE_ELECTORAL_ROLL_REGISTRATION,
+              modelAdminService.getProject(DCProject.OASIS_MAIN));
         model.setDocumentation(""); // TODO
 
         model.addField(new DCField(PREFIX + "nom_de_famille", STRING_TYPE, true, 0));

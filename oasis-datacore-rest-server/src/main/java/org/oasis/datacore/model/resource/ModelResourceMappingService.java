@@ -4,20 +4,20 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
-import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
+import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.DCURI;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
+import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.oasis.datacore.rest.server.resource.ValueParsingService;
 import org.oasis.datacore.sample.ResourceModelIniter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,10 +30,6 @@ import com.google.common.collect.ImmutableMap.Builder;
 @Component
 public class ModelResourceMappingService {
    
-   /** to be able to build a full uri, to avoid using ResourceService
-    * BUT COULD SINCE NOT IN ResourceModelIniter ANYMORE */
-   ///@Value("${datacoreApiClient.baseUrl}") 
-   ///private String baseUrl; // useless
    /////@Value("${datacoreApiClient.containerUrl}") // DOESN'T WORK 
    @Value("${datacoreApiServer.containerUrl}")
    private String containerUrlString = "";
@@ -42,7 +38,7 @@ public class ModelResourceMappingService {
    private URI containerUrl = null;
    
    @Autowired
-   private DataModelServiceImpl dataModelService;
+   private DCModelService dataModelService;
    @Autowired
    private ValueParsingService valueService;
    /** TODO rm merge */
@@ -58,17 +54,36 @@ public class ModelResourceMappingService {
       return UriHelper.buildUri(containerUrl, "dcmo:model_0",
             (String) modelResource.get("dcmo:name")/* + '_' + modelResource.get("dcmo:majorVersion")*/); // LATER refactor
    }
-
-   /** public for tests */
-   public String buildMixinUri(DCResource modelResource) {
-      return UriHelper.buildUri(containerUrl, "dcmi:mixin_0",
-         (String) modelResource.get("dcmo:name")/* + '_' + modelResource.get("dcmo:majorVersion")*/); // LATER refactor
-   }
    
    /** public for tests */
    public String buildFieldUriPrefix(DCURI dcUri) {
       return new DCURI(dcUri.getContainerUrl(), "dcmf:field_0",
             dcUri.getType() + '/' + dcUri.getId()).toString();
+   }
+
+   /**
+    * Used by all POVs
+    * @param modelType
+    * @param name
+    * @return
+    */
+   public String buildNameUri(String modelType, String name) {
+      return UriHelper.buildUri(containerUrl, modelType, name);
+   }
+   /**
+    * NOT USED
+    * public for tests
+    * @param modelResource
+    * @return
+    * @throws RuntimeException if missing model type, TODO better ex. ResourceParsingException
+    */
+   public String buildPointOfViewUri(DCResource modelResource) throws RuntimeException {
+      List<String> types = modelResource.getTypes();
+      if (types == null || types.isEmpty()) {
+         throw new RuntimeException("Missing Model type");
+      }
+      return UriHelper.buildUri(containerUrl, types.get(0),
+            (String) modelResource.get("dcmpv:name"));
    }
    
    
@@ -78,31 +93,46 @@ public class ModelResourceMappingService {
    /**
     * Creates DCModel or DCMixin, then calls resourceToModelOrMixin()
     * and modelOrMixinToResource() (to enrich model resource by fields
-    * that are computed by DCModelBase)
+    * that are computed by DCModelBase).
+    * TODO LATER gather all ResourceParsingException in a ParsingContext
+    * like in ResourceEntityMappingService 
     * @param r
     * @param isModel
     * @return
-    * @throws ResourceParsingException
+    * @throws ResourceException (NOT ResourceParsingException which must be wrapped)
     */
-   public DCModelBase toModelOrMixin(DCResource r, boolean isModel) throws ResourceParsingException {
-      // TODO check non required fields : required queryLimit openelec maxScan resourceType
+   public DCModelBase toModelOrMixin(DCResource r) throws ResourceException {
+      // TODO check non required fields : required queryLimit openelec's maxScan resourceType
+      
+      // get project :
+      //String pointOfViewAbsoluteName = (String) r.get("dcmo:pointOfViewAbsoluteName");
+      // NOO rather from context :
+      String pointOfViewAbsoluteName = dataModelService.getProject().getAbsoluteName();
+      
+      
       DCModelBase modelOrMixin;
       String typeName = (String) r.get("dcmo:name");
-      if (isModel) {
-         DCModel model = new DCModel(typeName);
-         modelOrMixin = model;
-         // NB. collectionName is deduced from typeName
-         model.setMaxScan((int) r.get("dcmo:maxScan"));
-         model.setHistorizable((boolean) r.get("dcmo:isHistorizable"));
-         model.setContributable((boolean) r.get("dcmo:isContributable"));
-      } else {
-         modelOrMixin = new DCMixin(typeName);
+      modelOrMixin = new DCModel(typeName, pointOfViewAbsoluteName);
+      // NB. collectionName is deduced from storage typeName
+      modelOrMixin.setMaxScan((int) r.get("dcmo:maxScan"));
+      modelOrMixin.setHistorizable((boolean) r.get("dcmo:isHistorizable"));
+      modelOrMixin.setContributable((boolean) r.get("dcmo:isContributable"));
+
+      // POLY :
+      modelOrMixin.setDefinition((boolean) r.get("dcmo:isDefinition"));
+      modelOrMixin.setStorage((boolean) r.get("dcmo:isStorage"));
+      modelOrMixin.setInstanciable((boolean) r.get("dcmo:isInstanciable"));
+
+      try {
+         this.resourceToFieldsAndMixins(modelOrMixin, r);
+
+         // enrich model resource by fields that are computed by DCModelBase ;
+         this.mrMappingService1.modelFieldsAndMixinsToResource(modelOrMixin, r);
+         
+      } catch (ResourceParsingException rpex) {
+         throw new ResourceException("Error while loading DCModel from Resource", rpex, r, dataModelService.getProject());
       }
-
-      this.resourceToModelOrMixin(modelOrMixin, r);
-
-      // enrich model resource by fields that are computed by DCModelBase ;
-      this.mrMappingService1.modelOrMixinToResource(modelOrMixin, r);
+      // (therefore don't load their caches from r)
       
       return modelOrMixin;
    }
@@ -113,7 +143,7 @@ public class ModelResourceMappingService {
     * @param r
     * @throws ResourceParsingException
     */
-   public void resourceToModelOrMixin(DCModelBase modelOrMixin, DCResource r) throws ResourceParsingException {
+   public void resourceToFieldsAndMixins(DCModelBase modelOrMixin, DCResource r) throws ResourceParsingException {
       modelOrMixin.setMajorVersion(valueService.parseLong(r.get("dcmo:majorVersion"), null));
       modelOrMixin.setDocumentation((String) r.get("dcmo:documentation"));
       
@@ -128,10 +158,8 @@ public class ModelResourceMappingService {
                + r, rpex);
       }
       
-      /* NO NEED to get this prop, fieldAndMixinNames is enough IF ALL MIXINS ARE IN ModelService
-      @SuppressWarnings("unchecked")
-      List<String> mixinNames = (List<String>) r.get("dcmo:mixins");
-      modelOrMixin.addMixin(mixin); // TODO TODO lazy withModelAndMixins*/
+      // NB. since ModelService checks at add() that all of a Model's mixins are already known by it,
+      // dcmo:fieldAndMixinNames is enough to know mixins and no need to get the dcmo:mixins prop
       
       // add fields and mixins :
       // TODO TODO mixins rather lazy in DCModelBase !!!!
@@ -143,15 +171,12 @@ public class ModelResourceMappingService {
             modelOrMixin.addField(field); // and NOT getFieldMap().put() because more must be done
             continue;
          }
-         DCModelBase mixin = dataModelService.getMixin(fieldAndMixinName);
-         if (mixin == null) {
-            mixin = dataModelService.getModel(fieldAndMixinName);
-         }
+         DCModelBase mixin = dataModelService.getMixin(fieldAndMixinName); // does also model
          if (mixin != null) {
             modelOrMixin.addMixin(mixin);
             continue;
          }
-         // TODO TODO logger, and even tag error / log on Model Resource as info & state for further handling !!
+         // TODO TODO logger, in ParsingContext, and even tag error / log on Model Resource as info & state for further handling !!
          throw new ResourceParsingException("Can't find field or mixin "
                + fieldAndMixinName + " when updating DCModelBase from resource " + r);
       }

@@ -71,6 +71,7 @@
          <bean class="org.oasis.datacore.rest.server.cxf.ArrayServerInInterceptor">
             <property name="objectMapper"><ref bean="datacoreApiServer.objectMapper"/></property>
          </bean>
+         <bean class="org.oasis.datacore.rest.server.cxf.ProjectServerInInterceptor"/>
          <bean class="org.oasis.datacore.monitoring.TimeTaggerInInterceptor"/>
          <bean class="org.oasis.datacore.monitoring.ContextInInterceptor"/>
       </jaxrs:inInterceptors>

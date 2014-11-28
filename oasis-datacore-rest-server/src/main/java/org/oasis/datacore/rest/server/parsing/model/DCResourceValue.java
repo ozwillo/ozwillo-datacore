@@ -5,6 +5,7 @@ import java.net.URISyntaxException;
 import java.util.Map;
 
 import org.oasis.datacore.core.meta.model.DCField;
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.DCURI;
 import org.oasis.datacore.rest.api.util.UriHelper;
@@ -13,20 +14,29 @@ public class DCResourceValue {
 
    /** for lazy computing of fullValuedPath */
    private DCResourceValue previousResourceValue;
+   /** only when changes */
+   public DCModelBase model;
+   /** only when changes */
+   public DCModelBase storageModel;
    private DCField field;
    private Object value;
    private long index;
    /** lazily built */
    private String fullValuedPath;
    
-   public DCResourceValue(DCResourceValue previousResourceValue, DCField field, Object value) {
+   public DCResourceValue(DCResourceValue previousResourceValue,
+         DCModelBase model, DCModelBase storageModel, DCField field, Object value) {
       this.previousResourceValue = previousResourceValue;
+      this.model = model;
+      this.storageModel = storageModel;
       this.field = field;
       this.value = value;
    }
 
-   public DCResourceValue(DCResourceValue previousResourceValue, DCField field, Object value, long index) {
-      this(previousResourceValue, field, value);
+   /** only for lists */
+   public DCResourceValue(DCResourceValue previousResourceValue,
+         DCModelBase model, DCModelBase storageModel, DCField field, Object value, long index) {
+      this(previousResourceValue, model, storageModel, field, value);
       this.index = index;
    }
 
@@ -41,7 +51,7 @@ public class DCResourceValue {
                fullValuedPath = "Missing root model name";
             } else {
                //fullValuedPath = value.toString(); // too long start, said anyway on top
-               fullValuedPath = "";
+               fullValuedPath = ""; // model.getName() + "[" + id + "]"
             }
             
          } else {
@@ -117,6 +127,14 @@ public class DCResourceValue {
          }
       }
       return fullValuedPath;
+   }
+
+   public DCModelBase getModel() {
+      return model;
+   }
+
+   public DCModelBase getStorageModel() {
+      return storageModel;
    }
 
    public void setFullValuedPath(String fullValuedPath) {

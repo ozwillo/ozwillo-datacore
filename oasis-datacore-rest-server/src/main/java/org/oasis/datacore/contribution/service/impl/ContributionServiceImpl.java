@@ -23,6 +23,7 @@ import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.contribution.DCContributionMixin;
 import org.oasis.datacore.core.meta.model.contribution.DCContributionModel;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
@@ -69,9 +70,9 @@ public class ContributionServiceImpl implements ContributionService {
 		dcContribution.setId(contributionId);
 		dcContribution.setUserId(datacoreSecurityService.getCurrentUserId());
 		
-		DCModel originalModel = dataModelServiceImpl.getModel(dcContribution.getModelType());
+		DCModelBase originalModel = dataModelServiceImpl.getModelBase(dcContribution.getModelType());
 		DCContributionModel contributionModel = new DCContributionModel(originalModel);
-				
+		
 		// we add the model to the model list but with a different name (getCollectionName)
 		dataModelServiceImpl.addModel(contributionModel, contributionModel.getCollectionName());
 		
@@ -113,7 +114,7 @@ public class ContributionServiceImpl implements ContributionService {
 		}
 		
 		List<DCResource> listResource = dcContribution.getListResources();
-		DCModel dcModel = dataModelServiceImpl.getModel(dcContribution.getModelType());
+		DCModelBase dcModel = dataModelServiceImpl.getModelBase(dcContribution.getModelType());
 		
 		if(dcModel == null) {
 			throw new RuntimeException("Model cannot be found");
@@ -161,10 +162,10 @@ public class ContributionServiceImpl implements ContributionService {
 	@Override
 	public List<DCContribution> get(String modelType, String userId, String contributionId, int start, int limit) throws RuntimeException, BadRequestException {
 
-		DCModel model = null;
+		DCModelBase model = null;
 
 		if (modelType != null) {
-			model = dataModelServiceImpl.getModel(modelType);
+			model = dataModelServiceImpl.getModelBase(modelType);
 		}
 
 		if (model == null) {
@@ -185,7 +186,7 @@ public class ContributionServiceImpl implements ContributionService {
 
 		List<DCEntity> listEntities;
 		try {
-			listEntities = ldpEntityQueryService.findDataInType(contributionModel, params, start, limit);
+			listEntities = ldpEntityQueryService.findDataInType(contributionModel.getName(), params, start, limit);
 		} catch (QueryException qex) {
 			throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST).entity(qex.getMessage()).type(MediaType.TEXT_PLAIN).build());
 		}
@@ -201,10 +202,10 @@ public class ContributionServiceImpl implements ContributionService {
 	@Override
 	public List<DCResource> get(String modelType, String contributionId) {
 		
-		DCModel model = null;
+		DCModelBase model = null;
 
 		if (modelType != null) {
-			model = dataModelServiceImpl.getModel(modelType);
+			model = dataModelServiceImpl.getModelBase(modelType);
 		}
 
 		if (model == null) {
@@ -229,7 +230,7 @@ public class ContributionServiceImpl implements ContributionService {
 		try {
 			// We must limit the request to a number of resources retrieved
 			// As we limit the number of resources per contribution with a parameter, we use the same to retrieve
-			listEntities = ldpEntityQueryService.findDataInType(contributionModel, params, 0, MAX_CONTRIBUTION_RESOURCES_LIMIT);
+			listEntities = ldpEntityQueryService.findDataInType(contributionModel.getName(), params, 0, MAX_CONTRIBUTION_RESOURCES_LIMIT);
 		} catch (QueryException qex) {
 			throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST).entity(qex.getMessage()).type(MediaType.TEXT_PLAIN).build());
 		}
@@ -248,10 +249,10 @@ public class ContributionServiceImpl implements ContributionService {
 	public boolean remove(String modelType, String contributionId)
 	      throws ResourceTypeNotFoundException, ResourceException {
 		
-		DCModel model = null;
+		DCModelBase model = null;
 
 		if (modelType != null) {
-			model = dataModelServiceImpl.getModel(modelType);
+			model = dataModelServiceImpl.getModelBase(modelType);
 		}
 
 		if (model == null) {

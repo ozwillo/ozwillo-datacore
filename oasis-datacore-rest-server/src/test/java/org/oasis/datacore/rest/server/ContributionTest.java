@@ -18,6 +18,7 @@ import org.oasis.datacore.contribution.rest.api.DCContribution;
 import org.oasis.datacore.contribution.service.ContributionService;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.security.mock.MockAuthenticationService;
 import org.oasis.datacore.historization.service.HistorizationService;
 import org.oasis.datacore.rest.api.DCResource;
@@ -85,7 +86,7 @@ public class ContributionTest {
 		mockAuthenticationService.loginAs("admin");
 		markaInvestData.createDataSample();
 		mockAuthenticationService.logout();
-		DCModel fieldModel = modelAdminService.getModel(MarkaInvestModel.FIELD_MODEL_NAME);
+		DCModelBase fieldModel = modelAdminService.getModelBase(MarkaInvestModel.FIELD_MODEL_NAME);
 		Assert.assertNotNull(fieldModel);
 		fieldModel.getSecurity().setGuestReadable(true);
 		fieldModel.getSecurity().setAuthentifiedReadable(true);
@@ -121,7 +122,7 @@ public class ContributionTest {
 	public void logoutAfter() {
 		mockAuthenticationService.logout();
 		///flushData();
-		DCModel fieldModel = modelAdminService.getModel(MarkaInvestModel.FIELD_MODEL_NAME);
+		DCModelBase fieldModel = modelAdminService.getModelBase(MarkaInvestModel.FIELD_MODEL_NAME);
 		Assert.assertNotNull(fieldModel);
 		fieldModel.getSecurity().setGuestReadable(true);
 		fieldModel.getSecurity().setAuthentifiedReadable(true);
@@ -134,7 +135,7 @@ public class ContributionTest {
 		
 		mockAuthenticationService.loginAs("admin");
 		datacoreApiClient.postAllDataInType(markaInvestData.getData().get(MarkaInvestModel.FIELD_MODEL_NAME), MarkaInvestModel.FIELD_MODEL_NAME);
-		DCModel fieldModel = modelAdminService.getModel(MarkaInvestModel.FIELD_MODEL_NAME);
+		DCModelBase fieldModel = modelAdminService.getModelBase(MarkaInvestModel.FIELD_MODEL_NAME);
 		Assert.assertNotNull(fieldModel);
 		fieldModel.getSecurity().setGuestReadable(false);
 		fieldModel.getSecurity().setAuthentifiedReadable(false);
