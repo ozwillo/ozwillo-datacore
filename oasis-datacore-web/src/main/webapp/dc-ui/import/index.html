@@ -78,8 +78,12 @@
 <br/><br/>
 <span title="Used to generate model prefixes">Model domain prefix</span> :
 <input type="text" class="domainPrefix" value="elec" style="width: 50px"/>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<span title="-1 means all (default)">Model row limit</span> :
+<input type="text" class="modelRowLimit" value="-1" style="width: 50px"/>
 <br/><br/>
-<input type="file" class="modelFile"/>&nbsp;&nbsp;
+<input type="file" class="modelFile"/>
+&nbsp;&nbsp;&nbsp;&nbsp;
 samples :
 <a href="samples/openelec/oasis-donnees-metiers-openelec.csv">OpenElec v1 models</a>,
 <a href="samples/geohier/geo_model.csv">Geo Hierarchy v1 models</a>
@@ -91,9 +95,11 @@ samples :
 <br/><br/>
 <div style="display: inline-block; font-weight: bold; width: 150px;">Data :</div>
 <br/><br/>
-Resource row limit : <input type="text" class="resourceRowLimit" value="50" style="width: 50px"/>
+<span title="-1 means all">Resource row limit</span> :
+<input type="text" class="resourceRowLimit" value="50" style="width: 50px"/>
 <br/><br/>
-<input type="file" class="resourceFile"/>&nbsp;&nbsp;
+<input type="file" class="resourceFile"/>
+&nbsp;&nbsp;&nbsp;&nbsp;
 samples :
 <a href="samples/openelec/electeur_v26010_sample.csv">OpenElec v1 data</a>,
 <a href="samples/geohier/geo_data_samplefrit.csv">Geo Hierarchy v1 data</a>

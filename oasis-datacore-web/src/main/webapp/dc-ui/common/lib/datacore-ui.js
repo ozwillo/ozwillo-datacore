@@ -1,5 +1,39 @@
 //var containerUrl = "http://data.oasis-eu.org/"; // rather auto defined in description.html
 
+
+   
+   function encodeUriPath(uriPath) {
+      if (uriPath.indexOf("/") === -1) {
+         return encodeUriPathComponent(uriPath);
+      }
+      var slashSplitPath = uriPath.split('/');
+      for (var pathCptInd in slashSplitPath) {
+         slashSplitPath[pathCptInd] = encodeUriPathComponent(slashSplitPath[pathCptInd]); // encoding ! NOT encodeURIComponent
+      }
+      return slashSplitPath.join('/');
+      //return encodeURI(idValue); // encoding !
+      // (rather than encodeURIComponent which would not accept unencoded slashes)
+   }
+
+   var safeCharsRegexString = "0-9a-zA-Z" + "\\$\\-_\\.\\+!\\*'\\(\\)"; // "$-_.()" + "+!*'";
+   var reservedCharsRegexString = "$&+,/:;=@" + "~"; // NOT ? and besides ~ is not encoded by Java URI
+   var pathComponentSafeCharsRegex = new RegExp('[' + safeCharsRegexString + reservedCharsRegexString + ']');
+   function encodeUriPathComponent(pathCpt) {
+      var res = '';
+      for (var cInd in pathCpt) {
+         var c = pathCpt[cInd];
+         res += pathComponentSafeCharsRegex.test(c) ? c : encodeURIComponent(c);
+      }
+      return res;
+   }
+   function buildUri(typeName, id, shouldEncodeId) {
+      // encoding ! NOT encodeURIComponent
+      return containerUrl + "dc/type/" + encodeUriPathComponent(typeName)
+            + "/" + (shouldEncodeId ? encodeIdSaveIfNot(id) : id);
+   }
+   
+
+
 function toolifyDcResourceJson(prettyDcResourceJson) {
    prettyDcResourceJson = prettyDcResourceJson.replace(/\"http:\/\/data\.oasis-eu\.org\/dc\/type\/([^\/]+)\/([^\"]+)\"/g,
       '"http://data.oasis-eu.org/dc/type/'
@@ -177,15 +211,18 @@ function findDataByType(relativeUrl, success, error) {
    var cleanedRelativeUrl = "/dc/type/" + resourceTypeAndQuery; // also works if no dc/type in relativeUrl
    setUrl(cleanedRelativeUrl);
    var i = resourceTypeAndQuery.indexOf("?");
-   // decodeURIComponent
    var modelType = i == -1 ? resourceTypeAndQuery : resourceTypeAndQuery.substring(0, i);
+   var decodedModelType = decodeURIComponent(modelType);
+   // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
+   // because swagger.js re-encodes
+   // decodeURIComponent
    var query = i == -1 ? "" : resourceTypeAndQuery.substring(i + 1);
    /*var l = '/dc/type/'.length;
    var tq = relativeUrl.substring(l);
    var i = tq.indexOf('?');
    window.t = i == -1 ? tq : tq.substring(0, i);
    window.q = i == -1 ? '' : tq.substring(i + 1);*/
-   dcApi.dc.findDataInType({type:modelType, '#queryParameters':query,
+   dcApi.dc.findDataInType({type:decodedModelType, '#queryParameters':query,
          Authorization:getAuthHeader()},
       function(data) {
          var resources = eval(data.content.data);
@@ -219,12 +256,12 @@ function getData(relativeUrl, success, error) {
    var resourceIri = relativeUrl.replace(/^\/*dc\/type\/*/, "");
    var cleanedRelativeUrl = "/dc/type/" + resourceIri; // also works if no dc/type in relativeUrl
    setUrl(cleanedRelativeUrl);
-   // decodeURIComponent
    var modelType = resourceIri.substring(0, resourceIri.indexOf("/"));
+   var decodedModelType = decodeURIComponent(modelType);
    var decodedResourceId = decodeURI(resourceIri.substring(resourceIri.indexOf("/") + 1));
-   // NB. resourceId is encoded as URIs should be, BUT must be decoded before used as GET URI
-   // because swagger.js re-encodes (per path element because __unencoded__-prefixed per hack)
-   dcApi.dc.getData({type:modelType, __unencoded__iri:decodedResourceId,
+   // NB. modelType & resourceId are encoded as URIs should be, BUT must be decoded before used as GET URI
+   // because swagger.js re-encodes (for resourceId, per path element because __unencoded__-prefixed per hack)
+   dcApi.dc.getData({type:decodedModelType, __unencoded__iri:decodedResourceId,
          'If-None-Match':-1, Authorization:getAuthHeader()},
       function(data) {
          var resource = eval('[' + data.content.data + ']')[0];
@@ -265,15 +302,18 @@ function findDataByTypeRdf(relativeUrl, success, error) {
    var cleanedRelativeUrl = "/dc/type/" + resourceTypeAndQuery; // also works if no dc/type in relativeUrl
    setUrl(cleanedRelativeUrl);
    var i = resourceTypeAndQuery.indexOf("?");
-   // decodeURIComponent
    var modelType = i == -1 ? resourceTypeAndQuery : resourceTypeAndQuery.substring(0, i);
+   var decodedModelType = decodeURIComponent(modelType);
+   // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
+   // because swagger.js re-encodes
+   // decodeURIComponent
    var query = i == -1 ? "" : resourceTypeAndQuery.substring(i + 1);
    /*var l = '/dc/type/'.length;
    var tq = relativeUrl.substring(l);
    var i = tq.indexOf('?');
    window.t = i == -1 ? tq : tq.substring(0, i);
    window.q = i == -1 ? '' : tq.substring(i + 1);*/
-   dcApi.dc.findDataInType({type:modelType, '#queryParameters':query,
+   dcApi.dc.findDataInType({type:decodedModelType, '#queryParameters':query,
          Authorization:getAuthHeader()}, {responseContentType:'text/x-nquads'},
       function(data) {
          var prettyText = data.content.data;
@@ -304,16 +344,15 @@ function findDataByTypeRdf(relativeUrl, success, error) {
 // WRITE
 
 function postAllDataInType(relativeUrl, resources, success, error) {
-   var modelType = relativeUrl.replace(/^\/*dc\/type\/*/, "");
-   var cleanedRelativeUrl = "/dc/type/" + modelType; // also works if no dc/type in relativeUrl
+   var encodedModelType = relativeUrl.replace(/^\/*dc\/type\/*/, "");
+   var cleanedRelativeUrl = "/dc/type/" + encodedModelType; // also works if no dc/type in relativeUrl
    setUrl(cleanedRelativeUrl);
-   // decodeURIComponent
    /*var l = '/dc/type/'.length;
    var tq = relativeUrl.substring(l);
    var i = tq.indexOf('?');
    window.t = i == -1 ? tq : tq.substring(0, i);
    window.q = i == -1 ? '' : tq.substring(i + 1);*/
-   dcApi.dc.postAllDataInType({type:modelType, body:resources,
+   dcApi.dc.postAllDataInType({type:encodedModelType, body:resources,
          Authorization:getAuthHeader()},
       function(data) {
          var resResources = eval(data.content.data);
@@ -345,12 +384,12 @@ function deleteDataInType(resource, success, error) {
    var resourceIri = uri.replace(/^\/*dc\/type\/*/, "");
    var cleanedRelativeUrl = "/dc/type/" + resourceIri; // also works if no dc/type in relativeUrl
    setUrl(cleanedRelativeUrl);
-   // decodeURIComponent
    var modelType = resourceIri.substring(0, resourceIri.indexOf("/"));
+   var decodedModelType = decodeURIComponent(modelType);
    var decodedResourceId = decodeURI(resourceIri.substring(resourceIri.indexOf("/") + 1));
-   // NB. resourceId is encoded as URIs should be, BUT must be decoded before used as GET URI
-   // because swagger.js re-encodes (per path element because __unencoded__-prefixed per hack)
-   dcApi.dc.deleteData({type:modelType, __unencoded__iri:decodedResourceId,
+   // NB. modelType & resourceId are encoded as URIs should be, BUT must be decoded before used as GET URI
+   // because swagger.js re-encodes (for resourceId, per path element because __unencoded__-prefixed per hack)
+   dcApi.dc.deleteData({type:decodedModelType, __unencoded__iri:decodedResourceId,
          'If-Match':resource["o:version"], Authorization:getAuthHeader()},
       function(data) {
          var resource = eval('[' + data.content.data + ']')[0];
