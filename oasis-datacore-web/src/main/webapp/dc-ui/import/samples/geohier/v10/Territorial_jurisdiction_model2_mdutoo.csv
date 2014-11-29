@@ -1,0 +1,69 @@
+Mixin,Field name,Data type,Multiple,Description,Internal field name,defaultValue,isInMixinRef,indexInId,isInstanciable,isStorage,isDefinition,Inherits,Has Mixins,fieldAndMixins,isHistorizable,isContributable,documentation,maxScan,storageModel
+,"TODO gdenis samples ids (& relative designator ? Lower case ? All levels ?) for each type of first data line (& first Italian line)
+ TODO gdenis check data for each field of first data line (& first Italian line)
+ TODO gdenis inheriting NUTS2/3 and then country-specific types using polymorphism and separate fr/itData.csv, then delete all « level »
+ TODO ancestors : only on geo:Area ? Does it solve the portal's need ?
+ TODO server : once polymorphism, o:ancestors ref type check
+ TODO import : once polymorphism, don't import mixins (or make it configurable)
+ TODO import : extract model import prefix from file name (OPT & display it)
+ TODO import : raise error if non-URL (http prefixed) value for Resource-typed field
+ TODO import : is separate ancestors from indexInId required now ? Then do it, else LATER
+ TODO import : i18n, for id default language is en (or LATER by model LATER default for a language ex. fr for fr_su)
+ TODO import : don't redefine fields to import when unnecessary
+ TODO i18n of o_displayable:name / geo_area:name, then delete all « name »
+ TODO i18n of model names (must be gotten separately and cached), then delete all « label »
+ TODO country ref on NUTS and below, NUTS2 ref on NUTS3 and below : copied fields ? Referencing Mixin ? As embedded ressource ?
+ TODO pretty prefixes
+ TODO server : indexInId, ancestors & deduplication key fields redux
+ Q :
+ o_displayable:name = geo_area:name ? YES = Country:geoName ? YES =others typex:name ? YES NB. Displayable clearer about what it's about i.e. its « business »
+ Parent spécifique ou générique ? Spécifique for now car facilite le linking and ancestors are generic anyway
+ gdenis « info » = i18n, see above
+ Are all idIso fields the same or not ? Yes => generic field
+ TODO Q gdenis Designator still useful, vs idIso (same value) ? Id any useful (no value) ? IdStat ? idNational ?
+ & see below",,,,,,,,"Is Mixin = !isInstanciable.
+Defaults to true, set to false when :
+you don't want to import a Resource of this precise type,
+such as for reusable, not concrete type (mixin)
+or for concrete types inheriting from a polymorphic storage type","Defaults to true, set to false when :
+You don't want this type to have its own collection / table,
+Such as for concrete types inheriting from a polymorphic storage type","(differs from saying that a given inherited field should not be redefined, which is auto)
+Defaults to true, set to false when :
+No inherited field definition should be redefined",i.e. reuses but overrides definitions,,,,,,,?
+o:Displayable_0,o_displayable:name,String,,TODO i18n,,,,,false,false,,,,,,,,,
+o:Ancestor_0,o:ancestors,o:Ancestor_0,true,"auto computed OR can be provided (as URL, one per line or comma separated), in the same data file or additional ones",,,true,,false,false,,,,,,,,,
+geo:Area_0,geo_area:idIso,String,,LATER polymorphism,,,,,false,true,,,"o:Displayable_0,o:Ancestor_0",,,,,,
+geo:Area_0,geo_area:country,geo:Country_0,,LATER polymorphism or ancestors,,,,,,,,,,,,,,,
+geo:Country_0,geo_country:name,String,,TODO rather o_displayable:name ?,geo_country:name,,,,,,,,,,,,,,
+geo:Country_0,geo_country:idIso,String,,"id country = iso, idem pour nuts ; ex. FR, IT, TR...",geo_country:idIso,TK,true,0,,false,,,"geo:Area_0,o:Ancestor_0",,,,,,
+geo:Country_0,geo_country:statisticalInstitute,String,,Website OR ressource reference,geo_country:statisticalInstitute,,,,,,,,,,,,,,
+geo:NUTS_0,geo_NUTS:name,String,,NUTS def & NUTS 2 import,geo_NUTS2:name,,,,,,,,,,,,,,
+geo:NUTS_0,geo_NUTS:idIso,String,,,geo_NUTS2:idIso,,,1,,false,,,"geo:Area_0,o:Ancestor_0",,,,,,
+geo:NUTS_0,geo_NUTS:idStat,String,,ex. id insee,geo_NUTS2:idStat,,,,,,,,,,,,,,
+geo:NUTS_0,geo_NUTS:idNational,String,,Actually used in the country ex. tax number in Spain ; To specify differently for each country ! OR is (a rule on) (one of the) other fields ?,geo_NUTS2:idNational,,,,,,,,,,,,,,
+geo:NUTS_0,geo_NUTS:country,geo:Country_0,,NO internal field name but autolinking,,,,0,,,,,,,,,,,
+geo:NUTS_0,geo_NUTS:parent,geo:NUTS_0,,vide pour NUTS2 (déjà country) ; anyway NO internal field name but subresource linking,,,,,,,,,,,,,,,
+geo:City_0,geo_city:nuts3.geo_NUTS:name,String,,NUTS 3 import,geo_NUTS3:name,,,,,,,,,,,,,,
+geo:City_0,geo_city:nuts3.geo_NUTS:idIso,String,,,geo_NUTS3:idIso,,,,,,,,,,,,,,
+geo:City_0,geo_city:nuts3.geo_NUTS:idStat,String,,,geo_NUTS3:idStat,,,,,,,,,,,,,,
+geo:City_0,geo_city:nuts3.geo_NUTS:idNational,String,,To specify differently for each country ! OR is (a rule on) (one of the) other fields ?,geo_NUTS3:idNational,,,,,,,,,,,,,,
+geo:City_0,geo_city:nuts3.geo_NUTS:country.geo_country:idIso,String,,NB. autolinking wouldn't work here,geo_country:idIso,,,,,,,,,,,,,,
+geo:City_0,geo_city:name,String,,id ville = nuts3 + nom,geo_city:name,,,1,,false,,,"geo:Area_0,o:Ancestor_0",,,,,,
+geo:City_0,geo_city:country,geo:Country_0,,NO internal field name but autolinking,,,,,,,,,,,,,,,
+geo:City_0,geo_city:idStat,String,,,geo_city:idStat,,,,,,,,,,,,,,
+geo:City_0,geo_city:idNational,String,,To specify differently for each country ! OR is (a rule on) (one of the) other fields ?,geo_city:idNational,,,,,,,,,,,,,,
+geo:City_0,geo_city:nuts2,geo:NUTS_0,,No need for dotted path to autolink to main NUTS(2) ; NO internal field name but subresource linking,,,,,,,,,,,,,,,
+geo:City_0,geo_city:nuts3,geo:NUTS_0,,NO internal field name but subresource linking,,,,0,,,,,,,,,,,
+geo:City_0,geo_city:cityGroup,geo:CityGroup_0,,NO internal field name but auto linking,,,,,,,,,,,,,,,
+geo:City_0,geo_city:zipCode,String,,of main townhall only,geo_city:zipCode,,,,,,,,,,,,,,
+geo:CityGroup_0,geo_cityGroup:name,String,,TODO mdutoo polymorphism pour : Id : nom + parent = vide en France mais nuts3 en Espagne !! => indexInId différents en France et en Epagne TODO par polymorphisme,geo_cityGroup:name,UNKNOWN_CityGroup,,1,,false,,,"geo:Area_0,o:Ancestor_0",,,,,,
+geo:CityGroup_0,geo_cityGroup:idStat,String,"not in France, in Italy maybe of the Provincia ?",,geo_cityGroup:idStat,,,,,,,,,,,,,,
+geo:CityGroup_0,geo_cityGroup:country,geo:Country_0,,NO internal field name but auto linking,,,,0,,,,,,,,,,,
+geo:TKProvince_0,geo_NUTS:name,String,,TK NUTS3 within Country,Province,UNKNOWN_TKProvince,,1,,false,,,"geo:NUTS_0,geo:Area_0,o:Ancestor_0",,,,,,
+geo:TKProvince_0,geo_NUTS:country,geo:Country_0,,NO internal field name but auto linking,,,,0,,,,,,,,,,,
+geo:Borough_0,geo_borough:city,geo:City_0,,"LATER some / all of city refs : nuts3, nuts2, country...",,,,0,,,,,,,,,,,
+geo:Borough_0,geo_borough:name,String,,id : country + name,,UNKNOWN_Borough,,1,,false,,,"geo:Area_0,o:Ancestor_0",,,,,,
+geo:Borough_0,geo_borough:idStat,String,,NB. Turkey has also subdistrict & neighbourhood BUT those don't provide services,,,,,,,,,"geo:Area_0,o:Ancestor_0",,,,,,
+geo:TKDistrict_0,geo_tkdistrict:name,String,,TK ~= City ; parent => TKProvince,District,UNKNOWN_TKDistrict,,1,,false,,,"geo:Area_0,o:Ancestor_0",,,,,,
+geo:TKDistrict_0,geo_tkdistrict:country,geo:Country_0,,NO internal field name but auto linking,,,,,,,,,,,,,,,
+geo:TKDistrict_0,geo_tkdistrict:province,geo:TKProvince_0,,Ref to its parent NUTS 3 ; NO internal field name but subresource linking,,,,0,,,,,,,,,,,
