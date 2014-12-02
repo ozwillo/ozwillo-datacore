@@ -67,7 +67,7 @@ public class LoadPersistedModelsAtInit extends InitableBase {
       
       // now, reload all models that had been persisted in mongo in last execution : TODO wrap in projects
       List<DCResource> modelResources = findDataInType(ResourceModelIniter.MODEL_MODEL_NAME);
-      HashSet<String> previousModelsInError, modelsInError = null;
+      HashSet<String> previousModelsInError = null, modelsInError = null;
       List<ResourceException> rexList = new ArrayList<ResourceException>();
       do {
          previousModelsInError = modelsInError;
@@ -77,6 +77,9 @@ public class LoadPersistedModelsAtInit extends InitableBase {
          for (DCResource modelResource : modelResources) {
             String modelProjectName = (String) modelResource.get("dcmo:pointOfViewAbsoluteName");
             String modelAbsoluteName = modelProjectName + "." + modelResource.get("dcmo:name");
+            if (previousModelsInError != null && !previousModelsInError.contains(modelAbsoluteName)) {
+               continue; // not first time and already imported successfully
+            }
             try {
                // set context project before loading :
                new SimpleRequestContextProvider() {
@@ -102,7 +105,7 @@ public class LoadPersistedModelsAtInit extends InitableBase {
                }
             }
          }
-      } while (!modelsInError.isEmpty() || modelsInError.equals(previousModelsInError));
+      } while (!modelsInError.isEmpty() && !modelsInError.equals(previousModelsInError));
 
       if (!rexList.isEmpty()) {
          logger.error("Unable to reload from persistence models with absolute names : "
