@@ -570,7 +570,7 @@
                   }
                   return resource; // abort resource creation in this loop (don't add it to uri'd resources yet)
                }
-               if (typeof idField["dcmf:resourceType"] !== 'undefined') { // getting ref'd resource id
+               if (idField["dcmf:type"] === 'resource') { // getting ref'd resource id
                   var uri;
                   if (typeof idValue === 'string') { // resource
                      uri = idValue;
@@ -587,6 +587,29 @@
                   var iri = uri.replace(/^.*\/\/*dc\/type\/*/, ""); //uri.substring(uri.indexOf("/dc/type/") + 9);
                   var idEncodedValue = iri.substring(iri.indexOf("/") + 1);
                   indexToEncodedValue[indexInId] = {v : idEncodedValue, uri : uri };
+               } else if (idField["dcmf:type"] === 'i18n') {
+                  var defaultLanguage = idField['dcmf:defaultLanguage'];
+                  if (typeof defaultLanguage === 'undefined') {
+                     importState.data.errors.push({ errorType : "i18nIsInIdButHasNoDefaultLanguage",
+                           mixin : mixin['dcmo:name'], fieldName : idFieldName,
+                           message : "ERROR i18nIsInIdButHasNoDefaultLanguage" });
+                     return null;
+                  }
+                  var valueInLanguage = null;
+                  for (var listInd in idValue) {
+                     if (idValue[listInd].l === defaultLanguage) {
+                        valueInLanguage = idValue[listInd].v;
+                        break;
+                     }
+                  }
+                  if (valueInLanguage === null) {
+                     importState.data.warnings.push({ errorType : "i18nIsInIdButHasNoValueForDefaultLanguage",
+                        mixin : mixin['dcmo:name'], fieldName : idFieldName, defaultLanguage : defaultLanguage,
+                        message : "ERROR i18nIsInIdButHasNoValueForDefaultLanguage" });
+                     return null;
+                  }
+                  indexToEncodedValue[indexInId] = {v : encodeIdSaveIfNot(valueInLanguage + "", // convert to string (might be number)
+                        idField) };
                } else {
                   indexToEncodedValue[indexInId] = {v : encodeIdSaveIfNot(idValue + "", // convert to string (might be number)
                         idField) };
@@ -706,6 +729,8 @@
         var loopIndex = 0;
         do {
            missingIdFieldResourceOrMixins = []; // NB. fastest way to empty an array
+           importState.data.errors = []; // clearing, only keeping last (& cleanest) one
+           importState.data.warnings = []; // clearing, only keeping last (& cleanest) one
            //console.log("row mixins loop " + loopIndex + " " + missingIdFieldResourceOrMixins);//
         
         for (var mInd in involvedMixins) {
