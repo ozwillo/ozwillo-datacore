@@ -85,6 +85,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addField(new DCField("dcmf:isInMixinRef", "boolean", false, 0))
          .addField(new DCField("dcmf:indexInId", "int", false, 0))
          .addField(new DCField("dcmf:defaultStringValue", "string", false, 0))
+         .addField(new DCField("dcmf:defaultLanguage", "string", false, 0))
          .addField(new DCField("dcmf:internalName", "string", false, 100))
       ;
       
