@@ -326,8 +326,9 @@ public class ModelResourceMappingService {
          fieldPropBuilder.put("dcmf:mapFields",
                fieldsToProps(mapField.getMapFields(), fieldUri, existingMapFieldProps));
          break;
-      case "list" :
       case "i18n" :
+         fieldPropBuilder.put("dcmf:defaultLanguage", ((DCI18nField) field).getDefaultLanguage());
+      case "list" : // and also i18n
          @SuppressWarnings("unchecked")
          Map<String,Object> existingListElementFieldProps = (existingProps != null)
             ? (Map<String,Object>) existingProps.get("dcmf:listElementField") : null;
@@ -462,7 +463,12 @@ public class ModelResourceMappingService {
          field = new DCListField(fieldName, propsToField(listElementFieldProps));
          break;
       case "i18n" :
-         field = new DCI18nField(fieldName, fieldQueryLimit);
+         DCI18nField i18nField = new DCI18nField(fieldName, fieldQueryLimit);
+         String defaultLanguage = (String) fieldResource.get("dcmf:defaultLanguage");
+         if (defaultLanguage != null) {
+            i18nField.setDefaultLanguage(defaultLanguage);
+         }
+         field = i18nField;
          break;
       case "resource" :
          String fieldResourceType = (String) fieldResource.get("dcmf:resourceType");
