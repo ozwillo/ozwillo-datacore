@@ -591,6 +591,7 @@
          // because swagger.js re-encodes (per path element because __unencoded__-prefixed per hack)
          // out of fields
          var indexToEncodedValue = {};
+         var parentIndexToEncodedValue = {};
          for (var idFieldName in enrichedModelOrMixinFieldMap) {
             var idField = enrichedModelOrMixinFieldMap[idFieldName];
             var indexInId = idField["dcmf:indexInId"]; // NB. this import-specific conf has been enriched in refreshed involvedMixins' global fields
@@ -662,12 +663,40 @@
                   indexToEncodedValue[indexInId] = {v : encodeIdSaveIfNot(idValue + "", // convert to string (might be number)
                         idField) };
                }
+               
             }
-         }
-         var ancestors = null;
-         if (contains(mixin["dcmo:globalMixins"], "o:Ancestor_0")) {
-            // && mixin["dcmo:isInstanciable"] only if old "model" (already checked)
-            ancestors = [];
+            
+            // checking if parent, for ancestors :
+            if (importState.model.defaultRow['useIdForParent'] !== 'true') {
+               var indexInParents = idField["dcmf:indexInParents"]; // NB. this import-specific conf has been enriched in refreshed involvedMixins' global fields ??????????????
+               if (typeof indexInParents === 'number') {
+                  var parentValue = resource[idFieldName];
+                  if (typeof parentValue === 'undefined' || parentValue === null || parentValue === "") {
+                     importState.data.errors.push({ code : "missingValueForParentField",
+                           mixin : mixin['dcmo:name'], fieldName : idFieldName,
+                           resource : resource, pathInFieldNameTree : pathInFieldNameTree,
+                           message : "ERROR missingValueForParentField" });
+                  } else {
+                  
+                  // NB. idField is a resource field, because checked at model parsing time
+                  var uri;
+                  if (typeof parentValue === 'string') { // resource
+                     uri = parentValue;
+                  } else { // subresource (refMixin ???)
+                     uri = parentValue["@id"];
+                     if (typeof uri === 'undefined') {
+                        importState.data.errors.push({ code : "missingUriForResourceParentField",
+                              mixin : mixin['dcmo:name'], fieldName : idFieldName, value : parentValue,
+                              resource : resource, pathInFieldNameTree : pathInFieldNameTree,
+                              message : "ERROR missingUriForResourceParentField" });
+                        return resource; // without adding it to uri'd resources
+                     }
+                  }
+                  parentIndexToEncodedValue[indexInParents] = { uri : uri };
+                  
+                  }
+               }
+            }
          }
          for (var idevInd in indexToEncodedValue) {
             var idValueElt = indexToEncodedValue[idevInd];
@@ -676,25 +705,33 @@
             } else {
                id += "/" + idValueElt.v;
             }
-            
-            // also computing ancestors :
+         }
+
+         // computing ancestors :
+         var ancestors = null;
+         if (contains(mixin["dcmo:globalMixins"], "o:Ancestor_0")) {
+            // && mixin["dcmo:isInstanciable"] only if old "model" (already checked)
+            ancestors = [];
+         }
+         for (var pevInd in parentIndexToEncodedValue) {
+            var pValueElt = parentIndexToEncodedValue[pevInd];
             if (ancestors !== null // else not an o:Ancestor_0
-                  && typeof idValueElt.uri !== 'undefined') { // else itself (added later), rather than another resource
-               var ancestor = importState.data.resources[idValueElt.uri];
+                  && typeof pValueElt.uri !== 'undefined') { // else itself (added later), rather than another resource
+               var ancestor = importState.data.resources[pValueElt.uri];
                // TODO check if ancestor not known (ex. string resource reference...)
                if (typeof ancestor === 'undefined') {
-                  ancestors = null;
+                  ancestors = null; // reset since incomplete
                   importState.data.errors.push({ code : "cantFindAncestorAmongParsedResources",
-                        resource : resource, ancestorUri : idValueElt.uri,
+                        resource : resource, ancestorUri : pValueElt.uri,
                         pathInFieldNameTree : pathInFieldNameTree });
                } else if (!hasMixin(ancestor["@type"][0], "o:Ancestor_0", importState)) {
-                  ancestors = null;
+                  ancestors = null; // reset since incomplete ; TODO or accept as its own single ancestor ?
                   importState.data.errors.push({ code : "ancestorHasNotAncestorMixin",
                      resource : resource, ancestor : ancestor, pathInFieldNameTree : pathInFieldNameTree });
                } else {
                   var ancestorAncestors = ancestor["o:ancestors"];
                   if (typeof ancestorAncestors === 'undefined') {
-                     ancestors = null;
+                     ancestors = null; // reset since incomplete
                      importState.data.errors.push({ code : "ancestorHasNotDefinedAncestors",
                         resource : resource, ancestor : ancestor, pathInFieldNameTree : pathInFieldNameTree });
                   } else {
@@ -1054,6 +1091,11 @@
       mergeStringValueOrDefaultIfAny(field, "dcmf:isInMixinRef", fieldRow["isInMixinRef"],
             importState.metamodel["dcmf:field_0"]); // meaningless for list but required by ModelResourceMappingService for now
       mergeStringValueOrDefaultIfAny(field, "dcmf:indexInId", fieldRow["indexInId"], importState.metamodel["dcmf:field_0"]);
+      mergeStringValueOrDefaultIfAny(field, "dcmf:indexInParents", fieldRow["indexInParents"], importState.metamodel["dcmf:field_0"]);
+      if (field['dcmf:indexInParents'] && field['dcmf:type'] !== 'resource') {
+         importState.model.errors.push({ code : "indexInParentsFieldIsNotResource",
+            mixin : mixinTypeName, field : field });
+      }
       mergeStringValueOrDefaultIfAny(field, "dcmf:defaultStringValue", fieldRow["defaultValue"], importState.metamodel["dcmf:field_0"]);
       mergeStringValueOrDefaultIfAny(field, "dcmf:defaultLanguage", fieldRow["defaultLanguage"], importState.metamodel["dcmf:field_0"]);
       
