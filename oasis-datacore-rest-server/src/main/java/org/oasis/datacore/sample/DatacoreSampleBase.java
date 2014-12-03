@@ -238,12 +238,8 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
       return this.storageModels;
    }
    // for tests
-   public void cleanCreatedModels() {
-      for (DCModelBase model : this.getCreatedStorageModels()) {
-         mgo.dropCollection(model.getCollectionName()); // delete data ; should only be storage
-         modelAdminService.removeModel(model.getName()); // remove model
-      }
-      this.storageModels.clear();
+   public void cleanModels() {
+      cleanModels(new ArrayList<DCModelBase>(getCreatedStorageModels()));
    }
    public void cleanModels(DCModelBase ... models) {
       cleanModels(Arrays.asList(models));

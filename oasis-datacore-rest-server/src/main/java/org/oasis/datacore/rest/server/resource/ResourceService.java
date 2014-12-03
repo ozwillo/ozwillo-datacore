@@ -417,7 +417,7 @@ public class ResourceService {
    /**
     * 
     * @param uri
-    * @param modelType
+    * @param modelType only to avoid reparsing uri, TODO rather pass DCURI
     * @return
     * @throws ResourceTypeNotFoundException
     * @throws ResourceNotFoundException

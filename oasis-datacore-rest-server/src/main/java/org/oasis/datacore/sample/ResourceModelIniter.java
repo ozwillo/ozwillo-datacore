@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.oasis.datacore.core.meta.model.DCField;
+import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCMixin;
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * TODO move most to ModelResourceMappingService (& Model(Admin)Service)
+ * TODO LATER disable it once mongo becomes reference rather than code-defined DCModel, at least for metamodel
  * @author mdutoo
  *
  */
@@ -68,7 +70,12 @@ public class ResourceModelIniter extends DatacoreSampleBase {
    public void buildModels(List<DCModelBase> modelsToCreate) {
       DCProject project = modelAdminService.getProject(DCProject.OASIS_MAIN);
       
+      DCMixin displayableModel = (DCMixin) new DCMixin("o:Displayable_0", project) // and not DCModel : fields exist within model & mixins
+         .addField(new DCI18nField("odisp:name", 100))
+      ;
+      
       DCMixin fieldModel = (DCMixin) new DCMixin("dcmf:field_0", project) // and not DCModel : fields exist within model & mixins
+         .addMixin(displayableModel)
          .addField(new DCField("dcmf:name", "string", true, 100))
          .addField(new DCField("dcmf:type", "string", true, 100))
          .addField(new DCField("dcmf:required", "boolean", (Object) false, 0)) // defaults to false, indexing would bring not much
@@ -84,12 +91,14 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addField(new DCField("dcmf:documentation", "string", false, 0))
          .addField(new DCField("dcmf:isInMixinRef", "boolean", false, 0))
          .addField(new DCField("dcmf:indexInId", "int", false, 0))
+         .addField(new DCField("dcmf:indexInParents", "int", false, 0))
          .addField(new DCField("dcmf:defaultStringValue", "string", false, 0))
          .addField(new DCField("dcmf:defaultLanguage", "string", false, 0))
          .addField(new DCField("dcmf:internalName", "string", false, 100))
       ;
       
-      DCModel mixinBackwardCompatibilityModel = new DCModel(MODEL_MIXIN_NAME);
+      DCModel mixinBackwardCompatibilityModel = (DCModel) new DCModel(MODEL_MIXIN_NAME)
+         .addMixin(displayableModel);
       ///mixinBackwardCompatibilityModel.setStorage(true);
       mixinBackwardCompatibilityModel.setInstanciable(false);
 
@@ -97,6 +106,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       DCModel modelOrMixinModel = (DCModel) new DCModel(MODEL_MODEL_NAME, project) // POLY MODEL_MIXIN_NAME // and not DCMixin, they must be introspectable
           // TODO security
          .addMixin(mixinBackwardCompatibilityModel)
+         //.addMixin(displayableModel);
          .addField(new DCField("dcmo:name", "string", true, 100))
          .addField(new DCField("dcmo:pointOfViewAbsoluteName", "string", true, 100)) // TODO compound index on POV and name
          .addField(new DCField("dcmo:majorVersion", "long", true, 100)) // don't index and rather lookup on URI ??
@@ -139,6 +149,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       // TODO security, OPT private models ???
 
       DCModel pointOfViewModel = (DCModel) new DCModel(MODEL_POINTOFVIEW_NAME, project)
+         .addMixin(displayableModel)
          .addField(new DCField("dcmpv:name", "string", true, 100))
          .addField(new DCField("dcmpv:documentation", "string", false, 100))
          .addField(new DCListField("dcmpv:pointOfViews", new DCResourceField("useless", MODEL_POINTOFVIEW_NAME))) // or not ???
@@ -173,8 +184,51 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          ;
       useCasePointOfViewElementModel.setStorage(false); // store in dcmpv
       
-      modelsToCreate.addAll(Arrays.asList(fieldModel, mixinBackwardCompatibilityModel, modelOrMixinModel,
+      modelsToCreate.addAll(Arrays.asList(displayableModel,
+            fieldModel, mixinBackwardCompatibilityModel, modelOrMixinModel,
             pointOfViewModel, projectModel, useCasePointOfViewModel, useCasePointOfViewElementModel));
+   }
+
+   @Override
+   protected boolean createModels(List<DCModelBase> modelOrMixins, boolean deleteCollectionsFirst) {
+      boolean res = super.createModels(modelOrMixins, deleteCollectionsFirst);
+      
+      // update (override ; i.e. fillData) metamodel resources always, for now :
+      updateMetamodelResources(modelOrMixins);
+      return res;
+   }
+
+   // TODO in service ?!
+   private void updateMetamodelResources(List<DCModelBase> modelOrMixins) {
+      for (DCModelBase modelToCreate : modelOrMixins) {
+         try {
+            // filling model's provided props :
+            DCResource metamodelResource = mrMappingService.modelToResource(modelToCreate);
+            mrMappingService.modelFieldsAndMixinsToResource(modelToCreate, metamodelResource);
+            
+            // once props are complete, post or update & put :
+            // (only done on servers that store their own models, so no need to use client)
+            DCResource existingResource = resourceService.get(metamodelResource.getUri(), metamodelResource.getTypes().get(0));
+            if (diff(metamodelResource, existingResource)) {
+               // PUT rather than merge and PATCH using POST
+               metamodelResource.setVersion(existingResource.getVersion());
+               resourceService.createOrUpdate(metamodelResource, metamodelResource.getTypes().get(0), false, true, true);
+            } else {
+               /*datacoreApiClient.*/postDataInType(metamodelResource);
+            }
+         } catch (ResourceParsingException rpex) {
+            ///logger.error("Conversion error building Resource from meta DCModel " + modelToCreate, rpex);
+            throw new RuntimeException("Conversion error updating meta DCModel " + modelToCreate, rpex); // TODO report errors ex. in list & abort once all are handled ?
+         } catch (Throwable t) {
+            ///logger.error("Unkown error building Resource from meta DCModel " + modelToCreate, t);
+            throw new RuntimeException("Unknown error updating meta DCModel " + modelToCreate, t); // TODO report errors ex. in list & abort once all are handled ?
+         }
+      }
+   }
+
+   // TODO implement true diff : resourceService.build(modifiedResource), without created/modified props, with diff lib
+   private boolean diff(DCResource metamodelResource, DCResource existingResource) {
+      return true;
    }
 
    /** @obsolete */
@@ -267,7 +321,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
    
    private void projectToResource(DCProject project, List<DCResource> resourcesToPost) {
       try {
-         final DCResource projectResource = mrMappingService.projectToResource(project);
+         DCResource projectResource = mrMappingService.projectToResource(project);
          resourcesToPost.add(projectResource);
       } catch (ResourceParsingException e) {
          logger.error("Conversion error building Resource from DCProject " + project, e);
@@ -286,7 +340,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
    private void modelToResource(DCModelBase model, List<DCResource> resourcesToPost) {
       try {
          // filling model's provided props :
-         final DCResource modelResource = mrMappingService.modelToResource(model);
+         DCResource modelResource = mrMappingService.modelToResource(model);
          mrMappingService.modelFieldsAndMixinsToResource(model, modelResource);
          
          // once props are complete, schedule post :
