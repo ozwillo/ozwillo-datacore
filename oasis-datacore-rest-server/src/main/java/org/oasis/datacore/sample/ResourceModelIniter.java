@@ -24,6 +24,7 @@ import org.oasis.datacore.model.event.ModelResourceDCListener;
 import org.oasis.datacore.model.resource.ModelResourceMappingService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
+import org.oasis.datacore.rest.server.resource.ResourceNotFoundException;
 import org.oasis.datacore.rest.server.resource.ValueParsingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -208,13 +209,20 @@ public class ResourceModelIniter extends DatacoreSampleBase {
             
             // once props are complete, post or update & put :
             // (only done on servers that store their own models, so no need to use client)
-            DCResource existingResource = resourceService.get(metamodelResource.getUri(), metamodelResource.getTypes().get(0));
-            if (diff(metamodelResource, existingResource)) {
-               // PUT rather than merge and PATCH using POST
-               metamodelResource.setVersion(existingResource.getVersion());
-               resourceService.createOrUpdate(metamodelResource, metamodelResource.getTypes().get(0), false, true, true);
-            } else {
-               /*datacoreApiClient.*/postDataInType(metamodelResource);
+            DCResource existingResource;
+            try {
+               existingResource = resourceService.get(metamodelResource.getUri(), metamodelResource.getTypes().get(0));
+               if (diff(metamodelResource, existingResource)) {
+                  // PUT rather than merge and PATCH using POST
+                  logger.debug("Persisting metamodel as update " + metamodelResource.getUri());
+                  metamodelResource.setVersion(existingResource.getVersion());
+                  resourceService.createOrUpdate(metamodelResource, metamodelResource.getTypes().get(0), false, true, true);
+               } else {
+                  logger.debug("No need to repersist metamodel, no change " + metamodelResource.getUri());
+               }
+            } catch (ResourceNotFoundException rnfex) {
+               logger.debug("Persisting metamodel as new " + metamodelResource.getUri());
+               /*datacoreApiClient.*/postDataInType(metamodelResource); // create new
             }
          } catch (ResourceParsingException rpex) {
             ///logger.error("Conversion error building Resource from meta DCModel " + modelToCreate, rpex);
@@ -271,6 +279,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       //NB. mixins should be added before models containing them, checked in addModel
 
       for (DCResource resource : resourcesToPost) {
+         logger.debug("Persisting model " + resource.getUri());
          /*String modelResourceName = (String) resource.get("dcmo:name"); // TODO can also be project with dcmp:name
          String[] modelType = modelResourceName.split("_", 2); // TODO better
          String modelName = (modelType.length == 2) ? modelType[0] : modelResourceName;
