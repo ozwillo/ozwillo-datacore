@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.oasis.datacore.core.meta.model.DCField;
-import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
@@ -22,6 +21,8 @@ import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.DCURI;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
+import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
+import org.oasis.datacore.rest.server.resource.ResourceEntityMapperService;
 import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.oasis.datacore.rest.server.resource.ValueParsingService;
 import org.oasis.datacore.sample.ResourceModelIniter;
@@ -47,6 +48,10 @@ public class ModelResourceMappingService {
    private DCModelService dataModelService;
    @Autowired
    private ValueParsingService valueService;
+   /** to parse i18n default value according to default language
+    * LATER use it in the whole model mapping process ? */
+   @Autowired
+   private ResourceEntityMapperService resourceEntityMapperService;
    
    
    //////////////////////////////////////////////////////
@@ -482,10 +487,27 @@ public class ModelResourceMappingService {
          field = new DCField(fieldName, fieldType, fieldRequired, fieldQueryLimit);
       }
       
+      // parse & set default value :
+      // TODO LATER use DCResourceParsingContext in the whole model mapping process ?
       String defaultStringValue = (String) fieldResource.get("dcmf:defaultStringValue");
       if (defaultStringValue != null) {
-         field.setDefaultValue(valueService.parseValueFromJSONOrString(
-               DCFieldTypeEnum.getEnumFromStringType(fieldType), defaultStringValue));
+         DCModelBase dcModel = null; // dcmo:model_80
+         DCModelBase storageModel = null; // dcmf:field_0
+         DCURI uri;
+         try {
+            uri = UriHelper.parseUri((String) fieldResource.get("@id"));
+         } catch (MalformedURLException | URISyntaxException e) {
+            throw new ResourceParsingException("Unknown error while parsing default value field URI ", e);
+         }
+         DCResourceParsingContext resourceParsingContext =
+               new DCResourceParsingContext(dcModel, storageModel, uri);
+         resourceParsingContext.enter(null, null, field, defaultStringValue);
+         try {
+            field.setDefaultValue(resourceEntityMapperService.parseValueFromJSONOrString(
+                  defaultStringValue, field, resourceParsingContext));
+         } finally {
+            resourceParsingContext.exit();
+         }
       }
       return field;
    }

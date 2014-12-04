@@ -133,7 +133,12 @@ public class ValueParsingService {
       
       try {
          // else try to parse as json :
-         return parseValueFromJSONInternal(fieldTypeEnum, value);
+         Object res = parseValueFromJSONInternal(fieldTypeEnum, value);
+         if (fieldTypeEnum == DCFieldTypeEnum.I18N && res instanceof String) {
+            throw new ResourceParsingException("Wrong use of this method, can't read "
+                  + value + " string as i18n because here default language can't be known");
+         }
+         return res;
          
       } catch (IOException ioex) {
          // not JSON !
@@ -152,6 +157,9 @@ public class ValueParsingService {
                singleValueList.add(value); // defaulting to string value
             }
             return singleValueList;
+         case I18N:
+            throw new ResourceParsingException("Wrong use of this method, can't read "
+                  + value + " string as i18n because here default language can't be known", ioex);
          default:
          }
          

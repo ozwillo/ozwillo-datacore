@@ -23,6 +23,7 @@ import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.model.DCField;
+import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
@@ -44,6 +45,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 @Component
 public class ResourceEntityMapperService {
@@ -97,6 +101,47 @@ public class ResourceEntityMapperService {
    ///@Qualifier("datacore.cxfJaxrsApiProvider")
    //protected DCRequestContextProvider requestContextProvider;
    protected DCRequestContextProviderFactory requestContextProviderFactory;
+
+
+   /** LATER use request context */
+   public String getDefaultLanguage(DCI18nField dcI18nField) {
+      // assume it is translated in the model's default language :
+      String defaultLanguage = dcI18nField.getDefaultLanguage();
+      // TODO TODO let user change it ? request-scoped (from request context) ?
+      if (defaultLanguage == null) {
+         defaultLanguage = DCI18nField.DEFAULT_LANGUAGE; // global default
+      }
+      return defaultLanguage;
+   }
+   private Object toSingleLanguageI18n(String value, DCI18nField dcI18nField) {
+      return new ImmutableList.Builder<Map<String,String>>()
+            .add(new ImmutableMap.Builder<String, String>()
+                  .put(getDefaultLanguage(dcI18nField), value).build()).build();
+   }
+   /** same as ValueParsingService's, but using context (field, global defaults, LATER request) ;
+    * especially allows to parse (i18n) according to context
+    * (i18n default language, from field or LATER request)*/
+   public Object parseValueFromJSONOrString(String resourceValue, DCField dcField,
+         DCResourceParsingContext resourceParsingContext) throws ResourceParsingException {
+      DCFieldTypeEnum fieldTypeEnum = DCFieldTypeEnum.getEnumFromStringType(dcField.getType());
+      Object res;
+      try {
+         res = valueParsingService.parseValueFromJSONOrString(fieldTypeEnum, resourceValue);
+         if (fieldTypeEnum == DCFieldTypeEnum.I18N && res instanceof String) {
+            return toSingleLanguageI18n((String) res, (DCI18nField) dcField);
+         }
+         return res;
+      } catch (ResourceParsingException rpex) {
+         if (fieldTypeEnum == DCFieldTypeEnum.I18N) {
+            if (logger.isDebugEnabled()) {
+               logger.debug("Failed to parse string as i18n, assuming as "
+                     + "single default language value" + rpex.getMessage());
+            }
+            return toSingleLanguageI18n(resourceValue, (DCI18nField) dcField);
+         }
+         throw rpex;
+      }
+   }
    
    /**
     * Does 3 things :
@@ -124,7 +169,7 @@ public class ResourceEntityMapperService {
          // accepting null (for non required fields) if only to allow to remove / clear values
          // TODO rather enforce even non required list & maps to be inited to empty ??
          // defaulting (usually null ; NB. there are only values provided in resources here) :
-         ///entityValue = dcField.getDefaultValue(); // NO rather only if value not provided
+         ///entityValue = dcField.getDefaultValue(); // NO rather only if value not provided (see below)
          entityValue = null;
          
       } else if ("string".equals(dcField.getType())) {
@@ -226,6 +271,12 @@ public class ResourceEntityMapperService {
          entityValue = entityList;
          
       } else if ("i18n".equals(dcField.getType())) {
+         DCI18nField dcI18nField = (DCI18nField) dcField;
+         if (resourceValue instanceof String) {
+            entityValue = toSingleLanguageI18n((String) resourceValue, dcI18nField);
+            
+         } else {
+         
          if (!(resourceValue instanceof List<?>)) {
             throw new ResourceParsingException("list Field value is not a JSON Array : " + resourceValue);
          }
@@ -264,6 +315,8 @@ public class ResourceEntityMapperService {
             }
          }
          entityValue = entityList;
+         
+         }
          
       } else if ("resource".equals(dcField.getType())) { // or "reference" ?
          //if (!(dcField instanceof DCResourceField)) { // never happens, TODO rather check it at model creation / change
