@@ -176,6 +176,7 @@ function toolifyDcListOrResource(valuesOrResource) {
    }
 }
 function setUrl(relativeUrl) {
+   if (doUpdateDisplay) {
    if (relativeUrl == null || relativeUrl == "") {
       $('.myurl').val('');
       document.getElementById('mydata').innerHTML = '';
@@ -183,10 +184,13 @@ function setUrl(relativeUrl) {
       $('.myurl').val(relativeUrl);
       document.getElementById('mydata').innerHTML = '...';
    }
+   }
    return false;
 }
 function setError(errorMsg) {
+   if (doUpdateDisplay) {
 	document.getElementById('mydata').innerHTML = errorMsg;
+   }
 	return false;
 }
 
@@ -206,7 +210,8 @@ function getAuthHeader() {
    return 'Basic YWRtaW46YWRtaW4=';
 }
 
-function findDataByType(relativeUrl, success, error) {
+// optional : success, error, start (else 0, max 500), limit (else 10 !!! max 100 !)
+function findDataByType(relativeUrl, success, error, start, limit) {
    var resourceTypeAndQuery = relativeUrl.replace(/^\/*dc\/type\/*/, "");
    var cleanedRelativeUrl = "/dc/type/" + resourceTypeAndQuery; // also works if no dc/type in relativeUrl
    setUrl(cleanedRelativeUrl);
@@ -222,14 +227,17 @@ function findDataByType(relativeUrl, success, error) {
    var i = tq.indexOf('?');
    window.t = i == -1 ? tq : tq.substring(0, i);
    window.q = i == -1 ? '' : tq.substring(i + 1);*/
-   dcApi.dc.findDataInType({type:decodedModelType, '#queryParameters':query,
-         Authorization:getAuthHeader()},
+   var swaggerParams = {type:decodedModelType, '#queryParameters':query,
+         Authorization:getAuthHeader()};
+   if (start) {
+      swaggerParams.start = start;
+   }
+   if (limit) {
+      swaggerParams.limit = limit;
+   }
+   dcApi.dc.findDataInType(swaggerParams,
       function(data) {
-         var resources = eval(data.content.data);
-         var prettyJson = toolifyDcList(resources, null, null, null, 0);
-         ///var prettyJson = JSON.stringify(resources, null, '\t').replace(/\n/g, '<br>');
-         ///prettyJson = toolifyDcResourceJson(prettyJson);
-         $('.mydata').html(prettyJson);
+         var resources = displayJsonObjectResult(data);
          if (success) {
             success(resources);
          }
@@ -264,11 +272,7 @@ function getData(relativeUrl, success, error) {
    dcApi.dc.getData({type:decodedModelType, __unencoded__iri:decodedResourceId,
          'If-None-Match':-1, Authorization:getAuthHeader()},
       function(data) {
-         var resource = eval('[' + data.content.data + ']')[0];
-         var prettyJson = toolifyDcResource(resource, 0);
-         //var prettyJson = JSON.stringify(resource, null, '\t').replace(/\n/g, '<br>');
-         //prettyJson = toolifyDcResourceJson(prettyJson);
-         $('.mydata').html(prettyJson);
+         var resource = displayJsonObjectResult(data);
          if (success) {
         	 success(resource);
          }
@@ -297,7 +301,8 @@ function findData(relativeUrl, success, error) {
 	}
 	return getData(relativeUrl, success, error);
 }
-function findDataByTypeRdf(relativeUrl, success, error) {
+//optional : success, error, start (else 0, max 500), limit (else 10 !!! max 100 !)
+function findDataByTypeRdf(relativeUrl, success, error, start, limit) {
    var resourceTypeAndQuery = relativeUrl.replace(/^\/*dc\/type\/*/, "");
    var cleanedRelativeUrl = "/dc/type/" + resourceTypeAndQuery; // also works if no dc/type in relativeUrl
    setUrl(cleanedRelativeUrl);
@@ -313,11 +318,17 @@ function findDataByTypeRdf(relativeUrl, success, error) {
    var i = tq.indexOf('?');
    window.t = i == -1 ? tq : tq.substring(0, i);
    window.q = i == -1 ? '' : tq.substring(i + 1);*/
-   dcApi.dc.findDataInType({type:decodedModelType, '#queryParameters':query,
-         Authorization:getAuthHeader()}, {responseContentType:'text/x-nquads'},
+   var swaggerParams = {type:decodedModelType, '#queryParameters':query,
+         Authorization:getAuthHeader()};
+   if (start) {
+      swaggerParams.start = start;
+   }
+   if (limit) {
+      swaggerParams.limit = limit;
+   }
+   dcApi.dc.findDataInType(swaggerParams, {responseContentType:'text/x-nquads'},
       function(data) {
-         var prettyText = data.content.data;
-         $('.mydata').text(prettyText);
+         displayTextResult(data);
          if (success) {
             success(data.content.data);
          }
@@ -355,11 +366,7 @@ function postAllDataInType(relativeUrl, resources, success, error) {
    dcApi.dc.postAllDataInType({type:encodedModelType, body:resources,
          Authorization:getAuthHeader()},
       function(data) {
-         var resResources = eval(data.content.data);
-         var prettyJson = toolifyDcList(resResources, null, null, null, 0);
-         ///var prettyJson = JSON.stringify(resResources, null, '\t').replace(/\n/g, '<br>');
-         ///prettyJson = toolifyDcResourceJson(prettyJson);
-         $('.mydata').html(prettyJson);
+         var resources = displayJsonListResult(data);
          if (success) {
     	     success(resources);
          }
@@ -392,11 +399,7 @@ function deleteDataInType(resource, success, error) {
    dcApi.dc.deleteData({type:decodedModelType, __unencoded__iri:decodedResourceId,
          'If-Match':resource["o:version"], Authorization:getAuthHeader()},
       function(data) {
-         var resource = eval('[' + data.content.data + ']')[0];
-         var prettyJson = toolifyDcResource(resource, 0);
-         //var prettyJson = JSON.stringify(resource, null, '\t').replace(/\n/g, '<br>');
-         //prettyJson = toolifyDcResourceJson(prettyJson);
-         $('.mydata').html(prettyJson);
+         var resource = displayJsonObjectResult(data);
          if (success) {
             success(resource);
          }
@@ -414,11 +417,7 @@ function postAllData(resources, success, error) {
    dcApi.dc.postAllData({body:resources,
          Authorization:getAuthHeader()},
       function(data) {
-         var resResources = eval(data.content.data);
-         var prettyJson = toolifyDcList(resResources, null, null, null, 0);
-         ///var prettyJson = JSON.stringify(resResources, null, '\t').replace(/\n/g, '<br>');
-         ///prettyJson = toolifyDcResourceJson(prettyJson);
-         $('.mydata').html(prettyJson);
+         var resources = displayJsonListResult(data);
          if (success) {
             success(resources);
          }
@@ -432,4 +431,39 @@ function postAllData(resources, success, error) {
          }
       });
     return false;
- }
+}
+
+
+///////////////////////
+// CALLBACKS
+
+var doUpdateDisplay = true;
+
+function displayTextResult(data) {
+   if (doUpdateDisplay) {
+   var prettyText = data.content.data;
+   $('.mydata').text(prettyText);
+   }
+}
+
+function displayJsonObjectResult(data) {
+   var resource = eval('[' + data.content.data + ']')[0];
+   if (doUpdateDisplay) {
+   var prettyJson = toolifyDcResource(resource, 0);
+   //var prettyJson = JSON.stringify(resource, null, '\t').replace(/\n/g, '<br>');
+   //prettyJson = toolifyDcResourceJson(prettyJson);
+   $('.mydata').html(prettyJson);
+   }
+   return resource;
+}
+
+function displayJsonListResult(data) {
+   var resResources = eval(data.content.data);
+   if (doUpdateDisplay) {
+   var prettyJson = toolifyDcList(resResources, null, null, null, 0);
+   ///var prettyJson = JSON.stringify(resResources, null, '\t').replace(/\n/g, '<br>');
+   ///prettyJson = toolifyDcResourceJson(prettyJson);
+   $('.mydata').html(prettyJson);
+   }
+   return resResources;
+}
