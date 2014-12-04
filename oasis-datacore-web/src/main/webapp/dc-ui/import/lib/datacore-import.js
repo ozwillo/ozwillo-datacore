@@ -356,7 +356,7 @@
       if (fieldOrListFieldType === 'resource') {
          // resource tree : looking for value in an (indirectly) referenced resource
          resourceMixinOrFields = findMixin(resourceType, importState.data["involvedMixins"]);
-         if (typeof resourceMixin === null) {
+         if (typeof resourceMixin === 'undefined') {
             importState.data.errors.push({ code : "unknownReferencedMixin",
                   path : subPathInFieldNameTree.join('.'), referencedMixin : resourceType,
                   message : "ERROR can't find resource field referenced mixin " +
@@ -952,6 +952,13 @@
       $('.resourceRowCounter').html("Handled no resource row yet");
       $('.resourceCounter').html("Posted no resource yet");
    }
+   function abortImport(msg) {
+      msg = "Aborted. " + msg;
+      $('.resourceRowCounter').html(msg);
+      $('.importedResourcesFromCsv').html(msg);
+      throw msg;
+   }
+   
    function fillData(importState) {
       if (getResourceRowLimit() == 0) {
          return;
@@ -991,8 +998,14 @@
                }
                importState.data["importedFieldNames"] = importedFieldNames;
                
-      	      findDataByType("/dc/type/dcmo:model_0?dcmo:fields.dcmf:name=$in"
+               // BEWARE limited to 10 by default !!!!!! and 100 max !!
+      	      findDataByType("/dc/type/dcmo:model_0?dcmo:globalFields.dcmf:name=$in"
+      	            // globalFields else won't get ex. CountryFR inheriting from Country but with no additional field (??)
                      + JSON.stringify(importState.data.importedFieldNames, null, null), function(fieldNameMixinsFound) {
+                     if (fieldNameMixinsFound.length === 100) { // max limit
+                        abortImport("Too many mixins (>= 100) found for field names to import");
+                     }
+                     
                      for (var fnmInd in fieldNameMixinsFound) {
                         var involvedMixin = fieldNameMixinsFound[fnmInd];
                         var modelOrMixin = importState.model.modelOrMixins[involvedMixin["dcmo:name"]];
@@ -1026,7 +1039,7 @@
                      }
                      
                      csvToData(results.data, importState);
-               });
+               }, null, 0, 100); // max limit (else 10 !!!)
             }
       }
       if ($(".resourceFile").val() != "") {
