@@ -457,7 +457,7 @@ public class ResourceService {
     * @throws ResourceException if asked to abort from within triggered event
     */
    public void delete(String uri, String modelType, Long version)
-         throws ResourceTypeNotFoundException, ResourceException {
+         throws ResourceTypeNotFoundException, ResourceNotFoundException, ResourceException {
       DCProject project = modelService.getProject(); // TODO explode if none 
 	   
       DCModelBase dcModel = modelService.getModelBase(modelType); // NB. type can't be null thanks to JAXRS

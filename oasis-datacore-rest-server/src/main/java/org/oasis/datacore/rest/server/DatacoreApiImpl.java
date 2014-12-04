@@ -3,10 +3,7 @@ package org.oasis.datacore.rest.server;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.EntityNotFoundException;
 import javax.ws.rs.BadRequestException;
-import javax.ws.rs.ClientErrorException;
-import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.WebApplicationException;
@@ -32,6 +29,7 @@ import org.oasis.datacore.historization.service.HistorizationService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.util.DCURI;
+import org.oasis.datacore.rest.api.util.JaxrsExceptionHelper;
 import org.oasis.datacore.rest.server.cxf.CxfJaxrsApiProvider;
 import org.oasis.datacore.rest.server.cxf.JaxrsServerBase;
 import org.oasis.datacore.rest.server.resource.ExternalResourceException;
@@ -131,41 +129,35 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
                canCreate, canUpdate, putRatherThanPatchMode);
          
       } catch (ResourceTypeNotFoundException rtnfex) {
-         throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
-               .entity(rtnfex.getMessage()).type(MediaType.TEXT_PLAIN).build());
+         throw JaxrsExceptionHelper.toNotFoundException(rtnfex);
          
-      } catch (ExternalResourceException ere) {
+      } catch (ExternalResourceException erex) {
          String msg;
-         if (ere.getUri().isExternalDatacoreUri()) {
+         if (erex.getUri().isExternalDatacoreUri()) {
             // TODO LATER OPT true broker / proxy mode ?
             msg = "Resource URI has known external Datacore container, "
-                  + "this Datacore can't handle it, but doing a POST/PUT rather there should work";
+                  + "this Datacore can't handle it, but doing a POST/PUT rather there should work.";
          } else { // ere.getUri().isExternalWebUri())
             msg = "Resource has external unkown container, this Datacore can't handle it, "
-                  + "see rather there how to do a POST/PUT (if it can)";
+                  + "see rather there how to do a POST/PUT (if it can).";
          } // TODO LATER OPT known external Web container ?
          throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
-               .entity(msg).type(MediaType.TEXT_PLAIN).build());
-         
-      } catch (ResourceNotFoundException rnfex) {
-         throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
-               .entity(rnfex.getMessage()).type(MediaType.TEXT_PLAIN).build());
-         
-      } catch (ResourceObsoleteException roex) {
-         throw new ClientErrorException(Response.status(Response.Status.CONFLICT)
-               .entity(roex.getMessage()).type(MediaType.TEXT_PLAIN).build());
-         
-      } catch (BadUriException buex) {
-         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
-               .entity("Error while parsing root URI '" + buex.getUri() + "' : " + buex.getOwnMessage())
+               .entity(msg + "\n   Cause :\n" + JaxrsExceptionHelper.toString(erex))
                .type(MediaType.TEXT_PLAIN).build());
          
+      } catch (ResourceNotFoundException rnfex) {
+         throw JaxrsExceptionHelper.toNotFoundException(rnfex);
+         
+      } catch (ResourceObsoleteException roex) {
+         throw JaxrsExceptionHelper.toClientErrorException(roex);
+         
+      } catch (BadUriException buex) {
+         throw JaxrsExceptionHelper.toBadRequestException(buex);
+         
       } catch (ResourceException rex) {
-         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
-               .entity(rex.getMessage()).type(MediaType.TEXT_PLAIN).build());
+         throw JaxrsExceptionHelper.toBadRequestException(rex);
       } catch (DuplicateKeyException dkex) {
-         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
-               .entity(dkex.getMessage()).type(MediaType.TEXT_PLAIN).build());
+         throw JaxrsExceptionHelper.toBadRequestException(dkex);
       }
    }
    
@@ -223,8 +215,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
                   normalizeUrlMode, replaceBaseUrlMode);
          } catch (BadUriException rpex) {
             // TODO LATER rather context & for multi post
-            throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
-                  .entity(rpex.getMessage()).type(MediaType.TEXT_PLAIN).build());
+            throw JaxrsExceptionHelper.toBadRequestException(rpex);
          }
          res.add(internalPostDataInType(resource, uri.getType(), canCreate, canUpdate, putRatherThanPatchMode));
          // NB. no ETag validation support, see discussion in internalPostAllDataInType()
@@ -260,19 +251,17 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
             resource.getVersion().toString(); // no need of additional uri because only for THIS resource
          
       } catch (ResourceTypeNotFoundException e) {
-         throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
-             .entity("Unknown Model type " + e.getModelType()).type(MediaType.TEXT_PLAIN).build());
+         throw JaxrsExceptionHelper.toNotFoundException(e);
          
       // NB. no ExternalResourceException because URI is HTTP URL which can't be external !
       // therefore no RedirectException to throw because of it
          
       } catch (ResourceNotFoundException e) {
-         //return Response.noContent().build();
-         throw new NotFoundException();
+         throw JaxrsExceptionHelper.toNotFoundException(e);
          // rather than NO_CONTENT ; like Atol ex. deleteApplication in
          // https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/apps/ApplicationDirectoryResource.java
       } catch (ResourceException e) { // asked to abort from within triggered event
-         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).type(MediaType.TEXT_PLAIN).build());
+         throw JaxrsExceptionHelper.toBadRequestException(e);
       }
 
       // ETag caching :
@@ -332,16 +321,14 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
          resourceService.delete(uri, modelType, version);
          
       } catch (ResourceTypeNotFoundException e) {
-         throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
-               .entity("Unknown Model type " + e.getModelType()).type(MediaType.TEXT_PLAIN).build());
+         throw JaxrsExceptionHelper.toNotFoundException(e);
          
       // NB. no ExternalResourceException because URI is HTTP URL which can't be external !
          
-      } catch (EntityNotFoundException e) {
-    	  throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
-                  .entity("Resource (model:iri:version) " + modelType + ":" + iri + ":" + version + " does not exist").type(MediaType.TEXT_PLAIN).build());
+      } catch (ResourceNotFoundException e) {
+         throw JaxrsExceptionHelper.toNotFoundException(e);
       } catch (ResourceException e) { // asked to abort from within triggered event
-         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).type(MediaType.TEXT_PLAIN).build());
+         throw JaxrsExceptionHelper.toBadRequestException(e);
       }
 
       throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT).build());
@@ -374,14 +361,12 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
    @Override
    public List<DCResource> updateDataInTypeWhere(DCResource dcDataDiff,
          String modelType, UriInfo uriInfo) {
-      throw new InternalServerErrorException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-            .entity("Feature not implemented").type(MediaType.TEXT_PLAIN).build());
+      throw JaxrsExceptionHelper.toNotImplementedException();
    }
 
    @Override
    public void deleteDataInTypeWhere(String modelType, UriInfo uriInfo) {
-      throw new InternalServerErrorException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-            .entity("Feature not implemented").type(MediaType.TEXT_PLAIN).build());
+      throw JaxrsExceptionHelper.toNotImplementedException();
    }
    
    
@@ -438,11 +423,9 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       try {
          foundEntities = ldpEntityQueryService.findDataInType(modelType, params, start, limit);
       } catch (ModelNotFoundException mnfex) {
-         throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
-               .entity(mnfex.getMessage()).type(MediaType.TEXT_PLAIN).build());
+         throw JaxrsExceptionHelper.toNotFoundException(mnfex);
       } catch (QueryException qex) {
-         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
-               .entity(qex.getMessage()).type(MediaType.TEXT_PLAIN).build());
+         throw JaxrsExceptionHelper.toBadRequestException(qex);
          // TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
          // TODO better support for query parsing errors / warnings / detailedMode & additional
          // non-error behaviours of query engines like "explain" switch
@@ -474,12 +457,10 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       List<DCEntity> entities;
       try {
          entities = this.entityQueryService.queryInType(modelType, query, language);
-      } catch (ModelNotFoundException e) {
-         throw new NotFoundException(Response.status(Response.Status.NOT_FOUND)
-               .entity("Unknown Model type " + e.getModelType()).type(MediaType.TEXT_PLAIN).build());
+      } catch (ModelNotFoundException mnfex) {
+         throw JaxrsExceptionHelper.toNotFoundException(mnfex);
       } catch (QueryException qex) {
-         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
-               .entity(qex.getMessage()).type(MediaType.TEXT_PLAIN).build());
+         throw JaxrsExceptionHelper.toBadRequestException(qex);
          // TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
          // TODO better support for query parsing errors / warnings / detailedMode & additional
          // non-error behaviours of query engines like "explain" switch
@@ -492,8 +473,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       try {
          entities = this.entityQueryService.query(query, language);
       } catch (QueryException qex) {
-         throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
-               .entity(qex.getMessage()).type(MediaType.TEXT_PLAIN).build());
+         throw JaxrsExceptionHelper.toBadRequestException(qex);
          // TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
          // TODO better support for query parsing errors / warnings / detailedMode & additional
          // non-error behaviours of query engines like "explain" switch
@@ -524,7 +504,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
 		try {
 			historizedEntity = historizationService.getHistorizedEntity(uri, version, dcModel);
 		} catch (HistorizationException e) {
-			throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).type(MediaType.TEXT_PLAIN).build());
+			throw JaxrsExceptionHelper.toBadRequestException(e);
 		}
 		if (historizedEntity == null) {
 			throw new NotFoundException(Response.status(Response.Status.NOT_FOUND).entity("Entity with URI : " + uri + " and version : " + version + "was not found").type(MediaType.TEXT_PLAIN)

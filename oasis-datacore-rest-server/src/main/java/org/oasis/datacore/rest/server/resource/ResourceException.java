@@ -2,6 +2,7 @@ package org.oasis.datacore.rest.server.resource;
 
 import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.rest.api.DCResource;
+import org.oasis.datacore.rest.api.util.JaxrsExceptionHelper;
 
 public class ResourceException extends Exception {
    private static final long serialVersionUID = -3244361074758795252L;
@@ -9,6 +10,8 @@ public class ResourceException extends Exception {
    private DCProject project;
    private String resourceMessage;
    private DCResource resource;
+   /** lazy cache */
+   private String asString = null;
 
    /**
     * 
@@ -62,6 +65,17 @@ public class ResourceException extends Exception {
       sb.append(": ");
       sb.append(resourceMessage);
       return sb.toString();
+   }
+   
+   /**
+    * To be used to build JAXRS WebApplication Exceptions.
+    */
+   public String asString() {
+      if (asString != null) {
+         return asString;
+      }
+      asString = JaxrsExceptionHelper.toString(this);
+      return asString;
    }
 
 }
