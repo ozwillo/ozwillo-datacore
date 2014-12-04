@@ -11,6 +11,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -98,6 +99,10 @@ public class ResourceModelTest {
 
    @Autowired
    private ModelResourceMappingService mrMappingService;
+   
+   /** for tests */
+   @Autowired
+   private CityCountrySample cityCountrySample;
    
    
    /**
@@ -222,6 +227,9 @@ public class ResourceModelTest {
 
    @Test
    public void testResourceModelCreateAndIndex() throws Exception {
+      cityCountrySample.cleanDataOfCreatedModels();
+      cityCountrySample.initData(); // else can't find France country on CI server
+      
       String newName =  "sample.city.city_1";
       /*// put in initial state (delete stuff) in case test was aborted :
       mgo.dropCollection(newName);
