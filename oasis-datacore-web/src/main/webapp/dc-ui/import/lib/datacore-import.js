@@ -800,13 +800,15 @@
    function csvToData(resultsData, importState) {
       var internalFieldNames = importState.data.internalFieldNames;
       var involvedMixins = importState.data.involvedMixins;
-      for (var rInd in resultsData) {
-         var rowNb = parseInt(rInd, 10) + 1; // nb. rInd is string
-        console.log("row " + rowNb);//
+      var rLength = Math.min(resultsData.length, getResourceRowStart() + getResourceRowLimit());
+      var rowNb = 0;
+      for (var rInd = getResourceRowStart(); rInd < rLength ; rInd++) {
+         rowNb++; // nb. rInd is string
+        console.log("row " + rInd);//
         ///var importStateRowData = {};
         ///importState.data.push(importStateRowData);
         // TODO by push / step
-        var resourceRow = resultsData[rInd];
+        var resourceRow = resultsData[rInd + '']; // convert to string !!
         var modelTypeToRowResources = {};
         
         // mixins loop :
@@ -866,7 +868,7 @@
         ///importStateRowData["loops"] = loopIndex + 1;
         ////importStateRowData["errors"] = errors;
 
-        if (rowNb % 1000 == 1) {
+        if (rowNb % 1000 == 1) { // or 100 ? TODO yield !!
            $('.resourceRowCounter').html("Handled <a href=\"#importedJsonFromCsv\">" + rowNb + " rows</a>");
         }
      }
@@ -928,6 +930,13 @@
       }
       return 50;
    }
+   function getResourceRowStart() {
+      var resourceRowStart = parseInt($(".resourceRowStart").val(), 10);
+      if (typeof resourceRowStart === 'number' && resourceRowStart > 0) { // && resourceRowStart < 50000
+         return resourceRowStart;
+      }
+      return 0;
+   }
    function resetResourceCounters() {
       $('.resourceRowCounter').html("Handled no resource row yet");
       $('.resourceCounter').html("Posted no resource yet");
@@ -935,14 +944,14 @@
    function fillData(importState) {
       if (getResourceRowLimit() == 0) {
          return;
-      } // else > 0, or -1 means all
+      } // else > 0, or -1 means all ; or 
       
       resetResourceCounters();
       //console.log("fillData");//
       var resourceParsingConf = {
             download: true,
             header: true,
-            preview: getResourceRowLimit() + 1, // ex. '1' user input means importing title line + 1 more line
+            preview: getResourceRowStart() + getResourceRowLimit() + 1, // ex. '1' user input means importing title line + 1 more line
             complete: function(results) {
                console.log("Remote file parsed!", results);
                ///var results = eval('[' + data.content.data + ']')[0];
@@ -1182,7 +1191,7 @@
               // TODO LATER use empty field row for mixin values
            }
            if (mixinName.indexOf('//') === 0 || mixinName.indexOf('#') === 0) {
-              continue; // skipping comment line
+              continue; // skipping comment line, TODO rm should be done auto by papaparse comments = true
            }
            mixinName = buildMixinName(fieldRow["Mixin"], importState); // TODO case
 
@@ -1514,6 +1523,7 @@
       var modelParsingConf = {
          download: true,
          header: true,
+         comments: true, // skip # or // starting lines
          preview: getModelRowLimit() + 1, // ex. '1' user input means importing title line + 1 more line
          complete: function(results) {
             var prettyJson = JSON.stringify(results.data, null, '\t').replace(/\n/g, '<br>');
