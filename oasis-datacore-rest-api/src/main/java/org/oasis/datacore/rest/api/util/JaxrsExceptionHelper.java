@@ -1,33 +1,58 @@
 package org.oasis.datacore.rest.api.util;
 
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.ClientErrorException;
-import javax.ws.rs.InternalServerErrorException;
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 public class JaxrsExceptionHelper {
 
-   public static BadRequestException toBadRequestException(Throwable t) {
-      return new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
-            .entity(toString(t)).type(MediaType.TEXT_PLAIN).build());
+   /**
+    * To be used inside BadRequestException, like this :
+    * throw new BadRequestException(JaxrsExceptionHelper.toBadRequestResponse(e))
+    * @param t
+    * @return
+    */
+   public static Response toBadRequestResponse(Throwable t) {
+      return Response.status(Response.Status.BAD_REQUEST)
+            .entity(toString(t)).type(MediaType.TEXT_PLAIN).build();
    }
-   public static NotFoundException toNotFoundException(Throwable t) {
-      return new NotFoundException(Response.status(Response.Status.NOT_FOUND)
-            .entity(toString(t)).type(MediaType.TEXT_PLAIN).build());
+   /**
+    * To be used inside NotFoundException, like this :
+    * throw new NotFoundException(JaxrsExceptionHelper.toNotFoundResponse(e))
+    * @param t
+    * @return
+    */
+   public static Response toNotFoundResponse(Throwable t) {
+      return Response.status(Response.Status.NOT_FOUND)
+            .entity(toString(t)).type(MediaType.TEXT_PLAIN).build();
    }
-   public static ClientErrorException toClientErrorException(Throwable t) {
-      return new ClientErrorException(Response.status(Response.Status.CONFLICT)
-            .entity(toString(t)).type(MediaType.TEXT_PLAIN).build());
+   /**
+    * To be used inside ClientErrorException, like this :
+    * throw new ClientErrorException(JaxrsExceptionHelper.toClientErrorResponse(e))
+    * @param t
+    * @return
+    */
+   public static Response toClientErrorResponse(Throwable t) {
+      return Response.status(Response.Status.CONFLICT)
+            .entity(toString(t)).type(MediaType.TEXT_PLAIN).build();
    }
-   public static InternalServerErrorException toInternalServerErrorException(Throwable t) {
-      throw new InternalServerErrorException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-            .entity(toString(t)).type(MediaType.TEXT_PLAIN).build());
+   /**
+    * To be used inside InternalServerErrorException, like this :
+    * throw new InternalServerErrorException(JaxrsExceptionHelper.toInternalServerErrorResponse(e))
+    * @param t
+    * @return
+    */
+   public static Response toInternalServerErrorResponse(Throwable t) {
+      return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+            .entity(toString(t)).type(MediaType.TEXT_PLAIN).build();
    }
-   public static InternalServerErrorException toNotImplementedException() {
-      throw new InternalServerErrorException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-            .entity("Feature not implemented").type(MediaType.TEXT_PLAIN).build());
+   /**
+    * To be used inside InternalServerErrorException, like this :
+    * throw new InternalServerErrorException(JaxrsExceptionHelper.toNotImplementedResponse());
+    * @return
+    */
+   public static Response toNotImplementedResponse() {
+      return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+            .entity("Feature not implemented").type(MediaType.TEXT_PLAIN).build();
    }
    
    /**

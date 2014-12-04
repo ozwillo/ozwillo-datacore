@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.WebApplicationException;
@@ -129,7 +131,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
                canCreate, canUpdate, putRatherThanPatchMode);
          
       } catch (ResourceTypeNotFoundException rtnfex) {
-         throw JaxrsExceptionHelper.toNotFoundException(rtnfex);
+         throw new NotFoundException(JaxrsExceptionHelper.toNotFoundResponse(rtnfex));
          
       } catch (ExternalResourceException erex) {
          String msg;
@@ -146,18 +148,18 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
                .type(MediaType.TEXT_PLAIN).build());
          
       } catch (ResourceNotFoundException rnfex) {
-         throw JaxrsExceptionHelper.toNotFoundException(rnfex);
+         throw new NotFoundException(JaxrsExceptionHelper.toNotFoundResponse(rnfex));
          
       } catch (ResourceObsoleteException roex) {
-         throw JaxrsExceptionHelper.toClientErrorException(roex);
+         throw new ClientErrorException(JaxrsExceptionHelper.toClientErrorResponse(roex));
          
       } catch (BadUriException buex) {
-         throw JaxrsExceptionHelper.toBadRequestException(buex);
+         throw new BadRequestException(JaxrsExceptionHelper.toBadRequestResponse(buex));
          
       } catch (ResourceException rex) {
-         throw JaxrsExceptionHelper.toBadRequestException(rex);
+         throw new BadRequestException(JaxrsExceptionHelper.toBadRequestResponse(rex));
       } catch (DuplicateKeyException dkex) {
-         throw JaxrsExceptionHelper.toBadRequestException(dkex);
+         throw new BadRequestException(JaxrsExceptionHelper.toBadRequestResponse(dkex));
       }
    }
    
@@ -215,7 +217,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
                   normalizeUrlMode, replaceBaseUrlMode);
          } catch (BadUriException rpex) {
             // TODO LATER rather context & for multi post
-            throw JaxrsExceptionHelper.toBadRequestException(rpex);
+            throw new BadRequestException(JaxrsExceptionHelper.toBadRequestResponse(rpex));
          }
          res.add(internalPostDataInType(resource, uri.getType(), canCreate, canUpdate, putRatherThanPatchMode));
          // NB. no ETag validation support, see discussion in internalPostAllDataInType()
@@ -251,17 +253,17 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
             resource.getVersion().toString(); // no need of additional uri because only for THIS resource
          
       } catch (ResourceTypeNotFoundException e) {
-         throw JaxrsExceptionHelper.toNotFoundException(e);
+         throw new NotFoundException(JaxrsExceptionHelper.toNotFoundResponse(e));
          
       // NB. no ExternalResourceException because URI is HTTP URL which can't be external !
       // therefore no RedirectException to throw because of it
          
       } catch (ResourceNotFoundException e) {
-         throw JaxrsExceptionHelper.toNotFoundException(e);
+         throw new NotFoundException(JaxrsExceptionHelper.toNotFoundResponse(e));
          // rather than NO_CONTENT ; like Atol ex. deleteApplication in
          // https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/apps/ApplicationDirectoryResource.java
       } catch (ResourceException e) { // asked to abort from within triggered event
-         throw JaxrsExceptionHelper.toBadRequestException(e);
+         throw new BadRequestException(JaxrsExceptionHelper.toBadRequestResponse(e));
       }
 
       // ETag caching :
@@ -321,14 +323,14 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
          resourceService.delete(uri, modelType, version);
          
       } catch (ResourceTypeNotFoundException e) {
-         throw JaxrsExceptionHelper.toNotFoundException(e);
+         throw new NotFoundException(JaxrsExceptionHelper.toNotFoundResponse(e));
          
       // NB. no ExternalResourceException because URI is HTTP URL which can't be external !
          
       } catch (ResourceNotFoundException e) {
-         throw JaxrsExceptionHelper.toNotFoundException(e);
+         throw new NotFoundException(JaxrsExceptionHelper.toNotFoundResponse(e));
       } catch (ResourceException e) { // asked to abort from within triggered event
-         throw JaxrsExceptionHelper.toBadRequestException(e);
+         throw new BadRequestException(JaxrsExceptionHelper.toBadRequestResponse(e));
       }
 
       throw new WebApplicationException(Response.status(Response.Status.NO_CONTENT).build());
@@ -361,12 +363,12 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
    @Override
    public List<DCResource> updateDataInTypeWhere(DCResource dcDataDiff,
          String modelType, UriInfo uriInfo) {
-      throw JaxrsExceptionHelper.toNotImplementedException();
+      throw new InternalServerErrorException(JaxrsExceptionHelper.toNotImplementedResponse());
    }
 
    @Override
    public void deleteDataInTypeWhere(String modelType, UriInfo uriInfo) {
-      throw JaxrsExceptionHelper.toNotImplementedException();
+      throw new InternalServerErrorException(JaxrsExceptionHelper.toNotImplementedResponse());
    }
    
    
@@ -423,9 +425,9 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       try {
          foundEntities = ldpEntityQueryService.findDataInType(modelType, params, start, limit);
       } catch (ModelNotFoundException mnfex) {
-         throw JaxrsExceptionHelper.toNotFoundException(mnfex);
+         throw new NotFoundException(JaxrsExceptionHelper.toNotFoundResponse(mnfex));
       } catch (QueryException qex) {
-         throw JaxrsExceptionHelper.toBadRequestException(qex);
+         throw new BadRequestException(JaxrsExceptionHelper.toBadRequestResponse(qex));
          // TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
          // TODO better support for query parsing errors / warnings / detailedMode & additional
          // non-error behaviours of query engines like "explain" switch
@@ -458,9 +460,9 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       try {
          entities = this.entityQueryService.queryInType(modelType, query, language);
       } catch (ModelNotFoundException mnfex) {
-         throw JaxrsExceptionHelper.toNotFoundException(mnfex);
+         throw new NotFoundException(JaxrsExceptionHelper.toNotFoundResponse(mnfex));
       } catch (QueryException qex) {
-         throw JaxrsExceptionHelper.toBadRequestException(qex);
+         throw new BadRequestException(JaxrsExceptionHelper.toBadRequestResponse(qex));
          // TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
          // TODO better support for query parsing errors / warnings / detailedMode & additional
          // non-error behaviours of query engines like "explain" switch
@@ -473,7 +475,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       try {
          entities = this.entityQueryService.query(query, language);
       } catch (QueryException qex) {
-         throw JaxrsExceptionHelper.toBadRequestException(qex);
+         throw new BadRequestException(JaxrsExceptionHelper.toBadRequestResponse(qex));
          // TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
          // TODO better support for query parsing errors / warnings / detailedMode & additional
          // non-error behaviours of query engines like "explain" switch
@@ -504,7 +506,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
 		try {
 			historizedEntity = historizationService.getHistorizedEntity(uri, version, dcModel);
 		} catch (HistorizationException e) {
-			throw JaxrsExceptionHelper.toBadRequestException(e);
+			throw new BadRequestException(JaxrsExceptionHelper.toBadRequestResponse(e));
 		}
 		if (historizedEntity == null) {
 			throw new NotFoundException(Response.status(Response.Status.NOT_FOUND).entity("Entity with URI : " + uri + " and version : " + version + "was not found").type(MediaType.TEXT_PLAIN)
