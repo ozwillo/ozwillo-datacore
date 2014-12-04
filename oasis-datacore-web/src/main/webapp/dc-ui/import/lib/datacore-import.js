@@ -288,6 +288,7 @@
 
    function importedResourcePosted(resourceOrData, importStateRes, importState, kind, counter, success, error) {
       importStateRes.postedNb++;
+      
       if (typeof resourceOrData === 'object' && typeof resourceOrData["_headers"] === 'object') {
          importStateRes.errors.push([ resourceOrData._body._body, resourceOrData.request._body ]);
          var requestBodyHtml;
@@ -299,7 +300,17 @@
          }
          importStateRes.errorHtml += "<p>-&nbsp;" + resourceOrData._body._body
                + " :<br/>" + requestBodyHtml + "<p/>";
+         
+      } else {
+         if (typeof resourceOrData['@id'] !== 'undefined') {
+            importStateRes.postedUri[resourceOrData['@id']] = null; // set
+         } else { // usual case : single value list
+            for (var rInd in resourceOrData) {
+               importStateRes.postedUri[resourceOrData[rInd]['@id']] = null; // set
+            }
+         }
       }
+      
       if (true/*importStateRes.postedNb % 1000 == 0 || importStateRes.postedNb > importStateRes.toBePostedNb - 10*/) {
          var msg = "Posted <a href=\"#importedResourcesFromCsv\">" + importStateRes.postedNb
                + " " + kind + "s</a> (";
@@ -890,10 +901,10 @@
       }
       
       function importedDataPosted(resourceOrData) {
-         importedResourcePosted(resourceOrData, importState.data, importState,
+         importedResourcePosted(resourceOrData, importState.data.posted, importState,
                "resource", $('.resourceCounter'));
       }
-      importState.data["toBePostedNb"] = importState.data.resources.length;
+      importState.data.posted.toBePostedNb = Object.keys(importState.data.resources).length;
       for (var uri in importState.data.resources) {
          // TODO mass version update !
          var relativeUrl = uri.substring(uri.indexOf("/dc/type/"));
@@ -1494,22 +1505,32 @@
                ///mixinArray : null, // MUST NOT BE USED outside of csvToModel because have no global fields, rather use .data.involvedMixins
                modelArray : null, // MUST NOT BE USED outside of csvToModel because have no global fields, rather use .data.involvedMixins
                loops : 0,
-               toBePostedNb : 0,
-               postedNb : 0,
                warnings : [],
                errors : [],
-               errorHtml : ""
+               posted : {
+                  toBePostedNb : 0, // = modelArray length
+                  postedNb : 0,
+                  postedUri : {}, // set
+                  warnings : [],
+                  errors : [],
+                  errorHtml : "" 
+               }
             },
             data : {
                fileName : '', // set below
                dataColumnNames : null,
                involvedMixins : [],
                resources : {},
-               toBePostedNb : 0,
-               postedNb : 0,
                warnings : [],
                errors : [],
-               errorHtml : ""
+               posted : {
+                  toBePostedNb : 0, // = resources nb
+                  postedNb : 0,
+                  postedUri : {}, // set
+                  warnings : [],
+                  errors : [],
+                  errorHtml : ""
+               }
             }
       }
       
@@ -1543,11 +1564,11 @@
                }
                
                function fillDataWhenAllModelsUpdated(resourcesOrData) {
-                  importedResourcePosted(resourcesOrData, importState.model, importState,
+                  importedResourcePosted(resourcesOrData, importState.model.posted, importState,
                         "models or mixin", $('.modelCounter'), fillData);
                };
 
-               importState.model["toBePostedNb"] = importState.model.modelArray.length;
+               importState.model.posted.toBePostedNb = importState.model.modelArray.length;
                refreshAndSchedulePost(importState.model.modelArray, '/dc/type/dcmo:model_0', fillDataWhenAllModelsUpdated);
             });
          }
