@@ -31,7 +31,10 @@
       return containerUrl + "dc/type/" + encodeUriPathComponent(typeName)
             + "/" + (shouldEncodeId ? encodeIdSaveIfNot(id) : id);
    }
-   
+   function getIdFromUri(subResourceUri) {
+      return subResourceUri.substring(subResourceUri
+            .indexOf('/', subResourceUri.indexOf('dc/type/') + 'dc/type/'.length) + 1);
+   }
 
 
 function toolifyDcResourceJson(prettyDcResourceJson) {
