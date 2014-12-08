@@ -1,4 +1,4 @@
-geo_country:name,geo_city:name,geo_city:zipCode,geo_city:idStat,geo_cityGroup:name,geo_NUTS3:name,geo_NUTS2:name,geo_country:idIso,geo_NUTS3:idIso,geo_NUTS3:idStat,geo_NUTS2:idIso,geo_NUTS2:idStat,geo_country:statisticalInstitute,geo_borough:name
+geocoes:name,geocies:name,geocies:zipCode,geocies:idStat,geocigres:name,geon3es:name,geon2es:name,geocoes:idIso,geon3es:idIso,geon3es:idStat,geon2es:idIso,geon2es:idStat,geocoes:statisticalInstitute,geo_borough:name
 España,Barcelona,8001,,Barcelonès,Barcelona,Catalunya,ES,ES-B,,,ES-CT,,
 España,Barcelona,8002,,Barcelonès,Barcelona,Catalunya,ES,ES-B,,,,,
 España,Barcelona,8003,,Barcelonès,Barcelona,Catalunya,ES,ES-B,,,,,
