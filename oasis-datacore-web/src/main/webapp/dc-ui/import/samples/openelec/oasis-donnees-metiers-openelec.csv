@@ -20,7 +20,7 @@ Elector,Surnames,ElectorSurnames,String,50,surname(s),prenom ,,true,,,
 Elector,BirthDate,ElectorBirthDate,Date,,birth date,date_naissance ,,,,,
 Elector,birthCity.department.INSEECode,ElectorBirthDepartmentINSEECode,String,5,birth department code (official INSEE code),code_departement_naissance ,,,1,99,Rather 1 after fr/ ?
 Elector,birthCity.department.Name,ElectorBirthDepartmentName,String,51,birth department name,libelle_departement,,true,,ETRANGER,
-Elector,birthCity.INSEECode,elec_Elector:birthCity.ElectorBirthCityINSEECode,String,5,birth city code (official INSEE code),code_lieu_naissance ,,,,1,
+Elector,birthCity.INSEECode,elec_Elector:birthCity.ElectorBirthCityINSEECode,String,5,birth city code (official INSEE code),code_lieu_de_naissance ,,,,1,
 Elector,birthCity.Name,elec_Elector:birthCity.ElectorBirthCityName,String,50,birth city name,libelle_commune,,,,1,
 Elector,birthCity.country.INSEECode,elec_Elector:birthCity.elec_City:country.INSEECode,String,5,country code of citizenship,code_nationalite ,,,0,Or / and ex. fr ?,
 Elector,birthCity.country.Name,elec_Elector:birthCity.elec_City:country.Name,String,30,Country name of citizenship,libelle_nationalite,,true,,,
