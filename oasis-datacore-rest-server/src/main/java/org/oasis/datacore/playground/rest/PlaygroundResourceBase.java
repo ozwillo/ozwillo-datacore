@@ -1,6 +1,8 @@
 package org.oasis.datacore.playground.rest;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.support.AbstractBeanFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -12,6 +14,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *
  */
 public abstract class PlaygroundResourceBase {
+   
+   /** to get any conf prop */
+   @Autowired
+   protected AbstractBeanFactory beanFactory;
 
    @Value("${datacore.devmode}")
    protected boolean devmode;
@@ -21,6 +27,9 @@ public abstract class PlaygroundResourceBase {
    protected String containerUrl;
    @Value("${kernel.baseUrl}")
    protected String kernelBaseUrl;
+   
+   ////////////////////////////////////////////////
+   // NOT REQUIRED BY OAUTH :
    
    @Value("${datacorePlayground.uiUrl}")
    protected String playgroundUiUrl; // = "http://localhost:8080/dc-ui/index.html"; // TODO rm
@@ -33,8 +42,16 @@ public abstract class PlaygroundResourceBase {
    protected int queryMaxStart;
    @Value("${datacoreApiServer.query.maxLimit}")
    protected int queryMaxLimit;
+   @Value("${datacoreApiServer.query.defaultLimit}")
+   protected int queryDefaultLimit;
 
    /** for quick JSON serialization only */
    protected ObjectMapper jsonNodeMapper = new ObjectMapper();
+
+   /** to get any conf prop
+    * see http://stackoverflow.com/questions/1771166/access-properties-file-programatically-with-spring */
+   public String getPropertyValue(String propName) {
+      return beanFactory.resolveEmbeddedValue("${" + propName + "}");
+   }
    
 }

@@ -92,6 +92,9 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    /** default maximum number of documents returned : 100... */
    @Value("${datacoreApiServer.query.maxLimit}")
    private int maxLimit;
+   /** default number of documents returned : 10... */
+   @Value("${datacoreApiServer.query.defaultLimit}")
+   protected int defaultLimit;
 
    /** to get storage model */
    @Autowired
@@ -155,10 +158,14 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       }
       
       // adding paging & sorting :
-      if (start > maxStart) {
+      if (start == null) { // should not happen
+         start = 0;
+      } else if (start > maxStart) {
          start = maxStart; // max, else prefer ranged query ; TODO or error message ?
       }
-      if (limit > maxLimit) {
+      if (limit == null) { // should not happen
+         limit = defaultLimit;
+      } else if (limit > maxLimit) {
          limit = maxLimit; // max, else prefer ranged query ; TODO or error message ?
       }
       Sort sort = queryParsingContext.getSort();

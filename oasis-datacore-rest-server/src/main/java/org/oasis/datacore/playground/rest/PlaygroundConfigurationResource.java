@@ -24,10 +24,32 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 @Component("datacore.playground.configurationResource") // else can't autowire Qualified
 public class PlaygroundConfigurationResource extends PlaygroundResourceBase {
    
+   /* DC props to expose to clients */
+   /*public String[] PLAYGROUND_CONF_PROP_NAMES = new String[] {
+         "datacore.devmode",
+         "datacoreApiServer.baseUrl",
+         "datacoreApiServer.containerUrl",
+         "kernel.baseUrl",
+         
+         "datacorePlayground.uiUrl",
+         
+         "datacoreApiServer.knownDatacoreContainerUrls",
+         "datacoreApiServer.query.maxScan",
+         "datacoreApiServer.query.maxStart",
+         "datacoreApiServer.query.maxLimit",
+         "datacoreApiServer.query.defaultLimit"
+   };*/
+   
    @GET
    @Path("")
    public Response getConfiguration() {
       Map<String,Object> confMap = new HashMap<String,Object>();
+      // this has the default that props are all String and not further typed :
+      /*for (String propName : PLAYGROUND_CONF_PROP_NAMES) {
+         confMap.put(propName, getPropertyValue(propName));
+      }*/
+      // so ideal solution would be reflection or better a @ClientConfiguration annotation,
+      // but for now merely (which has the benefit of nice js prop names) :
       confMap.put("devmode", devmode);
       confMap.put("baseUrl", baseUrl);
       confMap.put("containerUrl", containerUrl);
@@ -37,6 +59,7 @@ public class PlaygroundConfigurationResource extends PlaygroundResourceBase {
       confMap.put("queryMaxScan", queryMaxScan);
       confMap.put("queryMaxStart", queryMaxStart);
       confMap.put("queryMaxLimit", queryMaxLimit);
+      confMap.put("queryDefaultLimit", queryDefaultLimit);
       try {
          return Response.ok().entity(jsonNodeMapper.writer().writeValueAsString(confMap)).build();
       } catch (JsonProcessingException jpex) {
