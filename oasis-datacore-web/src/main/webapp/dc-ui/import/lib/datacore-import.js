@@ -1,4 +1,4 @@
-  var containerUrl = "http://data.oasis-eu.org/"; // rather auto defined in description.html NOO REQUIRES SwaggerUi
+//var containerUrl = "http://data.oasis-eu.org/"; // rather in dcConf filled at init by /dc/playground/configuration
   
   // first four letters of model import file
   function buildModelDomainPrefix(modelFileName) {
@@ -1249,8 +1249,8 @@
             var modelType = decodeURIComponent(resourceIri.substring(0, resourceIri.indexOf("/"))); // ex. geo:CityGroup_0
             // BUT don't decode URI !! (or use decoded resourceId to build URI)
             //var resourceId = decodeURIComponent(resourceIri.substring(resourceIri.indexOf("/") + 1)); // ex. "FR/CC les Châteaux"
-            //var upToDateResourceUri = containerUrl + "dc/type/" + modelType + "/" + resourceId;
-            var upToDateResourceUri = containerUrl + "dc/type/" + resourceIri;
+            //var upToDateResourceUri = dcConf.containerUrl + "dc/type/" + modelType + "/" + resourceId;
+            var upToDateResourceUri = dcConf.containerUrl + "dc/type/" + resourceIri;
             var upToDateResource = importState.data.resources[upToDateResourceUri];
             postAllDataInType(modelType, JSON.stringify([ upToDateResource ], null, null),
                   importedDataPosted, importedDataPosted);

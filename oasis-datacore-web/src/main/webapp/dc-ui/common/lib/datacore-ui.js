@@ -1,4 +1,4 @@
-//var containerUrl = "http://data.oasis-eu.org/"; // rather auto defined in description.html
+//var containerUrl = "http://data.oasis-eu.org/"; // rather in dcConf filled at init by /dc/playground/configuration
 
 
    
@@ -28,7 +28,7 @@
    }
    function buildUri(typeName, id, shouldEncodeId) {
       // encoding ! NOT encodeURIComponent
-      return containerUrl + "dc/type/" + encodeUriPathComponent(typeName)
+      return dcConf.containerUrl + "/dc/type/" + encodeUriPathComponent(typeName)
             + "/" + (shouldEncodeId ? encodeIdSaveIfNot(id) : id);
    }
    // also supports relative & no id after modelType
@@ -223,22 +223,6 @@ function setError(errorMsg) {
 	document.getElementById('mydata').innerHTML = errorMsg;
    }
 	return false;
-}
-
-// see http://stackoverflow.com/questions/13353352/use-this-javascript-to-load-cookie-into-variable
-function readCookie(key) {
-   var result;
-   return (result = new RegExp('(?:^|; )' + encodeURIComponent(key) + '=([^;]*)').exec(document.cookie)) ? (result[1]) : null;
-}
-function deleteCookie(key) {
-   document.cookie = encodeURIComponent(key) + '=; Path=/; expires=' + new Date(-1).toGMTString();
-}
-function getAuthHeader() {
-   var authCookie = readCookie("authorization");
-   if (authCookie && authCookie.length != 0) {
-      return authCookie;
-   }
-   return 'Basic YWRtaW46YWRtaW4=';
 }
 
 // optional : success, error, start (else 0, max 500), limit (else 10 !!! max 100 !)
@@ -492,6 +476,41 @@ function displayJsonListResult(data) {
    var resResources = eval(data.content.data);
    if (doUpdateDisplay) {
    var prettyJson = toolifyDcList(resResources, 0, null, getModelTypeFromUri(data.request.path));
+
+   // adding "..." link for pagination :
+   var start = 0;
+   var limit = dcConf.queryDefaultLimit; // from conf
+   var query = '';
+   if (data.request._query) {
+      // at least must get actual limit to know whether there might be more data
+      // but it's easier to also get start and build query at the same time
+      var splitQuery = data.request._query.split('&');
+      for (var critInd in splitQuery) {
+         var criteria = splitQuery[critInd];
+         if (criteria.indexOf('start=') !== -1) {
+            start = parseInt(criteria.substring(criteria.indexOf('=') + 1), 10);
+         } else if (criteria.indexOf('limit=') !== -1) {
+            limit = parseInt(criteria.substring(criteria.indexOf('=') + 1), 10);
+         } else {
+            query += '&' + criteria;
+         }
+      }
+   }
+
+   if (start !== 0) {
+      var previousStart = Math.max(0, start - limit);
+      var relativeUrl = data.request.path + '?start=' + previousStart + '&limit=' + limit + query;
+      prettyJson = '<a href="' + relativeUrl + '" class="dclink" onclick="'
+            + 'javascript:return findDataByType($(this).attr(\'href\'));'
+            + '">...</a>' + lineBreak(0) + prettyJson;
+   }
+   if (resResources.length === limit) {
+      var nextStart = start + limit;
+      var relativeUrl = data.request.path + '?start=' + nextStart + '&limit=' + limit + query;
+      prettyJson += lineBreak(0) + '<a href="' + relativeUrl + '" class="dclink" onclick="'
+            + 'javascript:return findDataByType($(this).attr(\'href\'));'
+            + '">...</a>';
+   }
    ///var prettyJson = JSON.stringify(resResources, null, '\t').replace(/\n/g, '<br>');
    ///prettyJson = toolifyDcResourceJson(prettyJson);
    $('.mydata').html(prettyJson);

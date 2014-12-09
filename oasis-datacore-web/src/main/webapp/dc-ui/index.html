@@ -17,104 +17,12 @@
   <script src='lib/swagger.js' type='text/javascript'></script>
   <script src='swagger-ui.js' type='text/javascript'></script>
   <script src='lib/highlight.7.3.pack.js' type='text/javascript'></script>
+  <script src='common/lib/datacore-base.js' type='text/javascript'></script>
   <script src='common/lib/datacore-ui.js' type='text/javascript'></script>
   <script type="text/javascript">
-    function initUserInfo() {
-       var userinfo;
-       var userinfoString = readCookie('userinfo');
-       if (userinfoString && userinfoString !== null) {
-          userinfo = JSON.parse(userinfoString);
-          if (!userinfo || userinfo === null) {
-             console.log('Unable to parse userinfo ' + userinfoString);
-          }
-          $('#logout').show();
-       } else {
-          if (dcConf.devmode) {
-             userinfo = {
-                   nickname : 'Administrator',
-                   sub_groups : 'admin,u_john,tutor_jim,rm_altTourism.place.SofiaMonastery_readers',
-                   test : true,
-                   anonymous : true
-             };
-          } else {
-             userinfo = {
-                   nickname : 'Anonymous',
-                   sub_groups : 'guest',
-                   anonymous : true
-             };
-          }
-          $('#logout').hide();
-       }
-       var welcomeHtml = 'Welcome <span style="text-decoration:underline;" title="'
-          + ((userinfo.sub_groups) ? 'groups: ' + userinfo.sub_groups : 'no groups') + '">'
-          + userinfo.nickname + '</span>'
-          + ((userinfo.test) ? ' (test account)' : '')
-          + ((userinfo.email) ? ' (' + userinfo.email + ')' : '')
-          + ((userinfo.anonymous) ? ' - <a href="/dc/playground/login">login</a>' : '');
-       $('#userinfo').html(welcomeHtml);
-    }
-    
-    function initDcConfReplacements() {
-       for (var key in dcConf) {
-          $(".dcConf_" + key).html("" + dcConf[key]); // converting to string first
-          $(".dcConf_" + key + "_link").html('<a href="' + dcConf[key] + '">' + dcConf[key] + '</a>');
-       }
-    }
-    
-    function initSwagger() {
-    window.swaggerUi = new SwaggerUi({
-      url: "/api-docs", // OASIS
-      dom_id: "swagger-ui-container",
-      supportedSubmitMethods: ['get', 'post', 'put', 'delete'], // OASIS TODO PATCH ?!?
-      onComplete: function(swaggerApi, swaggerUi){
-        if(console) {
-          console.log("Loaded SwaggerUI")
-        }
-        window.dcApi = swaggerUi.api; // OASIS
-        initDcConfReplacements(); // OASIS
-        $('pre code').each(function(i, e) {hljs.highlightBlock(e)});
-      },
-      onFailure: function(data) {
-        if(console) {
-          console.log("Unable to Load SwaggerUI");
-          console.log(data);
-        }
-      },
-      docExpansion: "list" // OASIS rather than none, full see https://github.com/wordnik/swagger-ui
-    });
-    }
 
    $(function () {
-      // getting dc playground conf ex. devmode :
-      $.ajax({
-         url:"/dc/playground/configuration",
-         headers: { Authorization:getAuthHeader() },
-         success:function(result){
-         window.dcConf = JSON.parse(result);
-         console.log("conf", dcConf);
-       
-      initSwagger();
-    /*$('#input_apiKey').change(function() {
-      var key = $('#input_apiKey')[0].value;
-      console.log("key: " + key);
-      if(key && key.trim() != "") {
-        console.log("added key " + key);
-        window.authorizations.add("key", new ApiKeyAuthorization("api_key", key, "query"));
-      }
-    })*/
-    window.swaggerUi.load();
-
-    initUserInfo();
-    
-   $('#logout').on('click', function(e) {
-      e.preventDefault();
-      deleteCookie('authorization');
-      deleteCookie('userinfo');
-      initUserInfo();
-      ///return false;
-   });
-
-      }});
+      initPlaygroundWithSwaggerUi(); // also window.dcApi
    });
   </script>
 </head>

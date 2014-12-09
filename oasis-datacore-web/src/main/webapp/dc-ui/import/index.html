@@ -17,23 +17,12 @@
   <script src='../lib/swagger.js' type='text/javascript'></script>
   <script src='../swagger-ui.js' type='text/javascript'></script>
   <script src='../lib/highlight.7.3.pack.js' type='text/javascript'></script>
+  <script src='../common/lib/datacore-base.js' type='text/javascript'></script>
   <script src='../common/lib/datacore-ui.js' type='text/javascript'></script>
   <script src='lib/papaparse.js' type='text/javascript'></script>
   <script src='lib/moment-with-locales.min.js' type='text/javascript'></script>
   <script src='lib/datacore-import.js' type='text/javascript'></script>
   <script type="text/javascript">
-  
-   function buildUrl(base, url) {
-     var parts;
-     console.log("base is " + base);
-     parts = base.split("/");
-     base = parts[0] + "//" + parts[2];
-     if (url.indexOf("/") === 0) {
-       return base + url;
-     } else {
-       return base + "/" + url;
-     }
-   }
      
    var inited = false; // OASIS
     $(function () {
@@ -41,23 +30,9 @@
          return; // OASIS else called at EACH reload including each CSV parsing !! 
       } // OASIS
       
-      var options = {
-            url: "/api-docs", // OASIS
-            supportedSubmitMethods: ['get', 'post', 'put', 'delete'] // OASIS TODO PATCH ?!?
-          };
-      if (options.url.indexOf("http") !== 0) {
-         options.url = buildUrl(window.location.href.toString(), options.url);
-      }
-      ///this.headerView.update(options.url);
-      var dcApi = new SwaggerApi(options.url, this.options);
-      dcApi.build();
-      window.dcApi = dcApi;
-
-      $('pre code').each(function(i, e) {hljs.highlightBlock(e)});
+      initPlayground(); // also window.dcApi
       
-      var baseUrl = buildUrl(window.location.href.toString(), "");
-      $('.baseUrl').html(baseUrl);
-      
+      // update model domain prefix on file change :
       $('.modelFile').change(function(e){
          $in=$(this);
          ///$in.next().html($in.val());
@@ -71,6 +46,10 @@
 <body>
 
 <div id="dc-ui-container" class="dc-ui-wrap">
+
+      <div class='input' id="userinfo"></div>
+      <div class='input'><a id="logout" href="#">logout</a></div>
+      
 <div class="info_title">Datacore Import UI</div>
 
 <br/><br/>
@@ -153,7 +132,7 @@ To get more info about import errors, for now open your browser's javascript con
 <b>Datacore :</b>
 <br/>
 <span class="json dcjsonline">GET </span>
-<span class="json dcjsonline baseUrl">${datacoreApiServer.baseUrl}</span>
+<span class="json dcjsonline dcConf_baseUrl">NOT INITED</span>
 <input span type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 527px; display: inline;">
 <button onclick="javascript:return findData($('.myurl').val());">go</button>
 <button onclick="javascript:return setUrl('');" style="float: right;">reset</button><br/>
