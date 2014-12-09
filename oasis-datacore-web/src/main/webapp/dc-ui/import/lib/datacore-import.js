@@ -1553,6 +1553,7 @@
                  "dcmo:name" : mixinName,
                  "dcmo:pointOfViewAbsoluteName" : importState.projectAbsoluteName, // TODO LATER + pointOfViewName + '.' + pointOfViewEltName 
                  "@id" : buildUri(mixinTypeName, mixinName),
+                 "@type" : [ mixinTypeName ], // NB. there are others but they will be recomputed on server side anyway
                  // more init :
                  "dcmo:majorVersion" : importState.mixinMajorVersion,
                  "dcmo:fields" : {},
@@ -1738,7 +1739,7 @@
         ///var results = eval('[' + data.content.data + ']')[0];
         //var prettyJson = toolifyDcResource(results, 0);
         //var mixinsPrettyJson = JSON.stringify(modelArray, null, '\t').replace(/\n/g, '<br>');
-        var mixinsPrettyJson = toolifyDcResource(modelArray, 0);
+        var mixinsPrettyJson = toolifyDcList(modelArray, 0, null, 'dcmo:model_0');
         $('.importedResourcesFromCsv').html(mixinsPrettyJson);
 
       callback(importState);

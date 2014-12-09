@@ -31,12 +31,19 @@
       return containerUrl + "dc/type/" + encodeUriPathComponent(typeName)
             + "/" + (shouldEncodeId ? encodeIdSaveIfNot(id) : id);
    }
+   // also supports relative & no id after modelType
+   function getModelTypeFromUri(subResourceUri) {
+      var mInd = subResourceUri.indexOf('dc/type/') + 'dc/type/'.length;
+      var nextSlashInd = subResourceUri.indexOf('/', mInd);
+      return subResourceUri.substring(mInd, (nextSlashInd !== -1) ? nextSlashInd : subResourceUri.length);
+   }
    function getIdFromUri(subResourceUri) {
       return subResourceUri.substring(subResourceUri
             .indexOf('/', subResourceUri.indexOf('dc/type/') + 'dc/type/'.length) + 1);
    }
 
 
+// TODO rm OBSOLETE
 function toolifyDcResourceJson(prettyDcResourceJson) {
    prettyDcResourceJson = prettyDcResourceJson.replace(/\"http:\/\/data\.oasis-eu\.org\/dc\/type\/([^\/]+)\/([^\"]+)\"/g,
       '"http://data.oasis-eu.org/dc/type/'
@@ -62,30 +69,41 @@ function lineBreak(depth) {
 	}
 	return res;
 }
-function toolifyDcResourceFieldAndColon(value, key, modelType, resource) {
-   if ("@id" == key || "o:version" == key || "@type" == key
-         || "dc:created" == key || "dc:creator" == key || "dc:modified" == key || "dc:contributor" == key) {
-      // skip
+// modelType is where queries are made in, therefore it's the upper resource's
+// keyPathInResource is used to make queries in it
+var nativeFieldNames = {
+      "@id" : null, "o:version" : null, "@type" : null, "dc:created" : null,
+      "dc:creator" : null, "dc:modified" : null, "dc:contributor" : null
+}
+function toolifyDcResourceFieldAndColon(value, key, modelType, upperResource, keyPathInResource) {
+   if (typeof nativeFieldNames[key] !== 'undefined' // skip native fields
+      || typeof upperResource === 'undefined') { // skip when hashmap of resources
       return JSON.stringify(key, null, '\t') + " : ";
    }
    return '"<a href="/dc/type/dcmo:model_0/' + modelType + '" class="dclink" onclick="'
       + 'javascript:return getData($(this).attr(\'href\'));'
       + '">' + key + '</a>"'
-      + '<a href="/dc/type/' + modelType + '?' + key + '=' + value + '" class="dclink" onclick="'
+      + '<a href="/dc/type/' + modelType + '?' + keyPathInResource.join('.') + '=' + value + '" class="dclink" onclick="'
       + 'javascript:return findDataByType($(this).attr(\'href\'));'
       + '"> : </a>';
 }
-function toolifyDcResource(resource, depth) { // or map
+// modelType, upperResource, keyPathInResource are not required for top level resource
+function toolifyDcResource(resource, depth, modelType, upperResource, keyPathInResource) { // or map
    if (resource == null) {
       return 'null'; // in case of getData() (else done in ...Values)
    }
-   var modelType;
-   var resourceTypes = resource["@type"];
-   if (resourceTypes instanceof Array && resource.length != 0) {
-	   modelType = resource["@type"][0];
-   } else {
-	   modelType = null;
-   }
+   if (typeof upperResource === 'undefined' || upperResource === null) {
+      // top level resource
+      if (resource["@type"] instanceof Array && resource["@type"].length != 0) {
+         // resource
+         modelType = resource["@type"][0];
+         upperResource = resource;
+      } else if (typeof resource["@id"] !== 'undefined') {
+         modelType = getModelTypeFromUri(resource["@id"]);
+         upperResource = resource;
+      } // else mere hashmap of resources, use elements themselves as resources
+      keyPathInResource = []; // else KO below
+   } // else : map (keep upper modelType), or TODO LATER embedded subresource
    var res = '{';
    var first = true;
    var subDepth = depth + 1;
@@ -97,9 +115,16 @@ function toolifyDcResource(resource, depth) { // or map
 	   }
 	   res += lineBreak(subDepth);
 	   var value = resource[key];
-	   //resource[key] = toolifyDcResourceValue(value, key, modelType, resource);
-      res += toolifyDcResourceFieldAndColon(value, key, modelType, resource)
-            + toolifyDcResourceValue(value, key, modelType, resource, subDepth);
+	   //resource[key] = toolifyDcResourceValue(value, key, subDepth, modelType, resource, keyPathInResource);
+	   try {
+	      keyPathInResource.push(key);
+         res += toolifyDcResourceFieldAndColon(value, key, modelType, upperResource, keyPathInResource)
+               + toolifyDcResourceValue(value, key, subDepth, modelType, upperResource, keyPathInResource);
+	   } catch (e) {
+	      console.log('Error in toolify', upperResource, keyPathInResource, value, e);
+      } finally {
+	      keyPathInResource.pop();
+	   }
    }
    if (!first) {
 	   // at least one (should !)
@@ -109,7 +134,8 @@ function toolifyDcResource(resource, depth) { // or map
    return res;
    //return resource;
 }
-function toolifyDcList(values, key, modelType, resource, depth) {
+// null values supported
+function toolifyDcList(values, depth, key, modelType, upperResource, keyPathInResource) {
    if (values == null || values.length == 0) {
       return '[]';
    }
@@ -125,7 +151,7 @@ function toolifyDcList(values, key, modelType, resource, depth) {
 	   }
 	   res += lineBreak(subDepth);
 	   value = values[vInd];
- 	   res += toolifyDcResourceValue(value, key, modelType, resource, subDepth);
+ 	   res += toolifyDcResourceValue(value, key, subDepth, modelType, upperResource, keyPathInResource);
    }
    if (!first) {
 	   // at least one
@@ -135,7 +161,7 @@ function toolifyDcList(values, key, modelType, resource, depth) {
    return res;
    //return resource;
 }
-function toolifyDcResourceValue(value, key, modelType, resource, depth) {
+function toolifyDcResourceValue(value, key, depth, modelType, upperResource, keyPathInResource) {
    if (value == null) {
       return 'null';
    }
@@ -158,22 +184,24 @@ function toolifyDcResourceValue(value, key, modelType, resource, depth) {
 			      + '<a href="/dc/type/$1" class="dclink" onclick="'
 			      + 'javascript:return findDataByType($(this).attr(\'href\'));'
 			      + '">$1</a>'
-			      + '/'
+               + '<a href="/dc/type/dcmo:model_0?dcmo:fields.dcmf:resourceType=$1" class="dclink" onclick="'
+               + 'javascript:return findDataByType($(this).attr(\'href\'));'
+               + '">/</a>'
 			      + '<a href="/dc/type/$1/$2" class="dclink" onclick="'
 			   	  + 'javascript:return getData($(this).attr(\'href\'));'
 			      + '">$2</a>') + '"';
 	} else if (valueType == 'object') {
 		if (value instanceof Array) {
-			return toolifyDcList(value, key, modelType, resource, depth);
-		} else {
-	 	   return toolifyDcResource(value, depth);
+			return toolifyDcList(value, depth, key, modelType, upperResource, keyPathInResource);
+		} else { // map
+	 	   return toolifyDcResource(value, depth, modelType, upperResource, keyPathInResource);
 		}
 	} // 'number', 'boolean'(?) : nothing to do ; TODO others (date) ??
 	return JSON.stringify(value, null, '\t');
 }
 function toolifyDcListOrResource(valuesOrResource) {
    if (typeof valuesOrResource.length !== 'undefined') { // array (=== 'object not enough)
-      return toolifyDcList(valuesOrResource, null, null, null, 0);
+      return toolifyDcList(valuesOrResource, 0);
    } else {
       return toolifyDcResource(valuesOrResource, 0);
    }
@@ -240,7 +268,7 @@ function findDataByType(relativeUrl, success, error, start, limit) {
    }
    dcApi.dc.findDataInType(swaggerParams,
       function(data) {
-         var resources = displayJsonObjectResult(data);
+         var resources = displayJsonListResult(data);
          if (success) {
             success(resources);
          }
@@ -452,7 +480,7 @@ function displayTextResult(data) {
 function displayJsonObjectResult(data) {
    var resource = eval('[' + data.content.data + ']')[0];
    if (doUpdateDisplay) {
-   var prettyJson = toolifyDcResource(resource, 0);
+   var prettyJson = toolifyDcResource(resource, 0); // ,  getModelTypeFromUri(data.request.path) // , upperResource, keyPathInResource
    //var prettyJson = JSON.stringify(resource, null, '\t').replace(/\n/g, '<br>');
    //prettyJson = toolifyDcResourceJson(prettyJson);
    $('.mydata').html(prettyJson);
@@ -463,7 +491,7 @@ function displayJsonObjectResult(data) {
 function displayJsonListResult(data) {
    var resResources = eval(data.content.data);
    if (doUpdateDisplay) {
-   var prettyJson = toolifyDcList(resResources, null, null, null, 0);
+   var prettyJson = toolifyDcList(resResources, 0, null, getModelTypeFromUri(data.request.path));
    ///var prettyJson = JSON.stringify(resResources, null, '\t').replace(/\n/g, '<br>');
    ///prettyJson = toolifyDcResourceJson(prettyJson);
    $('.mydata').html(prettyJson);
