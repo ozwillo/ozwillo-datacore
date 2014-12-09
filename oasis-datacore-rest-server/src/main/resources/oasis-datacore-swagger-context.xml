@@ -52,8 +52,8 @@
          </bean -->
       </property>
       <property name="contact" value="http://www.oasis-eu.org"/>
-      <property name="license" value="Apache 2.0 License"/><!-- TODO LGPL ??? -->
-      <property name="licenseUrl" value="http://www.apache.org/licenses/LICENSE-2.0.html"/>
+      <property name="license" value="Affero GPL (except for client libraries, which are LGPL)"/>
+      <property name="licenseUrl" value="http://www.gnu.org/licenses/agpl-3.0.html"/>
       <property name="scan" value="true"/>
    </bean>
    

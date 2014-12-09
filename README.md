@@ -19,7 +19,7 @@ To interact and scale up, it uses Web technologies (HTTP REST API, OAuth2) and a
 To achieve data model flexibility, it follows Semantic Web principles ("almost" W3C JSON-LD compatible), but curbed to fit real world constraints.
 
 Features
-   * HTTP REST API for sharing data, with OAuth2 authentication, client-side caching and online playground
+   * HTTP REST API for sharing data, with OAuth2 authentication and client-side caching
    * W3C JSON-LD-like data Resource representation
    * W3C LDP-inspired query filters
    * JSON Schema-like data models with Model (primary) and Mixin types. Models are the place where collaboration on data happens.
@@ -27,13 +27,16 @@ Features
    * Rights (readers, writers, owners) at Resource, Model and business (Scope) levels, with query optimization
    * Historization
    * Approvable changes, up to Contributions (merging Resources from other similar Models)
+   * Client libraries : CXF/Spring3/Java, Spring4/Java (Portal's), Javascript (swagger.js), and all languages that Swagger generates to
+   * Online API Playground, documentation and data browsing tool
+   * Online model & data Import tool
    * and more upcoming : see [Roadmap](https://github.com/pole-numerique/oasis-datacore/issues)
 
 Team
    * Design & Development of v1 : Marc Dutoo, Open Wide - http://www.openwide.fr
    * Authentication, Historization, Rights API, Contributions : Aurélien Giraudon, Open Wide - http://www.openwide.fr
 
-LGPL License
+License : Affero GPL3, except for client libraries which are LGPL3
 
 
 Getting Started with the server
