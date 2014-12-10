@@ -45,16 +45,20 @@
 
 <body>
 
-<div id="dc-ui-container" class="dc-ui-wrap">
-
+<div id=dc-header>
+<div class="dc-ui-wrap">
+   <a class="dc-logo" href="http://oasis-eu.org">OASIS - Datacore Import UI</a>
+   <div class="dc-ui-userinfo">
       <div class='input' id="userinfo"></div>
       <div class='input'><a id="logout" href="#">logout</a></div>
-      
-<div class="info_title">Datacore Import UI</div>
+   </div>
+</div>
+</div>
 
-<br/><br/>
-<div style="display: inline-block; font-weight: bold; width: 150px;">Models :</div>
-<br/><br/>
+<div id="dc-ui-container" class="dc-ui-wrap">
+
+<div class="dc-import-section">
+<div class="dc-import-subtitle">Models :</div>
 <span title="Used to generate model prefixes">Model domain prefix</span> :
 <input type="text" class="domainPrefix" value="elec" style="width: 50px"/>
 &nbsp;&nbsp;&nbsp;&nbsp;
@@ -73,11 +77,10 @@ Geo Hierarchy
 <br/><br/>
 <span class="json dcjsonarea modelRowCounter">Handled no model row yet</span>&nbsp;&nbsp;
 <span class="json dcjsonarea modelCounter">Posted no model yet</span>
+</div>
 
-<br/><br/>
-<br/><br/>
-<div style="display: inline-block; font-weight: bold; width: 150px;">Data :</div>
-<br/><br/>
+<div class="dc-import-section">
+<div class="dc-import-subtitle">Data :</div>
 <span title="-1 means all">Resource row limit</span> :
 <input type="text" class="resourceRowLimit" value="50" style="width: 50px"/>
 &nbsp;&nbsp;&nbsp;&nbsp;
@@ -102,9 +105,9 @@ v0.14
 <br/><br/>
 <span class="json dcjsonarea resourceRowCounter">Handled no resource row yet</span>&nbsp;&nbsp;
 <span class="json dcjsonarea resourceCounter">Posted no resource yet</span>
+</div>
 
-<br/><br/>
-<br/><br/>
+<div class="dc-import-section">
 <button onclick="javascript:return importModelAndResources();"><b>import</b></button>
 &nbsp;(clicking button with no file selected uses OpenElec sample files)
 <br/><br/>
@@ -112,25 +115,24 @@ v0.14
 (because for now Resources are not imported all at once nor ordered according to their dependencies).
 <br/><br/>
 To get more info about import errors, for now open your browser's javascript console.
+</div>
 
-<br/><br/>
-<br/><br/>
-<b>CSV rows :</b>
+
+<div class="dc-import-section">
+
+<div class="dc-import-subtitle">CSV rows :</div>
 <div class="block response_body">
 <pre class="json dcjsonarea"><code id="importedJsonFromCsv" class="importedJsonFromCsv"></code></pre><!-- dcjsonarea -->
 </div>
 
-<br/><br/>
 <a id="importedResourcesFromCsv"></a>
-<b>Resources :</b>
+<div class="dc-import-subtitle">Resources :</div>
 <div class="block response_body">
 <pre class="json dcjsonarea"><code id="importedResourcesFromCsv" class="importedResourcesFromCsv"></code></pre><!-- dcjsonarea -->
 </div>
-<br/><br/>
 
 <a id="datacoreResources"></a>
-<b>Datacore :</b>
-<br/>
+<div class="dc-import-subtitle">Datacore :</div>
 <span class="json dcjsonline">GET </span>
 <span class="json dcjsonline dcConf_baseUrl">NOT INITED</span>
 <input span type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 527px; display: inline;">
@@ -140,7 +142,8 @@ To get more info about import errors, for now open your browser's javascript con
 <a id="mydata"></a><!-- displays a short error message in red -->
 <pre class="json dcjsonarea"><code id="mydata" class="mydata"></code></pre>
 </div>
-<br/><br/>
+
+</div>
 
 </div>
 

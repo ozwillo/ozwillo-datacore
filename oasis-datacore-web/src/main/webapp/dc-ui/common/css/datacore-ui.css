@@ -1,3 +1,8 @@
+
+/********
+dc ui
+********/
+
 a.dclink {
    background-color:#fdf5cc;
    border-radius:6px;
@@ -21,6 +26,44 @@ a.dclink:hover {
 	background-color: #f8f8f8;
 	border: 1px solid #ddd;
 	border-radius: 3px;
+}
+
+
+/********
+dc header
+********/
+
+#dc-header {
+  background-color: #89bf04;
+  padding: 14px;
+}
+#dc-header a.dc-logo {
+  font-size: 1.5em;
+  font-weight: bold;
+  text-decoration: none;
+  background: transparent url(../images/dc-logo-small.png) no-repeat left center;
+  padding: 20px 0 20px 40px;
+  color: white;
+}
+#dc-header .dc-ui-userinfo {
+  display: block;
+  clear: none;
+  float: right;
+}
+
+
+/********
+dc import
+********/
+
+.dc-import-section {
+  padding: 7px;
+}
+.dc-import-subtitle {
+  font-size: 1.1em;
+  font-weight: bold;
+  width: 150px;
+  padding: 15px 0 10px 0;
 }
 
 
