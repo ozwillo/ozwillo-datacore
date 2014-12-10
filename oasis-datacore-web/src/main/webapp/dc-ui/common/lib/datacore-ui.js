@@ -206,8 +206,8 @@ function toolifyDcListOrResource(valuesOrResource) {
       return toolifyDcResource(valuesOrResource, 0);
    }
 }
-function setUrl(relativeUrl) {
-   if (doUpdateDisplay) {
+function setUrl(relativeUrl, dontUpdateDisplay) {
+   if (!dontUpdateDisplay && doUpdateDisplay) {
    if (relativeUrl == null || relativeUrl == "") {
       $('.myurl').val('');
       document.getElementById('mydata').innerHTML = '';
@@ -229,7 +229,7 @@ function setError(errorMsg) {
 function findDataByType(relativeUrl, success, error, start, limit) {
    var resourceTypeAndQuery = relativeUrl.replace(/^\/*dc\/type\/*/, "");
    var cleanedRelativeUrl = "/dc/type/" + resourceTypeAndQuery; // also works if no dc/type in relativeUrl
-   setUrl(cleanedRelativeUrl);
+   setUrl(cleanedRelativeUrl, success);
    var i = resourceTypeAndQuery.indexOf("?");
    var modelType = i == -1 ? resourceTypeAndQuery : resourceTypeAndQuery.substring(0, i);
    var decodedModelType = decodeURIComponent(modelType);
@@ -252,9 +252,9 @@ function findDataByType(relativeUrl, success, error, start, limit) {
    }
    dcApi.dc.findDataInType(swaggerParams,
       function(data) {
-         var resources = displayJsonListResult(data);
+         var resResources = displayJsonListResult(data, success);
          if (success) {
-            success(resources);
+            success(resResources);
          }
       }, function(data) {
          setError(data._body._body);
@@ -278,7 +278,7 @@ function findDataByType(relativeUrl, success, error, start, limit) {
 function getData(relativeUrl, success, error) {
    var resourceIri = relativeUrl.replace(/^\/*dc\/type\/*/, "");
    var cleanedRelativeUrl = "/dc/type/" + resourceIri; // also works if no dc/type in relativeUrl
-   setUrl(cleanedRelativeUrl);
+   setUrl(cleanedRelativeUrl, success);
    var modelType = resourceIri.substring(0, resourceIri.indexOf("/"));
    var decodedModelType = decodeURIComponent(modelType);
    var decodedResourceId = decodeURI(resourceIri.substring(resourceIri.indexOf("/") + 1));
@@ -287,14 +287,14 @@ function getData(relativeUrl, success, error) {
    dcApi.dc.getData({type:decodedModelType, __unencoded__iri:decodedResourceId,
          'If-None-Match':-1, Authorization:getAuthHeader()},
       function(data) {
-         var resource = displayJsonObjectResult(data);
+         var resResource = displayJsonObjectResult(data, success);
          if (success) {
-        	 success(resource);
+        	   success(resResource);
          }
       }, function(data) {
          setError(data._body._body);
          if (error) {
-        	 error(data);
+        	   error(data);
          }
       });
    /*window.datacore = new SwaggerApi({ url: '/api-docs', success: function() {
@@ -320,7 +320,7 @@ function findData(relativeUrl, success, error) {
 function findDataByTypeRdf(relativeUrl, success, error, start, limit) {
    var resourceTypeAndQuery = relativeUrl.replace(/^\/*dc\/type\/*/, "");
    var cleanedRelativeUrl = "/dc/type/" + resourceTypeAndQuery; // also works if no dc/type in relativeUrl
-   setUrl(cleanedRelativeUrl);
+   setUrl(cleanedRelativeUrl, success);
    var i = resourceTypeAndQuery.indexOf("?");
    var modelType = i == -1 ? resourceTypeAndQuery : resourceTypeAndQuery.substring(0, i);
    var decodedModelType = decodeURIComponent(modelType);
@@ -343,7 +343,7 @@ function findDataByTypeRdf(relativeUrl, success, error, start, limit) {
    }
    dcApi.dc.findDataInType(swaggerParams, {responseContentType:'text/x-nquads'},
       function(data) {
-         displayTextResult(data);
+         displayTextResult(data, success);
          if (success) {
             success(data.content.data);
          }
@@ -369,21 +369,25 @@ function findDataByTypeRdf(relativeUrl, success, error, start, limit) {
 //////////////////////////////////////////////////:
 // WRITE
 
+// resources can be a single resource or an array
 function postAllDataInType(relativeUrl, resources, success, error) {
    var encodedModelType = relativeUrl.replace(/^\/*dc\/type\/*/, "");
    var cleanedRelativeUrl = "/dc/type/" + encodedModelType; // also works if no dc/type in relativeUrl
-   setUrl(cleanedRelativeUrl);
+   setUrl(cleanedRelativeUrl, success);
    /*var l = '/dc/type/'.length;
    var tq = relativeUrl.substring(l);
    var i = tq.indexOf('?');
    window.t = i == -1 ? tq : tq.substring(0, i);
    window.q = i == -1 ? '' : tq.substring(i + 1);*/
-   dcApi.dc.postAllDataInType({type:encodedModelType, body:resources,
+   if (!resources instanceof Array) { // single resource
+      resources = [ resources ];
+   }
+   dcApi.dc.postAllDataInType({type:encodedModelType, body:JSON.stringify(resources, null, null),
          Authorization:getAuthHeader()},
       function(data) {
-         var resources = displayJsonListResult(data);
+         var resResources = displayJsonListResult(data, success);
          if (success) {
-    	     success(resources);
+    	     success(resResources, resources);
          }
       },
       function(data) {
@@ -405,7 +409,7 @@ function deleteDataInType(resource, success, error) {
    var uri = resource["@id"];
    var resourceIri = uri.replace(/^\/*dc\/type\/*/, "");
    var cleanedRelativeUrl = "/dc/type/" + resourceIri; // also works if no dc/type in relativeUrl
-   setUrl(cleanedRelativeUrl);
+   setUrl(cleanedRelativeUrl, success);
    var modelType = resourceIri.substring(0, resourceIri.indexOf("/"));
    var decodedModelType = decodeURIComponent(modelType);
    var decodedResourceId = decodeURI(resourceIri.substring(resourceIri.indexOf("/") + 1));
@@ -414,9 +418,9 @@ function deleteDataInType(resource, success, error) {
    dcApi.dc.deleteData({type:decodedModelType, __unencoded__iri:decodedResourceId,
          'If-Match':resource["o:version"], Authorization:getAuthHeader()},
       function(data) {
-         var resource = displayJsonObjectResult(data);
+         var resResource = displayJsonObjectResult(data, success);
          if (success) {
-            success(resource);
+            success(resResource, resource);
          }
       },
       function(data) {
@@ -428,13 +432,17 @@ function deleteDataInType(resource, success, error) {
    return false;
 }
 
+//resources can be a single resource or an array
 function postAllData(resources, success, error) {
-   dcApi.dc.postAllData({body:resources,
+   if (!resources instanceof Array) { // single resource
+      resources = [ resources ];
+   }
+   dcApi.dc.postAllData({body:JSON.stringify(resources, null, null),
          Authorization:getAuthHeader()},
       function(data) {
-         var resources = displayJsonListResult(data);
+         var resResources = displayJsonListResult(data, success);
          if (success) {
-            success(resources);
+            success(resResources, resources);
          }
       }, function(data) {
          setError(data._body._body);
@@ -454,16 +462,16 @@ function postAllData(resources, success, error) {
 
 var doUpdateDisplay = true;
 
-function displayTextResult(data) {
-   if (doUpdateDisplay) {
+function displayTextResult(data, dontUpdateDisplay) {
+   if (!dontUpdateDisplay && doUpdateDisplay) {
    var prettyText = data.content.data;
    $('.mydata').text(prettyText);
    }
 }
 
-function displayJsonObjectResult(data) {
+function displayJsonObjectResult(data, dontUpdateDisplay) {
    var resource = eval('[' + data.content.data + ']')[0];
-   if (doUpdateDisplay) {
+   if (!dontUpdateDisplay && doUpdateDisplay) {
    var prettyJson = toolifyDcResource(resource, 0); // ,  getModelTypeFromUri(data.request.path) // , upperResource, keyPathInResource
    //var prettyJson = JSON.stringify(resource, null, '\t').replace(/\n/g, '<br>');
    //prettyJson = toolifyDcResourceJson(prettyJson);
@@ -472,9 +480,9 @@ function displayJsonObjectResult(data) {
    return resource;
 }
 
-function displayJsonListResult(data) {
+function displayJsonListResult(data, dontUpdateDisplay) {
    var resResources = eval(data.content.data);
-   if (doUpdateDisplay) {
+   if (!dontUpdateDisplay && doUpdateDisplay) {
    var prettyJson = toolifyDcList(resResources, 0, null, getModelTypeFromUri(data.request.path));
 
    // adding "..." link for pagination :

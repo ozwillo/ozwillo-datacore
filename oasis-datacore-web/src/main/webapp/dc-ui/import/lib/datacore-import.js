@@ -591,29 +591,34 @@
    
    
 
-   function importedResourcePosted(resourceOrData, importStateRes, importState, kind, counter, success, error) {
+   function importedResourcePosted(resourcesOrErrorData, importStateRes, importState, kind, counter, origResources,
+         success, error) { // optional
       importStateRes.postedNb++;
       
-      if (typeof resourceOrData === 'object' && typeof resourceOrData["_headers"] === 'object') {
-         importStateRes.errors.push([ resourceOrData._body._body, resourceOrData.request._body ]);
-         var requestBodyHtml;
-         try {
-            requestBodyHtml = toolifyDcListOrResource(eval(resourceOrData.request._body._data));
-            // NB. no need of wrapping by [...] and taking [0] because always there
-         } catch (ex) {
-            requestBodyHtml = resourceOrData.request._body;
-         }
-         importStateRes.errorHtml += "<p>-&nbsp;" + resourceOrData._body._body
+      if (typeof resourcesOrErrorData === 'object' && typeof resourcesOrErrorData["_headers"] === 'object') {
+         // error response
+         importStateRes.errors.push([ resourcesOrErrorData._body._body, resourcesOrErrorData.request._body ]);
+         var requestBodyHtml = toolifyDcListOrResource(origResources);
+         // NB. no need of wrapping by [...] and taking [0] because always there
+         importStateRes.errorHtml += "<p>-&nbsp;" + resourcesOrErrorData._body._body
                + " :<br/>" + requestBodyHtml + "<p/>";
+         for (var rInd in origResources) {
+            var origResource = origResources[rInd];
+            importStateRes.postedResources[origResource['@id']] = null; // set
+         }
          
       } else {
-         if (typeof resourceOrData['@id'] !== 'undefined') {
-            importStateRes.postedUri[resourceOrData['@id']] = null; // set
-         } else { // usual case : single value list
-            for (var rInd in resourceOrData) {
-               importStateRes.postedUri[resourceOrData[rInd]['@id']] = null; // set
-            }
+         for (var rInd in resourcesOrErrorData) {
+            var postedResource = resourcesOrErrorData[rInd];
+            importStateRes.postedResources[postedResource['@id']] = postedResource; // set
          }
+         /*if (typeof resourcesOrData['@id'] !== 'undefined') {
+            importStateRes.postedResources[resourcesOrData['@id']] = null; // set
+         } else { // usual case : single value list
+            for (var rInd in resourcesOrData) {
+               importStateRes.postedResources[resourcesOrData[rInd]['@id']] = null; // set
+            }
+         }*/
       }
       
       if (true/*importStateRes.postedNb % 1000 == 0 || importStateRes.postedNb > importStateRes.toBePostedNb - 10*/) {
@@ -635,7 +640,10 @@
             $('.mydata').html(importStateRes.errorHtml);
          }
       }
-      if (importStateRes.postedNb === importStateRes.toBePostedNb) {
+      
+      if (Object.keys(importStateRes.postedResources).length === importStateRes.toBePostedNb) {
+         displayImportedResourcesPosted(importStateRes);
+         
          if (importStateRes.errors.length == 0) {
             console.log("INFO Successfully posted " + importStateRes.postedNb + " " + kind + "s.");
             if (typeof success !== 'undefined') {
@@ -648,7 +656,13 @@
                error(importState);
             }
          }
+         return true;
       }
+      return false;
+   }
+   function displayImportedResourcesPosted(importStateRes) {
+      setUrl('/dc');
+      $('.mydata').html(toolifyDcResource(importStateRes.postedResources, 0)); // , null, getModelTypeFromUri(data.request.path)
    }
    
    
@@ -680,6 +694,9 @@
       // (sub)resource field values might be provided, let's look for them
       var subresource = csvRowToDataResource(resourceMixinOrFields, resourceRow,
             subFieldNameTree, subPathInFieldNameTree, null, importState);
+      if (importState.aborted) {
+         return abortImport(); // not only with csvRowToDataResource() else the Abort message would get overwritten 
+      }
       
       if (subresource === null) {
          // (may be solved in next iteration)
@@ -760,6 +777,10 @@
       //for (var fieldName in (Object.keys(fieldNameTree).length !== 0 ?
       //      fieldNameTree : enrichedModelOrMixinFieldMap)) {
       for (var fieldName in enrichedModelOrMixinFieldMap) {
+         if (importState.aborted) {
+            throw "aborted";
+         }
+         
          var fieldOrListField = enrichedModelOrMixinFieldMap[fieldName];
          if (typeof resource[fieldName] !== 'undefined') {
             mixinHasValue = true;
@@ -1127,9 +1148,9 @@
       var internalFieldNames = importState.data.internalFieldNames;
       var involvedMixins = importState.data.involvedMixins;
       var rLength = Math.min(resultsData.length, getResourceRowStart() + getResourceRowLimit());
-      var rowNb = 0;
+      importState.data.rowNb = 0;
       for (var rInd = getResourceRowStart(); rInd < rLength ; rInd++) {
-         rowNb++; // nb. rInd is string
+         importState.data.rowNb++; // nb. rInd is string
         console.log("row " + rInd);//
         ///var importStateRowData = {};
         ///importState.data.push(importStateRowData);
@@ -1151,6 +1172,7 @@
            importState.data.warnings = []; // clearing, only keeping last (& cleanest) one
            //console.log("row mixins loop " + importState.data.row.loopIndex + " " + importState.data.row.missingIdFieldResourceOrMixins);//
         
+        var importedResource;
         for (var mInd in involvedMixins) {
              // for each mixin, find its values in the current row :
              var mixin = involvedMixins[mInd];
@@ -1159,8 +1181,17 @@
                 continue; // don't import models that are strictly mixins ex. o:Ancestor_0 or geo:Area_0
              }
              
-             var importedResource = csvRowToDataResource(mixin, importState.data.row.resourceRow, null,
+             try {
+             importedResource = csvRowToDataResource(mixin, importState.data.row.resourceRow, null,
                    [ mixin["dcmo:name"] ], importState.data.row.modelTypeToRowResources, importState);
+             } catch (e) {
+                if (importState.aborted) {
+                   abortImport();
+                } else {
+                   abortImport(e);
+                }
+                return;
+             }
              
              if (importedResource == null) {
                 // nothing to import (or only autolinked values), skip resource
@@ -1203,12 +1234,55 @@
         ///importStateRowData["loops"] = importState.data.row.loopIndex + 1;
         ////importStateRowData["errors"] = errors;
 
-        if (rowNb % 1000 == 1) { // or 100 ? TODO yield !!
-           $('.resourceRowCounter').html("Handled <a href=\"#importedJsonFromCsv\">" + rowNb + " rows</a>");
+        if (importState.data.rowNb % 1000 == 1) { // or 100 ? TODO yield !!
+           $('.resourceRowCounter').html("Handled <a href=\"#importedJsonFromCsv\">" + importState.data.rowNb + " rows</a>");
         }
      }
 
-      $('.resourceRowCounter').html("Handled <a href=\"#importedJsonFromCsv\">" + rowNb
+      displayParsedResource(importState);
+      
+      function importedDataPosted(resourceOrData, origResources) {
+         var done = importedResourcePosted(resourceOrData, importState.data.posted, importState,
+               "resource", $('.resourceCounter'), origResources);
+         if (done) {
+            concludeImport();
+         }
+      }
+      importState.data.posted.toBePostedNb = Object.keys(importState.data.resources).length;
+      for (var uri in importState.data.resources) {
+         if (importState.aborted) {
+            return abortImport();
+         }
+         
+         // TODO mass version update !
+         var relativeUrl = uri.substring(uri.indexOf("/dc/type/"));
+         getData(relativeUrl, function (returnedResource) {
+            // updating existing resource : 
+            // NB. can't access original "resource" variable because has been changed since call is async
+            var upToDateResourceUri = returnedResource["@id"]; // ex. "http://data.oasis-eu.org/dc/type/geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
+            var upToDateResource = importState.data.resources[upToDateResourceUri];
+            upToDateResource["o:version"] = returnedResource["o:version"];
+            var resourceIri = upToDateResourceUri.substring(upToDateResourceUri.indexOf("/dc/type/") + "/dc/type/".length); // ex. "geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
+            var modelType = decodeURIComponent(resourceIri.substring(0, resourceIri.indexOf("/"))); // ex. geo:CityGroup_0
+            //var resourceId = decodeURIComponent(resourceIri.substring(resourceIri.indexOf("/") + 1));
+            postAllDataInType(modelType, upToDateResource,
+                  importedDataPosted, importedDataPosted);
+         }, function (data) {
+            // creating new resource :
+            var resourceIri = data.request.path.replace(/^\/*dc\/type\/*/, ""); // ex. "geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
+            var modelType = decodeURIComponent(resourceIri.substring(0, resourceIri.indexOf("/"))); // ex. geo:CityGroup_0
+            // BUT don't decode URI !! (or use decoded resourceId to build URI)
+            //var resourceId = decodeURIComponent(resourceIri.substring(resourceIri.indexOf("/") + 1)); // ex. "FR/CC les Châteaux"
+            //var upToDateResourceUri = dcConf.containerUrl + "dc/type/" + modelType + "/" + resourceId;
+            var upToDateResourceUri = dcConf.containerUrl + "dc/type/" + resourceIri;
+            var upToDateResource = importState.data.resources[upToDateResourceUri];
+            postAllDataInType(modelType, upToDateResource,
+                  importedDataPosted, importedDataPosted);
+         });
+      }
+  }
+   function displayParsedResource(importState) {
+      $('.resourceRowCounter').html("Handled <a href=\"#importedJsonFromCsv\">" + importState.data.rowNb
             + " rows</a> (<a href=\"#datacoreResources\">" + importState.data.errors.length + " errors</a>)");
       if (importState.data.errors.length != 0) {
          //$('.mydata').html(
@@ -1223,40 +1297,7 @@
          var resourcesPrettyJson = toolifyDcResource(importState.data.resources, 0);
          $('.importedResourcesFromCsv').html(resourcesPrettyJson);
       }
-      
-      function importedDataPosted(resourceOrData) {
-         importedResourcePosted(resourceOrData, importState.data.posted, importState,
-               "resource", $('.resourceCounter'));
-      }
-      importState.data.posted.toBePostedNb = Object.keys(importState.data.resources).length;
-      for (var uri in importState.data.resources) {
-         // TODO mass version update !
-         var relativeUrl = uri.substring(uri.indexOf("/dc/type/"));
-         getData(relativeUrl, function (returnedResource) {
-            // updating existing resource : 
-            // NB. can't access original "resource" variable because has been changed since call is async
-            var upToDateResourceUri = returnedResource["@id"]; // ex. "http://data.oasis-eu.org/dc/type/geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
-            var upToDateResource = importState.data.resources[upToDateResourceUri];
-            upToDateResource["o:version"] = returnedResource["o:version"];
-            var resourceIri = upToDateResourceUri.substring(upToDateResourceUri.indexOf("/dc/type/") + "/dc/type/".length); // ex. "geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
-            var modelType = decodeURIComponent(resourceIri.substring(0, resourceIri.indexOf("/"))); // ex. geo:CityGroup_0
-            //var resourceId = decodeURIComponent(resourceIri.substring(resourceIri.indexOf("/") + 1));
-            postAllDataInType(modelType, JSON.stringify([ upToDateResource ], null, null),
-                  importedDataPosted, importedDataPosted);
-         }, function (data) {
-            // creating new resource :
-            var resourceIri = data.request.path.replace(/^\/*dc\/type\/*/, ""); // ex. "geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
-            var modelType = decodeURIComponent(resourceIri.substring(0, resourceIri.indexOf("/"))); // ex. geo:CityGroup_0
-            // BUT don't decode URI !! (or use decoded resourceId to build URI)
-            //var resourceId = decodeURIComponent(resourceIri.substring(resourceIri.indexOf("/") + 1)); // ex. "FR/CC les Châteaux"
-            //var upToDateResourceUri = dcConf.containerUrl + "dc/type/" + modelType + "/" + resourceId;
-            var upToDateResourceUri = dcConf.containerUrl + "dc/type/" + resourceIri;
-            var upToDateResource = importState.data.resources[upToDateResourceUri];
-            postAllDataInType(modelType, JSON.stringify([ upToDateResource ], null, null),
-                  importedDataPosted, importedDataPosted);
-         });
-      }
-  }
+   }
   
    function getResourceRowLimit() {
       var resourceRowLimit = parseInt($(".resourceRowLimit").val(), 10);
@@ -1275,12 +1316,6 @@
    function resetResourceCounters() {
       $('.resourceRowCounter').html("Handled no resource row yet");
       $('.resourceCounter').html("Posted no resource yet");
-   }
-   function abortImport(msg) {
-      msg = "Aborted. " + msg;
-      $('.resourceRowCounter').html(msg);
-      $('.importedResourcesFromCsv').html(msg);
-      throw msg;
    }
    
    function fillData(importState) {
@@ -1327,7 +1362,7 @@
       	            // globalFields else won't get ex. CountryFR inheriting from Country but with no additional field (??)
                      + JSON.stringify(importState.data.importedFieldNames, null, null), function(fieldNameMixinsFound) {
                      if (fieldNameMixinsFound.length === 100) { // max limit
-                        abortImport("Too many mixins (>= 100) found for field names to import");
+                        return abortImport("Too many mixins (>= 100) found for field names to import");
                      }
                      
                      for (var fnmInd in fieldNameMixinsFound) {
@@ -1516,11 +1551,10 @@
       var mixinNameToFieldNameTree = importState.model.mixinNameToFieldNameTree;
       var mixins = importState.model.modelOrMixins;
         
-      var errors;
       var loopMaxIndex = 20;
       var loopIndex = -1;
       do {
-         errors = [];
+         importState.model.errors = [];
          if (loopIndex > loopMaxIndex) {
             break;
          }
@@ -1529,6 +1563,10 @@
         
         // import plan (& internalName) :
         fieldsLoop : for (var fInd in resultsData) {
+           if (importState.aborted) {
+              return abortImport();
+           }
+           
            var fieldRow = resultsData[fInd];
            var mixinName = fieldRow["Mixin"];
            if (typeof mixinName === 'undefined' || mixinName === null || mixinName.trim().length === 0) {
@@ -1607,7 +1645,7 @@
               subFieldOrListField = mixinFields[fieldName];
               if (typeof subFieldOrListField === 'undefined') {
                  // TODO error field must be defined in first pass NOO TODO TODO TODO TODO
-                 errors.push({ code : "missingSubFields", mixin : rootMixinName, field : fieldPath,
+                 importState.model.errors.push({ code : "missingSubFields", mixin : rootMixinName, field : fieldPath,
                        intermediateMixin : mixin, subFieldOrListField : fieldName }); // setting up another loop on fields
                  continue fieldsLoop;
               }
@@ -1631,7 +1669,7 @@
                  candidateMixin = mixins[subFieldResourceType];
                  if (typeof candidateMixin === 'undefined') {
                     // TODO error mixin must be defined in first pass NOO TODO TODO TODO TODO
-                    errors.push({ code : "missingReferencedMixins", mixin : rootMixinName,
+                    importState.model.errors.push({ code : "missingReferencedMixins", mixin : rootMixinName,
                           field : fieldPath, intermediateMixin : mixin, subfield : fieldName,
                           resourceType : subFieldResourceType }); // setting up another loop on fields
                     continue fieldsLoop;
@@ -1639,7 +1677,7 @@
                  mixin = candidateMixin;
                  mixinFields = mixin["dcmo:fields"];
               } else if (typeof subFieldType !== 'undefined') {
-                 errors.push({ code : "notMapOrResourceTypedFieldBeforeEndOfDottedPath", mixin : rootMixinName,
+                 importState.model.errors.push({ code : "notMapOrResourceTypedFieldBeforeEndOfDottedPath", mixin : rootMixinName,
                        field : fieldPath, intermediateMixin : mixin, subField : fieldName,
                        subFieldType : subFieldOrListFieldType }); // setting up another loop on fields
                  continue fieldsLoop;
@@ -1687,10 +1725,9 @@
            // TODO also mixins, resource links & sub...
         }
         
-      } while (errors.length != 0);
+      } while (importState.model.errors.length != 0);
 
       importState.model["loops"] = loopIndex + 1;
-      importState.model["errors"] = errors;
         
         // CUSTOM or import models (and not fields)
         // TODO OR RATHER binding than script ??!
@@ -1736,13 +1773,16 @@
         }
         importState.model["modelArray"] = modelArray;
         
-        ///var results = eval('[' + data.content.data + ']')[0];
-        //var prettyJson = toolifyDcResource(results, 0);
-        //var mixinsPrettyJson = JSON.stringify(modelArray, null, '\t').replace(/\n/g, '<br>');
-        var mixinsPrettyJson = toolifyDcList(modelArray, 0, null, 'dcmo:model_0');
-        $('.importedResourcesFromCsv').html(mixinsPrettyJson);
+        displayImportedModels(importState);
 
       callback(importState);
+   }
+   function displayImportedModels() {
+      ///var results = eval('[' + data.content.data + ']')[0];
+      //var prettyJson = toolifyDcResource(results, 0);
+      //var mixinsPrettyJson = JSON.stringify(modelArray, null, '\t').replace(/\n/g, '<br>');
+      var mixinsPrettyJson = toolifyDcList(importState.model.modelArray, 0, null, 'dcmo:model_0');
+      $('.importedResourcesFromCsv').html(mixinsPrettyJson);
    }
    
    function fieldsToArray(fields, fieldArray) {
@@ -1772,8 +1812,11 @@
       return cleanField;
    }
    
-   function refreshAndSchedulePost(modelOrMixinArray, relativeTypeUrl, postedCallback) {
+   function refreshAndSchedulePost(modelOrMixinArray, relativeTypeUrl, postedCallback, importState) {
       for (var mInd in modelOrMixinArray) {
+         if (importState.aborted) {
+            return abortImport();
+         }
          var mixin = modelOrMixinArray[mInd];
          // posting one at a time rather than all at once because version has
          // to be refreshed and it is easier to do it in sync this way
@@ -1784,7 +1827,7 @@
             // NB. can't access "mixin" variable because has been changed since call is async
             var upToDateMixin = findMixin(resource["dcmo:name"], modelOrMixinArray);
             upToDateMixin["o:version"] = resource["o:version"];
-            postAllDataInType(relativeTypeUrl, JSON.stringify([ upToDateMixin ], null, null),
+            postAllDataInType(relativeTypeUrl, upToDateMixin,
                   postedCallback, postedCallback);
          }, function (data) {
             // creating new resource :
@@ -1792,7 +1835,7 @@
             var resourceIri = relativeUrl.substring(relativeUrl.indexOf("/dc/type/") + "/dc/type/".length);
             var typeName = decodeURIComponent(resourceIri.substring(resourceIri.indexOf("/") + 1)); // else "elec%3ADepartment_0" ; AND NOT decodeURI
             var upToDateMixin = findMixin(typeName, modelOrMixinArray);
-            postAllDataInType(relativeTypeUrl, JSON.stringify([ upToDateMixin ], null, null),
+            postAllDataInType(relativeTypeUrl, upToDateMixin,
                   postedCallback, postedCallback);
          });
       }
@@ -1809,11 +1852,61 @@
       $('.modelRowCounter').html("Handled no model row yet");
       $('.modelCounter').html("Posted no model yet");
    }
+   /*function abortImport(msg) {
+      if (msg) {
+         msg = " Aborted. " + msg;
+      } else {
+         msg = " Aborted."
+      }
+      $('.resourceRowCounter').html($('.resourceRowCounter').html() + msg);
+      $('.importedResourcesFromCsv').html(msg);
+      throw msg;
+   }*/
+   function abortImport(msg) {
+      if (!window.importState) {
+         return; // already called
+      }
+      
+      if (Object.keys(importState.data.posted.postedResources).length !== 0) {
+         displayImportedResourcesPosted(importState.data.posted);
+      } else if (importState.data.rowNb !== 0) {
+         displayParsedResource(importState);
+      } else if (Object.keys(importState.model.posted.postedResources).length !== 0) {
+         displayImportedResourcesPosted(importState.model.posted);
+      } else if (importState.model.modelArray !== null) {
+         displayImportedModels(importState);
+      }
+      
+      if (msg) {
+         msg = "Aborted. " + msg + " ";
+      } else {
+         msg = "Aborted. "
+      }
+      $('.resourceRowCounter').html(msg + $('.resourceRowCounter').html());
+      $('.importedResourcesFromCsv').html(msg);
+      
+      concludeImport();
+      return true;
+   }
+   function concludeImport() {
+      delete window.importState;
+      $('.dc-import-button').html('<b>import</b>');
+   }
    function importModelAndResources() {
+      if (window.importState) {
+         window.importState.aborted = true;
+         $('.dc-import-button').html('aborted');
+         //abortImport(); // not only in loops, also there so that it's sure to happen
+         return;
+      } else {
+         $('.dc-import-button').html('abort');
+      }
+      
       resetModelCounters();
       resetResourceCounters();
       
       var importState = {
+            aborted : false,
             // CUSTOM
             typeMap : { // TODO more
                   "string" : "string",
@@ -1848,7 +1941,7 @@
                posted : {
                   toBePostedNb : 0, // = modelArray length
                   postedNb : 0,
-                  postedUri : {}, // set
+                  postedResources : {}, // set
                   warnings : [],
                   errors : [],
                   errorHtml : "" 
@@ -1858,19 +1951,27 @@
                fileName : '', // set below
                dataColumnNames : null,
                involvedMixins : [],
+               rowNb : 0,
+               row : { // current row
+                  loopIndex : 0,
+                  resourceRow : null,
+                  modelTypeToRowResources : {},
+                  missingIdFieldResourceOrMixins : null
+               },
                resources : {},
                warnings : [],
                errors : [],
                posted : {
                   toBePostedNb : 0, // = resources nb
                   postedNb : 0,
-                  postedUri : {}, // set
+                  postedResources : {}, // set
                   warnings : [],
                   errors : [],
                   errorHtml : ""
                }
             }
       }
+      window.importState = importState; // making available globally for abort
       
       findDataByType("/dc/type/dcmo:model_0?dcmo:name=$regexdcm.*", function (resources) {
          for (var mmInd in resources) {
@@ -1901,13 +2002,14 @@
                   return; // aborting
                }
                
-               function fillDataWhenAllModelsUpdated(resourcesOrData) {
+               function fillDataWhenAllModelsUpdated(resourcesOrData, origResources) {
                   importedResourcePosted(resourcesOrData, importState.model.posted, importState,
-                        "models or mixin", $('.modelCounter'), fillData);
+                        "models or mixin", $('.modelCounter'), origResources, fillData);
                };
 
                importState.model.posted.toBePostedNb = importState.model.modelArray.length;
-               refreshAndSchedulePost(importState.model.modelArray, '/dc/type/dcmo:model_0', fillDataWhenAllModelsUpdated);
+               refreshAndSchedulePost(importState.model.modelArray, '/dc/type/dcmo:model_0',
+                     fillDataWhenAllModelsUpdated, importState);
             });
          }
       };
