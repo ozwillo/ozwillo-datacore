@@ -621,9 +621,26 @@
          }*/
       }
       
+      var postedResourcesNb = Object.keys(importStateRes.postedResources).length;
+      var done = postedResourcesNb === importStateRes.toBePostedNb;
+      
       if (true/*importStateRes.postedNb % 1000 == 0 || importStateRes.postedNb > importStateRes.toBePostedNb - 10*/) {
-         var msg = "Posted <a href=\"#importedResourcesFromCsv\">" + importStateRes.postedNb
-               + " " + kind + "s</a> (";
+         var msg = "Posted <a href=\"#importedResourcesFromCsv\"";
+         if (done) {
+            var resourcesSummary = '';
+            var rInd = 0;
+            for (var postedUri in importStateRes.postedResources) {
+               if (rInd < 15 || rInd > postedResourcesNb - 10) {
+                  var parsedUri = parseUri(postedUri);
+                  resourcesSummary += '../' + parsedUri.modelType + '/' + parsedUri.id + ' \n';
+               } else if (rInd === 15) {
+                  resourcesSummary += "...\n";
+               }
+               rInd++;
+            }
+            msg += " title=\"" + resourcesSummary + "\"";
+         }
+         msg += ">" + importStateRes.postedNb + " " + kind + "s</a> (";
          if (importStateRes.errors.length === 0) {
             msg += "no error";
             msg += "), <a href=\"#datacoreResources\">browse them</a>";
@@ -641,7 +658,7 @@
          }
       }
       
-      if (Object.keys(importStateRes.postedResources).length === importStateRes.toBePostedNb) {
+      if (done) {
          displayImportedResourcesPosted(importStateRes);
          
          if (importStateRes.errors.length == 0) {
@@ -668,13 +685,12 @@
    
    function importMapOrResourceValue(fieldOrListField, resourceRow, subFieldNameTree,
          mixin, fieldName, subPathInFieldNameTree, importState) { // log purpose only
-      var value = null;
       var fieldOrListFieldType = fieldOrListField["dcmf:type"];
       var resourceType = fieldOrListField["dcmf:resourceType"];
       var resourceMixinOrFields;
       if (fieldOrListFieldType === 'resource') {
          // resource tree : looking for value in an (indirectly) referenced resource
-         resourceMixinOrFields = findMixin(resourceType, importState.data["involvedMixins"]);
+         resourceMixinOrFields = findMixin(resourceType, importState.data.involvedMixins);
          if (typeof resourceMixinOrFields === 'undefined') {
             importState.data.errors.push({ code : "unknownReferencedMixin",
                   path : subPathInFieldNameTree.join('.'), referencedMixin : resourceType,
@@ -703,32 +719,36 @@
          importState.data.warnings.push({ code : "subresourceWithoutValue",
                mixin : mixin['dcmo:name'], fieldName : fieldName, path : subPathInFieldNameTree.join('.'),
                message : "WARNING subresourceWithoutValue" });
+         return null;
          
       } else if (fieldOrListFieldType === 'map') {
-         value = subresource;
+         return subresource;
             
       } else if (typeof subresource["@id"] === 'undefined') {
          // (may be solved in next iteration)
          importState.data.errors.push({ code : "unableToBuildSubresourceId",
                mixin : mixin['dcmo:name'], fieldName : fieldName, path : subPathInFieldNameTree.join('.'), subresource : subresource,
                message : "ERROR unableToBuildSubresourceId" });
-         
-      } else if (resourceMixinOrFields['dcmo:isInstanciable']) { // resource with (probably) exact instance model type ;
+         return null;
+      }
+      
+      var subresourceModel = findMixin(subresource['@type'][0], importState.data.involvedMixins);
+      if (subresourceModel/*resourceMixinOrFields*/['dcmo:isInstanciable']) { // resource with (probably) exact instance model type ;
          // TODO TODO better is subresource ex. storage(Path) == modelx/path ; typeof value !== 'undefined' && value != null && value.length != 0
-         value = subresource["@id"]; // uri
          // adding it :
          importState.data.resources[subresource['@id']] = subresource;
          /*if (modelTypeToRowResources != null) { NOOOOOOOOOOO only if top level, for autolinking
             modelTypeToRowResources[resourceType] = subresource; // in case not yet there
          }*/
+         return subresource["@id"]; // uri
          
       } else/* if ()*/ { // resource with abstract type : don't import but look for compatible (sub)type and same id
-         return findResourceByUriId(subresource, resourceMixinOrFields, importState);
+         subresource = findResourceByUriId(subresource, resourceMixinOrFields, importState);
+         return subresource !== null ? subresource["@id"] : null; // uri
          
       }/* else { // subresource ; TODO TODO better is subresource ex. storage(Path) == modelx/path ; typeof value !== 'undefined' && value != null && value.length != 0
-         value = subresource;
+         return subresource;
       }*/
-      return value;
    }
    
    // pathInFieldNameTree for log only ; mixin must be dcmo:isInstanciable (old "model")
