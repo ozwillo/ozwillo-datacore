@@ -1255,8 +1255,7 @@
          }
          
          // TODO mass version update !
-         var relativeUrl = uri.substring(uri.indexOf("/dc/type/"));
-         getData(relativeUrl, function (returnedResource) {
+         getData(uri, function (returnedResource) {
             // updating existing resource : 
             // NB. can't access original "resource" variable because has been changed since call is async
             var upToDateResourceUri = returnedResource["@id"]; // ex. "http://data.oasis-eu.org/dc/type/geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
@@ -1265,7 +1264,7 @@
             var resourceIri = upToDateResourceUri.substring(upToDateResourceUri.indexOf("/dc/type/") + "/dc/type/".length); // ex. "geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
             var modelType = decodeURIComponent(resourceIri.substring(0, resourceIri.indexOf("/"))); // ex. geo:CityGroup_0
             //var resourceId = decodeURIComponent(resourceIri.substring(resourceIri.indexOf("/") + 1));
-            postAllDataInType(modelType, upToDateResource,
+            postAllDataInType({ modelType: modelType }, upToDateResource,
                   importedDataPosted, importedDataPosted);
          }, function (data) {
             // creating new resource :
@@ -1276,7 +1275,7 @@
             //var upToDateResourceUri = dcConf.containerUrl + "dc/type/" + modelType + "/" + resourceId;
             var upToDateResourceUri = dcConf.containerUrl + "dc/type/" + resourceIri;
             var upToDateResource = importState.data.resources[upToDateResourceUri];
-            postAllDataInType(modelType, upToDateResource,
+            postAllDataInType({ modelType: modelType }, upToDateResource,
                   importedDataPosted, importedDataPosted);
          });
       }
@@ -1821,8 +1820,7 @@
          // posting one at a time rather than all at once because version has
          // to be refreshed and it is easier to do it in sync this way
          var uri = mixin["@id"];
-         var relativeUrl = uri.substring(uri.indexOf("/dc/type/"));
-         getData(relativeUrl, function (resource) {
+         getData(uri, function (resource) {
             // updating existing resource : 
             // NB. can't access "mixin" variable because has been changed since call is async
             var upToDateMixin = findMixin(resource["dcmo:name"], modelOrMixinArray);
@@ -2008,7 +2006,7 @@
                };
 
                importState.model.posted.toBePostedNb = importState.model.modelArray.length;
-               refreshAndSchedulePost(importState.model.modelArray, '/dc/type/dcmo:model_0',
+               refreshAndSchedulePost(importState.model.modelArray, { modelType : 'dcmo:model_0' },
                      fillDataWhenAllModelsUpdated, importState);
             });
          }

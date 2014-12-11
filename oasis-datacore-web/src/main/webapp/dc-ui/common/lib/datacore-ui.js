@@ -32,14 +32,105 @@
             + "/" + (shouldEncodeId ? encodeIdSaveIfNot(id) : id);
    }
    // also supports relative & no id after modelType
-   function getModelTypeFromUri(subResourceUri) {
+   function getModelTypeFromUri(subResourceUri) { // TODO regex
       var mInd = subResourceUri.indexOf('dc/type/') + 'dc/type/'.length;
       var nextSlashInd = subResourceUri.indexOf('/', mInd);
-      return subResourceUri.substring(mInd, (nextSlashInd !== -1) ? nextSlashInd : subResourceUri.length);
+      return decodeURIComponent(subResourceUri.substring(mInd,
+            (nextSlashInd !== -1) ? nextSlashInd : subResourceUri.length));
    }
-   function getIdFromUri(subResourceUri) {
-      return subResourceUri.substring(subResourceUri
-            .indexOf('/', subResourceUri.indexOf('dc/type/') + 'dc/type/'.length) + 1);
+   function getIdFromUri(subResourceUri) { // TODO regex
+      return decodeURI(subResourceUri.substring(subResourceUri
+            .indexOf('/', subResourceUri.indexOf('/dc/type/') + '/dc/type/'.length) + 1));
+   }
+   // only supports relative uri (iri) ex. /dc/type/model/id and query, but modelType at least is required
+   //var dcResourceIriRegex = /^\/+dc\/+type\/+([^\/\?]+)\/*([^\?]+)?\??(.*)$/g; // NOO seems stateful, else sometimes matches gets null
+   function parseIri(resourceIri) { // TODO regex
+      /*var encModelType = resourceIri.substring(0, resourceIri.indexOf("/"));
+      var encId = decodeURI(resourceIri.substring(resourceIri.indexOf("/") + 1));
+      return {
+         containerUrl : dcConf.containerUrl,
+         modelType : decodeURIComponent(encModelType),
+         id : decodeURI(encId),
+         uri : dcConf.containerUrl + resourceIri
+         };*/
+      var matches = /^\/+dc\/+type\/+([^\/\?]+)\/*([^\?]+)?\??(.*)$/g.exec(resourceIri);
+      var modelType = decodeURIComponent(matches[1]); // required
+      // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
+      // because swagger.js re-encodes
+      var id = matches[2];
+      var iri = '/dc/type/' + modelType;
+      var query = matches[3]; // no decoding, else would need to be first split along & and =
+      if (id) {
+         id = decodeURI(id);
+         iri += '/' + id;
+      } else {
+         id = null;
+      }
+      if (query) {
+         iri += '?' + query;
+      } else {
+         query = null;
+      }
+      return {
+         containerUrl : dcConf.containerUrl,
+         modelType : modelType,
+         id : id,
+         query : query,
+         uri : dcConf.containerUrl + iri,
+         iri : iri
+         };
+   }
+   //var dcResourceUriRegex = /^http:\/\/data\.oasis-eu\.org\/dc\/type\/([^\/]+)\/(.+)$/g;
+   //var dcResourceUriRegex = /^(http[s]?):\/\/+([^\/]+)\/+dc\/+type\/+([^\/\?]+)\/*([^\?]+)?\??(.*)$/g; // NOO seems stateful, else sometimes matches gets null
+   // also supports relative uri (iri) and query, but modelType is required
+   function parseUri(resourceUri) { // TODO regex
+      if (resourceUri.indexOf('http') !== 0) {
+         return parseIri(resourceUri);
+      }
+      /*var pInd = resourceUri.indexOf('/dc/type/');
+      var containerUrl = resourceUri.substring(0, pInd);
+      var mInd = pInd + '/dc/type/'.length;
+      var nextSlashInd = resourceUri.indexOf('/', mInd);
+      var encModelType = resourceUri.substring(mInd, (nextSlashInd !== -1) ? nextSlashInd : resourceUri.length);
+      var encId = resourceUri.substring(resourceUri.indexOf('/', mInd) + 1);
+      if (containerUrl.length === 0) {
+         containerUrl = dcConf.containerUrl;
+         resourceUri = containerUrl + resourceUri;
+      }
+      return {
+         containerUrl : containerUrl,
+         modelType : decodeURIComponent(encModelType),
+         id : decodeURI(encId),
+         uri : resourceUri
+         };*/
+      var matches = /^(http[s]?):\/\/+([^\/]+)\/+dc\/+type\/+([^\/\?]+)\/*([^\?]+)?\??(.*)$/g.exec(resourceUri);
+      var containerUrl = matches[1] + '://' + matches[2];
+      var modelType = decodeURIComponent(matches[3]); // required
+      // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
+      // because swagger.js re-encodes
+      var id = matches[4];
+      var iri = '/dc/type/' + modelType;
+      var query = matches[5]; // no decoding, else would need to be first split along & and =
+      if (id) {
+         id = decodeURI(id);
+         iri += '/' + id;
+      } else {
+         id = null;
+      }
+      if (query) {
+         iri += '?' + query;
+      } else {
+         query = null;
+      }
+      return {
+         //containerUrl : dcConf.containerUrl,
+         containerUrl : containerUrl,
+         modelType : modelType,
+         id : id,
+         query : query,
+         uri : containerUrl + iri,
+         iri : iri
+         };
    }
 
 
@@ -161,6 +252,23 @@ function toolifyDcList(values, depth, key, modelType, upperResource, keyPathInRe
    return res;
    //return resource;
 }
+function toolifyDcResourceUri(value) {
+   return '"' + value.replace(/^http:\/\/data\.oasis-eu\.org\/dc\/type\/([^\/]+)\/(.+)$/g,
+         dcConf.containerUrl + '/dc/'
+         + '<a href="/dc/type/dcmo:model_0/$1" class="dclink" onclick="'
+         + 'javascript:return getData($(this).attr(\'href\'));'
+         + '">type</a>'
+         + '/'
+         + '<a href="/dc/type/$1" class="dclink" onclick="'
+         + 'javascript:return findDataByType($(this).attr(\'href\'));'
+         + '">$1</a>'
+         + '<a href="/dc/type/dcmo:model_0?dcmo:fields.dcmf:resourceType=$1" class="dclink" onclick="'
+         + 'javascript:return findLinkedData(\'/dc/type/$1/$2\');'
+         + '">/</a>'
+         + '<a href="/dc/type/$1/$2" class="dclink" onclick="'
+         + 'javascript:return getData($(this).attr(\'href\'));'
+         + '">$2</a>') + '"';
+}
 function toolifyDcResourceValue(value, key, depth, modelType, upperResource, keyPathInResource) {
    if (value == null) {
       return 'null';
@@ -175,21 +283,10 @@ function toolifyDcResourceValue(value, key, depth, modelType, upperResource, key
 	         + '">' + value + '</a>"';
 		}
 		///if ("@id" == key) {
-		return '"' + value.replace(/^http:\/\/data\.oasis-eu\.org\/dc\/type\/([^\/]+)\/(.+)$/g,
-			      'http://data.oasis-eu.org/dc/'
-			      + '<a href="/dc/type/dcmo:model_0/$1" class="dclink" onclick="'
-			      + 'javascript:return getData($(this).attr(\'href\'));'
-			      + '">type</a>'
-			      + '/'
-			      + '<a href="/dc/type/$1" class="dclink" onclick="'
-			      + 'javascript:return findDataByType($(this).attr(\'href\'));'
-			      + '">$1</a>'
-               + '<a href="/dc/type/dcmo:model_0?dcmo:fields.dcmf:resourceType=$1" class="dclink" onclick="'
-               + 'javascript:return findDataByType($(this).attr(\'href\'));'
-               + '">/</a>'
-			      + '<a href="/dc/type/$1/$2" class="dclink" onclick="'
-			   	  + 'javascript:return getData($(this).attr(\'href\'));'
-			      + '">$2</a>') + '"';
+		if (value.indexOf('http') !== 0) { // shortcut
+		   return value;
+		}
+		return toolifyDcResourceUri(value);
 	} else if (valueType == 'object') {
 		if (value instanceof Array) {
 			return toolifyDcList(value, depth, key, modelType, upperResource, keyPathInResource);
@@ -208,11 +305,14 @@ function toolifyDcListOrResource(valuesOrResource) {
 }
 function setUrl(relativeUrl, dontUpdateDisplay) {
    if (!dontUpdateDisplay && doUpdateDisplay) {
-   if (relativeUrl == null || relativeUrl == "") {
+   if (relativeUrl == null || relativeUrl == "" || !relativeUrl.modelType) {
       $('.myurl').val('');
       document.getElementById('mydata').innerHTML = '';
    } else {
-      $('.myurl').val(relativeUrl);
+      if (typeof relativeUrl === 'string') {
+         relativeUrl = parseUri(relativeUrl);
+      }
+      $('.myurl').val(relativeUrl.iri);
       document.getElementById('mydata').innerHTML = '...';
    }
    }
@@ -227,22 +327,13 @@ function setError(errorMsg) {
 
 // optional : success, error, start (else 0, max 500), limit (else 10 !!! max 100 !)
 function findDataByType(relativeUrl, success, error, start, limit) {
-   var resourceTypeAndQuery = relativeUrl.replace(/^\/*dc\/type\/*/, "");
-   var cleanedRelativeUrl = "/dc/type/" + resourceTypeAndQuery; // also works if no dc/type in relativeUrl
-   setUrl(cleanedRelativeUrl, success);
-   var i = resourceTypeAndQuery.indexOf("?");
-   var modelType = i == -1 ? resourceTypeAndQuery : resourceTypeAndQuery.substring(0, i);
-   var decodedModelType = decodeURIComponent(modelType);
-   // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
-   // because swagger.js re-encodes
-   // decodeURIComponent
-   var query = i == -1 ? "" : resourceTypeAndQuery.substring(i + 1);
-   /*var l = '/dc/type/'.length;
-   var tq = relativeUrl.substring(l);
-   var i = tq.indexOf('?');
-   window.t = i == -1 ? tq : tq.substring(0, i);
-   window.q = i == -1 ? '' : tq.substring(i + 1);*/
-   var swaggerParams = {type:decodedModelType, '#queryParameters':query,
+   if (typeof relativeUrl === 'string') {
+      // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
+      // because swagger.js re-encodes
+      relativeUrl = parseUri(relativeUrl);
+   }
+   setUrl(relativeUrl, success);
+   var swaggerParams = {type:relativeUrl.modelType, '#queryParameters':relativeUrl.query,
          Authorization:getAuthHeader()};
    if (start) {
       swaggerParams.start = start;
@@ -262,29 +353,16 @@ function findDataByType(relativeUrl, success, error, start, limit) {
             error(data);
          }
       });
-   /*window.datacore = new SwaggerApi({ url: '/api-docs',
-      success: function() {
-         if(datacore.ready === true) {
-            datacore.apis.dc.findDataInType({type:window.t, '#queryParameters':window.q,
-            	   Authorization:getAuthHeader()}, function(data) {
-               var prettyJson = JSON.stringify(eval(data.content.data), null, '\t').replace(/\n/g, '<br>');
-               $('.mydata').html(prettyJson);
-            });
-         }
-      }
-   });*/
    return false;
 }
 function getData(relativeUrl, success, error) {
-   var resourceIri = relativeUrl.replace(/^\/*dc\/type\/*/, "");
-   var cleanedRelativeUrl = "/dc/type/" + resourceIri; // also works if no dc/type in relativeUrl
-   setUrl(cleanedRelativeUrl, success);
-   var modelType = resourceIri.substring(0, resourceIri.indexOf("/"));
-   var decodedModelType = decodeURIComponent(modelType);
-   var decodedResourceId = decodeURI(resourceIri.substring(resourceIri.indexOf("/") + 1));
-   // NB. modelType & resourceId are encoded as URIs should be, BUT must be decoded before used as GET URI
-   // because swagger.js re-encodes (for resourceId, per path element because __unencoded__-prefixed per hack)
-   dcApi.dc.getData({type:decodedModelType, __unencoded__iri:decodedResourceId,
+   if (typeof relativeUrl === 'string') {
+      // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
+      // because swagger.js re-encodes (for resourceId, per path element because __unencoded__-prefixed per hack)
+      relativeUrl = parseUri(relativeUrl);
+   }
+   setUrl(relativeUrl, success);
+   dcApi.dc.getData({type:relativeUrl.modelType, __unencoded__iri:relativeUrl.id,
          'If-None-Match':-1, Authorization:getAuthHeader()},
       function(data) {
          var resResource = displayJsonObjectResult(data, success);
@@ -297,43 +375,26 @@ function getData(relativeUrl, success, error) {
         	   error(data);
          }
       });
-   /*window.datacore = new SwaggerApi({ url: '/api-docs', success: function() {
-      if(datacore.ready === true) {
-         datacore.apis.dc.getData({type:window.t, __unencoded__iri:window.iri, 'If-None-Match':-1,
-            Authorization:getAuthHeader()}, function(data) {
-               var prettyJson = JSON.stringify(eval('[' + data.content.data + ']'), null, '\t').replace(/\n/g, '<br>');
-               $('.mydata').html(prettyJson);
-            });
-         }
-      }
-   });*/
    return false;
 }
 function findData(relativeUrl, success, error) {
-	if (relativeUrl.indexOf('?') != -1
-			|| relativeUrl.replace(/^\/*dc\/type\/*/, "").indexOf('/') == -1) { // none (or last position(s) ??)
+   if (typeof relativeUrl === 'string') {
+      relativeUrl = parseUri(relativeUrl);
+   }
+   if (relativeUrl.query !== null || relativeUrl.id === null) {
 		return findDataByType(relativeUrl, success, error);
 	}
 	return getData(relativeUrl, success, error);
 }
 //optional : success, error, start (else 0, max 500), limit (else 10 !!! max 100 !)
 function findDataByTypeRdf(relativeUrl, success, error, start, limit) {
-   var resourceTypeAndQuery = relativeUrl.replace(/^\/*dc\/type\/*/, "");
-   var cleanedRelativeUrl = "/dc/type/" + resourceTypeAndQuery; // also works if no dc/type in relativeUrl
-   setUrl(cleanedRelativeUrl, success);
-   var i = resourceTypeAndQuery.indexOf("?");
-   var modelType = i == -1 ? resourceTypeAndQuery : resourceTypeAndQuery.substring(0, i);
-   var decodedModelType = decodeURIComponent(modelType);
-   // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
-   // because swagger.js re-encodes
-   // decodeURIComponent
-   var query = i == -1 ? "" : resourceTypeAndQuery.substring(i + 1);
-   /*var l = '/dc/type/'.length;
-   var tq = relativeUrl.substring(l);
-   var i = tq.indexOf('?');
-   window.t = i == -1 ? tq : tq.substring(0, i);
-   window.q = i == -1 ? '' : tq.substring(i + 1);*/
-   var swaggerParams = {type:decodedModelType, '#queryParameters':query,
+   if (typeof relativeUrl === 'string') {
+      // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
+      // because swagger.js re-encodes
+      relativeUrl = parseUri(relativeUrl);
+   }
+   setUrl(relativeUrl, success);
+   var swaggerParams = {type:relativeUrl.modelType, '#queryParameters':relativeUrl.query,
          Authorization:getAuthHeader()};
    if (start) {
       swaggerParams.start = start;
@@ -353,15 +414,6 @@ function findDataByTypeRdf(relativeUrl, success, error, start, limit) {
             error(data);
          }
       });
-   /*window.datacore = new SwaggerApi({ url: '/api-docs', success: function() {
-      if(datacore.ready === true) {
-         datacore.apis.dc.findDataInType({type:window.t, '#queryParameters':window.q,
-            Authorization:getAuthHeader()}, {responseContentType:'text/x-nquads'}, function(data) {
-               var prettyText = data.content.data; $('.mydata').text(prettyText);
-            });
-         }
-      }
-   });*/
    return false;
 }
 
@@ -371,18 +423,16 @@ function findDataByTypeRdf(relativeUrl, success, error, start, limit) {
 
 // resources can be a single resource or an array
 function postAllDataInType(relativeUrl, resources, success, error) {
-   var encodedModelType = relativeUrl.replace(/^\/*dc\/type\/*/, "");
-   var cleanedRelativeUrl = "/dc/type/" + encodedModelType; // also works if no dc/type in relativeUrl
-   setUrl(cleanedRelativeUrl, success);
-   /*var l = '/dc/type/'.length;
-   var tq = relativeUrl.substring(l);
-   var i = tq.indexOf('?');
-   window.t = i == -1 ? tq : tq.substring(0, i);
-   window.q = i == -1 ? '' : tq.substring(i + 1);*/
+   if (typeof relativeUrl === 'string') {
+      // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
+      // because swagger.js re-encodes
+      relativeUrl = parseUri(relativeUrl);
+   }
+   setUrl(relativeUrl, success);
    if (!resources instanceof Array) { // single resource
       resources = [ resources ];
    }
-   dcApi.dc.postAllDataInType({type:encodedModelType, body:JSON.stringify(resources, null, null),
+   dcApi.dc.postAllDataInType({type:relativeUrl.modelType, body:JSON.stringify(resources, null, null),
          Authorization:getAuthHeader()},
       function(data) {
          var resResources = displayJsonListResult(data, success);
@@ -406,16 +456,11 @@ function postAllDataInType(relativeUrl, resources, success, error) {
 // TODO putDataInType and use it...
 
 function deleteDataInType(resource, success, error) {
-   var uri = resource["@id"];
-   var resourceIri = uri.replace(/^\/*dc\/type\/*/, "");
-   var cleanedRelativeUrl = "/dc/type/" + resourceIri; // also works if no dc/type in relativeUrl
-   setUrl(cleanedRelativeUrl, success);
-   var modelType = resourceIri.substring(0, resourceIri.indexOf("/"));
-   var decodedModelType = decodeURIComponent(modelType);
-   var decodedResourceId = decodeURI(resourceIri.substring(resourceIri.indexOf("/") + 1));
-   // NB. modelType & resourceId are encoded as URIs should be, BUT must be decoded before used as GET URI
+   // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
    // because swagger.js re-encodes (for resourceId, per path element because __unencoded__-prefixed per hack)
-   dcApi.dc.deleteData({type:decodedModelType, __unencoded__iri:decodedResourceId,
+   var parsedUri = parseUri(resource["@id"]);
+   setUrl(parsedUri, success);
+   dcApi.dc.deleteData({type:parsedUri.modelType, __unencoded__iri:parsedUri.id,
          'If-Match':resource["o:version"], Authorization:getAuthHeader()},
       function(data) {
          var resResource = displayJsonObjectResult(data, success);
@@ -524,4 +569,107 @@ function displayJsonListResult(data, dontUpdateDisplay) {
    $('.mydata').html(prettyJson);
    }
    return resResources;
+}
+
+function findLinkedData(resourceUri, linkingModelType) {
+   var parsedUri = parseUri(resourceUri);
+   if (typeof linkingModelType === 'undefined') {
+      linkingModelType = parsedUri.modelType;
+   }
+   var isModel = parsedUri.modelType.indexOf('dcmo:model_') === 0;
+   if (isModel) { // lookup instances in this model :
+      findDataByType("/dc/type/" + parsedUri.id); // NB. works even if not storage thanks to polymorphism
+   } else { // lookup models linking to this one and display them and their resources :
+      findDataByType("/dc/type/dcmo:model_0?dcmo:fields.dcmf:resourceType=" + linkingModelType,
+            function(modelResources) {
+         getData(parsedUri, function(linkedResource) {
+            displayModelAndResourceLinks(modelResources, linkedResource, parsedUri, linkingModelType);
+         });
+      });
+      // NB. for subresources : models having this one as mixin can be found by ":" on @type
+      // TODO LATER also on dcmo:fields.dcmf:mapFields.dcmf:resourceType for top level maps' fields...
+   }
+   return false;
+}
+// displays linking models and their resources
+function displayModelAndResourceLinks(linkingModels, linkedResource, parsedUri, linkingModelType) {
+   if (typeof linkingModelType === 'undefined') {
+      linkingModelType = parsedUri.modelType;
+   }
+   var html = '';
+   if (linkingModels.length === 0) {
+      html = 'No model links through '
+         + '<a href="/dc/type/dcmo:model_0/' + linkingModelType + '" class="dclink" onclick="'
+         + 'javascript:return getData($(this).attr(\'href\'));'
+         + '">' + linkingModelType + '</a>'
+         + ' at top level to ' + lineBreak(1) + toolifyDcResourceUri(parsedUri.uri) + ' .';
+   } else {
+      html = 'There are ' + linkingModels.length + ' model(s) linking through '
+         + '<a href="/dc/type/dcmo:model_0/' + linkingModelType + '" class="dclink" onclick="'
+         + 'javascript:return getData($(this).attr(\'href\'));'
+         + '">' + linkingModelType + '</a>'
+         + ' at top level to ' + lineBreak(1) + toolifyDcResourceUri(parsedUri.uri) + ' :'; // NB. line break is below
+      for (var mInd in linkingModels) {
+         var linkingModel = linkingModels[mInd];
+         var field = findResource(linkingModel['dcmo:fields'], { 'dcmf:resourceType' : linkingModelType });
+         var modelType = linkingModel['dcmo:name'];
+         html += lineBreak(0) + '- ';
+         html += '<a href="/dc/type/dcmo:model_0/' + modelType + '" class="dclink" onclick="'
+            + 'javascript:return getData($(this).attr(\'href\'));'
+            + '">' + modelType + '</a>'
+         html += ' - resources : ';
+         //html += toolifyDcResourceValue(model, null, 1);
+         html += dcConf.containerUrl + '/dc/'
+            + '<a href="/dc/type/dcmo:model_0/' + modelType + '" class="dclink" onclick="'
+            + 'javascript:return getData($(this).attr(\'href\'));'
+            + '">type</a>'
+            + '/'
+            + '<a href="/dc/type/' + modelType + '?' + field['dcmf:name'] + '=' + parsedUri.uri + '" class="dclink" onclick="'
+            + 'javascript:return findDataByType($(this).attr(\'href\'));'
+            + '">' + modelType + '</a>'
+            + '...';
+      }
+   }
+   html += displayModelMixinLinks(linkedResource, parsedUri, linkingModelType);
+   $('.mydata').html(html);
+}
+function displayModelMixinLinks(linkedResource, parsedUri, linkingModelType) {
+   var html = '';
+   var mixins = linkedResource['@type'];
+   if (mixins.length > 1) {
+      html += lineBreak(0) + 'You can also try its other mixins :';
+      for (var mInd in mixins) {
+         var mixinName = mixins[mInd];
+         if (mixinName === linkingModelType) {
+            continue;
+         }
+         html += lineBreak(1) + '- ';
+         html +=  '<a href="/dc/type/dcmo:model_0?dcmo:fields.dcmf:resourceType=' + mixinName + '" class="dclink" onclick="'
+            + 'javascript:return findLinkedData(\'/dc/type/' +  parsedUri.modelType + '/' +  parsedUri.id + '\', \'' + mixinName + '\');'
+            + '">' + mixinName + '</a>'
+            + "...";
+      }
+   }
+   return html;
+}
+
+
+///////////////////////
+// MODEL MANIPULATION
+
+function findResource(resources, criteria) {
+   for (var rInd in resources) {
+      var resource = resources[rInd];
+      var found = true;
+      for (var key in criteria) {
+         if (resource[key] !== criteria[key]) {
+            found = false;
+            break;
+         }
+      }
+      if (found) {
+         return resource;  
+      }
+   }
+   return null;
 }
