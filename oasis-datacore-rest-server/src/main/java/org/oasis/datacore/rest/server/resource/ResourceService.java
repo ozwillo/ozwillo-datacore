@@ -173,13 +173,22 @@ public class ResourceService {
       
       DCModelBase dcModel = modelService.getModelBase(modelType); // NB. type can't be null thanks to JAXRS
       if (dcModel == null) {
-         throw new ResourceTypeNotFoundException(modelType,
-               null, null, resource, project);
+         // TODO LATER OPT client side might deem it a data health / governance problem,
+         // and put it in the corresponding inbox
+         throw new ResourceTypeNotFoundException(modelType, "Can't find model type. "
+               + "Maybe it is badly spelled, or it has been deleted or renamed since (only in test). "
+               + "In this case, the missing model must first be created again, "
+               + "before patching the entity.", null, resource, project);
       }
       DCModelBase storageModel = modelService.getStorageModel(modelType); // TODO cache, in context ?
       if (storageModel == null) {
+         // TODO LATER OPT client side might deem it a data health / governance problem,
+         // and put it in the corresponding inbox
          throw new ResourceTypeNotFoundException(modelType,
-               "Unknown storage model for model type", null, resource, project);
+               "Can't find storage model of model type, meaning it's a true (definition) mixin. "
+               + "Maybe it had one at some point and this model (and its inherited mixins) "
+               + "has changed since (only in test). In this case, the missing model must first "
+               + "be created again, before patching the entity.", null, resource, project);
       }
       modelType = dcModel.getName(); // normalize ; TODO useful ?
       
@@ -354,7 +363,12 @@ public class ResourceService {
          throws ResourceTypeNotFoundException {
       DCModelBase dcModel = modelService.getModelBase(modelType); // NB. type can't be null thanks to JAXRS
       if (dcModel == null) {
-         throw new ResourceTypeNotFoundException(modelType, null, null, resource, project);
+         // TODO LATER OPT client side might deem it a data health / governance problem,
+         // and put it in the corresponding inbox
+         throw new ResourceTypeNotFoundException(modelType, "Can't find model type. "
+               + "Maybe it is badly spelled, or it has been deleted or renamed since (only in test). "
+               + "In this case, the missing model must first be created again, "
+               + "before patching the entity.", null, resource, project);
       }
       return buildResourceTypes(resource, dcModel);
    }
@@ -391,7 +405,12 @@ public class ResourceService {
       DCProject project = modelService.getProject(); // TODO explode if none 
       DCModelBase dcModel = modelService.getModelBase(modelType); // NB. type can't be null thanks to JAXRS
       if (dcModel == null) {
-         throw new ResourceTypeNotFoundException(modelType, null, null, null, project);
+         // TODO LATER OPT client side might deem it a data health / governance problem,
+         // and put it in the corresponding inbox
+         throw new ResourceTypeNotFoundException(modelType, "Can't find model type for " + uri
+               + ". Maybe it is badly spelled, or it has been deleted or renamed since (only in test). "
+               + "In this case, the missing model must first be created again, "
+               + "before patching the entity.", null, null, project);
       }
       modelType = dcModel.getName(); // normalize ; TODO useful ?
       
@@ -428,7 +447,12 @@ public class ResourceService {
       DCProject project = modelService.getProject(); // TODO explode if none 
       DCModelBase dcModel = modelService.getModelBase(modelType); // NB. type can't be null thanks to JAXRS
       if (dcModel == null) {
-         throw new ResourceTypeNotFoundException(modelType, null, null, null, project);
+         // TODO LATER OPT client side might deem it a data health / governance problem,
+         // and put it in the corresponding inbox
+         throw new ResourceTypeNotFoundException(modelType, "Can't find model type for " + uri
+               + ". Maybe it is badly spelled, or it has been deleted or renamed since (only in test). "
+               + "In this case, the missing model must first be created again, "
+               + "before patching the entity.", null, null, project);
       }
       
       DCEntity entity = entityService.getByUri(uri, dcModel);
@@ -462,7 +486,12 @@ public class ResourceService {
 	   
       DCModelBase dcModel = modelService.getModelBase(modelType); // NB. type can't be null thanks to JAXRS
       if (dcModel == null) {
-         throw new ResourceTypeNotFoundException(modelType, null, null, null, project);
+         // TODO LATER OPT client side might deem it a data health / governance problem,
+         // and put it in the corresponding inbox
+         throw new ResourceTypeNotFoundException(modelType, "Can't find model type for " + uri
+               + ". Maybe it is badly spelled, or it has been deleted or renamed since (only in test). "
+               + "In this case, the missing model must first be created again, "
+               + "before patching the entity.", null, null, project);
       }
       modelType = dcModel.getName(); // normalize ; TODO useful ?
       

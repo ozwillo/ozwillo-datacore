@@ -34,9 +34,14 @@ public class LocalDatacoreLinkedResourceChecker extends LinkedResourceChecker {
       DCModelBase refModel = super.checkUriModel(dcUri, dcResourceField);
       
       if (modelService.getStorageModel(refModel.getName()) == null) {
-         throw new ResourceParsingException("Resource type " + refModel.getName()
+         // TODO LATER OPT client side might deem it a data health / governance problem,
+         // and put it in the corresponding inbox
+         throw new ResourceParsingException("Resource model type " + refModel.getName()
                + " " + getLinkType() + " by resource Field of URI value " + dcUri.toString()
-               + " has a model that doesn't define any storage");
+               + " has a model that doesn't define any storage, which is not allowed "
+               + "(would by highly inefficient). Maybe it had one at some point and this model "
+               + "(and its inherited mixins) has changed since (only in test, in which case "
+               + "the missing model must first be created again before patching the entity).");
       }
       
       return refModel;

@@ -499,7 +499,13 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
 		
 		DCModelBase dcModel = modelService.getModelBase(modelType);
 		if (dcModel == null) {
-			throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST).entity("Unknown Model type " + modelType).type(MediaType.TEXT_PLAIN).build());
+         // TODO LATER OPT client side might deem it a data health / governance problem,
+         // and put it in the corresponding inbox
+         throw new BadRequestException(JaxrsExceptionHelper.toBadRequestResponse(
+               new ResourceTypeNotFoundException(modelType, "Can't find model type for " + uri
+               + ". Maybe it is badly spelled, or it has been deleted or renamed since (only in test). "
+               + "In this case, the missing model must first be created again, "
+               + "before patching the entity.", null, null, modelService.getProject())));
 		}
 		modelType = dcModel.getName();
 		DCEntity historizedEntity = null;
@@ -509,8 +515,9 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
 			throw new BadRequestException(JaxrsExceptionHelper.toBadRequestResponse(e));
 		}
 		if (historizedEntity == null) {
-			throw new NotFoundException(Response.status(Response.Status.NOT_FOUND).entity("Entity with URI : " + uri + " and version : " + version + "was not found").type(MediaType.TEXT_PLAIN)
-					.build());
+			throw new NotFoundException(JaxrsExceptionHelper.toNotFoundResponse(
+			      new ResourceNotFoundException("Entity with URI : " + uri + " and version : "
+			            + version + "was not found", uri, null, modelService.getProject())));
 		}
 
 		DCResource resource = resourceEntityMapperService.entityToResource(historizedEntity);

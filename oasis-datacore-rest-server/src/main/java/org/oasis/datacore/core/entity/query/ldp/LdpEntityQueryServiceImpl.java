@@ -129,11 +129,22 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       
       DCModelBase model = modelService.getModelBase(modelType); // NB. if used from JAXRS, modelType can't be null thanks to JAXRS
       if (model == null) {
-         throw new ModelNotFoundException(modelType, modelService.getProject(), "Unknown model type");
+         // TODO LATER OPT client side might deem it a data health / governance problem,
+         // and put it in the corresponding inbox
+         throw new ModelNotFoundException(modelType, modelService.getProject(),
+               "Can't find model type. Maybe it is badly spelled, or it has been deleted "
+               + "or renamed since (only in test). In this case, the missing model must first "
+               + "be created again, before patching the entity.");
       }
       DCModelBase storageModel = modelService.getStorageModel(modelType); // TODO cache, in context ?
       if (storageModel == null) {
-         throw new ModelNotFoundException(modelType, modelService.getProject(), "Unknown storage model for model type");
+         // TODO LATER OPT client side might deem it a data health / governance problem,
+         // and put it in the corresponding inbox
+         throw new ModelNotFoundException(modelType, modelService.getProject(),
+               "Can't find storage model of model type, meaning it's a true (definition) mixin. "
+               + "Maybe it had one at some point and this model (and its inherited mixins) "
+               + "has changed since (only in test).In this case, the missing model must first "
+               + "be created again, before patching the entity.");
       }
       
       if (params == null) {
@@ -190,8 +201,14 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       // setting cached model for future mapping to resource :
       // POLY NOO might differ, & also storageModel
       for (DCEntity foundEntity : foundEntities) {
-         ///foundEntity.setCachedModel(dcModel);
-         entityModelService.getModel(foundEntity);
+         entityModelService.checkAndFillDataEntityCaches(foundEntity);
+         // NB. accepting even entities with wrong model type (not instanciable, no storage
+         // because the model type or his mixins has changed, only in test),
+         // so that they may be at least read in order to be patched.
+         // However, we don't reassign model to a known one (ex. the storage that has been looked in)
+         // otherwise it might break rights (though such wrong models should only happen
+         // in sandbox / test / draft / not yet published phase).
+         // TODO LATER better : put such cases in data health / governance inbox, through event
       }
       return foundEntities;
    }

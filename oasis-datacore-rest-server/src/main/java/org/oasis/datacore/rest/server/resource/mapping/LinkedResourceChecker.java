@@ -59,7 +59,9 @@ public abstract class LinkedResourceChecker {
       if (refModel == null) {
          throw new ResourceParsingException("Resource " + dcUri + " is " + getLinkType() + " in "
                + dcResourceField.getResourceType() + "-typed \"" + dcResourceField.getName()
-               + "\" field but this type's model does not exist");
+               + "\" field but this type's model does not exist. Maybe it did at some point but it "
+               + "(and its inherited mixins) has changed since (only in test, in which case "
+               + "the missing model must first be created again before patching the entity).");
       }
       return refModel;
    }

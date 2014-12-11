@@ -153,7 +153,7 @@ public class ModelResourceMappingService {
             .set("dcmo:isContributable", model.isContributable())
             
             // POLY cache :
-            .set("dcmo:definitionModel", definitionModel.getName())
+            .set("dcmo:definitionModel", definitionModel.getName()) // all models should have one !!
             ;
       if (storageModel != null) {
          modelResource.set("dcmo:storageModel", storageModel.getName());

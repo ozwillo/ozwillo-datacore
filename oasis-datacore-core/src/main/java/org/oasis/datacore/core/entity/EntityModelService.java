@@ -4,10 +4,13 @@ import java.util.List;
 
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
+import org.oasis.datacore.core.meta.ModelException;
 import org.oasis.datacore.core.meta.ModelNotFoundException;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.pov.DCProject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -37,6 +40,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class EntityModelService {
    
+   private static final Logger logger = LoggerFactory.getLogger(EntityModelService.class);
+   
    @Autowired
    private DCModelService modelService;
 
@@ -47,55 +52,74 @@ public class EntityModelService {
     * (instanciable model)
     * Helper using entity cached transient model (mainainted over the course
     * of a request only) if available, else retrieving & setting it
-    * (not sync'd nor threaded because within single request thread)
-    * @throws IllegalArgumentException if unknown model type (first of types)
+    * (not sync'd nor threaded because within single request thread).
+    * Might not be there (or not instanciable) if obsolete dataEntity (i.e. its model has changed, only in test),
+    * so check it or use a method that does it ex. getCollectionName()
     * @param dataEntity
     * @return
     */
    public DCModelBase getModel(DCEntity dataEntity) {
-      checkDataEntityCaches(dataEntity);
+      checkAndFillDataEntityCaches(dataEntity);
       return dataEntity.getCachedModel();
    }
+   /** Might not be there (or not instanciable) if obsolete dataEntity (i.e. its model has changed, only in test),
+    * so check it or use a method that does it ex. getCollectionName() */
    public DCModelBase getInstanciableModel(DCEntity dataEntity) {
       return getModel(dataEntity);
    }
 
+   /** Might not be there if obsolete dataEntity (i.e. its model has changed), so check it
+    * or use a method that does it ex. getCollectionName() */
    public DCModelBase getStorageModel(DCEntity dataEntity) {
-      checkDataEntityCaches(dataEntity);
+      checkAndFillDataEntityCaches(dataEntity);
       return dataEntity.getCachedStorageModel();
    }
 
+   /** Might not be there if obsolete dataEntity (i.e. its model has changed), so check it */
    public DCModelBase getDefinitionModel(DCEntity dataEntity) {
-      checkDataEntityCaches(dataEntity);
+      checkAndFillDataEntityCaches(dataEntity);
       return dataEntity.getCachedDefinitionModel();
    }
    
    /**
-    * Checks and fills Models cache in given Entity
+    * Fills Models cache in given Entity, but does not check them. 
+    * Indeed, they might not be there (or model type not instanciable) if obsolete dataEntity
+    * (i.e. its model has changed, only in test),
+    * so check it or use a method that does it ex. getCollectionName().
+    * TODO LATER better : put such cases in data health / governance inbox, through event
     * @param dataEntity
     */
-   private void checkDataEntityCaches(DCEntity dataEntity) {
+   public void checkAndFillDataEntityCaches(DCEntity dataEntity) {
       if (dataEntity.getCachedModel() != null) {
          return;
       }
       DCModelBase cachedModel = modelService.getModelBase(this.getModelName(dataEntity));
       if (cachedModel == null) { // = cachedInstanciableModel
-         throw new IllegalArgumentException("DCEntity should have a valid (instance) model type"); // TODO custom ex ?
+         return;
+         /*throw new IllegalArgumentException("Can't find model for DCEntity, "
+               + "it's probably obsolete i.e. its model has changed since (only in test) : "
+               + dataEntity.getUri()); // TODO custom ex ?*/
       }
-      if (!cachedModel.isInstanciable()) { // = cachedInstanciableModel
-         throw new IllegalArgumentException("DCEntity model type should be instanciable"); // TODO custom ex ?
-      }
+      /*if (!cachedModel.isInstanciable()) { // = cachedInstanciableModel
+         throw new IllegalArgumentException("DCEntity model type is not instanciable, "
+               + "it's probably obsolete i.e. its model has changed since (only in test) : "
+               + dataEntity.getUri()); // TODO custom ex ?
+      }*/
       DCModelBase cachedStorageModel = projectService.getStorageModel(cachedModel.getName());
-      if (cachedStorageModel == null) {
-         throw new IllegalArgumentException("DCEntity should have a valid storage model type"); // TODO custom ex ?
-      }
       DCModelBase cachedDefinitionModel = projectService.getDefinitionModel(cachedModel.getName());
-      if (cachedDefinitionModel == null) {
-         throw new IllegalArgumentException("DCEntity should have a valid definition model type"); // TODO custom ex ?
+      /*if (cachedStorageModel == null) {
+         throw new IllegalArgumentException("Can't find storage (model) for DCEntity, "
+               + "it's probably obsolete i.e. its model has changed since (only in test) : "
+               + dataEntity.getUri()); // TODO custom ex ?
       }
-      dataEntity.setCachedModel(cachedModel);
-      dataEntity.setCachedStorageModel(cachedModel);
-      dataEntity.setCachedDefinitionModel(cachedModel);
+      if (cachedDefinitionModel == null) {
+         throw new IllegalArgumentException("Can't find definition (model) for DCEntity, "
+               + "it's probably obsolete i.e. its model has changed since (only in test) : "
+               + dataEntity.getUri()); // TODO custom ex ?
+      }*/
+      dataEntity.setCachedModel(cachedModel); // = cachedInstanciableModel
+      dataEntity.setCachedStorageModel(cachedStorageModel);
+      dataEntity.setCachedDefinitionModel(cachedDefinitionModel);
    }
 
    public String getModelName(DCEntity dataEntity) {
@@ -106,23 +130,64 @@ public class EntityModelService {
       return null;
    }
 
+   /**
+    * 
+    * @param model
+    * @return
+    * @throws ModelNotFoundException if storage model not found
+    * TODO LATER better : put it in data health / governance inbox, through event
+    */
    public String getCollectionName(DCModelBase model) throws ModelNotFoundException {
       DCModelBase storageModel = modelService.getStorageModel(model.getName());
       if (storageModel == null) {
-         throw new ModelNotFoundException(model, modelService.getProject(model.getName()),
-               "can't find storage model of model type");
+         // TODO LATER better : put it in data health / governance inbox, through event
+         throw new ModelNotFoundException(model, modelService.getProject(),
+               "Can't find storage model of model, meaning it's a true (definition) mixin. "
+               + "Maybe it had one at some point and this model (and its inherited mixins) "
+               + "has changed since (only in test, in which case the missing model "
+               + "must first be created again before patching the entity).");
       }
       return storageModel.getCollectionName();
    }
    
+   /**
+    * logs if model not instanciable.
+    * TODO LATER better : put it in data health / governance inbox, through event
+    * @param dataEntity
+    * @return
+    * @throws ModelNotFoundException if model or storage not found (same remark)
+    */
    public String getCollectionName(DCEntity dataEntity) throws ModelNotFoundException {
       DCProject project = projectService.getProject(); // NB. can't be null ; TODO add method with param
       DCModelBase model = getModel(dataEntity);
       if (model == null) {
+         // TODO LATER better : put it in data health / governance inbox, through event
          throw new ModelNotFoundException(dataEntity.getModelName(), project,
-               "for entity with uri " + dataEntity.getUri());
+               "When getting storage, can't find (instanciable) model type for entity, "
+               + "it's probably obsolete i.e. its model (and inherited mixins) "
+               + "has changed since (only in test, in which case the missing model "
+               + "must first be created again before patching the entity) : " + dataEntity.getUri());
       }
-      return getCollectionName(model);
+      if (!model.isInstanciable()) {
+         String msg = "When getting storage, centity model type is not instanciable, "
+               + "it's probably obsolete i.e. its model has changed since (only in test, in which case "
+               + "the missing model must first be created again before patching the entity) : "
+               + dataEntity.getUri();
+         logger.debug("Error when getting entity storage",
+               new ModelException(dataEntity.getModelName(), project, msg));
+         // TODO LATER better : put it in data health / governance inbox, through event
+         //throw new ModelException(dataEntity.getModelName(), project, msg);
+      }
+      DCModelBase storageModel = modelService.getStorageModel(model.getName());
+      if (storageModel == null) {
+         // TODO LATER better : put it in data health / governance inbox, through event
+         throw new ModelNotFoundException(model, modelService.getProject(),
+               "Can't find storage (model) for DCEntity, it's probably obsolete "
+               + "i.e. its model (and inherited mixins) has changed since (only in test, in which case "
+               + "the missing model must first be created again before patching the entity.) : "
+               + dataEntity.getUri());
+      }
+      return storageModel.getCollectionName();
    }
    
 }

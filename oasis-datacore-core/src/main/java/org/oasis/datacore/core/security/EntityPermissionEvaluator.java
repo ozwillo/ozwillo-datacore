@@ -5,7 +5,8 @@ import java.util.Set;
 
 import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.model.DCEntity;
-import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.DataModelServiceImpl;
+import org.oasis.datacore.core.meta.ModelNotFoundException;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,9 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
    @Autowired
    @Qualifier("datacoreSecurityServiceImpl")
    private DatacoreSecurityService datacoreSecurityService;
+
+   @Autowired
+   private DataModelServiceImpl projectService;
    
    @Autowired
    private EntityModelService entityModelService;
@@ -72,7 +76,12 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       
       DCModelBase model = entityModelService.getModel(dataEntity);
       if (model == null) {
-         throw new RuntimeException("Unknown model for " + dataEntity);
+         // TODO LATER better : put it in data health / governance inbox, through event
+         throw new RuntimeException("Error when checking rights of entity " + dataEntity.getUri(),
+               new ModelNotFoundException(dataEntity.getModelName(), projectService.getProject(),
+                     "When getting storage, can't find (instanciable) model type for entity, "
+                     + "it's probably obsolete i.e. its model (and inherited mixins) "
+                     + "has changed since (only in test) : " + dataEntity.getUri()));
       }
 
       if (model.getSecurity().isResourceAdmin(user)) {

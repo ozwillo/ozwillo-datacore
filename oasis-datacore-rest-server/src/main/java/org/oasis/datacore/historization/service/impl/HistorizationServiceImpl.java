@@ -78,7 +78,8 @@ public class HistorizationServiceImpl implements HistorizationService {
 		      return createHistorizationModel(originalModel);
 			}
 		} else {
-			throw new HistorizationException("Original model cannot be null");
+			throw new HistorizationException("Original model cannot be null. "
+               + "Maybe it has been deleted since (test only).");
 		}
 		
 	}
@@ -86,7 +87,8 @@ public class HistorizationServiceImpl implements HistorizationService {
    @Override
    public DCModelBase getHistorizationModel(DCModelBase originalModel) throws HistorizationException {
       if(originalModel == null) {
-         throw new HistorizationException("Original model cannot be null");
+         throw new HistorizationException("Original model cannot be null. "
+               + "Maybe it has been deleted since (test only).");
       }
       return dcModelService.getModelBase(originalModel.getName() + HISTORIZATION_COLLECTION_SUFFIX);
    }
@@ -107,7 +109,8 @@ public class HistorizationServiceImpl implements HistorizationService {
 			dataModelServiceImpl.addModel(historizationModel);
 			return historizationModel;
 		} else {
-			throw new HistorizationException("Can't create historization model because original model is null");
+			throw new HistorizationException("Can't create historization model because original model is null. "
+               + "Maybe it has been deleted since (test only).");
 		}
 		
 	}
@@ -117,7 +120,8 @@ public class HistorizationServiceImpl implements HistorizationService {
 		if(model != null) {
 			return model.isHistorizable();
 		} else {
-			throw new HistorizationException("Can't know if model is historizable because model is null");
+			throw new HistorizationException("Can't know if model is historizable because model is null. "
+               + "Maybe it has been deleted since (test only).");
 		}
 		
 	}

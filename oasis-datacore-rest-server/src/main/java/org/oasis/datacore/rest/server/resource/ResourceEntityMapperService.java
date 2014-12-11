@@ -494,8 +494,13 @@ public class ResourceEntityMapperService {
       
       DCEntity entityEntityValue = null;
       if (valueModelOrMixin == null) {
+         // TODO LATER OPT client side might deem it a data health / governance problem,
+         // and put it in the corresponding inbox
          throw new ResourceParsingException("Can't find Model with type " + dcUri.getType()
-               + " for Embedded resource wth uri " + dcUri.toString());
+               + " for Embedded resource wth uri " + dcUri.toString() + " . Maybe it is badly spelled, "
+               + "or it has been deleted or renamed since (only in test). "
+               + "In this case, the missing model must first be created again, "
+               + "before patching the entity.");
          
       } else if (!valueModelOrMixin.isDefinition()) {
          // NOO ex. if data-level project fork
@@ -541,7 +546,15 @@ public class ResourceEntityMapperService {
          entityEntityValue = new DCEntity();
          entityEntityValue.setUri(dcUri.toString());
          if (valueModelOrMixin.isInstanciable()) {
-            entityModelService.getModel(entityEntityValue); // setup model caches
+            entityModelService.checkAndFillDataEntityCaches(entityEntityValue);
+            // NB. accepting even entities with wrong model type (not instanciable, no storage
+            // because the model type or his mixins has changed, only in test),
+            // so that they may be at least read in order to be patched.
+            // However, we don't reassign model to a known one (ex. the storage that has been looked in)
+            // otherwise it might break rights (though such wrong models should only happen
+            // in sandbox / test / draft / not yet published phase).
+            // TODO LATER better : put such cases in data health / governance inbox, through event
+            
             ///entityEntityValue.setModelName(valueModel.getName()); // TODO LATER2 check that same (otherwise ex. external approvable contrib ??)
          } // else fully embedded subresource
          // NB. no version yet
@@ -744,7 +757,15 @@ public class ResourceEntityMapperService {
    /**
     * Special handling :
     * - non-JODA Dates made JODA
-    * - if within JSONLD REST Exchange, converts i18n map keys to JSONLD
+    * - if within JSONLD REST Exchange, converts i18n map keys to JSONLD.
+    * NB. accepting even entities with wrong model type (not instanciable, no storage
+    * because the model type or his mixins has changed, only in test),
+    * so that they may be at least read in order to be patched.
+    * However, we don't accept missing model (or reassign model to a known, wider one)
+    * otherwise it might break rights. In this case, the missing model must first be
+    * created again, before patching the entity. Anyway, such wrong models should only happen
+    * in sandbox / test / draft / not yet published phase.
+    * TODO LATER better : put such cases in data health / governance inbox, through event
     * @param entity must have its model cached
     * @return
     */
@@ -894,6 +915,7 @@ public class ResourceEntityMapperService {
    }
 
 
+   /** see entityToResource() */
    public List<DCResource> entitiesToResources(List<DCEntity> entities) {
       ArrayList<DCResource> datas = new ArrayList<DCResource>(entities.size());
       for (DCEntity entity : entities) {
