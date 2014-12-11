@@ -593,24 +593,27 @@
 
    function importedResourcePosted(resourcesOrErrorData, importStateRes, importState, kind, counter, origResources,
          success, error) { // optional
-      importStateRes.postedNb++;
-      
       if (typeof resourcesOrErrorData === 'object' && typeof resourcesOrErrorData["_headers"] === 'object') {
          // error response
-         importStateRes.errors.push([ resourcesOrErrorData._body._body, resourcesOrErrorData.request._body ]);
-         var requestBodyHtml = toolifyDcListOrResource(origResources);
+         // adding exactly one error item per request in error :
+         importStateRes.postedErrors.push([ resourcesOrErrorData._body._body, resourcesOrErrorData.request._body ]);
+         /*var requestBodyHtml = toolifyDcListOrResource(origResources);
          // NB. no need of wrapping by [...] and taking [0] because always there
          importStateRes.errorHtml += "<p>-&nbsp;" + resourcesOrErrorData._body._body
                + " :<br/>" + requestBodyHtml + "<p/>";
          for (var rInd in origResources) {
             var origResource = origResources[rInd];
-            importStateRes.postedResources[origResource['@id']] = null; // set
-         }
+            importStateRes.postedResources[origResource['@id']] = null; // used as set
+         }*/
          
       } else {
          for (var rInd in resourcesOrErrorData) {
             var postedResource = resourcesOrErrorData[rInd];
-            importStateRes.postedResources[postedResource['@id']] = postedResource; // set
+            var postedUri = postedResource['@id'];
+            if (!importStateRes.postedResources[postedUri]) {
+               importStateRes.postedResources[postedUri] = postedResource; // used as set
+               importStateRes.postedResourceUris.push(postedUri);
+            }
          }
          /*if (typeof resourcesOrData['@id'] !== 'undefined') {
             importStateRes.postedResources[resourcesOrData['@id']] = null; // set
@@ -621,39 +624,37 @@
          }*/
       }
       
-      var postedResourcesNb = Object.keys(importStateRes.postedResources).length;
-      var done = postedResourcesNb === importStateRes.toBePostedNb;
+      importStateRes.postedNb = Object.keys(importStateRes.postedResources).length; // updating
+      var done = importStateRes.toBePostedNb === (importStateRes.postedNb + importStateRes.postedErrors.length);
       
       if (true/*importStateRes.postedNb % 1000 == 0 || importStateRes.postedNb > importStateRes.toBePostedNb - 10*/) {
          var msg = "Posted <a href=\"#importedResourcesFromCsv\"";
          if (done) {
             var resourcesSummary = '';
-            var rInd = 0;
-            for (var postedUri in importStateRes.postedResources) {
-               if (rInd < 15 || rInd > postedResourcesNb - 10) {
-                  var parsedUri = parseUri(postedUri);
+            for (var rInd in importStateRes.postedResourceUris) {
+               if (rInd < 15 || rInd > importStateRes.postedNb - 10) {
+                  var parsedUri = parseUri(importStateRes.postedResourceUris[rInd]);
                   resourcesSummary += '../' + parsedUri.modelType + '/' + parsedUri.id + ' \n';
                } else if (rInd === 15) {
                   resourcesSummary += "...\n";
                }
-               rInd++;
             }
             msg += " title=\"" + resourcesSummary + "\"";
          }
-         msg += ">" + importStateRes.postedNb + " " + kind + "s</a> (";
-         if (importStateRes.errors.length === 0) {
+         msg += ">" + importStateRes.postedNb + /*' / ' + importStateRes.toBePostedNb +*/" " + kind + "s</a> (";
+         if (importStateRes.postedErrors.length === 0) {
             msg += "no error";
             msg += "), <a href=\"#datacoreResources\">browse them</a>";
          } else {
-            msg += "<a href=\"#datacoreResources\">" + importStateRes.errors.length + " error"
-            if (importStateRes.errors.length !== 1) {
+            msg += "<a href=\"#datacoreResources\">" + importStateRes.postedErrors.length + " error"
+            if (importStateRes.postedErrors.length !== 1) {
                msg += "s";
             }
             msg += "</a>";
             msg += ")";
          }
          counter.html(msg);
-         if (importStateRes.errors.length != 0) {
+         if (importStateRes.postedErrors.length != 0) {
             $('.mydata').html(importStateRes.errorHtml);
          }
       }
@@ -661,14 +662,14 @@
       if (done) {
          displayImportedResourcesPosted(importStateRes);
          
-         if (importStateRes.errors.length == 0) {
+         if (importStateRes.postedErrors.length == 0) {
             console.log("INFO Successfully posted " + importStateRes.postedNb + " " + kind + "s.");
             if (typeof success !== 'undefined') {
                success(importState);
             }
          } else {
             console.log("WARNING Posted " + importStateRes.postedNb + " "+ kind
-                  + "s with " + importStateRes.errors.length + " errors.");
+                  + "s with " + importStateRes.postedErrors.length + " errors.");
             if (typeof error !== 'undefined') {
                error(importState);
             }
@@ -678,7 +679,12 @@
       return false;
    }
    function displayImportedResourcesPosted(importStateRes) {
-      setUrl('/dc');
+      if (importStateRes.postedResourceUris.length !== 0) {
+         var lastUri = importStateRes.postedResourceUris[importStateRes.postedResourceUris.length - 1];
+         setUrl(lastUri); // showing all resources in last posted in type
+      } else {
+         setUrl('');
+      }
       $('.mydata').html(toolifyDcResource(importStateRes.postedResources, 0)); // , null, getModelTypeFromUri(data.request.path)
    }
    
@@ -1278,24 +1284,21 @@
          getData(uri, function (returnedResource) {
             // updating existing resource : 
             // NB. can't access original "resource" variable because has been changed since call is async
-            var upToDateResourceUri = returnedResource["@id"]; // ex. "http://data.oasis-eu.org/dc/type/geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
-            var upToDateResource = importState.data.resources[upToDateResourceUri];
+            var upToDateResourceUri = parseUri(returnedResource["@id"]); // ex. "http://data.oasis-eu.org/dc/type/geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
+            // and .modelType ex. "geo:CityGroup_0", .id ex. "FR/CC les Châteaux"
+            var upToDateResource = importState.data.resources[upToDateResourceUri.uri];
+            if (typeof upToDateResource === 'undefined') {
+               console.log("upToDateResource uri", upToDateResourceUri);
+            }
             upToDateResource["o:version"] = returnedResource["o:version"];
-            var resourceIri = upToDateResourceUri.substring(upToDateResourceUri.indexOf("/dc/type/") + "/dc/type/".length); // ex. "geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
-            var modelType = decodeURIComponent(resourceIri.substring(0, resourceIri.indexOf("/"))); // ex. geo:CityGroup_0
-            //var resourceId = decodeURIComponent(resourceIri.substring(resourceIri.indexOf("/") + 1));
-            postAllDataInType({ modelType: modelType }, upToDateResource,
+            postAllDataInType({ modelType: upToDateResourceUri.modelType }, upToDateResource,
                   importedDataPosted, importedDataPosted);
          }, function (data) {
             // creating new resource :
-            var resourceIri = data.request.path.replace(/^\/*dc\/type\/*/, ""); // ex. "geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
-            var modelType = decodeURIComponent(resourceIri.substring(0, resourceIri.indexOf("/"))); // ex. geo:CityGroup_0
-            // BUT don't decode URI !! (or use decoded resourceId to build URI)
-            //var resourceId = decodeURIComponent(resourceIri.substring(resourceIri.indexOf("/") + 1)); // ex. "FR/CC les Châteaux"
-            //var upToDateResourceUri = dcConf.containerUrl + "dc/type/" + modelType + "/" + resourceId;
-            var upToDateResourceUri = dcConf.containerUrl + "dc/type/" + resourceIri;
-            var upToDateResource = importState.data.resources[upToDateResourceUri];
-            postAllDataInType({ modelType: modelType }, upToDateResource,
+            var resourceUri = parseUri(data.request.path); // ex. "/dc/type/geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
+            // and .modelType ex. "geo:CityGroup_0", .id ex. "FR/CC les Châteaux"
+            var upToDateResource = importState.data.resources[resourceUri.uri];
+            postAllDataInType({ modelType: resourceUri.modelType }, upToDateResource,
                   importedDataPosted, importedDataPosted);
          });
       }
@@ -1957,12 +1960,15 @@
                warnings : [],
                errors : [],
                posted : {
-                  toBePostedNb : 0, // = modelArray length
-                  postedNb : 0,
-                  postedResources : {}, // set
-                  warnings : [],
-                  errors : [],
-                  errorHtml : "" 
+                  errors : [], // not used yet
+                  warnings : [], // not used yet
+                  toBePostedNb : 0, // = resources nb
+                  postedResources : {}, // used as set
+                  postedResourceUris : [], // to have their order
+                  postedSuccessNb : 0, // computed from postedResources
+                  postedErrors : [],
+                  //postedErrorNb : 0, // merely postedErrors.length
+                  errorHtml : ""
                }
             },
             data : {
@@ -1980,11 +1986,14 @@
                warnings : [],
                errors : [],
                posted : {
+                  errors : [], // not used yet
+                  warnings : [], // not used yet
                   toBePostedNb : 0, // = resources nb
-                  postedNb : 0,
-                  postedResources : {}, // set
-                  warnings : [],
-                  errors : [],
+                  postedResources : {}, // used as set
+                  postedResourceUris : [], // to have their order
+                  postedSuccessNb : 0, // computed from postedResources
+                  postedErrors : [],
+                  //postedErrorNb : 0, // merely postedErrors.length
                   errorHtml : ""
                }
             }

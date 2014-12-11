@@ -58,17 +58,13 @@
       // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
       // because swagger.js re-encodes
       var id = matches[2];
-      var iri = '/dc/type/' + modelType;
       var query = matches[3]; // no decoding, else would need to be first split along & and =
       if (id) {
          id = decodeURI(id);
-         iri += '/' + id;
       } else {
          id = null;
       }
-      if (query) {
-         iri += '?' + query;
-      } else {
+      if (!query) {
          query = null;
       }
       return {
@@ -76,8 +72,8 @@
          modelType : modelType,
          id : id,
          query : query,
-         uri : dcConf.containerUrl + iri,
-         iri : iri
+         uri : dcConf.containerUrl + resourceIri, // NOT encoded !!
+         iri : resourceIri // NOT encoded !!
          };
    }
    //var dcResourceUriRegex = /^http:\/\/data\.oasis-eu\.org\/dc\/type\/([^\/]+)\/(.+)$/g;
@@ -109,17 +105,13 @@
       // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
       // because swagger.js re-encodes
       var id = matches[4];
-      var iri = '/dc/type/' + modelType;
       var query = matches[5]; // no decoding, else would need to be first split along & and =
       if (id) {
          id = decodeURI(id);
-         iri += '/' + id;
       } else {
          id = null;
       }
-      if (query) {
-         iri += '?' + query;
-      } else {
+      if (!query) {
          query = null;
       }
       return {
@@ -128,9 +120,39 @@
          modelType : modelType,
          id : id,
          query : query,
-         uri : containerUrl + iri,
-         iri : iri
+         uri : resourceUri, // NOT encoded !!
          };
+   }
+   function getRelativeUrl(uri) {
+      if (typeof uri === 'object') {
+         uri = uri.uri;
+      }
+      var pInd = uri.indexOf("/dc/type/");
+      if (pInd === -1) {
+         throw "not an uri (nor path) : " + uri;
+      }
+      return uri.substring(pInd);
+   }
+   function getModelTypeAndIdUrlPart(uri) {
+      if (typeof uri === 'object') {
+         uri = uri.uri;
+      }
+      var pInd = uri.indexOf("/dc/type/");
+      if (pInd === -1) {
+         return uri;
+      }
+      return uri.substring(pInd + "/dc/type/".length);
+   }
+   function getModelTypeUrl(uri) {
+      if (typeof uri === 'object') {
+         uri = uri.uri;
+      }
+      var pInd = uri.indexOf("/dc/type/");
+      if (pInd === -1) {
+         return uri;
+      }
+      var mInd = pInd + "/dc/type/".length;
+      return uri.substring(pInd, uri.indexOf('/', mInd));
    }
 
 
@@ -305,14 +327,11 @@ function toolifyDcListOrResource(valuesOrResource) {
 }
 function setUrl(relativeUrl, dontUpdateDisplay) {
    if (!dontUpdateDisplay && doUpdateDisplay) {
-   if (relativeUrl == null || relativeUrl == "" || !relativeUrl.modelType) {
+   if (!relativeUrl || relativeUrl === "") {
       $('.myurl').val('');
       document.getElementById('mydata').innerHTML = '';
    } else {
-      if (typeof relativeUrl === 'string') {
-         relativeUrl = parseUri(relativeUrl);
-      }
-      $('.myurl').val(relativeUrl.iri);
+      $('.myurl').val(getModelTypeUrl(relativeUrl));
       document.getElementById('mydata').innerHTML = '...';
    }
    }
@@ -345,12 +364,12 @@ function findDataByType(relativeUrl, success, error, start, limit) {
       function(data) {
          var resResources = displayJsonListResult(data, success);
          if (success) {
-            success(resResources);
+            success(resResources, relativeUrl);
          }
       }, function(data) {
          setError(data._body._body);
          if (error) {
-            error(data);
+            error(data, relativeUrl);
          }
       });
    return false;
@@ -367,12 +386,12 @@ function getData(relativeUrl, success, error) {
       function(data) {
          var resResource = displayJsonObjectResult(data, success);
          if (success) {
-        	   success(resResource);
+        	   success(resResource, relativeUrl);
          }
       }, function(data) {
          setError(data._body._body);
          if (error) {
-        	   error(data);
+        	   error(data, relativeUrl);
          }
       });
    return false;
@@ -406,12 +425,12 @@ function findDataByTypeRdf(relativeUrl, success, error, start, limit) {
       function(data) {
          displayTextResult(data, success);
          if (success) {
-            success(data.content.data);
+            success(data.content.data, relativeUrl);
          }
       }, function(data) {
          setError(data._body._body);
          if (error) {
-            error(data);
+            error(data); // , resources // NB. always undefined !
          }
       });
    return false;
@@ -443,7 +462,7 @@ function postAllDataInType(relativeUrl, resources, success, error) {
       function(data) {
          setError(data._body._body);
          if (error) {
-            error(data);
+            error(data); // , resources // NB. always undefined !
          }
          /*if (error._body._body.indexOf("already existing") != -1) { // TODO better
           findDataByType(relativeUrl, callback);
@@ -471,7 +490,7 @@ function deleteDataInType(resource, success, error) {
       function(data) {
          setError(data._body._body);
          if (error) {
-            error(data);
+            error(data); // , resources // NB. always undefined !
          }
       });
    return false;
@@ -495,7 +514,7 @@ function postAllData(resources, success, error) {
             findDataByType(relativeUrl, callback);
          }*/
          if (error) {
-            error(data);
+            error(data); // , resources // NB. always undefined !
          }
       });
     return false;
