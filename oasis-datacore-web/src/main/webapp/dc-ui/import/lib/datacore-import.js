@@ -289,7 +289,7 @@
    function findResourceByUriId(subresource, mixin, importState) {
       var resourceType = mixin['dcmo:name'];
       var subResourceUri = subresource["@id"];
-      var subResourceId = getIdFromUri(subResourceUri);
+      var subResourceId = parseUri(subResourceUri).id;
       for (var modelOrMixinName in importState.model.modelOrMixins) {
          var modelOrMixin = importState.model.modelOrMixins[modelOrMixinName];
          if (modelOrMixin['dcmo:isInstanciable']) {
@@ -685,7 +685,7 @@
       } else {
          setUrl('');
       }
-      $('.mydata').html(toolifyDcResource(importStateRes.postedResources, 0)); // , null, getModelTypeFromUri(data.request.path)
+      $('.mydata').html(toolifyDcResource(importStateRes.postedResources, 0)); // , null, parseUri(data.request.path).modelType
    }
    
    
@@ -768,7 +768,7 @@
          // assuming map
          typeName = 'map'; // ??
          mixinFields = mixin;
-         enrichedModelOrMixinFieldMap = importState.model.modelOrMixins[pathInFieldNameTree[0]]['dcmo:fields']; // for import-specific data lookup
+         enrichedModelOrMixinFieldMap = importState.model.modelOrMixins[pathInFieldNameTree[0]]['dcmo:fields']; // for import-specific data lookup ; NOT globalFields (??)
          for (var pInd = 1; pInd < pathInFieldNameTree.length; pInd++) {
             var enrichedSubField = enrichedModelOrMixinFieldMap[pathInFieldNameTree[pInd]];
             var enrichedSubFieldType = enrichedSubField['dcmf:type'];

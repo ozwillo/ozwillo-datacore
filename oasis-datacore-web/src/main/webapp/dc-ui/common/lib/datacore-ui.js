@@ -31,17 +31,6 @@
       return dcConf.containerUrl + "/dc/type/" + encodeUriPathComponent(typeName)
             + "/" + (shouldEncodeId ? encodeIdSaveIfNot(id) : id);
    }
-   // also supports relative & no id after modelType
-   function getModelTypeFromUri(subResourceUri) { // TODO regex
-      var mInd = subResourceUri.indexOf('dc/type/') + 'dc/type/'.length;
-      var nextSlashInd = subResourceUri.indexOf('/', mInd);
-      return decodeURIComponent(subResourceUri.substring(mInd,
-            (nextSlashInd !== -1) ? nextSlashInd : subResourceUri.length));
-   }
-   function getIdFromUri(subResourceUri) { // TODO regex
-      return decodeURI(subResourceUri.substring(subResourceUri
-            .indexOf('/', subResourceUri.indexOf('/dc/type/') + '/dc/type/'.length) + 1));
-   }
    // only supports relative uri (iri) ex. /dc/type/model/id and query, but modelType at least is required
    //var dcResourceIriRegex = /^\/+dc\/+type\/+([^\/\?]+)\/*([^\?]+)?\??(.*)$/g; // NOO seems stateful, else sometimes matches gets null
    function parseIri(resourceIri) { // TODO regex
@@ -133,6 +122,7 @@
       }
       return uri.substring(pInd);
    }
+   /*
    function getModelTypeAndIdUrlPart(uri) {
       if (typeof uri === 'object') {
          uri = uri.uri;
@@ -143,8 +133,13 @@
       }
       return uri.substring(pInd + "/dc/type/".length);
    }
+   */
    function getModelTypeUrl(uri) {
-      if (typeof uri === 'object') {
+      if (typeof uri !== 'object') {
+         uri = parseUri(uri);
+      }
+      return uri.containerUrl + "/dc/type/" + encodeUriPathComponent(uri.modelType);
+      /*if (typeof uri === 'object') {
          uri = uri.uri;
       }
       var pInd = uri.indexOf("/dc/type/");
@@ -152,7 +147,11 @@
          return uri;
       }
       var mInd = pInd + "/dc/type/".length;
-      return uri.substring(pInd, uri.indexOf('/', mInd));
+      var iInd = uri.indexOf('/', mInd);
+      if (iInd === -1) {
+         iInd = uri.length;
+      }
+      return uri.substring(pInd, iInd);*/
    }
 
 
@@ -212,7 +211,7 @@ function toolifyDcResource(resource, depth, modelType, upperResource, keyPathInR
          modelType = resource["@type"][0];
          upperResource = resource;
       } else if (typeof resource["@id"] !== 'undefined') {
-         modelType = getModelTypeFromUri(resource["@id"]);
+         modelType = parseUri(resource["@id"]).modelType;
          upperResource = resource;
       } // else mere hashmap of resources, use elements themselves as resources
       keyPathInResource = []; // else KO below
@@ -284,7 +283,7 @@ function toolifyDcResourceUri(value) {
          + '<a href="/dc/type/$1" class="dclink" onclick="'
          + 'javascript:return findDataByType($(this).attr(\'href\'));'
          + '">$1</a>'
-         + '<a href="/dc/type/dcmo:model_0?dcmo:fields.dcmf:resourceType=$1" class="dclink" onclick="'
+         + '<a href="/dc/type/dcmo:model_0?dcmo:globalFields.dcmf:resourceType=$1" class="dclink" onclick="'
          + 'javascript:return findLinkedData(\'/dc/type/$1/$2\');'
          + '">/</a>'
          + '<a href="/dc/type/$1/$2" class="dclink" onclick="'
@@ -327,11 +326,14 @@ function toolifyDcListOrResource(valuesOrResource) {
 }
 function setUrl(relativeUrl, dontUpdateDisplay) {
    if (!dontUpdateDisplay && doUpdateDisplay) {
+      if (typeof relativeUrl === 'object') {
+         relativeUrl = relativeUrl.uri;
+      }
    if (!relativeUrl || relativeUrl === "") {
       $('.myurl').val('');
       document.getElementById('mydata').innerHTML = '';
    } else {
-      $('.myurl').val(getModelTypeUrl(relativeUrl));
+      $('.myurl').val(getRelativeUrl(relativeUrl));
       document.getElementById('mydata').innerHTML = '...';
    }
    }
@@ -536,7 +538,7 @@ function displayTextResult(data, dontUpdateDisplay) {
 function displayJsonObjectResult(data, dontUpdateDisplay) {
    var resource = eval('[' + data.content.data + ']')[0];
    if (!dontUpdateDisplay && doUpdateDisplay) {
-   var prettyJson = toolifyDcResource(resource, 0); // ,  getModelTypeFromUri(data.request.path) // , upperResource, keyPathInResource
+   var prettyJson = toolifyDcResource(resource, 0); // ,  parseUri(data.request.path).modelType // , upperResource, keyPathInResource
    //var prettyJson = JSON.stringify(resource, null, '\t').replace(/\n/g, '<br>');
    //prettyJson = toolifyDcResourceJson(prettyJson);
    $('.mydata').html(prettyJson);
@@ -547,7 +549,7 @@ function displayJsonObjectResult(data, dontUpdateDisplay) {
 function displayJsonListResult(data, dontUpdateDisplay) {
    var resResources = eval(data.content.data);
    if (!dontUpdateDisplay && doUpdateDisplay) {
-   var prettyJson = toolifyDcList(resResources, 0, null, getModelTypeFromUri(data.request.path));
+   var prettyJson = toolifyDcList(resResources, 0, null, parseUri(data.request.path).modelType);
 
    // adding "..." link for pagination :
    var start = 0;
@@ -590,47 +592,75 @@ function displayJsonListResult(data, dontUpdateDisplay) {
    return resResources;
 }
 
-function findLinkedData(resourceUri, linkingModelType) {
+function findLinkedData(resourceUri, linkingModelType, queryFieldPath) {
    var parsedUri = parseUri(resourceUri);
    if (typeof linkingModelType === 'undefined') {
       linkingModelType = parsedUri.modelType;
    }
+   if (typeof queryFieldPath === 'undefined') {
+      queryFieldPath = '';
+   }
+   ///var depth = queryFieldPath.split('.').length - 2; // 0 for dcmo:globalFields.dcmf:resourceType
    var isModel = parsedUri.modelType.indexOf('dcmo:model_') === 0;
    if (isModel) { // lookup instances in this model :
       findDataByType("/dc/type/" + parsedUri.id); // NB. works even if not storage thanks to polymorphism
    } else { // lookup models linking to this one and display them and their resources :
-      findDataByType("/dc/type/dcmo:model_0?dcmo:fields.dcmf:resourceType=" + linkingModelType,
-            function(modelResources) {
-         getData(parsedUri, function(linkedResource) {
-            displayModelAndResourceLinks(modelResources, linkedResource, parsedUri, linkingModelType);
+      var linkedModelUrl = "/dc/type/dcmo:model_0?dcmo:globalFields." + queryFieldPath + "dcmf:resourceType=" + linkingModelType;
+      setUrl(linkedModelUrl);
+      findDataByType(linkedModelUrl, function(topLevelLinkingModelResources) {
+         // also list fields using embedded subresource dcmf:field_0 stored in dcmo:mixin_0 :
+         findDataByType("/dc/type/dcmo:model_0?dcmo:globalFields." + queryFieldPath + "dcmf:listElementField.dcmf:resourceType=" + linkingModelType,
+               function(topLevelListLinkingModelResources) {
+            getData(parsedUri, function(linkedResource) {
+               displayModelAndResourceLinks(linkedResource, parsedUri, queryFieldPath, linkingModelType,
+                     topLevelLinkingModelResources, topLevelListLinkingModelResources);
+            });
          });
+         // TODO LATER anyway, it doesn't handle all list + field combinations ex. list.field.field,
+         // so thinkg of more queriable storage for models ex. to allow to query fields at every depth :
+         // ex. (additional) per field collection entity with materialized path in mongo, or relational database, or (db'd, collaborative) EMF, or triplestore !!
+         
+         // NB. simpler version without lists :
+         /*getData(parsedUri, function(linkedResource) {
+            displayModelAndResourceLinks(linkedResource, parsedUri, linkingModelType,
+                  topLevelLinkingModelResources, [], depth);
+         });*/
       });
       // NB. for subresources : models having this one as mixin can be found by ":" on @type
-      // TODO LATER also on dcmo:fields.dcmf:mapFields.dcmf:resourceType for top level maps' fields...
+      // TODO LATER also on dcmo:globalFields.dcmf:mapFields.dcmf:resourceType for top level maps' fields...
    }
    return false;
 }
 // displays linking models and their resources
-function displayModelAndResourceLinks(linkingModels, linkedResource, parsedUri, linkingModelType) {
-   if (typeof linkingModelType === 'undefined') {
-      linkingModelType = parsedUri.modelType;
-   }
+function displayModelAndResourceLinks(linkedResource, parsedUri, queryFieldPath, linkingModelType,
+      linkingModels, listLinkingModels) {
    var html = '';
+   html += displayModelAndResourceFieldLinks(linkingModels, parsedUri, queryFieldPath, linkingModelType, 'field');
+   html += lineBreak(0);
+   html += displayModelAndResourceFieldLinks(listLinkingModels, parsedUri, queryFieldPath + 'dcmf:listElementField.', linkingModelType, 'list field');
+   html += displayModelMixinLinks(linkedResource, parsedUri, linkingModelType);
+   $('.mydata').html(html);
+}
+function displayModelAndResourceFieldLinks(linkingModels, parsedUri, queryFieldPath, linkingModelType, fieldKind) {
+   var html;
+   var depth = queryFieldPath.split('.').length - 1; // 1 for (dcmo:globalFields).dcmo:globalFields(.dcmf:resourceType)
    if (linkingModels.length === 0) {
       html = 'No model links through '
          + '<a href="/dc/type/dcmo:model_0/' + linkingModelType + '" class="dclink" onclick="'
          + 'javascript:return getData($(this).attr(\'href\'));'
          + '">' + linkingModelType + '</a>'
-         + ' at top level to ' + lineBreak(1) + toolifyDcResourceUri(parsedUri.uri) + ' .';
+         + ' by a ' + depth + '-deep ' + fieldKind + ' to ' + lineBreak(1) + toolifyDcResourceUri(parsedUri.uri) + ' .';
    } else {
       html = 'There are ' + linkingModels.length + ' model(s) linking through '
          + '<a href="/dc/type/dcmo:model_0/' + linkingModelType + '" class="dclink" onclick="'
          + 'javascript:return getData($(this).attr(\'href\'));'
          + '">' + linkingModelType + '</a>'
-         + ' at top level to ' + lineBreak(1) + toolifyDcResourceUri(parsedUri.uri) + ' :'; // NB. line break is below
+         + ' by a ' + depth + '-deep ' + fieldKind + ' to ' + lineBreak(1) + toolifyDcResourceUri(parsedUri.uri) + ' :'; // NB. line break is below
       for (var mInd in linkingModels) {
          var linkingModel = linkingModels[mInd];
-         var field = findResource(linkingModel['dcmo:fields'], { 'dcmf:resourceType' : linkingModelType });
+         var criteria = {};
+         criteria[queryFieldPath + 'dcmf:resourceType'] = linkingModelType;
+         var field = findResource(linkingModel['dcmo:globalFields'], criteria);
          var modelType = linkingModel['dcmo:name'];
          html += lineBreak(0) + '- ';
          html += '<a href="/dc/type/dcmo:model_0/' + modelType + '" class="dclink" onclick="'
@@ -649,8 +679,14 @@ function displayModelAndResourceLinks(linkingModels, linkedResource, parsedUri, 
             + '...';
       }
    }
-   html += displayModelMixinLinks(linkedResource, parsedUri, linkingModelType);
-   $('.mydata').html(html);
+   queryFieldPath = 'dcmo:globalFields.' + queryFieldPath;
+   html += lineBreak(0) + 'You can also try '
+   + '<a href="/dc/type/dcmo:model_0dcmo:globalFields.?' + queryFieldPath + 'dcmf:resourceType=' + linkingModelType + '" class="dclink" onclick="'
+   + 'javascript:return findLinkedData(\'/dc/type/' +  parsedUri.modelType
+   + '/' +  parsedUri.id + '\', \'' + linkingModelType + '\', \'' + queryFieldPath + '\');'
+   + '">at further depth</a>'
+   + "...";
+   return html;
 }
 function displayModelMixinLinks(linkedResource, parsedUri, linkingModelType) {
    var html = '';
@@ -663,7 +699,7 @@ function displayModelMixinLinks(linkedResource, parsedUri, linkingModelType) {
             continue;
          }
          html += lineBreak(1) + '- ';
-         html +=  '<a href="/dc/type/dcmo:model_0?dcmo:fields.dcmf:resourceType=' + mixinName + '" class="dclink" onclick="'
+         html +=  '<a href="/dc/type/dcmo:model_0?dcmo:globalFields.dcmf:resourceType=' + mixinName + '" class="dclink" onclick="'
             + 'javascript:return findLinkedData(\'/dc/type/' +  parsedUri.modelType + '/' +  parsedUri.id + '\', \'' + mixinName + '\');'
             + '">' + mixinName + '</a>'
             + "...";
@@ -681,7 +717,8 @@ function findResource(resources, criteria) {
       var resource = resources[rInd];
       var found = true;
       for (var key in criteria) {
-         if (resource[key] !== criteria[key]) {
+         var keyPathElts = key.split('.');
+         if (!checkResourceCriteria(resource, keyPathElts, 0, criteria[key])) {
             found = false;
             break;
          }
@@ -691,4 +728,20 @@ function findResource(resources, criteria) {
       }
    }
    return null;
+}
+
+function checkResourceCriteria(subresourceOrValue, keyPathElts, depth, value) {
+   if (subresourceOrValue instanceof Array) {
+      for (var i in subresourceOrValue) {
+         if (checkResourceCriteria(subresourceOrValue[i], keyPathElts, depth, value)) { // same depth
+            return true;
+         }
+      }
+      return false;
+   } else if (depth == keyPathElts.length) {
+      return subresourceOrValue == value;
+   } else {
+      subresourceOrValue = subresourceOrValue[keyPathElts[depth]];
+      return checkResourceCriteria(subresourceOrValue, keyPathElts, depth + 1, value);
+   }
 }
