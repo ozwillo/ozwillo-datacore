@@ -18,8 +18,10 @@ import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
+import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
+import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.core.meta.model.DCSecurity;
 import org.oasis.datacore.core.security.DCUserImpl;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
@@ -281,6 +283,9 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
                  if("map".equals(dcField.getType())) {
                     dcField = handleMapField(dcField, fieldPathElement,
                           queryParsingContext, entityFieldPathSb, fieldPathElements, i);
+                 } else if ("resource".equals(dcField.getType())) { // TODO noooooooooooo embedded / subresource
+                    dcField = handleResourceField(dcField, fieldPathElement,
+                          queryParsingContext, entityFieldPathSb, fieldPathElements, i);
                  } else {
                     entityFieldPathSb.append(fieldPathElement);
                  }
@@ -288,10 +293,8 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
                } while (dcField != null && "list".equals(dcField.getType()));
                
             } else if ("resource".equals(dcField.getType())) { // TODO noooooooooooo embedded / subresource
-               queryParsingContext.addError("Found criteria requiring join : in type " + dcModel.getName() + ", field "
-                     + fieldPath + " (" + i + "th in field path elements " + Arrays.asList(fieldPathElements)
-                     + ") can't be done in findDataInType, do it rather on client side");
-               continue parameterLoop; // TODO boum
+               dcField = handleResourceField(dcField, fieldPathElement,
+                     queryParsingContext, entityFieldPathSb, fieldPathElements, i);
                
             } else if ("i18n".equals(dcField.getType())) {
                dcField = handleI18nField(dcField, fieldPathElement,
@@ -301,7 +304,8 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
             } else {
                queryParsingContext.addError("In type " + dcModel.getName() + ", can't find field with path elements"
                      + Arrays.asList(fieldPathElements) + ": can't go below " + i + "th element " 
-                     + fieldPathElement + ", because field type is neither map nor list nor i18n but " + dcField.getType());
+                     + fieldPathElement + ", because field type is neither map nor list nor i18n "
+                     + "nor embedded subresource but " + dcField.getType());
                continue parameterLoop; // TODO boum
             }
             
@@ -383,6 +387,49 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
                + ((i == 0) ? fieldPathElements.length - 1 : i) + "th path element "
                + fieldPathElement + ", because field is unkown. Allowed fields are "
                + ((DCMapField) dcField).getMapFields().keySet());
+      }
+      String entityFieldPathElement = fieldPathElement;
+      entityFieldPathSb.append(entityFieldPathElement);
+      return subDcField;
+   }
+
+   private DCField handleResourceField(DCField dcField, String fieldPathElement,
+         DCQueryParsingContext queryParsingContext, StringBuilder entityFieldPathSb,
+         String[] fieldPathElements, int i) {
+      queryParsingContext.addWarning("Found criteria which might require join, "
+            + "resolving it as embedded subresource for now : in type "
+            + queryParsingContext.peekModel().getName() + ", field "
+      //queryParsingContext.addError("Found criteria requiring join : in type " + dcModel.getName() + ", field "
+      //      + fieldPath + " (" + i + "th in field path elements " + Arrays.asList(fieldPathElements)
+            + ") can't be done in findDataInType, do it rather on client side");
+      //continue parameterLoop; // TODO boum
+      String linkModelType = ((DCResourceField) dcField).getResourceType();
+      DCModelBase linkModel = modelService.getModelBase(linkModelType);
+      if (linkModel == null) {
+         // TODO LATER OPT client side might deem it a data health / governance problem,
+         // and put it in the corresponding inbox
+         queryParsingContext.addError("In type " + queryParsingContext.peekModel().getName()
+               + ", can't find field with path elements"
+               + Arrays.asList(fieldPathElements) + ": can't go below "
+               + ((i == 0) ? fieldPathElements.length - 1 : i) + "th path element "
+               + fieldPathElement + ", because resource field modelType " + linkModelType
+               + " is unkown. Maybe it is badly spelled, or it has been deleted "
+               + "or renamed since (only in test). In this case, the missing model must first "
+               + "be created again, before patching the entity.");
+         return null;
+      }
+      DCModelBase linkStorageModel = modelService.getStorageModel(linkModelType);
+      // TODO check linkStorageModel, separate cases :
+      // fully embedded (isInstanceStorage ? storagePath ? storageModel ?), refMixin,
+      // external resource (in which case explode because a join is required)
+      DCField subDcField = linkModel.getGlobalField(fieldPathElement);
+      if (subDcField == null) {
+         queryParsingContext.addError("In type " + queryParsingContext.peekModel().getName()
+               + ", can't find field with path elements"
+               + Arrays.asList(fieldPathElements) + ": can't go below "
+               + ((i == 0) ? fieldPathElements.length - 1 : i) + "th path element "
+               + fieldPathElement + ", because field is unkown. Allowed fields are "
+               + linkModel.getGlobalFieldMap().keySet());
       }
       String entityFieldPathElement = fieldPathElement;
       entityFieldPathSb.append(entityFieldPathElement);
