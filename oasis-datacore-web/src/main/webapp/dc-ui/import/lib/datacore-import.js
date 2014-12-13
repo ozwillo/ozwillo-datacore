@@ -1,5 +1,65 @@
 //var containerUrl = "http://data.oasis-eu.org/"; // rather in dcConf filled at init by /dc/playground/configuration
-  
+
+   
+//////////////////////////////////////////////////:
+// DATA MANIPULATION
+   
+   // generate ids for URIs :
+   // * hashing confidential info for uri id, even securely, is bad practice (since the uri is widely exposed).
+   // Moreover generating hashes from non-confidential info makes no sense (since not confidential, hashing is not required),
+   // save to get a shorter version of it, which is a different use case that is addressed by http://hashids.org ).
+   // * id unicity (across time, users, shards...) is actually the first (and only, see above) property to be ensured.
+   
+   // MOST CASES generate unique (not secure) hash-like id :
+   // TODO murmur3 https://github.com/garycourt/murmurhash-js and see discussions
+   // at http://hashids.org/ and also http://instagram-engineering.tumblr.com/post/10853187575/sharding-ids-at-instagram
+   // and http://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript-jquery
+   
+   // IF URI ID IS REALLY TOO LONG generate unique short (hash or two-way) (not secure) id :
+   // (unique as long as encoded info is unique. Else make it unique using other info ex. murmur3, see above)
+   // TODO two-way : http://hashids.org (2-way, for numbers only)
+   // TODO hash : md5, sha1...
+   
+   // TODO IF NEEDED also base64 encode it
+
+   // IF REALLY IT IS NEEDED generate secure hash id :
+   // (make it unique using other info ex. murmur3, see above)
+   // TODO SHA256 https://bitwiseshiftleft.github.io/sjcl/ , see also http://stackoverflow.com/questions/18338890/are-there-any-sha-256-javascript-implementations-that-are-generally-considered-t
+   // and https://crackstation.net/hashing-security.htm
+   // full TLS impl https://github.com/digitalbazaar/forge
+   // https://code.google.com/p/crypto-js/
+   
+   var hashids = new Hashids("OASIS Datacore Playground Import Tool"); // https://github.com/ivanakimov/hashids.js 298e9a7f8241f074256f50f0ffa3631f8f4f03e1
+   // examples :
+   //var id = hashids.encode(1, 2, 3);
+   //var numbers = hashids.decode(id);
+   
+   // Java String.hashCode() see http://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript-jquery
+   function hashCodeId(s) {
+      return '' + hashCode(s); // convert to string
+   }
+   function hashCode(s) {
+      var hash = 0, i, chr, len;
+      if (s.length == 0) return hash;
+      for (i = 0, len = s.length; i < len; i++) {
+         chr   = s.charCodeAt(i);
+         hash  = ((hash << 5) - hash) + chr;
+         hash |= 0; // Convert to 32bit integer
+      }
+      return hash;
+   }
+   /*String.prototype.hashCode = function() {
+      var hash = 0, i, chr, len;
+      if (this.length == 0) return hash;
+      for (i = 0, len = this.length; i < len; i++) {
+         chr   = this.charCodeAt(i);
+         hash  = ((hash << 5) - hash) + chr;
+         hash |= 0; // Convert to 32bit integer
+      }
+      return hash;
+   };*/
+
+
   // first four letters of model import file
   function buildModelDomainPrefix(modelFileName) {
      return modelFileName.substring(modelFileName.lastIndexOf('/') + 1, 3).toLowerCase();
@@ -47,18 +107,19 @@
       "float" : parseFloat,
       "long" : identity, // javascript has no long, though int ones could be parsed
       "double" : identity, // idem
-      "list" : function(stringValue, mixinField) {
+      "list" : function(stringValue, mixinField, importState) {
          var values = [];
          var stringValues = stringValue.split(",");
          var listElementField = mixinField["dcmf:listElementField"];
          for (var svInd in stringValues) {
-            values.push(convertValue(stringValues[svInd], listElementField));
+            values.push(convertValue(stringValues[svInd], listElementField, importState));
          }
          return values;
       }
       // TODO i18n (list of maps) (not here : map, subresource)
    }
-   function convertValue(stringValue, mixinField) {
+   function convertValue(stringValue, mixinField,
+         importState) { // optional, allows to use state when importconf:evalAsJs
       if (typeof stringValue === 'undefined' || stringValue == null) {
          return null; // TODO raise error, shouldn't happen in CSV !(?)
       }
@@ -70,6 +131,8 @@
          }
          if (mixinField["importconf:evalAsJs"]) {
             return eval(stringValue);
+         } else if (mixinField["importconf:jsFunctionToEval"]) {
+            return eval(mixinField["importconf:jsFunctionToEval"])(stringValue);
          }
          return stringValue;
       }
@@ -82,7 +145,7 @@
       if (convertFunction === 'undefined') { // TODO error
          return "ERROR unknown type " + fieldType + " for value " + stringValue;
       }
-      return convertFunction(stringValue, mixinField);
+      return convertFunction(stringValue, mixinField, importState);
    }
    
    function getDefaultValueIfAny(mixinField, importState,
@@ -102,7 +165,7 @@
             // handling Datacore server-serialized stringValue :
             defaultStringValue = defaultStringValue.substring(1, defaultStringValue.length - 1);
          }
-         return convertValue(defaultStringValue, mixinField);
+         return convertValue(defaultStringValue, mixinField, importState);
       }
       return null;
    }
@@ -496,7 +559,7 @@
          
       } else if (existingValue === newValue) {
          // nothing to do
-      } else if (existingValue === convertValue(field['dcmf:defaultStringValue'], field)) {
+      } else if (existingValue === convertValue(field['dcmf:defaultStringValue'], field, importState)) {
          // (including external resource case)
          existingResource[key] = newValue; // allow to override default value
       } else {
@@ -544,18 +607,18 @@
    function mergeStringValueOrDefaultIfAny(existingResource, key, newStringValue, mixin, importState,
          defaultStringValue) { // optional
       var mergeField = findField(key, mixin["dcmo:globalFields"]);
-      var newValue = convertValue(newStringValue, mergeField);
+      var newValue = convertValue(newStringValue, mergeField, importState);
       if (newValue === null) {
          var existingValue = existingResource[key];
          if (typeof existingValue === 'undefined' || existingValue === null) {
             // no value yet
             if (typeof defaultStringValue !== 'undefined') {
-               newValue = convertValue(defaultStringValue, mergeField);
+               newValue = convertValue(defaultStringValue, mergeField, importState);
             }
             if (newValue === null) {
                var defaultStringValue = mergeField["dcmf:defaultStringValue"];
                if (typeof defaultStringValue !== 'undefined') {
-                  newValue = convertValue(defaultStringValue, mergeField);
+                  newValue = convertValue(defaultStringValue, mergeField,importState);
                }
             }
          } // else no need to compute default value, there is already one
@@ -714,10 +777,20 @@
       }
       
       // (sub)resource field values might be provided, let's look for them
-      var subresource = csvRowToDataResource(resourceMixinOrFields, resourceRow,
-            subFieldNameTree, subPathInFieldNameTree, null, importState);
-      if (importState.aborted) {
-         return abortImport(); // not only with csvRowToDataResource() else the Abort message would get overwritten 
+      var subresource;
+      try {
+         importState.data.row.fieldNameTreeStack.push(subFieldNameTree);
+         subresource = csvRowToDataResource(resourceMixinOrFields, resourceRow,
+               subFieldNameTree, subPathInFieldNameTree, null, importState);
+      } catch (e) {
+         if (importState.aborted) {
+            abortImport(); // not only with csvRowToDataResource() else the Abort message would get overwritten
+         } else {
+            abortImport(e);
+         }
+         return null;
+      } finally {
+         importState.data.row.fieldNameTreeStack.pop();
       }
       
       if (subresource === null) {
@@ -808,10 +881,7 @@
          }
          
          var fieldOrListField = enrichedModelOrMixinFieldMap[fieldName];
-         if (typeof resource[fieldName] !== 'undefined') {
-            mixinHasValue = true;
-            continue; // skipping, value already found in this row WARNING NOT FOR MULTIPLE LANGUAGES IN A SINGLE LINE
-         }
+         var fieldOrListFieldType = fieldOrListField["dcmf:type"];
          
          var subFieldNameTree = fieldNameTree[fieldName];
          // copy and stack up subPathInFieldNameTree : TODO LATER push on & pop from stack
@@ -824,8 +894,7 @@
          
          var value = null;
          var field = fieldOrListField;
-         var fieldType = fieldOrListField["dcmf:type"];
-         var fieldOrListFieldType = fieldType;
+         var fieldType = fieldOrListFieldType;
          while (fieldOrListFieldType === 'list' || fieldOrListFieldType === 'i18n') {
             fieldOrListField = fieldOrListField['dcmf:listElementField'];
             fieldOrListFieldType = fieldOrListField["dcmf:type"];
@@ -833,7 +902,7 @@
          
          if (subFieldNameTree !== null // else primitive (?)
                && typeof subFieldNameTree === 'object' // ex. {} ; typeof fieldOrListField["dcmf:type"] !== 'resource'
-                  && subFieldNameTree['type'] ==='node') { // else leaf (primitive)
+                  && subFieldNameTree['type'] === 'node') { // else leaf (primitive)
             
             if (fieldType === 'list' || fieldType === 'i18n') {
                // import 0, 1... nth list item (map or (embedded or not) resource) if defined in fieldNameTree import plan
@@ -859,6 +928,16 @@
             value = importMapOrResourceValue(fieldOrListField, resourceRow, subFieldNameTree,
                   mixin, fieldName, subPathInFieldNameTree, importState);
          }
+
+         // optimization, but doesn't skip much (only primitive value & mainly autolinking lookup) !
+         if (value === null && typeof resource[fieldName] !== 'undefined'
+               && fieldOrListFieldType !== fieldType) { // list or i18n
+            mixinHasValue = true; // TODO or default value ?!!
+            continue; // skipping, value already found in this row
+            // WARNING NOT FOR MULTIPLE LANGUAGES IN A SINGLE LINE OR SAME FOR LIST
+            // Can't skip earlier, because dotted pathes-linked (embedded or linked) resources or map
+            // may still need some non-id resource fields to be autolinked
+         } // else if value != null will skip anyway and go directly to adding it, TODO LATER skip adding it then when kept in state
          
          if (value === null) {
             // looking for local value :
@@ -879,7 +958,7 @@
                   value = resourceRow[fieldName];
                }
                if (typeof value !== 'undefined') {
-                  value = convertValue(value, fieldOrListField); // NB. empty becomes null
+                  value = convertValue(value, fieldOrListField, importState); // NB. empty becomes null
                   // NB. if null, means among imported fields but empty (!fieldHasValue), and default value will be set if any
                   if (value !== null && fieldOrListField['dcmf:type'] === 'resource' && value.indexOf('http') !== 0) {
                      importState.data.errors.push({ code : "resourceUriReadInCsvNotHttp",
@@ -958,6 +1037,15 @@
             }
             resource[fieldName] = value;
          }
+         
+         // shortcut abort when this missing field would make id building & resource creation incomplete :
+         /*var indexInId = idField["dcmf:indexInId"]; // NB. this import-specific conf has been enriched in refreshed involvedMixins' global fields
+         if (typeof indexInId === 'number') {
+            var idValue = resource[idFieldName];
+            if (typeof idValue === 'undefined' || idValue === null || idValue === "") {
+               
+            }
+         }*/
          
       } // end field loop
       
@@ -1185,6 +1273,7 @@
               loopIndex : 0,
               resourceRow : resultsData[rInd + ''], // convert to string !!
               modelTypeToRowResources : {},
+              fieldNameTreeStack : [],
               missingIdFieldResourceOrMixins : null
         };
         
@@ -1208,6 +1297,7 @@
              }
              
              try {
+                importState.data.row.fieldNameTreeStack.push(importState.model.mixinNameToFieldNameTree[mixin["dcmo:name"]]);
              importedResource = csvRowToDataResource(mixin, importState.data.row.resourceRow, null,
                    [ mixin["dcmo:name"] ], importState.data.row.modelTypeToRowResources, importState);
              } catch (e) {
@@ -1217,6 +1307,8 @@
                    abortImport(e);
                 }
                 return;
+             } finally {
+                importState.data.row.fieldNameTreeStack.pop();
              }
              
              if (importedResource == null) {
@@ -1266,6 +1358,13 @@
      }
 
       displayParsedResource(importState);
+
+      importState.data.posted.toBePostedNb = Object.keys(importState.data.resources).length;
+      if (importState.data.posted.toBePostedNb === 0) {
+         importedResourcePosted([], importState.data.posted, importState,
+               "resource", $('.resourceCounter'), null);
+         concludeImport();
+      }
       
       function importedDataPosted(resourceOrData, origResources) {
          var done = importedResourcePosted(resourceOrData, importState.data.posted, importState,
@@ -1274,7 +1373,6 @@
             concludeImport();
          }
       }
-      importState.data.posted.toBePostedNb = Object.keys(importState.data.resources).length;
       for (var uri in importState.data.resources) {
          if (importState.aborted) {
             return abortImport();
@@ -1516,7 +1614,8 @@
       // import conf-specific (not in server-side model) :
       // NB. importconf:internalName & defaultValue are in fieldNameTree import plan
       mergeImportConfStringValue(field, "importconf:dontEncodeIdInUri", fieldRow["dontEncodeIdInUri"], "boolean");
-      mergeImportConfStringValue(field, "importconf:evalAsJs", fieldRow["jsToEval"], "string");
+      mergeImportConfStringValue(field, "importconf:evalAsJs", fieldRow["evalAsJs"], "boolean");
+      mergeImportConfStringValue(field, "importconf:jsFunctionToEval", fieldRow["jsFunctionToEval"], "string");
       
       // for app.js / openelec (NOT required) :
       var description = trimIfAnyElseNull(fieldRow["Description"]);
@@ -1732,8 +1831,10 @@
            } // else can be skipped, map listElementField already defined
 
            // import plan-specific (not in server-side model nor generic field import conf) :
-           if (typeof fieldNameTreeCur[fieldName] !== 'object') { // ex. 'undefined' or {} (should not happen ?)
+           if (typeof fieldNameTreeCur[fieldName] === 'undefined') {
               fieldNameTreeCur[fieldName] = { type:'leaf' };
+           }
+           if (fieldNameTreeCur[fieldName]['type'] === 'leaf') { // NB. merge even if already seen & defined
               mergeImportConfStringValue(fieldNameTreeCur[fieldName], 'importconf:internalName',
                     fieldRow["Internal field name"].trim(), // else can't find ex. OpenElec "code_departement_naissance " !!
                     "string");

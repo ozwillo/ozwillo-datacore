@@ -1,6 +1,8 @@
 //var containerUrl = "http://data.oasis-eu.org/"; // rather in dcConf filled at init by /dc/playground/configuration
 
 
+//////////////////////////////////////////////////:
+// URI
    
    function encodeUriPath(uriPath) {
       if (uriPath.indexOf("/") === -1) {
@@ -153,7 +155,10 @@
       }
       return uri.substring(pInd, iInd);*/
    }
-
+   
+   
+//////////////////////////////////////////////////:
+// PLAYGROUND TOOLIFY
 
 // TODO rm OBSOLETE
 function toolifyDcResourceJson(prettyDcResourceJson) {
@@ -346,6 +351,13 @@ function setError(errorMsg) {
 	return false;
 }
 
+
+//////////////////////////////////////////////////:
+// API
+
+//////////////////////////////////////////////////:
+// READ
+
 // optional : success, error, start (else 0, max 500), limit (else 10 !!! max 100 !)
 function findDataByType(relativeUrl, success, error, start, limit) {
    if (typeof relativeUrl === 'string') {
@@ -524,7 +536,7 @@ function postAllData(resources, success, error) {
 
 
 ///////////////////////
-// CALLBACKS
+// DISPLAY CALLBACKS
 
 var doUpdateDisplay = true;
 
@@ -591,6 +603,10 @@ function displayJsonListResult(data, dontUpdateDisplay) {
    }
    return resResources;
 }
+
+
+//////////////////////////////////////////////////:
+// PLAYGROUND ADVANCED BROWSING
 
 function findLinkedData(resourceUri, linkingModelType, queryFieldPath) {
    var parsedUri = parseUri(resourceUri);
