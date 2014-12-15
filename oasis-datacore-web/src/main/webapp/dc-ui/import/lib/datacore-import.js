@@ -1299,10 +1299,6 @@
                   // NB. not putting alreadyFoundResource in resources, only using it as id,
                   // but will be reused at resource POST time to avoid reGETting it
                }
-               findDataByType(lookupQuery, function(fieldNameMixinsFound) {
-                  var a = 1;
-                  //TODO
-               });
             }
          }
          
@@ -1413,28 +1409,27 @@
       return resource;
    }
            
-   function csvToData(resultsData, importState) {
-      var rLength = Math.min(resultsData.length, getResourceRowStart() + getResourceRowLimit());
-      importState.data.rowNb = 0;
-      for (var rInd = getResourceRowStart(); rInd < rLength ; rInd++) {
-         importState.data.rowNb++; // nb. rInd is string
-        console.log("row " + rInd);//
-        ///var importStateRowData = {};
-        ///importState.data.push(importStateRowData);
-        // TODO by push / step
+   function csvToData(importState) {
+      if (importState.data.rInd < importState.data.rLength) {
+        
+         if (importState.data.row === null || importState.data.row.done) {
+            importState.data.rowNb++; // nb. rInd is string
+            console.log("row " + importState.data.rInd);//
         importState.data.row = {
               loopIndex : 0,
-              resourceRow : resultsData[rInd + ''], // convert to string !!
+              resourceRow : importState.data.rows[importState.data.rInd + ''], // convert to string !!
               modelTypeToRowResources : {},
               fieldNameTreeStack : [],
               previousMissingIdFieldResourceOrMixinNb : -1,
-              lookupQueriesToRun : []
-        };
+              lookupQueriesToRun : [],
+              done : false
+         };
+         } // else next iteration in same row
         
         ///csvRowToData(importState);
         
         // mixins loop :
-        do {
+        /*do {*/
            importState.data.row.iteration = {
                  missingIdFieldMixinToResources : {},
                  errors : [], // NB. assigning is the fastest way to empty an array anyway
@@ -1486,7 +1481,10 @@
              }
         }
 
-           if (Object.keys(importState.data.row.iteration.missingIdFieldMixinToResources).length // size equality enough if involvedMixins don't change
+           if (importState.data.row.previousMissingIdFieldResourceOrMixinNb === 0) {
+              importState.data.row.done = true; // next row
+              
+           } else if (Object.keys(importState.data.row.iteration.missingIdFieldMixinToResources).length // size equality enough if involvedMixins don't change
                       == importState.data.row.previousMissingIdFieldResourceOrMixinNb || importState.data.row.loopIndex > 20) {
               importState.data.row.iteration.errors.push({ code : "missingIdFields",
                  missingIdFieldMixinToResources : importState.data.row.iteration.missingIdFieldMixinToResources,
@@ -1495,12 +1493,47 @@
                     + JSON.stringify(importState.data.row.iteration.missingIdFieldMixinToResources, null, "\t")
                     + "\n   in resourceRow :\n" + JSON.stringify(importState.data.row.resourceRow, null, null));
               //console.log("   with resources " + JSON.stringify(resources, null, null));
-              break;
+              importState.data.row.done = true; // next row
+              
+           } else {
+              importState.data.row.previousMissingIdFieldResourceOrMixinNb =
+                 Object.keys(importState.data.row.iteration.missingIdFieldMixinToResources).length;
+              importState.data.row.loopIndex++;
+              if (importState.data.row.lookupQueriesToRun.length === 0) {
+                 csvToData(importState); // next iteration
+              } else {
+                 var lookupQuery = importState.data.row.lookupQueriesToRun.pop();
+                 findDataByType(lookupQuery, function(resourcesFound) {
+                    if (!resourcesFound || resourcesFound.length === 0) {
+                       importState.data.lookupQueryToResource[lookupQuery] = null; // preventing further lookups
+                       importState.data.errors.push({ code : "lookupQueryHasNoResult",
+                          lookupQuery : lookupQuery,
+                          row : importState.data.row.resourceRow }); // NB. not in iteration errors
+                       
+                    } else if (resourcesFound.length === 1) {
+                       var resourceFound = resourcesFound[0];
+                       importState.data.lookupQueryToResource[lookupQuery] = resourceFound;
+                       importState.data.cachedResources[resourceFound['@id']] = resourceFound; // caching for refresh before POSTing
+                       
+                    } else {
+                       importState.data.errors.push({ code : "lookupQueryHasMoreThanOneResult",
+                          lookupQuery : lookupQuery, resourcesFound : resourcesFound,
+                          row : importState.data.row.resourceRow }); // NB. not in iteration errors
+                    }
+                    //TODO
+                    csvToData(importState); // next iteration
+                 }, function(data) {
+                    var error = (data._body && data._body._body) ? data._body._body : data;
+                    importState.data.errors.push({ code : "lookupQueryError",
+                       lookupQuery : lookupQuery, error : error,
+                       row : importState.data.row.resourceRow }); // NB. not in iteration errors
+                    csvToData(importState); // next iteration
+                 }, 0, 2); // 2 results are enough to know whether unique
+              }
+              return;
            }
-           importState.data.row.previousMissingIdFieldResourceOrMixinNb = Object.keys(importState.data.row.iteration.missingIdFieldMixinToResources).length;
-           importState.data.row.loopIndex++;
         
-        } while (importState.data.row.previousMissingIdFieldResourceOrMixinNb != 0);
+        /*} while (importState.data.row.previousMissingIdFieldResourceOrMixinNb != 0);*/
 
         for (var i in importState.data.row.iteration.errors) {
            importState.data.errors.push(importState.data.row.iteration.errors[i]);
@@ -1515,7 +1548,10 @@
         if (importState.data.rowNb % 1000 == 1) { // or 100 ? TODO yield !!
            $('.resourceRowCounter').html("Handled <a href=\"#importedJsonFromCsv\">" + importState.data.rowNb + " rows</a>");
         }
-     }
+        
+        importState.data.rInd++;
+        csvToData(importState);
+     } else {
 
       displayParsedResource(importState);
 
@@ -1560,7 +1596,9 @@
                   importedDataPosted, importedDataPosted);
          });
       }
-  }
+      }
+   }
+      
    function displayParsedResource(importState) {
       $('.resourceRowCounter').html("Handled <a href=\"#importedJsonFromCsv\">" + importState.data.rowNb
             + " rows</a> (<a href=\"#datacoreResources\">" + importState.data.errors.length + " errors</a>)");
@@ -1637,6 +1675,10 @@
                }
                importState.data["importedFieldNames"] = importedFieldNames;
                
+               importState.data.rows = results.data;
+               importState.data.rLength = Math.min(importState.data.rows.length, getResourceRowStart() + getResourceRowLimit());
+               importState.data.rInd = getResourceRowStart();
+               
                // BEWARE limited to 10 by default !!!!!! and 100 max !!
       	      findDataByType("/dc/type/dcmo:model_0?dcmo:globalFields.dcmf:name=$in"
       	            // globalFields else won't get ex. CountryFR inheriting from Country but with no additional field (??)
@@ -1676,8 +1718,8 @@
                            enrichedModelOrMixinFieldMap[fieldName] = involvedMixinField;
                         }
                      }
-                     
-                     csvToData(results.data, importState);
+
+                     csvToData(importState);
                }, null, 0, 100); // max limit (else 10 !!!)
             }
       }
@@ -2300,8 +2342,10 @@
                fileName : '', // set below
                dataColumnNames : null,
                involvedMixins : [],
+               rows : null,
                rowNb : 0,
-               row : { // current row
+               row : null, // current row
+               /*row : { // current row
                   loopIndex : 0,
                   resourceRow : null,
                   modelTypeToRowResources : {},
@@ -2312,8 +2356,9 @@
                         warnings : null
                   },
                   previousMissingIdFieldResourceOrMixinNb : -1,
-                  lookupQueriesToRun : []
-               },
+                  lookupQueriesToRun : [],
+                  done : false
+               },*/
                lookupQueryToResource : {},
                cachedResources : {},
                resources : {},
