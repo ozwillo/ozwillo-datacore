@@ -4,8 +4,10 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.oasis.datacore.core.meta.model.DCField;
@@ -410,7 +412,7 @@ public class ModelResourceMappingService {
       modelOrMixin.setMajorVersion(valueService.parseLong(r.get("dcmo:majorVersion"), null));
       modelOrMixin.setDocumentation((String) r.get("dcmo:documentation"));
       
-      // TODO mixin (computed) security (version)
+      // TODO (computed) security (version)
       @SuppressWarnings("unchecked")
       List<Map<String, Object>> fieldResources = (List<Map<String, Object>>) r.get("dcmo:fields");
       Map<String, DCField> fields;
@@ -428,20 +430,53 @@ public class ModelResourceMappingService {
       // TODO TODO mixins rather lazy in DCModelBase !!!!
       @SuppressWarnings("unchecked")
       List<String> fieldAndMixinNames = (List<String>) r.get("dcmo:fieldAndMixins"); // TODO or list of boolean maps ??
-      for (String fieldAndMixinName : fieldAndMixinNames) {
-         DCField field = fields.get(fieldAndMixinName);
-         if (field != null) {
-            modelOrMixin.addField(field); // and NOT getFieldMap().put() because more must be done
-            continue;
+      if (fieldAndMixinNames != null) { // TODO 
+         for (String fieldAndMixinName : fieldAndMixinNames) {
+            DCField field = fields.get(fieldAndMixinName);
+            if (field != null) {
+               modelOrMixin.addField(field); // and NOT getFieldMap().put() because more must be done
+               continue;
+            }
+            DCModelBase mixin = dataModelService.getMixin(fieldAndMixinName); // does also model
+            if (mixin != null) {
+               modelOrMixin.addMixin(mixin);
+               continue;
+            }
+            // TODO TODO logger, in ParsingContext, and even tag error / log on Model Resource as info & state for further handling !!
+            // NOO may be a previously existing field or mixin that has been removed
+            // by client side which has then not recomputed fieldAndMixinName
+            ///throw new ResourceParsingException("Can't find field or mixin "
+            ///      + fieldAndMixinName + " when updating DCModelBase from resource " + r);
          }
-         DCModelBase mixin = dataModelService.getMixin(fieldAndMixinName); // does also model
-         if (mixin != null) {
+      }
+
+      // in case of obsolete and not recomputed fieldAndMixins, adding new (i.e. remaining)
+      // fields in case of obsolete and not recomputed fieldAndMixins :
+      Set<String> fieldAndMixinNameSet = new HashSet<String>(fieldAndMixinNames);
+      if (fields != null) { 
+         for (String fieldName : fields.keySet()) {
+            if (fieldAndMixinNameSet != null && fieldAndMixinNameSet.contains(fieldName)) {
+               continue;
+            }
+            modelOrMixin.addField(fields.get(fieldName)); // and NOT getFieldMap().put() because more must be done
+         }
+      }
+      
+      // adding new (i.e. remaining) mixins in case of obsolete and not recomputed fieldAndMixins :@SuppressWarnings("unchecked")
+      @SuppressWarnings("unchecked")
+      List<String> mixinNames = (List<String>) r.get("dcmo:mixins");
+      if (mixinNames != null) { // NB. import tool does not send them if none
+         for (String mixinName : mixinNames) {
+            if (fieldAndMixinNameSet.contains(mixinName)) {
+               continue;
+            }
+            DCModelBase mixin = dataModelService.getMixin(mixinName); // does also model
+            if (mixin == null) {
+               throw new ResourceParsingException("Can't find mixin " + mixinName
+                     + " when updating DCModelBase from resource " + r); // should not happen, as said above
+            }
             modelOrMixin.addMixin(mixin);
-            continue;
          }
-         // TODO TODO logger, in ParsingContext, and even tag error / log on Model Resource as info & state for further handling !!
-         throw new ResourceParsingException("Can't find field or mixin "
-               + fieldAndMixinName + " when updating DCModelBase from resource " + r);
       }
    }
    
