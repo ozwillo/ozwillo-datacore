@@ -74,9 +74,16 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       DCMixin displayableModel = (DCMixin) new DCMixin("o:Displayable_0", project) // and not DCModel : fields exist within model & mixins
          .addField(new DCI18nField("odisp:name", 100))
       ;
+
+      DCModel fieldIdentificationModel = (DCModel) new DCModel("dcmfid:Identification", project)
+         .addField(new DCField("dcmfid:indexInId", "int", false, 0))
+         .addField(new DCField("dcmfid:indexInParents", "int", false, 0))
+         .addField(new DCListField("dcmfid:queryNames", new DCField("useless", "string", false, 0), false))
+         ;
       
       DCMixin fieldModel = (DCMixin) new DCMixin("dcmf:field_0", project) // and not DCModel : fields exist within model & mixins
          .addMixin(displayableModel)
+         .addMixin(fieldIdentificationModel)
          .addField(new DCField("dcmf:name", "string", true, 100))
          .addField(new DCField("dcmf:type", "string", true, 100))
          .addField(new DCField("dcmf:required", "boolean", (Object) false, 0)) // defaults to false, indexing would bring not much
@@ -91,8 +98,6 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          // TODO for app.js / openelec (NOT required else other samples KO) :
          .addField(new DCField("dcmf:documentation", "string", false, 0))
          .addField(new DCField("dcmf:isInMixinRef", "boolean", false, 0))
-         .addField(new DCField("dcmf:indexInId", "int", false, 0))
-         .addField(new DCField("dcmf:indexInParents", "int", false, 0))
          .addField(new DCField("dcmf:defaultStringValue", "string", false, 0))
          .addField(new DCField("dcmf:defaultLanguage", "string", false, 0))
          .addField(new DCField("dcmf:internalName", "string", false, 100))
@@ -103,10 +108,21 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       ///mixinBackwardCompatibilityModel.setStorage(true);
       mixinBackwardCompatibilityModel.setInstanciable(false);
 
+      DCModel modelIdentificationModel = (DCModel) new DCModel("dcmoid:Identification", project)
+         .addField(new DCListField("dcmoid:idFieldNames", new DCField("useless", "string", false, 0), false))
+         .addField(new DCListField("dcmoid:idGenJs", new DCField("useless", "string", false, 0), false))
+         .addField(new DCListField("dcmoid:parentFieldNames", new DCField("useless", "string", false, 0), false))
+         .addField(new DCListField("dcmoid:lookupQueries", new DCMapField("useless")
+               .addField(new DCField("dcmoidlq:name", "string", false, 0))
+               .addField(new DCListField("dcmoidlq:fieldNames", new DCField("useless", "string", false, 0), false)), false)
+         )
+         ;
+      
       // Mixins (or only as names ??) model and at the same time modelBase (or in same collection ?) :
       DCModel modelOrMixinModel = (DCModel) new DCModel(MODEL_MODEL_NAME, project) // POLY MODEL_MIXIN_NAME // and not DCMixin, they must be introspectable
           // TODO security
          .addMixin(mixinBackwardCompatibilityModel)
+         .addMixin(modelIdentificationModel)
          //.addMixin(displayableModel);
          .addField(new DCField("dcmo:name", "string", true, 100))
          .addField(new DCField("dcmo:pointOfViewAbsoluteName", "string", true, 100)) // TODO compound index on POV and name
@@ -186,7 +202,8 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       useCasePointOfViewElementModel.setStorage(false); // store in dcmpv
       
       modelsToCreate.addAll(Arrays.asList(displayableModel,
-            fieldModel, mixinBackwardCompatibilityModel, modelOrMixinModel,
+            fieldIdentificationModel, fieldModel,
+            mixinBackwardCompatibilityModel, modelIdentificationModel, modelOrMixinModel,
             pointOfViewModel, projectModel, useCasePointOfViewModel, useCasePointOfViewElementModel));
    }
 
