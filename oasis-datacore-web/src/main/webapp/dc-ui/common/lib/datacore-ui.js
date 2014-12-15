@@ -28,8 +28,37 @@
       }
       return res;
    }
-   function buildUri(typeName, id, shouldEncodeId) {
+   
+   function decodeIdSaveIfNot(idValue, idField) {
+      if (typeof idField !== 'undefined' && idField !== null) {
+         var dontDecode = idField["importconf:dontEncodeIdInUri"];
+         if (dontDecode) {
+            return idValue;
+         }
+      }
+      var slashSplitId = idValue.split('/');
+      for (var idCptInd in slashSplitId) {
+         slashSplitId[idCptInd] = decodeURIComponent(slashSplitId[idCptInd]); // decoding !
+      }
+      return slashSplitId.join('/');
+      //return decodeURI(idValue); // decoding !
+      // (rather than decodeURIComponent which would not accept unencoded slashes)
+   }
+   function encodeIdSaveIfNot(idValue, idField) {
+      if (typeof idField !== 'undefined' && idField !== null) {
+         var dontEncode = idField["importconf:dontEncodeIdInUri"];
+         if (dontEncode) {
+            return idValue;
+         }
+      }
+      return encodeUriPath(idValue);
+   }
+   function buildUri(typeName, id,
+         shouldEncodeId) { // optional, default is false
       // encoding ! NOT encodeURIComponent
+      if (typeof id === 'undefined') {
+         return dcConf.containerUrl + "/dc/type/" + encodeUriPathComponent(typeName);
+      }
       return dcConf.containerUrl + "/dc/type/" + encodeUriPathComponent(typeName)
             + "/" + (shouldEncodeId ? encodeIdSaveIfNot(id) : id);
    }
@@ -95,12 +124,11 @@
       var modelType = decodeURIComponent(matches[3]); // required
       // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
       // because swagger.js re-encodes
-      var id = matches[4];
+      var encodedId = matches[4];
       var query = matches[5]; // no decoding, else would need to be first split along & and =
-      if (id) {
-         id = decodeURI(id);
-      } else {
-         id = null;
+      var id = null;
+      if (encodedId) {
+         id = decodeURI(encodedId);
       }
       if (!query) {
          query = null;
@@ -110,6 +138,7 @@
          containerUrl : containerUrl,
          modelType : modelType,
          id : id,
+         encodedId : encodedId,
          query : query,
          uri : resourceUri, // NOT encoded !!
          };
