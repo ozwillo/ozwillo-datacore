@@ -1603,6 +1603,28 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
         opts.responseContentType = $("div select[name=responseContentType]", $(this.el)).val();
         opts.requestContentType = $("div select[name=parameterContentType]", $(this.el)).val();
         $(".response_throbber", $(this.el)).show();
+
+        // OASIS HACK start
+        for (var mapKey in map) {
+           if (mapKey.substring(0,1) == "#") {
+              // assume arg is a query (and not a query param), meaning it can't be encoded by swagger.js
+              // (because it wouldn't know which '&' and '=' not to encode), so encode it here :
+              var queryElts = map[mapKey].split('&');
+              for (var qeInd in queryElts) {
+                 var queryElt = queryElts[qeInd];
+                 var equalIndex = queryElt.indexOf('=');
+                 if (equalIndex === -1) {
+                    continue;
+                 }
+                 var queryEltParam = queryElt.substring(0, equalIndex);
+                 var queryEltValue = queryElt.substring(equalIndex + 1, queryElt.length);
+                 queryElts[qeInd] = encodeURIComponent(queryEltParam) + '=' + encodeURIComponent(queryEltValue);
+              }
+              map[mapKey] = queryElts.join('&');
+           }
+        }
+        // OASIS HACK end
+        
         return this.model["do"](map, opts, this.showCompleteStatus, this.showErrorStatus, this);
       }
     };

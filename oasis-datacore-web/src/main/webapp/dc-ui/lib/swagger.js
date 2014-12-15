@@ -888,8 +888,10 @@
             
             // OASIS HACK start
             if(param.name.substring(0,1) == "#") { // OASIS HACK
-               // assume arg is a query (and not a query param) i.e. don't encode & and = :
-               queryParams += encodeURI(args[param.name]); // NOT encodeURIComponent because & and =
+               // assume arg is a query (and not a query param), which must have been already encoded
+               // by caller (ex. by swagger-ui.js) :
+               // (else no way to know which '&' and '=' not to encode) 
+               queryParams += args[param.name]; // NOT encodeURI(Component) because '&' and '='
                continue;
             }
             // OASIS HACK end
