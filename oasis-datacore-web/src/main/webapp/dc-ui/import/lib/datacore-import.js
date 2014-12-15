@@ -1036,7 +1036,6 @@
          // out of fields
          
          var idEncodedValues = [];
-         var parentUris = [];
          /*for (var idFieldName in enrichedModelOrMixinFieldMap) {
             var idField = enrichedModelOrMixinFieldMap[idFieldName];
             ///fillIndexToEncodedValue(idField, resource, mixin, mixinMustBeImported, pathInFieldNameTree, importState);
@@ -1088,7 +1087,6 @@
                   var iri = uri.replace(/^.*\/+dc\/+type\/*/, ""); //uri.substring(uri.indexOf("/dc/type/") + 9);
                   idEncodedValue = iri.substring(iri.indexOf("/") + 1);
                   ///indexToEncodedValue[indexInId] = {v : idEncodedValue, uri : uri };
-                  parentUris.push(uri);
                   }
                } else if (idField["dcmf:type"] === 'i18n') {
                   var defaultLanguage = getDefaultLanguage(idField, importState, mixin);
@@ -1132,40 +1130,6 @@
             }
          if (idEncodedValues.length === mixin['dcmoid:idFieldNames'].length) {
             id = idEncodedValues.join('/');
-         }
-         }
-
-         if (importState.model.defaultRow['useIdForParent'] !== 'true' && mixin['dcmoid:parentFieldNames']) {
-         parentUris = [];
-         for (var fInd in mixin['dcmoid:parentFieldNames']) {
-            var idFieldName = mixin['dcmoid:parentFieldNames'][fInd];
-            var idField = enrichedModelOrMixinFieldMap[idFieldName];
-            
-            var parentValue = resource[idFieldName];
-                  if (typeof parentValue === 'undefined' || parentValue === null || parentValue === "") {
-                     /*importState.data.row.iteration.errors.push({ code : "missingValueForParentField",
-                           mixin : mixin['dcmo:name'], fieldName : idFieldName,
-                           resource : resource, pathInFieldNameTree : pathInFieldNameTree,
-                           message : "ERROR missingValueForParentField" });*/
-                  } else {
-                  
-                  // NB. idField is a resource field, because checked at model parsing time
-                  var uri;
-                  if (typeof parentValue === 'string') { // resource
-                     uri = parentValue;
-                  } else { // subresource (refMixin ???)
-                     uri = parentValue["@id"];
-                  }
-                  if (typeof uri === 'undefined') {
-                     importState.data.row.iteration.errors.push({ code : "missingUriForResourceParentField",
-                           mixin : mixin['dcmo:name'], fieldName : idFieldName, value : parentValue,
-                           resource : resource, pathInFieldNameTree : pathInFieldNameTree,
-                           message : "ERROR missingUriForResourceParentField" });
-                     ///return resource; // without adding it to uri'd resources // NOO not required for creation
-                  } else {
-                     parentUris.push(uri);
-                  }
-                  }
          }
          }
          
@@ -1338,20 +1302,52 @@
          // computing ancestors :
          // (only now that id is known i.e. we are able to find or create it, even if already exists in case changes)
          var ancestors = null;
-         if (contains(mixin["dcmo:globalMixins"], "o:Ancestor_0")) {
+         var hasAncestorMixin = contains(mixin["dcmo:globalMixins"], "o:Ancestor_0");
+         if (hasAncestorMixin) {
             // && mixin["dcmo:isInstanciable"] only if old "model" (already checked)
             ancestors = [];
+            if (!mixin['dcmoid:parentFieldNames']) {
+               // no parent (itself is the only ancestor) ex. Country
+               
+            } else {
+               var parentUris = [];
+               for (var fInd in mixin['dcmoid:parentFieldNames']) {
+                  var idFieldName = mixin['dcmoid:parentFieldNames'][fInd];
+                  var idField = enrichedModelOrMixinFieldMap[idFieldName];
+                  
+                  var parentValue = resource[idFieldName];
+                  if (typeof parentValue === 'undefined' || parentValue === null || parentValue === "") {
+                     /*importState.data.row.iteration.errors.push({ code : "missingValueForParentField",
+                           mixin : mixin['dcmo:name'], fieldName : idFieldName,
+                           resource : resource, pathInFieldNameTree : pathInFieldNameTree,
+                           message : "ERROR missingValueForParentField" });*/
+                  } else {
+                     
+                     // NB. idField is a resource field, because checked at model parsing time
+                     var parentUri;
+                     if (typeof parentValue === 'string') { // resource
+                        parentUri = parentValue;
+                     } else { // subresource (refMixin ???)
+                        parentUri = parentValue["@id"];
+                     }
+                     if (typeof parentUri === 'undefined') {
+                        importState.data.row.iteration.errors.push({ code : "missingUriForResourceParentField",
+                              mixin : mixin['dcmo:name'], fieldName : idFieldName, value : parentValue,
+                              resource : resource, pathInFieldNameTree : pathInFieldNameTree,
+                              message : "ERROR missingUriForResourceParentField" });
+                        ///return resource; // without adding it to uri'd resources // NOO not required for creation
+                     } else {
+                        parentUris.push(parentUri);
+                     }
+                  }
+               }
             
-         /*if (importState.model.defaultRow['useIdForParent'] === 'true') {
-            parentIndexToEncodedValue = indexToEncodedValue; // ?? TODO test
-         }*/
-         if (!mixin['dcmoid:parentFieldNames']) {
-            // no parent (itself is the only ancestor) ex. Country
-         } else if (mixin['dcmoid:parentFieldNames'].length !== parentUris.length) {
+         if (mixin['dcmoid:parentFieldNames'].length !== parentUris.length) {
             importState.data.row.iteration.errors.push({ code : "missingValueForParentField",
                mixin : mixin['dcmo:name'], parentUris : parentUris, parentFieldNames : mixin['dcmoid:parentFieldNames'],
                resource : resource, pathInFieldNameTree : pathInFieldNameTree,
                message : "ERROR missingValueForParentField" });
+            return resource; // prevent it from being added to resources to force it to compute parents again
          } else {
          // NB. itself added later
          for (var pInd in parentUris) {
@@ -1374,13 +1370,23 @@
                      importState.data.row.iteration.errors.push({ code : "ancestorHasNotDefinedAncestors",
                         resource : resource, ancestor : ancestor, pathInFieldNameTree : pathInFieldNameTree });
                   } else {
-                     for (var aInd in ancestorAncestors) {
-                        ancestors.push(ancestorAncestors[aInd]);
+                     for (var aaInd in ancestorAncestors) {
+                        var parentExists = false;
+                        for (var aInd in ancestors) {
+                           if (ancestorAncestors[aaInd] === ancestors[aInd]) {
+                              parentExists = true;
+                              break;
+                           }
+                        }
+                        if (!parentExists) {
+                           ancestors.push(ancestorAncestors[aaInd]);
+                        }
                      }
                   }
                }
          }
          }
+            }
          }
          
          ///var uri = buildUri(typeName, id);
@@ -1941,6 +1947,8 @@
            mergeStringValueOrDefaultIfAny(mixin, "dcmo:fieldAndMixins", fieldRow["fieldAndMixins"], importState.metamodel["dcmo:model_0"], importState);
            
            mergeStringValueOrDefaultIfAny(mixin, "dcmoid:idGenJs", fieldRow["idGenJs"], importState.metamodel["dcmo:model_0"], importState);
+           mergeStringValueOrDefaultIfAny(mixin, "dcmoid:useIdForParent", fieldRow["useIdForParent"],
+                 importState.metamodel["dcmo:model_0"], importState, importState.model.defaultRow['useIdForParent']);
            
               // storage-level fields : (if not storage nor instanciable, might be used by inheriting models)
               mergeStringValueOrDefaultIfAny(mixin, "dcmo:maxScan", fieldRow["maxScan"], importState.metamodel["dcmo:model_0"], importState);
@@ -2087,6 +2095,9 @@
                var indexInId = idField["dcmfid:indexInId"]; // NB. this import-specific conf has been enriched in refreshed involvedMixins' global fields
                if (typeof indexInId === 'number') {
                   idIndexToFieldNames[indexInId] = idFieldName;
+                  if (mixin['dcmoid:useIdForParent'] === true && idField['dcmf:type'] === 'resource') {
+                     parentIndexToFieldNames[indexInId] = idFieldName;
+                  }
                }
                var indexInParents = idField["dcmfid:indexInParents"]; // NB. this import-specific conf has been enriched in refreshed involvedMixins' global fields
                if (typeof indexInParents === 'number') {
