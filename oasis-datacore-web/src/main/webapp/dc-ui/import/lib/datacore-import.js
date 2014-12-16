@@ -1416,7 +1416,7 @@
    }
            
    function csvToData(importState) {
-      if (importState.data.rInd < importState.data.rLength) {
+      while (importState.data.rInd < importState.data.rLength) {
         
          if (importState.data.row === null || importState.data.row.done) {
             importState.data.rowNb++; // nb. rInd is string
@@ -1432,21 +1432,13 @@
          };
          } // else next iteration in same row
         
-        ///csvRowToData(importState);
-        
         // mixins loop :
-        /*do {*/
+        do {
            importState.data.row.iteration = {
                  missingIdFieldMixinToResources : {},
                  errors : [], // NB. assigning is the fastest way to empty an array anyway
                  warnings : []
            };
-           /*
-           importState.data.row.missingIdFieldMixinToResources = {};
-           importState.data.errors = []; // clearing, only keeping last (& cleanest) one // NB. fastest way to empty an array
-           importState.data.warnings = []; // clearing, only keeping last (& cleanest) one
-           //console.log("row mixins loop " + importState.data.row.loopIndex + " " + importState.data.row.missingIdFieldResourceOrMixins);//
-        */
         
         var importedResource;
         for (var mInd in importState.data.involvedMixins) {
@@ -1487,10 +1479,11 @@
              }
         }
 
-           if (importState.data.row.previousMissingIdFieldResourceOrMixinNb === 0) {
+           var newMissingIdFieldResourceOrMixinNb = Object.keys(importState.data.row.iteration.missingIdFieldMixinToResources).length;
+           if (newMissingIdFieldResourceOrMixinNb === 0) {
               importState.data.row.done = true; // next row
               
-           } else if (Object.keys(importState.data.row.iteration.missingIdFieldMixinToResources).length // size equality enough if involvedMixins don't change
+           } else if (newMissingIdFieldResourceOrMixinNb // size equality enough if involvedMixins don't change
                       == importState.data.row.previousMissingIdFieldResourceOrMixinNb || importState.data.row.loopIndex > 20) {
               importState.data.row.iteration.errors.push({ code : "missingIdFields",
                  missingIdFieldMixinToResources : importState.data.row.iteration.missingIdFieldMixinToResources,
@@ -1502,10 +1495,9 @@
               importState.data.row.done = true; // next row
               
            } else {
-              importState.data.row.previousMissingIdFieldResourceOrMixinNb =
-                 Object.keys(importState.data.row.iteration.missingIdFieldMixinToResources).length;
+              importState.data.row.previousMissingIdFieldResourceOrMixinNb = newMissingIdFieldResourceOrMixinNb;
               importState.data.row.loopIndex++;
-              if (importState.data.row.lookupQueriesToRun.length === 0) {
+              /*if (importState.data.row.lookupQueriesToRun.length === 0) {
                  csvToData(importState); // next iteration
               } else {
                  var lookupQuery = importState.data.row.lookupQueriesToRun.pop();
@@ -1536,10 +1528,10 @@
                     csvToData(importState); // next iteration
                  }, 0, 2); // 2 results are enough to know whether unique
               }
-              return;
+              return;*/
            }
         
-        /*} while (importState.data.row.previousMissingIdFieldResourceOrMixinNb != 0);*/
+        } while (!importState.data.row.done);
 
         for (var i in importState.data.row.iteration.errors) {
            importState.data.errors.push(importState.data.row.iteration.errors[i]);
@@ -1547,17 +1539,14 @@
         for (var i in importState.data.row.iteration.warnings) {
            importState.data.warnings.push(importState.data.row.iteration.warnings[i]);
         }
-        
-        ///importStateRowData["loops"] = importState.data.row.loopIndex + 1;
-        ////importStateRowData["errors"] = errors;
 
         if (importState.data.rowNb % 1000 == 1) { // or 100 ? TODO yield !!
            $('.resourceRowCounter').html("Handled <a href=\"#importedJsonFromCsv\">" + importState.data.rowNb + " rows</a>");
         }
         
         importState.data.rInd++;
-        csvToData(importState);
-     } else {
+        ///csvToData(importState); // next row
+     }/* else {*/
 
       displayParsedResource(importState);
 
@@ -1602,7 +1591,7 @@
                   importedDataPosted, importedDataPosted);
          });
       }
-      }
+      /*}*/
    }
       
    function displayParsedResource(importState) {
