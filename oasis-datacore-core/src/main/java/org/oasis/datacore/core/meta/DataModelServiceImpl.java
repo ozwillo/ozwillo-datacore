@@ -85,7 +85,7 @@ public class DataModelServiceImpl implements DCModelService {
    }
    public DCProject getProject(String projectName) {
       DCProject project = projectMap.get(projectName);
-      if (project == null && devmode) {
+      if (project == null) { // && devmode
          // devmode default projects building :
          if (projectName.endsWith(".test")) {
             String testedProjectName = projectName.substring(0,
