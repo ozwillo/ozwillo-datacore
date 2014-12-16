@@ -1,0 +1,1519 @@
+COD_ATECO,DESC_ATECO
+01,"AGRICOLTURA, CACCIA E RELATIVI SERVIZI"
+01.1,"COLTIVAZIONI AGRICOLE, ORTICOLTURA, FLORICOLTURA"
+01.11,Coltivazioni di cereali e di altri seminativi
+01.11.1,Coltivazione di cereali (compreso il riso)
+01.11.2,Coltivazione di semi e frutti oleosi
+01.11.3,Coltivazione di barbabietola da zucchero
+01.11.4,Coltivazione di tabacco
+01.11.5,Coltivazione di altri seminativi
+01.11.6,Coltivazioni miste di cereali e altri seminativi
+01.12,"Coltivazione di ortaggi, specialita' orticole, fiori e prodotti di vivai"
+01.12.1,Coltivazione di ortaggi in campo aperto
+01.12.2,Coltivazione di ortaggi in serra
+01.12.3,Coltivazioni floricole e di piante ornamentali in campo aperto
+01.12.4,Coltivazioni floricole e di piante ornamentali in serra
+01.12.5,Orto-colture specializzate vivaistiche e sementiere in campo aperto
+01.12.6,Orto-colture specializzate vivaistiche e sementiere in serra
+01.12.7,"Coltivazioni miste di ortaggi, specialita' orticole, fiori e prodotti di vivai in campo aperto"
+01.12.8,"Coltivazioni miste di ortaggi, specialita' orticole, fiori e prodotti di vivai in serra"
+01.13,"Coltivazione di frutta, frutta a guscio, prodotti destinati alla preparazione di bevande, spezie"
+01.13.1,Colture viticole e aziende vitivinicole (comprese le cantine sociali)
+01.13.2,Colture olivicole (compresi i frantoi sociali)
+01.13.3,Colture agrumicole
+01.13.4,"Colture frutticole diverse, coltivazione di prodotti destinati alla preparazione di bevande e spezie"
+01.13.5,"Colture miste viticole, olivicole e frutticole"
+01.2,ALLEVAMENTO DI ANIMALI
+01.21,"Allevamento di bovini e bufalini, produzione di latte crudo (comprese le latterie e i caseifici sociali)"
+01.22,"Allevamento di ovini, caprini, equini"
+01.22.1,"Allevamento di ovini e caprini, produzione di latte crudo (comprese le latterie e i caseifici sociali)"
+01.22.2,Allevamento di equini
+01.23,Allevamento di suini
+01.24,Allevamento di pollame e altri volatili
+01.25,Allevamento di altri animali
+01.25.1,Allevamento di conigli
+01.25.2,Allevamento di animali da pelliccia
+01.25.3,Apicoltura
+01.25.4,Bachicoltura
+01.25.5,Allevamento di altri animali n.c.a.
+01.3,COLTIVAZIONI AGRICOLE ASSOCIATE ALL'ALLEVAMENTO DI ANIMALI: ATTIVITA' MISTA
+01.4,"SERVIZI CONNESSI ALL'AGRICOLTURA E ALLA ZOOTECNIA, ESCLUSI I SERVIZI VETERINARI; CREAZIONE E MANUTENZIONE DI GIARDINI, AIUOLE E SPAZI VERDI"
+01.41,"Servizi connessi all'agricoltura; creazione e manutenzione di giardini, aiuole e spazi verdi"
+01.41.1,Esercizio per conto terzi e noleggio di mezzi e di macchine agricole con personale
+01.41.2,"Raccolta, prima lavorazione (esclusa trasformazione), conservazione di prodotti agricoli ed altri servizi connessi all'agricoltura svolti per conto terzi; approvvigionamento e distribuzione di mezzi tecnici necessari all'esercizio dell'agricoltura"
+01.41.21,"Raccolta, prima lavorazione (esclusa trasformazione), conservazione di prodotti agricoli ed altri servizi connessi all'agricoltura svolti per conto terzi"
+01.41.22,Approvvigionamento e distribuzione di mezzi tecnici necessari all'esercizio dell'agricoltura
+01.41.3,"Sistemazione di parchi, giardini e aiuole"
+01.42,"Servizi connessi all'allevamento del bestiame, esclusi i servizi veterinari"
+01.5,"CACCIA E CATTURA DI ANIMALI PER ALLEVAMENTO E RIPOPOLAMENTO DI SELVAGGINA, COMPRESI I SERVIZI CONNESSI"
+02,SILVICOLTURA E UTILIZZAZIONE DI AREE FORESTALI E SERVIZI CONNESSI
+02.01,Silvicoltura e utilizzazione di aree forestali
+02.01.1,Utilizzazione di aree forestali
+02.01.2,Silvicoltura
+02.01.3,Gestione di vivai forestali
+02.02,Servizi connessi alla silvicoltura e all'utilizzazione di aree forestali
+05,"PESCA, PISCICOLTURA E SERVIZI CONNESSI"
+05.01,Pesca e servizi connessi
+05.01.1,Pesca in acque marine e lagunari e servizi connessi
+05.01.2,Pesca in acque dolci e servizi connessi
+05.02,"Piscicoltura, acquicoltura e servizi connessi"
+05.02.1,"Piscicoltura, acquicoltura in acqua di mare, salmastra o lagunare e servizi connessi"
+05.02.2,"Piscicoltura, acquicoltura in acque dolci e servizi connessi"
+10,"ESTRAZIONE DI CARBON FOSSILE, LIGNITE, TORBA"
+10.1,ESTRAZIONE ED AGGLOMERAZIONE DI CARBON FOSSILE
+10.2,ESTRAZIONE ED AGGLOMERAZIONE DI LIGNITE
+10.3,ESTRAZIONE ED AGGLOMERAZIONE DI TORBA
+11,"ESTRAZIONE DI PETROLIO GREGGIO E DI GAS NATURALE E SERVIZI CONNESSI, ESCLUSA LA PROSPEZIONE"
+11.1,ESTRAZIONE DI PETROLIO GREGGIO E DI GAS NATURALE
+11.2,"SERVIZI CONNESSI ALL'ESTRAZIONE DI PETROLIO E DI GAS, ESCLUSA LA PROSPEZIONE"
+12,ESTRAZIONE DI MINERALI DI URANIO E DI TORIO
+13,ESTRAZIONE DI MINERALI METALLIFERI
+13.1,ESTRAZIONE DI MINERALI DI FERRO
+13.2,"ESTRAZIONE DI MINERALI METALLICI NON FERROSI, AD ECCEZIONE DEI MINERALI DI URANIO E DI TORIO"
+14,ALTRE INDUSTRIE ESTRATTIVE
+14.1,ESTRAZIONE DI PIETRE
+14.11,Estrazione di pietre ornamentali e da costruzione
+14.11.1,Estrazione di pietre ornamentali
+14.11.2,Estrazione di pietre da costruzione
+14.12,"Estrazione di pietra per calce, pietra da gesso e creta"
+14.12.1,Estrazione di pietra da gesso e di anidrite
+14.12.2,Estrazione di pietre per calce e per cementi e di dolomite
+14.13,Estrazione di ardesia
+14.2,"ESTRAZIONE DI GHIAIA, SABBIA E ARGILLA"
+14.21,Estrazione di ghiaia e sabbia
+14.22,Estrazione di argilla e caolino
+14.3,ESTRAZIONE DI MINERALI PER LE INDUSTRIE CHIMICHE E LA FABBRICAZIONE DI CONCIMI
+14.30.1,Estrazione di sali naturali di potassio e di fosfati di calcio
+14.30.2,Estrazione di zolfo e di pirite
+14.30.3,"Estrazione di baritina, di fluorite, di acido borico, terre coloranti e altri minerali per le industrie chimiche"
+14.4,PRODUZIONE DI SALE
+14.5,ESTRAZIONE DI ALTRI MINERALI ED ALTRI PRODOTTI DI CAVA
+14.50.1,"Estrazione di pomice e di altri minerali ed altri prodotti di cava n.c.a. (quarzo, quarzite, sabbie silicee, ecc.)"
+14.50.2,Estrazione di asfalto e bitume naturali
+15,INDUSTRIE ALIMENTARI E DELLE BEVANDE
+15.1,"PRODUZIONE, LAVORAZIONE E CONSERVAZIONE DI CARNE E DI PRODOTTI A BASE DI CARNE, ESCLUSA L'ATTIVITA' DELLE MACELLERIE"
+15.11,"Produzione e refrigerazione di carne e di prodotti della macellazione del bestiame, esclusi volatili e conigli, esclusa l'attivita' delle macellerie"
+15.12,"Produzione e refrigerazione di carne e di prodotti della macellazione di volatili e conigli, esclusa l'attivita' delle macellerie"
+15.13,"Lavorazione e conservazione di carne e di prodotti a base di carne, esclusa l'attivita' delle macellerie"
+15.13.01,"Produzione di salumeria (carni affumicate, salate, insaccate, seccate o comunque altrimenti preparate), esclusa l'attivita' delle macellerie"
+15.13.02,Produzione di carne in scatola
+15.13.03,"Altre lavorazioni e conservazioni di carne e di prodotti a base di carne n.c.a., esclusa l'attivita' delle macellerie"
+15.2,LAVORAZIONE E CONSERVAZIONE DI PESCE E DI PRODOTTI A BASE DI PESCE
+15.20.1,"Conservazione di pesce, crostacei e molluschi mediante surgelamento, salatura, ecc."
+15.20.2,"Preparazione e inscatolamento di prodotti e conserve a base di pesce, crostacei e molluschi"
+15.3,LAVORAZIONE E CONSERVAZIONE DI FRUTTA E ORTAGGI
+15.31,Lavorazione e conservazione delle patate
+15.32,Produzione di succhi di frutta e di ortaggi
+15.33,Altre lavorazioni e conservazioni di frutta e ortaggi
+15.33.01,Lavorazione e conservazione dei pomodori
+15.33.02,"Produzione di confetture, marmellate e gelatine da tavola"
+15.33.03,Altre lavorazioni e conservazioni n.c.a. di frutta e ortaggi
+15.4,PRODUZIONE DI OLI E GRASSI VEGETALI E ANIMALI
+15.41,Produzione di oli e grassi grezzi o non modificati chimicamente
+15.41.1,Produzione di olio grezzo di oliva
+15.41.2,Produzione di oli grezzi da semi oleosi
+15.41.3,Produzione di oli di origine animale; grassi grezzi non commestibili di origine animale
+15.42,Produzione di oli e grassi raffinati
+15.42.1,Produzione di olio raffinato di oliva
+15.42.2,Produzione di olio e grassi raffinati da semi e da frutti oleosi
+15.42.3,Produzione di grassi raffinati non commestibili di origine animale
+15.43,Produzione di margarina e di grassi commestibili simili
+15.5,INDUSTRIA LATTIERO-CASEARIA E DEI GELATI
+15.51,"Industria lattiero-casearia, trattamento igienico e conservazione del latte"
+15.51.1,Trattamento igienico del latte
+15.51.2,Produzione dei derivati del latte
+15.52,Produzione di gelati
+15.6,LAVORAZIONE DELLE GRANAGLIE E DI PRODOTTI AMIDACEI
+15.61,Lavorazione delle granaglie
+15.61.1,Molitura del frumento
+15.61.2,Molitura di altri cereali
+15.61.3,Lavorazione del riso
+15.61.4,Altre lavorazioni di semi e granaglie
+15.62,Produzione di prodotti amidacei
+15.7,PRODUZIONE DI PRODOTTI PER L'ALIMENTAZIONE DEGLI ANIMALI
+15.71,Produzione di prodotti per l'alimentazione degli animali da allevamento
+15.72,Produzione di prodotti per l'alimentazione degli animali domestici
+15.8,PRODUZIONE DI ALTRI PRODOTTI ALIMENTARI
+15.81,Produzione di prodotti di panetteria; altri prodotti da forno e pasticceria fresca
+15.81.1,Produzione di pane e di prodotti freschi simili
+15.81.2,Produzione di altri prodotti da forno e di pasticceria fresca senza somministrazione
+15.81.21,Produzione di pizza al taglio e da asporto e di altre specialita' da forno (rustici e pizzette) senza somministrazione
+15.81.22,Produzione di pasticceria fresca senza somministrazione
+15.82,"Produzione di fette biscottate, biscotti, prodotti di pasticceria e di panetteria secchi e conservati"
+15.83,Produzione e raffinazione dello zucchero
+15.84,"Produzione di cacao in polvere, cioccolato, caramelle e confetterie"
+15.85,"Produzione di paste alimentari, di cuscus e di prodotti farinacei simili"
+15.85.01,Produzione di paste alimentari secche
+15.85.02,Produzione di paste alimentari fresche
+15.85.03,Altre produzioni diverse dalla pasta
+15.86,"Lavorazione del caffe', del te' e altri preparati per infusi"
+15.86.01,Lavorazione del caffe'
+15.86.02,Lavorazione del te' e di altri preparati per infusi
+15.87,"Produzione di condimenti, spezie e salse non a base di carne e di pesce"
+15.88,Produzione di preparati omogeneizzati e di alimenti dietetici
+15.89,Produzione di prodotti alimentari n.c.a.
+15.89.01,"Produzione senza somministrazione di cibi preparati (gastronomie, friggitorie, rosticcerie, take-away, ecc.)"
+15.89.02,"Produzione di cibi precotti (surgelati, in scatola o comunque conservati), esclusa la carne in scatola"
+15.89.03,Produzione di altri prodotti alimentari n.c.a.
+15.9,INDUSTRIA DELLE BEVANDE
+15.91,Produzione di bevande alcoliche distillate
+15.92,Produzione di alcol etilico di fermentazione
+15.93,Produzione di vini
+15.93.1,Produzione di vini da tavola e di vini di qualita' prodotti in regioni determinate (v.q.p.r.d.)
+15.93.11,Produzione di vini da tavola
+15.93.12,Produzione di vini di qualita' prodotti in regioni determinate (v.q.p.r.d.)
+15.93.2,Produzione di vini speciali
+15.93.21,Produzione di vini spumanti
+15.93.22,Produzione di altri vini speciali
+15.94,Produzione di sidro e di altri vini a base di frutta
+15.95,Produzione di bevande ottenute per infusione e di altre bevande fermentate
+15.96,Produzione di birra
+15.97,Produzione di malto
+15.98,Produzione di acque minerali e di bibite analcoliche
+16,INDUSTRIA DEL TABACCO
+17,INDUSTRIE TESSILI
+17.1,PREPARAZIONE E FILATURA DI FIBRE TESSILI
+17.11,Preparazione e filatura di fibre tipo cotone
+17.12,Preparazione e filatura di fibre tipo lana cardata
+17.12.1,"Preparazione delle fibre di lana e assimilate, cardatura"
+17.12.2,Filatura della lana cardata e di altre fibre tessili a taglio laniero
+17.13,Preparazione e filatura di fibre tipo lana pettinata
+17.13.1,Pettinatura e ripettinatura delle fibre di lana e assimilate
+17.13.2,Filatura della lana pettinata e delle fibre assimilate; preparazione in gomitoli e matasse
+17.14,Preparazione e filatura di fibre tipo lino
+17.15,Torcitura e testurizzazione della seta e di filamenti sintetici o artificiali tipo seta
+17.16,Fabbricazione di filati cucirini in qualsiasi fibra tessile
+17.17,Preparazione e filatura di altre fibre tessili
+17.2,TESSITURA
+17.21,Tessitura di filati tipo cotone
+17.22,Tessitura di filati tipo lana cardata
+17.23,Tessitura di filati tipo lana pettinata
+17.24,Tessitura di filati tipo seta
+17.25,Tessitura di altre materie tessili
+17.3,FINISSAGGIO DEI TESSILI E DEGLI ARTICOLI DI VESTIARIO
+17.4,"CONFEZIONAMENTO DI ARTICOLI TESSILI, ESCLUSI GLI ARTICOLI DI VESTIARIO"
+17.40.1,"Confezionamento di biancheria da letto, da tavola e per l'arredamento"
+17.40.2,Confezionamento di altri articoli in materie tessili n.c.a.
+17.5,ALTRE INDUSTRIE TESSILI
+17.51,Fabbricazione di tappeti e moquette
+17.52,"Fabbricazione di spago, corde, funi e reti"
+17.53,"Fabbricazione di tessuti non tessuti e di articoli in tali materie, esclusi gli articoli di vestiario"
+17.54,Fabbricazione di altri tessili
+17.54.1,Fabbricazione di feltro e di feltri battuti
+17.54.2,"Fabbricazione di nastri, fettucce, stringhe, trecce, etichette, passamanerie di fibre tessili"
+17.54.3,"Fabbricazione di tessuti e articoli tessili elasticizzati, impregnati, spalmati, ricoperti, laminati, metallizzati, armati ed accoppiati"
+17.54.4,Fabbricazione di tessuti e articoli tessili per usi tecnici
+17.54.5,"Fabbricazione di tulle, pizzi, merletti"
+17.54.6,Fabbricazione di ricami
+17.6,FABBRICAZIONE DI TESSUTI A MAGLIA
+17.7,"FABBRICAZIONE DI ARTICOLI DI MAGLIERIA, ESCLUSA LA MAGLIERIA INTIMA"
+17.71,Fabbricazione di articoli di calzetteria
+17.72,"Fabbricazione di pullover, cardigan ed altri articoli simili a maglia, esclusa la maglieria intima"
+18,"CONFEZIONE DI ARTICOLI DI ABBIGLIAMENTO; PREPARAZIONE, TINTURA E CONFEZIONE DI PELLICCE"
+18.1,CONFEZIONE DI VESTIARIO IN PELLE E IN SIMILPELLE
+18.2,"CONFEZIONE DI VESTIARIO IN TESSUTO ED ACCESSORI, ESCLUSO L'ABBIGLIAMENTO IN PELLE E PELLICCIA"
+18.21,Confezione di indumenti da lavoro
+18.22,"Confezione di abbigliamento esterno, escluso l'abbigliamento in pelle e pelliccia"
+18.22.1,"Confezione in serie di abbigliamento esterno, escluso l'abbigliamento in pelle e pelliccia"
+18.22.2,"Sartorie: confezione su misura di abbigliamento esterno (escluso quello in pelle e pelliccia), comprese la modifica e le riparazione"
+18.23,Confezione di biancheria e maglieria intima; camicieria
+18.24,Confezione di altri articoli di abbigliamento ed accessori
+18.24.1,Confezioni varie e accessori per l'abbigliamento
+18.24.2,"Confezione di abbigliamento sportivo, di indumenti particolari e di altri articoli di abbigliamento n.c.a."
+18.24.3,Servizi collegati all'industria dell'abbigliamento
+18.3,PREPARAZIONE E TINTURA DI PELLICCE; CONFEZIONE DI ARTICOLI IN PELLICCIA
+18.30.1,Preparazione e tintura di pellicce naturali
+18.30.2,"Confezione di articoli in pelliccia naturale e artificiale, compresa la riparazione"
+19,"PREPARAZIONE E CONCIA DEL CUOIO; FABBRICAZIONE DI ARTICOLI DA VIAGGIO, BORSE, ARTICOLI DA CORREGGIAIO, SELLERIA E CALZATURE IN CUOIO E IN MATERIALE SIMILARE"
+19.1,PREPARAZIONE E CONCIA DEL CUOIO; FABBRICAZIONE DI SEMILAVORATI IN PELLE
+19.2,"FABBRICAZIONE DI ARTICOLI DA VIAGGIO, BORSE,  ARTICOLI DA CORREGGIAIO E SELLERIA IN CUOIO E IN MATERIALE SIMILARE"
+19.3,FABBRICAZIONE DI CALZATURE
+19.30.1,Fabbricazione di calzature non in gomma
+19.30.2,Fabbricazione di parti e accessori per calzature non in gomma
+19.30.3,"Fabbricazione di calzature, suole e tacchi in gomma e plastica"
+20,"INDUSTRIA DEL LEGNO E DEI PRODOTTI IN LEGNO ED IN SUGHERO, ESCLUSI I MOBILI; FABBRICAZIONE DI ARTICOLI IN MATERIALI DA INTRECCIO"
+20.1,"TAGLIO, PIALLATURA E TRATTAMENTO DEL LEGNO"
+20.10.01,Fabbricazione di elementi non assemblati per pavimenti in legno
+20.10.02,Altre lavorazioni del legno
+20.2,"FABBRICAZIONE DI FOGLI DA IMPIALLACCIATURA; COMPENSATO E PANNELLI DI LEGNO (STRATIFICATI, DI TRUCIOLATO, DI FIBRE E DI LEGNO MASSELLO)"
+20.3,FABBRICAZIONE DI CARPENTERIA IN LEGNO E FALEGNAMERIA PER L'EDILIZIA
+20.30.1,Fabbricazione di porte e finestre in legno (escluse porte blindate)
+20.30.2,Fabbricazione di altri elementi di carpenteria in legno e falegnameria per l'edilizia
+20.4,FABBRICAZIONE DI IMBALLAGGI IN LEGNO
+20.5,"FABBRICAZIONE DI ALTRI PRODOTTI IN LEGNO, IN SUGHERO E IN MATERIALI DA INTRECCIO"
+20.51,Fabbricazione di altri prodotti in legno
+20.51.1,Fabbricazione di prodotti vari in legno (esclusi i mobili)
+20.51.2,Laboratori di corniciai
+20.52,Fabbricazione di articoli in sughero e in materiali da intreccio
+20.52.1,Fabbricazione dei prodotti della lavorazione del sughero
+20.52.2,Fabbricazione di articoli di materiale da intreccio
+21,"FABBRICAZIONE DELLA PASTA-CARTA, DELLA CARTA E DEL CARTONE E DEI PRODOTTI DI CARTA"
+21.1,"FABBRICAZIONE DELLA PASTA-CARTA, DELLA CARTA E DEL CARTONE"
+21.11,Fabbricazione della pasta-carta
+21.12,Fabbricazione della carta e del cartone destinati ad un'ulteriore lavorazione
+21.2,FABBRICAZIONE DI ARTICOLI DI CARTA E DI CARTONE
+21.21,"Fabbricazione di carta e cartoni ondulati; imballaggi di carta e cartone, esclusi quelli in carta pressata"
+21.22,Fabbricazione di prodotti di carta e cartone per uso domestico e igienico-sanitario
+21.23,Fabbricazione di prodotti cartotecnici
+21.24,Fabbricazione di carta da parati e di rivestimenti murali analoghi
+21.25,Fabbricazione di altri articoli di carta e di cartone
+22,"EDITORIA, STAMPA E RIPRODUZIONE DI SUPPORTI REGISTRATI"
+22.1,EDITORIA
+22.11,"Edizione di libri, opuscoli, volantini, libri di musica, carte stradali e simili"
+22.12,Edizione di giornali
+22.13,Edizione di riviste e periodici
+22.14,Edizione di registrazioni sonore
+22.15,Altre edizioni
+22.2,STAMPA E SERVIZI CONNESSI ALLA STAMPA
+22.21,Stampa di giornali
+22.22,Altre stampe di arti grafiche
+22.23,"Legatoria, rilegatura di libri e di altro materiale stampato"
+22.24,Lavorazioni preliminari alla stampa
+22.25,Lavorazioni ausiliarie connesse alla stampa
+22.3,RIPRODUZIONE  DA ORIGINALI DI SUPPORTI REGISTRATI
+22.31,Riproduzione da originali di registrazioni sonore
+22.32,Riproduzione da originali di registrazioni video
+22.33,Riproduzione da originali di registrazioni informatiche
+23,"FABBRICAZIONE DI COKE, RAFFINERIE DI PETROLIO, TRATTAMENTO DEI COMBUSTIBILI NUCLEARI"
+23.1,FABBRICAZIONE DI PRODOTTI DI COKERIA
+23.20.2,Preparazione o miscelazione di derivati del petrolio (esclusa la petrolchimica)
+23.20.4,"Fabbricazione di emulsioni di bitume, di catrame e di leganti per uso stradale"
+24.14,Fabbricazione di vari prodotti chimici di base organici
+24.2,"FABBRICAZIONE DI PRODOTTI CHIMICI PER L'AGRICOLTURA (ESCLUSI I CONCIMI) E DI INSETTICIDI, TOPICIDI E SIMILI"
+24.51.1,"Fabbricazione di saponi e detergenti non per uso personale, di detersivi e di agenti organici tensioattivi"
+24.6,FABBRICAZIONE DI ALTRI PRODOTTI CHIMICI
+24.64,Fabbricazione di prodotti chimici per uso fotografico
+24.66.2,"Fabbricazione di prodotti elettrochimici (esclusa produzione di cloro, soda e potassa) e di prodotti elettrotermici"
+24.66.4,Fabbricazione di preparati antidetonanti e antigelo e di altri prodotti chimici vari per uso industriale n.c.a.
+24.7,FABBRICAZIONE DI FIBRE SINTETICHE E ARTIFICIALI
+25.13,Fabbricazione di altri prodotti in gomma n.c.a.
+25.23.01,"Fabbricazione di finestre, porte, tapparelle e maniglie in plastica"
+25.24,Fabbricazione di altri articoli in materie plastiche n.c.a.
+26.12.02,Altre lavorazioni e trasformazioni del vetro piano
+26.14,Fabbricazione di fibre di vetro
+26.15.2,"Lavorazione di articoli in vetro a mano e a soffio, compresa la decorazione"
+26.22,Fabbricazione di articoli sanitari in ceramica
+26.26,Fabbricazione di prodotti refrattari in ceramica ed in terracotta (esclusi i casalinghi)
+26.6,"FABBRICAZIONE DI PRODOTTI IN CALCESTRUZZO, CEMENTO, PIETRA ARTIFICIALE E GESSO; CONGLOMERATI BITUMINOSI"
+26.61.02,"Fabbricazione di altri prodotti in calcestruzzo, cemento e pietra artificiale per l'edilizia"
+26.63.01,Produzione di calcestruzzo
+26.64,Produzione di malta
+26.70.2,Lavorazione artistica delle pietre e del marmo; lavori in mosaico
+26.8,FABBRICAZIONE DI ALTRI PRODOTTI IN MINERALI NON METALLIFERI
+27.22,Fabbricazione di tubi e raccordi di acciaio
+27.3,ALTRE ATTIVITA' DI PRIMA TRASFORMAZIONE A FREDDO DEL FERRO E DELL'ACCIAIO
+27.33,Profilatura mediante formatura o piegatura a freddo del ferro e dell'acciaio
+27.43,"Produzione di zinco, piombo e stagno e semilavorati"
+27.52,Fusione di acciaio
+28.12,"Fabbricazione di porte e finestre in metallo; fabbricazione, installazione e riparazione di tende da sole con strutture metalliche"
+28.2,"FABBRICAZIONE, INSTALLAZIONE E RIPARAZIONE DI CISTERNE, SERBATOI E CONTENITORI IN METALLO DI CAPACITA' SUPERIORE A 300 LITRI; FABBRICAZIONE DI RADIATORI E CALDAIE PER IL RISCALDAMENTO CENTRALE"
+28.3,"FABBRICAZIONE, INSTALLAZIONE E RIPARAZIONE DI GENERATORI DI VAPORE, ESCLUSE LE CALDAIE PER IL RISCALDAMENTO CENTRALE"
+28.40.3,Imbutitura e profilatura di lamiere di metallo; tranciatura e lavorazione a sbalzo
+28.5,TRATTAMENTO E RIVESTIMENTO DEI METALLI; LAVORAZIONI DI MECCANICA GENERALE
+28.62,Fabbricazione di utensileria ad azionamento manuale; parti intercambiabili per macchine utensili
+28.73,Fabbricazione di prodotti fabbricati con fili metallici
+28.74.2,Fabbricazione di molle
+28.75.1,"Fabbricazione di stoviglie, pentolame, vasellame, attrezzi da cucina e accessori casalinghi non elettrici, articoli metallici per l'arredamento di stanze da bagno"
+28.75.4,Fabbricazione di armi bianche
+29,"FABBRICAZIONE, INSTALLAZIONE, RIPARAZIONE E MANUTENZIONE DI MACCHINE ED APPARECCHI MECCANICI"
+29.11.2,"Fabbricazione , installazione, riparazione e manutenzione di turbine idrauliche e termiche e di altre macchine che producono energia meccanica, compresi parti e accessori"
+29.14,"Fabbricazione, installazione, riparazione e manutenzione di cuscinetti, ingranaggi e organi di trasmissione"
+29.2,"FABBRICAZIONE , INSTALLAZIONE, RIPARAZIONE E MANUTENZIONE DI ALTRE MACCHINE DI IMPIEGO GENERALE"
+29.21.2,Riparazione e manutenzione di fornaci e bruciatori
+29.22.11,"Fabbricazione e installazione di ascensori, montacarichi e scale mobili, esclusa l'installazione negli edifici da parte di imprese non produttrici"
+29.22.13,Fabbricazione e installazione di altre macchine e apparecchi di sollevamento e movimentazione
+29.23,"Fabbricazione, installazione, riparazione e manutenzione di attrezzature di uso non domestico per la refrigerazione e la ventilazione"
+29.24,"Fabbricazione, installazione, riparazione e manutenzione di altre macchine di impiego generale n.c.a."
+29.24.2,"Fabbricazione e installazione di bilance e di macchine automatiche per la vendita e la distribuzione, compresi parti staccate e accessori"
+29.24.32,Fabbricazione e installazione di macchine per la pulizia (comprese le lavastoviglie) per uso non domestico
+29.24.4,"Fabbricazione e installazione di macchine e apparecchi per le industrie chimiche, petrolchimiche e petrolifere, compresi parti e accessori"
+29.24.6,Riparazione e manutenzione di altre macchine di impiego generale n.c.a.
+29.24.62,"Riparazione e manutenzione di macchine per le industrie chimiche, petrolchimiche e petrolifere"
+29.24.64,"Riparazione e manutenzione di estintori, compresa la ricarica"
+29.3,"FABBRICAZIONE, INSTALLAZIONE, RIPARAZIONE E MANUTENZIONE DI MACCHINE PER L'AGRICOLTURA E LA SILVICOLTURA"
+29.31.2,Riparazione e manutenzione di trattori agricoli
+29.32.2,"Riparazione e manutenzione di altre macchine per l'agricoltura, la silvicoltura e la zootecnia"
+29.43,"Fabbricazione, installazione, riparazione e manutenzione di altre macchine utensili ed accessori, escluse le parti intercambiabili"
+29.52.02,"Fabbricazione, installazione, riparazione e manutenzione di altre macchine per miniere, cave e cantieri"
+29.53.01,"Fabbricazione, installazione, riparazione e manutenzione di macchine per il settore lattiero-caseario"
+29.53.03,"Fabbricazione, installazione, riparazione e manutenzione di macchine per i settori dolciario, della panificazione e delle paste alimentari"
+29.53.05,"Fabbricazione, installazione, riparazione e manutenzione di altre macchine per l'industria alimentare, delle bevande e del tabacco"
+29.54.11,"Fabbricazione, installazione, riparazione e manutenzione di macchine per cucire e per maglieria"
+29.54.2,"Fabbricazione, installazione, riparazione e manutenzione di macchine e apparecchi per l'industria delle pelli, del cuoio e delle calzature, compresi parti e accessori"
+29.56,"Fabbricazione, installazione, riparazione e manutenzione di altre macchine per impieghi speciali, compresi parti e accessori"
+29.56.12,"Fabbricazione, installazione, riparazione e manutenzione di altre macchine per impieghi speciali n.c.a., compresi parti e accessori"
+29.56.3,"Fabbricazione, riparazione e manutenzione  di stampi, portastampi, sagome e forme in metallo"
+29.6,"FABBRICAZIONE, INSTALLAZIONE, RIPARAZIONE E MANUTENZIONE DI ARMI, SISTEMI D'ARMA E MUNIZIONI, COMPRESI PARTI E ACCESSORI"
+30.02,"Fabbricazione di elaboratori, sistemi e altre apparecchiature informatiche compresi gli accessori, escluse l'installazione, la riparazione e la manutenzione"
+31.2,"FABBRICAZIONE, INSTALLAZIONE, RIPARAZIONE E MANUTENZIONE DI APPARECCHIATURE PER LA DISTRIBUZIONE E IL CONTROLLO DELL'ELETTRICITA'"
+31.20.2,"Installazione, riparazione e manutenzione di apparecchiature per la distribuzione e il controllo dell'elettricita'"
+31.50.02,Fabbricazione di lampadine e lampade elettriche
+31.62.2,"Installazione, riparazione e manutenzione di impianti elettrici e di altre apparecchiature elettriche n.c.a.,escluse le installazioni elettriche negli edifici"
+32.20.2,"Fabbricazione e installazione di apparecchi e impianti per telecomunicazioni, esclusa l'installazione da parte di imprese non produttrici"
+33.10.2,"Fabbricazione, installazione, riparazione e manutenzione di strumenti medicali per diagnosi, di materiale medico-chirurgico e veterinario, di strumenti per odontoiatria, compresi parti e accessori"
+33.10.4,"Fabbricazione e riparazione di protesi ortopediche, altre protesi ed ausili"
+33.20.3,"Fabbricazione di strumenti per navigazione, idrologia, geofisica e meteorologia e di sistemi di radiocontrollo satellitare, compresi parti e accessori"
+33.20.5,"Riparazione e manutenzione di apparecchi di misura, controllo, prova, navigazione, strumenti scientifici e di precisione, esclusi quelli di precisione ottici e di controllo dei processi industriali"
+33.40.3,"Fabbricazione di elementi ottici, compresa la fabbricazione di fibre ottiche non individualmente inguainate"
+33.40.5,"Fabbricazione di apparecchiature fotografiche e cinematografiche, incluse quelle digitali, compresi parti e accessori"
+34.20.02,Fabbricazione di rimorchi e semirimorchi di autoveicoli
+34.20.04,"Altre lavorazioni affini alla fabbricazione di carrozzerie: allestimenti di autoveicoli, rimorchi e semirimorchi (comprese la coibentazione e la blindatura), ecc."
+35.11.1,"Cantieri navali per costruzioni metalliche, compresa l'attivita' di impiantistica"
+35.12,"Costruzione, riparazione e manutenzione di imbarcazioni da diporto e sportive, compresa l'attivita' di impiantistica"
+35.20.2,"Costruzione di materiale rotabile tranviario, filoviario e per metropolitane, compresa l'attivita' di impiantistica"
+35.3,"COSTRUZIONE, RIPARAZIONE E MANUTENZIONE DI AEROMOBILI E DI VEICOLI SPAZIALI, COMPRESA L'ATTIVITA' DI IMPIANTISTICA"
+35.41.2,"Fabbricazione di parti e accessori per motocicli e ciclomotori, escluse le parti dei motori"
+35.42.2,Fabbricazione di parti e accessori di biciclette
+35.50.2,Fabbricazione di veicoli in legno; fabbricazione di parti e accessori in legno per autoveicoli
+36.11.2,"Fabbricazione di poltrone e divani e loro telai, in qualsiasi materiale, esclusi parti e accessori; laboratori di tappezzeria per sedie, sedili, poltrone e divani"
+36.11.21,"Fabbricazione di poltrone e divani e loro telai, esclusi parti e accessori"
+36.11.22,"Laboratori di tappezzeria per sedie, sedili, poltrone e divani"
+36.12,"Fabbricazione di mobili per uffici, negozi, ecc., esclusi parti e accessori"
+36.12.1,"Fabbricazione di mobili metallici per uffici, negozi, ecc., esclusi parti e accessori"
+36.12.2,"Fabbricazione di mobili non metallici per uffici, negozi, ecc., esclusi parti e accessori"
+36.13,"Fabbricazione di mobili per cucina di qualsiasi materiale, esclusi parti e accessori"
+36.14,"Fabbricazione di altri mobili; finitura (lucidatura, laccatura e doratura) di sedie, sedili, poltrone, divani e mobili di qualsiasi tipo; restauratori e riparatori di mobili di qualsiasi tipo; fabbricazione di parti e accessori per sedie, sedili, poltrone, divani e mobili di qualsiasi tipo"
+36.14.1,"Fabbricazione di altri mobili n.c.a.; finitura (lucidatura, laccatura e doratura) di sedie, sedili, poltrone, divani e mobili di qualsiasi tipo; restauratori e riparatori di mobili di qualsiasi tipo; fabbricazione di parti e accessori per sedie, sedili, poltrone, divani e mobili di qualsiasi tipo"
+36.14.11,Fabbricazione di altri mobili n.c.a.
+36.14.12,"Finitura (lucidatura, laccatura e doratura) di sedie, sedili, poltrone, divani e mobili di qualsiasi tipo"
+36.14.13,"Restauratori e riparatori di sedie, sedili, poltrone, divani e mobili di qualsiasi tipo"
+36.14.14,"Fabbricazione di parti e accessori per sedie, sedili, poltrone, divani e mobili di qualsiasi tipo"
+36.14.2,"Fabbricazione di mobili in giunco, vimini ed altro materiale simile"
+36.15,"Fabbricazione di materassi e relativi supporti (reti metalliche, doghe in legno, ecc.)"
+36.2,GIOIELLERIA E OREFICERIA
+36.21,Coniazione di monete
+36.22,Fabbricazione di gioielleria e oreficeria; lavorazione di pietre preziose
+36.22.1,"Fabbricazione di oggetti di gioielleria ed oreficeria, di metalli preziosi o rivestiti di metalli preziosi"
+36.22.2,Lavorazione di pietre preziose e semipreziose per gioielleria e per uso industriale
+36.3,FABBRICAZIONE E RIPARAZIONE DI STRUMENTI MUSICALI
+36.4,"FABBRICAZIONE DI ARTICOLI SPORTIVI; RIPARAZIONE MANUTENZIONE DI ATTREZZATURE SPORTIVE DEL TIPO UTILIZZATO IN PALESTRE, CENTRI SPORTIVI E SIMILI"
+36.5,FABBRICAZIONE DI GIOCHI E GIOCATTOLI
+36.50.1,"Fabbricazione di giochi, compresi i videogiochi; riparazione e manutenzione di giochi di uso non domestico"
+36.50.2,"Fabbricazione di giocattoli, compresi i tricicli e gli strumenti musicali giocattolo"
+36.6,ALTRE INDUSTRIE MANIFATTURIERE N.C.A.
+36.61,Fabbricazione di oggetti di bigiotteria
+36.62,"Fabbricazione di scope, spazzole, pennelli e simili"
+36.63,Altre industrie manifatturiere non previste nei precedenti codici
+36.63.1,"Fabbricazione di carrozzine e passeggini per l'infanzia, escluse le culle"
+36.63.2,"Fabbricazione di linoleum, rivestimenti in materiale composito per pavimenti; elementi sagomati per la coibentazione termoacustica"
+36.63.3,"Fabbricazione di ombrelli, bottoni, chiusure lampo, parrucche e affini"
+36.63.4,"Fabbricazione riparazione e manutenzione di giostre, altalene e attrezzature meccaniche per luna-park"
+36.63.5,Fabbricazione di oggetti di cancelleria e di altri articoli n.c.a.
+36.63.51,Fabbricazione di oggetti di cancelleria
+36.63.52,Fabbricazione di altri articoli n.c.a.
+37,RECUPERO E PREPARAZIONE PER IL RICICLAGGIO
+37.1,RECUPERO E PREPARAZIONE PER IL RICICLAGGIO DI CASCAMI E ROTTAMI METALLICI; CANTIERI DI DEMOLIZIONI NAVALI
+37.10.1,Recupero e preparazione per il riciclaggio di cascami e rottami metallici
+37.10.2,Cantieri di demolizioni navali
+37.2,RECUPERO E PREPARAZIONE PER IL RICICLAGGIO DI CASCAMI E ROTTAMI NON METALLICI
+37.20.1,"Recupero e preparazione per il riciclaggio di materiale plastico per produzione di materie prime secondarie plastiche, resine sintetiche"
+37.20.2,"Recupero e preparazione per il riciclaggio dei rifiuti solidi urbani, industriali e biomasse"
+40,"PRODUZIONE E DISTRIBUZIONE DI ENERGIA ELETTRICA, DI GAS, DEL CALORE E DEL FREDDO"
+40.1,"PRODUZIONE, TRASPORTO, DISTRIBUZIONE E COMMERCIO DI ENERGIA ELETTRICA"
+40.11,Produzione di energia elettrica
+40.12,Trasporto di energia elettrica
+40.13,Distribuzione e commercio di energia elettrica
+40.2,PRODUZIONE DI GAS; DISTRIBUZIONE E COMMERCIO DI COMBUSTIBILI GASSOSI MEDIANTE CONDOTTE
+40.21,Produzione di gas
+40.22,Distribuzione e commercio di combustibili gassosi mediante condotte
+40.3,PRODUZIONE E DISTRIBUZIONE DEL CALORE E DEL FREDDO
+41,"RACCOLTA, DEPURAZIONE E DISTRIBUZIONE D'ACQUA"
+41.00.1,"Captazione, adduzione, depurazione e distribuzione di acqua potabile"
+41.00.2,"Captazione, adduzione, depurazione e distribuzione di acqua non potabile"
+45,COSTRUZIONI
+45.1,PREPARAZIONE DEL CANTIERE EDILE
+45.11,Demolizione di edifici e sistemazione del terreno
+45.12,Trivellazioni e perforazioni
+45.2,EDILIZIA E GENIO CIVILE
+45.21,Lavori generali di costruzione di edifici e lavori di ingegneria civile
+45.21.1,Lavori generali di costruzione di edifici
+45.21.2,Lavori di ingegneria civile
+45.22,"Posa in opera di coperture e costruzione di tetti di edifici, comprese le relative ossature; lavori di impermeabilizzazione"
+45.23,"Costruzione di autostrade, strade, strade ferrate, campi di aviazione, impianti sportivi e altri lavori di superficie"
+45.24,Costruzione di opere idrauliche
+45.25,Altri lavori speciali di costruzione
+45.3,INSTALLAZIONE DEI SERVIZI IN EDIFICI
+45.31,Installazione e riparazione di impianti elettrici ed elettronici; installazione di impianti di sollevamento in edifici
+45.31.01,Installazione e riparazione di impianti  per la distribuzione dell'energia elettrica
+45.31.02,"Installazione e riparazione di impianti Radio TV, impianti d'allarme, impianti telefonici ed altri impianti di telecomunicazione , antenne e parafulmini"
+45.31.03,"Installazione di impianti di sollevamento, esclusa la riparazione di ascensori, montacarichi e scale mobili"
+45.32,Lavori di isolamento
+45.33,"Installazione e riparazione di impianti termici, idraulico-sanitari e per il trasporto del gas"
+45.33.01,Installazione e riparazione di impianti di riscaldamento e di condizionamento
+45.33.02,Installazione e riparazione di impianti idrosanitari
+45.33.03,Installazione e riparazione di impianti per il trasporto del gas
+45.34,Installazione e riparazione di altri impianti
+45.34.01,Installazione e riparazione di impianti integrati di protezione antincendio
+45.34.02,Installazione e riparazione di altri impianti n.c.a.
+45.4,LAVORI DI COMPLETAMENTO DEGLI EDIFICI
+45.41,Intonacatura e stuccatura
+45.42,"Posa in opera di infissi, arredi controsoffitti, pareti mobili e simili"
+45.43,Rivestimento di pavimenti e di muri
+45.44,Tinteggiatura e posa in opera di vetri
+45.45,Attivita' non specializzate di lavori edili ed altri lavori di completamento degli edifici
+45.45.01,Attivita' non specializzate di lavori edili
+45.45.02,Altri lavori di completamento degli edifici
+45.5,"NOLEGGIO CON MANOVRATORE DI MACCHINE ED ATTREZZATURE PER LA COSTRUZIONE, LA DEMOLIZIONE ED IL MOVIMENTO TERRA; NOLEGGIO CON MANOVRATORE DI ATTREZZATURE PER I SOLLEVAMENTI SPECIALI"
+50,"COMMERCIO, MANUTENZIONE E RIPARAZIONE DI AUTOVEICOLI E MOTOCICLI; VENDITA AL DETTAGLIO DI CARBURANTI PER AUTOTRAZIONE"
+50.1,COMMERCIO DI AUTOVEICOLI
+50.10.01,Commercio ingrosso e dettaglio di autoveicoli
+50.10.02,"Intermediari del commercio di autoveicoli, comprese le agenzie di compravendita"
+50.2,MANUTENZIONE E RIPARAZIONE DI AUTOVEICOLI
+50.20.1,Manutenzione e riparazioni meccaniche di autoveicoli
+50.20.2,Manutenzione e riparazione di carrozzerie di autoveicoli
+50.20.3,Manutenzione e riparazione di impianti elettrici e di alimentazione per autoveicoli
+50.20.4,"Manutenzione e riparazione e sostituzione di pneumatici, esclusa la rigenerazione e la ricostruzione"
+50.20.5,Soccorso stradale; autolavaggio; altre attivita' di manutenzione e di riparazione di autoveicoli
+50.20.51,Soccorso stradale
+50.20.52,Autolavaggio
+50.20.53,Altre attivita' di manutenzione e di riparazione di autoveicoli
+50.3,COMMERCIO DI PARTI ED ACCESSORI DI AUTOVEICOLI
+50.30.01,Commercio all'ingrosso e al dettaglio di parti ed accessori di autoveicoli
+50.30.02,Intermediari del commercio di parti ed accessori di autoveicoli
+50.4,"COMMERCIO, MANUTENZIONE E RIPARAZIONE DI MOTOCICLI  E CICLOMOTORI, ACCESSORI E PEZZI DI RICAMBIO"
+50.40.1,Commercio di motocicli e ciclomotori
+50.40.11,Commercio all'ingrosso e al dettaglio di motocicli e ciclomotori
+50.40.12,Intermediari del commercio di motocicli e ciclomotori
+50.40.2,Commercio di parti ed accessori di motocicli e ciclomotori
+50.40.21,Commercio all'ingrosso e al dettaglio di parti ed accessori di motocicli e ciclomotori
+50.40.22,Intermediari del commercio di parti ed accessori di motocicli e ciclomotori
+50.40.3,"Manutenzione e riparazione di motocicli e ciclomotori, esclusa la riparazione e la sostituzione di pneumatici"
+50.5,"VENDITA AL DETTAGLIO DI CARBURANTI PER AUTOTRAZIONE, PER IMBARCAZIONI E AEREI (DA DIPORTO)"
+51,"COMMERCIO ALL'INGROSSO E INTERMEDIARI DEL COMMERCIO, AUTOVEICOLI E MOTOCICLI ESCLUSI"
+51.1,INTERMEDIARI DEL COMMERCIO
+51.11,"Intermediari del commercio di materie agricole, animali vivi; materie prime e semilavorati tessili; cuoio e pelli"
+51.11.01,"Agenti e rappresentanti di cereali, legumi secchi: grano, granoturco, riso greggio e semilavorato, legumi secchi e altri prodotti similari, sementi, foraggi e mangimi per zootecnia, piante officinali e semi oleosi"
+51.11.02,Agenti e rappresentanti di fiori e piante
+51.11.03,Agenti e rappresentanti di animali vivi
+51.11.04,"Agenti e rappresentanti di fibre tessili gregge e semilavorate, cuoio e pelli"
+51.11.05,"Procacciatori d'affari di materie agricole, animali vivi, materie prime e semilavorati tessili, cuoio e pelli"
+51.11.06,"Mediatori in materie agricole,  materie prime e semilavorati tessili, cuoio e pelli"
+51.11.07,Mediatori in animali vivi
+51.12,"Intermediari del commercio di prodotti petroliferi e lubrificanti; combustibili; minerali, metalli e prodotti semilavorati, esclusi i metalli preziosi; prodotti chimici ed assimilati per l'industria; prodotti chimici per l'agricoltura, compresi i concimi"
+51.12.01,"Agenti e rappresentanti di carburanti, gpl, gas in bombole e simili; lubrificanti"
+51.12.02,Agenti e rappresentanti di combustibili solidi
+51.12.03,"Agenti e rappresentanti di minerali, metalli e prodotti semilavorati, esclusi i metalli preziosi"
+51.12.04,"Agenti e rappresentanti di prodotti chimici per l'industria, compresi oli e grassi di origine animale e vegetale e gomma greggia"
+51.12.05,"Agenti e rappresentanti di prodotti chimici per l'agricoltura, compresi i concimi"
+51.12.06,"Procacciatori d'affari di prodotti petroliferi e lubrificanti; combustibili; minerali, metalli e prodotti semilavorati, esclusi i metalli preziosi; prodotti chimici per l'industria, compresi oli e grassi di origine animale e vegetale e gomma greggia; prodotti chimici per l'agricoltura, compresi i concimi"
+51.12.07,"Mediatori in prodotti petroliferi e lubrificanti; combustibili; minerali, metalli e prodotti semilavorati, esclusi i metalli preziosi; prodotti chimici per l'industria, compresi oli e grassi di origine animale e vegetale e gomma greggia; prodotti chimici per l'agricoltura, compresi i concimi"
+51.13,"Intermediari del commercio di legname, semilavorati in legno e legno artificiale; materiali da costruzione, compresi gli infissi e gli articoli igienico-sanitari; vetro piano; articoli di installazione: apparecchi idraulico-sanitari, apparecchi ed accessori per il riscaldamento e per il condizionamento e altri prodotti similari, esclusi i condizionatori per uso domestico"
+51.13.01,"Agenti e rappresentanti di legname, semilavorati in legno e legno artificiale"
+51.13.02,"Agenti e rappresentanti di materiale da costruzione, compresi gli infissi e gli articoli igienico-sanitari; vetro piano"
+51.13.03,"Agenti e rappresentanti di articoli di installazione: apparecchi idraulico-sanitari, apparecchi ed accessori per il riscaldamento e per il condizionamento e altri prodotti similari, esclusi i condizionatori per uso domestico"
+51.13.04,"Procacciatori d'affari di legname, semilavorati in legno e legno artificiale; materiali da costruzione, compresi gli infissi e gli articoli igienico-sanitari; vetro piano; articoli di installazione: apparecchi idraulico-sanitari, apparecchi ed accessori per il riscaldamento e per il condizionamento e altri prodotti similari, esclusi i condizionatori per uso domestico"
+51.13.05,"Mediatori in legname, semilavorati in legno e legno artificiale; materiali da costruzione, compresi gli infissi e gli articoli igienico-sanitari; vetro piano; articoli di installazione: apparecchi idraulico-sanitari, apparecchi ed accessori per il riscaldamento e per il condizionamento e altri prodotti similari, esclusi i condizionatori per uso domestico"
+51.14,"Intermediari del commercio di macchine, attrezzature ed impianti per l'industria ed il commercio; materiale ed apparecchi elettrici ed elettronici per uso non domestico; macchine per costruzioni edili e stradali; macchine ed attrezzature per ufficio, compresi i mobili; macchine ed attrezzature per uso agricolo; navi, aeromobili e altri veicoli, esclusi autoveicoli, motocicli, ciclomotori e biciclette"
+51.14.01,"Agenti e rappresentanti di macchine, attrezzature ed impianti per l'industria ed il commercio; materiale e apparecchi elettrici ed elettronici per uso non domestico"
+51.14.02,Agenti e rappresentanti di macchine per costruzioni edili e stradali
+51.14.03,"Agenti e rappresentanti di macchine ed attrezzature per ufficio, compresi i mobili"
+51.14.04,"Agenti e rappresentanti di macchine ed attrezzature per uso agricolo, compresi i trattori"
+51.14.05,"Agenti e rappresentanti di navi, aeromobili e altri veicoli,  esclusi autoveicoli, motocicli, ciclomotori e biciclette"
+51.14.06,"Procacciatori d'affari di macchine, attrezzature ed impianti per l'industria ed il commercio; materiale ed apparecchi elettrici ed elettronici per uso non domestico; macchine per costruzioni edili e stradali; macchine e attrezzature per ufficio, compresi i mobili; macchine ed attrezzature per uso agricolo; navi, aeromobili e altri veicoli, esclusi autoveicoli, motocicli, ciclomotori e biciclette"
+51.14.07,"Mediatori in macchine, attrezzature ed impianti per l'industria ed il commercio; materiale ed apparecchi elettrici ed elettronici per uso non domestico; macchine per costruzioni edili e stradali; macchine e attrezzature per ufficio, compresi i mobili; macchine ed attrezzature per uso agricolo; navi, aeromobili e altri veicoli, esclusi autoveicoli, motocicli, ciclomotori e biciclette"
+51.15,"Intermediari del commercio di mobili, esclusi i mobili per ufficio, per esercizi commerciali e per comunita'; articoli per la casa; articoli di ferramenta e di bricolage; articoli di mesticheria, compresi carte da parati, stucchi  e cornici decorativi"
+51.15.01,"Agenti e rappresentanti di mobili in legno, in metallo e in materie plastiche, esclusi i mobili per ufficio, per esercizi commerciali e per comunita'"
+51.15.02,Agenti e rappresentanti di articoli di ferramenta e di bricolage
+51.15.03,"Agenti e rappresentanti di articoli casalinghi, porcellane, articoli in vetro, ecc."
+51.15.04,"Agenti e rappresentanti di articoli di mesticheria, compresi carte da parati, stucchi  e cornici decorativi"
+51.15.05,"Agenti e rappresentanti di mobili e oggetti di arredamento per la casa in canna, vimini, giunco, sughero, paglia; scope, spazzole, cesti e simili"
+51.15.06,"Procacciatori d'affari di mobili, esclusi i mobili per ufficio, per esercizi commerciali e per comunita'; articoli per la casa; articoli di ferramenta e di bricolage; articoli di mesticheria, compresi carte da parati, stucchi  e cornici decorativi"
+51.15.07,"Mediatori in mobili, esclusi i mobili per ufficio, per esercizi commerciali e per comunita'; articoli per la casa; articoli di ferramenta e di bricolage; articoli di mesticheria, compresi carte da parati, stucchi  e cornici decorativi"
+51.16,"Intermediari del commercio di prodotti tessili; abbigliamento, compresi gli accessori; calzature ed accessori; articoli in cuoio; pellicce"
+51.16.01,Agenti e rappresentanti di vestiario ed accessori di abbigliamento
+51.16.02,Agenti e rappresentanti di pellicce
+51.16.03,"Agenti e rappresentanti di tessuti per abbigliamento ed arredamento, comprese merceria e passamaneria"
+51.16.04,"Agenti e rappresentanti di camicie, biancheria e maglieria intima"
+51.16.05,Agenti e rappresentanti di calzature ed accessori
+51.16.06,"Agenti e rappresentanti di pelletteria, valige ed articoli da viaggio"
+51.16.07,"Agenti e rappresentanti di articoli tessili per la casa, tappeti, stuoie e materassi"
+51.16.08,"Procacciatori d'affari di prodotti tessili; abbigliamento, compresi gli accessori; calzature ed accessori; articoli in cuoio; pellicce"
+51.16.09,"Mediatori in prodotti tessili; abbigliamento, compresi gli accessori; calzature ed accessori; articoli in cuoio; pellicce"
+51.17,"Intermediari del commercio di prodotti alimentari, bevande e tabacco"
+51.17.1,"Intermediari del commercio di prodotti ortofrutticoli freschi, congelati e surgelati"
+51.17.11,"Agenti e rappresentanti di prodotti ortofrutticoli freschi, congelati e surgelati"
+51.17.12,"Procacciatori d'affari di prodotti ortofrutticoli freschi, congelati e surgelati"
+51.17.13,"Mediatori in prodotti ortofrutticoli freschi, congelati e surgelati"
+51.17.2,Intermediari del commercio di altri prodotti alimentari; bevande e prodotti similari; tabacco
+51.17.21,"Agenti e rappresentanti di carni fresche, congelate, surgelate, conservate e secche; salumi"
+51.17.22,"Agenti e rappresentanti di latte, burro e formaggi, escluse le uova"
+51.17.23,"Agenti e rappresentanti di oli e grassi alimentari: olio d'oliva e di semi, margarina ed altri prodotti similari"
+51.17.24,Agenti e rappresentanti di bevande e prodotti similari
+51.17.25,"Agenti e rappresentanti di prodotti ittici freschi, congelati, surgelati e conservati e secchi"
+51.17.26,"Agenti e rappresentanti di altri prodotti alimentari, compresi le uova e gli alimenti per gli animali domestici; tabacco"
+51.17.27,Procacciatori d'affari di altri prodotti alimentari; bevande e prodotti similari; tabacco
+51.17.28,Mediatori in altri prodotti alimentari; bevande e prodotti similari; tabacco
+51.18,Intermediari del commercio di altri prodotti non alimentari n.c.a.
+51.18.1,"Intermediari del commercio di carta e cartone, esclusi gli imballaggi; articoli di cartoleria e cancelleria; libri e altre pubblicazioni, compresi i relativi abbonamenti"
+51.18.11,"Agenti e rappresentanti di carta e cartone, esclusi gli imballaggi; articoli di cartoleria e cancelleria"
+51.18.12,"Agenti e rappresentanti di libri e altre pubblicazioni, compresi i relativi abbonamenti"
+51.18.13,"Procacciatori d'affari di carta e cartone, esclusi gli imballaggi; articoli di cartoleria e cancelleria; libri e altre pubblicazioni, compresi i relativi abbonamenti"
+51.18.14,"Mediatori in articoli di carta e cartone, esclusi gli imballaggi; articoli di cartoleria e cancelleria; libri e altre pubblicazioni, compresi i relativi abbonamenti"
+51.18.2,Intermediari del commercio di materiale ed apparecchi elettrici ed elettronici per uso domestico
+51.18.21,"Agenti e rappresentanti di apparecchi radiotelevisivi; apparecchi per la registrazione e la riproduzione del suono e dell'immagine e prodotti connessi; apparecchi telefonici; strumenti musicali; dischi, videocassette, CD e simili; materiale radiotelevisivo e telefonico; materiale elettrico per uso domestico"
+51.18.22,Agenti e rappresentanti di apparecchi elettrodomestici
+51.18.23,Procacciatori d'affari di materiale ed apparecchi elettrici ed elettronici per uso domestico
+51.18.24,Mediatori in materiale ed apparecchi elettrici ed elettronici per uso domestico
+51.18.3,"Intermediari del commercio di prodotti farmaceutici; prodotti sanitari ed apparecchi medicali, chirurgici e ortopedici; prodotti di profumeria e di cosmetica, compresi articoli per parrucchieri; prodotti di erboristeria"
+51.18.31,Agenti e rappresentanti di prodotti farmaceutici; prodotti di erboristeria per uso medico
+51.18.32,"Agenti e rappresentanti di prodotti sanitari ed apparecchi medicali, chirurgici e ortopedici"
+51.18.33,"Agenti e rappresentanti di prodotti di profumeria e di cosmetica, compresi articoli per parrucchieri; prodotti di erboristeria per uso cosmetico"
+51.18.34,"Procacciatori d'affari di prodotti farmaceutici; prodotti sanitari ed apparecchi medicali, chirurgici e ortopedici; prodotti di profumeria e di cosmetica, compresi articoli per parrucchieri; prodotti di erboristeria"
+51.18.35,"Mediatori in prodotti farmaceutici; prodotti sanitari ed apparecchi medicali, chirurgici e ortopedici; prodotti di profumeria e di cosmetica, compresi articoli per parrucchieri; prodotti di erboristeria"
+51.18.4,"Intermediari del commercio di attrezzature sportive; biciclette; orologi, oggetti e metalli preziosi; articoli fotografici, ottici e prodotti simili; strumenti scientifici e per laboratori di analisi; saponi, detersivi, candele e prodotti simili; giocattoli; chincaglieria e bigiotteria; altri prodotti non alimentari n.c.a., compresi gli imballaggi e gli articoli antinfortunistici, antincendio e pubblicitari"
+51.18.41,Agenti e rappresentanti di attrezzature sportive; biciclette
+51.18.42,"Agenti e rappresentanti di orologi, oggetti e metalli preziosi"
+51.18.43,"Agenti e rappresentanti di articoli fotografici, ottici e prodotti simili; strumenti scientifici e per laboratori di analisi"
+51.18.44,"Agenti e rappresentanti di saponi, detersivi, candele e prodotti simili"
+51.18.45,Agenti e rappresentanti di giocattoli
+51.18.46,Agenti e rappresentanti di chincaglieria e bigiotteria
+51.18.47,"Agenti e rappresentanti di altri prodotti non alimentari n.c.a., compresi gli imballaggi e gli articoli antinfortunistici, antincendio e pubblicitari"
+51.18.48,"Procacciatori d'affari di attrezzature sportive; biciclette; orologi, oggetti e metalli preziosi; articoli fotografici, ottici e prodotti simili; strumenti scientifici e per laboratori di analisi; saponi, detersivi, candele e prodotti simili; giocattoli; chincaglieria, bigiotteria; altri prodotti non alimentari n.c.a., compresi gli imballaggi e gli articoli antinfortunistici, antincendio e pubblicitari"
+51.18.49,"Mediatori in attrezzature sportive; biciclette; orologi, oggetti e metalli preziosi; articoli fotografici, ottici e prodotti simili; strumenti scientifici e per laboratori di analisi; saponi, detersivi, candele e prodotti simili; giocattoli; chincaglieria, bigiotteria; altri prodotti non alimentari n.c.a., compresi gli imballaggi e gli articoli antinfortunistici, antincendio e pubblicitari"
+51.19,Intermediari del commercio di vari prodotti senza prevalenza di alcuno; gruppi di acquisto; mandatari agli acquisti; buyer
+51.19.01,Agenti e rappresentanti di vari prodotti senza prevalenza di alcuno
+51.19.02,Procacciatori d'affari di vari prodotti senza prevalenza di alcuno
+51.19.03,Mediatori in vari prodotti senza prevalenza di alcuno
+51.19.04,Gruppi di acquisto; mandatari agli acquisti; buyer
+51.2,COMMERCIO ALL'INGROSSO DI MATERIE AGRICOLE E DI ANIMALI VIVI
+51.21,"Commercio all'ingrosso di cereali e legumi secchi; sementi; mangimi per il bestiame; piante officinali, semi oleosi e patate da semina; oli e grassi non commestibili; altre materie agricole n.c.a."
+51.21.1,Commercio all'ingrosso di cereali e legumi secchi
+51.21.2,"Commercio all'ingrosso di sementi; mangimi per il bestiame; piante officinali, semi oleosi e patate da semina; oli  e grassi non commestibili; altre materie agricole n.c.a."
+51.22,Commercio all'ingrosso di fiori e piante
+51.23,"Commercio all'ingrosso di animali vivi, compresi quelli da compagnia"
+51.23.01,"Commercio all'ingrosso di pollame, conigli, cacciagione, selvaggina e altri volatili vivi"
+51.23.02,"Commercio all'ingrosso di altri animali vivi: bovini, suini, ovini, equini, caprini  e simili; animali da compagnia"
+51.24,"Commercio all'ingrosso di pelli, anche per pellicceria, e cuoio"
+51.24.1,"Commercio all'ingrosso di cuoio e di pelli gregge e lavorate, escluse pelli per pellicceria"
+51.24.2,Commercio all'ingrosso di pelli gregge e lavorate per pellicceria
+51.25,Commercio all'ingrosso di tabacco grezzo
+51.3,"COMMERCIO ALL'INGROSSO DI PRODOTTI ALIMENTARI, BEVANDE E PRODOTTI A BASE DI TABACCO"
+51.31,"Commercio all'ingrosso prodotti ortofrutticoli freschi, congelati e surgelati; patate non da semina"
+51.32,Commercio all'ingrosso di carne; prodotti di salumeria; carne lavorata;  prodotti a base di carne
+51.32.1,"Commercio all'ingrosso di carne fresca, congelata e surgelata"
+51.32.11,Commercio all'ingrosso di carne fresca
+51.32.12,Commercio all'ingrosso di carne congelata e surgelata
+51.32.2,Commercio all'ingrosso di prodotti di salumeria; carne lavorata; prodotti a base di carne
+51.33,"Commercio all'ingrosso di prodotti lattiero-caseari, uova, oli e grassi commestibili"
+51.33.1,Commercio all'ingrosso di prodotti lattiero-caseari e di uova
+51.33.2,Commercio all'ingrosso di oli e grassi commestibili
+51.34,Commercio all'ingrosso di bevande e prodotti similari
+51.34.1,Commercio all'ingrosso di bevande alcoliche
+51.34.2,Commercio all'ingrosso di altre bevande
+51.35,Commercio all'ingrosso di prodotti a base di tabacco
+51.36,"Commercio all'ingrosso di zucchero; cioccolato, dolciumi e gelati; prodotti da forno e di panetteria"
+51.36.01,Commercio all'ingrosso di zucchero
+51.36.02,"Commercio all'ingrosso di cioccolato, dolciumi e gelati"
+51.36.03,Commercio all'ingrosso di prodotti da forno e di panetteria
+51.37,Commercio all'ingrosso di caffe'; te' e altri preparati per infusi; cacao e spezie
+51.37.01,Commercio all'ingrosso di caffe'
+51.37.02,Commercio all'ingrosso di te' ed altri preparati per infusi; cacao e spezie
+51.38,Commercio all'ingrosso di prodotti della pesca; altri prodotti alimentari
+51.38.1,Commercio all'ingrosso di prodotti della pesca freschi
+51.38.2,"Commercio all'ingrosso di prodotti della pesca congelati, surgelati, conservati e secchi"
+51.38.3,Commercio all'ingrosso di prodotti alimentari n.c.a.
+51.38.31,Commercio all'ingrosso di conserve alimentari
+51.38.32,"Commercio all'ingrosso di paste alimentari, farina e lieviti"
+51.38.33,Commercio all'ingrosso di altri prodotti alimentari n.c.a.
+51.39,"Commercio all'ingrosso non specializzato di prodotti alimentari, bevande e prodotti  a base di tabacco"
+51.39.1,Commercio all'ingrosso non specializzato di prodotti surgelati e congelati
+51.39.2,"Commercio all'ingrosso non specializzato di altri prodotti alimentari, bevande e prodotti del tabacco tabacco"
+51.4,COMMERCIO ALL'INGROSSO DI ALTRI BENI DI CONSUMO FINALE
+51.41,Commercio all'ingrosso di prodotti tessili
+51.41.1,Commercio all'ingrosso di tessuti
+51.41.2,"Commercio all'ingrosso di articoli di merceria, filati e passamaneria"
+51.41.3,"Commercio all'ingrosso di articoli tessili per la casa, esclusi tappeti e stuoie, e di altri articoli tessili n.c.a."
+51.42,"Commercio all'ingrosso di abbigliamento e di calzature, compresi gli accessori"
+51.42.1,Commercio all'ingrosso di abbigliamento e accessori
+51.42.2,Commercio all'ingrosso di pellicce e articoli in pelliccia
+51.42.3,Commercio all'ingrosso di camicie; biancheria e maglieria intima e simili
+51.42.4,Commercio all'ingrosso di calzature e accessori
+51.43,"Commercio all'ingrosso di elettrodomestici, apparecchi radiotelevisivi e telefonici, compresi parti e accessori; antifurto; apparecchi ed articoli per illuminazione;  materiale elettrico per uso domestico"
+51.43.1,"Commercio all'ingrosso di elettrodomestici, apparecchi radiotelevisivi e telefonici, apparecchi per la registrazione e la riproduzione del suono e dell'immagine e prodotti connessi, compresi parti e accessori"
+51.43.2,"Commercio all'ingrosso di supporti, vergini o registrati, audio, video e informatici"
+51.43.3,"Commercio all'ingrosso di materiali radiotelevisivi, telefonici ed antifurto"
+51.43.4,Commercio all'ingrosso di apparecchi ed articoli per illuminazione; materiale elettrico per uso domestico
+51.44,"Commercio all'ingrosso di articoli di porcellana e di vetro; carte da parati, stucchi e cornici decorativi; prodotti per la pulizia non per uso personale; coltelleria, posateria,  pentole e tegami"
+51.44.1,Commercio all'ingrosso di vetrerie e cristallerie
+51.44.2,Commercio all'ingrosso di ceramiche e porcellane
+51.44.3,"Commercio all'ingrosso di carte da parati, stucchi e cornici decorativi"
+51.44.4,"Commercio all'ingrosso di saponi, detersivi ed altri prodotti per la pulizia non per uso personale"
+51.44.5,"Commercio all'ingrosso di coltelleria, posateria, pentole e tegami"
+51.45,"Commercio all'ingrosso di profumi, cosmetici, saponi ed altri detergenti per uso personale"
+51.46.1,"Commercio all'ingrosso di prodotti farmaceutici, compresi i prodotti di erboristeria per uso medico"
+51.47.1,"Commercio all'ingrosso di mobili di qualsiasi materiale, esclusi quelli per ufficio e per esercizi commerciali"
+51.47.4,"Commercio all'ingrosso di articoli per fotografia, cinematografia ed ottica; strumenti ed attrezzature per uso scientifico"
+51.47.51,"Commercio all'ingrosso di orologeria, di forniture e di accessori per orologeria"
+51.47.6,"Commercio all'ingrosso di giochi, esclusi i giochi pirotecnici e quelli per parchi giochi e luna-park; giocattoli; videogiochi per uso domestico; articoli per puericoltura"
+51.47.9,Commercio all'ingrosso di altri prodotti non alimentari
+51.47.92,"Commercio all'ingrosso di chincaglieria, bigiotteria, oggetti ricordo e di artigianato, compresi gli articoli religiosi"
+51.47.94,Commercio all'ingrosso di articoli antincendio ed antinfortunistici
+51.47.96,"Commercio all'ingrosso di moquette, linoleum e prodotti similari per il rivestimento di pavimenti"
+51.47.98,"Commercio all'ingrosso di articoli di antiquariato, esclusi i mobili"
+51.5,"COMMERCIO ALL'INGROSSO DI PRODOTTI INTERMEDI NON AGRICOLI, DI ROTTAMI E CASCAMI"
+51.51.2,"Commercio all'ingrosso di combustibili per riscaldamento solidi, liquidi e gassosi"
+51.52.2,Commercio all'ingrosso di metalli non ferrosi e prodotti semilavorati
+51.53.2,"Commercio all'ingrosso di materiali da costruzione, compresi gli infissi e gli articoli igienico-sanitari"
+51.53.22,Commercio all'ingrosso di manufatti in cemento per l'edilizia
+51.53.24,"Commercio all'ingrosso di altri materiali da costruzione, compresi gli infissi e gli articoli di arredo urbano"
+51.53.4,"Commercio all'ingrosso di vernici e colori, compresi i pennelli"
+51.54.2,"Commercio all'ingrosso di apparecchi ed accessori per impianti idraulici, di riscaldamento e di condizionamento"
+51.55.02,"Commercio all'ingrosso di prodotti chimici per l'industria, compresi oli e grassi di origine animale e vegetale e gomma greggia"
+51.56.2,Commercio all'ingrosso di altri prodotti intermedi n.c.a.
+51.57.2,"Commercio all'ingrosso di rottami e materiali di recupero non metallici, ad esempio in vetro, carta, cartone, tessuto e plastica"
+51.83,"Commercio all'ingrosso di macchine per l'industria tessile, conciaria e calzaturiera; macchine per cucire e per maglieria; macchine per lavanderie"
+51.84.02,Commercio all'ingrosso di software
+51.85.02,Commercio all'ingrosso di mobili per ufficio
+51.87,"Commercio all'ingrosso di altre macchine ed attrezzature per l'industria, il commercio e la navigazione"
+51.87.02,Commercio all'ingrosso di macchine grafiche
+51.87.04,"Commercio all'ingrosso di apparecchiature per parrucchieri, palestre, solarium e centri estetici"
+51.87.06,Commercio all'ingrosso di videogiochi per pubblici esercizi
+51.88,"Commercio all'ingrosso di macchine, accessori e utensili per l'agricoltura, compresi i trattori, per la zootecnia e per il giardinaggio"
+51.90.02,"Forniture di bordo, per case di pena, per convivenze e simili"
+52,"COMMERCIO AL DETTAGLIO, ESCLUSO QUELLO DI AUTOVEICOLI E DI MOTOCICLI; RIPARAZIONE DI BENI PERSONALI E PER LA CASA"
+52.11.2,Supermercati
+52.11.4,Minimercati ed altri esercizi non specializzati di alimentari vari
+52.12.1,Grandi magazzini
+52.22,Commercio al dettaglio di carni e di prodotti a base di carne
+52.24.2,"Commercio al dettaglio di pasticceria, dolciumi e confetteria"
+52.27,Commercio al dettaglio di altri prodotti alimentari
+52.27.3,Commercio al dettaglio di caffe'
+52.3,"COMMERCIO AL DETTAGLIO DI PRODOTTI FARMACEUTICI; PRODOTTI SANITARI ED APPARECCHI MEDICALI ED ORTOPEDICI; COSMETICI, ARTICOLI DI PROFUMERIA E PER L'IGIENE PERSONALE; ERBORISTERIE"
+52.33.1,Erboristerie
+52.41.1,"Commercio al dettaglio di tessuti, esclusi i tappeti; biancheria per la casa, escluse le tende"
+52.42.1,"Commercio al dettaglio di confezioni per adulti, escluso l'abbigliamento in pelle"
+52.42.4,Commercio al dettaglio di pellicce e di abbigliamento in pelle
+52.43,Commercio al dettaglio di calzature ed accessori; articoli in cuoio
+52.44,"Commercio al dettaglio di mobili, compresi quelli per ufficio; materiale elettrico ed articoli per l'illuminazione; articoli per uso domestico n.c.a."
+52.44.2,"Commercio al dettaglio di articoli casalinghi, cristallerie e vasellame"
+52.45,"Commercio al dettaglio di elettrodomestici; apparecchi radiotelevisivi; apparecchi per la registrazione e la riproduzione del suono e dell'immagine; strumenti musicali; supporti, vergini o registrati, audio e video"
+52.45.2,"Commercio al dettaglio di supporti, vergini o registrati, audio e video"
+52.46.1,Commercio al dettaglio di ferramenta e bricolage; materiale termoidraulico; vernici e colori; vetro piano
+52.46.4,"Commercio al dettaglio di macchine, attrezzature e prodotti per l'agricoltura, compresi i semi ed i fertilizzanti; attrezzature per il giardinaggio, esclusi i semi ed i fertilizzanti; animali da cortile; prodotti per la zootecnia, esclusi gli articoli e gli alimenti per gli animali domestici"
+52.47.2,"Commercio al dettaglio di giornali, riviste e periodici"
+52.48,Commercio al dettaglio di prodotti non alimentari n.c.a.
+52.48.C,"Commercio al dettaglio di tappeti, stuoie ed arazzi"
+52.48.E,Commercio al dettaglio di altri prodotti non alimentari n.c.a.
+52.48.E2,"Commercio al dettaglio di spaghi, cordami, tele e sacchi di juta e prodotti per l'imballaggio in genere, esclusa la carta"
+52.48.E4,"Commercio al dettaglio di saponi, detersivi ed altri prodotti per la pulizia non per uso personale"
+52.48.E6,Commercio al dettaglio di prodotti non alimentari non previsti nei precedenti codici
+52.48.3,"Commercio al dettaglio di orologi, articoli di gioielleria ed argenteria"
+52.48.5,"Commercio al dettaglio di articoli sportivi e per il tempo libero; biciclette, compresi ricambi ed accessori; medaglie, coppe, targhe e trofei; articoli per la caccia e la pesca; armi e munizioni; articoli militari, esclusi vestiario e calzature"
+52.48.52,"Commercio al dettaglio di biciclette, compresi ricambi ed accessori"
+52.48.54,Commercio al dettaglio di articoli per la caccia e la pesca; armi e munizioni
+52.48.6,"Commercio al dettaglio di oggetti d'arte, esclusi quelli d'antiquariato; gallerie di esposizione con vendita di oggetti d'arte, comprese le agenzie d'affari per la compravendita; oggetti d'artigianato e di decorazione; arredi sacri ed articoli religiosi; articoli da regalo e per fumatori; bomboniere; chincaglieria e bigiotteria, compresi gli oggetti ricordo e gli articoli di promozione pubblicitaria; articoli per le belle arti"
+52.48.62,"Gallerie di esposizione con vendita di oggetti d'arte, comprese le agenzie d'affari per la compravendita"
+52.48.64,Commercio al dettaglio di arredi sacri ed articoli religiosi
+52.48.66,Commercio al dettaglio di bomboniere
+52.48.68,Commercio al dettaglio di articoli per le belle arti
+52.48.9,"Commercio al dettaglio di carta da parati; moquette, linoleum e prodotti similari per il rivestimento di pavimenti"
+52.50.2,"Commercio al dettaglio di mobili usati; mobili ed oggetti di antiquariato, compresi i libri antichi"
+52.61.1,"Commercio al dettaglio di prodotti alimentari effettuato per corrispondenza, per telefono, per radio e per televisione"
+52.61.12,"Commercio al dettaglio di prodotti alimentari effettuato per corrispondenza, per telefono e per radio"
+52.61.22,"Commercio al dettaglio di prodotti non alimentari effettuato per corrispondenza, per telefono e per radio, esclusi i veicoli"
+52.61.4,"Commercio al dettaglio di prodotti non alimentari effettuato via Internet (commercio elettronico), esclusi i veicoli"
+52.62.11,Commercio al dettaglio ambulante a posteggio fisso di prodotti ortofrutticoli
+52.62.13,Commercio al dettaglio ambulante a posteggio fisso di carne
+52.62.2,"Commercio al dettaglio ambulante a posteggio fisso di tessuti, esclusi tappeti e stuoie; articoli tessili per la casa; merceria; articoli di abbigliamento, comprese la biancheria e la maglieria intima"
+52.62.22,"Commercio al dettaglio ambulante a posteggio fisso di articoli di abbigliamento, comprese la biancheria e la maglieria intima"
+52.62.4,Commercio al dettaglio ambulante a posteggio fisso di arredamenti per giardino; mobili; tappeti e stuoie; articoli casalinghi; elettrodomestici
+52.62.6A,Commercio al dettaglio a posteggio fisso di altri prodotti non alimentari n.c.a.
+52.62.62,"Commercio al dettaglio ambulante a posteggio fisso di profumi e cosmetici; saponi, detersivi ed altri detergenti per qualsiasi uso"
+52.62.64,"Commercio al dettaglio ambulante a posteggio fisso di animali vivi, compresi articoli e alimenti"
+52.62.66,Commercio al dettaglio ambulante a posteggio fisso di libri e dischi
+52.62.68,Commercio al dettaglio ambulante a posteggio fisso di chincaglieria e bigiotteria
+52.63,"Commercio al dettaglio effettuato in altre forme al di fuori dei negozi, compreso il commercio al dettaglio ambulante itinerante; case d'aste di vendita al dettaglio, comprese le vendite fallimentari"
+52.63.11,Commercio al dettaglio di prodotti alimentari effettuato mediante l'intervento di un dimostratore o di un incaricato alla vendita (porta a porta)
+52.63.2,Commercio al dettaglio effettuato per mezzo di distributori automatici
+52.63.22,Commercio al dettaglio di prodotti non alimentari effettuato per mezzo di distributori automatici
+52.63.32,Commercio al dettaglio ambulante itinerante di prodotti ittici
+52.63.4,"Commercio al dettaglio ambulante itinerante di tessuti, esclusi i tappeti; articoli tessili per la casa; merceria; articoli di abbigliamento, comprese la biancheria, la maglieria intima e gli accessori; calzature e pelletteria"
+52.63.6,"Case d'aste di vendita al dettaglio, anche via Internet, comprese le vendite fallimentari"
+52.72.01,Riparazione di elettrodomestici
+52.72.03,Riparazione di altri apparecchi elettrici per la casa
+52.74.02,Modifica e riparazione di articoli di vestiario non effettuate dalle sartorie
+52.74.04,Duplicazione di chiavi
+52.74.06,Riparazione di altri beni di consumo n.c.a.
+55.10.02,"Alberghi, hotel, pensioni e simili con fornitura di alloggio (ed eventualmente di bar) senza ristorante"
+55.21.1,Ostelli della gioventu'
+55.23,Altri alloggi per brevi soggiorni
+55.23.3,Gestione di vagoni letto
+55.23.5,Agriturismo
+55.30.2,Ristorazione con somministrazione e con preparazione di cibi da asporto
+55.30.4,Gelaterie con somministrazione
+55.40.02,"Birrerie, pub, enoteche ed altri esercizi simili senza cucina"
+60.22,Trasporti con taxi
+60.23,Altri trasporti terrestri non regolari di passeggeri
+60.30.2,"Trasporti di liquidi mediante condotte, compresa la gestione delle relative stazioni di pompaggio"
+63.11.2,Movimentazione merci relativa a trasporti marittimi e fluviali
+63.11.3,Movimentazione merci relativa a trasporti ferroviari
+63.11.4,Movimentazione merci relativa ad altri trasporti terrestri
+63.12,Magazzinaggio e custodia (per conto terzi)
+63.12.1,"Magazzini di deposito e custodia (per conto terzi), esclusi quelli frigoriferi"
+63.12.2,Magazzini frigoriferi (per conto terzi)
+63.2,ALTRE ATTIVITA' CONNESSE AI TRASPORTI
+63.21,Altre attivita' connesse ai trasporti terrestri
+63.21.1,"Gestione di infrastrutture ferroviarie, compresi la manovra e lo smistamento di carri ferroviari"
+63.21.2,"Gestione di strade, ponti e gallerie"
+63.21.3,Gestione di stazioni di autobus
+63.21.4,Gestione di interporti
+63.21.5,"Gestione di parcheggi ed autorimesse, escluso l'autolavaggio"
+63.21.6,Altre attivita' connesse ai trasporti terrestri n.c.a.
+63.22,Altre attivita' connesse ai trasporti per vie d'acqua
+63.23,Altre attivita' connesse ai trasporti aerei
+63.3,AGENZIE DI VIAGGIO ED ALTRI INTERMEDIARI DEL TURISMO; OPERATORI TURISTICI (TOUR OPERATOR); ASSISTENZA TURISTICA; GUIDE ED ACCOMPAGNATORI TURISTICI
+63.30.1,Agenzie di viaggio ed altri intermediari del turismo; operatori turistici (tour operator); assistenza turistica
+63.30.2,Guide ed accompagnatori turistici
+63.30.21,Guide turistiche
+63.30.22,Accompagnatori turistici
+63.4,AGENZIE DI TRASPORTO
+63.40.1,Spedizionieri e agenzie di operazioni doganali
+63.40.2,Intermediari dei trasporti
+64,POSTE E TELECOMUNICAZIONI
+64.1,POSTE NAZIONALI; CORRIERI POSTALI DIVERSI DALLE POSTE NAZIONALI; AGENZIE DI RECAPITO A DOMICILIO
+64.11,Poste nazionali
+64.12,Corrieri postali diversi dalle poste nazionali; agenzie di recapito a domicilio
+64.2,TELECOMUNICAZIONI
+64.20.1,Gestione di reti di telecomunicazione fissa
+64.20.2,Gestione di reti di telecomunicazione mobile
+64.20.3,"Gestione di reti di trasmissione (trasporto) di segnali radiotelevisivi (via cavo, via satellite e via ripetitore terrestre), esclusa la messa in onda di programmi (emittenti radiotelevisive)"
+64.20.4,Gestione e monitoraggio di reti di trasmissione dati
+64.20.5,Fornitura di accesso a Internet (Internet Provider)
+64.20.6,Internet Point ed altre attivita' connesse alle telecomunicazioni
+64.20.61,Internet Point
+64.20.62,Intermediazione in servizi di telecomunicazione e trasmissione dati
+64.20.63,Servizio di posto telefonico pubblico e di fax pubblico
+64.20.64,Servizio di distribuzione ai rivenditori di schede telefoniche prepagate
+64.20.65,Altre attivita' connesse alle telecomunicazioni n.c.a.
+65,"INTERMEDIAZIONE MONETARIA E FINANZIARIA, ESCLUSE LE ASSICURAZIONI E I FONDI PENSIONE"
+65.1,INTERMEDIAZIONE MONETARIA
+65.11,Banca Centrale
+65.12,Altre intermediazioni monetarie
+65.12.1,Banche
+65.12.2,"Fondi comuni monetari, escluse le societa' di gestione"
+65.12.3,Altre istituzioni finanziarie monetarie (IFM)
+65.2,ALTRE INTERMEDIAZIONI FINANZIARIE
+65.21,Leasing finanziario
+65.22,Altre attivita' creditizie
+65.22.1,Credito al consumo
+65.22.2,Factoring
+65.22.3,Altre attivita' creditizie n.c.a.
+65.23,Intermediazioni finanziarie n.c.a.
+65.23.1,Societa' fiduciarie di gestione; societa' di investimenti mobiliari; societa' di intermediazione mobiliare (SIM)
+65.23.11,Societa' fiduciarie di gestione
+65.23.12,Societa' di investimenti mobiliari
+65.23.13,Societa' di intermediazione mobiliare (SIM)
+65.23.2,Gestione del risparmio per conto proprio
+65.23.3,Holding di gruppi finanziari
+65.23.4,Merchant bank (Banca d'affari)
+65.23.5,"Intermediazione in cambi, esclusi i cambiavalute"
+65.23.6,Altre intermediazioni finanziarie n.c.a.
+66,ASSICURAZIONI E FONDI PENSIONE
+66.01,Assicurazioni sulla vita
+66.02,Fondi pensione
+66.03,Assicurazioni diverse da quelle sulla vita
+67,"ATTIVITA' AUSILIARIE DELL'INTERMEDIAZIONE FINANZIARIA, DELLE ASSICURAZIONI E DEI FONDI PENSIONE"
+67.1,ATTIVITA' AUSILIARIE DELL'INTERMEDIAZIONE FINANZIARIA
+67.11,Amministrazione dei mercati finanziari
+67.11.1,Autorita' centrali di controllo degli intermediari finanziari
+67.11.2,Borse valori ed altre attivita' di amministrazione dei mercati finanziari
+67.12,Gestione del risparmio per conto terzi
+67.13,Altre attivita' ausiliarie dell'intermediazione finanziaria
+67.13.1,Cambiavalute
+67.13.2,"Promotori finanziari; mediatori, agenti e procacciatori in prodotti finanziari"
+67.13.21,Promotori finanziari
+67.13.22,"Agenti, mediatori e procacciatori in prodotti finanziari"
+67.13.3,Consorzi e cooperative di garanzia collettiva fidi; altre attivita' ausiliarie dell'intermediazione finanziaria n.c.a.
+67.2,ATTIVITA' AUSILIARIE DELLE ASSICURAZIONI E DEI FONDI PENSIONE
+67.20.1,Intermediari delle assicurazioni
+67.20.11,Broker di assicurazioni
+67.20.12,Agenti di assicurazioni
+67.20.13,Sub-agenti di assicurazioni
+67.20.14,"Produttori, procacciatori ed altri intermediari delle assicurazioni"
+67.20.2,Periti e liquidatori indipendenti delle assicurazioni
+67.20.3,Autorita' centrali di vigilanza su assicurazioni e fondi pensione
+70,ATTIVITA' IMMOBILIARI
+70.1,ATTIVITA' IMMOBILIARI SU BENI PROPRI
+70.11,Valorizzazione e promozione immobiliare di beni propri
+70.12,Compravendita immobiliare di beni propri
+70.2,LOCAZIONE IMMOBILIARE DI BENI PROPRI E SUB-LOCAZIONE; AFFITTO DI AZIENDE; GESTIONE DI CENTRI COMMERCIALI PROPRI
+70.20.01,Locazione immobiliare di beni propri e sub-locazione
+70.20.02,Affitto di aziende
+70.20.03,"Gestione di centri commerciali propri, esclusa la gestione diretta delle attivita' commerciali"
+70.3,ATTIVITA' IMMOBILIARI PER CONTO TERZI
+70.31,"Attivita' di mediazione immobiliare, comprese le agenzie immobiliari"
+70.32,Amministrazione di condomini; gestione di beni immobili per conto terzi
+71,NOLEGGIO SENZA OPERATORE DI MACCHINARI E ATTREZZATURE E DI BENI PER USO PERSONALE E DOMESTICO
+71.1,"NOLEGGIO SENZA AUTISTA DI AUTOVETTURE, COMPRESI I FURGONI LEGGERI"
+71.2,NOLEGGIO SENZA OPERATORE DI ALTRI MEZZI DI TRASPORTO
+71.21,Noleggio senza autista di altri mezzi di trasporto terrestri
+71.21.01,Noleggio di motocicli
+71.21.02,Noleggio di roulotte e camper
+71.21.03,Noleggio di container
+71.21.04,"Noleggio senza autista di autocarri e motrici, compresi rimorchi e semi-rimorchi"
+71.21.05,Noleggio senza autista di altri mezzi di trasporto terrestri n.c.a.
+71.22,"Noleggio senza equipaggio di mezzi di trasporto marittimi e fluviali, escluse le imbarcazioni da diporto"
+71.23,Noleggio senza equipaggio di mezzi di trasporto aerei
+71.3,NOLEGGIO SENZA OPERATORE DI ALTRE MACCHINE ED ATTREZZATURE
+71.31,Noleggio senza operatore di macchine ed attrezzature agricole
+71.32,Noleggio senza manovratore di macchine ed attrezzature per lavori edili e di genio civile; noleggio senza manovratore di attrezzature per i sollevamenti speciali
+71.33,"Noleggio di macchine ed attrezzature per l'ufficio e per l'informatica, escluso il software"
+71.34,Noleggio di giochi elettromeccanici e macchine distributrici; noleggio senza operatore di macchine ed attrezzature n.c.a.
+71.34.01,Noleggio di giochi elettromeccanici e macchine distributrici
+71.34.02,Noleggio senza operatore di attrezzature di sollevamento e movimentazione merci: ad esempio carrelli elevatori e palette di carico (pallet)
+71.34.03,Noleggio di servizi igienici chimici
+71.34.04,"Noleggio di strutture ed attrezzature per manifestazioni e spettacoli: ad esempio impianti luce ed audio senza operatore, palchi, stand ed addobbi luminosi"
+71.34.05,Noleggio senza operatore di altre macchine ed attrezzature n.c.a.
+71.4,NOLEGGIO DI BENI PER USO PERSONALE E DOMESTICO
+71.40.1,"Noleggio di biancheria da tavola, da letto, da bagno e di articoli di vestiario, escluso quello effettuato dalle lavanderie industriali"
+71.40.2,"Noleggio di biciclette; noleggio di imbarcazioni da diporto senza equipaggio, compresi i pedalo'; noleggio di attrezzature ed articoli sportivi, escluso quello effettuato in connessione con la gestione di impianti sportivi"
+71.40.21,Noleggio di biciclette
+71.40.22,"Noleggio senza equipaggio di imbarcazioni da diporto, compresi i pedalo'"
+71.40.23,"Noleggio di attrezzature ed articoli sportivi, escluso quello effettuato in connessione con la gestione di impianti sportivi"
+71.40.3,"Noleggio di supporti registrati audio e video, compresi  i videogiochi"
+71.40.4,Noleggio di altri beni per uso personale e domestico
+71.40.41,"Noleggio di attrezzature da spiaggia (lettini, sdraio, ombrelloni e simili), esclusi i pedalo' ed il noleggio effettuato in connessione con la gestione di impianti balneari"
+71.40.42,"Noleggio di mobili, vasellame e cristalleria, servizi da cucina e da tavola; fiori e piante"
+71.40.43,Noleggio di altri beni per uso personale e domestico n.c.a.
+72,INFORMATICA ED ATTIVITA' CONNESSE
+72.1,CONSULENZA PER L'INSTALLAZIONE DI SISTEMI HARDWARE
+72.2,REALIZZAZIONE DI SOFTWARE; CONSULENZA SOFTWARE
+72.21,Realizzazione di software non personalizzato (edizioni di software)
+72.22,Realizzazione di software personalizzato; consulenza software
+72.3,ELABORAZIONE E REGISTRAZIONE ELETTRONICHE DI DATI (PER CONTO TERZI)
+72.30.01,Data Entry
+72.30.02,"Scannerizzazione ed archiviazione ottica di documenti, compresa la microfilmatura e microarchiviatura"
+72.30.03,"Elaborazione elettronica di dati contabili, esclusi i Centri Autorizzati di Assistenza Fiscale (CAAF)"
+72.30.04,Altre elaborazioni elettroniche di dati per conto terzi
+72.4,GESTIONE DI BANCHE DATI E DI PORTALI WEB
+72.5,"INSTALLAZIONE, MANUTENZIONE E RIPARAZIONE DI MACCHINE PER UFFICIO E DI APPARECCHIATURE INFORMATICHE"
+72.6,ATTIVITA' CONNESSE ALL'INFORMATICA
+72.60.01,"Housing, Hosting e ASP"
+72.60.02,"Intermediazione in servizi informatici, esclusi quelli telematici"
+72.60.03,Creazione grafica in ambiente web
+72.60.04,Altre attivita' connesse all'informatica
+73,RICERCA E SVILUPPO
+73.1,RICERCA E SVILUPPO SPERIMENTALE NEL CAMPO DELLE SCIENZE NATURALI E DELL'INGEGNERIA
+73.2,RICERCA E SVILUPPO SPERIMENTALE NEL CAMPO DELLE SCIENZE SOCIALI E UMANISTICHE
+74,SERVIZI PROFESSIONALI ED IMPRENDITORIALI
+74.1,"ATTIVITA' LEGALI, CONTABILITA', CONSULENZA FISCALE E SOCIETARIA; STUDI DI MERCATO E SONDAGGI DI OPINIONE; CONSULENZA COMMERCIALE E DI GESTIONE; HOLDING OPERATIVE"
+74.11,Studi legali e notarili
+74.11.1,Studi legali
+74.11.2,Studi notarili
+74.12,"Contabilita', consulenza societaria, incarichi giudiziari e consulenza in materia fiscale; societa' di revisione e certificazione di bilanci; gestione ed amministrazione del personale (per conto terzi)"
+74.12.1,"Contabilita', consulenza societaria, incarichi giudiziari e consulenza in materia fiscale"
+74.12.11,"Servizi in materia di contabilita', consulenza societaria, incarichi giudiziari e consulenza fiscale fornita da dottori commercialisti"
+74.12.12,"Servizi in materia di contabilita', consulenza societaria, incarichi giudiziari, consulenza fiscale fornita da ragionieri e periti commerciali"
+74.12.13,"Servizi in materia di contabilita' e consulenza fiscale forniti da altri soggetti, compresi i Centri Autorizzati di Assistenza Fiscale (CAAF)"
+74.12.2,Societa' di revisione e di certificazione di bilanci
+74.12.3,Gestione ed amministrazione del personale (per conto terzi)
+74.13,Studi di mercato e sondaggi di opinione
+74.14,Consulenza amministrativo-gestionale
+74.14.1,Consulenza finanziaria
+74.14.2,Consulenza del lavoro
+74.14.3,Consulenza agraria
+74.14.4,Consulenza amministrativo-gestionale e pianificazione aziendale
+74.14.5,Pubbliche relazioni
+74.14.6,Fornitura di informazioni commerciali
+74.15,"Assunzione e gestione di partecipazioni di controllo o meno, escluse le holding di gruppi finanziari"
+74.2,"STUDI DI ARCHITETTURA, DI INGEGNERIA ED ALTRE ATTIVITA' TECNICHE"
+74.20.1,Studi di architettura e di ingegneria
+74.20.2,Servizi di ingegneria integrata
+74.20.3,Aerofotogrammetria e cartografia; previsioni meteorologiche
+74.20.4,"Studi geologici e di prospezione geognostica e mineraria; indagini geodetiche, geofisiche, sismologiche ed idrografiche"
+74.20.5,Attivita' tecniche n.c.a.
+74.20.51,Attivita' tecniche svolte da geometri e periti industriali
+74.20.52,Disegnatori tecnici
+74.20.53,Consulenza su sicurezza ed igiene del posto di lavoro
+74.20.54,Consulenza su sicurezza dei prodotti svolta non in connessione con l'analisi tecnica degli stessi
+74.20.55,Altre attivita' tecniche n.c.a.
+74.3,COLLAUDI ED ANALISI TECNICHE
+74.30.1,Collaudi ed analisi tecniche di prodotti
+74.30.2,"Certificazione di prodotti, processi e sistemi; consorzi per la tutela di beni di produzione controllata"
+74.30.21,"Certificazione di prodotti, processi e sistemi"
+74.30.22,Consorzi per la tutela di beni di produzione controllata
+74.4,PUBBLICITA'
+74.40.1,Studi di promozione pubblicitaria
+74.40.2,Agenzie di concessione degli spazi pubblicitari; intermediazione in servizi pubblicitari
+74.5,"SERVIZI DI RICERCA, SELEZIONE E FORNITURA DI PERSONALE"
+74.50.1,"Servizi di ricerca, selezione, collocamento e supporto per il ricollocamento di personale"
+74.50.2,Agenzie di fornitura di lavoro interinale
+74.6,SERVIZI DI VIGILANZA ED INVESTIGAZIONE
+74.60.1,Servizi di vigilanza
+74.60.2,Servizi di investigazione
+74.7,"SERVIZI DI PULIZIA, DISINFEZIONE E DISINFESTAZIONE"
+74.70.1,Servizi di pulizia
+74.70.2,Servizi di disinfezione e disinfestazione
+74.8,ALTRI SERVIZI PROFESSIONALI ED IMPRENDITORIALI
+74.81,Attivita' fotografiche
+74.81.1,Studi fotografici
+74.81.2,Laboratori fotografici per lo sviluppo e la stampa
+74.81.3,"Aerofotografia, esclusa la aereocinematografia"
+74.82,Imballaggio e confezionamento (per conto terzi)
+74.82.1,Imballaggio e confezionamento di generi alimentari
+74.82.2,Imballaggio e confezionamento di generi non alimentari
+74.85,"Servizi di segreteria; traduzioni; disbrigo pratiche; spedizione di materiale propagandistico, compilazione e gestione di indirizzi ed elenchi"
+74.85.1,"Servizi di segreteria: dattilografia, stenografia, fotocopiatura e attivita' simili"
+74.85.2,Traduzioni ed interpretariato
+74.85.3,Richiesta certificati e disbrigo pratiche
+74.85.4,"Spedizione di materiale propagandistico, compilazione e gestione di indirizzi ed elenchi"
+74.86,Call center
+74.87,Altri servizi professionali ed imprenditoriali n.c.a.
+74.87.1,"Imprese ed enti di gestione esattoriale; riscossione di tributi (ad esempio bollo auto e canone televisivo) effettuata da altri soggetti autorizzati (ricevitorie del Lotto, ecc.)"
+74.87.11,Imprese ed enti di gestione esattoriale
+74.87.12,"Riscossione di tributi (ad esempio bollo auto e canone televisivo) effettuata da altri soggetti autorizzati (ricevitorie del Lotto, ecc.)"
+74.87.2,Agenzie di recupero crediti
+74.87.3,"Agenzie di distribuzione di libri, giornali e riviste"
+74.87.4,"Pubblici mercati e pese pubbliche, esclusi i banditori d'asta"
+74.87.5,"Design e stiling relativo a tessili, abbigliamento, calzature, gioielleria, mobili ed altri beni personali e per la casa"
+74.87.6,"Organizzazione di fiere, mostre, esposizioni, convegni e manifestazioni simili; servizi degli uffici-residence"
+74.87.61,"Organizzazione di fiere, mostre, esposizioni, convegni e manifestazioni simili"
+74.87.62,Servizi degli uffici-residence
+74.87.7,"Logistica aziendale, esterna e dei flussi di ritorno"
+74.87.8,Servizi professionali ed imprenditoriali non previsti nei precedenti codici
+74.87.81,Agenti e rappresentanti in servizi n.c.a.
+74.87.82,Procacciatori d'affari e mediatori in servizi n.c.a.
+74.87.83,Agenzie d'affari n.c.a.
+74.87.84,Attivita' peritali non inerenti al settore immobiliare o assicurativo
+74.87.85,"Gestione dei diritti connessi alla proprieta' industriale (licenze, brevetti, marchi di fabbrica, franchising, ecc.)"
+74.87.86,Altri servizi professionali ed imprenditoriali non previsti nei precedenti codici
+75,AMMINISTRAZIONE PUBBLICA (NOTA: LE ATTIVITA' DELLA P.A. QUI PREVISTE NON COMPORTANO  L'ISCRIZIONE AL REGISTRO DELLE IMPRESE)
+80,ISTRUZIONE
+80.1,ISTRUZIONE PRIMARIA
+80.10.1,"Istruzione di grado preparatorio: scuole materne, scuole speciali collegate a quelle primarie"
+80.10.2,Istruzione primaria: scuole elementari
+80.2,ISTRUZIONE SECONDARIA
+80.21,Istruzione secondaria di formazione generale
+80.21.1,Istruzione secondaria di primo grado: scuole medie
+80.21.2,Istruzione secondaria di secondo grado: licei
+80.22,"Istruzione secondaria di secondo grado: istituti tecnici, professionali ed artistici"
+80.3,ISTRUZIONE UNIVERSITARIA E POST-UNIVERSITARIA
+80.30.1,Corsi di laurea e di diploma universitario
+80.30.2,Corsi post-universitari
+80.30.3,Altre forme di istruzione universitaria e post-universitaria
+80.4,AUTOSCUOLE E SCUOLE DI PILOTAGGIO NON PER LINEE COMMERCIALI; CORSI DI FORMAZIONE E PERFEZIONAMENTO; ALTRI SERVIZI DI ISTRUZIONE
+80.41,Autoscuole; scuole di pilotaggio aeronautico e nautico non per linee commerciali
+80.42,Corsi di formazione e perfezionamento; altri servizi di istruzione
+80.42.1,Universita' per la terza eta'
+80.42.2,Corsi di formazione professionale
+80.42.3,Scuole e corsi di lingua
+80.42.4,Altri servizi di istruzione n.c.a.
+85,SANITA' ED ASSISTENZA SOCIALE
+85.1,SERVIZI SANITARI
+85.11,Servizi ospedalieri
+85.11.1,Ospedali e case di cura generali
+85.11.2,Ospedali e case di cura specializzati
+85.11.3,Ospedali e case di cura psichiatrici
+85.11.4,"Istituti, cliniche e policlinici universitari"
+85.11.5,Ospedali e case di cura per lunga degenza (cronicari)
+85.12,"Studi medici, esclusi gli studi odontoiatrici"
+85.12.1,Studi medici generici
+85.12.2,Studi medici specialistici e poliambulatori
+85.12.3,Studi di radiologia e radioterapia
+85.12.31,Studi di radiologia
+85.12.32,Studi di radioterapia
+85.12.4,Centri di igiene mentale
+85.12.5,"Altre istituzioni sanitarie senza ricovero: centri dialisi, ambulatori tricologici, ecc."
+85.13,Studi odontoiatrici
+85.14,Altri servizi sanitari
+85.14.1,"Laboratori di analisi cliniche, igiene e profilassi"
+85.14.2,Attivita' paramediche
+85.14.21,Fisioterapia
+85.14.22,Assistenza infermieristica
+85.14.23,Altre attivita' paramediche
+85.2,SERVIZI VETERINARI
+85.31.02,Altre forme di assistenza sociale residenziale
+85.32.01,"Asili nido e giardini d'infanzia (kinder garden), escluse le ludoteche"
+85.32.03,Altre forme di assistenza sociale non residenziale
+91,ATTIVITA' DI ORGANIZZAZIONI ASSOCIATIVE (NOTA: L'ISCRIZIONE NEL REGISTRO DELLE IMPRESE DI QUESTE ORGANIZZAZIONI PRESUPPONE LO SVOLGIMENTO DI ATTIVITA' ECONOMICHE CHE SONO GIA' PREVISTE NELLE ALTRE DIVISIONI)
+92.13,Proiezioni cinematografiche
+92.31.02,Organizzazione di spettacoli
+92.32,"Teatri, sale da concerto ed altre sale di spettacolo, escluse quelle cinematografiche; agenzie di vendita di biglietti"
+92.33.02,Trasporto di passeggeri a fini ricreativi
+92.34.1,"Discoteche, sale da ballo, night clubs e simili; scuole di danza"
+92.34.12,Scuole di danza
+92.4,"AGENZIE DI STAMPA E DI INFORMAZIONE; GIORNALISTI, FOTOREPORTER E PUBBLICISTI"
+92.53,"Orti botanici, giardini zoologici, parchi naturali e gestione del patrimonio naturale"
+92.61.2,Piscine
+92.61.5,Palestre
+92.62,Altre attivita' sportive
+92.62.3,Attivita' svolte da operatori sportivi indipendenti
+92.62.41,Societa' sportive ed altri nuclei organizzativi di base
+92.7,ATTIVITA' RICREATIVE
+92.71.02,Sale scommesse
+92.71.04,Attivita' connesse con le lotterie e con il gioco d'azzardo
+92.72.2,"Sale giochi e sale biliardi, escluse le sale da bowling"
+93,SERVIZI N.C.A.
+93.01.2,Altre lavanderie; tintorie di articoli tessili e pellicce
+93.02.02,Manicure e pedicure
+93.03,Pompe funebri e attivita' connesse
+93.04.1,"Centri per il benessere fisico, esclusi gli stabilimenti idropinici ed idrotermali; centri per cure anti-fumo"
+93.05.01,Agenzie matrimoniali e d'incontro
+93.05.03,Altri servizi non previsti nei precedenti codici
+99,ORGANIZZAZIONI ED ORGANISMI EXTRATERRITORIALI (NOTA: ATTIVITA' NON PRESENTE NEL REGISTRO IMPRESE)
+23.2,FABBRICAZIONE DI PRODOTTI PETROLIFERI RAFFINATI
+23.20.1,Raffinerie di petrolio
+23.20.3,Miscelazione di gas petroliferi liquefatti (GPL) e loro imbottigliamento
+23.3,TRATTAMENTO DEI COMBUSTIBILI NUCLEARI
+24,FABBRICAZIONE DI PRODOTTI CHIMICI E DI FIBRE SINTETICHE E ARTIFICIALI
+24.1,FABBRICAZIONE DI PRODOTTI CHIMICI DI BASE
+24.11,Fabbricazione di gas industriali
+24.12,Fabbricazione di coloranti e pigmenti di base di qualsiasi origine; sostanze fluorescenti e luminescenti
+24.13,Fabbricazione di vari prodotti chimici di base inorganici
+24.15,"Fabbricazione di concimi e di composti azotati associati, compresi i fertilizzanti naturali; produzione di compost"
+24.16,Fabbricazione di materie plastiche in forme primarie
+24.17,Fabbricazione di gomma sintetica in forme primarie
+24.3,"FABBRICAZIONE DI PITTURE, VERNICI E SMALTI, INCHIOSTRI DA STAMPA, MASTICI, SOLVENTI E DILUENTI A BASE ORGANICA E INORGANICA E PRODOTTI SVERNICIANTI"
+24.4,FABBRICAZIONE DI PRODOTTI FARMACEUTICI E DI PRODOTTI CHIMICI E BOTANICI PER USI MEDICINALI
+24.41,Fabbricazione di prodotti farmaceutici di base
+24.42,"Fabbricazione di medicinali, preparati farmaceutici, cerotti e simili"
+24.5,"FABBRICAZIONE DI SAPONI, DETERSIVI E DETERGENTI, DI PRODOTTI PER LA PULIZIA E LA LUCIDATURA, DI PROFUMI E COSMETICI"
+24.51,"Fabbricazione di saponi, detersivi, detergenti e di altri prodotti per la pulizia non per uso personale; prodotti per la ripulitura, la lucidatura e la manutenzione"
+24.51.2,"Fabbricazione di prodotti per la ripulitura, la lucidatura e la manutenzione e di altri prodotti simili"
+24.52,"Fabbricazione di saponi e detergenti per uso personale, di profumi e cosmetici"
+24.61,Fabbricazione di esplosivi
+24.62,"Fabbricazione di colle, gelatine, sigillanti e adesivi di qualsiasi origine"
+24.63,Fabbricazione di oli essenziali
+24.65,"Fabbricazione di supporti per registrazioni audio, video, informatica"
+24.66,Fabbricazione di altri prodotti chimici n.c.a.
+24.66.1,Fabbricazione di prodotti chimici organici mediante processi di fermentazione o derivati da materie prime vegetali
+24.66.3,Trattamento chimico degli acidi grassi
+24.66.5,Fabbricazione di prodotti chimici per ufficio
+24.66.6,Fabbricazione di prodotti chimici ausiliari per le industrie tessili e del cuoio
+25,FABBRICAZIONE DI ARTICOLI IN GOMMA E MATERIE PLASTICHE
+25.1,FABBRICAZIONE DI ARTICOLI IN GOMMA
+25.11,Fabbricazione di pneumatici e di camere d'aria
+25.12,Rigenerazione e ricostruzione di pneumatici
+25.2,FABBRICAZIONE DI ARTICOLI IN MATERIE PLASTICHE
+25.21,"Fabbricazione di semilavorati di materie plastiche: lastre, fogli, pellicole, ecc.; tubi e profilati in materie plastiche"
+25.22,Fabbricazione di imballaggi in materie plastiche
+25.23,Fabbricazione di articoli in plastica per l'edilizia
+25.23.02,Fabbricazione di altri articoli in plastica per l'edilizia
+26,FABBRICAZIONE DI PRODOTTI DELLA LAVORAZIONE DI MINERALI NON METALLIFERI
+26.1,FABBRICAZIONE DI VETRO E DI PRODOTTI IN VETRO
+26.11,Fabbricazione del vetro piano
+26.12,Lavorazione e trasformazione del vetro piano
+26.12.01,Decorazione del vetro piano (esclusa la creazione di opere di pittura su vetro)
+26.13,Fabbricazione di articoli in vetro cavo non per uso tecnico; articoli casalinghi in vetro
+26.15,Fabbricazione e lavorazione di altro vetro e di articoli in tali materiali; fabbricazione di articoli in vetro cavo per usi tecnici
+26.15.1,Fabbricazione di articoli in vetro cavo per usi tecnici
+26.15.3,Fabbricazione e lavorazione di altro vetro (anche per usi tecnici ed industriali) ed articoli in vetro n.c.a.
+26.2,"FABBRICAZIONE DI PRODOTTI CERAMICI NON REFRATTARI, NON DESTINATI ALL'EDILIZIA, E DI PRODOTTI CERAMICI REFRATTARI"
+26.21,"Fabbricazione di prodotti in ceramica per usi domestici e ornamentali, comprese la decorazione e la smaltatura"
+26.23,Fabbricazione di isolatori elettrici e di pezzi isolanti in ceramica
+26.24,Fabbricazione di altri prodotti ceramici per uso tecnico e industriale
+26.25,Fabbricazione di recipienti in ceramica per il trasporto ed il confezionamento di merci; altri prodotti ceramici
+26.3,"FABBRICAZIONE DI PIASTRELLE IN CERAMICA NON REFRATTARIA PER PAVIMENTI E RIVESTIMENTI, COMPRESA LA DECORAZIONE E LA SMALTATURA"
+26.4,"FABBRICAZIONE DI MATTONI, TEGOLE ED ALTRI PRODOTTI PER L'EDILIZIA IN TERRACOTTA NON REFRATTARI"
+26.5,"PRODUZIONE DI CEMENTO, CALCE E GESSO"
+26.51,Produzione di cemento
+26.52,Produzione di calce
+26.53,Produzione di gesso
+26.61,"Fabbricazione di prodotti in calcestruzzo, cemento e pietra artificiale per l'edilizia"
+26.61.01,"Fabbricazione di elementi prefabbricati in calcestruzzo, cemento e pietra artificiale per l'edilizia, compresi i caminetti"
+26.62,Fabbricazione di prodotti in gesso per l'edilizia
+26.63,Produzione di calcestruzzo e di conglomerati bituminosi
+26.63.02,Produzione di conglomerati bituminosi
+26.65,Fabbricazione di prodotti in fibrocemento
+26.66,"Fabbricazione di altri prodotti in calcestruzzo, cemento, pietra artificiale e gesso"
+26.7,"TAGLIO, MODELLATURA E FINITURA DI PIETRE E MARMO; FRANTUMAZIONE DI PIETRE E MINERALI"
+26.70.1,Segagione e lavorazione  non artistica delle pietre e del marmo
+26.70.3,Frantumazione di pietre e minerali effettuata non in connessione con l'estrazione
+26.81,Fabbricazione di prodotti abrasivi
+26.82,Fabbricazione di altri prodotti in minerali non metalliferi n.c.a.
+27,METALLURGIA
+27.1,SIDERURGIA
+27.2,"FABBRICAZIONE DI TUBI E RACCORDI DI GHISA, DI ACCIAIO COLATO E DI ACCIAIO"
+27.21,Fabbricazione di tubi e raccordi di ghisa e di acciaio colato
+27.22.1,Fabbricazione di tubi e raccordi in acciaio senza saldatura
+27.22.2,"Fabbricazione di tubi avvicinati, aggraffati, saldati e simili in acciaio; fabbricazione di raccordi in acciaio"
+27.31,Stiratura a freddo del ferro e dell'acciaio
+27.32,Laminazione a freddo di nastri di ferro e di acciaio
+27.34,Trafilatura a freddo del ferro e dell'acciaio
+27.4,"PRODUZIONE DI METALLI DI BASE NON FERROSI, COMPRESI I SEMILAVORATI"
+27.41,Produzione di metalli preziosi e semilavorati
+27.42,Produzione di alluminio e semilavorati
+27.44,Produzione di rame e semilavorati
+27.45,Produzione di altri metalli non ferrosi e semilavorati
+27.5,FONDERIE
+27.51,Fusione di ghisa
+27.53,Fusione di metalli leggeri
+27.54,Fusione di altri metalli non ferrosi
+28,"FABBRICAZIONE E LAVORAZIONE DEI PRODOTTI IN METALLO, ESCLUSI MACCHINE E IMPIANTI"
+28.1,FABBRICAZIONE DI ELEMENTI DA COSTRUZIONE IN METALLO
+28.11,"Fabbricazione, installazione e riparazione di strutture metalliche e di parti di strutture"
+28.12.1,"Fabbricazione di porte, finestre e loro telai, imposte, scale e cancelli metallici"
+28.12.2,"Fabbricazione, installazione e riparazione di tende da sole con strutture metalliche, tende alla veneziana e simili"
+28.21,"Fabbricazione, installazione e riparazione di cisterne, serbatoi e contenitori in metallo di capacita' superiore a 300 litri"
+28.22,Fabbricazione di radiatori e caldaie per il riscaldamento centrale
+28.4,"FUCINATURA, IMBUTITURA, STAMPAGGIO E PROFILATURA DEI METALLI; METALLURGIA DELLE POLVERI"
+28.40.1,Produzione di pezzi di metallo fucinati
+28.40.2,Produzione di pezzi di metallo stampati
+28.40.4,Sinterizzazione dei metalli e loro leghe (metallurgia delle polveri)
+28.51,Trattamento e rivestimento dei metalli
+28.52,Lavori di meccanica generale
+28.6,"FABBRICAZIONE DI ARTICOLI DI COLTELLERIA, UTENSILI, SERRATURE E SIMILI"
+28.61,Fabbricazione di articoli di coltelleria e posateria
+28.63,Fabbricazione di serrature e cerniere
+28.7,FABBRICAZIONE DI ALTRI PRODOTTI METALLICI
+28.71,Fabbricazione di contenitori in acciaio con capacita' non superiore a 300 litri
+28.72,Fabbricazione di contenitori ed imballaggi in metallo leggero
+28.74,"Fabbricazione di viti, bulloni, catene e molle"
+28.74.1,Fabbricazione di filettatura e bulloneria
+28.74.3,Fabbricazione di catene fucinate senza saldatura e stampate
+28.75,Fabbricazione di altri prodotti metallici n.c.a.
+28.75.2,"Fabbricazione di casseforti, forzieri, porte e infissi blindati"
+28.75.3,Fabbricazione di minuteria metallica ed altri articoli metallici n.c.a.
+28.75.5,"Fabbricazione di oggetti in ferro, in rame ed in altri metalli e relativi lavori di riparazione (fabbri, ramai, ecc.)"
+29.1,"FABBRICAZIONE , INSTALLAZIONE, RIPARAZIONE E MANUTENZIONE DI MACCHINE ED APPARECCHI PER LA PRODUZIONE E L'UTILIZZAZIONE DELL'ENERGIA MECCANICA, ESCLUSI I MOTORI DESTINATI AI MEZZI DI TRASPORTO SU STRADA E AD AEROMOBILI"
+29.11,"Fabbricazione, installazione, riparazione e manutenzione di motori e di turbine, esclusi i motori destinati ai mezzi di trasporto su strada e ad aeromobili"
+29.11.1,"Fabbricazione , installazione, riparazione e manutenzione di motori a combustione interna, compresi parti e accessori,esclusi i motori destinati ai mezzi di trasporto su strada e ad aeromobili"
+29.12,"Fabbricazione, installazione, riparazione e manutenzione di pompe, compressori e sistemi idraulici"
+29.13,"Fabbricazione, installazione, riparazione e manutenzione di rubinetti e valvole"
+29.14.1,"Fabbricazione, installazione, riparazione e manutenzione di ingranaggi e organi di trasmissione"
+29.14.2,"Fabbricazione, installazione, riparazione e manutenzione di cuscinetti a sfere ed a rulli, comprese loro parti"
+29.21,"Fabbricazione, installazione, riparazione e manutenzione di fornaci e bruciatori"
+29.21.1,Fabbricazione e installazione di fornaci e bruciatori
+29.22,"Fabbricazione, installazione, riparazione e manutenzione di macchine e apparecchi di sollevamento e movimentazione, esclusa l'installazione negli edifici da parte di imprese non produttrici di ascensori, montacarichi e scale mobili"
+29.22.1,"Fabbricazione e installazione di macchine e apparecchi di sollevamento e movimentazione, esclusa l'installazione negli edifici da parte di imprese non produttrici di ascensori, montacarichi e scale mobili"
+29.22.12,"Fabbricazione e installazione di gru, argani, verricelli a mano e a motore, carrelli trasbordatori, carrelli elevatori e piattaforme girevoli"
+29.22.2,Riparazione e manutenzione di macchine e apparecchi di sollevamento e movimentazione
+29.23.1,Fabbricazione e installazione di attrezzature di uso non domestico per la refrigerazione e la ventilazione
+29.23.2,Riparazione e manutenzione di attrezzature di uso non domestico per la refrigerazione e la ventilazione
+29.24.1,Fabbricazione di materiale per saldatura non elettrica
+29.24.3,Fabbricazione e installazione di macchine di impiego generale ed altro materiale meccanico n.c.a.
+29.24.31,Fabbricazione e installazione di apparecchi per la depurazione e la filtrazione dei liquidi e dei gas per uso non domestico
+29.24.33,Fabbricazione e installazione di altre macchine di impiego generale n.c.a.
+29.24.5,"Fabbricazione e installazione di macchine per la dosatura, la confezione e per l'imballaggio, compresi parti e accessori"
+29.24.61,Riparazione e manutenzione di bilance e macchine automatiche
+29.24.63,"Riparazione e manutenzione di macchine per la dosatura, la confezione e l'imballaggio"
+29.24.65,Riparazione e manutenzione di altre macchine di impiego generale non previste nei precedenti codici
+29.31,"Fabbricazione, riparazione e manutenzione di trattori agricoli"
+29.31.1,Fabbricazione di trattori agricoli
+29.32,"Fabbricazione, installazione, riparazione e manutenzione di altre macchine per l'agricoltura, la silvicoltura e la zootecnia"
+29.32.1,"Fabbricazione, installazione, di altre macchine per l'agricoltura, la silvicoltura e la zootecnia"
+29.4,"FABBRICAZIONE, INSTALLAZIONE, RIPARAZIONE E MANUTENZIONE DI MACCHINE UTENSILI ED ACCESSORI, ESCLUSE LE PARTI INTERCAMBIABILI"
+29.41,"Fabbricazione, riparazione e manutenzione di macchine utensili portatili motorizzate ed accessori, escluse le parti intercambiabili"
+29.42,"Fabbricazione, installazione, riparazione e manutenzione di macchine utensili per la lavorazione dei metalli ed accessori, escluse le parti intercambiabili"
+29.5,"FABBRICAZIONE, INSTALLAZIONE, RIPARAZIONE E MANUTENZIONE DI ALTRE MACCHINE PER IMPIEGHI SPECIALI, COMPRESI PARTI ED ACCESSORI"
+29.51,"Fabbricazione, installazione, riparazione e manutenzione di macchine per la metallurgia, compresi parti e accessori"
+29.52,"Fabbricazione, installazione, riparazione e manutenzione di macchine da miniera, cava e cantiere, compresi parti e accessori"
+29.52.01,"Fabbricazione, riparazione e manutenzione di macchine per movimento terra"
+29.53,"Fabbricazione, installazione, riparazione e manutenzione di macchine per l'industria alimentare, delle bevande e del tabacco, compresi parti e accessori"
+29.53.02,"Fabbricazione, installazione, riparazione e manutenzione di macchine per i settori enologico ed oleario"
+29.53.04,"Fabbricazione, installazione, riparazione e manutenzione di macchine per la preparazione di pasti e bevande per alberghi,  ristoranti e bar"
+29.54,"Fabbricazione, installazione, riparazione e manutenzione di macchine per le industrie tessili, dell'abbigliamento e del cuoio, compresi parti e accessori"
+29.54.1,"Fabbricazione, installazione, riparazione e manutenzione di macchine tessili, di macchine e di impianti per il trattamento ausiliario dei tessili, di macchine per cucire e per maglieria, compresi parti e accessori"
+29.54.12,"Fabbricazione, installazione, riparazione e manutenzione di altre macchine per la lavorazione e la finitura dei tessili"
+29.54.3,"Fabbricazione, installazione, riparazione e manutenzione di apparecchiature e di macchine per lavanderie e stirerie,compresi parti e accessori"
+29.55,"Fabbricazione, installazione, riparazione e manutenzione di macchine per l'industria della carta e del cartone, compresi parti e accessori"
+29.56.1,"Fabbricazione, installazione, riparazione e manutenzione di macchine per l'industria delle materie plastiche e della gomma e di altre macchine per impieghi speciali n.c.a., compresi parti e accessori"
+29.56.11,"Fabbricazione, installazione, riparazione e manutenzione di macchine per l'industria delle materie plastiche e della gomma, compresi parti e accessori"
+29.56.2,"Fabbricazione, installazione, riparazione e manutenzione di macchine per la stampa e la legatoria, compresi parti e accessori"
+29.56.4,"Fabbricazione, installazione, riparazione e manutenzione di robot industriali per usi molteplici, compresi parti e accessori"
+29.7,"FABBRICAZIONE DI APPARECCHI PER USO DOMESTICO COMPRESI PARTI ED ACCESSORI, ESCLUSE L' INSTALLAZIONE, LA RIPARAZIONE E LA MANUTENZIONE"
+29.71,"Fabbricazione di elettrodomestici compresi parti ed accessori, escluse l'installazione, la riparazione e la manutenzione"
+29.72,"Fabbricazione di apparecchi per uso domestico non elettrici compresi parti ed accessori, escluse l'installazione, la riparazione e la manutenzione"
+30,"FABBRICAZIONE DI MACCHINE PER UFFICIO, DI ELABORATORI E SISTEMI INFORMATICI COMPRESI GLI ACCESSORI, ESCLUSE L'INSTALLAZIONE, LA RIPARAZIONE E LA MANUTENZIONE"
+30.01,"Fabbricazione di macchine per ufficio compresi gli accessori, escluse l'installazione, la riparazione e la manutenzione"
+31,"FABBRICAZIONE, INSTALLAZIONE, RIPARAZIONE E MANUTENZIONE DI MACCHINE ED APPARECCHI ELETTRICI N.C.A."
+31.1,"FABBRICAZIONE, INSTALLAZIONE, RIPARAZIONE E MANUTENZIONE DI MOTORI, GENERATORI E TRASFORMATORI ELETTRICI"
+31.10.1,"Fabbricazione di motori, generatori e trasformatori elettrici"
+31.10.2,"Installazione, riparazione e manutenzione di motori, generatori e trasformatori elettrici"
+31.20.1,Fabbricazione di apparecchiature per la distribuzione e il controllo dell'elettricita'
+31.3,FABBRICAZIONE DI FILI E CAVI ISOLATI
+31.4,FABBRICAZIONE DI PILE E ACCUMULATORI ELETTRICI
+31.5,"FABBRICAZIONE DI DISPOSITIVI PER ILLUMINAZIONE (ANCHE DEL TIPO NON ELETTRICO), DI LAMPADINE E LAMPADE ELETTRICHE"
+31.50.01,"Fabbricazione di dispositivi per illuminazione (anche di tipo non elettrico), compresi insegne e cartelli luminosi"
+31.6,FABBRICAZIONE DI ALTRE APPARECCHIATURE ELETTRICHE N.C.A.
+31.61,Fabbricazione di apparecchiature elettriche per motori a combustione interna e per veicoli
+31.62,"Fabbricazione, installazione, riparazione e manutenzione di altre apparecchiature elettriche n.c.a., compresi parti e accessori"
+31.62.1,"Fabbricazione di altre apparecchiature elettriche n.c.a., comprese parti e accessori"
+32,FABBRICAZIONE DI APPARECCHI RADIOTELEVISIVI E DI APPARECCHIATURE PER LE COMUNICAZIONI
+32.1,FABBRICAZIONE DI TUBI E VALVOLE ELETTRONICI E DI ALTRI COMPONENTI ELETTRONICI
+32.2,FABBRICAZIONE DI APPARECCHI TRASMITTENTI PER LA RADIODIFFUSIONE E LA TELEVISIONE E DI APPARECCHI PER LE TELECOMUNICAZIONI
+32.20.1,Fabbricazione e installazione di apparecchi e impianti trasmittenti radio televisivi
+32.20.3,"Riparazione e manutenzione di apparecchi e impianti trasmittenti radio televisivi e per telecomunicazioni, esclusi i telefoni cellulari"
+32.3,"FABBRICAZIONE DI APPARECCHI RICEVENTI PER LA RADIODIFFUSIONE E LA TELEVISIONE, DI APPARECCHI PER LA REGISTRAZIONE E LA RIPRODUZIONE DEL SUONO E DELL'IMMAGINE E DI PRODOTTI CONNESSI, ESCLUSA LA RIPARAZIONE"
+33,"FABBRICAZIONE DI APPARECCHI MEDICALI, DI APPARECCHI DI PRECISIONE, DI STRUMENTI OTTICI E DI OROLOGI"
+33.1,"FABBRICAZIONE, RIPARAZIONE E MANUTENZIONE DI APPARECCHI MEDICALI E CHIRURGICI E DI APPARECCHI ORTOPEDICI"
+33.10.1,"Fabbricazione, installazione, riparazione e manutenzione di apparecchi elettromedicali, compresi parti e accessori"
+33.10.3,Fabbricazione e riparazione di protesi dentarie
+33.2,"FABBRICAZIONE, RIPARAZIONE E MANUTENZIONE DI STRUMENTI E APPARECCHI DI MISURAZIONE, CONTROLLO, PROVA, NAVIGAZIONE E SIMILI, ESCLUSE LE APPARECCHIATURE DI CONTROLLO DEI PROCESSI INDUSTRIALI"
+33.20.1,"Fabbricazione di apparecchi di misura elettrici ed elettronici, comprese parti e accessori"
+33.20.2,"Fabbricazione di contatori consumo di elettricita', gas, acqua ed altri liquidi, di altri apparecchi di misura, di apparecchi di controllo, regolazione e analisi, comprese parti e accessori, escluse le apparecchiature di controllo dei processi industriali"
+33.20.4,"Fabbricazione di strumenti per disegno e calcolo, di strumenti di misura dimensionale di precisione, di bilance analitiche di precisione, di apparecchi per laboratorio e di materiale didattico, di altri apparecchi e strumenti di precisione esclusi quelli di precisione di tipo ottico, compresi parti e accessori"
+33.3,"FABBRICAZIONE, RIPARAZIONE E MANUTENZIONE DI APPARECCHIATURE PER IL CONTROLLO DEI PROCESSI INDUSTRIALI"
+33.4,"FABBRICAZIONE, RIPARAZIONE E MANUTENZIONE DI STRUMENTI OTTICI E DI ATTREZZATURE FOTOGRAFICHE"
+33.40.1,"Fabbricazione di armature per occhiali di qualsiasi tipo; fabbricazione in serie di occhiali comuni, compresi parti e accessori"
+33.40.2,"Confezionamento ed apprestamento di occhiali da vista e lenti a contatto, compresa la riparazione di montature di occhiali (attivita' degli ottici)"
+33.40.4,Fabbricazione di lenti e strumenti ottici di precisione
+33.40.6,Riparazione e manutenzione di strumenti ottici e fotocinematografici
+33.5,FABBRICAZIONE DI OROLOGI
+34,"FABBRICAZIONE DI AUTOVEICOLI E LORO MOTORI, MOTORI DI MOTOCICLI, RIMORCHI E SEMIRIMORCHI"
+34.1,FABBRICAZIONE DI AUTOVEICOLI E LORO MOTORI; MOTORI DI MOTOCICLI
+34.2,FABBRICAZIONE DI CARROZZERIE PER AUTOVEICOLI; FABBRICAZIONE DI RIMORCHI E SEMIRIMORCHI DI AUTOVEICOLI
+34.20.01,"Fabbricazione di carrozzerie di qualsiasi tipo, comprese le cabine"
+34.20.03,Fabbricazione di container
+34.3,FABBRICAZIONE DI PARTI ED ACCESSORI PER AUTOVEICOLI (ESCLUSI QUELLI IN LEGNO) E PER I MOTORI DI AUTOVEICOLI E MOTOCICLI
+35,FABBRICAZIONE DI ALTRI MEZZI DI TRASPORTO
+35.1,"INDUSTRIA CANTIERISTICA: COSTRUZIONI NAVALI E RIPARAZIONI DI NAVI E IMBARCAZIONI, COMPRESA L'ATTIVITA' DI IMPIANTISTICA"
+35.11,"Costruzioni navali e riparazioni di navi, compresa l'attivita' di impiantistica"
+35.11.2,"Cantieri navali per costruzioni non metalliche, compresa l'attivita' di impiantistica"
+35.11.3,Cantieri di riparazioni navali
+35.2,"COSTRUZIONE, RIPARAZIONE E MANUTENZIONE DI LOCOMOTIVE, ANCHE DA MANOVRA, E DI MATERIALE ROTABILE FERRO-TRANVIARIO, COMPRESA L'ATTIVITA' DI IMPIANTISTICA"
+35.20.1,"Costruzione di materiale rotabile ferroviario, compresa l'attivita' di impiantistica"
+35.20.3,Riparazione e manutenzione di materiale rotabile ferroviario
+35.20.4,"Riparazione e manutenzione di materiale rotabile tranviario, filoviario e per metropolitane"
+35.4,"FABBRICAZIONE E MONTAGGIO DI MOTOCICLI, CICLOMOTORI E BICICLETTE, COMPRESI PARTI E ACCESSORI"
+35.41,"Fabbricazione e montaggio di motocicli e ciclomotori, compresi parti e accessori"
+35.41.1,"Fabbricazione e montaggio di motocicli e ciclomotori, esclusi i motori"
+35.42,"Fabbricazione e montaggio di biciclette, compresi parti  e accessori"
+35.42.1,Fabbricazione e montaggio di biciclette
+35.43,"Fabbricazione di veicoli per invalidi, compresi parti  e accessori"
+35.5,"FABBRICAZIONE DI ALTRI MEZZI DI TRASPORTO N.C.A., COMPRESI PARTI E ACCESSORI"
+35.50.1,"Fabbricazione di veicoli speciali e altro materiale da trasporto a trazione manuale o animale n.c.a., compresi parti  e accessori"
+36,FABBRICAZIONE DI MOBILI; ALTRE INDUSTRIE MANIFATTURIERE N.C.A.
+36.1,FABBRICAZIONE E RIPARAZIONE DI MOBILI
+36.11,"Fabbricazione di sedie e sedili, poltrone e divani e loro telai, in qualsiasi materiale, esclusi parti e accessori"
+36.11.1,"Fabbricazione di sedie e sedili, compresi quelli per aeromobili, autoveicoli, navi e treni, in qualsiasi materiale, esclusi parti e accessori"
+51.46,"Commercio all'ingrosso di prodotti farmaceutici, prodotti sanitari ed apparecchi medicali, chirurgici ed ortopedici"
+51.46.2,"Commercio all'ingrosso di prodotti sanitari ed apparecchi medicali, chirurgici ed ortopedici"
+51.47,Commercio all'ingrosso di altri prodotti per uso domestico
+51.47.2,"Commercio all'ingrosso di carta e cartone, esclusi gli imballaggi; articoli di cartoleria e cancelleria"
+51.47.3,"Commercio all'ingrosso di libri, riviste e giornali"
+51.47.5,"Commercio all'ingrosso di orologeria, gioielleria e pietre preziose lavorate"
+51.47.52,"Commercio all'ingrosso di oggetti e gioielli in metallo prezioso, pietre preziose lavorate ed altri articoli similari"
+51.47.7,"Commercio all'ingrosso di articoli sportivi, comprese le biciclette"
+51.47.8,"Commercio all'ingrosso di articoli in cuoio, in pelle e articoli da viaggio"
+51.47.91,"Commercio all'ingrosso di articoli ed apparecchi domestici non elettrici, esclusi pentole e tegami"
+51.47.93,Commercio all'ingrosso di articoli di promozione pubblicitaria
+51.47.95,Commercio all'ingrosso di strumenti musicali
+51.47.97,Commercio all'ingrosso di tappeti e stuoie
+51.47.99,Commercio all'ingrosso di altri prodotti non alimentari n.c.a.
+51.51,"Commercio all'ingrosso di prodotti petroliferi, carburanti e lubrificanti per autotrazione; combustibili per riscaldamento solidi, liquidi e gassosi"
+51.51.1,"Commercio all'ingrosso di prodotti petroliferi, carburanti e lubrificanti per autotrazione"
+51.52,"Commercio all'ingrosso di metalli e di minerali metalliferi, compresi i prodotti semilavorati"
+51.52.1,"Commercio all'ingrosso di minerali metalliferi, di metalli ferrosi e prodotti semilavorati"
+51.53,"Commercio all'ingrosso di legname, semilavorati in legno e legno artificiale; materiali da costruzione, compresi gli infissi e gli articoli igienico-sanitari; vetro piano; vernici e colori"
+51.53.1,"Commercio all'ingrosso di legname, semilavorati in legno e legno artificiale"
+51.53.21,"Commercio all'ingrosso di pietre da costruzione e ornamentali: marmi grezzi, pietre da taglio, ardesia, ecc."
+51.53.23,Commercio all'ingrosso di materiali per pavimentazione e rivestimento diversi da moquette e linoleum; articoli igienico-sanitari
+51.53.3,Commercio all'ingrosso di vetro piano
+51.54,"Commercio all'ingrosso di articoli di ferramenta e di bricolage; apparecchi ed accessori per impianti idraulici, di riscaldamento e di condizionamento"
+51.54.1,Commercio all'ingrosso di articoli di ferramenta e di bricolage
+51.55,Commercio all'ingrosso di prodotti chimici ed assimilati
+51.55.01,"Commercio all'ingrosso di fertilizzanti, concimi ed altri prodotti chimici per l'agricoltura"
+51.56,Commercio all'ingrosso di altri prodotti intermedi
+51.56.1,Commercio all'ingrosso di fibre tessili gregge e semilavorate
+51.57,Commercio all'ingrosso di rottami; materiali di recupero; sottoprodotti della lavorazione industriale (cascami)
+51.57.1,Commercio all'ingrosso di rottami e materiali di recupero metallici; sottoprodotti della lavorazione industriale (cascami)
+51.8,COMMERCIO ALL'INGROSSO DI MACCHINARI E ATTREZZATURE
+51.81,Commercio all'ingrosso di macchine utensili
+51.82,"Commercio all'ingrosso di macchine e attrezzature per le miniere, le cave, l'edilizia e il genio civile"
+51.84,"Commercio all'ingrosso di computer e apparecchiature informatiche, esclusi elaboratori destinati all'impiego nei processi industriali;  software"
+51.84.01,"Commercio all'ingrosso di computer e apparecchiature informatiche, esclusi elaboratori destinati all'impiego nei processi industriali"
+51.85,"Commercio all'ingrosso di macchine e di attrezzature per ufficio, esclusi  computer e apparecchiature informatiche; mobili per ufficio"
+51.85.01,"Commercio all'ingrosso di macchine e di attrezzature per ufficio, esclusi computer e apparecchiature informatiche"
+51.86,Commercio all'ingrosso di apparecchiature elettroniche per telecomunicazioni; componenti elettronici
+51.87.01,Commercio all'ingrosso di macchine per bar e gelaterie
+51.87.03,Commercio all'ingrosso di bilance per il commercio ed altri strumenti e attrezzature di misurazione per usi non scientifici
+51.87.05,"Commercio all'ingrosso di materiale ed apparecchi elettrici per uso non domestico, esclusi quelli per telecomunicazioni"
+51.87.07,"Commercio all'ingrosso di altre macchine ed attrezzature per l'industria, il commercio e la navigazione n.c.a."
+51.9,COMMERCIO ALL'INGROSSO DI ALTRI PRODOTTI; COMMERCIO ALL'INGROSSO DESPECIALIZZATO
+51.90.01,Cash and carry
+51.90.03,Commercio all'ingrosso di altri prodotti n.c.a.; altre forme di commercio all'ingrosso despecializzato n.c.a.
+52.1,COMMERCIO AL DETTAGLIO IN ESERCIZI NON SPECIALIZZATI
+52.11,Commercio al dettaglio in esercizi non specializzati con prevalenza di prodotti alimentari e bevande
+52.11.1,Ipermercati
+52.11.3,Discount di alimentari
+52.11.5,Commercio al dettaglio non specializzato di prodotti surgelati e congelati
+52.12,Commercio al dettaglio in esercizi non specializzati con prevalenza di prodotti non alimentari
+52.12.2,Bazar ed altri negozi non specializzati con prevalenza di prodotti non alimentari
+52.2,"COMMERCIO AL DETTAGLIO IN ESERCIZI SPECIALIZZATI DI PRODOTTI ALIMENTARI, BEVANDE E TABACCO"
+52.21,Commercio al dettaglio di frutta e verdura
+52.23,"Commercio al dettaglio di pesci, crostacei e molluschi"
+52.24,"Commercio al dettaglio di pane e prodotti di panetteria; pasticceria, dolciumi e confetteria"
+52.24.1,Commercio al dettaglio di pane e prodotti di panetteria
+52.25,Commercio al dettaglio di bevande
+52.26,Commercio al dettaglio di prodotti del tabacco e di altri generi di monopolio
+52.27.1,"Commercio al dettaglio di latte e di prodotti lattiero-caseari, escluse le uova"
+52.27.2,"Drogherie, salumerie, pizzicherie e simili"
+52.27.4,"Commercio al dettaglio di altri prodotti alimentari n.c.a., compresi gli oli alimentari"
+52.31,Farmacie e dispensari farmaceutici
+52.32,Commercio al dettaglio di prodotti sanitari ed apparecchi medicali ed ortopedici
+52.33,"Commercio al dettaglio di cosmetici, articoli di profumeria e per l'igiene personale; erboristerie"
+52.33.2,"Commercio al dettaglio di cosmetici, articoli di profumeria e per l'igiene personale"
+52.4,"COMMERCIO AL DETTAGLIO DI ALTRI PRODOTTI NON ALIMENTARI, ESCLUSI QUELLI DI SECONDA MANO"
+52.41,"Commercio al dettaglio di tessili, esclusi tappeti e tende"
+52.41.2,Commercio al dettaglio di filati per maglieria e di merceria
+52.42,Commercio al dettaglio di articoli di abbigliamento ed accessori
+52.42.2,Commercio al dettaglio di confezioni per bambini e neonati
+52.42.3,Commercio al dettaglio di biancheria e maglieria intima; camicieria
+52.42.5,"Commercio al dettaglio di accessori d'abbigliamento: cappelli, ombrelli, cravatte e simili, esclusi gli articoli di pelletteria"
+52.43.1,Commercio al dettaglio di calzature ed accessori
+52.43.2,Commercio al dettaglio di articoli di pelletteria e da viaggio
+52.44.1,"Commercio al dettaglio di mobili, compresi quelli per ufficio"
+52.44.3,Commercio al dettaglio di materiale elettrico e di articoli per l'illuminazione
+52.44.4,Commercio al dettaglio di altri articoli per uso domestico n.c.a.
+52.45.1,"Commercio al dettaglio di elettrodomestici, apparecchi radiotelevisivi; apparecchi per la registrazione e la riproduzione del suono e dell'immagine"
+52.45.3,"Commercio al dettaglio di strumenti musicali, compresi gli spartiti"
+52.46,"Commercio al dettaglio di ferramenta e bricolage; materiale termoidraulico; vernici e colori; vetro piano; articoli igienico-sanitari; materiali da costruzione; macchine, attrezzature e prodotti per l'agricoltura; attrezzature per il giardinaggio, esclusi i semi ed i fertilizzanti; prodotti per la zootecnia, esclusi gli articoli e gli alimenti per gli animali domestici"
+52.46.2,Commercio al dettaglio di articoli igienico-sanitari
+52.46.3,Commercio al dettaglio di materiali da costruzione e legname
+52.47,"Commercio al dettaglio di libri; giornali, riviste e periodici; articoli di cancelleria e cartoleria"
+52.47.1,Commercio al dettaglio di libri
+52.47.3,Commercio al dettaglio di articoli di cancelleria e cartoleria
+52.48.A,"Commercio al dettaglio di fiori, piante, bulbi, semi e fertilizzanti"
+52.48.B,"Commercio al dettaglio di animali domestici, compresi articoli ed alimenti"
+52.48.D,Commercio al dettaglio di combustibili per uso domestico e per riscaldamento
+52.48.E1,"Commercio al dettaglio di filatelia, numismatica e articoli da collezionismo"
+52.48.E3,Commercio al dettaglio di articoli funerari e cimiteriali
+52.48.E5,Commercio al dettaglio di articoli per adulti (sexy shop)
+52.48.1,"Commercio al dettaglio di macchine e attrezzature per ufficio, esclusi i mobili"
+52.48.2,"Commercio al dettaglio di articoli per fotografia, cinematografia ed ottica; strumenti ed attrezzature per uso scientifico"
+52.48.4,Commercio al dettaglio di giochi e giocattoli; videogiochi; articoli per puericoltura; articoli pirotecnici e per le feste
+52.48.51,Commercio al dettaglio di articoli sportivi e per il tempo libero
+52.48.53,"Commercio al dettaglio di medaglie, coppe, targhe e trofei"
+52.48.55,"Commercio al dettaglio di articoli militari, esclusi vestiario e calzature"
+52.48.61,"Commercio al dettaglio di oggetti d'arte, esclusi quelli d'antiquariato"
+52.48.63,Commercio al dettaglio di oggetti d'artigianato e di decorazione
+52.48.65,Commercio al dettaglio di articoli da regalo e per fumatori
+52.48.67,"Commercio al dettaglio di chincaglieria e bigiotteria, compresi gli oggetti ricordo e gli articoli di promozione pubblicitaria"
+52.48.7,Commercio al dettaglio di apparecchi ed attrezzature per le telecomunicazioni e la telefonia
+52.48.8,"Commercio al dettaglio di natanti, compresi parti ed accessori"
+52.5,"COMMERCIO AL DETTAGLIO DI ARTICOLI DI SECONDA MANO, ESCLUSE LE CASE DI VENDITA ALL'ASTA; MOBILI ED OGGETTI DI ANTIQUARIATO, COMPRESI I LIBRI ANTICHI"
+52.50.1,Commercio al dettaglio di libri usati
+52.50.3,Commercio al dettaglio di indumenti ed altri oggetti usati
+52.6,COMMERCIO AL DETTAGLIO AL DI FUORI DEI NEGOZI
+52.61,"Commercio al dettaglio effettuato per corrispondenza, per telefono, per radio e per televisione; commercio al dettaglio effettuato via Internet (commercio elettronico)"
+52.61.11,Commercio al dettaglio di prodotti alimentari effettuato per televisione
+52.61.2,"Commercio al dettaglio di prodotti non alimentari effettuato per corrispondenza, per telefono, per radio e per televisione, esclusi i veicoli"
+52.61.21,"Commercio al dettaglio di prodotti non alimentari effettuato per televisione, esclusi i veicoli"
+52.61.3,Commercio al dettaglio di prodotti alimentari effettuato via Internet (commercio elettronico)
+52.62,Commercio al dettaglio ambulante a posteggio fisso
+52.62.1,Commercio al dettaglio ambulante a posteggio fisso di alimentari e bevande
+52.62.12,Commercio al dettaglio ambulante a posteggio fisso di prodotti ittici
+52.62.14,Commercio al dettaglio ambulante a posteggio fisso di altri prodotti alimentari
+52.62.21,"Commercio al dettaglio ambulante a posteggio fisso di tessuti, esclusi tappeti e stuoie; articoli tessili per la casa; merceria"
+52.62.3,"Commercio al dettaglio ambulante a posteggio fisso di calzature, compresi gli accessori; articoli in pelle e cuoio"
+52.62.5,"Commercio al dettaglio ambulante a posteggio fisso di articoli di occasione, sia nuovi sia usati"
+52.62.6,Commercio al dettaglio ambulante a posteggio fisso di altri prodotti non alimentari
+52.62.61,"Commercio al dettaglio ambulante a posteggio fisso di fiori, piante, bulbi, semi e fertilizzanti"
+52.62.63,"Commercio al dettaglio ambulante a posteggio fisso di macchine, attrezzature e prodotti per l'agricoltura; attrezzature per il giardinaggio, esclusi semi e fertilizzanti"
+52.62.65,Commercio al dettaglio ambulante a posteggio fisso di opere d'arte ed oggetti di antiquariato
+52.62.67,Commercio al dettaglio ambulante a posteggio fisso di giocattoli
+52.62.69,Commercio al dettaglio ambulante a posteggio fisso di articoli di ferramenta e bricolage
+52.63.1,Commercio al dettaglio effettuato mediante l'intervento di un dimostratore o di un incaricato alla vendita (porta a porta)
+52.63.12,Commercio al dettaglio di prodotti non alimentari effettuato mediante l'intervento di un dimostratore o di un incaricato alla vendita (porta a porta)
+52.63.21,Commercio al dettaglio di prodotti alimentari effettuato per mezzo di distributori automatici
+52.63.3,Commercio al dettaglio ambulante itinerante di alimentari e bevande
+52.63.31,Commercio al dettaglio ambulante itinerante di prodotti ortofrutticoli
+52.63.33,Commercio al dettaglio ambulante itinerante di altri prodotti alimentari
+52.63.5,Commercio al dettaglio ambulante itinerante di altri prodotti non alimentari
+52.7,RIPARAZIONE DI BENI DI CONSUMO PERSONALI E PER LA CASA
+52.71,Riparazione di calzature ed altri articoli in cuoio; riparazione di articoli da viaggio e simili
+52.72,Riparazione di apparecchi elettrici per la casa
+52.72.02,Riparazione di apparecchi radiotelevisivi ed apparecchi per la riproduzione del suono e dell'immagine
+52.73,Riparazione di orologi e di gioielli
+52.74,Riparazione di altri beni di consumo
+52.74.01,Riparazione di biciclette
+52.74.03,Riparazione di telefoni cellulari
+52.74.05,Incisioni rapide su metallo non prezioso
+55,ALBERGHI E RISTORANTI
+55.1,"ALBERGHI, HOTEL, PENSIONI E SIMILI"
+55.10.01,"Alberghi, hotel, pensioni e simili con attivita' mista di fornitura di alloggio e di ristorante (ed eventualmente di bar)"
+55.2,"OSTELLI DELLA GIOVENTU', RIFUGI DI MONTAGNA, CAMPEGGI ED ALTRI ALLOGGI PER BREVI SOGGIORNI"
+55.21,Ostelli della gioventu' e rifugi di montagna
+55.21.2,Rifugi di montagna
+55.22,Campeggi ed aree attrezzate per roulotte
+55.23.1,Villaggi turistici
+55.23.2,Colonie marine e montane
+55.23.4,"Fornitura di alloggio per brevi soggiorni presso affittacamere, case ed appartamenti per vacanze, Bed & Breakfast e residence; altri alloggi per brevi soggiorni n.c.a."
+55.23.6,Alloggi per studenti e lavoratori con servizi di tipo alberghiero
+55.3,RISTORAZIONE
+55.30.1,Ristorazione con somministrazione
+55.30.3,Servizi di ristorazione su treni e navi
+55.4,"BAR E CAFFETTERIE; BIRRERIE, PUB, ENOTECHE ED ALTRI ESERCIZI SIMILI SENZA CUCINA"
+55.40.01,Bar e caffetterie
+55.5,MENSE; CATERING E BANQUETING
+55.51,Mense
+55.52,Catering e banqueting
+60,TRASPORTI TERRESTRI; TRASPORTI MEDIANTE CONDOTTE
+60.1,TRASPORTI FERROVIARI
+60.2,ALTRI TRASPORTI TERRESTRI
+60.21,Altri trasporti terrestri regolari di passeggeri
+60.22.1,Trasporti con veicoli da piazza
+60.22.2,Trasporti mediante noleggio di autovettura da rimessa con conducente
+60.24,Trasporti di merci su strada
+60.3,TRASPORTI MEDIANTE CONDOTTE
+60.30.1,"Trasporti di gas mediante condotte, compresa la gestione delle relative stazioni di pompaggio"
+61,TRASPORTI MARITTIMI E PER VIE D'ACQUA
+61.1,TRASPORTI MARITTIMI E COSTIERI
+61.2,"TRASPORTI PER VIE D'ACQUA INTERNE, COMPRESI I TRASPORTI LAGUNARI"
+62,TRASPORTI AEREI
+62.1,"TRASPORTI AEREI DI LINEA, ESCLUSI I VOLI CHARTER"
+62.2,TRASPORTI AEREI NON DI LINEA; VOLI CHARTER (DI LINEA E NON DI LINEA)
+62.3,TRASPORTI SPAZIALI; LANCIO DI SATELLITI
+63,ATTIVITA' DI SUPPORTO ED AUSILIARIE DEI TRASPORTI; AGENZIE DI VIAGGIO
+63.1,MOVIMENTAZIONE MERCI; MAGAZZINAGGIO E CUSTODIA (PER CONTO TERZI)
+63.11,Movimentazione merci
+63.11.1,Movimentazione merci relativa a trasporti aerei
+85.14.3,Psicologi
+85.14.4,Servizi di ambulanza; banche del sangue e simili; altri servizi sanitari non paramedici
+85.3,ASSISTENZA SOCIALE
+85.31,Assistenza sociale residenziale
+85.31.01,Case di riposo ed altri istituti di ricovero per anziani
+85.32,Assistenza sociale non residenziale
+85.32.02,Assistenza domiciliare
+90,"SMALTIMENTO DEI RIFIUTI SOLIDI, DELLE ACQUE DI SCARICO E SIMILI"
+90.01,Raccolta e depurazione delle acque di scarico
+90.02,Raccolta e smaltimento dei rifiuti solidi
+90.03,Pulizia delle aree pubbliche; decontaminazione e disinquinamento dell'ambiente
+92,"ATTIVITA' RICREATIVE, CULTURALI E SPORTIVE"
+92.1,PRODUZIONI E DISTRIBUZIONI CINEMATOGRAFICHE E DI VIDEO; PROIEZIONI CINEMATOGRAFICHE
+92.11,"Produzioni cinematografiche e di video, compresi i servizi connessi; studi di registrazione sonora"
+92.12,"Distribuzioni cinematografiche e di video, compresi i servizi connessi"
+92.2,"ATTIVITA' RADIOTELEVISIVE, ESCLUSA LA GESTIONE DI RETI DI TRASMISSIONE DEI SEGNALI RADIOTELEVISIVI"
+92.3,CREAZIONI ED INTERPRETAZIONI ARTISTICHE E LETTERARIE; ORGANIZZAZIONE DI SPETTACOLI; RESTAURO E CONSERVAZIONE DI OPERE D'ARTE; ALTRE ATTIVITA' RICREATIVE E CULTURALI
+92.31,Creazioni ed interpretazioni artistiche e letterarie; organizzazione di spettacoli; restauro e conservazione di opere d'arte
+92.31.01,Creazioni ed interpretazioni artistiche e letterarie
+92.31.03,Restauro e conservazione di opere d'arte
+92.33,"Parchi di divertimento, luna-park e simili; trasporto di passeggeri a fini ricreativi"
+92.33.01,"Parchi di divertimento, luna-park e simili"
+92.34,Attivita' di intrattenimento e spettacolo n.c.a.
+92.34.11,"Discoteche, sale da ballo, night clubs e simili"
+92.34.2,Circhi
+92.34.3,Altre attivita' di intrattenimento e di spettacolo n.c.a.
+92.5,"BIBLIOTECHE, ARCHIVI, MUSEI ED ALTRE ATTIVITA' CULTURALI"
+92.51,Biblioteche ed archivi
+92.52,Musei e gestione del patrimonio culturale
+92.6,ATTIVITA' SPORTIVE
+92.61,Stadi ed altri impianti sportivi
+92.61.1,Stadi
+92.61.3,Campi da tennis
+92.61.4,Impianti polivalenti
+92.61.6,Altri impianti sportivi
+92.62.1,Enti di promozione sportiva; promozione ed organizzazione di eventi sportivi
+92.62.2,Attivita' sportive prestate da atleti professionisti indipendenti
+92.62.4,"Societa' sportive ed altri nuclei organizzativi di base; scuole di nuoto, equitazione, vela, sci, scherma e simili"
+92.62.42,"Scuole di nuoto, equitazione, vela, sci, scherma e simili"
+92.71,"Ricevitorie del Lotto, SuperEnalotto, Totocalcio, ecc.; sale scommesse; case da gioco (casino') e sale Bingo; attivita' connesse con le lotterie e con il gioco d'azzardo"
+92.71.01,"Ricevitorie del Lotto, SuperEnalotto, Totocalcio, ecc."
+92.71.03,Case da gioco (casino') e sale Bingo
+92.72,Altre attivita' ricreative
+92.72.1,"Stabilimenti balneari: marittimi, lacuali e fluviali"
+92.72.3,Altre attivita' ricreative n.c.a.
+93.01,Lavanderie; tintorie di articoli tessili e pellicce
+93.01.1,Lavanderie industriali
+93.02,Parrucchieri e barbieri; manicure e pedicure; trattamenti estetici
+93.02.01,Parrucchieri e barbieri
+93.02.03,Trattamenti estetici
+93.04,Centri per il benessere fisico
+93.04.2,Stabilimenti idropinici ed idrotermali
+93.05,Altri servizi n.c.a.
+93.05.02,"Servizi di cura degli animali da compagnia, esclusi i servizi veterinari"
+95,ATTIVITA' DI DATORE DI LAVORO PER PERSONALE DOMESTICO SVOLTO DA FAMIGLIE E CONVIVENZE (NOTA: ATTIVITA' NON PRESENTE NEL REGISTRO IMPRESE)
+96,PRODUZIONE DI BENI PER USO PROPRIO DA PARTE DI FAMIGLIE E CONVIVENZE (NOTA: ATTIVITA' NON PRESENTE NEL REGISTRO IMPRESE)
+97,PRODUZIONE DI SERVIZI PER USO PROPRIO DA PARTE DI FAMIGLIE E CONVIVENZE (NOTA: ATTIVITA' NON PRESENTE NEL REGISTRO IMPRESE)
+N.P.,Non Valorizzato
