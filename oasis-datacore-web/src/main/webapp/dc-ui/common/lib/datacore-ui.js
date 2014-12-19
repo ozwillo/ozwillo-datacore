@@ -55,12 +55,66 @@
    }
    function buildUri(typeName, id,
          shouldEncodeId) { // optional, default is false
+      return dcConf.containerUrl + buildRelativeUrl(typeName, id, shouldEncodeId);
+   }
+   function buildRelativeUrl(typeName, id,
+         shouldEncodeId) { // optional, default is false
       // encoding ! NOT encodeURIComponent
       if (typeof id === 'undefined') {
-         return dcConf.containerUrl + "/dc/type/" + encodeUriPathComponent(typeName);
+         return "/dc/type/" + encodeUriPathComponent(typeName);
       }
-      return dcConf.containerUrl + "/dc/type/" + encodeUriPathComponent(typeName)
+      return "/dc/type/" + encodeUriPathComponent(typeName)
             + "/" + (shouldEncodeId ? encodeIdSaveIfNot(id) : id);
+   }
+   function buildUriQuery(queryFieldNameToOperatorValue, dontEncode) {
+      var query = null;
+      for (var queryFieldName in queryFieldNameToOperatorValue) {
+         if (query == null) { // first time
+            query = '';
+         } else {
+            query += '&';
+         }
+         if (dontEncode) {
+            query += queryFieldName + '=' + queryFieldNameToOperatorValue[queryFieldName];
+         } else {
+            query += encodeURIComponent(queryFieldName) + '=' + encodeURIComponent(queryFieldNameToOperatorValue[queryFieldName]);
+         }
+      }
+      return query;
+   }
+   function UriQuery(param, value) {
+      this.params = {};
+      if (typeof value !== 'undefined') {
+         this.p(param, value);
+      }
+   }
+   UriQuery.prototype.p = function (param, value) {
+      this.params[param] = value; // TODO multi criteria
+   }
+   UriQuery.prototype.s = function() {
+      return buildUriQuery(this.params);
+   }
+   // assume arg is a query (and not a query param), meaning it can't be encoded by swagger.js
+   // (because it wouldn't know which '&' and '=' not to encode), so allow to encode it
+   // at UI level using parseUriQuery() and buildUriQuery() :
+   function parseUriQuery(queryString, dontDecode) {
+      var query = {};
+      var queryElts = queryString.split('&');
+      for (var qeInd in queryElts) {
+         var queryElt = queryElts[qeInd];
+         var equalIndex = queryElt.indexOf('=');
+         if (equalIndex === -1) {
+            continue;
+         }
+         var queryEltParam = queryElt.substring(0, equalIndex);
+         var queryEltValue = queryElt.substring(equalIndex + 1, queryElt.length);
+         if (!dontDecode) {
+            queryEltParam = decodeURIComponent(queryEltParam);
+            queryEltValue = decodeURIComponent(queryEltValue);
+         }
+         query[queryEltParam] = queryEltValue;
+      }
+      return query;
    }
    // only supports relative uri (iri) ex. /dc/type/model/id and query, but modelType at least is required
    //var dcResourceIriRegex = /^\/+dc\/+type\/+([^\/\?]+)\/*([^\?]+)?\??(.*)$/g; // NOO seems stateful, else sometimes matches gets null
@@ -140,7 +194,7 @@
          id : id,
          encodedId : encodedId,
          query : query,
-         uri : resourceUri, // NOT encoded !!
+         uri : resourceUri // NOT encoded !!
          };
    }
    function getRelativeUrl(uri) {
@@ -188,26 +242,7 @@
    
 //////////////////////////////////////////////////:
 // PLAYGROUND TOOLIFY
-
-// TODO rm OBSOLETE
-function toolifyDcResourceJson(prettyDcResourceJson) {
-   prettyDcResourceJson = prettyDcResourceJson.replace(/\"http:\/\/data\.oasis-eu\.org\/dc\/type\/([^\/]+)\/([^\"]+)\"/g,
-      '"http://data.oasis-eu.org/dc/type/'
-      + '<a href="/dc/type/$1" class="dclink" onclick="'
-      + 'javascript:return findDataByType($(this).attr(\'href\'));'
-      + '">$1</a>'
-      + '/'
-      + '<a href="/dc/type/$1/$2" class="dclink" onclick="'
-   	  + 'javascript:return getData($(this).attr(\'href\'));'
-      + '">$2</a>"');
-   // for Models only :
-   prettyDcResourceJson = prettyDcResourceJson.replace(/\"dcmf:resourceType\": \"([^\"]+)\"/g,
-      '"dcmf:resourceType": "'
-      + '<a href="/dc/type/$1" class="dclink" onclick="'
-      + 'javascript:return findDataByType($(this).attr(\'href\'));'
-      + '">$1</a>"');
-   return prettyDcResourceJson;
-}
+   
 function lineBreak(depth) {
 	var res = '\n'; // \n OR <br> but not both because in pre code
 	for (var i = 0; i < depth; i++) {
@@ -226,10 +261,10 @@ function toolifyDcResourceFieldAndColon(value, key, modelType, upperResource, ke
       || typeof upperResource === 'undefined') { // skip when hashmap of resources
       return JSON.stringify(key, null, '\t') + " : ";
    }
-   return '"<a href="/dc/type/dcmo:model_0/' + modelType + '" class="dclink" onclick="'
+   return '"<a href="' + buildRelativeUrl('dcmo:model_0', modelType) + '" class="dclink" onclick="'
       + 'javascript:return getData($(this).attr(\'href\'));'
       + '">' + key + '</a>"'
-      + '<a href="/dc/type/' + modelType + '?' + keyPathInResource.join('.') + '=' + value + '" class="dclink" onclick="'
+      + '<a href="' + buildRelativeUrl(modelType) + '?' + new UriQuery(keyPathInResource.join('.'), value).s() + '" class="dclink" onclick="'
       + 'javascript:return findDataByType($(this).attr(\'href\'));'
       + '"> : </a>';
 }
@@ -308,6 +343,7 @@ function toolifyDcList(values, depth, key, modelType, upperResource, keyPathInRe
    //return resource;
 }
 function toolifyDcResourceUri(value) {
+   // TODO LATER rather encodeUriPathComponent('dcmo:model_0') etc. (however, $1 and $2 are already encoded)
    return '"' + value.replace(/^http:\/\/data\.oasis-eu\.org\/dc\/type\/([^\/]+)\/(.+)$/g,
          dcConf.containerUrl + '/dc/'
          + '<a href="/dc/type/dcmo:model_0/$1" class="dclink" onclick="'
@@ -333,7 +369,7 @@ function toolifyDcResourceValue(value, key, depth, modelType, upperResource, key
 	if (valueType== 'string') {
 		if ("@type" == key // in list
 				|| "dcmf:resourceType" == key) { // for Models
-			return '"<a href="/dc/type/' + value + '" class="dclink" onclick="'
+			return '"<a href="' + buildRelativeUrl(value) + '" class="dclink" onclick="'
 				      + 'javascript:return findDataByType($(this).attr(\'href\'));'
 	         + '">' + value + '</a>"';
 		}
@@ -360,18 +396,34 @@ function toolifyDcListOrResource(valuesOrResource) {
 }
 function setUrl(relativeUrl, dontUpdateDisplay) {
    if (!dontUpdateDisplay && doUpdateDisplay) {
-      if (typeof relativeUrl === 'object') {
-         relativeUrl = relativeUrl.uri;
+      if (typeof relativeUrl !== 'object') {
+         relativeUrl = parseUri(relativeUrl);
       }
    if (!relativeUrl || relativeUrl === "") {
       $('.myurl').val('');
       document.getElementById('mydata').innerHTML = '';
    } else {
-      $('.myurl').val(getRelativeUrl(relativeUrl));
+      // build unencoded URI, for better readability :
+      var unencodedRelativeUrl = '/dc/type/' + relativeUrl.modelType;
+      if (relativeUrl.id) {
+         unencodedRelativeUrl += '/' + relativeUrl.id;
+      }
+      if (relativeUrl.query) {
+         unencodedRelativeUrl += '?' + buildUriQuery(parseUriQuery(relativeUrl.query), true);
+      }
+      $('.myurl').val(unencodedRelativeUrl);
       document.getElementById('mydata').innerHTML = '...';
    }
    }
    return false;
+}
+// the opposite of setUrl()
+function encodeUri(unencodedUri) {
+   var uri = parseUri(unencodedUri);
+   if (uri.query) {
+      uri.query = buildUriQuery(parseUriQuery(uri.query, true));
+   }
+   return uri;
 }
 function setError(errorMsg) {
    if (doUpdateDisplay) {
@@ -387,6 +439,9 @@ function setError(errorMsg) {
 //////////////////////////////////////////////////:
 // READ
 
+// relativeUrl must be an encoded URI (encode it using builUri and buildUriQuery)
+// or a {modelType, query} object where query is encoded (encode it
+// using buildUriQuery)
 // optional : success, error, start (else 0, max 500), limit (else 10 !!! max 100 !)
 function findDataByType(relativeUrl, success, error, start, limit) {
    if (typeof relativeUrl === 'string') {
@@ -417,6 +472,9 @@ function findDataByType(relativeUrl, success, error, start, limit) {
       });
    return false;
 }
+// relativeUrl must be an encoded URI (encode it using builUri)
+// or a {modelType, id} object
+// optional : success, error
 function getData(relativeUrl, success, error) {
    if (typeof relativeUrl === 'string') {
       // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
@@ -439,6 +497,10 @@ function getData(relativeUrl, success, error) {
       });
    return false;
 }
+// relativeUrl must be an encoded URI (encode it using builUri and buildUriQuery)
+// or a {containerUrl (optional), modelType, id, query} object where query is encoded (encode it
+// using buildUriQuery)
+// optional : success, error
 function findData(relativeUrl, success, error) {
    if (typeof relativeUrl === 'string') {
       relativeUrl = parseUri(relativeUrl);
@@ -448,7 +510,10 @@ function findData(relativeUrl, success, error) {
 	}
 	return getData(relativeUrl, success, error);
 }
-//optional : success, error, start (else 0, max 500), limit (else 10 !!! max 100 !)
+// relativeUrl must be an encoded URI (encode it using builUri and buildUriQuery)
+// or a {modelType, query} object where query is encoded (encode it
+// using buildUriQuery)
+// optional : success, error, start (else 0, max 500), limit (else 10 !!! max 100 !)
 function findDataByTypeRdf(relativeUrl, success, error, start, limit) {
    if (typeof relativeUrl === 'string') {
       // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
@@ -483,7 +548,9 @@ function findDataByTypeRdf(relativeUrl, success, error, start, limit) {
 //////////////////////////////////////////////////:
 // WRITE
 
+// relativeUrl must be an encoded URI (encode it using builUri) or a {modelType} object,
 // resources can be a single resource or an array
+// optional : success, error
 function postAllDataInType(relativeUrl, resources, success, error) {
    if (typeof relativeUrl === 'string') {
       // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
@@ -517,6 +584,8 @@ function postAllDataInType(relativeUrl, resources, success, error) {
 // postDataInType would only differ on dcApi.dc.postDataInType function, TODO better & also for put
 // TODO putDataInType and use it...
 
+// resource's o:version must be up to date
+// optional : success, error
 function deleteDataInType(resource, success, error) {
    // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
    // because swagger.js re-encodes (for resourceId, per path element because __unencoded__-prefixed per hack)
@@ -539,7 +608,8 @@ function deleteDataInType(resource, success, error) {
    return false;
 }
 
-//resources can be a single resource or an array
+// resources can be a single resource or an array
+// optional : success, error
 function postAllData(resources, success, error) {
    if (!resources instanceof Array) { // single resource
       resources = [ resources ];
@@ -593,6 +663,7 @@ function displayJsonListResult(data, dontUpdateDisplay) {
    var prettyJson = toolifyDcList(resResources, 0, null, parseUri(data.request.path).modelType);
 
    // adding "..." link for pagination :
+   // NB. everything is already encoded
    var start = 0;
    var limit = dcConf.queryDefaultLimit; // from conf
    var query = '';
@@ -648,13 +719,15 @@ function findLinkedData(resourceUri, linkingModelType, queryFieldPath) {
    ///var depth = queryFieldPath.split('.').length - 2; // 0 for dcmo:globalFields.dcmf:resourceType
    var isModel = parsedUri.modelType.indexOf('dcmo:model_') === 0;
    if (isModel) { // lookup instances in this model :
-      findDataByType("/dc/type/" + parsedUri.id); // NB. works even if not storage thanks to polymorphism
+      findDataByType({ modelType : parsedUri.id }); // NB. works even if not storage thanks to polymorphism
    } else { // lookup models linking to this one and display them and their resources :
-      var linkedModelUrl = "/dc/type/dcmo:model_0?dcmo:globalFields." + queryFieldPath + "dcmf:resourceType=" + linkingModelType;
+      var linkedModelUrl = { modelType : 'dcmo:model_0', query : new UriQuery(
+         'dcmo:globalFields.' + queryFieldPath + 'dcmf:resourceType', linkingModelType).s() };
       setUrl(linkedModelUrl);
       findDataByType(linkedModelUrl, function(topLevelLinkingModelResources) {
          // also list fields using embedded subresource dcmf:field_0 stored in dcmo:mixin_0 :
-         findDataByType("/dc/type/dcmo:model_0?dcmo:globalFields." + queryFieldPath + "dcmf:listElementField.dcmf:resourceType=" + linkingModelType,
+         findDataByType({ modelType : 'dcmo:model_0', query : new UriQuery(
+            'dcmo:globalFields.' + queryFieldPath + 'dcmf:listElementField.dcmf:resourceType', linkingModelType).s() },
                function(topLevelListLinkingModelResources) {
             getData(parsedUri, function(linkedResource) {
                displayModelAndResourceLinks(linkedResource, parsedUri, queryFieldPath, linkingModelType,
@@ -691,13 +764,13 @@ function displayModelAndResourceFieldLinks(linkingModels, parsedUri, queryFieldP
    var depth = queryFieldPath.split('.').length - 1; // 1 for (dcmo:globalFields).dcmo:globalFields(.dcmf:resourceType)
    if (linkingModels.length === 0) {
       html = 'No model links through '
-         + '<a href="/dc/type/dcmo:model_0/' + linkingModelType + '" class="dclink" onclick="'
+         + '<a href="' + buildRelativeUrl('dcmo:model_0', linkingModelType) + '" class="dclink" onclick="'
          + 'javascript:return getData($(this).attr(\'href\'));'
          + '">' + linkingModelType + '</a>'
          + ' by a ' + depth + '-deep ' + fieldKind + ' to ' + lineBreak(1) + toolifyDcResourceUri(parsedUri.uri) + ' .';
    } else {
       html = 'There are ' + linkingModels.length + ' model(s) linking through '
-         + '<a href="/dc/type/dcmo:model_0/' + linkingModelType + '" class="dclink" onclick="'
+         + '<a href="' + buildRelativeUrl('dcmo:model_0', linkingModelType) + '" class="dclink" onclick="'
          + 'javascript:return getData($(this).attr(\'href\'));'
          + '">' + linkingModelType + '</a>'
          + ' by a ' + depth + '-deep ' + fieldKind + ' to ' + lineBreak(1) + toolifyDcResourceUri(parsedUri.uri) + ' :'; // NB. line break is below
@@ -708,17 +781,17 @@ function displayModelAndResourceFieldLinks(linkingModels, parsedUri, queryFieldP
          var field = findResource(linkingModel['dcmo:globalFields'], criteria);
          var modelType = linkingModel['dcmo:name'];
          html += lineBreak(0) + '- ';
-         html += '<a href="/dc/type/dcmo:model_0/' + modelType + '" class="dclink" onclick="'
+         html += '<a href="' + buildRelativeUrl('dcmo:model_0', modelType) + '" class="dclink" onclick="'
             + 'javascript:return getData($(this).attr(\'href\'));'
             + '">' + modelType + '</a>'
          html += ' - resources : ';
          //html += toolifyDcResourceValue(model, null, 1);
          html += dcConf.containerUrl + '/dc/'
-            + '<a href="/dc/type/dcmo:model_0/' + modelType + '" class="dclink" onclick="'
+            + '<a href="' + buildRelativeUrl('dcmo:model_0', modelType) + '" class="dclink" onclick="'
             + 'javascript:return getData($(this).attr(\'href\'));'
             + '">type</a>'
             + '/'
-            + '<a href="/dc/type/' + modelType + '?' + field['dcmf:name'] + '=' + parsedUri.uri + '" class="dclink" onclick="'
+            + '<a href="' + buildRelativeUrl(modelType) + '?' + new UriQuery(field['dcmf:name'], parsedUri.uri).s() + '" class="dclink" onclick="'
             + 'javascript:return findDataByType($(this).attr(\'href\'));'
             + '">' + modelType + '</a>'
             + '...';
@@ -726,9 +799,10 @@ function displayModelAndResourceFieldLinks(linkingModels, parsedUri, queryFieldP
    }
    queryFieldPath = 'dcmo:globalFields.' + queryFieldPath;
    html += lineBreak(0) + 'You can also try '
-   + '<a href="/dc/type/dcmo:model_0dcmo:globalFields.?' + queryFieldPath + 'dcmf:resourceType=' + linkingModelType + '" class="dclink" onclick="'
-   + 'javascript:return findLinkedData(\'/dc/type/' +  parsedUri.modelType
-   + '/' +  parsedUri.id + '\', \'' + linkingModelType + '\', \'' + queryFieldPath + '\');'
+   + '<a href="' + buildRelativeUrl('dcmo:model_0') + '?' + new UriQuery(
+      'builddcmo:globalFields.' + queryFieldPath + 'dcmf:resourceType', linkingModelType).s() + '" class="dclink" onclick="'
+   + 'javascript:return findLinkedData(\'' + buildUri(parsedUri.modelType, parsedUri.id) + '\', \''
+   + linkingModelType + '\', \'' + queryFieldPath + '\');'
    + '">at further depth</a>'
    + "...";
    return html;
@@ -744,7 +818,8 @@ function displayModelMixinLinks(linkedResource, parsedUri, linkingModelType) {
             continue;
          }
          html += lineBreak(1) + '- ';
-         html +=  '<a href="/dc/type/dcmo:model_0?dcmo:globalFields.dcmf:resourceType=' + mixinName + '" class="dclink" onclick="'
+         html +=  '<a href="' + buildRelativeUrl('dcmo:model_0') + '?' + new UriQuery(
+               'dcmo:globalFields.dcmf:resourceType', mixinName).s() + '" class="dclink" onclick="'
             + 'javascript:return findLinkedData(\'/dc/type/' +  parsedUri.modelType + '/' +  parsedUri.id + '\', \'' + mixinName + '\');'
             + '">' + mixinName + '</a>'
             + "...";

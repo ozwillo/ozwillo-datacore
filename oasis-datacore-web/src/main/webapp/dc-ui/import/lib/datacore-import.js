@@ -1241,15 +1241,7 @@
             
             if (lookupQueryFieldNameToValue !== null && lookupQueryFields.length !== null
                   && Object.keys(lookupQueryFieldNameToValue).length === lookupQueryFields.length) {
-               for (var queryFieldName in lookupQueryFieldNameToValue) {
-                  if (lookupQuery == null) {
-                     lookupQuery = '';
-                  } else {
-                     lookupQuery += '&';
-                  }
-                  lookupQuery += encodeURIComponent(queryFieldName) + '=' + encodeURIComponent(lookupQueryFieldNameToValue[queryFieldName]);
-               }
-               lookupQuery = buildUri(mixin['dcmo:name']) + '?' + lookupQuery;
+               lookupQuery = buildUri(mixin['dcmo:name']) + '?' + buildUriQuery(lookupQueryFieldNameToValue);
                var alreadyFoundResource = importState.data.lookupQueryToResource[lookupQuery];
                if (typeof alreadyFoundResource === 'undefined') {
                   importState.data.row.lookupQueriesToRun.push(lookupQuery);
@@ -1675,9 +1667,11 @@
                importState.data.rInd = getResourceRowStart();
                
                // BEWARE limited to 10 by default !!!!!! and 100 max !!
-      	      findDataByType("/dc/type/dcmo:model_0?dcmo:globalFields.dcmf:name=$in"
-      	            // globalFields else won't get ex. CountryFR inheriting from Country but with no additional field (??)
-                     + JSON.stringify(importState.data.importedFieldNames, null, null), function(fieldNameMixinsFound) {
+      	      findDataByType({ modelType : 'dcmo:model_0', query : new UriQuery(
+      	         'dcmo:globalFields.dcmf:name', '$in'
+                  // globalFields else won't get ex. CountryFR inheriting from Country but with no additional field (??)
+                  + JSON.stringify(importState.data.importedFieldNames, null, null)
+      	      ).s() }, function(fieldNameMixinsFound) {
                      if (fieldNameMixinsFound.length === 100) { // max limit
                         return abortImport("Too many mixins (>= 100) found for field names to import");
                      }
@@ -2356,7 +2350,7 @@
                         warnings : null
                   },
                   previousMissingIdFieldResourceOrMixinNb : -1,
-                  lookupQueriesToRun : [],
+                  lookupQueriesToRun : [], // of URIs, LATER rather of { modelType : '', query : buildUriQuery({ 'fieldName' : 'operatorValueSort }) }
                   done : false
                },*/
                lookupQueryToResource : {},
@@ -2379,7 +2373,9 @@
       }
       window.importState = importState; // making available globally for abort
       
-      findDataByType("/dc/type/dcmo:model_0?dcmo:name=$regexdcm.*", function (resources) {
+      findDataByType({ modelType : 'dcmo:model_0', query : new UriQuery(
+         'dcmo:name', '$regexdcm.*'
+      ).s() }, function (resources) {
          for (var mmInd in resources) {
             var modelResource = resources[mmInd];
             importState["metamodel"][modelResource["dcmo:name"]] = modelResource;

@@ -1608,19 +1608,8 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
         for (var mapKey in map) {
            if (mapKey.substring(0,1) == "#") {
               // assume arg is a query (and not a query param), meaning it can't be encoded by swagger.js
-              // (because it wouldn't know which '&' and '=' not to encode), so encode it here :
-              var queryElts = map[mapKey].split('&');
-              for (var qeInd in queryElts) {
-                 var queryElt = queryElts[qeInd];
-                 var equalIndex = queryElt.indexOf('=');
-                 if (equalIndex === -1) {
-                    continue;
-                 }
-                 var queryEltParam = queryElt.substring(0, equalIndex);
-                 var queryEltValue = queryElt.substring(equalIndex + 1, queryElt.length);
-                 queryElts[qeInd] = encodeURIComponent(queryEltParam) + '=' + encodeURIComponent(queryEltValue);
-              }
-              map[mapKey] = queryElts.join('&');
+              // (because it wouldn't know which '&' and '=' not to encode), so encode it at UI level here :
+              map[mapKey] = _buildUriQuery(_parseUriQuery(mapKey, true))
            }
         }
         // OASIS HACK end
@@ -1628,6 +1617,45 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
         return this.model["do"](map, opts, this.showCompleteStatus, this.showErrorStatus, this);
       }
     };
+
+    // assume arg is a query (and not a query param), meaning it can't be encoded by swagger.js
+    // (because it wouldn't know which '&' and '=' not to encode), so allow to encode it
+    // at UI level using _parseUriQuery() and _buildUriQuery() :
+    function _parseUriQuery(queryString, dontDecode) {
+       var query = {};
+       var queryElts = queryString.split('&');
+       for (var qeInd in queryElts) {
+          var queryElt = queryElts[qeInd];
+          var equalIndex = queryElt.indexOf('=');
+          if (equalIndex === -1) {
+             continue;
+          }
+          var queryEltParam = queryElt.substring(0, equalIndex);
+          var queryEltValue = queryElt.substring(equalIndex + 1, queryElt.length);
+          if (!dontDecode) {
+             queryEltParam = decodeURIComponent(queryEltParam);
+             queryEltValue = decodeURIComponent(queryEltValue);
+          }
+          query[queryEltParam] = queryEltValue;
+       }
+       return query;
+    }
+    function _buildUriQuery(queryFieldNameToOperatorValue, dontEncode) {
+       var query = null;
+       for (var queryFieldName in queryFieldNameToOperatorValue) {
+          if (query == null) { // first time
+             query = '';
+          } else {
+             query += '&';
+          }
+          if (dontEncode) {
+             query += queryFieldName + '=' + queryFieldNameToOperatorValue[queryFieldName];
+          } else {
+             query += encodeURIComponent(queryFieldName) + '=' + encodeURIComponent(queryFieldNameToOperatorValue[queryFieldName]);
+          }
+       }
+       return query;
+    }
 
     OperationView.prototype.success = function(response, parent) {
       return parent.showCompleteStatus(response);

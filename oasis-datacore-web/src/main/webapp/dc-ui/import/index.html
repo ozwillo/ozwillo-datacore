@@ -149,7 +149,7 @@ softwares (such as Google Doc's) often breaks files (ex. "true" becomes VRAI, "f
 <span class="json dcjsonline">GET </span>
 <span class="json dcjsonline dcConf_baseUrl">NOT INITED</span>
 <input span type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 527px; display: inline;">
-<button onclick="javascript:return findData($('.myurl').val());">go</button>
+<button onclick="javascript:return findData(encodeUri($('.myurl').val()));">go</button>
 <button onclick="javascript:return setUrl('');" style="float: right;">reset</button><br/>
 <div class="block response_body">
 <a id="mydata"></a><!-- displays a short error message in red -->
