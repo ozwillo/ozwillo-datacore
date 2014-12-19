@@ -13,6 +13,7 @@ public class DCQueryParsingContext extends DCResourceParsingContext {
    // TODO privilege indexed fields !!!!!!!!!!
    private Criteria criteria = new Criteria();
    private String currentEntityFieldPath;
+   private int criteriaNb = -1;
    private List<Criteria> currentMultiCriteria = null;
 
    // TODO sort, on INDEXED (Queriable) field
@@ -29,21 +30,30 @@ public class DCQueryParsingContext extends DCResourceParsingContext {
          throw new IllegalArgumentException("Can't enter criteria when there is already one");
       }
       this.currentEntityFieldPath = entityFieldPath;
+      this.criteriaNb = criteriaNb;
       if (criteriaNb > 1) {
          currentMultiCriteria = new ArrayList<Criteria>(criteriaNb);
       }
    }
    
+   public void patchCriteria(String entityFieldPath) {
+      this.currentEntityFieldPath = null;
+      this.currentMultiCriteria = null;
+      this.enterCriteria(entityFieldPath, criteriaNb);
+   }
+   
    public void exitCriteria() {
       if (this.currentMultiCriteria != null) {
          // parsing multiple values (of a field that is mentioned several times) :
-         // (such as {limit=[10], founded=[>"-0143-04-01T00:00:00.000Z", <"-0043-04-02T00:00:00.000Z"]})
+         // (such as {limit=[10], founded=[>"-0143-04-01T00:00:00.000Z", <"-0043-04-02T00:00:00.000Z"]}
+         // or /dc/type/sample.city.city?city:founded=>="0043-04-02T00:00:00.000Z"&city:founded=<="2043-04-02T00:00:00.000Z" )
          // NB. can't be done by merely chaining .and(...)'s because of mongo BasicDBObject limitations, see
          // http://www.mkyong.com/java/due-to-limitations-of-the-basicdbobject-you-cant-add-a-second-and/
          this.getCriteria().andOperator(this.currentMultiCriteria
                .toArray(new Criteria[this.currentMultiCriteria.size()]));
       }
       this.currentEntityFieldPath = null;
+      this.criteriaNb = -1;
       this.currentMultiCriteria = null;
    }
 
@@ -105,4 +115,8 @@ public class DCQueryParsingContext extends DCResourceParsingContext {
       this.hasNoIndexedField = hasNoIndexedField;
    }
 
+   public String getEntityFieldPath() {
+      return currentEntityFieldPath;
+   }
+   
 }

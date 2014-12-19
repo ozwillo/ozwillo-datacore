@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
+import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
@@ -45,6 +46,22 @@ public class QueryParsingServiceImpl implements QueryParsingService {
          throw new ResourceParsingException("Query operator wasn't identified for query parameter "
                + operatorAndValue);
       }
+      
+      // shortcuts :
+      // i18n - if no language specified, by default lookup by value (and not the language) :
+      if ("i18n".equals(dcField.getType())
+            && !operatorEnum.isListSpecificOperator() && !operatorEnum.equals(QueryOperatorsEnum.EXISTS)) {
+         String fieldPathElement = DCI18nField.KEY_VALUE;
+         dcField = ((DCListField) dcField).getListElementField();
+         dcField = ((DCMapField) dcField).getMapFields().get(fieldPathElement);
+         // NB. not checking that subfield exist because model is expected to have been checked
+         /*entityFieldPathSb.append('.');
+         entityFieldPathSb.append(fieldPathElement);
+         dcField = handleI18nField(dcField, fieldPathElement,
+         queryParsingContext, entityFieldPathSb, fieldPathElements, 0);*/
+         queryParsingContext.patchCriteria(queryParsingContext.getEntityFieldPath() + '.' + fieldPathElement);
+         // TODO LATER also / rather by (model / app / user...) default language...
+      }
 
       // We check if the selected operator is suitable for the type of DCField
       isQueryOperatorSuitableForField(dcField, operatorEnum);
@@ -78,7 +95,7 @@ public class QueryParsingServiceImpl implements QueryParsingService {
       queryParsingContext.setHasNoIndexedField(
             queryParsingContext.isHasNoIndexedField() || dcField.getQueryLimit() == 0);
 
-      DCFieldTypeEnum dcFieldTypeEnum = DCFieldTypeEnum.getEnumFromStringType(dcField.getType()); // TODO LATER enum type
+      ///DCFieldTypeEnum dcFieldTypeEnum = DCFieldTypeEnum.getEnumFromStringType(dcField.getType()); // TODO LATER enum type
       
       switch(operatorEnum) {
 
@@ -201,7 +218,7 @@ public class QueryParsingServiceImpl implements QueryParsingService {
          break;
 
       case NOT_IN:
-         // TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
+         // TODO check that not i18n (which is map ! or use value or (context) default language or allow fallback) ???
          // TODO check that indexed (or set low limit) ??
          queryParsingContext.addSort(sortEnum);
          queryParsingContext.addCriteria().nin((Collection<?>) parsedData); // BEWARE else taken as an object (array of array)

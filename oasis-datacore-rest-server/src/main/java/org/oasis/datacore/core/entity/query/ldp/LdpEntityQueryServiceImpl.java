@@ -325,14 +325,6 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
 //            }
          }
          
-         // handling leaf fields :
-         // TODO LATER i18n default : (CONFLICTS WITH $elemMatch)
-         /*if ("i18n".equals(dcField.getType())) {
-            // by default, search on an i18n field searches on the value (and not the language) :
-            dcField = handleI18nField(dcField, DCI18nField.KEY_VALUE,
-                  queryParsingContext, entityFieldPathSb, fieldPathElements, 0);
-         }*/
-         
          }
          
          List<String> values = params.get(fieldPath);
