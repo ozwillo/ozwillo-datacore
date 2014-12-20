@@ -1408,7 +1408,7 @@
       return resource;
    }
            
-   function csvToData(importState) {
+   function csvToData(importState, getResourceRow) {
       while (importState.data.rInd < importState.data.rLength) {
         
          if (importState.data.row === null || importState.data.row.done) {
@@ -1416,7 +1416,7 @@
             console.log("row " + importState.data.rInd);//
         importState.data.row = {
               loopIndex : 0,
-              resourceRow : importState.data.rows[importState.data.rInd + ''], // convert to string !!
+              resourceRow : getResourceRow(),
               modelTypeToRowResources : {},
               fieldNameTreeStack : [],
               previousMissingIdFieldResourceOrMixinNb : -1,
@@ -1491,7 +1491,7 @@
               importState.data.row.previousMissingIdFieldResourceOrMixinNb = newMissingIdFieldResourceOrMixinNb;
               importState.data.row.loopIndex++;
               /*if (importState.data.row.lookupQueriesToRun.length === 0) {
-                 csvToData(importState); // next iteration
+                 csvToData(importState, getResourceRow); // next iteration
               } else {
                  var lookupQuery = importState.data.row.lookupQueriesToRun.pop();
                  findDataByType(lookupQuery, function(resourcesFound) {
@@ -1512,13 +1512,13 @@
                           row : importState.data.row.resourceRow }); // NB. not in iteration errors
                     }
                     //TODO
-                    csvToData(importState); // next iteration
+                    csvToData(importState, getResourceRow); // next iteration
                  }, function(data) {
                     var error = (data._body && data._body._body) ? data._body._body : data;
                     importState.data.errors.push({ code : "lookupQueryError",
                        lookupQuery : lookupQuery, error : error,
                        row : importState.data.row.resourceRow }); // NB. not in iteration errors
-                    csvToData(importState); // next iteration
+                    csvToData(importState, getResourceRow); // next iteration
                  }, 0, 2); // 2 results are enough to know whether unique
               }
               return;*/
@@ -1538,7 +1538,7 @@
         }
         
         importState.data.rInd++;
-        ///csvToData(importState); // next row
+        ///csvToData(importState, getResourceRow); // next row
      }/* else {*/
 
       displayParsedResource(importState);
@@ -1635,82 +1635,35 @@
             download: true,
             header: true,
             preview: getResourceRowStart() + getResourceRowLimit() + 1, // ex. '1' user input means importing title line + 1 more line
+            /*step: function(row) {
+               console.log("Row:", row.data);
+               importState.data.rows = results.data;
+               if (!importState.data.columnNames) {
+                  handle.pause();
+                  importState.data.columnNames = row.meta.fields;
+                  getImportedFieldsModels(importState, function() {
+                     csvToData(importState, asyncGetResourceRow);
+                     handle.resume();
+                  });
+               } else {
+                  csvToData(importState, asyncGetResourceRow);
+               }
+            },*/
             complete: function(results) {
                console.log("Remote file parsed!", results);
                ///var results = eval('[' + data.content.data + ']')[0];
                var prettyJson = JSON.stringify(results.data, null, '\t').replace(/\n/g, '<br>');
                $('.importedJsonFromCsv').html(prettyJson);
                // TODO handle errors...
-
-               var involvedMixins = importState.data.involvedMixins;
-               
-               var dataColumnNames = results.meta.fields;
-               importState.data["dataColumnNames"] = dataColumnNames;
-               
-               // imported field names
-               // adding field names with internal field name :
-               var importedFieldNames = [];
-               var fieldNamesWithInternalNameMap = importState.model.fieldNamesWithInternalNameMap;
-               for (var fnInd in fieldNamesWithInternalNameMap) {
-                  importedFieldNames.push(fnInd);
-               }
-               // adding prefixed data column names :
-               for (var dcnInd in dataColumnNames) {
-                  var dataColumnName = dataColumnNames[dcnInd];
-                  if (dataColumnName.indexOf(':') !== -1 && fieldNamesWithInternalNameMap[dataColumnName] === null) {
-                     importedFieldNames.push(dataColumnName);
-                  }
-               }
-               importState.data["importedFieldNames"] = importedFieldNames;
                
                importState.data.rows = results.data;
                importState.data.rLength = Math.min(importState.data.rows.length, getResourceRowStart() + getResourceRowLimit());
                importState.data.rInd = getResourceRowStart();
                
-               // BEWARE limited to 10 by default !!!!!! and 100 max !!
-      	      findDataByType({ modelType : 'dcmo:model_0', query : new UriQuery(
-      	         'dcmo:globalFields.dcmf:name', '$in'
-                  // globalFields else won't get ex. CountryFR inheriting from Country but with no additional field (??)
-                  + JSON.stringify(importState.data.importedFieldNames, null, null)
-      	      ).s() }, function(fieldNameMixinsFound) {
-                     if (fieldNameMixinsFound.length === 100) { // max limit
-                        return abortImport("Too many mixins (>= 100) found for field names to import");
-                     }
-                     
-                     for (var fnmInd in fieldNameMixinsFound) {
-                        var involvedMixin = fieldNameMixinsFound[fnmInd];
-                        var modelOrMixin = importState.model.modelOrMixins[involvedMixin["dcmo:name"]];
-                        if (typeof modelOrMixin === 'undefined') {
-                           continue; // not used, ex. unused mixin that inherits a used field
-                        }
-                        involvedMixins.push(involvedMixin);
-                        
-                        // global mixins :
-                        modelOrMixin["dcmo:globalMixins"] = involvedMixin["dcmo:globalMixins"];
-                        // global fields :
-                        var involvedMixinFieldArray = involvedMixin["dcmo:globalFields"];
-                        var modelOrMixinLocalFieldMap = modelOrMixin["dcmo:fields"];
-                        var enrichedModelOrMixinFieldMap = {};
-                        importState.model.modelOrMixins[involvedMixin["dcmo:name"]]["dcmo:globalFields"] = enrichedModelOrMixinFieldMap;
-                        for (var fInd in involvedMixinFieldArray) {
-                           var involvedMixinField = involvedMixinFieldArray[fInd];
-                           var fieldName = involvedMixinField["dcmf:name"];
-                           var enrichedModelOrMixinField = modelOrMixinLocalFieldMap[fieldName];
-                           if (typeof enrichedModelOrMixinField !== 'undefined') {
-                              // let's enrich the refreshed involvedMixin with import data it doesn't know about :
-                              for (var fieldKey in enrichedModelOrMixinField) {
-                                 if (typeof involvedMixinField[fieldKey] === 'undefined') { // ex. "importconf:internalName"
-                                    involvedMixinField[fieldKey] = enrichedModelOrMixinField[fieldKey];
-                                 }
-                              }
-                           } // else ex. field not local
-                           // let's add it as global fields in the modelOrMixin shortcuts :
-                           enrichedModelOrMixinFieldMap[fieldName] = involvedMixinField;
-                        }
-                     }
-
-                     csvToData(importState);
-               }, null, 0, 100); // max limit (else 10 !!!)
+               importState.data.columnNames = results.meta.fields;
+               getImportedFieldsModels(importState, function() {
+                  csvToData(importState, syncGetResourceRow);
+               });
             }
       }
       if ($(".resourceFile").val() != "") {
@@ -1720,6 +1673,77 @@
                + new Date().getTime(), resourceParsingConf); // to prevent browser caching
       }
    }
+
+   function syncGetResourceRow() {
+      return importState.data.rows[importState.data.rInd + '']; // convert to string !!
+   }
+   function asyncGetResourceRow() {
+      return importState.data.rows['0']; // string !!
+   }
+   
+   function getImportedFieldsModels(importState, success) {// imported field names
+      // adding field names with internal field name :
+      importState.data.importedFieldNames = [];
+      var fieldNamesWithInternalNameMap = importState.model.fieldNamesWithInternalNameMap;
+      for (var fnInd in fieldNamesWithInternalNameMap) {
+         importState.data.importedFieldNames.push(fnInd);
+      }
+      // adding prefixed data column names :
+      for (var dcnInd in importState.data.columnNames) {
+         var dataColumnName = importState.data.columnNames[dcnInd];
+         if (dataColumnName.indexOf(':') !== -1 && fieldNamesWithInternalNameMap[dataColumnName] === null) {
+            importState.data.importedFieldNames.push(dataColumnName);
+         }
+      }
+      
+      // BEWARE limited to 10 by default !!!!!! and 100 max !!
+      findDataByType({ modelType : 'dcmo:model_0', query : new UriQuery(
+         'dcmo:globalFields.dcmf:name', '$in'
+         // globalFields else won't get ex. CountryFR inheriting from Country but with no additional field (??)
+         + JSON.stringify(importState.data.importedFieldNames, null, null)
+      ).s() }, function(fieldNameMixinsFound) {
+            if (fieldNameMixinsFound.length === 100) { // max limit
+               return abortImport("Too many mixins (>= 100) found for field names to import");
+            }
+            
+            for (var fnmInd in fieldNameMixinsFound) {
+               var involvedMixin = fieldNameMixinsFound[fnmInd];
+               var modelOrMixin = importState.model.modelOrMixins[involvedMixin["dcmo:name"]];
+               if (typeof modelOrMixin === 'undefined') {
+                  continue; // not used, ex. unused mixin that inherits a used field
+               }
+               importState.data.involvedMixins.push(involvedMixin);
+               
+               // global mixins :
+               modelOrMixin["dcmo:globalMixins"] = involvedMixin["dcmo:globalMixins"];
+               // global fields :
+               var involvedMixinFieldArray = involvedMixin["dcmo:globalFields"];
+               var modelOrMixinLocalFieldMap = modelOrMixin["dcmo:fields"];
+               var enrichedModelOrMixinFieldMap = {};
+               importState.model.modelOrMixins[involvedMixin["dcmo:name"]]["dcmo:globalFields"] = enrichedModelOrMixinFieldMap;
+               for (var fInd in involvedMixinFieldArray) {
+                  var involvedMixinField = involvedMixinFieldArray[fInd];
+                  var fieldName = involvedMixinField["dcmf:name"];
+                  var enrichedModelOrMixinField = modelOrMixinLocalFieldMap[fieldName];
+                  if (typeof enrichedModelOrMixinField !== 'undefined') {
+                     // let's enrich the refreshed involvedMixin with import data it doesn't know about :
+                     for (var fieldKey in enrichedModelOrMixinField) {
+                        if (typeof involvedMixinField[fieldKey] === 'undefined') { // ex. "importconf:internalName"
+                           involvedMixinField[fieldKey] = enrichedModelOrMixinField[fieldKey];
+                        }
+                     }
+                  } // else ex. field not local
+                  // let's add it as global fields in the modelOrMixin shortcuts :
+                  enrichedModelOrMixinFieldMap[fieldName] = involvedMixinField;
+               }
+            }
+
+            if (success) {
+               success(importState);
+            }
+      }, null, 0, 100); // max limit (else 10 !!!)
+   }
+   
   
    function importField(fieldRow, fieldName, mixinFields, mixinTypeName, importState) {
       var field = mixinFields[fieldName];
@@ -2335,7 +2359,7 @@
             },
             data : {
                fileName : '', // set below
-               dataColumnNames : null,
+               columnNames : null,
                involvedMixins : [],
                rows : null,
                rowNb : 0,
