@@ -989,11 +989,11 @@ public class DatacoreApiServerTest {
       Assert.assertEquals(moscowCityUri, resources.get(0).getUri());
       //Assert.assertEquals(moscowCityData.get("i18Name"), resources.get(0).get("i18Name"));
       
-      // TODO LATER i18n, default lookup (on value)
-      /*resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+      // i18n, default lookup (on value)
+      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters().add("i18n:name", "Moscow"), null, 10);
       Assert.assertEquals(1, resources.size());
-      Assert.assertEquals(moscowCityUri, resources.get(0).getUri());*/
+      Assert.assertEquals(moscowCityUri, resources.get(0).getUri());
    
       // checking used index
       params.add("debug", "true");
