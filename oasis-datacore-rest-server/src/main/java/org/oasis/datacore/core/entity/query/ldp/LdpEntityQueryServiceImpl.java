@@ -220,6 +220,9 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       DCModelBase dcModel = queryParsingContext.peekModel();
       
       parameterLoop : for (String fieldPath : params.keySet()) {
+         if (fieldPath.length() == 0) {
+            continue; // ex. ?& or &&
+         }
          if (findConfParams.contains(fieldPath)) {
             // skip find conf params
             continue;

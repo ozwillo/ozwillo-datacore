@@ -1156,10 +1156,10 @@
             
          } else if (mixin['dcmoid:lookupQueries']) {
             var lookupQueryFields;
-            var lookupQueryFieldNameToValue = null;
+            var lookupUriQuery = null;
             for (var qInd in mixin['dcmoid:lookupQueries']) {
                lookupQueryFields = mixin['dcmoid:lookupQueries'][qInd]['dcmoidlq:fieldNames'];
-               lookupQueryFieldNameToValue = {};
+               lookupUriQuery = new UriQuery();
                   for (var fInd in lookupQueryFields) {
                   var idFieldName = lookupQueryFields[fInd];
                /*var indexInQuery = idField["dcmfid:indexInQuery"]; // NB. this import-specific conf has been enriched in refreshed involvedMixins' global fields
@@ -1184,7 +1184,7 @@
                      
                   } else if (idField["dcmf:type"] === 'resource') { // getting ref'd resource id
                      if (typeof queryValue === 'string') { // resource
-                        lookupQueryFieldNameToValue[idFieldName] = queryValue;
+                        lookupQueryFieldNameToValues.p(idFieldName, queryValue);
                      } else { // subresource TODO also (list of) map & i18n
                         var uriQueryValue = queryValue["@id"];
                         if (typeof uriQueryValue === 'undefined') {
@@ -1199,7 +1199,7 @@
                            //
                            break; // next lookup query/return resource; // without adding it to uri'd resources
                         } else {
-                           lookupQueryFieldNameToValue[idFieldName + '.@id'] = uriQueryValue; // TODO test
+                           lookupUriQuery.p(idFieldName + '.@id', uriQueryValue); // TODO test
                         }
                      }
                   } else if (idField["dcmf:type"] === 'i18n') { // NB. beyond default language, is done like list of map
@@ -1227,21 +1227,22 @@
                      } else {
                         // NB. could support querying without knowing the language, but must have a
                         // value criteria that is provided in a given language anyway
-                        lookupQueryFieldNameToValue[idFieldName + '.v'] = queryValue;
-                        lookupQueryFieldNameToValue[idFieldName + '.l'] = defaultLanguage;
+                        lookupUriQuery.p(idFieldName + '.v', queryValue);
+                        lookupUriQuery.p(idFieldName + '.l', defaultLanguage);
                      }
                   } else {
-                     lookupQueryFieldNameToValue[idFieldName] = queryValue;
+                     lookupUriQuery.p(idFieldName, queryValue);
                   }
                }
-               if (Object.keys(lookupQueryFieldNameToValue).length === lookupQueryFields.length) {
-                  break; // found a complete query
+               if (Object.keys(lookupUriQuery.params).length === lookupQueryFields.length) {
+                  break; // found a complete query,
+                  // NB. multi criteria (ex. "between") not supported for lookup queries
                }
             }
             
-            if (lookupQueryFieldNameToValue !== null && lookupQueryFields.length !== null
-                  && Object.keys(lookupQueryFieldNameToValue).length === lookupQueryFields.length) {
-               lookupQuery = buildUri(mixin['dcmo:name']) + '?' + buildUriQuery(lookupQueryFieldNameToValue);
+            if (lookupUriQuery !== null && lookupQueryFields.length !== null
+                  && Object.keys(lookupUriQuery.params).length === lookupQueryFields.length) {
+               lookupQuery = buildUri(mixin['dcmo:name']) + '?' + lookupUriQuery.s();
                var alreadyFoundResource = importState.data.lookupQueryToResource[lookupQuery];
                if (typeof alreadyFoundResource === 'undefined') {
                   importState.data.row.lookupQueriesToRun.push(lookupQuery);

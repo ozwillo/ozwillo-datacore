@@ -1609,7 +1609,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
            if (mapKey.substring(0,1) == "#") {
               // assume arg is a query (and not a query param), meaning it can't be encoded by swagger.js
               // (because it wouldn't know which '&' and '=' not to encode), so encode it at UI level here :
-              map[mapKey] = _buildUriQuery(_parseUriQuery(mapKey, true))
+              map[mapKey] = _buildUriQuery(_parseUriQuery(map[mapKey], true))
            }
         }
         // OASIS HACK end
@@ -1636,22 +1636,37 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
              queryEltParam = decodeURIComponent(queryEltParam);
              queryEltValue = decodeURIComponent(queryEltValue);
           }
-          query[queryEltParam] = queryEltValue;
+          if (typeof query[queryEltParam] === 'undefined') {
+             // support multi criteria ex. /dc/type/pli:city_0?dc:modified=>=2013-11-30T11:14:42.528+01:00&dc:modified=<=2016-11-30T11:14:42.528+01:00
+             query[queryEltParam] = [];
+          }
+          query[queryEltParam].push(queryEltValue);
        }
        return query;
     }
-    function _buildUriQuery(queryFieldNameToOperatorValue, dontEncode) {
+    function identity(o) {
+       return o;
+    }
+    // supports multi criteria ex. /dc/type/pli:city_0?dc:modified=>=2013-11-30T11:14:42.528+01:00&dc:modified=<=2016-11-30T11:14:42.528+01:00
+    function _buildUriQuery(queryFieldNameToOperatorValues, dontEncode) {
+       var encodeOrNot = (dontEncode) ? identity : encodeURIComponent;
        var query = null;
-       for (var queryFieldName in queryFieldNameToOperatorValue) {
-          if (query == null) { // first time
+       for (var queryFieldName in queryFieldNameToOperatorValues) {
+          var operatorValues = queryFieldNameToOperatorValues[queryFieldName];
+          var operatorValuesNb = operatorValues.length;
+          if (operatorValuesNb === 0) {
+             continue;
+          } // else at least one
+          if (query === null) { // first time
              query = '';
           } else {
              query += '&';
           }
-          if (dontEncode) {
-             query += queryFieldName + '=' + queryFieldNameToOperatorValue[queryFieldName];
-          } else {
-             query += encodeURIComponent(queryFieldName) + '=' + encodeURIComponent(queryFieldNameToOperatorValue[queryFieldName]);
+          for (var vInd = 0; vInd < operatorValuesNb ; vInd++) {
+             if (vInd !== 0) {
+                query += '&';
+             }
+             query += encodeOrNot(queryFieldName) + '=' + encodeOrNot(operatorValues[vInd]);
           }
        }
        return query;
