@@ -414,14 +414,16 @@ function toolifyDcListOrResource(valuesOrResource) {
    }
 }
 function setUrl(relativeUrl, dontUpdateDisplay) {
-   if (!dontUpdateDisplay && doUpdateDisplay) {
-      if (typeof relativeUrl !== 'object') {
-         relativeUrl = parseUri(relativeUrl);
-      }
+   if (dontUpdateDisplay || !doUpdateDisplay) {
+      return false;
+   }
    if (!relativeUrl || relativeUrl === "") {
       $('.myurl').val('');
       document.getElementById('mydata').innerHTML = '';
    } else {
+      if (typeof relativeUrl !== 'object') {
+         relativeUrl = parseUri(relativeUrl);
+      }
       // build unencoded URI, for better readability :
       var unencodedRelativeUrl = '/dc/type/' + relativeUrl.modelType;
       if (relativeUrl.id) {
@@ -432,7 +434,6 @@ function setUrl(relativeUrl, dontUpdateDisplay) {
       }
       $('.myurl').val(unencodedRelativeUrl);
       document.getElementById('mydata').innerHTML = '...';
-   }
    }
    return false;
 }
