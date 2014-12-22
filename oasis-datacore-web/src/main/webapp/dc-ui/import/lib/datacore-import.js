@@ -731,7 +731,7 @@
       } else {
          setUrl('');
       }
-      $('.mydata').html(toolifyDcResource(importStateRes.postedResources, 0)); // , null, parseUri(data.request.path).modelType
+      $('.mydata').html(toolifyDcResource(getPartial(importStateRes.postedResources, 50), 0) + "<br/>..."); // , null, parseUri(data.request.path).modelType
    }
    
    
@@ -1409,7 +1409,7 @@
    }
            
    function csvToData(importState, getResourceRow, nextRow) {
-      /*while if (importState.data.rInd < importState.data.rLength) {*/
+      /*while*/ if (importState.data.rInd < importState.data.rLength) {
         
          if (importState.data.row === null || importState.data.row.done) {
             importState.data.rowNb++; // nb. rInd is string
@@ -1538,10 +1538,13 @@
         }
         
         importState.data.rInd++;
-        nextRow(importState, getResourceRow, nextRow); // next row
-     /*} else {
+        if (nextRow) {
+           nextRow(importState, getResourceRow, nextRow); // next row
+        }
+        
+     } else {/**/
         csvToDataCompleted(importState);
-     }*/
+     }
   }
   function csvToDataCompleted(importState) {
       displayParsedResource(importState);
@@ -1594,16 +1597,16 @@
             + " rows</a> (<a href=\"#datacoreResources\">" + importState.data.errors.length + " errors</a>)");
       if (importState.data.errors.length != 0) {
          //$('.mydata').html(
-         $('.importedResourcesFromCsv').html("<b>Errors :</b><br/>"
-               + JSON.stringify(importState.data.errors, null, '\t').replace(/\n/g, '<br>')
-               + "<br/><br/><b>Warnings :</b><br/>"
-               + JSON.stringify(importState.data.warnings, null, '\t').replace(/\n/g, '<br>'));
+         var errorsString = JSON.stringify(getPartial(importState.data.errors, 50), null, '\t').replace(/\n/g, '<br>') + "<br/>...";
+         var warningsString = JSON.stringify(getPartial(importState.data.warnings, 25), null, '\t').replace(/\n/g, '<br>') + "<br/>...";
+         $('.importedResourcesFromCsv').html("<b>Errors :</b><br/>" + errorsString
+               + "<br/><br/><b>Warnings :</b><br/>" + warningsString);
          
       } else {
          // display full resources only if no errors to display :
          //var resourcesPrettyJson = JSON.stringify(resources, null, '\t').replace(/\n/g, '<br>');
-         var resourcesPrettyJson = toolifyDcResource(importState.data.resources, 0);
-         $('.importedResourcesFromCsv').html(resourcesPrettyJson);
+         var resourcesPrettyJson = toolifyDcResource(getPartial(importState.data.resources, 50), 0);
+         $('.importedResourcesFromCsv').html(resourcesPrettyJson + "<br/>...");
       }
    }
   
@@ -1637,7 +1640,7 @@
             download: true,
             header: true,
             preview: getResourceRowStart() + getResourceRowLimit() + 1, // ex. '1' user input means importing title line + 1 more line
-            step: function(row, handle) {
+            /*step: function(row, handle) {
                console.log("Row:", row.data);
                handle.pause();
                importState.data.rows = row.data;
@@ -1653,22 +1656,26 @@
                      handle.resume();
                   });
                }
-            },
+            },*/
             complete: function(results) {
                console.log("Remote file parsed!", results);
                ///var results = eval('[' + data.content.data + ']')[0];
-               /*var prettyJson = JSON.stringify(results.data, null, '\t').replace(/\n/g, '<br>');
+               var prettyJson = JSON.stringify(getPartial(results.data, 10), null, '\t').replace(/\n/g, '<br>') + "<br/>...";
                $('.importedJsonFromCsv').html(prettyJson);
                // TODO handle errors...
+               
+               var nextRowFunction = function () {
+                  setTimeout(function () {
+                     csvToData(importState, syncGetResourceRow, nextRowFunction);
+                  }, 1);
+               };
                
                importState.data.rows = results.data;
                importState.data.rLength = Math.min(importState.data.rows.length, getResourceRowStart() + getResourceRowLimit());
                importState.data.rInd = getResourceRowStart();
                
                importState.data.columnNames = results.meta.fields;
-               getImportedFieldsModels(importState, function() {
-                  csvToData(importState, syncGetResourceRow, function () {});
-               });*/
+               getImportedFieldsModels(importState, nextRowFunction);
                csvToDataCompleted(importState);///
             }
       }
@@ -1678,6 +1685,41 @@
          Papa.parse("samples/openelec/electeur_v26010_sample.csv?reload="
                + new Date().getTime(), resourceParsingConf); // to prevent browser caching
       }
+   }
+   
+   function getPartial(arrayOrHashmap, rowNb) {
+      if (arrayOrHashmap instanceof Array) {
+         return getPartialArray(arrayOrHashmap, rowNb);
+      }
+      if (typeof arrayOrHashmap === 'object') {
+         return getPartialHashmap(arrayOrHashmap, rowNb);
+      }
+   }
+   
+   function getPartialArray(array, rowNb) {
+      if (typeof rowNb === 'undefined') {
+         rowNb = 10;
+      }
+      var partialArray = [];
+      for (var pInd = 0; pInd < array.length; pInd++) {
+         partialArray.push(array[pInd]);
+      }
+      return partialArray;
+   }
+   
+   function getPartialHashmap(hashmap, rowNb) {
+      if (typeof rowNb === 'undefined') {
+         rowNb = 10;
+      }
+      var partialHashmap = {};
+      var partialNb = 0;
+      for (var key in hashmap) {
+         if (partialNb++ === rowNb) {
+            break;
+         }
+         partialHashmap[key] = hashmap[key];
+      }
+      return partialHashmap;
    }
 
    function syncGetResourceRow(importState) {
@@ -2195,6 +2237,7 @@
       ///var results = eval('[' + data.content.data + ']')[0];
       //var prettyJson = toolifyDcResource(results, 0);
       //var mixinsPrettyJson = JSON.stringify(modelArray, null, '\t').replace(/\n/g, '<br>');
+      // TODO LATER getPartial ?
       var mixinsPrettyJson = toolifyDcList(importState.model.modelArray, 0, null, 'dcmo:model_0');
       $('.importedResourcesFromCsv').html(mixinsPrettyJson);
    }
