@@ -1408,15 +1408,15 @@
       return resource;
    }
            
-   function csvToData(importState, getResourceRow) {
-      while (importState.data.rInd < importState.data.rLength) {
+   function csvToData(importState, getResourceRow, nextRow) {
+      /*while if (importState.data.rInd < importState.data.rLength) {*/
         
          if (importState.data.row === null || importState.data.row.done) {
             importState.data.rowNb++; // nb. rInd is string
             console.log("row " + importState.data.rInd);//
         importState.data.row = {
               loopIndex : 0,
-              resourceRow : getResourceRow(),
+              resourceRow : getResourceRow(importState),
               modelTypeToRowResources : {},
               fieldNameTreeStack : [],
               previousMissingIdFieldResourceOrMixinNb : -1,
@@ -1426,7 +1426,7 @@
          } // else next iteration in same row
         
         // mixins loop :
-        do {
+        /*do {*/
            importState.data.row.iteration = {
                  missingIdFieldMixinToResources : {},
                  errors : [], // NB. assigning is the fastest way to empty an array anyway
@@ -1490,8 +1490,8 @@
            } else {
               importState.data.row.previousMissingIdFieldResourceOrMixinNb = newMissingIdFieldResourceOrMixinNb;
               importState.data.row.loopIndex++;
-              /*if (importState.data.row.lookupQueriesToRun.length === 0) {
-                 csvToData(importState, getResourceRow); // next iteration
+              if (importState.data.row.lookupQueriesToRun.length === 0) {
+                 csvToData(importState, getResourceRow, nextRow); // next iteration
               } else {
                  var lookupQuery = importState.data.row.lookupQueriesToRun.pop();
                  findDataByType(lookupQuery, function(resourcesFound) {
@@ -1512,19 +1512,19 @@
                           row : importState.data.row.resourceRow }); // NB. not in iteration errors
                     }
                     //TODO
-                    csvToData(importState, getResourceRow); // next iteration
+                    csvToData(importState, getResourceRow, nextRow); // next iteration
                  }, function(data) {
                     var error = (data._body && data._body._body) ? data._body._body : data;
                     importState.data.errors.push({ code : "lookupQueryError",
                        lookupQuery : lookupQuery, error : error,
                        row : importState.data.row.resourceRow }); // NB. not in iteration errors
-                    csvToData(importState, getResourceRow); // next iteration
+                    csvToData(importState, getResourceRow, nextRow); // next iteration
                  }, 0, 2); // 2 results are enough to know whether unique
               }
-              return;*/
+              return;
            }
         
-        } while (!importState.data.row.done);
+        /*} while (!importState.data.row.done);*/
 
         for (var i in importState.data.row.iteration.errors) {
            importState.data.errors.push(importState.data.row.iteration.errors[i]);
@@ -1538,9 +1538,12 @@
         }
         
         importState.data.rInd++;
-        ///csvToData(importState, getResourceRow); // next row
-     }/* else {*/
-
+        nextRow(importState, getResourceRow, nextRow); // next row
+     /*} else {
+        csvToDataCompleted(importState);
+     }*/
+  }
+  function csvToDataCompleted(importState) {
       displayParsedResource(importState);
 
       importState.data.posted.toBePostedNb = Object.keys(importState.data.resources).length;
@@ -1584,7 +1587,6 @@
                   importedDataPosted, importedDataPosted);
          });
       }
-      /*}*/
    }
       
    function displayParsedResource(importState) {
@@ -1635,24 +1637,27 @@
             download: true,
             header: true,
             preview: getResourceRowStart() + getResourceRowLimit() + 1, // ex. '1' user input means importing title line + 1 more line
-            /*step: function(row) {
+            step: function(row, handle) {
                console.log("Row:", row.data);
-               importState.data.rows = results.data;
+               handle.pause();
+               importState.data.rows = row.data;
                if (!importState.data.columnNames) {
-                  handle.pause();
                   importState.data.columnNames = row.meta.fields;
                   getImportedFieldsModels(importState, function() {
-                     csvToData(importState, asyncGetResourceRow);
-                     handle.resume();
+                     csvToData(importState, asyncGetResourceRow, function() {
+                        handle.resume();
+                     });
                   });
                } else {
-                  csvToData(importState, asyncGetResourceRow);
+                  csvToData(importState, asyncGetResourceRow, function() {
+                     handle.resume();
+                  });
                }
-            },*/
+            },
             complete: function(results) {
                console.log("Remote file parsed!", results);
                ///var results = eval('[' + data.content.data + ']')[0];
-               var prettyJson = JSON.stringify(results.data, null, '\t').replace(/\n/g, '<br>');
+               /*var prettyJson = JSON.stringify(results.data, null, '\t').replace(/\n/g, '<br>');
                $('.importedJsonFromCsv').html(prettyJson);
                // TODO handle errors...
                
@@ -1662,8 +1667,9 @@
                
                importState.data.columnNames = results.meta.fields;
                getImportedFieldsModels(importState, function() {
-                  csvToData(importState, syncGetResourceRow);
-               });
+                  csvToData(importState, syncGetResourceRow, function () {});
+               });*/
+               csvToDataCompleted(importState);///
             }
       }
       if ($(".resourceFile").val() != "") {
@@ -1674,10 +1680,10 @@
       }
    }
 
-   function syncGetResourceRow() {
+   function syncGetResourceRow(importState) {
       return importState.data.rows[importState.data.rInd + '']; // convert to string !!
    }
-   function asyncGetResourceRow() {
+   function asyncGetResourceRow(importState) {
       return importState.data.rows['0']; // string !!
    }
    
@@ -2363,6 +2369,7 @@
                involvedMixins : [],
                rows : null,
                rowNb : 0,
+               rInd : 0, // current row number, not in pull parser mode
                row : null, // current row
                /*row : { // current row
                   loopIndex : 0,
