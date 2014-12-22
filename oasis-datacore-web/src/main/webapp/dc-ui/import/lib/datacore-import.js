@@ -441,13 +441,13 @@
       return found;
    }
 
-   function mergeValues(existingResourceOrMap, newResourceOrMap, allFields, importState) {
+   function mergeValues(existingResourceOrMap, newResourceOrMap, allFields, importState, noError) {
       for (var key in newResourceOrMap) {
          // NB. works for fields but also native fields ex. modified...
-         mergeValue(existingResourceOrMap, key, newResourceOrMap[key], allFields[key], importState);
+         mergeValue(existingResourceOrMap, key, newResourceOrMap[key], allFields, importState, noError);
       }
    }
-   function mergeListValue(existingList, newValueElt, nvInd, listElementField, importState) {
+   function mergeListValue(existingList, newValueElt, nvInd, listElementField, importState, noError) {
       //if (true) return; ///////////////////// TODO PERF ! OK !!!
       var fieldType = listElementField["dcmf:type"];
       if (fieldType === 'list' || fieldType === 'i18n') {
@@ -501,7 +501,7 @@
          if (existingMapFound === null) {
             existingList.push(newValueElt);
          } else {
-            mergeValue(existingSubresourceFound, null, newValueElt, subresourceFields, importState);
+            mergeValue(existingSubresourceFound, null, newValueElt, subresourceFields, importState, noError);
          }
          
       } else if (fieldType === 'map') {
@@ -515,7 +515,7 @@
          if (existingMapFound === null) {
             existingList.push(newValueElt);
          } else {
-            mergeValue(existingMapFound, null, newValueElt, listMapFields, importState);
+            mergeValue(existingMapFound, null, newValueElt, listMapFields, importState, noError);
          }
          
       } else if (!contains(existingList, newValueElt)) { // primitive value not yet in list
@@ -525,7 +525,7 @@
    // merge new value over existing resource :
    // also list (primitives as sets, LATER beyond id / key subfields should be used), i18n, map & embedded subresource
    // NB. key param is required only if no or default existing value
-   function mergeValue(existingResource, key, newValue, allFields, importState) {
+   function mergeValue(existingResource, key, newValue, allFields, importState, noError) {
       if (typeof newValue === 'undefined' || newValue == null
             || typeof newValue === 'string' && newValue.length == 0) {
          return; // no new value to merge
@@ -551,26 +551,26 @@
          // NB. existingValue has at least one value, because tested above
          if (newValue instanceof Array) {
             for (var nvInd in newValue) {
-               mergeListValue(existingValue, newValue[nvInd], nvInd, field["dcmf:listElementField"], importState); // TODO or key subfield specified on list field ???
+               mergeListValue(existingValue, newValue[nvInd], nvInd, field["dcmf:listElementField"], importState, noError); // TODO or key subfield specified on list field ???
             }
          } else { // TODO better for non primitive values...
-            mergeListValue(existingValue, newValue, 0, field["dcmf:listElementField"], importState);
+            mergeListValue(existingValue, newValue, 0, field["dcmf:listElementField"], importState, noError);
          }
          
       } else if (fieldType === 'map') {
-         mergeValues(existingValue, newValue, field['dcmf:mapFields'], importState);
+         mergeValues(existingValue, newValue, field['dcmf:mapFields'], importState, noError);
          
       } else if (fieldType === 'resource' && typeof newValue === 'object') { // embedded resource TODO LATER better test on getStorage() = concrete resource model & storagePath
          var modelOrMixin = importState.model.modelOrMixins[existingValue['@type'][0]];
          // NB. iterating over newValue values, but using "most concrete" existingValue fields as guide
-         mergeValues(existingValue, newValue, modelOrMixin['dcmo:globalFields'], importState);
+         mergeValues(existingValue, newValue, modelOrMixin['dcmo:globalFields'], importState, noError);
          
       } else if (existingValue === newValue) {
          // nothing to do
       } else if (existingValue === convertValue(field['dcmf:defaultStringValue'], field, importState)) {
          // (including external resource case)
          existingResource[key] = newValue; // allow to override default value
-      } else {
+      } else if (!noError) {
          importState.data.row.iteration.errors.push({ code : "incompatiblePrimitiveValueMerge",
                resource : existingResource, key : key, newValue : newValue,
                message : "ERROR incompatiblePrimitiveValueMerge" });
@@ -673,7 +673,7 @@
       importStateRes.postedNb = Object.keys(importStateRes.postedResources).length; // updating
       var done = importStateRes.toBePostedNb === (importStateRes.postedNb + importStateRes.postedErrors.length);
       
-      if (true/*importStateRes.postedNb % 1000 == 0 || importStateRes.postedNb > importStateRes.toBePostedNb - 10*/) {
+      if (true/*importStateRes.postedNb % 10 == 0 || importStateRes.postedNb > importStateRes.toBePostedNb - 10*/) {
          var msg = "Posted <a href=\"#importedResourcesFromCsv\"";
          if (done) {
             var resourcesSummary = '';
@@ -798,10 +798,7 @@
       if (subresourceModel/*resourceMixinOrFields*/['dcmo:isInstanciable']) { // resource with (probably) exact instance model type ;
          // TODO TODO better is subresource ex. storage(Path) == modelx/path ; typeof value !== 'undefined' && value != null && value.length != 0
          // adding it :
-         importState.data.resources[subresource['@id']] = subresource;
-         /*if (modelTypeToRowResources != null) { NOOOOOOOOOOO only if top level, for autolinking
-            modelTypeToRowResources[resourceType] = subresource; // in case not yet there
-         }*/
+         addResource(subresource, mixin, importState, false); // DON'T add to modelTypeToRowResources for autolinking because not top level
          return subresource["@id"]; // uri
          
       } else/* if ()*/ { // resource with abstract type : don't import but look for compatible (sub)type and same id
@@ -1023,6 +1020,7 @@
          
       } // end field loop
       
+      
       if (typeof resource['@id'] === 'undefined' && typeName !== 'map') {
          // create or find & update resource :
          
@@ -1157,6 +1155,8 @@
          } else if (mixin['dcmoid:lookupQueries']) {
             var lookupQueryFields;
             var lookupUriQuery = null;
+            var lookupQueryFound = true;
+            var qField;
             for (var qInd in mixin['dcmoid:lookupQueries']) {
                lookupQueryFields = mixin['dcmoid:lookupQueries'][qInd]['dcmoidlq:fieldNames'];
                lookupUriQuery = new UriQuery();
@@ -1167,7 +1167,7 @@
                   var queryValue = resource[idFieldName];
                   if (typeof queryValue === 'undefined' || queryValue === null || queryValue === "") {
                      //console.log("Missing value for query field " + idFieldName
-                     //      + ", clearing others (" + Object.keys(lookupQueryFieldNameToValue).length
+                     //      + ", clearing others (" + lookupUriQuery.params.length
                      //      + ") ; below " + pathInFieldNameTree + " in :");
                      //console.log(resource);
                      if (!mixinMustBeImported) {
@@ -1180,16 +1180,19 @@
                               message : "ERROR missingValueForQueryField" });*/
                         ///return resource; // abort resource creation in this loop (don't add it to uri'd resources yet)
                      }
+                     lookupQueryFound = false;
                      break; // next lookup query
                      
-                  } else if (idField["dcmf:type"] === 'resource') { // getting ref'd resource id
+                  }
+                  qField = enrichedModelOrMixinFieldMap[idFieldName];
+                  if (qField["dcmf:type"] === 'resource') { // getting ref'd resource id
                      if (typeof queryValue === 'string') { // resource
-                        lookupQueryFieldNameToValues.p(idFieldName, queryValue);
+                        lookupUriQuery.p(idFieldName, queryValue);
                      } else { // subresource TODO also (list of) map & i18n
                         var uriQueryValue = queryValue["@id"];
                         if (typeof uriQueryValue === 'undefined') {
                            //console.log("Missing uri for resource query field " + idFieldName
-                           //      + ", clearing others (" + Object.keys(lookupQueryFieldNameToValue).length
+                           //      + ", clearing others (" + lookupUriQuery.params.length
                            //      + ") ; below " + pathInFieldNameTree + " in :");
                            console.log(resource);
                            /*importState.data.row.iteration.errors.push({ code : "missingUriForResourceQueryField", // TODO or warning since global error anyway ?
@@ -1202,8 +1205,8 @@
                            lookupUriQuery.p(idFieldName + '.@id', uriQueryValue); // TODO test
                         }
                      }
-                  } else if (idField["dcmf:type"] === 'i18n') { // NB. beyond default language, is done like list of map
-                     var defaultLanguage = getDefaultLanguage(idField, importState, mixin);
+                  } else if (qField["dcmf:type"] === 'i18n') { // NB. beyond default language, is done like list of map
+                     var defaultLanguage = getDefaultLanguage(qField, importState, mixin);
                      /*if (typeof defaultLanguage === 'undefined') {
                         importState.data.row.iteration.errors.push({ code : "i18nIsInQueryButHasNoDefaultLanguage",
                               mixin : mixin['dcmo:name'], fieldName : idFieldName,
@@ -1227,22 +1230,21 @@
                      } else {
                         // NB. could support querying without knowing the language, but must have a
                         // value criteria that is provided in a given language anyway
-                        lookupUriQuery.p(idFieldName + '.v', queryValue);
+                        lookupUriQuery.p(idFieldName + '.v', valueInLanguage);
                         lookupUriQuery.p(idFieldName + '.l', defaultLanguage);
                      }
                   } else {
                      lookupUriQuery.p(idFieldName, queryValue);
                   }
                }
-               if (Object.keys(lookupUriQuery.params).length === lookupQueryFields.length) {
+               if (lookupUriQuery !== null && lookupQueryFound) {
                   break; // found a complete query,
                   // NB. multi criteria (ex. "between") not supported for lookup queries
                }
             }
             
-            if (lookupUriQuery !== null && lookupQueryFields.length !== null
-                  && Object.keys(lookupUriQuery.params).length === lookupQueryFields.length) {
-               lookupQuery = buildUri(mixin['dcmo:name']) + '?' + lookupUriQuery.s();
+            if (lookupUriQuery !== null && lookupQueryFound) {
+               lookupQuery = "/dc/type/" + encodeUriPathComponent(mixin['dcmo:name']) + '?' + lookupUriQuery.s();
                var alreadyFoundResource = importState.data.lookupQueryToResource[lookupQuery];
                if (typeof alreadyFoundResource === 'undefined') {
                   importState.data.row.lookupQueriesToRun.push(lookupQuery);
@@ -1273,7 +1275,7 @@
             if (mixin['dcmoid:lookupQueries'] && mixin['dcmoid:lookupQueries'].length !== 0) {
                if (lookupQuery === null) {
                   importState.data.row.iteration.errors.push({ code : "missingValueForQueryField",
-                     mixin : mixin['dcmo:name'], lookupQueryFieldNameToValue : lookupQueryFieldNameToValue,
+                     mixin : mixin['dcmo:name'], lookupUriQueryParams : lookupUriQuery.params,
                      /*lookupQueryFields : lookupQueryFields,*/ lookupQueries : mixin['dcmoid:lookupQueries'],
                      resource : resource, pathInFieldNameTree : pathInFieldNameTree,
                      message : "ERROR missingValueForQueryField" });
@@ -1291,98 +1293,8 @@
                   + typeName + " and resourceRow " + resourceRow });*/
             return resource;
          }
-
-         // computing ancestors :
-         // (only now that id is known i.e. we are able to find or create it, even if already exists in case changes)
-         var ancestors = null;
-         var hasAncestorMixin = contains(mixin["dcmo:globalMixins"], "o:Ancestor_0");
-         if (hasAncestorMixin) {
-            // && mixin["dcmo:isInstanciable"] only if old "model" (already checked)
-            ancestors = [];
-            if (!mixin['dcmoid:parentFieldNames']) {
-               // no parent (itself is the only ancestor) ex. Country
-               
-            } else {
-               var parentUris = [];
-               for (var fInd in mixin['dcmoid:parentFieldNames']) {
-                  var idFieldName = mixin['dcmoid:parentFieldNames'][fInd];
-                  var idField = enrichedModelOrMixinFieldMap[idFieldName];
-                  
-                  var parentValue = resource[idFieldName];
-                  if (typeof parentValue === 'undefined' || parentValue === null || parentValue === "") {
-                     /*importState.data.row.iteration.errors.push({ code : "missingValueForParentField",
-                           mixin : mixin['dcmo:name'], fieldName : idFieldName,
-                           resource : resource, pathInFieldNameTree : pathInFieldNameTree,
-                           message : "ERROR missingValueForParentField" });*/
-                  } else {
-                     
-                     // NB. idField is a resource field, because checked at model parsing time
-                     var parentUri;
-                     if (typeof parentValue === 'string') { // resource
-                        parentUri = parentValue;
-                     } else { // subresource (refMixin ???)
-                        parentUri = parentValue["@id"];
-                     }
-                     if (typeof parentUri === 'undefined') {
-                        importState.data.row.iteration.errors.push({ code : "missingUriForResourceParentField",
-                              mixin : mixin['dcmo:name'], fieldName : idFieldName, value : parentValue,
-                              resource : resource, pathInFieldNameTree : pathInFieldNameTree,
-                              message : "ERROR missingUriForResourceParentField" });
-                        ///return resource; // without adding it to uri'd resources // NOO not required for creation
-                     } else {
-                        parentUris.push(parentUri);
-                     }
-                  }
-               }
-            
-         if (mixin['dcmoid:parentFieldNames'].length !== parentUris.length) {
-            importState.data.row.iteration.errors.push({ code : "missingValueForParentField",
-               mixin : mixin['dcmo:name'], parentUris : parentUris, parentFieldNames : mixin['dcmoid:parentFieldNames'],
-               resource : resource, pathInFieldNameTree : pathInFieldNameTree,
-               message : "ERROR missingValueForParentField" });
-            return resource; // prevent it from being added to resources to force it to compute parents again
-         } else {
-         // NB. itself added later
-         for (var pInd in parentUris) {
-            var parentUri = parentUris[pInd];
-               var ancestor = importState.data.resources[parentUri];
-               // TODO check if ancestor not known (ex. string resource reference...)
-               if (typeof ancestor === 'undefined') {
-                  ancestors = null; // reset since incomplete
-                  importState.data.row.iteration.errors.push({ code : "cantFindAncestorAmongParsedResources",
-                        resource : resource, ancestorUri : parentUri,
-                        pathInFieldNameTree : pathInFieldNameTree });
-               } else if (!hasMixin(ancestor["@type"][0], "o:Ancestor_0", importState)) {
-                  ancestors = null; // reset since incomplete ; TODO or accept as its own single ancestor ?
-                  importState.data.row.iteration.errors.push({ code : "ancestorHasNotAncestorMixin",
-                     resource : resource, ancestor : ancestor, pathInFieldNameTree : pathInFieldNameTree });
-               } else {
-                  var ancestorAncestors = ancestor["o:ancestors"];
-                  if (typeof ancestorAncestors === 'undefined') {
-                     ancestors = null; // reset since incomplete
-                     importState.data.row.iteration.errors.push({ code : "ancestorHasNotDefinedAncestors",
-                        resource : resource, ancestor : ancestor, pathInFieldNameTree : pathInFieldNameTree });
-                  } else {
-                     for (var aaInd in ancestorAncestors) {
-                        var parentExists = false;
-                        for (var aInd in ancestors) {
-                           if (ancestorAncestors[aaInd] === ancestors[aInd]) {
-                              parentExists = true;
-                              break;
-                           }
-                        }
-                        if (!parentExists) {
-                           ancestors.push(ancestorAncestors[aaInd]);
-                        }
-                     }
-                  }
-               }
-         }
-         }
-            }
-         }
          
-         ///var uri = buildUri(typeName, id);
+         // creating or merging :
          // NB. uri is encoded as URIs should be, BUT must be decoded before used as GET URI
          // because swagger.js re-encodes (per path element because __unencoded__-prefixed per hack)
          var existingResource = importState.data.resources[uri];
@@ -1391,21 +1303,152 @@
             resource["@id"] = uri; // WARNING is wrong if !dcmo:isInstanciable, but id may be right (else requires key fields linking)
             //resource["o:version"] = -1;
             resource["@type"] = [ typeName ];
-            if (ancestors !== null && mixin['dcmo:isInstanciable']) {
-               ancestors.push(uri); // itself, but only if dcmo:isInstanciable, else added at instance building elsewhere 
-               resource["o:ancestors"] = ancestors;
-            }
             // NB. added by caller, at top (row) or subresource import level, depending on embedded or not
-            return resource;
+            ///return resource;
          } else {
             // merge (this mixin's found values) over existing resource :
             // also list (primitives as sets, LATER beyond id / key subfields should be used), i18n, map & embedded subresource
             mergeValues(existingResource, resource, mixin["dcmo:globalFields"], importState); // works for fields but also native fields ex. modified...
             // NB. ancestors, type & uri have already been built and set at creation
-            return existingResource;
+            resource = existingResource;
+            ///return resource;
          }
       }
+
+
+      // complete resource once id built :
+      if (typeof resource['@id'] !== 'undefined' && typeName !== 'map') {
+         
+         // (re)computing ancestors :
+         // (only now that id is known i.e. we are able to find or create it, even if already exists in case changes)
+         // (done not only when id built, but everytime until no unknown resource in line in case of autolinking)
+         if (mixin['dcmo:isInstanciable'] && contains(mixin["dcmo:globalMixins"], "o:Ancestor_0")) {
+            // && mixin["dcmo:isInstanciable"] only if old "model" (already checked)
+            ///var ancestorNb = 1 + (mixin['dcmoid:parentFieldNames'] ? mixin['dcmoid:parentFieldNames'].length : 0);
+            /*if (resource['o:ancestors'] && resource['o:ancestors'].length !== 0) { /// === ancestorNb
+               // already computed all ancestors (can't know exact number of ancestors, only of parents)
+               
+            } else {*/
+               var ancestors = [];
+               if (!mixin['dcmoid:parentFieldNames']) {
+                  // no parent (itself is the only ancestor) ex. Country
+                  
+               } else {
+                  var parentUris = [];
+                  for (var fInd in mixin['dcmoid:parentFieldNames']) {
+                     var idFieldName = mixin['dcmoid:parentFieldNames'][fInd];
+                     var idField = enrichedModelOrMixinFieldMap[idFieldName];
+                     
+                     var parentValue = resource[idFieldName];
+                     if (typeof parentValue === 'undefined' || parentValue === null || parentValue === "") {
+                        /*importState.data.row.iteration.errors.push({ code : "missingValueForParentField",
+                              mixin : mixin['dcmo:name'], fieldName : idFieldName,
+                              resource : resource, pathInFieldNameTree : pathInFieldNameTree,
+                              message : "ERROR missingValueForParentField" });*/
+                     } else {
+                        
+                        // NB. idField is a resource field, because checked at model parsing time
+                        var parentUri;
+                        if (typeof parentValue === 'string') { // resource
+                           parentUri = parentValue;
+                        } else { // subresource (refMixin ???)
+                           parentUri = parentValue["@id"];
+                        }
+                        if (typeof parentUri === 'undefined') {
+                           /*importState.data.row.iteration.errors.push({ code : "missingUriForResourceParentField",
+                                 mixin : mixin['dcmo:name'], fieldName : idFieldName, value : parentValue,
+                                 resource : resource, pathInFieldNameTree : pathInFieldNameTree,
+                                 message : "ERROR missingUriForResourceParentField" });*/
+                           ///return resource; // without adding it to uri'd resources // NOO not required for creation
+                        } else {
+                           parentUris.push(parentUri);
+                        }
+                     }
+                  }
+               
+                  if (mixin['dcmoid:parentFieldNames'].length !== parentUris.length) {
+                     importState.data.row.iteration.errors.push({ code : "missingValueForParentField",
+                        mixin : mixin['dcmo:name'], parentUris : parentUris, parentFieldNames : mixin['dcmoid:parentFieldNames'],
+                        resource : resource, pathInFieldNameTree : pathInFieldNameTree,
+                        message : "ERROR missingValueForParentField" });
+                     ///return resource; // prevent it from being added to resources to force it to compute parents again
+                     
+                  }/* else {*/
+                  // NB. parents can be optional (ex. some very few CityFR have no CommunauteDeCommune),
+                  // so can't explode if error and must recompute everytime until one iteration after no more
+                  // missingIdFieldMixinToResources
+                     for (var pInd in parentUris) {
+                        var parentUri = parentUris[pInd];
+                        var ancestor = importState.data.resources[parentUri];
+                        // TODO check if ancestor not known (ex. string resource reference...)
+                        if (typeof ancestor === 'undefined') {
+                           ancestors = null; // reset since incomplete
+                           importState.data.row.iteration.errors.push({ code : "cantFindAncestorAmongParsedResources",
+                                 resource : resource, ancestorUri : parentUri,
+                                 pathInFieldNameTree : pathInFieldNameTree });
+                        } else if (!hasMixin(ancestor["@type"][0], "o:Ancestor_0", importState)) {
+                           ancestors = null; // reset since incomplete ; TODO or accept as its own single ancestor ?
+                           importState.data.row.iteration.errors.push({ code : "ancestorHasNotAncestorMixin",
+                              resource : resource, ancestor : ancestor, pathInFieldNameTree : pathInFieldNameTree });
+                        } else {
+                           var ancestorAncestors = ancestor["o:ancestors"];
+                           if (typeof ancestorAncestors === 'undefined') {
+                              ancestors = null; // reset since incomplete
+                              importState.data.row.iteration.errors.push({ code : "ancestorHasNotDefinedAncestors",
+                                 resource : resource, ancestor : ancestor, pathInFieldNameTree : pathInFieldNameTree });
+                           } else {
+                              for (var aaInd in ancestorAncestors) {
+                                 var parentExists = false;
+                                 for (var aInd in ancestors) {
+                                    if (ancestorAncestors[aaInd] === ancestors[aInd]) {
+                                       parentExists = true;
+                                       break;
+                                    }
+                                 }
+                                 if (!parentExists) {
+                                    ancestors.push(ancestorAncestors[aaInd]);
+                                 }
+                              }
+                           }
+                        }
+                     }
+                  }
+               /*}*/
+  
+               if (ancestors !== null) {
+                  ancestors.push(resource['@id']); // itself, but only if dcmo:isInstanciable, else added at instance building elsewhere 
+                  mergeValue(resource, 'o:ancestors', ancestors, enrichedModelOrMixinFieldMap, importState);
+               }
+            ///}
+         }
+      }
+      
       return resource;
+   }
+   
+   function addResource(importedResource, mixin, importState, isTopLevel) {
+      var irUri = importedResource["@id"];
+      if (typeof irUri === 'undefined') {
+         //console.log(JSON.stringify(importedResource, null, null));//
+         importState.data.row.iteration.missingIdFieldMixinToResources[mixin["dcmo:name"]] = importedResource;
+      } else {
+         if (isTopLevel && importState.data.row.modelTypeToRowResources != null) { // top level only, for autolinking
+            importState.data.row.modelTypeToRowResources[importedResource['@type'][0]] = importedResource; // in case not yet there
+            // and NOT mixin["dcmo:name"] because it may have been changed after calling findBestMatchingRowResourceForType()
+         }
+
+         if (!importState.data.resources[irUri]) {
+            // adding it :
+            importState.data.resources[irUri] = importedResource;
+            
+            // scheduling refresh, in order not to loose fields that are not imported this time ex. o:ancestors :
+            importState.data.row.lookupQueriesToRun.push(irUri);
+            importState.data.row.iteration.warnings.push({ code : 'refreshUriToRunInNextIteration',
+               mixin : mixin['dcmo:name'], refreshUri : irUri,
+               resource : importedResource,
+               message : 'WARNING refreshUriToRunInNextIteration' });
+         }
+      }
    }
            
    function csvToData(importState, getResourceRow, nextRow) {
@@ -1419,7 +1462,8 @@
               resourceRow : getResourceRow(importState),
               modelTypeToRowResources : {},
               fieldNameTreeStack : [],
-              previousMissingIdFieldResourceOrMixinNb : -1,
+              previousMissingIdFieldResourceOrMixinNb : -2,
+              missingIdFieldResourceOrMixinNb : -1, // different, else stops
               lookupQueriesToRun : [],
               done : false
          };
@@ -1459,24 +1503,16 @@
              
              if (importedResource == null) {
                 // nothing to import (or only autolinked values), skip resource
-             } else if (typeof importedResource["@id"] === 'undefined') {
-                //console.log(JSON.stringify(importedResource, null, null));//
-                importState.data.row.iteration.missingIdFieldMixinToResources[mixin["dcmo:name"]] = importedResource;
              } else {
-                // adding it :
-                importState.data.resources[importedResource['@id']] = importedResource;
-                if (importState.data.row.modelTypeToRowResources != null) {
-                   importState.data.row.modelTypeToRowResources[importedResource['@type'][0]] = importedResource; // in case not yet there
-                   // and NOT mixin["dcmo:name"] because it may have been changed after calling findBestMatchingRowResourceForType()
-                }
+                addResource(importedResource, mixin, importState, true); // DO add to modelTypeToRowResources for autolinking because top level
              }
         }
 
-           var newMissingIdFieldResourceOrMixinNb = Object.keys(importState.data.row.iteration.missingIdFieldMixinToResources).length;
-           if (newMissingIdFieldResourceOrMixinNb === 0) {
-              importState.data.row.done = true; // next row
+           if (importState.data.row.previousMissingIdFieldResourceOrMixinNb === 0) {
+              importState.data.row.done = true; // next row (last row being ONE ITERATION AFTER everything has been found,
+              // so that ex. ancestors can be well computed)
               
-           } else if (newMissingIdFieldResourceOrMixinNb // size equality enough if involvedMixins don't change
+           } else if (importState.data.row.missingIdFieldResourceOrMixinNb // size equality enough if involvedMixins don't change
                       == importState.data.row.previousMissingIdFieldResourceOrMixinNb || importState.data.row.loopIndex > 20) {
               importState.data.row.iteration.errors.push({ code : "missingIdFields",
                  missingIdFieldMixinToResources : importState.data.row.iteration.missingIdFieldMixinToResources,
@@ -1488,36 +1524,54 @@
               importState.data.row.done = true; // next row
               
            } else {
-              importState.data.row.previousMissingIdFieldResourceOrMixinNb = newMissingIdFieldResourceOrMixinNb;
+              importState.data.row.previousMissingIdFieldResourceOrMixinNb = importState.data.row.missingIdFieldResourceOrMixinNb;
+              importState.data.row.missingIdFieldResourceOrMixinNb = Object.keys(importState.data.row.iteration.missingIdFieldMixinToResources).length;
               importState.data.row.loopIndex++;
               if (importState.data.row.lookupQueriesToRun.length === 0) {
                  csvToData(importState, getResourceRow, nextRow); // next iteration
               } else {
                  var lookupQuery = importState.data.row.lookupQueriesToRun.pop();
-                 findDataByType(lookupQuery, function(resourcesFound) {
-                    if (!resourcesFound || resourcesFound.length === 0) {
-                       importState.data.lookupQueryToResource[lookupQuery] = null; // preventing further lookups
-                       importState.data.errors.push({ code : "lookupQueryHasNoResult",
-                          lookupQuery : lookupQuery,
-                          row : importState.data.row.resourceRow }); // NB. not in iteration errors
-                       
-                    } else if (resourcesFound.length === 1) {
-                       var resourceFound = resourcesFound[0];
-                       importState.data.lookupQueryToResource[lookupQuery] = resourceFound;
-                       importState.data.cachedResources[resourceFound['@id']] = resourceFound; // caching for refresh before POSTing
-                       
-                    } else {
-                       importState.data.errors.push({ code : "lookupQueryHasMoreThanOneResult",
-                          lookupQuery : lookupQuery, resourcesFound : resourcesFound,
-                          row : importState.data.row.resourceRow }); // NB. not in iteration errors
+                 findData(lookupQuery, function(resourcesFound) { // NB. works on query AND GET uri
+                    if (resourcesFound) {
+                       var resourceFound = null;
+                       if (resourcesFound instanceof Array) {
+                          if (resourcesFound.length === 0) {
+                             importState.data.lookupQueryToResource[lookupQuery] = null; // preventing further lookups
+                             importState.data.errors.push({ code : "lookupQueryHasNoResult",
+                                lookupQuery : lookupQuery,
+                                row : importState.data.row.resourceRow }); // NB. not in iteration errors
+                             
+                          } else if (resourcesFound.length === 1) {
+                             resourceFound = resourcesFound[0];
+                             
+                          } else {
+                             importState.data.errors.push({ code : "lookupQueryHasMoreThanOneResult",
+                                lookupQuery : lookupQuery, resourcesFound : resourcesFound,
+                                row : importState.data.row.resourceRow }); // NB. not in iteration errors
+                          }
+                       } else if (typeof resourcesFound === 'object' && resourcesFound['@id']) {
+                          resourceFound = resourcesFound;
+                       }
+                       if (resourceFound !== null) {
+                          importState.data.lookupQueryToResource[lookupQuery] = resourceFound;
+                          var rfId = resourceFound['@id'];
+                          if (importState.data.resources[rfId]) {
+                             // already there : merging, in order not to loose fields that are not imported this time ex. o:ancestors
+                             var modelOrMixin = importState.model.modelOrMixins[resourceFound['@type'][0]];
+                             // merge : (gets o:version and missing existing fields, not all @type but recomputed on server anyway)
+                             mergeValues(importState.data.resources[rfId], resourceFound, modelOrMixin['dcmo:globalFields'], importState, true);
+                          }
+                          importState.data.cachedResources[rfId] = resourceFound; // caching for LATER refresh before POSTing
+                       }
                     }
-                    //TODO
                     csvToData(importState, getResourceRow, nextRow); // next iteration
                  }, function(data) {
+                    if (lookupQuery.indexOf('?') !== -1) {
                     var error = (data._body && data._body._body) ? data._body._body : data;
                     importState.data.errors.push({ code : "lookupQueryError",
                        lookupQuery : lookupQuery, error : error,
                        row : importState.data.row.resourceRow }); // NB. not in iteration errors
+                    } // else mere GET refresh query
                     csvToData(importState, getResourceRow, nextRow); // next iteration
                  }, 0, 2); // 2 results are enough to know whether unique
               }
@@ -1533,7 +1587,7 @@
            importState.data.warnings.push(importState.data.row.iteration.warnings[i]);
         }
 
-        if (importState.data.rowNb % 1000 == 1) { // or 100 ? TODO yield !!
+        if (importState.data.rowNb % 5 == 1) { // or 100 ?
            $('.resourceRowCounter').html("Handled <a href=\"#importedJsonFromCsv\">" + importState.data.rowNb + " rows</a>");
         }
         
@@ -1675,8 +1729,7 @@
                importState.data.rInd = getResourceRowStart();
                
                importState.data.columnNames = results.meta.fields;
-               getImportedFieldsModels(importState, nextRowFunction);
-               csvToDataCompleted(importState);///
+               getImportedFieldsModels(importState, nextRowFunction); // NB. nextRowFunction starts resource building
             }
       }
       if ($(".resourceFile").val() != "") {
@@ -2323,6 +2376,7 @@
          return; // already called
       }
       
+      var importState = window.importState;
       if (Object.keys(importState.data.posted.postedResources).length !== 0) {
          displayImportedResourcesPosted(importState.data.posted);
       } else if (importState.data.rowNb !== 0) {
@@ -2335,6 +2389,10 @@
       
       if (msg) {
          msg = "Aborted. " + msg + " ";
+         if (msg instanceof Error) {
+            msg += " in " + msg.fileName + " at " + msg.fileNumber;
+            ///throw msg; // to get the error line in the debugger
+         }
       } else {
          msg = "Aborted. "
       }
@@ -2425,6 +2483,7 @@
                         warnings : null
                   },
                   previousMissingIdFieldResourceOrMixinNb : -1,
+                  missingIdFieldResourceOrMixinNb : -1,
                   lookupQueriesToRun : [], // of URIs, LATER rather of { modelType : '', query : buildUriQuery({ 'fieldName' : 'operatorValueSort }) }
                   done : false
                },*/

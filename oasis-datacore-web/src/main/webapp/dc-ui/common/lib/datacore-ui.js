@@ -521,12 +521,12 @@ function getData(relativeUrl, success, error) {
 // or a {containerUrl (optional), modelType, id, query} object where query is encoded (encode it
 // using buildUriQuery)
 // optional : success, error
-function findData(relativeUrl, success, error) {
+function findData(relativeUrl, success, error, start, limit) {
    if (typeof relativeUrl === 'string') {
       relativeUrl = parseUri(relativeUrl);
    }
    if (relativeUrl.query !== null || relativeUrl.id === null) {
-		return findDataByType(relativeUrl, success, error);
+		return findDataByType(relativeUrl, success, error, start, limit);
 	}
 	return getData(relativeUrl, success, error);
 }
