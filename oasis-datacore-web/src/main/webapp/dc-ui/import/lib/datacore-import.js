@@ -515,7 +515,7 @@
          if (existingMapFound === null) {
             existingList.push(newValueElt);
          } else {
-            mergeValue(existingMapFound, null, newValueElt, listMapFields, importState, noError);
+            mergeValues(existingMapFound, newValueElt, listMapFields, importState, noError);
          }
          
       } else if (!contains(existingList, newValueElt)) { // primitive value not yet in list
@@ -731,7 +731,7 @@
       } else {
          setUrl('');
       }
-      $('.mydata').html(toolifyDcResource(getPartial(importStateRes.postedResources, 50), 0) + "<br/>..."); // , null, parseUri(data.request.path).modelType
+      $('.mydata').html(toolifyDcResourcePartial(importStateRes.postedResources, 50)); // , null, parseUri(data.request.path).modelType
    }
    
    
@@ -1651,15 +1651,15 @@
             + " rows</a> (<a href=\"#datacoreResources\">" + importState.data.errors.length + " errors</a>)");
       if (importState.data.errors.length != 0) {
          //$('.mydata').html(
-         var errorsString = JSON.stringify(getPartial(importState.data.errors, 50), null, '\t').replace(/\n/g, '<br>') + "<br/>...";
-         var warningsString = JSON.stringify(getPartial(importState.data.warnings, 25), null, '\t').replace(/\n/g, '<br>') + "<br/>...";
+         var errorsString = stringifyPartial(importState.data.errors, 50);
+         var warningsString = stringifyPartial(importState.data.warnings, 25);
          $('.importedResourcesFromCsv').html("<b>Errors :</b><br/>" + errorsString
                + "<br/><br/><b>Warnings :</b><br/>" + warningsString);
          
       } else {
          // display full resources only if no errors to display :
          //var resourcesPrettyJson = JSON.stringify(resources, null, '\t').replace(/\n/g, '<br>');
-         var resourcesPrettyJson = toolifyDcResource(getPartial(importState.data.resources, 50), 0);
+         var resourcesPrettyJson = toolifyDcResourcePartial(importState.data.resources, 50);
          $('.importedResourcesFromCsv').html(resourcesPrettyJson + "<br/>...");
       }
    }
@@ -1693,7 +1693,8 @@
       var resourceParsingConf = {
             download: true,
             header: true,
-            preview: getResourceRowStart() + getResourceRowLimit() + 1, // ex. '1' user input means importing title line + 1 more line
+            preview: getResourceRowStart() + getResourceRowLimit() + 1, // ex. '1' user input
+            // means importing title line + 1 more line (first data line)
             /*step: function(row, handle) {
                console.log("Row:", row.data);
                handle.pause();
@@ -1714,7 +1715,7 @@
             complete: function(results) {
                console.log("Remote file parsed!", results);
                ///var results = eval('[' + data.content.data + ']')[0];
-               var prettyJson = JSON.stringify(getPartial(results.data, 10), null, '\t').replace(/\n/g, '<br>') + "<br/>...";
+               var prettyJson = stringifyPartial(results.data, 10);
                $('.importedJsonFromCsv').html(prettyJson);
                // TODO handle errors...
                
@@ -1738,41 +1739,6 @@
          Papa.parse("samples/openelec/electeur_v26010_sample.csv?reload="
                + new Date().getTime(), resourceParsingConf); // to prevent browser caching
       }
-   }
-   
-   function getPartial(arrayOrHashmap, rowNb) {
-      if (arrayOrHashmap instanceof Array) {
-         return getPartialArray(arrayOrHashmap, rowNb);
-      }
-      if (typeof arrayOrHashmap === 'object') {
-         return getPartialHashmap(arrayOrHashmap, rowNb);
-      }
-   }
-   
-   function getPartialArray(array, rowNb) {
-      if (typeof rowNb === 'undefined') {
-         rowNb = 10;
-      }
-      var partialArray = [];
-      for (var pInd = 0; pInd < array.length; pInd++) {
-         partialArray.push(array[pInd]);
-      }
-      return partialArray;
-   }
-   
-   function getPartialHashmap(hashmap, rowNb) {
-      if (typeof rowNb === 'undefined') {
-         rowNb = 10;
-      }
-      var partialHashmap = {};
-      var partialNb = 0;
-      for (var key in hashmap) {
-         if (partialNb++ === rowNb) {
-            break;
-         }
-         partialHashmap[key] = hashmap[key];
-      }
-      return partialHashmap;
    }
 
    function syncGetResourceRow(importState) {
@@ -2520,7 +2486,8 @@
          download: true,
          header: true,
          comments: true, // skip # or // starting lines
-         preview: getModelRowLimit() + 1, // ex. '1' user input means importing title line + 1 more line
+         preview: getModelRowLimit(), // ex. '1' user input means importing
+         // title line + model default line + 1 more (field) line
          complete: function(results) {
             var prettyJson = JSON.stringify(results.data, null, '\t').replace(/\n/g, '<br>');
             $('.importedJsonFromCsv').html(prettyJson);

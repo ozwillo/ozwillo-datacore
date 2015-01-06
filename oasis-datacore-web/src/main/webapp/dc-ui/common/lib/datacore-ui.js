@@ -259,7 +259,7 @@
    }
    
    
-//////////////////////////////////////////////////:
+///////////////////////////////////////////////////
 // PLAYGROUND TOOLIFY
    
 function lineBreak(depth) {
@@ -413,6 +413,62 @@ function toolifyDcListOrResource(valuesOrResource) {
       return toolifyDcResource(valuesOrResource, 0);
    }
 }
+
+function toolifyDcResourcePartial(resources, rowNb) {
+   var partialRes = getPartial(resources, rowNb);
+   return toolifyDcResource(partialRes.res, 0) + ((partialRes.isPartial) ? '<br/>...' : '');
+}
+function stringifyPartial(arrayOrHashmap, rowNb) {
+   var partialRes = getPartial(arrayOrHashmap, rowNb);
+   return JSON.stringify(partialRes.res, null, '\t').replace(/\n/g, '<br>')
+         + ((partialRes.isPartial) ? '<br/>...' : '');
+}
+
+
+///////////////////////////////////////////////////
+// PARTIAL
+
+// returns { isPartial : isPartial, res : partialArrayOrHashmap } 
+function getPartial(arrayOrHashmap, rowNb) {
+   if (arrayOrHashmap instanceof Array) {
+      return getPartialArray(arrayOrHashmap, rowNb);
+   }
+   if (typeof arrayOrHashmap === 'object') {
+      return getPartialHashmap(arrayOrHashmap, rowNb);
+   }
+}
+function getPartialArray(array, rowNb) {
+   if (typeof rowNb === 'undefined') {
+      rowNb = 10;
+   }
+   var partialArray = [];
+   var isPartial = true;
+   if (array.length < rowNb) {
+      rowNb = array.length;
+      isPartial = false;
+   }
+   var partialArrayLength = Math.min(array.length, rowNb);
+   for (var pInd = 0; pInd < partialArrayLength; pInd++) {
+      partialArray.push(array[pInd]);
+   }
+   return { isPartial : isPartial, res : partialArray };
+}
+function getPartialHashmap(hashmap, rowNb) {
+   if (typeof rowNb === 'undefined') {
+      rowNb = 10;
+   }
+   var partialHashmap = {};
+   var partialNb = 0;
+   for (var key in hashmap) {
+      if (partialNb++ === rowNb) {
+         return { isPartial : true, res : partialHashmap };
+      }
+      partialHashmap[key] = hashmap[key];
+   }
+   return { isPartial : false, res : partialHashmap };
+}
+
+
 function setUrl(relativeUrl, dontUpdateDisplay) {
    if (dontUpdateDisplay || !doUpdateDisplay) {
       return false;
@@ -453,10 +509,10 @@ function setError(errorMsg) {
 }
 
 
-//////////////////////////////////////////////////:
+///////////////////////////////////////////////////
 // API
 
-//////////////////////////////////////////////////:
+///////////////////////////////////////////////////
 // READ
 
 // relativeUrl must be an encoded URI (encode it using builUri and buildUriQuery)
@@ -565,7 +621,7 @@ function findDataByTypeRdf(relativeUrl, success, error, start, limit) {
 }
 
 
-//////////////////////////////////////////////////:
+///////////////////////////////////////////////////
 // WRITE
 
 // relativeUrl must be an encoded URI (encode it using builUri) or a {modelType} object,
@@ -654,7 +710,7 @@ function postAllData(resources, success, error) {
 }
 
 
-///////////////////////
+///////////////////////////////////////////////////
 // DISPLAY CALLBACKS
 
 var doUpdateDisplay = true;
@@ -725,7 +781,7 @@ function displayJsonListResult(data, dontUpdateDisplay) {
 }
 
 
-//////////////////////////////////////////////////:
+///////////////////////////////////////////////////
 // PLAYGROUND ADVANCED BROWSING
 
 function findLinkedData(resourceUri, linkingModelType, queryFieldPath) {
@@ -849,7 +905,7 @@ function displayModelMixinLinks(linkedResource, parsedUri, linkingModelType) {
 }
 
 
-///////////////////////
+///////////////////////////////////////////////////
 // MODEL MANIPULATION
 
 function findResource(resources, criteria) {
