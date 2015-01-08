@@ -40,6 +40,24 @@
          $('.domainPrefix').val(buildModelDomainPrefix($in.val()));
       });
   });
+   
+   function getImportStateConf() {
+      return {
+            domainPrefix : $(".domainPrefix").val(), // changed by UI on model file select to its first three letters, else elec
+            model : {
+               fileName : $(".modelFile").val(),
+               file : $(".modelFile"),
+               rowLimit : parseInt($(".modelRowLimit").val(), 10)
+            },
+            data : {
+               fileName : $(".resourceFile").val(),
+               file : $(".resourceFile"),
+               rowLimit : parseInt($(".resourceRowLimit").val(), 10),
+               rowStart : parseInt($(".resourceRowStart").val(), 10),
+               detailedErrors : $('.resourceDetailedErrors').is(':checked') 
+            }
+      };
+   }
 
   </script>
 </head>
@@ -89,6 +107,9 @@ Geo Mapping
 &nbsp;&nbsp;&nbsp;&nbsp;
 <span title="0 means at the beginning">start</span> :
 <input type="text" class="resourceRowStart" value="0" style="width: 50px"/>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<span>detailed errors</span> :
+<input type="checkbox" class="resourceDetailedErrors" checked="checked"/>
 <br/><br/>
 <input type="file" class="resourceFile"/>
 &nbsp;&nbsp;&nbsp;&nbsp;
@@ -116,7 +137,7 @@ v0.2
 </div>
 
 <div class="dc-import-section">
-<button class="dc-import-button" onclick="javascript:return importModelAndResources();"><b>import</b></button>
+<button class="dc-import-button" onclick="javascript:return importModelAndResources(getImportStateConf());"><b>import</b></button>
 &nbsp;(clicking button with no file selected uses OpenElec sample files)
 <br/><br/>
 <b>WARNING if Resources that depend on others are not imported, click button again</b>

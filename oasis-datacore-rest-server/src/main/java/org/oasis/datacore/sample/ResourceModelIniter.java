@@ -140,6 +140,9 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addField(new DCListField("dcmo:mixins", new DCField("useless", "string", false, 100)))
          .addField(new DCListField("dcmo:fieldAndMixins", new DCField("useless", "string", false, 100), true))
          
+         .addField(new DCField("dcmo:importDefaultOnly", "boolean", (Object) false, 100))
+         .addField(new DCField("dcmo:importAutolinkedOnly", "boolean", (Object) false, 100))
+         
          // storage :
          .addField(new DCField("dcmo:maxScan", "int", 0, 0)) // not "required"
          

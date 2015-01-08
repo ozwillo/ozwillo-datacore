@@ -293,7 +293,7 @@
    
    function hasMixin(modelOrMixinResourceOrName, mixinName, importState) {
       var modelOrMixinResource = (typeof modelOrMixinResourceOrName === 'string') ?
-            findMixin(modelOrMixinResourceOrName, importState.data.involvedMixins) : modelOrMixinResourceOrName;
+            importState.data.involvedMixins[modelOrMixinResourceOrName] : modelOrMixinResourceOrName;
       return contains(modelOrMixinResource["dcmo:globalMixins"], mixinName);
    }
 
@@ -732,24 +732,42 @@
    }
    
 
-   function log(importState, logs, code, detailsMap) {
-      if (!logs) {
-         return null; // TODO might be in model import ??
+   // severity : error or warning (log list name id deduced by adding ('s')
+   function log(importState, severity, code, detailsMap) {
+      var logListName = severity + 's';
+      var log = { code : code };
+      if (importState.data.row) {
+         if (importState.data.row.iteration) {
+            logs = importState.data.row.iteration[logListName];
+            // iteration default info :
+         } else {
+            logs = importState.data[logListName];
+         }
+         // row default info :
+         log.path = importState.data.row.pathInFieldNameTree.join('.');
+      } else {
+         logs = importState.model[logListName];
+         // NB. happens when mergeValue() used in model field parsing
       }
-      var log = { code : code, path : importState.data.row.pathInFieldNameTree.join('.') };
       logs.push(log);
       if (detailsMap) {
          for (var key in detailsMap) {
             log[key] = detailsMap[key];
          }
       }
+      if (importState.data.row) {
+         // post details row default info :
+         if (importState.data.detailedErrors) {
+            log.resources = importState.data.row.modelTypeToRowResources;
+         }
+      }
       return log;
    }
    function resourceError(importState, code, detailsMap) {
-      return log(importState, importState.data.row.iteration.errors, code, detailsMap);
+      return log(importState, 'error', code, detailsMap);
    }
    function resourceWarning(importState, code, detailsMap) {
-      return log(importState, importState.data.row.iteration.warnings, code, detailsMap);
+      return log(importState, 'warning', code, detailsMap);
    }
    
    
@@ -760,7 +778,7 @@
       var resourceMixinOrFields;
       if (fieldOrListFieldType === 'resource') {
          // resource tree : looking for value in an (indirectly) referenced resource
-         resourceMixinOrFields = findMixin(resourceType, importState.data.involvedMixins);
+         resourceMixinOrFields = importState.data.involvedMixins[resourceType];
          if (typeof resourceMixinOrFields === 'undefined') {
             resourceError(importState, 'unknownReferencedMixin', { referencedMixin : resourceType,
                   message : "ERROR can't find resource field referenced mixin "
@@ -809,7 +827,7 @@
          return null;
       }
       
-      var subresourceModel = findMixin(subresource['@type'][0], importState.data.involvedMixins);
+      var subresourceModel = importState.data.involvedMixins[subresource['@type'][0]];
       if (subresourceModel/*resourceMixinOrFields*/['dcmo:isInstanciable']) { // resource with (probably) exact instance model type ;
          // TODO TODO better is subresource ex. storage(Path) == modelx/path ; typeof value !== 'undefined' && value != null && value.length != 0
          // adding it :
@@ -1036,8 +1054,13 @@
          // create or find & update resource :
          
          var mixinMustBeImported = mixinHasValue
-               || mixinHasAutolinkedValue && importState.model.defaultRow['importAutolinkedOnly'] !== 'false' // autolinking not enough to build id ?
-               || mixinHasDefaultValue && importState.model.defaultRow['importDefaultOnly'] !== 'false';
+               || mixinHasAutolinkedValue && mixin['dcmo:importAutolinkedOnly']
+               // whose default is true in 1. free design phase. In 2. unify phase, default is false
+               // and it may be true only for singletons ex. CountryFR/FR (otherwise an id field must be provided in data),
+               // allowing to skip trying to import mixins whose internal field names are not among data columns titles)
+               || mixinHasDefaultValue && mixin['dcmo:importDefaultOnly'];
+               // whose default is true in 1. free design phase. In 2. unify phase, default is false,
+               // allowing to skip trying to import mixins whose internal field names are not among data columns titles)
          
          // build id :
          var id = null; // NB. id is encoded as URIs should be, BUT must be decoded before used as GET URI
@@ -1443,6 +1466,7 @@
         importState.data.row = {
               loopIndex : 0,
               resourceRow : getResourceRow(importState),
+              blockedModelTypeSet : {},
               modelTypeToRowResources : {},
               fieldNameTreeStack : [],
               pathInFieldNameTree : [], // for logging only
@@ -1462,17 +1486,20 @@
            };
         
         var importedResource;
-        for (var mInd in importState.data.involvedMixins) {
+        for (var mixinName in importState.data.importableMixins) { // rather than whole involvedMixins
              // for each mixin, find its values in the current row :
-             var mixin = importState.data.involvedMixins[mInd];
+             var mixin = importState.data.importableMixins[mixinName];
              
              if (!mixin["dcmo:isInstanciable"]) {
                 continue; // don't import models that are strictly mixins ex. o:Ancestor_0 or geo:Area_0
              }
+             if (importState.data.row.blockedModelTypeSet[mixinName]) {
+                continue; // don't import models where no value has been found in this row
+             }
              
              try {
-                importState.data.row.fieldNameTreeStack.push(importState.model.mixinNameToFieldNameTree[mixin["dcmo:name"]]);
-                importState.data.row.pathInFieldNameTree.push(mixin["dcmo:name"]);
+                importState.data.row.fieldNameTreeStack.push(importState.model.mixinNameToFieldNameTree[mixinName]);
+                importState.data.row.pathInFieldNameTree.push(mixinName);
              importedResource = csvRowToDataResource(mixin, importState.data.row.resourceRow, null,
                    importState.data.row.modelTypeToRowResources, importState);
              } catch (e) {
@@ -1488,7 +1515,8 @@
              }
              
              if (importedResource == null) {
-                // nothing to import (or only autolinked values), skip resource
+                // nothing to import (or only autolinked values), remember to skip mixin in next iteration and rows
+                importState.data.row.blockedModelTypeSet[mixinName] = mixin;
              } else {
                 addResource(importedResource, mixin, importState, true); // DO add to modelTypeToRowResources for autolinking because top level
              }
@@ -1649,28 +1677,9 @@
          $('.importedResourcesFromCsv').html(resourcesPrettyJson + "<br/>...");
       }
    }
-  
-   function getResourceRowLimit() {
-      var resourceRowLimit = parseInt($(".resourceRowLimit").val(), 10);
-      if (typeof resourceRowLimit === 'number') { // && resourceRowLimit < 500
-         return resourceRowLimit;
-      }
-      return 50;
-   }
-   function getResourceRowStart() {
-      var resourceRowStart = parseInt($(".resourceRowStart").val(), 10);
-      if (typeof resourceRowStart === 'number' && resourceRowStart > 0) { // && resourceRowStart < 50000
-         return resourceRowStart;
-      }
-      return 0;
-   }
-   function resetResourceCounters() {
-      $('.resourceRowCounter').html("Handled no resource row yet");
-      $('.resourceCounter').html("Posted no resource yet");
-   }
    
    function fillData(importState) {
-      if (getResourceRowLimit() == 0) {
+      if (importState.data.rowLimit == 0) {
          return;
       } // else > 0, or -1 means all ; or 
       
@@ -1679,7 +1688,7 @@
       var resourceParsingConf = {
             download: true,
             header: true,
-            preview: getResourceRowStart() + getResourceRowLimit() + 1, // ex. '1' user input
+            preview: importState.data.rowStart + importState.data.rowLimit + 1, // ex. '1' user input
             // means importing title line + 1 more line (first data line)
             /*step: function(row, handle) {
                console.log("Row:", row.data);
@@ -1712,17 +1721,20 @@
                };
                
                importState.data.rows = results.data;
-               importState.data.rLength = Math.min(importState.data.rows.length, getResourceRowStart() + getResourceRowLimit());
-               importState.data.rInd = getResourceRowStart();
+               importState.data.rLength = Math.min(importState.data.rows.length, importState.data.rowStart + importState.data.rowLimit);
+               importState.data.rInd = importState.data.rowStart;
                
                importState.data.columnNames = results.meta.fields;
                getImportedFieldsModels(importState, nextRowFunction); // NB. nextRowFunction starts resource building
             }
       }
-      if ($(".resourceFile").val() != "") {
-         $(".resourceFile").parse({ config : resourceParsingConf });
+
+      // starting parsing :
+      if (importState.data.file) {
+         importState.data.file.parse({ config : resourceParsingConf });
       } else {
-         Papa.parse("samples/openelec/electeur_v26010_sample.csv?reload="
+         // file must be online at this relative location (case of default file)
+         Papa.parse(importState.data.fileName + "?reload="
                + new Date().getTime(), resourceParsingConf); // to prevent browser caching
       }
    }
@@ -1747,6 +1759,19 @@
          if (dataColumnName.indexOf(':') !== -1 && fieldNamesWithInternalNameMap[dataColumnName] === null) {
             importState.data.importedFieldNames.push(dataColumnName);
          }
+
+         // add its mixin to importableMixins :
+         var mixinName = importState.model.fieldInternalNameToMixinName[dataColumnName];
+         if (mixinName) {
+            // importable only if has an internalFieldName among data column names
+            var importableMixin = importState.model.modelOrMixins[mixinName];
+            if (!importableMixin['dcmo:isInstanciable']) { // TODO error
+               resourceError(importState, 'dataColumnNameIsFieldInternalNameOfNonInstanciableMixin',
+                     { mixin : importableMixin, dataColumnName : dataColumnName });
+            } else {
+               importState.data.importableMixins[mixinName] = importableMixin;  
+            }
+         }
       }
       
       // BEWARE limited to 10 by default !!!!!! and 100 max !!
@@ -1765,7 +1790,7 @@
                if (typeof modelOrMixin === 'undefined') {
                   continue; // not used, ex. unused mixin that inherits a used field
                }
-               importState.data.involvedMixins.push(involvedMixin);
+               importState.data.involvedMixins[involvedMixin['dcmo:name']] = involvedMixin;
                
                // global mixins :
                modelOrMixin["dcmo:globalMixins"] = involvedMixin["dcmo:globalMixins"];
@@ -1788,6 +1813,13 @@
                   } // else ex. field not local
                   // let's add it as global fields in the modelOrMixin shortcuts :
                   enrichedModelOrMixinFieldMap[fieldName] = involvedMixinField;
+               }
+
+               // add to importableMixins if default importable (even without data) : 
+               if (involvedMixin['dcmo:isInstanciable']
+                     && (involvedMixin['dcmo:importDefaultOnly'] // && has default value (logically)
+                     || involvedMixin['dcmo:importAutolinkedOnly'])) {
+                  importState.data.importableMixins[involvedMixin["dcmo:name"]] = involvedMixin;
                }
             }
 
@@ -2006,6 +2038,11 @@
            mergeStringValueOrDefaultIfAny(mixin, "dcmo:documentation", fieldRow["documentation"], importState.metamodel["dcmo:model_0"], importState); // TODO required
            mergeStringValueOrDefaultIfAny(mixin, "dcmo:mixins", fieldRow["Has Mixins"], importState.metamodel["dcmo:model_0"], importState);
            mergeStringValueOrDefaultIfAny(mixin, "dcmo:fieldAndMixins", fieldRow["fieldAndMixins"], importState.metamodel["dcmo:model_0"], importState);
+
+           mergeStringValueOrDefaultIfAny(mixin, "dcmo:importDefaultOnly", fieldRow["importDefaultOnly"],
+                 importState.metamodel["dcmo:model_0"], importState, importState.model.defaultRow['importDefaultOnly']);
+           mergeStringValueOrDefaultIfAny(mixin, "dcmo:importAutolinkedOnly", fieldRow["importAutolinkedOnly"],
+                 importState.metamodel["dcmo:model_0"], importState, importState.model.defaultRow['importAutolinkedOnly']);
            
            mergeStringValueOrDefaultIfAny(mixin, "dcmoid:idGenJs", fieldRow["idGenJs"], importState.metamodel["dcmo:model_0"], importState);
            mergeStringValueOrDefaultIfAny(mixin, "dcmoid:useIdForParent", fieldRow["useIdForParent"],
@@ -2118,9 +2155,11 @@
                     "string");
               mergeImportConfStringValue(fieldNameTreeCur[fieldName], 'importconf:defaultStringValue',
                     fieldRow["defaultValue"], "string");
-              if (fieldNameTreeCur[fieldName]['importconf:internalName'] !== null) {
+              var fieldInternalName = fieldNameTreeCur[fieldName]['importconf:internalName'];
+              if (fieldInternalName !== null) {
                  importState.model.fieldNamesWithInternalNameMap[fieldName] = null; // used as a set
               }
+              importState.model.fieldInternalNameToMixinName[fieldInternalName] = mixin['dcmo:name']; // to filter importableMixins
            } // else may have already been seen within fieldPath
            
            // TODO also mixins, resource links & sub...
@@ -2302,12 +2341,39 @@
       }
    }
 
-   function getModelRowLimit() {
-      var modelRowLimit = parseInt($(".modelRowLimit").val(), 10);
-      if (typeof modelRowLimit === 'number') { // && resourceRowLimit < 500
-         return modelRowLimit;
-      }
-      return -1;
+   function loadConf(importStateConf, importState) {
+      importState.domainPrefix = importStateConf.domainPrefix; // changed by UI on model file select to its first three letters, else elec
+      
+      // model :
+      if (typeof importStateConf.model.rowLimit === 'number') { // && importStateConf.model.rowLimit < 500
+         importState.model.rowLimit = importStateConf.model.rowLimit;
+      } // else use default
+      
+      if (importStateConf.model.fileName && importStateConf.model.fileName !== "") {
+         importState.model.fileName = importStateConf.model.fileName;
+         importState.model.file = importStateConf.model.file;
+      } // else use default
+      
+      // resource :
+      if (typeof importStateConf.data.rowLimit === 'number') { // && importStateConf.data.rowLimit < 500
+         importState.data.rowLimit = importStateConf.data.rowLimit;
+      } // else use default
+
+      if (typeof importStateConf.data.rowStart !== 'number' && importStateConf.data.rowStart > 0) { // && importStateConf.data.rowStart < 50000
+         importState.data.rowStart = importStateConf.data.rowStart;
+      } // else use default
+      
+      importState.data.detailedErrors = importStateConf.data.detailedErrors;
+      
+      if (importStateConf.data.fileName && importStateConf.data.fileName !== "") {
+         importState.data.fileName = importStateConf.data.fileName;
+         importState.data.file = importStateConf.data.file;
+      } // else use default
+   }
+   
+   function resetResourceCounters() {
+      $('.resourceRowCounter').html("Handled no resource row yet");
+      $('.resourceCounter').html("Posted no resource yet");
    }
    function resetModelCounters() {
       $('.modelRowCounter').html("Handled no model row yet");
@@ -2358,7 +2424,7 @@
       delete window.importState;
       $('.dc-import-button').html('<b>import</b>');
    }
-   function importModelAndResources() {
+   function importModelAndResources(importStateConf) {
       if (window.importState) {
          window.importState.aborted = true;
          $('.dc-import-button').html('aborted');
@@ -2393,11 +2459,17 @@
             mixinMajorVersion : 0, // TODO better
             metamodel : {},
             model : {
-               fileName : '', // set below
+               // conf :
+               domainPrefix : 'elec',
+               rowLimit : -1,
+               // state :
+               file : null,
+               fileName : 'samples/openelec/oasis-donnees-metiers-openelec.csv',
                defaultRow : {},
                modelOrMixins : {}, // NOOOO MUST NOT BE USED outside of csvToModel because have no global fields, rather use .data.involvedMixins
                mixinNameToFieldNameTree : {},
                fieldNamesWithInternalNameMap : {}, // used as set to get all models or mixins that are imported
+               fieldInternalNameToMixinName : {}, // to filter importableMixins
                ///modelOrMixinArray : null, // MUST NOT BE USED outside of csvToModel because have no global fields, rather use .data.involvedMixins
                ///mixinArray : null, // MUST NOT BE USED outside of csvToModel because have no global fields, rather use .data.involvedMixins
                modelArray : null, // MUST NOT BE USED outside of csvToModel because have no global fields, rather use .data.involvedMixins
@@ -2417,9 +2489,15 @@
                }
             },
             data : {
-               fileName : '', // set below
+               // conf :
+               rowLimit : 50,
+               rowStart : 0,
+               // state :
+               file : null,
+               fileName : 'samples/openelec/electeur_v26010_sample.csv',
                columnNames : null,
-               involvedMixins : [],
+               involvedMixins : {}, // name to mixin map
+               importableMixins : {}, // name to mixin map
                rows : null,
                rowNb : 0,
                rInd : 0, // current row number, not in pull parser mode
@@ -2427,13 +2505,14 @@
                /*row : { // current row
                   loopIndex : 0,
                   resourceRow : null,
+                  blockedModelTypeSet : {},
                   modelTypeToRowResources : {},
                   fieldNameTreeStack : [],
                   pathInFieldNameTree : [], // for logging only
                   iteration : {
-                        missingIdFieldMixinToResources : null,
-                        errors : null,
-                        warnings : null
+                        missingIdFieldMixinToResources : {},
+                        errors : [],
+                        warnings : []
                   },
                   previousMissingIdFieldResourceOrMixinNb : -1,
                   missingIdFieldResourceOrMixinNb : -1,
@@ -2445,6 +2524,7 @@
                resources : {},
                warnings : [],
                errors : [],
+               detailedErrors : true,
                posted : {
                   errors : [], // not used yet
                   warnings : [], // not used yet
@@ -2459,7 +2539,14 @@
             }
       }
       window.importState = importState; // making available globally for abort
+
+
+      // load custom conf if any :
+      if (importStateConf) {
+         loadConf(importStateConf, importState);
+      } // else using defaults
       
+      // loading existing metamodel : 
       findDataByType({ modelType : 'dcmo:model_0', query : new UriQuery(
          'dcmo:name', '$regexdcm.*'
       ).s() }, function (resources) {
@@ -2467,13 +2554,13 @@
             var modelResource = resources[mmInd];
             importState["metamodel"][modelResource["dcmo:name"]] = modelResource;
          }
-         
+
          
       var modelParsingConf = {
          download: true,
          header: true,
          comments: true, // skip # or // starting lines
-         preview: getModelRowLimit(), // ex. '1' user input means importing
+         preview: importState.model.rowLimit, // ex. '1' user input means importing
          // title line + model default line + 1 more (field) line
          complete: function(results) {
             var prettyJson = JSON.stringify(results.data, null, '\t').replace(/\n/g, '<br>');
@@ -2503,14 +2590,12 @@
             });
          }
       };
-
-
-      importState.domainPrefix = $(".domainPrefix").val(); // changed by UI on model file select to its first three letters, else elec
-      importState.model.fileName = $(".modelFile").val();
-      if (importState.model.fileName !== "") {
-         $(".modelFile").parse({ config : modelParsingConf });
+      
+      // starting parsing :
+      if (importState.model.file) {
+         importState.model.file.parse({ config : modelParsingConf });
       } else {
-         importState.model.fileName = "samples/openelec/oasis-donnees-metiers-openelec.csv";
+         // file must be online at this relative location (case of default file)
          Papa.parse(importState.model.fileName + "?reload="
                + new Date().getTime(), modelParsingConf); // to prevent browser caching
       }
