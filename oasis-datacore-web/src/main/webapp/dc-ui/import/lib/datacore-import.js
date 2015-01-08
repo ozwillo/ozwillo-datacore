@@ -1377,10 +1377,10 @@
                   }
                
                   if (mixin['dcmoid:parentFieldNames'].length !== parentUris.length) {
-                     resourceError(importState, 'missingValueForParentField',
+                     resourceWarning(importState, 'missingValueForParentField',
                         { parentUris : parentUris, parentFieldNames : mixin['dcmoid:parentFieldNames'],
                         resource : resource });
-                     ///return resource; // prevent it from being added to resources to force it to compute parents again
+                     ///return resource; // no need to prevent it from being added to resources to force it to compute parents again because always recomputed
                      
                   }/* else {*/
                   // NB. parents can be optional (ex. some very few CityFR have no CommunauteDeCommune),
