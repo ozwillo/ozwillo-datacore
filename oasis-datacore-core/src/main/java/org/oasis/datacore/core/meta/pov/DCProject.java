@@ -138,43 +138,59 @@ public class DCProject extends DCPointOfViewBase {
       return modelMap.get(type);
    }
    
-   public DCModelBase getDefinitionModel(String type) {
-      String inheritedType = type;
-      DCModelBase model;
+   // can't return null (explodes)
+   public DCModelBase getDefinitionModel(DCModelBase model) {
       // TODO cache :
-      while ((model = this.getModel(inheritedType)) != null) {
-         if (model.isDefinition()) {
-            return model;
+      if (model == null) {
+         return null;
+      }
+      DCModelBase inheritanceParentModel = model;
+      String inheritedType;
+      do {
+         if (inheritanceParentModel.isDefinition()) {
+            return inheritanceParentModel;
          }
          // get inherited type i.e. first mixin :
          // TODO or rather visit the full mixin hierarchy in order ??
-         if (model.getMixinNames().isEmpty()) {
-            throw new ModelNotFoundException(type, this, "Unable to find any definition model");
+         if (inheritanceParentModel.getMixinNames().isEmpty()) {
+            throw new ModelNotFoundException(inheritanceParentModel, this, "Unable to find any definition model");
          }
 
-         inheritedType = model.getMixinNames().iterator().next(); // TODO or from cache
-      }
-      throw new ModelNotFoundException(inheritedType, this, "Can't find model "
-            + " while looking for definition of type " + type);
+         // get its first ("inheritance parent") mixin
+         inheritedType = inheritanceParentModel.getMixinNames().iterator().next(); // TODO or from cache
+         inheritanceParentModel = this.getModel(inheritedType);
+      } while (inheritanceParentModel != null);
+      throw new ModelNotFoundException(inheritedType, this, "Can't find definition model "
+            + "while looking for definition of type " + model.getName()
+            + " in project " + this.getName());
    }
-   public DCModelBase getStorageModel(String type) {
-      String inheritedType = type;
-      DCModelBase model;
+   /** returns null if abstract model */
+   public DCModelBase getStorageModel(DCModelBase model) {
       // TODO cache :
-      while ((model = this.getModel(inheritedType)) != null) {
-         if (model.isStorage()) {
-            return model;
+      if (model == null) {
+         return null;
+      }
+      DCModelBase inheritanceParentModel = model;
+      String inheritedType;
+      do {
+         if (inheritanceParentModel.isStorage()) {
+            return inheritanceParentModel;
          }
          // get inherited type i.e. first mixin :
          // TODO or rather visit the full mixin hierarchy in order ??
-         if (model.getMixinNames().isEmpty()) {
-            return null; // no inherited model, so storage might be in more generic types
+         if (inheritanceParentModel.getMixinNames().isEmpty()) {
+            ///throw new ModelNotFoundException(inheritanceParentModel, this, "Unable to find any storage model");
+            return null; // abstract model
          }
-         
-         inheritedType = model.getMixinNames().iterator().next(); // TODO or from cache
-      }
-      throw new ModelNotFoundException(inheritedType, this, "Can't find model "
-            + " while looking for storage of type " + type);
+
+         // get its first ("inheritance parent") mixin
+         inheritedType = inheritanceParentModel.getMixinNames().iterator().next(); // TODO or from cache
+         inheritanceParentModel = this.getModel(inheritedType);
+      } while (inheritanceParentModel != null);
+      /*throw new ModelNotFoundException(inheritedType, this, "Can't find storage model "
+            + "while looking for definition of type " + model.getName()
+            + " in project " + this.getName());*/
+      return null; // abstract model
    }
 
    /*public DCStorage getVisibleProject(String type) { // TODO or in projectService ?!

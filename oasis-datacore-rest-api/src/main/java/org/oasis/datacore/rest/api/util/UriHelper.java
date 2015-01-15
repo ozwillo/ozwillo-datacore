@@ -116,15 +116,27 @@ public class UriHelper {
    }
    
    /**
+    * No check for now.
+    * NB. checking for URL_ALWAYS_SAFE_CHARACTERS only when not
+    * country / language specific is done rather in ModelResourceMappingService
     * @param modelType must not contain URL_ALWAYS_SAFE_CHARACTERS (best practice)
     * @throws IllegalArgumentException otherwise
     */
    public static void checkModelType(String modelType) {
+      /*
       if (notUrlAlwaysSafeCharactersPattern.matcher(modelType).find()) {
          throw new IllegalArgumentException("Model type does not follow best practice rule "
                + " of not containing URL always safe or colon characters i.e. "
                + NOT_URL_ALWAYS_SAFE_OR_COLON_CHARACTERS_REGEX);
-      }
+      }*/
+   }
+   /**
+    * Used by ModelResourceMappingService to check model type when not country / language specific
+    * @param modelType
+    * @return
+    */
+   public static boolean hasUrlAlwaysSafeCharacters(String modelType) {
+      return !notUrlAlwaysSafeCharactersPattern.matcher(modelType).find();
    }
    
    /**

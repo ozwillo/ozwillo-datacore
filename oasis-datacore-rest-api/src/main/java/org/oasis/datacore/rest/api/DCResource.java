@@ -282,6 +282,9 @@ public class DCResource {
    public void setProperty(String name, Object value) {
       this.properties.put(name, value);
    }
+   public void setProperties(Map<String, Object> properties) {
+      this.properties = properties;
+   }
    
    public String getUri() {
       return uri;

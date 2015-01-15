@@ -118,46 +118,51 @@ public class ResourceService {
       return resource;
    }
    
-   
 
    /**
-    * TODO: replace modelType with the DCModel you want to use
+    * Helper without event but with canCreate, canUpdate, putRatherThanPatchMode
+    * FOR CLEANING RESOURCE PRIORI TO COMPUTING FIELDS & TESTING MAINLY
     * @param resource
-    * @param modelType TODO rather DCModel to allow storing same model in different places (contributions, storage strategy...)
-    * @param canCreate
-    * @param canUpdate
-    * @param putRatherThanPatchMode 
+    * @param modelType
     * @return
-    * @throws ResourceTypeNotFoundException if unknown model type
+    * @throws ExternalResourceException
+    * @throws ResourceTypeNotFoundException
     * @throws ResourceNotFoundException
-    * @throws BadUriException if missing (null), malformed, syntax,
-    * relative without type, uri's and given modelType don't match
-    * @throws ResourceParsingException
+    * @throws BadUriException
     * @throws ResourceObsoleteException
-    * @throws ResourceException if no data (null resource), forbidden version in strict POST mode,
-    * missing required version in PUT mode,
+    * @throws ResourceException
     */
-   public DCResource createOrUpdate(DCResource resource, String modelType,
-         boolean canCreate, boolean canUpdate, boolean putRatherThanPatchMode)
+   public DCEntity resourceToEntity(DCResource resource)
                throws ExternalResourceException, ResourceTypeNotFoundException, ResourceNotFoundException,
                BadUriException, ResourceObsoleteException, ResourceException {
-      // TODO pass request to validate ETag,
-      // or rather in a CXF ResponseHandler (or interceptor but closer to JAXRS 2) see http://cxf.apache.org/docs/jax-rs-filters.html
-      // by getting result with outMessage.getContent(Object.class), see ServiceInvokerInterceptor.handleMessage() l.78
-      // conf :
-      // TODO header or param...
-      ///boolean detailedErrorsMode = true;
-      ///boolean matchBaseUrlMode = true;
-      ///boolean normalizeUrlMode = true;
+      return this.resourceToEntity(resource, resource.getModelType(), true, true, true, false);
+   }
 
-      boolean isCreation = true;
+   /**
+    * Similar to createOrUpdate() (by which it is called) save for persistence,
+    * i.e. does all ABOUT_TO_BUILD event, checks & resource parsing until
+    * ABOUT_TO_CREATE/UPDATE event excepted.
+    * @param resource
+    * @param modelType
+    * @param canCreate
+    * @param canUpdate
+    * @param putRatherThanPatchMode
+    * @return
+    * @throws ExternalResourceException
+    * @throws ResourceTypeNotFoundException
+    * @throws ResourceNotFoundException
+    * @throws BadUriException
+    * @throws ResourceObsoleteException
+    * @throws ResourceException
+    */
+   public DCEntity resourceToEntity(DCResource resource, String modelType,
+         boolean canCreate, boolean canUpdate, boolean putRatherThanPatchMode, boolean triggerEvent)
+               throws ExternalResourceException, ResourceTypeNotFoundException, ResourceNotFoundException,
+               BadUriException, ResourceObsoleteException, ResourceException {
       
       DCProject project = modelService.getProject(); // TODO TODO explode if none 
-
-      if (resource == null) {
-         throw new ResourceException("No data (modelType = " + modelType + ")", null, project);
-      }
       
+      boolean isCreation = true;
       Long version = resource.getVersion();
       if (version != null && version >= 0) { // version < 0 means new
          if (!canUpdate) {
@@ -180,7 +185,7 @@ public class ResourceService {
                + "In this case, the missing model must first be created again, "
                + "before patching the entity.", null, resource, project);
       }
-      DCModelBase storageModel = modelService.getStorageModel(modelType); // TODO cache, in context ?
+      DCModelBase storageModel = modelService.getStorageModel(dcModel); // TODO cache, in context ?
       if (storageModel == null) {
          // TODO LATER OPT client side might deem it a data health / governance problem,
          // and put it in the corresponding inbox
@@ -190,7 +195,7 @@ public class ResourceService {
                + "has changed since (only in test). In this case, the missing model must first "
                + "be created again, before patching the entity.", null, resource, project);
       }
-      modelType = dcModel.getName(); // normalize ; TODO useful ?
+      modelType = dcModel.getName(); // normalize ; not useful yet, only TODO LATER IF ex. CountryFR aliasable from Country
       
       
       // TODO in resourceService.build() :
@@ -202,7 +207,9 @@ public class ResourceService {
       } // else TODO better add missing ones, or allow them if optional...
       // pre parse hooks (before parsing, to give them a chance to still patch resource ex. auto set uri & id / iri)
       // TODO better as 2nd pass / within parsing ?? or rather on entity ????
-      eventService.triggerResourceEvent(DCResourceEvent.Types.ABOUT_TO_BUILD, resource);
+      if (triggerEvent) {
+         eventService.triggerResourceEvent(DCResourceEvent.Types.ABOUT_TO_BUILD, resource);
+      }
       
       
       String stringUri = resource.getUri();
@@ -249,8 +256,6 @@ public class ResourceService {
          }
       }
       
-      /**/
-      
       // supporting PUT vs default PATCH-like POST mode :
       if (dataEntity == null) {
          dataEntity = new DCEntity();
@@ -262,6 +267,7 @@ public class ResourceService {
          if (putRatherThanPatchMode) {
             dataEntity.getProperties().clear();
          } // else reuse existing entity as base : PATCH-like behaviour
+         // NB. cached model has been set at entity get
       }
 
       Map<String, Object> dataProps = resource.getProperties();
@@ -283,6 +289,61 @@ public class ResourceService {
          String msg = DCResourceParsingContext.formatParsingErrorsMessage(resourceParsingContext, detailedErrorsMode);
          throw new ResourceException(msg, resource, project);
       } // else TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
+
+      resourceEntityMapperService.entityToResource(dataEntity, resource);
+      // NB. rather than manually updating resource, because props may have changed
+      // (ex. if POST/PATCH of a null prop => has not actually been removed)
+      // ((and LATER possibly because of behaviours))
+      // NB. done before ABOUT_TO_ events so that they can do their checks on the cleaned up resource
+      // NB. only thing to still change is persistence-computed fields : o:version...
+      
+      return dataEntity;
+   }
+   
+
+   /**
+    * Does some checks, calls resourceToEntity() which does all checks,
+    * then persists (including history) ; calls events : (ABOUT_TO_)CREATE/UPDATE(D).
+    * @param resource
+    * @param modelType TODO rather DCModel to allow storing same model in different places (contributions, storage strategy...)
+    * @param canCreate
+    * @param canUpdate
+    * @param putRatherThanPatchMode 
+    * @return
+    * @throws ResourceTypeNotFoundException if unknown model type
+    * @throws ResourceNotFoundException
+    * @throws BadUriException if missing (null), malformed, syntax,
+    * relative without type, uri's and given modelType don't match
+    * @throws ResourceParsingException
+    * @throws ResourceObsoleteException
+    * @throws ResourceException if no data (null resource), forbidden version in strict POST mode,
+    * missing required version in PUT mode,
+    */
+   public DCResource createOrUpdate(DCResource resource, String modelType,
+         boolean canCreate, boolean canUpdate, boolean putRatherThanPatchMode)
+               throws ExternalResourceException, ResourceTypeNotFoundException, ResourceNotFoundException,
+               BadUriException, ResourceObsoleteException, ResourceException {
+      // TODO pass request to validate ETag,
+      // or rather in a CXF ResponseHandler (or interceptor but closer to JAXRS 2) see http://cxf.apache.org/docs/jax-rs-filters.html
+      // by getting result with outMessage.getContent(Object.class), see ServiceInvokerInterceptor.handleMessage() l.78
+      // conf :
+      // TODO header or param...
+      ///boolean detailedErrorsMode = true;
+      ///boolean matchBaseUrlMode = true;
+      ///boolean normalizeUrlMode = true;
+      
+      DCProject project = modelService.getProject(); // TODO TODO explode if none 
+
+      if (resource == null) {
+         throw new ResourceException("No data (modelType = " + modelType + ")", null, project);
+      }
+      
+      DCEntity dataEntity = this.resourceToEntity(resource, modelType,
+            canCreate, canUpdate, putRatherThanPatchMode, true);
+      DCModelBase dcModel = dataEntity.getCachedModel();
+      
+      boolean isCreation = !(resource.getVersion() != null
+            && resource.getVersion() >= 0); // NB. already checked by resourceToEntity()
 
       // pre save hooks
       // TODO better as 2nd pass / within parsing ?? or rather on entity ????
@@ -322,11 +383,8 @@ public class ResourceService {
             throw ntdaex;
          }
       }
-
-      resource = resourceEntityMapperService.entityToResource(dataEntity);
-      // NB. rather than manually updating resource, because props may have changed
-      // (ex. if POST/PATCH of a null prop => has not actually been removed)
-      // ((and LATER possibly because of behaviours))
+      
+      resourceEntityMapperService.entityToResourcePersistenceComputedFields(dataEntity, resource);
 
       // 2nd pass : post save hooks
       // TODO better
@@ -427,7 +485,7 @@ public class ResourceService {
          // rather than NO_CONTENT ; like Atol ex. deleteApplication in
          // https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/apps/ApplicationDirectoryResource.java
       }
-      DCResource resource = resourceEntityMapperService.entityToResource(entity);
+      DCResource resource = resourceEntityMapperService.entityToResource(entity, null);
       
       eventService.triggerResourceEvent(DCResourceEvent.Types.READ, resource);
       return resource;
@@ -462,7 +520,7 @@ public class ResourceService {
          // rather than NO_CONTENT ; like Atol ex. deleteApplication in
          // https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/apps/ApplicationDirectoryResource.java
       }
-      DCResource resource = resourceEntityMapperService.entityToResource(entity);
+      DCResource resource = resourceEntityMapperService.entityToResource(entity, null);
 
       eventService.triggerResourceEvent(DCResourceEvent.Types.READ, resource);
       
@@ -509,7 +567,7 @@ public class ResourceService {
          throw new ResourceNotFoundException(null, uri, null, project);
       }
       
-      DCResource resource = resourceEntityMapperService.entityToResource(dataEntity);
+      DCResource resource = resourceEntityMapperService.entityToResource(dataEntity, null);
       eventService.triggerResourceEvent(DCResourceEvent.Types.ABOUT_TO_DELETE, resource);
  	   entityService.deleteByUriId(dataEntity);
       eventService.triggerResourceEvent(DCResourceEvent.Types.DELETED, resource);

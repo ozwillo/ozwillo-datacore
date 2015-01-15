@@ -1,6 +1,8 @@
 package org.oasis.datacore.sample;
 
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -31,6 +33,7 @@ import org.oasis.datacore.core.security.mock.MockAuthenticationService;
 import org.oasis.datacore.historization.exception.HistorizationException;
 import org.oasis.datacore.historization.service.impl.HistorizationServiceImpl;
 import org.oasis.datacore.rest.api.DCResource;
+import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.server.DatacoreApiImpl;
 import org.oasis.datacore.rest.server.event.EventService;
@@ -141,7 +144,9 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
          if (modelsToCreate.isEmpty()) { // data only sample
             cleanDataOfCreatedModels(); // uses dependent sample models
          } else if (/*enableFillDataAtInit() && */(!allCollectionsAlreadyExist || hasSomeModelsWithoutResource())) {
-            cleanDataOfCreatedModels(modelsToCreate);
+            if (!neverCleanData()) {
+               cleanDataOfCreatedModels(modelsToCreate);
+            }
             fillData();
          }
 
@@ -164,6 +169,17 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
    ///////////////////////////////////////////////////////////////////////////:
    // For tests : methods to use & implement
    // 
+
+   /** default false, override to change ; requires to also override refreshBeforePost,
+    * or to refresh explicitly before posting */
+   protected boolean neverCleanData() {
+      return false;
+   }
+   
+   /** default false, override to change */
+   protected boolean refreshBeforePost() {
+      return false;
+   }
    
    protected abstract void buildModels(List<DCModelBase> models); // TODO TODOOOOO buildModels
    
@@ -555,6 +571,25 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
     * Requires to have logged in first
     */
    public DCResource postDataInType(DCResource resource) {
+      if (refreshBeforePost()) {
+         try {
+            datacoreApiImpl.getData(resource.getModelType(),
+                  UriHelper.parseUri(resource.getUri()).getId(), resource.getVersion());
+         } catch (WebApplicationException e) {
+            if (e.getResponse().getStatus() / 100 == 2){ // successfully found
+               DCResource existingResource = ((DCResource) e.getResponse().getEntity());
+               resource.setVersion(existingResource.getVersion());
+            } else if (e.getResponse().getStatus() == 304 // not modified
+                  || e.getResponse().getStatus() == 404) { // not found, allow creation of new resource
+            } else {
+               throw e;
+            }
+         } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+         } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+         }
+      }
       try {
          return datacoreApiImpl.postDataInType(resource, resource.getModelType());
       } catch (WebApplicationException e) {

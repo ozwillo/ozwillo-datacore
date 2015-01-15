@@ -95,6 +95,10 @@ public abstract class DCModelBase {
     * http://docs.mongodb.org/manual/reference/operator/meta/maxScan/ */
    private int maxScan = 0;
    
+   // features :
+   /** Country / language specific : TODO LATER rather optional / candidate mixin (FR/IT...)CountryLanguageSpecific */
+   private String countryLanguage = null;
+   
    
    /** for unmarshalling only */
    public DCModelBase() {
@@ -430,6 +434,14 @@ public abstract class DCModelBase {
 
    public void setContributable(boolean isContributable) {
       this.isContributable = isContributable;
+   }
+
+   public String getCountryLanguage() {
+      return countryLanguage;
+   }
+   
+   public void setCountryLanguage(String countryLanguage) {
+      this.countryLanguage = countryLanguage;
    }
 
    

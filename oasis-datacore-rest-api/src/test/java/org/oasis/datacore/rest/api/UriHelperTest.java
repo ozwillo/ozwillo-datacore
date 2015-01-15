@@ -110,14 +110,8 @@ public class UriHelperTest {
    public void testSafeCharacters() throws Exception {
       String modelType = "alt.tourism.placeKind";
 
-      // test fails on bad practice modelType (characters beyond $-_.() AND +!*'
-      // i.e. reserved $&+,/:;=?@ & unsafe  "<>#%{}|\^~[]`)
-      try {
-         UriHelper.buildUri(containerUrl, modelType + "?", "hotel");
-         Assert.fail("? should be bad practice in modelType");
-      } catch (IllegalArgumentException iaex) {
-         Assert.assertTrue(true);
-      }
+      // NB. modelType checked for URL_ALWAYS_SAFE_CHARACTERS only when not
+      // country / language specific is done rather in ModelResourceMappingService
       
       // test OK on always characters in modelType ($-_.())
       String uri = UriHelper.buildUri(containerUrl, modelType + "$", "hotel");

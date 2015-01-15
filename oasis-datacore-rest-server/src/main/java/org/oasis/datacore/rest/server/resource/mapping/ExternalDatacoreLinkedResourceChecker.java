@@ -36,7 +36,7 @@ public class ExternalDatacoreLinkedResourceChecker extends LinkedResourceChecker
    public DCModelBase checkUriModel(DCURI dcUri, DCResourceField dcResourceField) throws ResourceParsingException {
       DCModelBase refModel = super.checkUriModel(dcUri, dcResourceField);
 
-      if (modelService.getStorageModel(refModel.getName()) == null) {
+      if (modelService.getStorageModel(refModel) == null) {
          // TODO LATER OPT client side might deem it a data health / governance problem,
          // and put it in the corresponding inbox
          throw new ResourceParsingException("Resource model type " + refModel.getName()

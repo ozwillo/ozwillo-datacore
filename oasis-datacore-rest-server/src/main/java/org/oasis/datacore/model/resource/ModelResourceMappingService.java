@@ -64,6 +64,11 @@ public class ModelResourceMappingService {
       return UriHelper.buildUri(containerUrl, "dcmo:model_0",
             (String) modelResource.get("dcmo:name")/* + '_' + modelResource.get("dcmo:majorVersion")*/); // LATER refactor
    }
+   /** only for tests */
+   public String buildModelUri(DCModelBase model) {
+      return UriHelper.buildUri(containerUrl, "dcmo:model_0",
+            (String) model.getName()/* + '_' + model.getMajorVersion()*/); // LATER refactor
+   }
    
    /** public for tests */
    public String buildFieldUriPrefix(DCURI dcUri) {
@@ -125,16 +130,22 @@ public class ModelResourceMappingService {
    }
    
    
-   /** TODO move to ModelResourceMappingService */
-   public DCResource modelToResource(DCModelBase model) throws ResourceParsingException {
-      DCModelBase definitionModel = dataModelService.getDefinitionModel(model.getName());
-      DCModelBase storageModel = dataModelService.getStorageModel(model.getName());
+   /** TODO move to ModelResourceMappingService
+    * if not null, modelResource is updated */
+   public DCResource modelToResource(DCModelBase model, DCResource modelResource) throws ResourceParsingException {
+      if (modelResource == null) {
+         modelResource = DCResource.create(null, ResourceModelIniter.MODEL_MODEL_NAME);
+      }
+      
+      DCModelBase definitionModel = dataModelService.getDefinitionModel(model);
+      DCModelBase storageModel = dataModelService.getStorageModel(model); // null if abstract
       
       // filling model's provided props :
-      DCResource modelResource = DCResource.create(null, ResourceModelIniter.MODEL_MODEL_NAME)
+      modelResource
             .set("dcmo:name", model.getName())
             .set("dcmo:pointOfViewAbsoluteName", model.getPointOfViewAbsoluteName())
             .set("dcmo:majorVersion", model.getMajorVersion())
+            // NB. NOT o:version which is only in DCModelBase for info purpose
             
              // POLY
             .set("dcmo:isDefinition", model.isDefinition()) // = !dcmo:isStorageOnly
@@ -166,11 +177,14 @@ public class ModelResourceMappingService {
       // once id source props are complete, build URI out of them :
       String uri = this.buildModelUri(modelResource);
       modelResource.setUri(uri);
+      
+      this.modelFieldsAndMixinsToResource(model, modelResource);
+      
       return modelResource;
    }
 
    /** TODO move to ModelResourceMappingService */
-   public void modelFieldsAndMixinsToResource(DCModelBase model, DCResource modelResource) throws ResourceParsingException {
+   private void modelFieldsAndMixinsToResource(DCModelBase model, DCResource modelResource) throws ResourceParsingException {
       // still fill other props, including uri-depending ones :
       DCURI dcUri;
       try {
@@ -208,61 +222,6 @@ public class ModelResourceMappingService {
             new ArrayList<String>(model.getGlobalMixinNames())); // TODO order
       modelResource.set("dcmo:globalFields", fieldsToProps(model.getGlobalFieldMap(),
             fieldUriPrefix, null)); // computed, so don't enrich existing props
-      
-      // filling company's resource props and missing referencing Mixin props : 
-      // - by building URI from known id/iri if no missing referencing Mixin prop,
-      // - or by looking up referenced resource with another field as criteria
-      
-      /*
-      // NB. single Italia country has to be filled at "install" time
-      company.set("!plo:country", UriHelper.buildUri(containerUrl, "!plo:country",
-            (String) company.get("!plo:country_name")));
-
-      company.set("!pli:city", UriHelper.buildUri(containerUrl, "!pli:city",
-            (String) company.get("!plo:country_name") + '/' + (String) company.get("!pli:city_name")));
-
-      // NB. ateco Model has to be filled at "install" time else code is not known
-      List<DCEntity> atecos = ldpEntityQueryService.findDataInType(modelAdminService.getModel("!coita:ateco"), new HashMap<String,List<String>>() {{
-               put("!?coita:atecoDescription", new ArrayList<String>() {{ add((String) company.get("!?coita:atecoDescription")); }}); }}, 0, 1);
-      DCResource ateco;
-      if (atecos != null && !atecos.isEmpty()) {
-         ateco = resourceEntityMapperService.entityToResource(atecos.get(0));
-      } else {
-         ///throw new RuntimeException("Unknown ateco description " + company.get("!?coita:atecoDescription"));
-         // WORKAROUND TO WRONG DESCRIPTIONS : (!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!)
-         // filling company's provided props :
-         ateco = DCResource.create(null, "!coita:ateco")
-               .set("!coita:atecoCode", ((String) company.get("!?coita:atecoDescription")).replace(' ', '_'))
-               .set("!?coita:atecoDescription", company.get("!?coita:atecoDescription"));
-         // once props are complete, build URI out of them and post :
-         ateco.setUriFromId(containerUrl, (String) ateco.get("!coita:atecoCode"));
-         /datacoreApiClient./postDataInType(ateco);
-         //resourcesToPost.add(ateco); // post and NOT schedule else can't be found in loop
-      }
-      company.set("!coita:atecoCode", ateco.get("!coita:atecoCode"));
-      company.set("!coita:ateco", ateco.getUri());
-      */
-
-      
-      // filling other Models that this table is a source of :
-      // TODO mixins ; fields ??
-      /*
-      try {
-         resourceService.get((String) company.get("!pli:city"), "!pli:city");
-      } catch (ResourceNotFoundException rnfex) {
-         /if (Response.Status.NOT_FOUND.getStatusCode() != waex.getResponse().getStatus()) {
-            throw new RuntimeException("Unexpected error", waex.getResponse().getEntity());
-         }/
-         DCResource city = DCResource.create((String) company.get("!pli:city"))
-               .set("!pli:city_name", company.get("!pli:city_name"))
-               .set("!plo:country_name", (String) company.get("!plo:country_name"))
-               .set("!plo:country", (String) company.get("!plo:country"));
-         // once props are complete, build URI out of them and (schedule) post :
-         ///city.setUriFromId(containerUrl, (String) company.get("!plo:country_name") + '/' + (String) company.get("!pli:city_name"));
-         /datacoreApiClient./postDataInType(city);
-         //resourcesToPost.add(city); // BEWARE must be posted before company else resource reference check fails
-      }
-      */
    }
    
    
@@ -356,9 +315,12 @@ public class ModelResourceMappingService {
    // Resource to DCModel (used in ModelResourceDCListener) :
 
    /**
-    * Creates DCModel or DCMixin, then calls resourceToModelOrMixin()
-    * and modelOrMixinToResource() (to enrich model resource by fields
-    * that are computed by DCModelBase).
+    * Creates and fills DCModel or DCMixin (by calling resourceToFieldsAndMixins())
+    * from given resource.
+    * BUT does not clean / update r with ex. DCModelBase-computed fields (globalFields...
+    * for this call afterwards modelFieldsAndMixinsToResource()), nor check consistency
+    * (country / language specific model... for this call afterwards checkModelOrMixin()).
+    * 
     * TODO LATER gather all ResourceParsingException in a ParsingContext
     * like in ResourceEntityMappingService 
     * @param r
@@ -373,11 +335,23 @@ public class ModelResourceMappingService {
       //String pointOfViewAbsoluteName = (String) r.get("dcmo:pointOfViewAbsoluteName");
       // NOO rather from context :
       String pointOfViewAbsoluteName = dataModelService.getProject().getAbsoluteName();
-      
-      
-      DCModelBase modelOrMixin;
       String typeName = (String) r.get("dcmo:name");
-      modelOrMixin = new DCModel(typeName, pointOfViewAbsoluteName);
+      
+      DCModelBase modelOrMixin = new DCModel(typeName, pointOfViewAbsoluteName);
+
+      Long version = (Long) r.get("o:version");
+      if (version == null) {
+         version = -1l; // assuming new
+      }
+      modelOrMixin.setVersion(version); // only in DCModelBase for info purpose
+      Long majorVersion = (Long) r.get("dcmo:majorVersion");
+      if (majorVersion == null) {
+         majorVersion = 0l; // TODO LATER compute : parse from dcmo:name
+      }
+      modelOrMixin.setMajorVersion(majorVersion); // LATER
+      
+      modelOrMixin.setDocumentation((String) r.get("dcmo:documentation")); // OPT
+      
       // NB. collectionName is deduced from storage typeName
       modelOrMixin.setMaxScan((int) r.get("dcmo:maxScan"));
       modelOrMixin.setHistorizable((boolean) r.get("dcmo:isHistorizable"));
@@ -387,96 +361,168 @@ public class ModelResourceMappingService {
       modelOrMixin.setDefinition((boolean) r.get("dcmo:isDefinition"));
       modelOrMixin.setStorage((boolean) r.get("dcmo:isStorage"));
       modelOrMixin.setInstanciable((boolean) r.get("dcmo:isInstanciable"));
-
+      
+      // features :
+      modelOrMixin.setCountryLanguage((String) r.get("dcmls:code"));
+      
       try {
          this.resourceToFieldsAndMixins(modelOrMixin, r);
-
-         // enrich model resource by fields that are computed by DCModelBase ;
-         this.modelFieldsAndMixinsToResource(modelOrMixin, r);
-         
       } catch (ResourceParsingException rpex) {
-         throw new ResourceException("Error while loading DCModel from Resource", rpex, r, dataModelService.getProject());
+         throw new ResourceException("Error while loading DCModel from Resource",
+               rpex, r, dataModelService.getProject());
       }
-      // (therefore don't load their caches from r)
       
       return modelOrMixin;
    }
    
    /**
-    * 
+    * Checks model consistency ; NOT on startup else order of load can make it fail.
+    * - dcmls:CountryLanguageSpecific : only by having this mixin and another generic mixin
+    * can its modelType have non-URL safe chars
+    * TODO LATER :
+    * - that ref'd model exists at computing time OR BETTER make resourceType a link (DCResourceField)
+    * - ...
+    * @param modelOrMixin checked
+    * @param r for logging purpose
+    * @throws ResourceException if consistency check fails
+    */
+   public void checkModelOrMixin(DCModelBase modelOrMixin, DCResource r) throws ResourceException {
+      if (modelOrMixin.getCountryLanguage() != null) {
+      //if (r.get("dcmls:code") != null) {
+         boolean hasGenericMixin = false;
+         for (String mixinName : modelOrMixin.getGlobalMixinNames()) { // OR not global to avoid
+            // language-specific inheritance trees with a single generic mixin, but not perfect either
+            if (mixinName.equals("dcmls:CountryLanguageSpecific")) {
+               continue;
+            }
+            DCModelBase mixin = dataModelService.getModelBase(mixinName);
+            if (mixin.getCountryLanguage() == null) {
+            //if (!ldpEntityQueryService.find("dcmi:mixin_0", { 'dcmls:code' : '$exist' }).isEmpty()) {
+               hasGenericMixin = true;
+               break;
+            }
+         }
+      /*if (modelOrMixin.hasMixin("dcmls:CountryLanguageSpecific")) { // LATER WOULD REQUIRED ANONYMOUS TYPES / OPTIONAL / CANDIDATE MIXINS
+         boolean hasGenericMixin = false;
+         for (String mixinName : modelOrMixin.getGlobalMixinNames()) { // OR not global to avoid
+            // language-specific inheritance trees with a single generic mixin, but not perfect either
+            if (mixinName.equals("dcmls:CountryLanguageSpecific")) {
+               continue;
+            }
+            DCModelBase mixin = dataModelService.getModelBase(mixinName);
+            if (!mixin.hasMixin("dcmls:CountryLanguageSpecific")) { // LATER WOULD REQUIRED ANONYMOUS TYPES / OPTIONAL / CANDIDATE MIXINS
+               hasGenericMixin = true;
+               break;
+            }
+         }*/
+         if (!hasGenericMixin) {
+            throw new ResourceException("Country / language-specific (with  "
+                  + "dcmls:CountryLanguageSpecific mixin) model type has no generic mixin",
+                  null, r, dataModelService.getProject());
+         }
+      } else {
+         if (!UriHelper.hasUrlAlwaysSafeCharacters(modelOrMixin.getName())) {
+            throw new ResourceException("Non country / language-specific (with "
+                  + "dcmls:CountryLanguageSpecific mixin) model type does not follow best practice rule "
+                  + "of not containing URL always safe or colon characters i.e. "
+                  + UriHelper.NOT_URL_ALWAYS_SAFE_OR_COLON_CHARACTERS_REGEX,
+                  null, r, dataModelService.getProject());
+         }
+      }
+   }
+
+   /**
+    * public only for tests.
     * @param modelOrMixin created by TODO
     * @param r
     * @throws ResourceParsingException
     */
    public void resourceToFieldsAndMixins(DCModelBase modelOrMixin, DCResource r) throws ResourceParsingException {
-      modelOrMixin.setMajorVersion(valueService.parseLong(r.get("dcmo:majorVersion"), null));
-      modelOrMixin.setDocumentation((String) r.get("dcmo:documentation"));
-      
       // TODO (computed) security (version)
       @SuppressWarnings("unchecked")
       List<Map<String, Object>> fieldResources = (List<Map<String, Object>>) r.get("dcmo:fields");
-      Map<String, DCField> fields;
+      if (fieldResources == null) {
+         // (allowing model without fields but ex. a mixin)
+         fieldResources = new ImmutableList.Builder<Map<String, Object>>().build();
+      }
+
+      // map fields :
+      Map<String, DCField> fieldMap;
       try {
-         fields = this.propsToFields(fieldResources);
+         fieldMap = this.propsToFields(fieldResources);
       } catch (ResourceParsingException rpex) {
          throw new ResourceParsingException("Error when parsing fields of model resource "
                + r, rpex);
       }
       
+      // map mixins :
+      @SuppressWarnings("unchecked")
+      List<String> mixinNames = (List<String>) r.get("dcmo:mixins"); // TODO or list of boolean maps ??
+      if (mixinNames == null) { // TODO when is tag-like mixin ? ; NB. import tool does not send them if none
+         mixinNames = new ImmutableList.Builder<String>().build();
+      }
+      Builder<String, DCModelBase> mixinMapBuilder = new ImmutableMap.Builder<String, DCModelBase>();
+      for (String mixinName : mixinNames) {
+         DCModelBase mixin = dataModelService.getMixin(mixinName); // does also model
+         if (mixin == null) {
+            throw new ResourceParsingException("Can't find mixin "
+                  + mixinName + " when updating DCModelBase from resource " + r);
+         }
+         mixinMapBuilder.put(mixin.getName(), mixin);
+      }
+      Map<String, DCModelBase> mixinMap = mixinMapBuilder.build();
+      
       // NB. since ModelService checks at add() that all of a Model's mixins are already known by it,
       // dcmo:fieldAndMixinNames is enough to know mixins and no need to get the dcmo:mixins prop
       
-      // add fields and mixins :
+      // add fields and mixins, in order :
       // TODO TODO mixins rather lazy in DCModelBase !!!!
       @SuppressWarnings("unchecked")
       List<String> fieldAndMixinNames = (List<String>) r.get("dcmo:fieldAndMixins"); // TODO or list of boolean maps ??
-      if (fieldAndMixinNames != null) { // TODO 
-         for (String fieldAndMixinName : fieldAndMixinNames) {
-            DCField field = fields.get(fieldAndMixinName);
+      if (fieldAndMixinNames == null) { // TODO when is tag-like mixin ?
+         fieldAndMixinNames = new ImmutableList.Builder<String>().build();
+      }
+      for (String fieldAndMixinName : fieldAndMixinNames) {
+         if (fieldMap != null) {
+            DCField field = fieldMap.get(fieldAndMixinName);
             if (field != null) {
                modelOrMixin.addField(field); // and NOT getFieldMap().put() because more must be done
                continue;
             }
-            DCModelBase mixin = dataModelService.getMixin(fieldAndMixinName); // does also model
-            if (mixin != null) {
-               modelOrMixin.addMixin(mixin);
-               continue;
-            }
-            // TODO TODO logger, in ParsingContext, and even tag error / log on Model Resource as info & state for further handling !!
-            // NOO may be a previously existing field or mixin that has been removed
-            // by client side which has then not recomputed fieldAndMixinName
-            ///throw new ResourceParsingException("Can't find field or mixin "
-            ///      + fieldAndMixinName + " when updating DCModelBase from resource " + r);
          }
+         DCModelBase mixin = mixinMap.get(fieldAndMixinName); // does also model
+         if (mixin != null
+               && !fieldAndMixinName.equals(modelOrMixin.getName())) { // can't have itself as mixin
+            modelOrMixin.addMixin(mixin);
+            continue;
+         }
+         // TODO may be a previously existing field or mixin that has been removed
+         // by client side which has then not recomputed fieldAndMixinName
+         ///throw new ResourceParsingException("Can't find field or mixin "
+         ///      + fieldAndMixinName + " when updating DCModelBase from resource " + r);
       }
 
       // in case of obsolete and not recomputed fieldAndMixins, adding new (i.e. remaining)
       // fields in case of obsolete and not recomputed fieldAndMixins :
       Set<String> fieldAndMixinNameSet = new HashSet<String>(fieldAndMixinNames);
-      if (fields != null) { 
-         for (String fieldName : fields.keySet()) {
-            if (fieldAndMixinNameSet != null && fieldAndMixinNameSet.contains(fieldName)) {
-               continue;
-            }
-            modelOrMixin.addField(fields.get(fieldName)); // and NOT getFieldMap().put() because more must be done
+      for (String fieldName : fieldMap.keySet()) {
+         if (fieldAndMixinNameSet != null && fieldAndMixinNameSet.contains(fieldName)) {
+            continue;
          }
+         modelOrMixin.addField(fieldMap.get(fieldName)); // and NOT getFieldMap().put() because more must be done
       }
       
-      // adding new (i.e. remaining) mixins in case of obsolete and not recomputed fieldAndMixins :@SuppressWarnings("unchecked")
-      @SuppressWarnings("unchecked")
-      List<String> mixinNames = (List<String>) r.get("dcmo:mixins");
-      if (mixinNames != null) { // NB. import tool does not send them if none
-         for (String mixinName : mixinNames) {
-            if (fieldAndMixinNameSet.contains(mixinName)) {
-               continue;
-            }
-            DCModelBase mixin = dataModelService.getMixin(mixinName); // does also model
-            if (mixin == null) {
-               throw new ResourceParsingException("Can't find mixin " + mixinName
-                     + " when updating DCModelBase from resource " + r); // should not happen, as said above
-            }
-            modelOrMixin.addMixin(mixin);
+      // adding new (i.e. remaining) mixins in case of obsolete and not recomputed fieldAndMixins :
+      for (String mixinName : mixinNames) {
+         if (fieldAndMixinNameSet.contains(mixinName)) {
+            continue;
          }
+         DCModelBase mixin = mixinMap.get(mixinName); // does also model
+         if (mixin == null) {
+            throw new ResourceParsingException("Can't find mixin " + mixinName
+                  + " when updating DCModelBase from resource " + r); // should not happen, as said above
+         }
+         modelOrMixin.addMixin(mixin);
       }
    }
    
@@ -514,9 +560,13 @@ public class ModelResourceMappingService {
          String fieldResourceType = (String) fieldResource.get("dcmf:resourceType");
          if (fieldResourceType == null) {
             throw new ResourceParsingException("dcmf:resourceType can't be null on resource-typed field "
-                  + fieldResourceType);
+                  + fieldName);
          }
          field = new DCResourceField(fieldName, fieldResourceType, fieldRequired, fieldQueryLimit);
+         /*if (!fieldResourceType.equals(topLevelModelType) && dataModelService.getModelBase(fieldResourceType)) {
+            throw new ResourceParsingException("model " + fieldResourceType
+                  + " linked by field " + fieldName + " can't be found");
+         }*/ // TODO rather check subresource mixins
          break;
       default :
          field = new DCField(fieldName, fieldType, fieldRequired, fieldQueryLimit);

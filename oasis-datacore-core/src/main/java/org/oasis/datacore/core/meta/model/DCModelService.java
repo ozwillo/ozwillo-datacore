@@ -36,17 +36,17 @@ public interface DCModelService {
     * NB. there can't be more than one inherited model being definition
     * (else they would be inherited by a non-definition model, which would
     * then be definition since it would define that both must be added)
-    * @param type
+    * @param model
     * @return
     */
-   DCModelBase getDefinitionModel(String type);
+   DCModelBase getDefinitionModel(DCModelBase model);
 
    /**
     * 
-    * @param type
+    * @param model
     * @return
     */
-   DCModelBase getStorageModel(String type);
+   DCModelBase getStorageModel(DCModelBase model);
    
    /**
     * reified model types

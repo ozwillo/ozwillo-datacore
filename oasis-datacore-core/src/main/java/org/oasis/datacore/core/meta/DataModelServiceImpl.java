@@ -49,14 +49,14 @@ public class DataModelServiceImpl implements DCModelService {
       return project.getModel(type); // TODO if isStorageOnly, get inherited model ?
    }
    @Override
-   public DCModelBase getDefinitionModel(String type) {
+   public DCModelBase getDefinitionModel(DCModelBase model) {
       DCProject project = getProject(); // NB. can't be null
-      return project.getDefinitionModel(type);
+      return project.getDefinitionModel(model);
    }
    @Override
-   public DCModelBase getStorageModel(String type) {
+   public DCModelBase getStorageModel(DCModelBase model) {
       DCProject project = getProject(); // NB. can't be null
-      return project.getStorageModel(type);
+      return project.getStorageModel(model);
    }
    @Override
    public Collection<DCProject> getProjects() {

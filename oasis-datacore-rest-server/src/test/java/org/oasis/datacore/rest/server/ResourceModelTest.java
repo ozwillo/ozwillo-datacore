@@ -1,6 +1,7 @@
 package org.oasis.datacore.rest.server;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -11,7 +12,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,6 +37,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.google.common.collect.ImmutableList;
 
 
 /**
@@ -174,12 +176,15 @@ public class ResourceModelTest {
       Assert.assertNotNull(villeurbanneCity);
       // getting model and changing it
       DCResource cityModelResource = datacoreApiClient.getData("dcmo:model_0", CityCountrySample.CITY_MODEL_NAME);
+      resourceService.resourceToEntity(cityModelResource); // cleans up resource, else ex. Long props are rather Integers,
+      // which toModelOrMixin doesn't support 
       DCModel clientCityModel = (DCModel) mrMappingService.toModelOrMixin(cityModelResource);
       DCField clientCityFoundedField = clientCityModel.getField("city:founded");
       Assert.assertTrue(!clientCityFoundedField.isRequired());
       clientCityFoundedField.setRequired(true);
-      mrMappingService.modelFieldsAndMixinsToResource(clientCityModel, cityModelResource); // mrMappingService1.modelToResource(clientCityModel)
+      mrMappingService.modelToResource(clientCityModel, cityModelResource); // mrMappingService1.modelToResource(clientCityModel)
       try {
+      
       // updating model & check that changed
       cityModelResource = datacoreApiClient.putDataInType(cityModelResource);
       @SuppressWarnings("unchecked")
@@ -201,13 +206,116 @@ public class ResourceModelTest {
       villeurbanneCity.set("city:founded", new DateTime(-6000, 4, 1, 0, 0, DateTimeZone.UTC));
       villeurbanneCity = datacoreApiClient.putDataInType(villeurbanneCity);
       Assert.assertNotNull(villeurbanneCity);
+      
       } finally {
          // putting it back in default state
          clientCityFoundedField.setRequired(false);
-         mrMappingService.modelFieldsAndMixinsToResource(clientCityModel, cityModelResource); // mrMappingService1.modelToResource(clientCityModel)
+         mrMappingService.modelToResource(clientCityModel, cityModelResource); // mrMappingService1.modelToResource(clientCityModel)
          cityModelResource = datacoreApiClient.putDataInType(cityModelResource);
          deleteExisting(villeurbanneCity);
       }
+   }
+
+   @Test
+   public void testCountryLanguageSpecificModel() throws Exception {
+      String frCityModelName = "sample.city.cité"; // with problem-bound é
+      ArrayList<String> frCityModelMixins = new ArrayList<String>();
+      DCResource frCityModel = resourceService.create("dcmo:model_0", frCityModelName)
+            .set("dcmo:name", frCityModelName).set("dcmo:mixins", frCityModelMixins).set("dcmo:maxScan", 0);
+      deleteExisting(frCityModel);
+      
+      try {
+         datacoreApiClient.postDataInType(frCityModel);
+         // test fails on bad practice non-country / language specific modelType
+         // (characters beyond $-_.() AND +!*' i.e. reserved $&+,/:;=?@ & unsafe  "<>#%{}|\^~[]`)
+         Assert.fail("é should be bad practice in non country / language specific modelType");
+      } catch (BadRequestException iaex) {
+         Assert.assertTrue(true);
+      }
+
+      frCityModelMixins.add("dcmls:CountryLanguageSpecific");
+      frCityModel.set("dcmls:code", "FR");
+      try {
+         datacoreApiClient.postDataInType(frCityModel);
+         Assert.fail("country / language specific modelType should have generic mixin");
+      } catch (BadRequestException iaex) {
+         Assert.assertTrue(true);
+      }
+
+      frCityModelMixins.add(CityCountrySample.CITY_MODEL_NAME);
+      frCityModel = datacoreApiClient.postDataInType(frCityModel);
+      Assert.assertNotNull(frCityModel); // no more é or generic mixin error
+   }
+
+   @Test
+   public void testImpactedModelUpdate() throws Exception {
+      // create referring model :
+      String frCityModelName = "sample.city.cityFR";
+      ArrayList<String> frCityModelMixins = new ArrayList<String>();
+      DCResource frCityModelResource = resourceService.create("dcmo:model_0", frCityModelName)
+            .set("dcmo:name", frCityModelName).set("dcmo:mixins", new ImmutableList.Builder<String>()
+                  .add(CityCountrySample.CITY_MODEL_NAME).build()).set("dcmo:maxScan", 0);
+      deleteExisting(frCityModelResource);
+
+      frCityModelMixins.add(CityCountrySample.CITY_MODEL_NAME);
+      frCityModelResource = datacoreApiClient.postDataInType(frCityModelResource);
+      Assert.assertNotNull(frCityModelResource);
+      // check initial referring model :
+      // in server :
+      DCModelBase frCityModel = modelAdminService.getModelBase(frCityModelName);
+      Assert.assertNotNull(frCityModel);
+      Assert.assertTrue(!frCityModel.getGlobalField("city:founded").isRequired());
+      // in served model resource :
+      frCityModelResource = datacoreApiClient.getData(frCityModelResource);
+      Assert.assertNotNull(frCityModelResource);
+      resourceService.resourceToEntity(frCityModelResource); // cleans up resource, else ex. Long props are rather Integers,
+      // which toModelOrMixin doesn't support 
+      frCityModel = (DCModel) mrMappingService.toModelOrMixin(frCityModelResource);
+      Assert.assertTrue(!frCityModel.getGlobalField("city:founded").isRequired());
+      
+      // update referred model :
+      
+      // getting referred model and changing it
+      DCResource cityModelResource = datacoreApiClient.getData("dcmo:model_0", CityCountrySample.CITY_MODEL_NAME);
+      resourceService.resourceToEntity(cityModelResource); // cleans up resource, else ex. Long props are rather Integers,
+      // which toModelOrMixin doesn't support 
+      DCModel clientCityModel = (DCModel) mrMappingService.toModelOrMixin(cityModelResource);
+      DCField clientCityFoundedField = clientCityModel.getField("city:founded");
+      Assert.assertTrue(!clientCityFoundedField.isRequired());
+      clientCityFoundedField.setRequired(true);
+      mrMappingService.modelToResource(clientCityModel, cityModelResource);
+      try {
+         
+         // updating referred model & check that changed
+         cityModelResource = datacoreApiClient.putDataInType(cityModelResource);
+         @SuppressWarnings("unchecked")
+         Map<String,DCField> cityModelFields1 = mrMappingService.propsToFields(
+               (List<Map<String, Object>>) cityModelResource.get("dcmo:fields"));
+         Assert.assertTrue(cityModelFields1.get("city:founded").isRequired());
+         // checking that DCModel has been updated :
+         DCModelBase cityModel = modelAdminService.getModelBase(CityCountrySample.CITY_MODEL_NAME);
+         Assert.assertNotNull(cityModel);
+         Assert.assertTrue(cityModel.getField("city:founded").isRequired());
+
+         // check that referring model has changed :
+         // in server :
+         frCityModel = modelAdminService.getModelBase(frCityModelName);
+         Assert.assertNotNull(frCityModel);
+         Assert.assertTrue(frCityModel.getGlobalField("city:founded").isRequired());
+         // in served model resource :
+         frCityModelResource = datacoreApiClient.getData(frCityModelResource);
+         Assert.assertNotNull(frCityModelResource);
+         resourceService.resourceToEntity(frCityModelResource); // cleans up resource, else ex. Long props are rather Integers,
+         // which toModelOrMixin doesn't support 
+         frCityModel = (DCModel) mrMappingService.toModelOrMixin(frCityModelResource);
+         Assert.assertTrue(frCityModel.getGlobalField("city:founded").isRequired());
+         
+         } finally {
+            // putting it back in default state
+            clientCityFoundedField.setRequired(false);
+            mrMappingService.modelToResource(clientCityModel, cityModelResource);
+            cityModelResource = datacoreApiClient.putDataInType(cityModelResource);
+         }
    }
 
    /** puts back in initial state ; TODO in base helper */

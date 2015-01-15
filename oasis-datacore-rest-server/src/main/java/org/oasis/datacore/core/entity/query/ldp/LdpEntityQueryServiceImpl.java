@@ -18,7 +18,6 @@ import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
-import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.model.DCResourceField;
@@ -138,7 +137,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
                + "or renamed since (only in test). In this case, the missing model must first "
                + "be created again, before patching the entity.");
       }
-      DCModelBase storageModel = modelService.getStorageModel(modelType); // TODO cache, in context ?
+      DCModelBase storageModel = modelService.getStorageModel(model); // TODO cache, in context ?
       if (storageModel == null) {
          // TODO LATER OPT client side might deem it a data health / governance problem,
          // and put it in the corresponding inbox
@@ -413,7 +412,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
                + "be created again, before patching the entity.");
          return null;
       }
-      DCModelBase linkStorageModel = modelService.getStorageModel(linkModelType);
+      DCModelBase linkStorageModel = modelService.getStorageModel(linkModel);
       // TODO check linkStorageModel, separate cases :
       // fully embedded (isInstanceStorage ? storagePath ? storageModel ?), refMixin,
       // external resource (in which case explode because a join is required)

@@ -11,6 +11,9 @@ import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
 import org.oasis.datacore.core.init.InitableBase;
+import org.oasis.datacore.core.meta.DataModelServiceImpl;
+import org.oasis.datacore.core.meta.model.DCModelBase;
+import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.server.event.DCResourceEvent;
 import org.oasis.datacore.rest.server.event.EventService;
@@ -36,7 +39,13 @@ public class LoadPersistedModelsAtInit extends InitableBase {
    private LdpEntityQueryService ldpEntityQueryService;
    @Autowired
    protected ResourceEntityMapperService resourceEntityMapperService; // to unmap LdpEntityQueryService results
-
+   @Autowired
+   protected ModelResourceMappingService mrMappingService;
+   @Autowired
+   private DCModelService dataModelService;
+   @Autowired
+   private DataModelServiceImpl dataModelAdminService;
+   
    @Autowired
    protected EventService eventService;
    
@@ -86,8 +95,12 @@ public class LoadPersistedModelsAtInit extends InitableBase {
                new SimpleRequestContextProvider() {
                   protected void executeInternal() {
                      try {
-                        eventService.triggerResourceEvent(DCResourceEvent.Types.UPDATED, modelResource);
+                        ///eventService.triggerResourceEvent(DCResourceEvent.Types.UPDATED, modelResource);
                         // NB. handled by ModelResourceDCListener
+                        
+                        DCModelBase model = mrMappingService.toModelOrMixin(modelResource);
+                        dataModelAdminService.addModel(model);
+                        // TODO LATER once all is loaded, ((clean cache and)) repersist all in case were wrong
                      } catch (ResourceException rex) {
                         throw new RuntimeException(rex);
                      }

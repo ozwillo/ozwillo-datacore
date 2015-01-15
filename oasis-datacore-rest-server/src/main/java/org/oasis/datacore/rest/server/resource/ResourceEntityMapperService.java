@@ -769,9 +769,14 @@ public class ResourceEntityMapperService {
     * @param entity must have its model cached
     * @return
     */
-   public DCResource entityToResource(DCEntity entity) {
-      DCResource resource = new DCResource(entityToResourceProps(
-            entity.getProperties(), entity.getCachedModel().getGlobalFieldMap()));
+   public DCResource entityToResource(DCEntity entity, DCResource resource) {
+      Map<String, Object> resourceProps = entityToResourceProps(
+            entity.getProperties(), entity.getCachedModel().getGlobalFieldMap());
+      if (resource == null) {
+         resource = new DCResource(resourceProps);
+      } else {
+         resource.setProperties(resourceProps);
+      }
       resource.setUri(entity.getUri());
       //resource.setId(entity.getIri()); // TODO ??
       /*ArrayList<String> types = new ArrayList<String>(entity.getTypes().size() + 1);
@@ -780,14 +785,18 @@ public class ResourceEntityMapperService {
       resource.setTypes(types);*/
       resource.setTypes(entity.getTypes()); // TODO or as above, or from model ?
       
+      entityToResourcePersistenceComputedFields(entity, resource);
+      
+      return resource;
+   }
+   
+   public void entityToResourcePersistenceComputedFields(DCEntity entity, DCResource resource) {
       resource.setVersion(entity.getVersion());
       
       resource.setCreated(entity.getCreated()); // NB. if already provided, only if creation
       resource.setCreatedBy(entity.getCreatedBy()); // NB. if already provided, only if creation
       resource.setLastModified(entity.getLastModified());
       resource.setLastModifiedBy(entity.getLastModifiedBy());
-      
-      return resource;
    }
    
    /**
@@ -919,7 +928,7 @@ public class ResourceEntityMapperService {
    public List<DCResource> entitiesToResources(List<DCEntity> entities) {
       ArrayList<DCResource> datas = new ArrayList<DCResource>(entities.size());
       for (DCEntity entity : entities) {
-         DCResource resource = entityToResource(entity);
+         DCResource resource = entityToResource(entity, null);
          datas.add(resource);
       }
       return datas;

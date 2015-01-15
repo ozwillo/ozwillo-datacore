@@ -67,6 +67,18 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       eventService.init(new ModelDCListener(ModelDCEvent.MODEL_DEFAULT_BUSINESS_DOMAIN));
    }
    
+   /** do neverCleanData */
+   @Override
+   protected boolean neverCleanData() {
+      return true;
+   }
+   
+   /** do refreshBeforePost */
+   @Override
+   protected boolean refreshBeforePost() {
+      return true;
+   }
+   
    @Override
    public void buildModels(List<DCModelBase> modelsToCreate) {
       DCProject project = modelAdminService.getProject(DCProject.OASIS_MAIN);
@@ -75,6 +87,10 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addField(new DCI18nField("odisp:name", 100))
       ;
 
+      DCMixin countryLanguageSpecificModel = (DCMixin) new DCMixin("dcmls:CountryLanguageSpecific", project) // and not DCModel : fields exist within model & mixins
+         .addField(new DCField("dcmls:code", "string", false, 0)) // LATER false & mixin optional
+      ;
+      
       DCModel fieldIdentificationModel = (DCModel) new DCModel("dcmfid:Identification", project)
          .addField(new DCField("dcmfid:indexInId", "int", false, 0))
          .addField(new DCField("dcmfid:indexInParents", "int", false, 0))
@@ -124,11 +140,18 @@ public class ResourceModelIniter extends DatacoreSampleBase {
           // TODO security
          .addMixin(mixinBackwardCompatibilityModel)
          .addMixin(modelIdentificationModel)
+         .addMixin(countryLanguageSpecificModel)
          //.addMixin(displayableModel);
          .addField(new DCField("dcmo:name", "string", true, 100))
-         .addField(new DCField("dcmo:pointOfViewAbsoluteName", "string", true, 100)) // TODO compound index on POV and name
-         .addField(new DCField("dcmo:majorVersion", "long", true, 100)) // don't index and rather lookup on URI ??
+         .addField(new DCField("dcmo:pointOfViewAbsoluteName", "string", false, 100)) // TODO compound index on POV and name
+         // NB. NOT required (for now), rather computed from current one, else should be
+         // custom computed in ModelResourceDCListener in ABOUT_TO_BUILD step (but then
+         // default values are not set by parsing yet which makes toModelOrMixin fail on ex. maxScan)
+         .addField(new DCField("dcmo:majorVersion", "long", false, 100)) // don't index and rather lookup on URI ??
          // NB. Resource version is finer but NOT the minorVersion of the majorVersion
+         // NB. NOT required (for now), rather computed from dcmo:name, else should be
+         // custom computed in ModelResourceDCListener in ABOUT_TO_BUILD step (but then
+         // default values are not set by parsing yet which makes toModelOrMixin fail on ex. maxScan)
          
          // POLY
          .addField(new DCField("dcmo:isDefinition", "boolean", (Object) true, 100)) // = !dcmo:isStorageOnly
@@ -138,7 +161,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addField(new DCField("dcmo:documentation", "string", false, 100)) // TODO LATER required, TODO in another collection for performance
          .addField(new DCListField("dcmo:fields", new DCResourceField("useless", "dcmf:field_0")))
          .addField(new DCListField("dcmo:mixins", new DCField("useless", "string", false, 100)))
-         .addField(new DCListField("dcmo:fieldAndMixins", new DCField("useless", "string", false, 100), true))
+         .addField(new DCListField("dcmo:fieldAndMixins", new DCField("useless", "string", false, 100), false)) // NOT required, only used if any to change override order
          
          .addField(new DCField("dcmo:importDefaultOnly", "boolean", (Object) false, 100))
          .addField(new DCField("dcmo:importAutolinkedOnly", "boolean", (Object) false, 100))
@@ -205,7 +228,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          ;
       useCasePointOfViewElementModel.setStorage(false); // store in dcmpv
       
-      modelsToCreate.addAll(Arrays.asList(displayableModel,
+      modelsToCreate.addAll(Arrays.asList(displayableModel, countryLanguageSpecificModel,
             fieldIdentificationModel, fieldModel,
             mixinBackwardCompatibilityModel, modelIdentificationModel, modelOrMixinModel,
             pointOfViewModel, projectModel, useCasePointOfViewModel, useCasePointOfViewElementModel));
@@ -225,8 +248,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       for (DCModelBase modelToCreate : modelOrMixins) {
          try {
             // filling model's provided props :
-            DCResource metamodelResource = mrMappingService.modelToResource(modelToCreate);
-            mrMappingService.modelFieldsAndMixinsToResource(modelToCreate, metamodelResource);
+            DCResource metamodelResource = mrMappingService.modelToResource(modelToCreate, null);
             
             // once props are complete, post or update & put :
             // (only done on servers that store their own models, so no need to use client)
@@ -370,8 +392,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
    private void modelToResource(DCModelBase model, List<DCResource> resourcesToPost) {
       try {
          // filling model's provided props :
-         DCResource modelResource = mrMappingService.modelToResource(model);
-         mrMappingService.modelFieldsAndMixinsToResource(model, modelResource);
+         DCResource modelResource = mrMappingService.modelToResource(model, null);
          
          // once props are complete, schedule post :
          resourcesToPost.add(modelResource);

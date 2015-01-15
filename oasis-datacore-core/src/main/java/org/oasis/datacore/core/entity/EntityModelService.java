@@ -105,8 +105,8 @@ public class EntityModelService {
                + "it's probably obsolete i.e. its model has changed since (only in test) : "
                + dataEntity.getUri()); // TODO custom ex ?
       }*/
-      DCModelBase cachedStorageModel = projectService.getStorageModel(cachedModel.getName());
-      DCModelBase cachedDefinitionModel = projectService.getDefinitionModel(cachedModel.getName());
+      DCModelBase cachedStorageModel = projectService.getStorageModel(cachedModel);
+      DCModelBase cachedDefinitionModel = projectService.getDefinitionModel(cachedModel);
       /*if (cachedStorageModel == null) {
          throw new IllegalArgumentException("Can't find storage (model) for DCEntity, "
                + "it's probably obsolete i.e. its model has changed since (only in test) : "
@@ -138,7 +138,7 @@ public class EntityModelService {
     * TODO LATER better : put it in data health / governance inbox, through event
     */
    public String getCollectionName(DCModelBase model) throws ModelNotFoundException {
-      DCModelBase storageModel = modelService.getStorageModel(model.getName());
+      DCModelBase storageModel = modelService.getStorageModel(model);
       if (storageModel == null) {
          // TODO LATER better : put it in data health / governance inbox, through event
          throw new ModelNotFoundException(model, modelService.getProject(),
@@ -178,7 +178,7 @@ public class EntityModelService {
          // TODO LATER better : put it in data health / governance inbox, through event
          //throw new ModelException(dataEntity.getModelName(), project, msg);
       }
-      DCModelBase storageModel = modelService.getStorageModel(model.getName());
+      DCModelBase storageModel = modelService.getStorageModel(model);
       if (storageModel == null) {
          // TODO LATER better : put it in data health / governance inbox, through event
          throw new ModelNotFoundException(model, modelService.getProject(),
