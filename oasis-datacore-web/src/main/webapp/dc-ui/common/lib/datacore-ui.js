@@ -614,7 +614,7 @@ function findDataByTypeRdf(relativeUrl, success, error, start, limit) {
       }, function(data) {
          setError(data._body._body);
          if (error) {
-            error(data); // , resources // NB. always undefined !
+            error(data, relativeUrl);
          }
       });
    return false;
@@ -648,7 +648,7 @@ function postAllDataInType(relativeUrl, resources, success, error) {
       function(data) {
          setError(data._body._body);
          if (error) {
-            error(data); // , resources // NB. always undefined !
+            error(data, resources); // , resources // NB. always undefined ! NOO ?!
          }
          /*if (error._body._body.indexOf("already existing") != -1) { // TODO better
           findDataByType(relativeUrl, callback);
@@ -678,7 +678,7 @@ function deleteDataInType(resource, success, error) {
       function(data) {
          setError(data._body._body);
          if (error) {
-            error(data); // , resources // NB. always undefined !
+            error(data, resource); // , resource // NB. always undefined ! NOO ?!
          }
       });
    return false;
@@ -703,7 +703,7 @@ function postAllData(resources, success, error) {
             findDataByType(relativeUrl, callback);
          }*/
          if (error) {
-            error(data); // , resources // NB. always undefined !
+            error(data, resources); // , resources // NB. always undefined ! NOO ?!
          }
       });
     return false;

@@ -639,43 +639,58 @@
       if (typeof resourcesOrErrorData === 'object' && typeof resourcesOrErrorData["_headers"] === 'object') {
          // error response
          // adding exactly one error item per request in error :
-         importStateRes.postedErrors.push([ resourcesOrErrorData._body._body, resourcesOrErrorData.request._body ]);
-         /*var requestBodyHtml = toolifyDcListOrResource(origResources);
-         // NB. no need of wrapping by [...] and taking [0] because always there
-         importStateRes.errorHtml += "<p>-&nbsp;" + resourcesOrErrorData._body._body
-               + " :<br/>" + requestBodyHtml + "<p/>";
-         for (var rInd in origResources) {
-            var origResource = origResources[rInd];
-            importStateRes.postedResources[origResource['@id']] = null; // used as set
-         }*/
+         //var postedError = { data : resourcesOrErrorData._body._body,
+         //      request : resourcesOrErrorData.request, resources : origResources };
+         var postedError = { data : resourcesOrErrorData, resources : origResources };
+         if (origResources) {
+            if (!(origResources instanceof Array)) {
+               var origResource = origResources;
+               var origResourceUri = origResource['@id'];
+               importStateRes.sentResourceUriSet[origResourceUri] = null;
+               importStateRes.postedErrors[origResourceUri] = postedError;
+            } else {
+               for (var rInd in origResources) {
+                  var origResource = origResources[rInd];
+                  var origResourceUri = origResource['@id'];
+                  importStateRes.sentResourceUriSet[origResourceUri] = null;
+                  importStateRes.postedErrors[origResourceUri] = postedError;
+               }
+            }
+         } else {
+            console.log('WARNING no origResources');
+         }
          
       } else {
+         // no error (when ??), merely displaying posted resources :
          for (var rInd in resourcesOrErrorData) {
             var postedResource = resourcesOrErrorData[rInd];
             var postedUri = postedResource['@id'];
-            if (!importStateRes.postedResources[postedUri]) {
-               importStateRes.postedResources[postedUri] = postedResource; // used as set
-               importStateRes.postedResourceUris.push(postedUri);
-            }
+            importStateRes.postedResources[postedUri] = postedResource;
+            importStateRes.sentResourceUriSet[postedUri] = null;
+            delete importStateRes.postedErrors[postedUri]; // in case retried because of conflict
+            importStateRes.postedResourceUris.push(postedUri);
          }
          /*if (typeof resourcesOrData['@id'] !== 'undefined') {
-            importStateRes.postedResources[resourcesOrData['@id']] = null; // set
+            importStateRes.sentResourceUriSet[resourcesOrData['@id']] = null; // set
          } else { // usual case : single value list
             for (var rInd in resourcesOrData) {
-               importStateRes.postedResources[resourcesOrData[rInd]['@id']] = null; // set
+               importStateRes.sentResourceUriSet[resourcesOrData[rInd]['@id']] = null; // set
             }
          }*/
       }
       
+      importStateRes.sentNb = Object.keys(importStateRes.sentResourceUriSet).length; // updating
       importStateRes.postedNb = Object.keys(importStateRes.postedResources).length; // updating
-      var done = importStateRes.toBePostedNb === (importStateRes.postedNb + importStateRes.postedErrors.length);
+      importStateRes.postedErrorNb = Object.keys(importStateRes.postedErrors).length; // updating
+      var done = importStateRes.toBePostedNb === importStateRes.sentNb; //  + importStateRes.postedErrors.length);
+      // TODO BETTER if last one has to be retried because of conflict
       
-      if (true/*importStateRes.postedNb % 10 == 0 || importStateRes.postedNb > importStateRes.toBePostedNb - 10*/) {
+      if (true/*importStateRes.sentNb % 10 == 0 || importStateRes.sentNb > importStateRes.toBePostedNb - 10*/) {
          var msg = "Posted <a href=\"#importedResourcesFromCsv\"";
          if (done) {
             var resourcesSummary = '';
             for (var rInd in importStateRes.postedResourceUris) {
-               if (rInd < 15 || rInd > importStateRes.postedNb - 10) {
+               if (rInd < 15 || rInd > importStateRes.sentNb - 10) {
                   var parsedUri = parseUri(importStateRes.postedResourceUris[rInd]);
                   resourcesSummary += '../' + parsedUri.modelType + '/' + parsedUri.id + ' \n';
                } else if (rInd === 15) {
@@ -685,36 +700,40 @@
             msg += " title=\"" + resourcesSummary + "\"";
          }
          msg += ">" + importStateRes.postedNb + /*' / ' + importStateRes.toBePostedNb +*/" " + kind + "s</a> (";
-         if (importStateRes.postedErrors.length === 0) {
+         if (importStateRes.postedErrorNb === 0) {
             msg += "no error";
             msg += "), <a href=\"#datacoreResources\">browse them</a>";
          } else {
-            msg += "<a href=\"#datacoreResources\">" + importStateRes.postedErrors.length + " error"
-            if (importStateRes.postedErrors.length !== 1) {
+            msg += "<a href=\"#datacoreResources\">" + importStateRes.postedErrorNb + " error"
+            if (importStateRes.postedErrorNb !== 1) {
                msg += "s";
             }
             msg += "</a>";
             msg += ")";
          }
          counter.html(msg);
-         if (importStateRes.postedErrors.length != 0) {
+         // updating error details : NOO only at the end
+         /*if (importStateRes.postedErrorNb !== 0) {
             $('.mydata').html(importStateRes.errorHtml);
-         }
+         }*/
       }
       
       if (done) {
          displayImportedResourcesPosted(importStateRes);
          
-         if (importStateRes.postedErrors.length == 0) {
+         if (importStateRes.postedErrorNb == 0) {
             console.log("INFO Successfully posted " + importStateRes.postedNb + " " + kind + "s.");
             if (typeof success !== 'undefined') {
                success(importState);
             }
+            
          } else {
             console.log("WARNING Posted " + importStateRes.postedNb + " "+ kind
-                  + "s with " + importStateRes.postedErrors.length + " errors.");
+                  + "s with " + importStateRes.postedErrorNb + " errors.");
             if (typeof error !== 'undefined') {
                error(importState);
+            } else {
+               return concludeImport();
             }
          }
          return true;
@@ -722,13 +741,70 @@
       return false;
    }
    function displayImportedResourcesPosted(importStateRes) {
-      if (importStateRes.postedResourceUris.length !== 0) {
-         var lastUri = importStateRes.postedResourceUris[importStateRes.postedResourceUris.length - 1];
-         setUrl(lastUri); // showing all resources in last posted in type
+      if (importStateRes.postedErrorNb == 0) {
+         if (importStateRes.postedResourceUris.length !== 0) {
+            var lastUri = importStateRes.postedResourceUris[importStateRes.postedResourceUris.length - 1];
+            setUrl(lastUri); // pointing to all resources in last posted in type
+         } else {
+            setUrl('');
+         }
+         $('.mydata').html(toolifyDcResourcePartial(importStateRes.postedResources, 50)); // , null, parseUri(data.request.path).modelType
+         
       } else {
-         setUrl('');
+         var partialErrors = getPartial(importStateRes.postedErrors, 10);
+         for (var eInd in partialErrors.res) {
+            var postedError = partialErrors.res[eInd];
+            importStateRes.errorHtml += "<p>-&nbsp;";
+            if (postedError.data._body._type === 'application/json') {
+               var jsonError = eval('[' + postedError.data._body._body + ']')[0];
+               // NB. wrapping by [...] and taking [0] because not list
+
+               importStateRes.errorHtml += jsonError.message; // 'code : ' + error.code
+               if (jsonError.causes && jsonError.causes.length !== 0) {
+                  importStateRes.errorHtml += "<br/>" + jsonError.causes[0].message; // 'code : ' + error.code
+               }
+               if (jsonError.projectName) { // Resource & Model Exception
+                  importStateRes.errorHtml += '<br/>project : ' + jsonError.projectName + ', ';
+               }
+               importStateRes.errorHtml += 'location : <br/>' + ((jsonError.causes && jsonError.causes.length !== 0) ?
+                     jsonError.causes[0].location : jsonError.location);
+               if (jsonError.resource) { // Resource exception
+                  importStateRes.errorHtml += '<br/>resource : ' + toolifyDcListOrResource(jsonError.resource);
+               } else if (postedError.resources) {
+                  importStateRes.errorHtml += '<br/>resource : ' + (postedError.resources['@id'] ?
+                        toolifyDcListOrResource(postedError.resources) : toolifyDcResourcePartial(postedError.resources));
+               }
+               /*if (jsonError.resource) { // Resource exception
+                  importStateRes.errorHtml += '<br/>resource : ' + toolifyDcListOrResource(jsonError.resource);
+                  if (jsonError.causes && jsonError.causes.length !== 0) {
+                     importStateRes.errorHtml += jsonError.causes[0].message; // 'code : ' + error.code
+                  } else {
+                     importStateRes.errorHtml += jsonError.message; // 'code : ' + error.code
+                  }
+               } else {
+                  importStateRes.errorHtml += jsonError.message; // 'code : ' + error.code
+                  if (postedError.resources) {
+                     importStateRes.errorHtml += '<br/>resource : ' + (postedError.resources['@id'] ?
+                           toolifyDcListOrResource(postedError.resources) : toolifyDcResourcePartial(postedError.resources));
+                  }
+               }*/
+               if (jsonError.model) { // ModelException (MIGHT NOT BE REQUIRED IF ALREADY DISPLAYED IN "resource")
+                  importStateRes.errorHtml += '<br/>model : ' + JSON.stringify(jsonError.model, null, "\t") + ', ';
+               }
+            } else {
+               importStateRes.errorHtml += postedError.data._body._body;
+               if (postedError.resources) {
+                  importStateRes.errorHtml += '<br/>resource : ' + (postedError.resources['@id'] ?
+                        toolifyDcListOrResource(postedError.resources) : toolifyDcResourcePartial(postedError.resources));
+               }
+            }
+            importStateRes.errorHtml += "</p>";
+         }
+         if (partialErrors.isPartial) {
+            importStateRes.errorHtml += "<br/>...";
+         }
+         $('.mydata').html(importStateRes.errorHtml);
       }
-      $('.mydata').html(toolifyDcResourcePartial(importStateRes.postedResources, 50)); // , null, parseUri(data.request.path).modelType
    }
    
 
@@ -1625,11 +1701,8 @@
       }
       
       function importedDataPosted(resourceOrData, origResources) {
-         var done = importedResourcePosted(resourceOrData, importState.data.posted, importState,
-               "resource", $('.resourceCounter'), origResources);
-         if (done) {
-            concludeImport();
-         }
+         importedResourcePosted(resourceOrData, importState.data.posted, importState,
+               "resource", $('.resourceCounter'), origResources, concludeImport, concludeImport);
       }
       for (var uri in importState.data.resources) {
          if (importState.aborted) {
@@ -1835,6 +1908,9 @@
       if (typeof field === 'undefined') {
          var fieldUri = buildUri("dcmf:field_0", mixinTypeName + "/" + fieldName); // TODO map & sub sub resource
          var fieldDataType = fieldRow["Data type"];
+         if (typeof fieldDataType === 'undefined' || fieldDataType.trim().length === 0) {
+            fieldDataType = 'string'; // if none, defaults to string
+         }
          var fieldType = importState.typeMap[fieldDataType.toLowerCase()];
          if (typeof fieldType === 'undefined') {
             fieldType = "resource";
@@ -1844,7 +1920,7 @@
                "@id" : fieldUri,
                "o:version" : 0, // TODO top level's ?
                "@type" : [ "dcmf:field_0" ], // TODO version, default one ?
-               "dcmf:type" : (fieldType === 'i18n') ? 'map' : fieldType,
+               "dcmf:type" : (fieldType === 'i18n') ? 'map' : fieldType
          }; // TODO prefixes, case, version
          
          // TODO case
@@ -2005,9 +2081,6 @@
               continue; // skipping comment line, TODO rm should be done auto by papaparse comments = true
            }
            mixinName = buildMixinName(fieldRow["Mixin"], importState); // TODO case
-
-           var fieldPath = fieldRow["Field name"];
-           var fieldPathElements = fieldPath.split("."); // at least one
            
            var mixin = mixins[mixinName];
            ///var isModel = !convertMap["boolean"](fieldRow["Is Mixin"]);
@@ -2053,8 +2126,25 @@
               mergeStringValueOrDefaultIfAny(mixin, "dcmo:isHistorizable", fieldRow["isHistorizable"], importState.metamodel["dcmo:model_0"], importState);
               mergeStringValueOrDefaultIfAny(mixin, "dcmo:isContributable", fieldRow["isContributable"], importState.metamodel["dcmo:model_0"], importState);
               
-              // TODO any other DCModel field
+           // country / language specific : (requires inheriting a generic mixin)
+           var specificToCountryLanguage = fieldRow["specificToCountryLanguage"];
+           if (specificToCountryLanguage && specificToCountryLanguage.trim() !== '') {
+              if (!contains(mixin['@type'], 'dcmls:CountryLanguageSpecific')) {
+                 // NB. for now actually it is already there by default,
+                 // TODO LATER rather optional / candidate mixin (FR/IT...)CountryLanguageSpecific
+                 mixin['@type'].push('dcmls:CountryLanguageSpecific');
+              }
+              mixin['dcmls:code'] = specificToCountryLanguage.trim();
+           }
+              
+           // TODO any other DCModel field
+           
 
+           var fieldPath = fieldRow["Field name"];
+           if (typeof fieldPath !== 'undefined' && fieldPath !== null && fieldPath.trim().length !== 0) {
+           
+           var fieldPathElements = fieldPath.split("."); // at least one
+           
            // filling import plan :
            var rootMixinName = mixinName;
            var fieldNameTreeCur = mixinNameToFieldNameTree[rootMixinName];
@@ -2162,8 +2252,10 @@
               importState.model.fieldInternalNameToMixinName[fieldInternalName] = mixin['dcmo:name']; // to filter importableMixins
            } // else may have already been seen within fieldPath
            
+           } // end import field if any
+           
            // TODO also mixins, resource links & sub...
-        }
+        } // end line loop
 
          importState.model["loops"] = loopIndex + 1;
         
@@ -2314,11 +2406,29 @@
    }
    
    function refreshAndSchedulePost(modelOrMixinArray, relativeTypeUrl, postedCallback, importState) {
+      function refreshAndPostObsoleteUntilFresh(data, origResource) {
+         if (data._raw.statusCode === 409) {
+            // refresh then repost :
+            getData(origResource['@id'], function (resource) {
+               // updating existing resource : 
+               // NB. can't access "mixin" variable because has been changed since call is async
+               /*var upToDateMixin = findMixin(resource["dcmo:name"], modelOrMixinArray);
+               upToDateMixin["o:version"] = resource["o:version"];*/
+               origResource["o:version"] = resource["o:version"];
+               postAllDataInType(data.request.path, origResource,
+                     postedCallback, refreshAndPostObsoleteUntilFresh);
+            }, postedCallback);
+         } else {
+            postedCallback(data, origResource);
+         }
+      }
+      
       for (var mInd in modelOrMixinArray) {
          if (importState.aborted) {
             return abortImport();
          }
          var mixin = modelOrMixinArray[mInd];
+         
          // posting one at a time rather than all at once because version has
          // to be refreshed and it is easier to do it in sync this way
          var uri = mixin["@id"];
@@ -2328,8 +2438,8 @@
             var upToDateMixin = findMixin(resource["dcmo:name"], modelOrMixinArray);
             upToDateMixin["o:version"] = resource["o:version"];
             postAllDataInType(relativeTypeUrl, upToDateMixin,
-                  postedCallback, postedCallback);
-         }, function (data) {
+                  postedCallback, refreshAndPostObsoleteUntilFresh);
+         }, function (data) { // error because resource does not exist
             // creating new resource :
             var relativeUrl = data.request.path
             var resourceIri = relativeUrl.substring(relativeUrl.indexOf("/dc/type/") + "/dc/type/".length);
@@ -2391,15 +2501,15 @@
    }*/
    function abortImport(msg) {
       if (!window.importState) {
-         return; // already called
+         return false; // already called
       }
       
       var importState = window.importState;
-      if (Object.keys(importState.data.posted.postedResources).length !== 0) {
+      if (importState.data.posted.postedNb !== 0) {
          displayImportedResourcesPosted(importState.data.posted);
       } else if (importState.data.rowNb !== 0) {
          displayParsedResource(importState);
-      } else if (Object.keys(importState.model.posted.postedResources).length !== 0) {
+      } else if (importState.model.posted.postedNb !== 0) {
          displayImportedResourcesPosted(importState.model.posted);
       } else if (importState.model.modelArray !== null) {
          displayImportedModels(importState);
@@ -2480,11 +2590,14 @@
                   errors : [], // not used yet
                   warnings : [], // not used yet
                   toBePostedNb : 0, // = resources nb
-                  postedResources : {}, // used as set
-                  postedResourceUris : [], // to have their order
+                  postedResources : {},
+                  postedNb : 0,
+                  sentResourceUriSet : {}, // used as set
+                  sentNb : 0,
+                  postedResourceUris : [], // to have their order (NOO already in postedResources)
                   postedSuccessNb : 0, // computed from postedResources
-                  postedErrors : [],
-                  //postedErrorNb : 0, // merely postedErrors.length
+                  postedErrors : {},
+                  postedErrorNb : 0,
                   errorHtml : ""
                }
             },
@@ -2529,11 +2642,14 @@
                   errors : [], // not used yet
                   warnings : [], // not used yet
                   toBePostedNb : 0, // = resources nb
-                  postedResources : {}, // used as set
-                  postedResourceUris : [], // to have their order
+                  postedResources : {},
+                  postedNb : 0,
+                  sentResourceUriSet : {}, // used as set
+                  sentNb : 0,
+                  postedResourceUris : [], // to have their order (NOO already in postedResources)
                   postedSuccessNb : 0, // computed from postedResources
-                  postedErrors : [],
-                  //postedErrorNb : 0, // merely postedErrors.length
+                  postedErrors : {},
+                  postedErrorNb : 0,
                   errorHtml : ""
                }
             }
@@ -2576,12 +2692,12 @@
                }
                $('.modelRowCounter').html(message);
                if (importState.model.errors.length != 0) {
-                  return; // aborting
+                  return abortImport(importState.model.errors.length + ' model parsing errors');
                }
                
                function fillDataWhenAllModelsUpdated(resourcesOrData, origResources) {
                   importedResourcePosted(resourcesOrData, importState.model.posted, importState,
-                        "models or mixin", $('.modelCounter'), origResources, fillData);
+                        "models or mixin", $('.modelCounter'), origResources, fillData, concludeImport);
                };
 
                importState.model.posted.toBePostedNb = importState.model.modelArray.length;
