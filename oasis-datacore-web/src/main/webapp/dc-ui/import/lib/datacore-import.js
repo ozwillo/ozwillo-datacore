@@ -701,15 +701,22 @@
          }
          msg += ">" + importStateRes.postedNb + /*' / ' + importStateRes.toBePostedNb +*/" " + kind + "s</a> (";
          if (importStateRes.postedErrorNb === 0) {
-            msg += "no error";
-            msg += "), <a href=\"#datacoreResources\">browse them</a>";
+            msg += "no error)";
+            if (done) {
+               importStateRes.endTime = moment();
+               msg += " in " + importStateRes.endTime.diff(importStateRes.startTime, 'seconds') + 's';
+            }
+            msg += ", <a href=\"#datacoreResources\">browse them</a>";
          } else {
             msg += "<a href=\"#datacoreResources\">" + importStateRes.postedErrorNb + " error"
             if (importStateRes.postedErrorNb !== 1) {
                msg += "s";
             }
-            msg += "</a>";
-            msg += ")";
+            msg += "</a>)";
+            if (done) {
+               importStateRes.endTime = moment();
+               msg += " in " + importStateRes.endTime.diff(importStateRes.startTime, 'seconds') + 's';
+            }
          }
          counter.html(msg);
          // updating error details : NOO only at the end
@@ -821,6 +828,7 @@
          }
          // row default info :
          log.path = importState.data.row.pathInFieldNameTree.join('.');
+         log.line = importState.data.rInd;
       } else {
          logs = importState.model[logListName];
          // NB. happens when mergeValue() used in model field parsing
@@ -1691,8 +1699,11 @@
      }
   }
   function csvToDataCompleted(importState) {
+     importState.data.endTime = moment();
+     
       displayParsedResource(importState);
 
+      importState.data.posted.startTime = moment();
       importState.data.posted.toBePostedNb = Object.keys(importState.data.resources).length;
       if (importState.data.posted.toBePostedNb === 0) {
          importedResourcePosted([], importState.data.posted, importState,
@@ -1735,7 +1746,8 @@
       
    function displayParsedResource(importState) {
       $('.resourceRowCounter').html("Handled <a href=\"#importedJsonFromCsv\">" + importState.data.rowNb
-            + " rows</a> (<a href=\"#datacoreResources\">" + importState.data.errors.length + " errors</a>)");
+            + " rows</a> (<a href=\"#datacoreResources\">" + importState.data.errors.length + " errors</a>) in "
+            + importState.data.endTime.diff(importState.data.startTime, 'seconds') + "s");
       if (importState.data.errors.length != 0) {
          //$('.mydata').html(
          var errorsString = stringifyPartial(importState.data.errors, 50);
@@ -1798,6 +1810,7 @@
                importState.data.rInd = importState.data.rowStart;
                
                importState.data.columnNames = results.meta.fields;
+               importState.data.startTime = moment();
                getImportedFieldsModels(importState, nextRowFunction); // NB. nextRowFunction starts resource building
             }
       }
@@ -2587,6 +2600,8 @@
                warnings : [],
                errors : [],
                posted : {
+                  startTime : null, // moment()
+                  endTime : null, // moment()
                   errors : [], // not used yet
                   warnings : [], // not used yet
                   toBePostedNb : 0, // = resources nb
@@ -2606,6 +2621,8 @@
                rowLimit : 50,
                rowStart : 0,
                // state :
+               startTime : null, // moment()
+               endTime : null, // moment()
                file : null,
                fileName : 'samples/openelec/electeur_v26010_sample.csv',
                columnNames : null,
@@ -2637,8 +2654,10 @@
                resources : {},
                warnings : [],
                errors : [],
-               detailedErrors : true,
+               detailedErrors : true, // log error contains modelTypeToRowResources
                posted : {
+                  startTime : null, // moment()
+                  endTime : null, // moment()
                   errors : [], // not used yet
                   warnings : [], // not used yet
                   toBePostedNb : 0, // = resources nb
@@ -2700,6 +2719,7 @@
                         "models or mixin", $('.modelCounter'), origResources, fillData, concludeImport);
                };
 
+               importState.model.posted.startTime = moment();
                importState.model.posted.toBePostedNb = importState.model.modelArray.length;
                refreshAndSchedulePost(importState.model.modelArray, { modelType : 'dcmo:model_0' },
                      fillDataWhenAllModelsUpdated, importState);
