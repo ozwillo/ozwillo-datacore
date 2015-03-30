@@ -95,10 +95,10 @@ public class EntityModelService {
       }
       DCModelBase cachedModel = modelService.getModelBase(this.getModelName(dataEntity));
       if (cachedModel == null) { // = cachedInstanciableModel
-         return;
-         /*throw new IllegalArgumentException("Can't find model for DCEntity, "
+         throw new IllegalArgumentException("Can't find model for DCEntity, "
                + "it's probably obsolete i.e. its model has changed since (only in test) : "
-               + dataEntity.getUri()); // TODO custom ex ?*/
+               + dataEntity.getUri()); // NB. if no exception will NullPointerException anyway
+         // later in ResourceEntityMapperService.entityToResource() 
       }
       /*if (!cachedModel.isInstanciable()) { // = cachedInstanciableModel
          throw new IllegalArgumentException("DCEntity model type is not instanciable, "
