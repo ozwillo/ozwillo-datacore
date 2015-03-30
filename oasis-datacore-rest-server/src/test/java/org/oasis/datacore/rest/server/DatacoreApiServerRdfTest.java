@@ -3,6 +3,7 @@ package org.oasis.datacore.rest.server;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -112,6 +113,10 @@ public class DatacoreApiServerRdfTest {
       List<DCResource> resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             params, null, 10);
       Assert.assertEquals(1, resources.size());
+      @SuppressWarnings("unchecked")
+      List<Map<String,Object>> i18nName = (List<Map<String,Object>>) resources.get(0).get("i18n:name");
+      Assert.assertFalse(i18nName.isEmpty());
+      Assert.assertTrue(i18nName.get(0).containsKey("@value")); // and NOT v like in "native" format
    }
    
    @Test

@@ -23,8 +23,6 @@ import javax.ws.rs.ext.Provider;
 
 import org.apache.commons.io.IOUtils;
 import org.oasis.datacore.rest.api.DCResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jsonldjava.core.JsonLdError;
@@ -46,7 +44,7 @@ import com.github.jsonldjava.utils.JsonUtils;
    DatacoreMediaType.APPLICATION_JSONLD + "; format=expand" })
 public class JsonLdJavaRdfProvider implements MessageBodyReader<Object>, MessageBodyWriter<Object> {
 
-   private static final Logger logger = LoggerFactory.getLogger(JsonLdJavaRdfProvider.class);
+   //private static final Logger logger = LoggerFactory.getLogger(JsonLdJavaRdfProvider.class);
    
    private boolean clientSide = true;
    
@@ -125,11 +123,10 @@ public class JsonLdJavaRdfProvider implements MessageBodyReader<Object>, Message
             IOUtils.write(res.toString(), entityStream);
          }
          
-      } catch(IOException | JsonLdError ioe) {
-         //Problem with json ld fall back to normal execution
-         logger.error("Error while outputting JSONLD-based format (RDF etc.)", ioe);
-         objectMapper.writer().writeValue(entityStream, oneOrMoreResources);
-         return;
+      } catch(IOException | JsonLdError
+            | RuntimeException ioe) { // ex. NullPointer in conversion to turtle of map field
+         throw new WebApplicationException(JaxrsExceptionHelper.toInternalServerErrorResponse(
+               new IOException("Error while outputting JSONLD-based format (RDF etc.)", ioe)));
       }
    }
 
@@ -162,7 +159,7 @@ public class JsonLdJavaRdfProvider implements MessageBodyReader<Object>, Message
          json = json.replaceAll("\"l\"", "\"@language\"" )
                .replaceAll("\"v\"", "\"@value\"");
          // TODO better : visit resource and rebuild its (possibly immutable) props the right way...
-      }
+      } // NB. on server side in response, done in 
       Object jsonObject = JsonUtils.fromInputStream(new ByteArrayInputStream(json.getBytes()));
       return jsonObject;
    }

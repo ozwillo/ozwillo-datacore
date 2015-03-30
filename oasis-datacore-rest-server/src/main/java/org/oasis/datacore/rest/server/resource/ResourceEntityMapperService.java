@@ -847,8 +847,8 @@ public class ResourceEntityMapperService {
          return entityPropValue;
       case "i18n" :
          Map<String, Object> requestContext = requestContextProviderFactory.getRequestContext(); // should never be null
+         // looking in Request : (Server in or Client Out, context aggregates both with CXF Exchange) 
          String acceptContentType = CxfMessageHelper.getHeaderString(requestContext, Message.ACCEPT_CONTENT_TYPE);
-         // NB. rather than inMessage.get(Message.ACCEPT_CONTENT_TYPE) because none in client out case
          if (acceptContentType != null) { // else not called through REST
             int indexOfComma = acceptContentType.indexOf(',');
             if (indexOfComma != -1) {
