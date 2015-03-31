@@ -117,7 +117,6 @@
       <dependency>
          <groupId>org.hibernate</groupId>
          <artifactId>hibernate-validator</artifactId>
-         <version>4.2.0.Final</version>
       </dependency>
       
       <!-- for ImmutableMap/List(.Builder), also used by MITRE OpenIdConnect & Swagger -->

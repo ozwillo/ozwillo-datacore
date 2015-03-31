@@ -116,6 +116,7 @@
 		<!-- spring.version>3.2.4.RELEASE</spring.version -->
 		<spring.version>3.2.10.RELEASE</spring.version><!-- brought by spring data's ; older : 3.1.4.RELEASE -->
 		<cglib.version>2.2.2</cglib.version>
+		<hibernate-validator.version>4.2.0.Final</hibernate-validator.version>
 
 		<!-- spring data on mongodb -->
 		<spring-data-mongodb.version>1.5.2.RELEASE</spring-data-mongodb.version><!-- 
@@ -212,20 +213,39 @@
 						<groupId>org.codehaus.mojo</groupId>
 						<artifactId>cobertura-maven-plugin</artifactId>
 						<version>2.6</version>
-						<!-- configuration> <check> <branchRate>85</branchRate> <lineRate>85</lineRate> 
-							<haltOnFailure>true</haltOnFailure> <totalBranchRate>85</totalBranchRate> 
-							<totalLineRate>85</totalLineRate> <packageLineRate>85</packageLineRate> <packageBranchRate>85</packageBranchRate> 
-							</check> </configuration -->
+						<!-- configuration>
+							<check>
+								<branchRate>85</branchRate>
+								<lineRate>85</lineRate> 
+								<haltOnFailure>true</haltOnFailure>
+								<totalBranchRate>85</totalBranchRate> 
+								<totalLineRate>85</totalLineRate>
+								<packageLineRate>85</packageLineRate>
+								<packageBranchRate>85</packageBranchRate> 
+							</check>
+						</configuration -->
 						<!-- see http://stackoverflow.com/questions/6931360/what-is-the-proper-way-to-use-cobertura-with-maven-3-0-2 -->
-						<!-- executions> <execution> <id>clean</id> <phase>clean</phase> <goals> 
-							<goal>clean</goal> </goals> </execution> <execution> <id>instrument</id> 
-							<phase>process-classes</phase> <goals> <goal>instrument</goal> </goals> </execution -->
-						<!-- No "check" in verify phase, else error : Unable to prepare instrumentation 
-							directory. source and destination are the same directory. -->
-						<!-- NB. instrument and check must never be in the same execution because 
-							one depends on the other see http://blog.bielu.com/2012/01/errata-to-maven2-maven3-migration.html -->
-						<!-- No "cobertura" in package phase, because it must be done in reporting 
-							element instead -->
+						<!-- executions>
+							<execution>
+								<id>clean</id>
+								<phase>clean</phase>
+								<goals> 
+									<goal>clean</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>instrument</id> 
+								<phase>process-classes</phase>
+								<goals>
+									<goal>instrument</goal>
+								</goals>
+							</execution -->
+							<!-- No "check" in verify phase, else error : Unable to prepare instrumentation 
+								directory. source and destination are the same directory. -->
+							<!-- NB. instrument and check must never be in the same execution because 
+								one depends on the other see http://blog.bielu.com/2012/01/errata-to-maven2-maven3-migration.html -->
+							<!-- No "cobertura" in package phase, because it must be done in reporting 
+								element instead -->
 						<!-- /executions -->
 					</plugin>
 				</plugins>
@@ -268,16 +288,33 @@
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!-- dependency> <groupId>org.mockito</groupId> <artifactId>mockito-all</artifactId> 
-			<scope>test</scope> </dependency -->
+		<!-- dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId> 
+			<scope>test</scope>
+		</dependency --><!-- LATER mocked tests -->
 	</dependencies>
 
 	<!-- ======================== -->
 	<!-- Dependencies constraints -->
 	<!-- ======================== -->
+	<!-- includes transitive dependencies' licenses analysis
+	(done in Eclipse M2E Dependency Hierarchy analysis).
+	To sum it up, encountered AGPLv3-compatible licenses are :
+	- GPL, LGPL
+	- Apache 2.0 license
+	- MIT License
+	- (new) BSD License i.e. without original advertising clause
+	And encountered incompatible licenses are :
+	- CPL, EPL
+	- original BSD License i.e. with advertising clause
+	- GPL2 with classpath Exception or CDDL 1.0 licensed (java & javax)
+	-->
 	<dependencyManagement>
 		<dependencies>
-			<!-- Testing -->
+			<!-- Testing :
+			junit (TODO CPL 1.0 License) which depends on hamcrest-core ((new) BSD License),
+			jetty (TODO EPL 1.0 License) -->
 			<dependency>
 				<groupId>junit</groupId>
 				<artifactId>junit</artifactId>
@@ -325,11 +362,17 @@
 				<artifactId>oasis-datacore-api-client</artifactId>
 				<version>${oasis-datacore.version}</version>
 			</dependency>
+	      <dependency>
+	        <groupId>org.oasis.datacore</groupId>
+	        <artifactId>oasis-datacore-kernel-client</artifactId>
+	        <version>${oasis-datacore.version}</version>
+	      </dependency>
 
-			<!-- logging : using slf4j facade slf4j/logback (log4j successor) more 
+			<!-- logging : using slf4j (MIT License) facade on log4j (Apache 2.0 License) backend
+			   NB. logback (log4j successor) more 
 				recent, but log4j backend easier with spring & for single conf file why http://stackoverflow.com/questions/2533614/what-are-the-latest-options-in-java-logging-frameworks 
 				how http://stackoverflow.com/questions/4311026/how-to-get-slf4j-hello-world-working-with-log4j 
-				LATER slf4j also for spring (using jcl-over-slf4j) http://spring.io/blog/2009/12/04/logging-dependencies-in-spring/ 
+				LATER slf4j also for spring (using jcl-over-slf4j, also Apache 2.0 License) http://spring.io/blog/2009/12/04/logging-dependencies-in-spring/ 
 				LATER2 logback see gru http://www.lordofthejars.com/2012/04/hey-teachers-leave-them-kids-alone-all.html 
 				LATER3 mongo-backed logging ?? https://github.com/deftlabs/mongo-java-logging -->
 			<dependency>
@@ -348,12 +391,20 @@
 				<version>${log4j.version}</version>
 			</dependency>
 			<!-- LATER for logback backend instead -->
-			<!-- dependency> <groupId>org.slf4j</groupId> <artifactId>jcl-over-slf4j</artifactId> 
-				<version>${slf4j.version}</version> </dependency> <dependency> <groupId>ch.qos.logback</groupId> 
-				<artifactId>logback-classic</artifactId> <version>${logback.version}</version> 
-				</dependency -->
+			<!-- dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>jcl-over-slf4j</artifactId> 
+				<version>${slf4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>ch.qos.logback</groupId> 
+				<artifactId>logback-classic</artifactId>
+				<version>${logback.version}</version> 
+			</dependency -->
 
-			<!-- Spring framework -->
+			<!-- Spring framework and deps (all Apache 2.0 License) :
+			core, context (which also brings beans (!), expression, aop which brings aopalliance which is Public Domain)
+			context-support (cache), test ; also web, webmvc, jdbc -->
 			<dependency>
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-core</artifactId>
@@ -374,15 +425,24 @@
 				<artifactId>spring-test</artifactId>
 				<version>${spring.version}</version>
 			</dependency>
-			<!-- to support spring @Configuration
+			<!-- cglib (Apache 2.0 License), depends on asm ((new) BSD License), to support spring @Configuration
          see http://www.mkyong.com/spring3/cglib-is-required-to-process-configuration-classes/ -->
 			<dependency>
 				<groupId>cglib</groupId>
 				<artifactId>cglib</artifactId>
 				<version>${cglib.version}</version>
 			</dependency>
+	      <!-- (Hibernate) javax.validation impl, brings jBoss' api and slf4j-api (all Apache 2.0 License)
+	      else ValidationException: Unable to create a Configuration, because no Bean Validation provider could be found. Add a provider like Hibernate Validator (RI) to your classpath.
+	      see http://goldenpackagebyanuj.blogspot.fr/2013/05/validationException-no-Bean-Validation-provider-could-be-found.html -->
+	      <dependency>
+	         <groupId>org.hibernate</groupId>
+	         <artifactId>hibernate-validator</artifactId>
+	         <version>${hibernate-validator.version}</version>
+	      </dependency>
+	      
 
-         <!-- Spring security -->
+         <!-- Spring security (Apache 2.0 License) -->
          <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-core</artifactId>
@@ -416,42 +476,57 @@
             <artifactId>spring-expression</artifactId>
             <version>${spring.version}</version>
          </dependency>
-         <dependency><!-- not used (for now) -->
+         <dependency><!-- not used (for now), brought by spring-security-oauth2 -->
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
             <version>${spring.version}</version>
          </dependency>
-         <dependency><!-- not used (for now) -->
+         <dependency><!-- not used (for now) ? -->
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-web</artifactId>
             <version>${spring.security.version}</version>
          </dependency>
-         <dependency><!-- not used -->
+         <dependency><!-- not used ? brought by spring-security-web -->
             <groupId>org.springframework</groupId>
             <artifactId>spring-jdbc</artifactId>
             <version>${spring.version}</version><!-- 3.2.5 -->
          </dependency>
-         <!-- MITRE OpenId Connect Client library, for client & test -->
+         <!-- MITRE OpenId Connect Client library, for client & test (Apache 2.0 License),
+         depends on :
+         - spring & security & oauth (Apache 2.0 License),
+         guava (Apache 2.0 License), httpclient (Apache 2.0 License), gson (Apache 2.0 License), slf4j-api (MIT License),
+         javax.persistence (TODO GPL2 with classpath Exception or CDDL 1.0 licensed)
+         and nimbus-jose-jwt (Apache 2.0 License) which depends on :
+         - commons-codec (Apache 2.0 License), jcip-annotations (TODO Creative Commons Attribution 2.5),
+         json-smart (Apache 2.0 License), bcprov-jdk5on (MIT License),
+         - javax.mail which depends on javax.activation (both TODO GPL2 with classpath Exception or CDDL 1.0 licensed) -->
          <dependency>
             <groupId>org.mitre</groupId>
             <artifactId>openid-connect-client</artifactId>
             <version>${mitre-openid-client.version}</version>
          </dependency>
 
-			<!-- mongodb java driver -->
+			<!-- mongodb java driver (Apache 2.0 License) -->
 			<dependency>
 				<groupId>org.mongodb</groupId>
 				<artifactId>mongo-java-driver</artifactId>
 				<version>${mongodb.version}</version>
 			</dependency>
-			<!-- Spring data mongodb -->
+			<!-- Spring data mongodb (Apache 2.0 License), brings deps :
+			- Joda's DateTime (including in spring data auditing) (Apache 2.0 License)
+			- guava (Apache 2.0 License)
+			- Spring tx & -data-commons (Apache 2.0 License) -->
 			<dependency>
 				<groupId>org.springframework.data</groupId>
 				<artifactId>spring-data-mongodb</artifactId>
 				<version>${spring-data-mongodb.version}</version>
+				<exclusions>
+					<exclusion>
+						<groupId>org.slf4j</groupId>
+						<artifactId>jcl-over-slf4j</artifactId><!-- rather using slf4j-log4j12 (for now) -->
+					</exclusion>
+				</exclusions>
 			</dependency>
-			<!-- Spring data mongodb - date using Joda's DateTime (including in spring 
-				data auditing) -->
 			<dependency>
 				<groupId>joda-time</groupId>
 				<artifactId>joda-time</artifactId>
@@ -459,7 +534,7 @@
 			</dependency>
 
 			<!-- REST : -->
-			<!-- Jackson JAXRS (pulls all other deps) -->
+			<!-- Jackson JAXRS (pulls all other deps) (Apache 2.0 License) -->
 			<dependency>
 				<groupId>com.fasterxml.jackson.jaxrs</groupId>
 				<artifactId>jackson-jaxrs-json-provider</artifactId><!-- brings JacksonJsonProvider, 
@@ -476,13 +551,13 @@
 			</dependency>
 			<!-- NB. other Jackson deps : ex. for mere (JSONLD) parsing only core 
 				& databind -->
-			<!-- JAXRS API -->
+			<!-- JAXRS API (TODO GPL2 with classpath Exception or CDDL 1.0 licensed)-->
 			<dependency>
 				<groupId>javax.ws.rs</groupId>
 				<artifactId>javax.ws.rs-api</artifactId>
 				<version>${jaxrs.version}</version>
 			</dependency>
-			<!-- Servlet 3, from CXF's Jetty and compatible with Tomcat 7 ; otherwise 
+			<!-- Servlet 3 (Apache 2.0 License), from CXF's Jetty and compatible with Tomcat 7 ; otherwise 
 				javax.servlet javax.servlet-api 3.1.0 ?? -->
 			<dependency>
 				<groupId>org.apache.geronimo.specs</groupId>
@@ -490,14 +565,21 @@
 				<version>1.0</version>
 				<scope>provided</scope>
 			</dependency>
-			<!-- CXF -->
+			<!-- CXF (Apache 2.0 License) :
+			- api brings deps in Apache 2.0 License : woodstox' core and stax2-api, xmlschema-core, geronimo's java.mail 1.4
+			as well as TODO wsdl4j 1.6.3 (CPL 1.0)
+			- core brings also deps : jaxb-impl (TODO GPL2 with classpath Exception or CDDL 1.0 licensed
+			- rt-transport-http doesn't bring anything else -->
 			<dependency>
 				<groupId>org.apache.cxf</groupId>
 				<artifactId>cxf-rt-frontend-jaxrs</artifactId>
 				<version>${cxf.version}</version>
 			</dependency>
-			<!-- dependency> <groupId>org.apache.cxf</groupId> <artifactId>cxf-rt-frontend-jaxws</artifactId> 
-				<version>${cxf.version}</version> </dependency --><!-- for SOAP -->
+			<!-- dependency>
+				<groupId>org.apache.cxf</groupId>
+				<artifactId>cxf-rt-frontend-jaxws</artifactId> 
+				<version>${cxf.version}</version>
+			</dependency --><!-- for SOAP -->
 			<!-- for packaging on tomcat -->
 			<dependency>
 				<groupId>org.apache.cxf</groupId>
@@ -518,70 +600,83 @@
 				<scope>test</scope>
 			</dependency>
 			<!-- for async BUT ONLY ON JETTY -->
-			<!-- dependency> <groupId>org.eclipse.jetty</groupId> <artifactId>jetty-continuation</artifactId> 
-				<version>8.0.4.v20111024</version> </dependency -->
-			<!-- XXX Needed by Apache CXF, but missing from the deps. hierarchy ??? -->
-			<!-- dependency> <groupId>org.apache.xmlgraphics</groupId> <artifactId>batik-ext</artifactId> 
-				<version>1.7</version> </dependency -->
+			<!-- dependency>
+				<groupId>org.eclipse.jetty</groupId>
+				<artifactId>jetty-continuation</artifactId> 
+				<version>8.0.4.v20111024</version>
+			</dependency -->
 
-			<!-- for client-side cache -->
+			<!-- EHCache, for client-side cache (Apache 2.0 License) -->
 			<dependency>
 				<groupId>net.sf.ehcache.internal</groupId>
 				<artifactId>ehcache-core</artifactId>
 				<version>${ehcache.version}</version>
-				<!-- groupId>net.sf.ehcache</groupId> <artifactId>ehcache</artifactId> 
-					<type>pom</type --><!-- NO worked in 2.6.0 but not in 2.7.4 anymore because no more dependencies 
+				<!-- groupId>net.sf.ehcache</groupId>
+				<artifactId>ehcache</artifactId> 
+				<type>pom</type --><!-- NO worked in 2.6.0 but not in 2.7.4 anymore because no more dependencies 
 					to ehcache-core etc. (but in 2.9 works again !) would probably work without 
 					type=pom but brings in too much stuff (hibernate, terracotta...) -->
 			</dependency>
 
-         <!-- for ImmutableMap/List(.Builder), also used by MITRE OpenIdConnect & Swagger -->
+         <!-- for ImmutableMap/List(.Builder), also used by MITRE OpenIdConnect & Swagger (Apache 2.0 License) -->
          <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>${guava.version}</version>
          </dependency>
-			<!-- for EnumerationUtils, ListUtils... -->
+			<!-- for EnumerationUtils, ListUtils... (Apache 2.0 License) -->
 			<dependency>
 				<groupId>commons-collections</groupId>
 				<artifactId>commons-collections</artifactId>
 				<version>${commons-collections.version}</version>
 			</dependency>
-			<!-- for ExceptionUtils -->
+			<!-- for ExceptionUtils (Apache 2.0 License) -->
 			<dependency>
 				<groupId>commons-lang</groupId>
 				<artifactId>commons-lang</artifactId>
 				<version>${commons-lang.version}</version>
 			</dependency>
-			<!-- for IOUtils TODO used ?? -->
+			<!-- for IOUtils TODO used ?? (Apache 2.0 License) -->
 			<dependency>
 				<groupId>commons-io</groupId>
 				<artifactId>commons-io</artifactId>
 				<version>${commons-io.version}</version>
 			</dependency>
 
-			<!-- swagger (for apidoc) : -->
+			<!-- swagger, for apidoc (Apache 2.0 License)
+			 swagger-jaxrs depends on :
+			 * scala-library (BSD-like that is GPL3 compatible, see https://typesafe.com/legal/licenses )
+			 * swagger-core, which depends on
+			    * jackson-module-scala, which depends on paranamer ((new) BSD License https://github.com/paul-hammant/paranamer/blob/master/LICENSE.txt )
+			    * json4s-ext (Apache 2.0 License)
+			 * jsr311-api
+			 * reflections, which depends on
+			    * dom4j (TODO original BSD License, whose advertising clause is incompatible with GPL "advertising clause" http://www.cafeconleche.org/oldnews/news2006April11.html )
+			    * Javassist (MPL 1.1, compatible with AGPL3 as MPL 2.0 under section 6.1), which depends on
+			       * xml-apis (Apache 2.0 license) -->
 			<dependency>
 				<groupId>com.wordnik</groupId>
 				<artifactId>swagger-jaxrs_2.10</artifactId>
 				<version>${swagger.version}</version>
 			</dependency>
 
-			<!-- for packaging as webapp TODO dev webapp (in -web project) ? -->
+			<!-- for packaging as webapp (Apache 2.0 License) TODO dev webapp (in -web project) ? -->
 			<dependency>
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-web</artifactId>
 				<version>${spring.version}</version>
 			</dependency>
 
-			<!-- to push data to Riemann -->
+			<!-- to push data to Riemann (Apache 2.0 License), brings deps :
+			protbuf-java ((new) BSD license), netty (Apache 2.0 License),
+			CodaHale com.yammer.metrics (Apache 2.0 License) which brings slf4j-api (MIT License) -->
 			<dependency>
 				<groupId>com.aphyr</groupId>
 				<artifactId>riemann-java-client</artifactId>
 				<version>${riemann-client.version}</version>
 			</dependency>
 
-         <!-- JSON-LD facade -->
+         <!-- JSON-LD facade ((new) BSD License) and deps (all Apache 2.0 License) : -->
          <dependency>
             <groupId>com.github.jsonld-java</groupId>
             <artifactId>jsonld-java</artifactId><!-- also brought by openid -->
@@ -610,7 +705,7 @@
             <version>${httpclient.version}</version>
          </dependency>
          
-         <!-- import, for tests : -->
+         <!-- import, for tests (Apache 2.0 License) : -->
          <dependency>
             <groupId>net.sf.opencsv</groupId>
             <artifactId>opencsv</artifactId>
@@ -618,6 +713,15 @@
          </dependency>
          
 		</dependencies>
+		
+		<!--
+		and on JS UI side :
+		(though APIs don't depend on it, so JS UI could not be Open Sourced or using another license)
+		PapaParse, moment.js, hashids : MIT License
+		Swagger UI, swagger.js : Apache 2.0 License
+		jQuery, handlebars, underscore, backbone : MIT License
+		highlight.js : (new) BSD License https://github.com/isagalaev/highlight.js/blob/master/LICENSE
+		-->
 	</dependencyManagement>
 
 	<!-- ======= -->
@@ -633,8 +737,11 @@
 					<target>${java.version}</target>
 				</configuration>
 			</plugin>
-			<!-- plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-surefire-plugin</artifactId> 
-				<version>2.2.1</version> </plugin -->
+			<!-- plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId> 
+				<version>2.2.1</version>
+			</plugin -->
 
 			<!-- TODO or in release profile ? -->
 			<plugin>
@@ -652,14 +759,30 @@
 			</plugin>
 
 			<!-- TODO in release profile -->
-			<!-- plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-javadoc-plugin</artifactId> 
-				<executions> <execution> <id>attach-javadocs</id> <goals> <goal>jar</goal> 
-				</goals> </execution> </executions> </plugin -->
+			<!-- plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId> 
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal> 
+						</goals>
+					</execution>
+				</executions>
+			</plugin -->
 
 
-			<!-- plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-eclipse-plugin</artifactId> 
-				<version>2.9</version> <configuration> <downloadSources>true</downloadSources> 
-				<downloadJavadocs>true</downloadJavadocs> </configuration> </plugin -->
+			<!-- plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-eclipse-plugin</artifactId> 
+				<version>2.9</version>
+				<configuration>
+					<downloadSources>true</downloadSources> 
+					<downloadJavadocs>true</downloadJavadocs>
+				</configuration>
+			</plugin -->
+			
 		</plugins>
 
 		<!-- ================= -->
@@ -680,9 +803,12 @@
 	<!-- Repositories -->
 	<!-- ============ -->
 	<repositories>
-		<!-- repository> <id>oasis-datacore-local-libs</id> <name>oasis-datacore 
-			local project libraries</name> <url>file://${project.basedir}/lib</url> <layout>default</layout> 
-			</repository --><!-- oasis-datacore-core/lib -->
+		<!-- repository>
+			<id>oasis-datacore-local-libs</id>
+			<name>oasis-datacore local project libraries</name>
+			<url>file://${project.basedir}/lib</url>
+			<layout>default</layout> 
+		</repository --><!-- oasis-datacore-core/lib -->
 
        <!-- Riemann Java client -->
 	    <repository>
