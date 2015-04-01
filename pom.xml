@@ -149,7 +149,7 @@
 		<commons-lang.version>2.6</commons-lang.version><!-- for ExceptionUtils -->
 		<commons-io.version>2.4</commons-io.version><!-- for IOUtils TODO used ?? -->
 
-		<swagger.version>1.3.0</swagger.version><!-- for apidoc -->
+		<swagger.version>1.3.12</swagger.version><!-- for apidoc -->
 
       <!-- monitoring -->
       <!-- UDP is bugged in 0.2.10, rather use TCP for now -->
@@ -643,20 +643,37 @@
 				<version>${commons-io.version}</version>
 			</dependency>
 
-			<!-- swagger, for apidoc (Apache 2.0 License)
-			 swagger-jaxrs depends on :
-			 * scala-library (BSD-like that is GPL3 compatible, see https://typesafe.com/legal/licenses )
-			 * swagger-core, which depends on
-			    * jackson-module-scala, which depends on paranamer ((new) BSD License https://github.com/paul-hammant/paranamer/blob/master/LICENSE.txt )
-			    * json4s-ext (Apache 2.0 License)
-			 * jsr311-api
-			 * reflections, which depends on
-			    * dom4j (TODO original BSD License, whose advertising clause is incompatible with GPL "advertising clause" http://www.cafeconleche.org/oldnews/news2006April11.html )
-			    * Javassist (MPL 1.1, compatible with AGPL3 as MPL 2.0 under section 6.1), which depends on
-			       * xml-apis (Apache 2.0 license) -->
+			<!-- swagger, for apidoc
+			 swagger-jaxrs (Apache 2.0 License) depends on :
+			 * scala-library 2.10 (BSD-like that is GPL3 compatible, see https://typesafe.com/legal/licenses )
+			 * jsr311-api (TODO CDDL License)
+			 * reflections ((new) BSD License), which depends on
+			    * guava (Apache 2.0 License)
+			    * Javassist 3.18 (Apache 2.0 License ; though also distributed as TODO LGPL2.1
+			 and MPL 1.1 (original license) which is also compatible with AGPL3 as MPL 2.0 under section 6.1)
+			    * findbugs annotations (LGPL) links to http://www.gnu.org/licenses/lgpl.html
+			 * swagger-core, which also depends on
+			    * scala-reflect in addition to -library (BSD-like that is GPL3 compatible, see https://typesafe.com/legal/licenses )
+			    * a lot of jackson (mostly Apache 2.0 License)
+			    * swagger-annotations (Apache 2.0 License)
+			    * including jackson-module-scala (Apache 2.0 License), which depends on
+			       * a lot of jackson itself (Apache 2.0 License)
+			       * guava (Apache 2.0 License)
+			       * jsr305 Annotations for Findbugs (Apache 2.0 License)
+			       * paranamer ((new) BSD License https://github.com/paul-hammant/paranamer/blob/master/LICENSE.txt )
+			    * json4s-jackson (Apache 2.0 License), which also depends on jackson-databind (Apache 2.0 License)
+			    * json4s-ext (Apache 2.0 License), which also depends on joda-time and -convert (Apache 2.0 License)
+			    * json4s-native (Apache 2.0 License), which depends on scala-library (again) and json4s-core,
+			    which also depends on json4s-ast paranamer (again) and scalap (BSD-like that is GPL3 compatible,
+			    see https://typesafe.com/legal/licenses ) -->
 			<dependency>
 				<groupId>com.wordnik</groupId>
 				<artifactId>swagger-jaxrs_2.10</artifactId>
+				<version>${swagger.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.wordnik</groupId>
+				<artifactId>swagger-annotations</artifactId>
 				<version>${swagger.version}</version>
 			</dependency>
 

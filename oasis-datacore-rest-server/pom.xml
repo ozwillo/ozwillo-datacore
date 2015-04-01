@@ -26,7 +26,6 @@
       <dependency>
         <groupId>org.oasis.datacore</groupId>
         <artifactId>oasis-datacore-kernel-client</artifactId>
-        <version>1.0-SNAPSHOT</version>
       </dependency>
 
       <dependency>
@@ -112,6 +111,12 @@
       <dependency>
          <groupId>org.apache.httpcomponents</groupId>
          <artifactId>httpclient-cache</artifactId>
+      </dependency>
+      
+      <!-- swagger, for apidoc spec generation -->
+      <dependency>
+         <groupId>com.wordnik</groupId>
+         <artifactId>swagger-jaxrs_2.10</artifactId>
       </dependency>
          
       <!-- import, for tests : -->

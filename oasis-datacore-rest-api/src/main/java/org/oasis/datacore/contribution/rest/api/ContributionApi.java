@@ -21,6 +21,8 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import com.wordnik.swagger.annotations.Authorization;
+import com.wordnik.swagger.annotations.AuthorizationScope;
 
 /**
  * 
@@ -30,7 +32,13 @@ import com.wordnik.swagger.annotations.ApiResponses;
 @Path("dc/c")
 @Api(value = "/dc/c", 
 	 description = "Contribution management (add/get/remove)",
-     authorizations = "OASIS OAuth and required Datacore Resource authorizations")
+    authorizations = {
+       @Authorization(value = "OAuth2", scopes = {
+             @AuthorizationScope(scope = "datacore", description
+                   = "Scope required on a Ozwillo Kernel OAuth2 token for using Datacore API")
+       }),
+       @Authorization(value = "Basic")
+ })
 public interface ContributionApi {
 
 	   @Path("/")

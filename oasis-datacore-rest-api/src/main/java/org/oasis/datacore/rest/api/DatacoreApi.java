@@ -49,6 +49,8 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import com.wordnik.swagger.annotations.Authorization;
+import com.wordnik.swagger.annotations.AuthorizationScope;
 
 
 /**
@@ -103,8 +105,15 @@ import com.wordnik.swagger.annotations.ApiResponses;
  *
  */
 @Path("dc") // relative path among other OASIS services
-@Api(value = "/dc", description = "Operations about Datacore Resources",
-      authorizations="OASIS Kernel OAuth2 and required Datacore Resource authorizations")
+@Api(value = "/dc",
+   description = "Operations about Datacore Resources",
+   authorizations = {
+         @Authorization(value = "OAuth2", scopes = {
+               @AuthorizationScope(scope = "datacore", description
+                     = "Scope required on a Ozwillo Kernel OAuth2 token for using Datacore API")
+         }),
+         @Authorization(value = "Basic")
+   })
 ///@Consumes(MediaType.MEDIA_TYPE_WILDCARD) // TODO finer media type ex. +oasis-datacore ??
 ///@Produces(MediaType.MEDIA_TYPE_WILDCARD)
 @Consumes({MediaType.APPLICATION_JSON, DatacoreMediaType.APPLICATION_NQUADS,

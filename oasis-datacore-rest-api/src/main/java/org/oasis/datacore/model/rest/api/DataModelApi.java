@@ -1,7 +1,5 @@
 package org.oasis.datacore.model.rest.api;
 
-import java.util.List;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -15,6 +13,8 @@ import com.wordnik.swagger.annotations.ApiImplicitParams;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import com.wordnik.swagger.annotations.Authorization;
+import com.wordnik.swagger.annotations.AuthorizationScope;
 
 
 /**
@@ -40,7 +40,13 @@ import com.wordnik.swagger.annotations.ApiResponses;
  */
 @Path("dc/model") // relative path among other OASIS services
 @Api(value = "/dc/model", description = "DRAFT Operations about Datacore Models ",
-      authorizations="OASIS OAuth and required Datacore Resource authorizations")
+   authorizations = {
+      @Authorization(value = "OAuth2", scopes = {
+            @AuthorizationScope(scope = "datacore", description
+                  = "Scope required on a Ozwillo Kernel OAuth2 token for using Datacore API")
+      }),
+      @Authorization(value = "Basic")
+})
 @Consumes(MediaType.APPLICATION_JSON) // TODO finer media type ex. +oasis-datacore ??
 @Produces(MediaType.APPLICATION_JSON)
 public interface DataModelApi /*extends DataModelService*/ {

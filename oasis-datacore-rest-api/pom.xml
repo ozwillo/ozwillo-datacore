@@ -41,10 +41,20 @@
          <artifactId>jackson-datatype-joda</artifactId>
       </dependency>
       
-      <!-- swagger (for apidoc annotations) : -->
+      <!-- swagger jaxrs (for spec generation) : -->
       <dependency>
          <groupId>com.wordnik</groupId>
-         <artifactId>swagger-jaxrs_2.10</artifactId>
+         <artifactId>swagger-annotations</artifactId>
+      </dependency>
+      <!-- for ImmutableMap/List(.Builder) -->
+      <dependency>
+         <groupId>com.google.guava</groupId>
+         <artifactId>guava</artifactId>
+      </dependency>
+      <!-- for ExceptionUtils (Apache 2.0 License) -->
+      <dependency>
+         <groupId>commons-lang</groupId>
+         <artifactId>commons-lang</artifactId>
       </dependency>
       
       <dependency>
