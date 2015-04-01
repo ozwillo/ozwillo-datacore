@@ -22,7 +22,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	</servlet>
 
 	<!-- servlet mappings : (see http://www.coderanch.com/t/366340/Servlets/java/servlet-mapping-url-pattern) -->
-
+	
 	<servlet-mapping>
 		<servlet-name>default</servlet-name><!-- mapping to static resources servlet -->
 		<url-pattern>/dc-ui/*</url-pattern><!-- path mapping to UI (playground, swagger, import...) 
@@ -46,8 +46,12 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 			"not found" NB. can be done in a single servlet-mapping since servlet 2.5 -->
 	</servlet-mapping>
 
-	<!-- To redirect from swagger-ui/ to swagger-ui/index.html, BUT doesn't 
-		work (?!) <welcome-file-list> <welcome-file>index.html</welcome-file> </welcome-file-list -->
+	
+	<welcome-file-list>
+		<welcome-file>service.json</welcome-file><!-- to redirect from /api-docs (for static swagger spec only) -->
+		<!-- welcome-file>index.html</welcome-file> To redirect from dc-ui/ to dc-ui/index.html, BUT doesn't 
+		work (?!) -->
+	</welcome-file-list>
 	
 	<filter>
 		<filter-name>springSecurityFilterChain</filter-name>

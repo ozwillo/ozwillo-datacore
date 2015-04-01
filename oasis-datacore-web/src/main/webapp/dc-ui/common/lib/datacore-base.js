@@ -87,8 +87,9 @@ function initPlayground() {
 }
 
 function initDcApi() {
+   var apiDocsUrl = window.dcConf.apiDocsUrl; // OASIS ; OLD "/api-docs", STATIC /dc-ui/api-docs
    var options = {
-         url: "/api-docs", // OASIS
+         url: apiDocsUrl,
          supportedSubmitMethods: ['get', 'post', 'put', 'delete'] // OASIS TODO PATCH ?!?
        };
    if (options.url.indexOf("http") !== 0) {
@@ -135,8 +136,13 @@ function initPlaygroundWithSwaggerUi() {
 }
 
 function initDcApiWithSwaggerUi(success) {
+   var apiDocsUrl = window.dcConf.apiDocsUrl; // OASIS ; OLD "/api-docs", STATIC /dc-ui/api-docs
+   /*if (url.indexOf("http") !== 0) {
+      // else CORS request to ex. http://localhost/ and "uncaught exception: Please specify the protocol for /api-docs"
+      url = buildUrl(window.location.href.toString(), url);
+   }*/
    window.swaggerUi = new SwaggerUi({
-      url: "/api-docs", // OASIS
+      url: apiDocsUrl,
       dom_id: "swagger-ui-container",
       supportedSubmitMethods: ['get', 'post', 'put', 'delete'], // OASIS TODO PATCH ?!?
       onComplete: function(swaggerApi, swaggerUi){

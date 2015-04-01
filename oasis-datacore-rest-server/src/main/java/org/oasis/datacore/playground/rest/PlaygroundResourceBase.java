@@ -25,6 +25,8 @@ public abstract class PlaygroundResourceBase {
    protected String baseUrl;
    @Value("${datacoreApiServer.containerUrl}")
    protected String containerUrl;
+   @Value("${datacoreApiServer.apiDocsUrl}")
+   protected String apiDocsUrl;
    @Value("${kernel.baseUrl}")
    protected String kernelBaseUrl;
    

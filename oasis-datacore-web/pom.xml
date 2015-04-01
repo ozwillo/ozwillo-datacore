@@ -33,6 +33,107 @@
       <finalName>datacore</finalName>
   
       <plugins>
+      
+			<!-- Swagger spec gen plugin (Apache 2.0 License) :
+			see https://github.com/kongchen/swagger-maven-plugin
+                        NOT USED FOR NOW (rather using swagger-jaxrs dynamic spec gen), for this would require :
+			- either templatizing generated spec with URL for each environment and serving them from a JAXRS Resource
+			that runs a template engine on them and fills description from -rest-api/.../description.html
+			   - and caching those rendered templates (done by swagger-jaxrs for now)
+                           - moving gen to /api-docs dir rather than /dc-ui/api-docs (or updating datacore-base.js to /dc-ui/api-docs instead)
+                        - or rendering spec at deployment time i.e. in puppet as a .erb template,
+                           - move description.html to -web and load it in ajax,
+                           - and redirect (/dc-ui)/api-docs to .../service.json using ex. web.xml's <welcome-file-list>
+			-->
+			<!-- generation of dev (http://localhost:8080) spec : -->
+			<plugin>
+			  <groupId>com.github.kongchen</groupId>
+			  <artifactId>swagger-maven-plugin</artifactId>
+			  <version>2.3.4</version><!-- "2.x.x : For Swagger core version >= 1.3.0 swagger-spec 1.2"
+			  (Datacore APIs use swagger-annotations_2.10-1.3.12 which outpus swagger spec with "swaggerVersion":"1.2") -->
+			  <configuration>
+			    <apiSources>
+			      <apiSource>
+			        <locations>org.oasis.datacore.rest.api;org.oasis.datacore.rights.rest.api;org.oasis.datacore.contribution.rest.api;org.oasis.datacore.model.rest.api</locations>
+			        <apiVersion>1.0.0</apiVersion>
+			        <basePath>http://localhost:8080</basePath><!-- TODO templatize ;
+			        used by swagger.js client to call server (so NO ending by /dc-ui/api-docs).
+			        Must be absolute URL else server path is not prepended. OLD ${datacoreApiServer.baseUrl} -->
+			        <supportSpringMvc>false</supportSpringMvc>
+			        <apiInfo>
+			          <title>Datacore Resource API</title>
+			          <description>Allows to manage (CRUD) and find Data Resources and their Models using JSON/HTTP REST calls.</description><!-- the full description.html
+			          is more of a js-specific playground (calls swagger.js, requires ajax init...),
+			          so it's not a problem if it's not in the spec -->
+			          <termsOfServiceUrl>https://www.ozwillo.com/en/terms</termsOfServiceUrl>
+			          <contact>http://www.ozwillo.com</contact>
+			          <license>Affero GPL v3 (except for client libraries, which are LGPL v3)</license>
+			          <licenseUrl>http://www.gnu.org/licenses/agpl-3.0.html</licenseUrl>
+			        </apiInfo>
+			        <!-- TODO LATER apiSortComparator>com.foo.bar.YourApiComarator</apiSortComparator -->
+			        <swaggerDirectory>../oasis-datacore/oasis-datacore-web/src/main/webapp/dc-ui/api-docs</swaggerDirectory><!-- TODO -->
+			        <swaggerUIDocBasePath>http://localhost:8080/dc-ui/api-docs</swaggerUIDocBasePath><!-- TODO templatize ;
+			        overrides basePath in root service.json to provide access to other .json spec files,
+			        which must be therefore in this directory. Must be absolute URL else : Unable to read api 'dc'
+			        from path /dc-ui/api-docs/dc.json (server returned undefined). NB. service.json is accessed
+			        from /dc-ui/api-docs thanks to using web.xml's welcome-file-list (rather than targeting it directly) -->
+			      </apiSource>
+			    </apiSources>
+			  </configuration>
+			  <executions>
+			    <execution>
+			      <phase>compile</phase>
+			        <goals>
+			          <goal>generate</goal>
+			        </goals>
+			    </execution>
+			  </executions>
+			</plugin>
+			<!-- generation of puppet .erb-templatized spec : -->
+			<plugin>
+			  <groupId>com.github.kongchen</groupId>
+			  <artifactId>swagger-maven-plugin</artifactId>
+			  <version>2.3.4</version><!-- "2.x.x : For Swagger core version >= 1.3.0 swagger-spec 1.2"
+			  (Datacore APIs use swagger-annotations_2.10-1.3.12 which outpus swagger spec with "swaggerVersion":"1.2") -->
+			  <configuration>
+			    <apiSources>
+			      <apiSource>
+			        <locations>org.oasis.datacore.rest.api;org.oasis.datacore.rights.rest.api;org.oasis.datacore.contribution.rest.api;org.oasis.datacore.model.rest.api</locations>
+			        <apiVersion>1.0.0</apiVersion>
+			        <basePath>&lt;%= datacore_baseUrl %&gt;</basePath><!-- TODO templatize ;
+			        used by swagger.js client to call server (so NO ending by /dc-ui/api-docs).
+			        Must be absolute URL else server path is not prepended. OLD ${datacoreApiServer.baseUrl} -->
+			        <supportSpringMvc>false</supportSpringMvc>
+			        <apiInfo>
+			          <title>Datacore Resource API</title>
+			          <description>Allows to manage (CRUD) and find Data Resources and their Models using JSON/HTTP REST calls.</description><!-- the full description.html
+			          is more of a js-specific playground (calls swagger.js, requires ajax init...),
+			          so it's not a problem if it's not in the spec -->
+			          <termsOfServiceUrl>https://www.ozwillo.com/en/terms</termsOfServiceUrl>
+			          <contact>http://www.ozwillo.com</contact>
+			          <license>Affero GPL v3 (except for client libraries, which are LGPL v3)</license>
+			          <licenseUrl>http://www.gnu.org/licenses/agpl-3.0.html</licenseUrl>
+			        </apiInfo>
+			        <!-- TODO LATER apiSortComparator>com.foo.bar.YourApiComarator</apiSortComparator -->
+			        <swaggerDirectory>../oasis-datacore/oasis-datacore-web/src/main/webapp/dc-ui/api-docs-erb</swaggerDirectory><!-- TODO -->
+			        <swaggerUIDocBasePath>&lt;%= datacore_baseUrl %&gt;/dc-ui/api-docs</swaggerUIDocBasePath><!-- TODO templatize ;
+			        overrides basePath in root service.json to provide access to other .json spec files,
+			        which must be therefore in this directory. Must be absolute URL else : Unable to read api 'dc'
+			        from path /dc-ui/api-docs/dc.json (server returned undefined). NB. service.json is accessed
+			        from /dc-ui/api-docs thanks to using web.xml's welcome-file-list (rather than targeting it directly) -->
+			      </apiSource>
+			    </apiSources>
+			  </configuration>
+			  <executions>
+			    <execution>
+			      <phase>compile</phase>
+			        <goals>
+			          <goal>generate</goal>
+			        </goals>
+			    </execution>
+			  </executions>
+			</plugin>
+			
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-war-plugin</artifactId>

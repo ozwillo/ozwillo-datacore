@@ -53,6 +53,7 @@ public class PlaygroundConfigurationResource extends PlaygroundResourceBase {
       confMap.put("devmode", devmode);
       confMap.put("baseUrl", baseUrl);
       confMap.put("containerUrl", containerUrl);
+      confMap.put("apiDocsUrl", apiDocsUrl);
       confMap.put("kernelBaseUrl", kernelBaseUrl);
       confMap.put("playgroundUiUrl", playgroundUiUrl);
       confMap.put("knownDatacoreContainerUrls", knownDatacoreContainerUrls);
