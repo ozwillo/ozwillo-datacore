@@ -3,7 +3,6 @@ package org.oasis.datacore.rest.client.cxf;
 import java.util.logging.Logger;
 
 import javax.ws.rs.HttpMethod;
-import javax.ws.rs.client.ClientException;
 import javax.ws.rs.core.HttpHeaders;
 
 import org.apache.cxf.common.logging.LogUtils;
@@ -96,7 +95,7 @@ public class ETagClientOutInterceptor extends AbstractPhaseInterceptor<Message> 
                   if (cachedResource.getVersion() != null) { // TODO should not happen
                      CxfMessageHelper.setHeader(clientOutRequestMessage, HttpHeaders.IF_MATCH, etag);
                   } else { // trying to delete probably non existing Resource (without version)
-                     throw new Fault(new ClientException( // or any non-Fault exception, else blocks in
+                     throw new Fault(new IllegalArgumentException( // or any non-Fault exception, else blocks in
                            // abstractClient.checkClientException() (waits for missing response code)
                            // see http://stackoverflow.com/questions/8316354/cxf-ws-interceptor-stop-processing-respond-with-fault
                            "Resource to delete should have a non null version, "
@@ -106,7 +105,7 @@ public class ETagClientOutInterceptor extends AbstractPhaseInterceptor<Message> 
                }
             } else {
                throw new Fault(
-                     new ClientException( // or any non-Fault exception, else blocks in
+                     new IllegalArgumentException( // or any non-Fault exception, else blocks in
                      // abstractClient.checkClientException() (waits for missing response code)
                      // see http://stackoverflow.com/questions/8316354/cxf-ws-interceptor-stop-processing-respond-with-fault
                      "Can't delete a Data without having (gotten) and cached it first, "
@@ -150,7 +149,7 @@ public class ETagClientOutInterceptor extends AbstractPhaseInterceptor<Message> 
       } catch (Exception e) {
          // should not happen
          throw new Fault(
-               new ClientException( // or any non-Fault exception, else blocks in
+               new IllegalArgumentException( // or any non-Fault exception, else blocks in
                // abstractClient.checkClientException() (waits for missing response code)
                // see http://stackoverflow.com/questions/8316354/cxf-ws-interceptor-stop-processing-respond-with-fault
                "Endpoint URI is not an URL : " + endpointUri, e),

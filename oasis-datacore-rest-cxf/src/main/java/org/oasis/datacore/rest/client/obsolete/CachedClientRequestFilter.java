@@ -20,7 +20,7 @@ public class CachedClientRequestFilter implements ClientRequestFilter {
 
    @Override
    public void filter(ClientRequestContext requestContext) throws IOException {
-      EnumerationUtils.toList(requestContext.getPropertyNames());
+      requestContext.getPropertyNames();
       
    }
 

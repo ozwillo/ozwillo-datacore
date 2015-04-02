@@ -9,10 +9,10 @@ import javax.ws.rs.BadRequestException;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.RedirectionException;
-import javax.ws.rs.client.ClientException;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.cxf.interceptor.OutInterceptors;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.DCURI;
@@ -155,7 +155,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
     */
    @CachePut(value={"org.oasis.datacore.rest.api.DCResource"}, key="#resource.uri") // after invocation
    @Override
-   public DCResource putDataInType(DCResource resource) throws ClientException {
+   public DCResource putDataInType(DCResource resource) throws IllegalArgumentException {
       String modelType = resource.getModelType(); // NB. if null lets server explode
       String id = resource.getId();
       if (id == null) {
@@ -164,7 +164,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
          try { 
             id = UriHelper.parseUri(resource.getUri(), this.containerUrlString).getId();
          } catch (MalformedURLException | URISyntaxException e) {
-            throw new ClientException("Bad Resource URI " + resource.getUri(), e);
+            throw new IllegalArgumentException("Bad Resource URI " + resource.getUri(), e);
          }
       }
       return this.putDataInType(resource, modelType, id); // TODO or parse id from uri ??
@@ -211,7 +211,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
    //@Cacheable(value={"org.oasis.datacore.rest.api.DCResource"}, key="buildUri(#modelType, #iri)")
    // so NOT Cacheable because returning from cache is triggered from HTTP 304 reponse (complex caching decision)
    @Override
-   public DCResource getData(final DCResource resource) throws ClientException {
+   public DCResource getData(final DCResource resource) throws IllegalArgumentException {
       try { 
          final DCURI dcUri = UriHelper.parseUri(resource.getUri(), this.containerUrlString);
          return new AbstractCachedGetDataPerformer() {
@@ -221,7 +221,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
             }
          }.performCachedGetData(resource.getUri());
       } catch (MalformedURLException | URISyntaxException e) {
-         throw new ClientException("Bad Resource URI " + resource.getUri(), e);
+         throw new IllegalArgumentException("Bad Resource URI " + resource.getUri(), e);
       }
    }
 
@@ -315,7 +315,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
     * @see org.oasis.datacore.rest.client.DatacoreCachedClient#deleteData(org.oasis.datacore.rest.api.DCResource)
     */
    @Override
-   public void deleteData(DCResource resource) throws ClientException {
+   public void deleteData(DCResource resource) throws IllegalArgumentException {
       String modelType = resource.getModelType(); // NB. if null lets server explode
       String id = resource.getId();
       if (id == null) {
@@ -324,7 +324,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
          try { 
             id = UriHelper.parseUri(resource.getUri(), this.containerUrlString).getId();
          } catch (MalformedURLException | URISyntaxException e) {
-            throw new ClientException("Bad Resource URI " + resource.getUri(), e);
+            throw new IllegalArgumentException("Bad Resource URI " + resource.getUri(), e);
          }
       }
       this.deleteData(modelType, id, resource.getVersion());
@@ -451,7 +451,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
    @Override
    public List<DCResource> findData(UriInfo uriInfo, Integer start, Integer limit) {
       //return delegate.findData(uriInfo, start, limit, sort); // TODO cache ??
-      throw new ClientException("Use rather findData(String queryParams ...) on client side");
+      throw new NotImplementedException("Use rather findData(String queryParams ...) on client side");
    }
 
    /* (non-Javadoc)

@@ -19,6 +19,7 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Variant;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.cxf.jaxrs.impl.HttpHeadersImpl;
 import org.apache.cxf.jaxrs.impl.RequestImpl;
 import org.apache.cxf.jaxrs.impl.UriInfoImpl;
@@ -237,6 +238,20 @@ public class CxfJaxrsApiProvider implements JaxrsApiProvider {
    }
 
    @Override
+   public URI relativize(URI uri) {
+      // TODO better
+      //return new UriInfoImpl(getInMessage()).relativize(uri);
+      throw new NotImplementedException(); // because CXF 2.7.7 implements jaxrs 2.0-m10 and not 2.0 (from geronimo specs)
+   }
+
+   @Override
+   public URI resolve(URI uri) {
+      // TODO better
+      //return new UriInfoImpl(getInMessage()).resolve(uri);
+      throw new NotImplementedException(); // because CXF 2.7.7 implements jaxrs 2.0-m10 and not 2.0 (from geronimo specs)
+   }
+
+   @Override
    public String getMethod() {
       // TODO better
       return new RequestImpl(getInMessage()).getMethod();
@@ -258,7 +273,7 @@ public class CxfJaxrsApiProvider implements JaxrsApiProvider {
    @Override
    public ResponseBuilder evaluatePreconditions(Date lastModified) {
       // TODO better
-      return new RequestImpl(getInMessage()).evaluateIfNotModifiedSince(lastModified);
+      return new RequestImpl(getInMessage()).evaluatePreconditions(lastModified);
    }
 
    @Override

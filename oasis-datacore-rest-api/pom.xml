@@ -25,8 +25,8 @@
       </dependency><!-- TODO or only annotations ? -->
       <!-- JAXRS API -->
       <dependency>
-       <groupId>javax.ws.rs</groupId>
-       <artifactId>javax.ws.rs-api</artifactId>
+       <groupId>org.apache.geronimo.specs</groupId>
+       <artifactId>geronimo-jaxrs_2.0_spec</artifactId>
       </dependency>
       <!-- Servlet 3, from CXF's Jetty and compatible with Tomcat 7 ; otherwise javax.servlet javax.servlet-api 3.1.0 ?? -->
       <dependency>

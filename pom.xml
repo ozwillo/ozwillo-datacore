@@ -306,7 +306,8 @@
 	And encountered incompatible licenses are :
 	- CPL, EPL
 	- original BSD License i.e. with advertising clause
-	- GPL2 with classpath Exception or CDDL 1.0 licensed (java & javax)
+	- GPL2 with classpath Exception or CDDL 1.0 (java & javax)
+	- Creative Commons Attribution 2.5
 	-->
 	<dependencyManagement>
 		<dependencies>
@@ -505,16 +506,52 @@
          depends on :
          - spring & security & oauth (Apache 2.0 License),
          guava (Apache 2.0 License), httpclient (Apache 2.0 License), gson (Apache 2.0 License), slf4j-api (MIT License),
-         javax.persistence (TODO GPL2 with classpath Exception or CDDL 1.0 licensed)
+         EclipseLink's javax.persistence 2.0 (EPL 1.0 licensed, therefore replaced by Geronimo's Apache 2.0 licensed)
          and nimbus-jose-jwt (Apache 2.0 License) which depends on :
-         - commons-codec (Apache 2.0 License), jcip-annotations (TODO Creative Commons Attribution 2.5),
+         - commons-codec (Apache 2.0 License), jcip-annotations (Creative Commons Attribution 2.5,
+         therefore replaced by stephenc's Apache 2.0 licensed),
          json-smart (Apache 2.0 License), bcprov-jdk5on (MIT License),
-         - javax.mail which depends on javax.activation (both TODO GPL2 with classpath Exception or CDDL 1.0 licensed) -->
+         - javax.mail which depends on javax.activation (both GPL2 with classpath Exception or CDDL 1.0 licensed,
+         therefore replaced by Geronimo's Apache 2.0 licensed) -->
          <dependency>
             <groupId>org.mitre</groupId>
             <artifactId>openid-connect-client</artifactId>
             <version>${mitre-openid-client.version}</version>
+            <exclusions>
+              <exclusion>
+               <groupId>net.jcip</groupId>
+               <artifactId>jcip-annotations</artifactId>
+              </exclusion>
+              <exclusion>
+               <groupId>org.eclipse.persistence</groupId>
+               <artifactId>javax.persistence</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>javax.mail</groupId>
+                <artifactId>mail</artifactId>
+              </exclusion>
+            </exclusions>
          </dependency>
+			<!-- javax.persistence API replacement (Apache 2.0 License), probably not used -->
+			<dependency>
+				<groupId>org.apache.geronimo.specs</groupId>
+				<artifactId>geronimo-jpa_2.0_spec</artifactId>
+				<version>1.1</version>
+			</dependency>
+			<!-- jcip-annotations replacement (Apache 2.0 License), not used since not using JWT yet -->
+			<dependency>
+				<groupId>com.github.stephenc.jcip</groupId>
+				<artifactId>jcip-annotations</artifactId>
+				<version>1.0-1</version>
+			</dependency>
+			<!-- java.mail API replacement (Apache 2.0 License), not used since not using JWT yet
+			though even then probably would not be used ; TODO BEWARE misses impl ex. smtp transport
+			is in another geronimo jar -->
+			<dependency>
+				<groupId>org.apache.geronimo.specs</groupId>
+				<artifactId>geronimo-javamail_1.4_spec</artifactId><!-- also brought by cxf-api -->
+				<version>1.7.1</version>
+			</dependency>
 
 			<!-- mongodb java driver (Apache 2.0 License) -->
 			<dependency>
@@ -563,10 +600,9 @@
 				& databind -->
 			<!-- JAXRS API (TODO GPL2 with classpath Exception or CDDL 1.0 licensed)-->
 			<dependency>
-				<groupId>javax.ws.rs</groupId>
-				<artifactId>javax.ws.rs-api</artifactId>
-				<version>2.0-m10</version><!-- from CXF ; rather than 2.0, 
-			   else ClassNotFoundException: javax.ws.rs.client.ClientException -->
+				<groupId>org.apache.geronimo.specs</groupId>
+				<artifactId>geronimo-jaxrs_2.0_spec</artifactId>
+				<version>1.0-alpha-1</version>
 			</dependency>
 			<!-- Servlet 3 (Apache 2.0 License), from CXF's Jetty and compatible with Tomcat 7 ; otherwise 
 				javax.servlet javax.servlet-api 3.1.0 ?? -->
@@ -577,20 +613,63 @@
 				<scope>provided</scope>
 			</dependency>
 			<!-- CXF (Apache 2.0 License) :
-			- api brings deps in Apache 2.0 License : woodstox' core and stax2-api, xmlschema-core, geronimo's java.mail 1.4
-			as well as TODO wsdl4j 1.6.3 (CPL 1.0)
-			- core brings also deps : jaxb-impl (TODO GPL2 with classpath Exception or CDDL 1.0 licensed
+			- api brings deps in Apache 2.0 License : woodstox' core and stax2-api, xmlschema-core,
+			geronimo's java.mail 1.4 as well as wsdl4j 1.6.3 (CPL 1.0, therefore replaced by servicemix')
+			- core brings also deps : jaxb-impl (GPL2 with classpath Exception or CDDL 1.0 licensed,
+			therefore replaced by Geronimo's Apache 2.0 licensed, but anyway probably not used
+			since no XML representation)
 			- rt-transport-http doesn't bring anything else -->
+			<dependency>
+				<groupId>org.apache.cxf</groupId>
+				<artifactId>cxf-api</artifactId><!-- auto brought by -rt-*
+				but explicited there to centralize exclusions -->
+				<version>${cxf.version}</version>
+				<exclusions>
+				  <exclusion>
+				    <groupId>wsdl4j</groupId>
+				    <artifactId>wsdl4j</artifactId>
+				  </exclusion>
+				</exclusions>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.servicemix.bundles</groupId>
+				<artifactId>org.apache.servicemix.bundles.wsdl4j</artifactId>
+				<version>1.6.3_1</version>
+			</dependency><!-- replaces wsdl4j, needed by cxf-api else
+			Caused by: java.lang.NoClassDefFoundError: javax/wsdl/extensions/ExtensibilityElement
+			... at org.apache.cxf.transport.http.spring.HttpConduitBeanDefinitionParser.doParse(HttpConduitBeanDefinitionParser.java:58)
+			 -->
+			<dependency>
+				<groupId>org.apache.cxf</groupId>
+				<artifactId>cxf-rt-core</artifactId><!-- auto brought by -rt-*
+				but explicited there to centralize exclusions -->
+				<version>${cxf.version}</version>
+				<exclusions>
+				  <!-- exclusion>
+				    <groupId>javax.ws.rs</groupId>
+				    <artifactId>javax.ws.rs-api</artifactId>
+				  </exclusion -->
+				  <exclusion>
+				    <groupId>com.sun.xml.bind</groupId>
+				    <artifactId>jaxb-impl</artifactId>
+				  </exclusion>
+				</exclusions>
+			</dependency>
 			<dependency>
 				<groupId>org.apache.cxf</groupId>
 				<artifactId>cxf-rt-frontend-jaxrs</artifactId>
 				<version>${cxf.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>org.apache.geronimo.specs</groupId>
+				<artifactId>geronimo-jaxb_2.1_spec</artifactId>
+				<version>1.0</version>
+			</dependency><!-- replaces jaxb-impl, but not used since no XML representation -->
 			<!-- dependency>
 				<groupId>org.apache.cxf</groupId>
 				<artifactId>cxf-rt-frontend-jaxws</artifactId> 
 				<version>${cxf.version}</version>
-			</dependency --><!-- for SOAP -->
+			</dependency --><!-- would be for SOAP -->
 			<!-- for packaging on tomcat -->
 			<dependency>
 				<groupId>org.apache.cxf</groupId>
@@ -615,7 +694,8 @@
 			<!-- dependency>
 				<groupId>org.eclipse.jetty</groupId>
 				<artifactId>jetty-continuation</artifactId> 
-				<version>8.0.4.v20111024</version>
+				<version>${jetty.version}</version>
+				<scope>test</scope>
 			</dependency -->
 
 			<!-- EHCache, for client-side cache (Apache 2.0 License) -->
@@ -658,11 +738,12 @@
 			<!-- swagger, for apidoc
 			 swagger-jaxrs (Apache 2.0 License) depends on :
 			 * scala-library 2.10 (BSD-like that is GPL3 compatible, see https://typesafe.com/legal/licenses )
-			 * jsr311-api (TODO CDDL License)
+			 * jsr311-api i.e. JAXRS 1 (CDDL License, therefore replaced by geronimo's Apache 2.0-licensed JAXRS 2,
+			 which is backwards compatible with JAXRS 1)
 			 * reflections ((new) BSD License), which depends on
 			    * guava (Apache 2.0 License)
-			    * Javassist 3.18 (Apache 2.0 License ; though also distributed as TODO LGPL2.1
-			 and MPL 1.1 (original license) which is also compatible with AGPL3 as MPL 2.0 under section 6.1)
+			    * Javassist 3.18 (Apache 2.0 License ; NB. also licensed under LGPL2.1
+			 and MPL 1.1 (original license) which would also be compatible with AGPL3 as MPL 2.0 under section 6.1)
 			    * findbugs annotations (LGPL) links to http://www.gnu.org/licenses/lgpl.html
 			 * swagger-core, which also depends on
 			    * scala-reflect in addition to -library (BSD-like that is GPL3 compatible, see https://typesafe.com/legal/licenses )
@@ -740,7 +821,7 @@
             <version>${httpclient.version}</version>
          </dependency>
          
-         <!-- import, for tests (Apache 2.0 License) : -->
+         <!-- import, for samples & tests (Apache 2.0 License) : -->
          <dependency>
             <groupId>net.sf.opencsv</groupId>
             <artifactId>opencsv</artifactId>
