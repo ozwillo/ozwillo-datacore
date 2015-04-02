@@ -1,0 +1,906 @@
+{
+  "apiVersion" : "1.0.0",
+  "swaggerVersion" : "1.2",
+  "basePath" : "<%= datacore_baseUrl %>",
+  "resourcePath" : "/dc",
+  "produces" : [ "application/json", "text/x-nquads", "text/turtle", "application/json+ld; format=expand", "application/json+ld; format=frame", "application/json+ld; format=flatten", "application/json+ld; format=compact" ],
+  "consumes" : [ "application/json", "text/x-nquads", "text/turtle", "application/json+ld; format=expand", "application/json+ld; format=frame", "application/json+ld; format=flatten", "application/json+ld; format=compact" ],
+  "apis" : [ {
+    "path" : "/dc/type/{type}",
+    "operations" : [ {
+      "method" : "POST",
+      "summary" : "Creates new data Resource(s) in the given type, or updates them if allowed.",
+      "notes" : "A single data Resource or an array of several ones (in which case it is a mere wrapper over the atomic case) are accepted. \n<br/><br/>\nResource URI(s) must be provided but can be relative to type, up-to-date version(s) are required to update existing resources (which first requires that strict POST mode is not enabled). POST of a single data resource (instead of an array with a single item) is supported.",
+      "type" : "array",
+      "items" : {
+        "$ref" : "DCResource"
+      },
+      "nickname" : "postAllDataInType",
+      "parameters" : [ {
+        "name" : "body",
+        "description" : "Data Resources to create",
+        "required" : true,
+        "type" : "array",
+        "items" : {
+          "$ref" : "DCResource"
+        },
+        "paramType" : "body",
+        "allowMultiple" : false
+      }, {
+        "name" : "type",
+        "description" : "Model type to create them in",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "Authorization",
+        "description" : "OAuth2 Bearer or (DEV MODE ONLY) Basic Auth",
+        "defaultValue" : "Basic YWRtaW46YWRtaW4=",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      }, {
+        "name" : "X-Datacore-Project",
+        "description" : "Examples : oasis.test, oasis.main",
+        "defaultValue" : "oasis.main",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      } ],
+      "responseMessages" : [ {
+        "code" : 500,
+        "message" : "Internal server error"
+      }, {
+        "code" : 409,
+        "message" : "Conflict : while trying to update existing resource (in non-strict POST mode only), optimistic locking error (provided resource version is not up-to-date with the server's latest)"
+      }, {
+        "code" : 404,
+        "message" : "Type model not found"
+      }, {
+        "code" : 400,
+        "message" : "Bad request : missing content, missing or invalid URIs, (if enabled) strict POST mode not respected (version provided or resource already exists), field parsing errors (format, consistency with Model & Mixin types...)"
+      }, {
+        "code" : 201,
+        "message" : "Created : resources have been created"
+      } ]
+    }, {
+      "method" : "PUT",
+      "summary" : "Updates existing data Resources in the given type.",
+      "notes" : "Mere wrapper over atomic typed PUT. \n<br/><br/>\nResource URI (Model type and IRI i.e. Internal Resource Identifier) are required TODO but also up-to-date version sent as an ETag in an If-Match=version precondition, TODO all fields must be provided OR PATCH behaviour differ from PUT's",
+      "type" : "array",
+      "items" : {
+        "$ref" : "DCResource"
+      },
+      "nickname" : "putAllDataInType",
+      "parameters" : [ {
+        "name" : "body",
+        "description" : "Data Resources to update",
+        "required" : true,
+        "type" : "array",
+        "items" : {
+          "$ref" : "DCResource"
+        },
+        "paramType" : "body",
+        "allowMultiple" : false
+      }, {
+        "name" : "type",
+        "description" : "Model type to update them in",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "Authorization",
+        "description" : "OAuth2 Bearer or (DEV MODE ONLY) Basic Auth",
+        "defaultValue" : "Basic YWRtaW46YWRtaW4=",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      }, {
+        "name" : "X-Datacore-Project",
+        "description" : "Examples : oasis.test, oasis.main",
+        "defaultValue" : "oasis.main",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      } ],
+      "responseMessages" : [ {
+        "code" : 500,
+        "message" : "Internal server error"
+      }, {
+        "code" : 409,
+        "message" : "Conflict : while trying to update existing resource, optimistic locking error (provided resource version is not up-to-date with the server's latest)"
+      }, {
+        "code" : 404,
+        "message" : "Resource does not exist, or type model not found"
+      }, {
+        "code" : 400,
+        "message" : "Bad request : missing content or version, missing or invalid URI, non existing resource, field parsing errors (format, consistency with Model & Mixin types...)"
+      }, {
+        "code" : 200,
+        "message" : "OK : resources have been updated"
+      } ]
+    }, {
+      "method" : "GET",
+      "summary" : "Returns matching resources of the given Model type.",
+      "notes" : "Returns all Datacore resources of the given Model type that match all (AND)criteria provided in HTTP query parameters, sorted in the given order(s) if any, with (limited) pagination.\n<br/><br/>\nEach additional HTTP query parameter (in Swagger UI, enter them as a single URL query string, ex. name=London&population=>100000) is a Datacore query criteria in the form field=operatorValueSort. There, 'field' is the field's dotted path within its model type(s), 'operator' (if any, else defaults to '=') can be in logical, XML (most), MongoDB (all) or sometimes Java-like form, simple unquoted value is accepted but ideally and formally value should be JSON (i.e. number, list / array, map / Object, or quoted string including for string serialized types : resource, date, long) (meaning a quoted string should be doubly quoted), and 'sort' is an optional + (resp. -) suffix for ascending (resp. descending) order (that logically only applies to greater, lower, (not) in and not equals operators). \n<br/>\nThey (operatorValueSort) must be rightly encoded as an HTTP query parameter value (meaning in Java using URLEncoder.encode(\"UTF-8\") and Javascript using encodeURIComponent(), <a href=\"http://xkr.us/articles/javascript/encode-compare/\">see difference and test it</a>).Sorting according to a field not already specified in a criteria is done by providing an HTTP query parameter in the form field=sort where 'sort' is + (resp. -) for ascending (resp. descending) order ; by default it sorts on modified date. A given field can be specified twice (even if it's not perfect HTTP), for instance to define \"between\" queries using &gt and < operators.\n<br/><br/>\nAccepted operators, in their logical/XML/MongoDB/Java forms if any (else -), are : =/-/-/==, >/&gt/$gt/- (ex. >3), </&lt;/$lt/-, >=/&gt;=/$gte/-, <=/&lt;=/$lte/-, <>/&lt;&gt;/$ne/!=, -/-/$in/- (in JSON list, ex. $in[0,1]), -/-/$nin/- (not in JSON list), -/-/$regex/- (Perl's ex. $regex/Lond.*n/i or only $regexLond.*n), -/-/$exists/- (field exists ; no value) ; list operators : -/-/$all/- (on JSON list whose elements must be all present in list values found ex. $all[\"cat1\", \"cat2\"]), -/-/$elemMatch/- (on JSON object of key/values to be ALL matched ex. on i18n field $elemMatch{\"v\":\"Torino\",\"l\":\"it\"} ), -/-/$size/- (list field size ; no value). \n<br/><br/>\nSee <a href=\"http://docs.mongodb.org/manual/reference/operator/query/\">detailed documentation about MongoDB operators</a>.\n<br/>\nSome generic fields can also be used as criteria : @id , dc:modified .\n<br/>\nMultiple criteria on same field allow to achieve a \"between\" constraint, ex. GET <a href=\"/dc/type/dcmo:model_0?dc:modified=>=1943-04-02T00:00:00.000Z&dc:modified=<=2043-04-02T00:00:00.000Z\" class=\"dclink\" onclick=\"javascript:return findDataByType($(this).attr('href'));\">/dc/type/dcmo:model_0?dc:modified=>=1943-04-02T00:00:00.000Z&dc:modified=<=2043-04-02T00:00:00.000Z</a>.\n<br/><br/>\nIf debug is enabled, it rather returns a JSON object containing in \"results\" regular results and in \"explain\" the result of a <a href=\"http://docs.mongodb.org/manual/reference/method/cursor.explain\">MongoDB explain command</a>, in order to help users optimize queries.\n<br/>\nOnly the first results of big queries are returned, to avoid one badly optimized query worsen performance for all other users. First, pagination start and limit can't go beyond default maxima (defined in server propertiesdatacoreApiServer.query.maxStart and datacoreApiServer.query.maxLimit).Secondly, MongoDB maxScan is set on the query to the maximal queried fields' queryLimit, and at most to default maximum (defined in server property datacoreApiServer.query.maxScan) ; beware, maxScan differs from limit because sorts or multiple criteria can eat some scans.",
+      "type" : "array",
+      "items" : {
+        "$ref" : "DCResource"
+      },
+      "nickname" : "findDataInType",
+      "parameters" : [ {
+        "name" : "type",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "start",
+        "description" : "Pagination start",
+        "defaultValue" : "0",
+        "required" : false,
+        "type" : "integer",
+        "format" : "int32",
+        "paramType" : "query",
+        "allowMultiple" : false
+      }, {
+        "name" : "limit",
+        "description" : "Pagination limit",
+        "defaultValue" : "10",
+        "required" : false,
+        "type" : "integer",
+        "format" : "int32",
+        "paramType" : "query",
+        "allowMultiple" : false
+      }, {
+        "name" : "debug",
+        "description" : "Debug",
+        "required" : false,
+        "type" : "boolean",
+        "paramType" : "query",
+        "allowMultiple" : false
+      }, {
+        "name" : "#queryParameters",
+        "description" : "Each other HTTP query parameter (in Swagger UI, enter them as a single URL query string, ex. name=London&population=>100000) is a Datacore query criteria",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "query",
+        "allowMultiple" : true
+      }, {
+        "name" : "X-Datacore-Debug",
+        "description" : "Enable debug on query.",
+        "defaultValue" : "false",
+        "required" : false,
+        "type" : "boolean",
+        "paramType" : "header",
+        "allowMultiple" : false
+      }, {
+        "name" : "Authorization",
+        "description" : "OAuth2 Bearer or (DEV MODE ONLY) Basic Auth",
+        "defaultValue" : "Basic YWRtaW46YWRtaW4=",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      }, {
+        "name" : "X-Datacore-Project",
+        "description" : "Examples : oasis.test, oasis.main",
+        "defaultValue" : "oasis.main",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      } ],
+      "responseMessages" : [ {
+        "code" : 404,
+        "message" : "Type model not found"
+      }, {
+        "code" : 400,
+        "message" : "Bad request : field parsing errors (format, consistency with Model & Mixin types...)"
+      }, {
+        "code" : 200,
+        "message" : "OK : resources found and returned"
+      } ]
+    } ]
+  }, {
+    "path" : "/dc/",
+    "operations" : [ {
+      "method" : "POST",
+      "summary" : "Creates new data Resources, or updates them if allowed.",
+      "notes" : "Mere wrapper over atomic typed POST. \n<br/><br/>\nResource URI must be provided, up-to-date versions are required to update existing resources (which first requires that strict POST mode is not enabled)",
+      "type" : "array",
+      "items" : {
+        "$ref" : "DCResource"
+      },
+      "nickname" : "postAllData",
+      "parameters" : [ {
+        "name" : "body",
+        "description" : "Data Resources to create",
+        "required" : true,
+        "type" : "array",
+        "items" : {
+          "$ref" : "DCResource"
+        },
+        "paramType" : "body",
+        "allowMultiple" : false
+      }, {
+        "name" : "Authorization",
+        "description" : "OAuth2 Bearer or (DEV MODE ONLY) Basic Auth",
+        "defaultValue" : "Basic YWRtaW46YWRtaW4=",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      }, {
+        "name" : "X-Datacore-Project",
+        "description" : "Examples : oasis.test, oasis.main",
+        "defaultValue" : "oasis.main",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      } ],
+      "responseMessages" : [ {
+        "code" : 500,
+        "message" : "Internal server error"
+      }, {
+        "code" : 409,
+        "message" : "Conflict : while trying to update existing resource (in non-strict POST mode only), optimistic locking error (provided resource version is not up-to-date with the server's latest)"
+      }, {
+        "code" : 404,
+        "message" : "Type model not found"
+      }, {
+        "code" : 400,
+        "message" : "Bad request : missing content, missing or invalid URIs, (if enabled) strict POST mode not respected (version provided or resource already exists), field parsing errors (format, consistency with Model & Mixin types...)"
+      }, {
+        "code" : 201,
+        "message" : "Created : resources have been created"
+      } ]
+    }, {
+      "method" : "PUT",
+      "summary" : "Updates existing data Resources.",
+      "notes" : "Mere wrapper over atomic typed PUT. \n<br/><br/>\nResource URI (Model type and IRI i.e. Internal Resource Identifier) are required TODO but also up-to-date version sent as an ETag in an If-Match=version precondition, TODO all fields must be provided OR PATCH behaviour differ from PUT's",
+      "type" : "array",
+      "items" : {
+        "$ref" : "DCResource"
+      },
+      "nickname" : "putAllData",
+      "parameters" : [ {
+        "name" : "body",
+        "description" : "Data Resources to update",
+        "required" : true,
+        "type" : "array",
+        "items" : {
+          "$ref" : "DCResource"
+        },
+        "paramType" : "body",
+        "allowMultiple" : false
+      }, {
+        "name" : "Authorization",
+        "description" : "OAuth2 Bearer or (DEV MODE ONLY) Basic Auth",
+        "defaultValue" : "Basic YWRtaW46YWRtaW4=",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      }, {
+        "name" : "X-Datacore-Project",
+        "description" : "Examples : oasis.test, oasis.main",
+        "defaultValue" : "oasis.main",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      } ],
+      "responseMessages" : [ {
+        "code" : 500,
+        "message" : "Internal server error"
+      }, {
+        "code" : 409,
+        "message" : "Conflict : while trying to update existing resource, optimistic locking error (provided resource version is not up-to-date with the server's latest)"
+      }, {
+        "code" : 404,
+        "message" : "Resource does not exist, or type model not found"
+      }, {
+        "code" : 400,
+        "message" : "Bad request : missing content or version, missing or invalid URI, non existing resource, field parsing errors (format, consistency with Model & Mixin types...)"
+      }, {
+        "code" : 200,
+        "message" : "OK : resources have been updated"
+      } ]
+    }, {
+      "method" : "GET",
+      "summary" : "Returns matching resources.",
+      "notes" : "Returns all Datacore resources of the given type that match all (AND)criteria provided in HTTP query parameters, sorted in the given order(s) if any, with (limited) pagination.It is a 'native' query in that it isimplemented as a single MongoDB query with pagination by default. \n<br/><br/>\nEach additional HTTP query parameter (in Swagger UI, enter them as a single URL query string, ex. name=London&population=>100000) is a Datacore query criteria in the form field=operatorValueSort. There, 'field' is the field's dotted path starting by its model type(s), 'operator' (if any, else defaults to '=') can be in logical, XML (most), MongoDB (all) or sometimes Java-like form, simple unquoted value is accepted but ideally and formally value should be JSON (i.e. number, list / array, map / Object, or quoted string including for string serialized types : resource, date, long) (meaning a quoted string should be doubly quoted), and 'sort' is an optional + (resp. -) suffix for ascending (resp. descending) order (that logically only applies to greater, lower, (not) in and not equals operators). \n<br/>\nThey (operatorValueSort) must be rightly encoded as an HTTP query parameter value (meaning in Java using URLEncoder.encode(\"UTF-8\") and Javascript using encodeURIComponent(), <a href=\"http://xkr.us/articles/javascript/encode-compare/\">see difference and test it</a>).Sorting according to a field not already specified in a criteria is done by providing an HTTP query parameter in the form field=sort where 'sort' is + (resp. -) for ascending (resp. descending) order ; by default it sorts on modified date. A given field can be specified twice (even if it's not perfect HTTP), for instance to define \"between\" queries using &gt and < operators.\n<br/><br/>\nAccepted operators, in their logical/XML/MongoDB/Java forms if any (else -), are : =/-/-/==, >/&gt/$gt/- (ex. >3), </&lt;/$lt/-, >=/&gt;=/$gte/-, <=/&lt;=/$lte/-, <>/&lt;&gt;/$ne/!=, -/-/$in/- (in JSON list, ex. $in[0,1]), -/-/$nin/- (not in JSON list), -/-/$regex/- (Perl's ex. $regex/Lond.*n/i or only $regexLond.*n), -/-/$exists/- (field exists ; no value) ; list operators : -/-/$all/- (on JSON list whose elements must be all present in list values found ex. $all[\"cat1\", \"cat2\"]), -/-/$elemMatch/- (on JSON object of key/values to be ALL matched ex. on i18n field $elemMatch{\"v\":\"Torino\",\"l\":\"it\"} ), -/-/$size/- (list field size ; no value). \n<br/><br/>\nSee <a href=\"http://docs.mongodb.org/manual/reference/operator/query/\">detailed documentation about MongoDB operators</a>.\n<br/>\nSome generic fields can also be used as criteria : @id , dc:modified .\n<br/>\nMultiple criteria on same field allow to achieve a \"between\" constraint, ex. GET <a href=\"/dc/type/dcmo:model_0?dc:modified=>=1943-04-02T00:00:00.000Z&dc:modified=<=2043-04-02T00:00:00.000Z\" class=\"dclink\" onclick=\"javascript:return findDataByType($(this).attr('href'));\">/dc/type/dcmo:model_0?dc:modified=>=1943-04-02T00:00:00.000Z&dc:modified=<=2043-04-02T00:00:00.000Z</a>.\n<br/><br/>\nIf debug is enabled, it rather returns a JSON object containing in \"results\" regular results and in \"explain\" the result of a <a href=\"http://docs.mongodb.org/manual/reference/method/cursor.explain\">MongoDB explain command</a>, in order to help users optimize queries.\n<br/>\nOnly the first results of big queries are returned, to avoid one badly optimized query worsen performance for all other users. First, pagination start and limit can't go beyond default maxima (defined in server propertiesdatacoreApiServer.query.maxStart and datacoreApiServer.query.maxLimit).Secondly, MongoDB maxScan is set on the query to the maximal queried fields' queryLimit, and at most to default maximum (defined in server property datacoreApiServer.query.maxScan) ; beware, maxScan differs from limit because sorts or multiple criteria can eat some scans.",
+      "type" : "array",
+      "items" : {
+        "$ref" : "DCResource"
+      },
+      "nickname" : "findData",
+      "parameters" : [ {
+        "name" : "start",
+        "description" : "Pagination start",
+        "defaultValue" : "0",
+        "required" : false,
+        "type" : "integer",
+        "format" : "int32",
+        "paramType" : "query",
+        "allowMultiple" : false
+      }, {
+        "name" : "limit",
+        "description" : "Pagination limit",
+        "defaultValue" : "10",
+        "required" : false,
+        "type" : "integer",
+        "format" : "int32",
+        "paramType" : "query",
+        "allowMultiple" : false
+      }, {
+        "name" : "#queryParameters",
+        "description" : "Each other HTTP query parameter (in Swagger UI, enter them as a single URL query string, ex. name=London&population=>100000) is a Datacore query criteria.",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "query",
+        "allowMultiple" : true
+      }, {
+        "name" : "Authorization",
+        "description" : "OAuth2 Bearer or (DEV MODE ONLY) Basic Auth",
+        "defaultValue" : "Basic YWRtaW46YWRtaW4=",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      }, {
+        "name" : "X-Datacore-Project",
+        "description" : "Examples : oasis.test, oasis.main",
+        "defaultValue" : "oasis.main",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      } ],
+      "responseMessages" : [ {
+        "code" : 404,
+        "message" : "Type model not found"
+      }, {
+        "code" : 400,
+        "message" : "Bad request : field parsing errors (format, consistency with Model & Mixin types...)"
+      }, {
+        "code" : 200,
+        "message" : "OK : resources found and returned"
+      } ]
+    } ]
+  }, {
+    "path" : "/dc/type/{type}/{__unencoded__iri:.+}",
+    "operations" : [ {
+      "method" : "PUT",
+      "summary" : "Updates an existing data Resource in the given type.",
+      "notes" : "(For now) mere wrapper over atomic typed non-strict mode POST. \n<br/><br/>\nResource URI (Model type and IRI i.e. Internal Resource Identifier) are required but also up-to-date version sent as an ETag in an If-Match=version precondition, TODO all fields must be provided OR PATCH behaviour differ from PUT's",
+      "type" : "DCResource",
+      "nickname" : "putDataInType",
+      "parameters" : [ {
+        "name" : "body",
+        "description" : "Data Resource to update",
+        "required" : true,
+        "type" : "DCResource",
+        "paramType" : "body",
+        "allowMultiple" : false
+      }, {
+        "name" : "type",
+        "description" : "Model type to update it in",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "__unencoded__iri",
+        "description" : "Type-relative resource id",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "Authorization",
+        "description" : "OAuth2 Bearer or (DEV MODE ONLY) Basic Auth",
+        "defaultValue" : "Basic YWRtaW46YWRtaW4=",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      }, {
+        "name" : "X-Datacore-Project",
+        "description" : "Examples : oasis.test, oasis.main",
+        "defaultValue" : "oasis.main",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      } ],
+      "responseMessages" : [ {
+        "code" : 500,
+        "message" : "Internal server error"
+      }, {
+        "code" : 409,
+        "message" : "Conflict : while trying to update existing resource, optimistic locking error (provided resource version is not up-to-date with the server's latest)"
+      }, {
+        "code" : 404,
+        "message" : "Resource does not exist, or type model not found"
+      }, {
+        "code" : 400,
+        "message" : "Bad request : missing content or version, missing or invalid URI, non existing resource, field parsing errors (format, consistency with Model & Mixin types...)"
+      }, {
+        "code" : 200,
+        "message" : "OK : the resource has been updated"
+      } ]
+    }, {
+      "method" : "GET",
+      "summary" : "Get an existing data Resource.",
+      "notes" : "Resource Model type and IRI (Internal Resource Identifier) are required. \n<br/><br/>\nAllows web-style client-side caching : if client sends its current cached resource's version as an ETag in an If-None-Match=version precondition, the Resource is returned only if this precondition is matched on the server, otherwise (if the client's version is not up-to-date with the server's), it returns 304 Not Modified, allowing the client to get the Resource from its cache.",
+      "type" : "DCResource",
+      "nickname" : "getData",
+      "parameters" : [ {
+        "name" : "type",
+        "description" : "Model type to look up in",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "__unencoded__iri",
+        "description" : "Type-relative resource id",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "If-None-Match",
+        "description" : "Resource version",
+        "required" : false,
+        "type" : "integer",
+        "format" : "int64",
+        "paramType" : "header",
+        "allowMultiple" : false
+      }, {
+        "name" : "Authorization",
+        "description" : "OAuth2 Bearer or (DEV MODE ONLY) Basic Auth",
+        "defaultValue" : "Basic YWRtaW46YWRtaW4=",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      }, {
+        "name" : "X-Datacore-Project",
+        "description" : "Examples : oasis.test, oasis.main",
+        "defaultValue" : "oasis.main",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      } ],
+      "responseMessages" : [ {
+        "code" : 404,
+        "message" : "Resource does not exist, or type model not found"
+      }, {
+        "code" : 304,
+        "message" : "Resource not modified (client can reuse its cache's)"
+      }, {
+        "code" : 200,
+        "message" : "OK : resource found and returned"
+      } ]
+    }, {
+      "method" : "DELETE",
+      "summary" : "Deletes an existing data Resource.",
+      "notes" : "Resource Model type and IRI (Internal Resource Identifier) are required, but also up-to-date version sent as an ETag in an If-Match=version precondition. Doesn't check whether said data Resource exists beforehands.",
+      "type" : "DCResource",
+      "nickname" : "deleteData",
+      "parameters" : [ {
+        "name" : "type",
+        "description" : "Model type to look up in",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "__unencoded__iri",
+        "description" : "Type-relative resource id",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "If-Match",
+        "description" : "Resource version",
+        "required" : false,
+        "type" : "integer",
+        "format" : "int64",
+        "paramType" : "header",
+        "allowMultiple" : false
+      }, {
+        "name" : "Authorization",
+        "description" : "OAuth2 Bearer or (DEV MODE ONLY) Basic Auth",
+        "defaultValue" : "Basic YWRtaW46YWRtaW4=",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      }, {
+        "name" : "X-Datacore-Project",
+        "description" : "Examples : oasis.test, oasis.main",
+        "defaultValue" : "oasis.main",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      } ],
+      "responseMessages" : [ {
+        "code" : 409,
+        "message" : "Conflict : while trying to delete existing resource, optimistic locking error (provided resource version is not up-to-date with the server's latest)"
+      }, {
+        "code" : 404,
+        "message" : "Resource does not exist, or type model not found"
+      }, {
+        "code" : 400,
+        "message" : "Bad request : version ETag is missing or not a long integer"
+      }, {
+        "code" : 204,
+        "message" : "Delete succeeded"
+      } ]
+    } ]
+  }, {
+    "path" : "/dc/post/type/{type}",
+    "operations" : [ {
+      "method" : "GET",
+      "summary" : "NOT IMPLEMENTED YET, (Testing only) creates a new data Resource in the given type, or updates it if allowed.",
+      "notes" : "This is a tunneled version of the POST operation over GET to ease up testing (e.g. on web browsers), prefer POST if possible. \n<br/><br/>\nResource URI must be provided but can be relative to type, up-to-date version is required to update an existing resource (which first requires that strict POST mode is not enabled)",
+      "type" : "DCResource",
+      "nickname" : "postDataInTypeOnGet",
+      "parameters" : [ {
+        "name" : "type",
+        "description" : "Model type to create (or update) it in",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "method",
+        "description" : "HTTP method to tunnel over",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "query",
+        "allowMultiple" : false,
+        "enum" : [ "POST" ]
+      }, {
+        "name" : "Authorization",
+        "description" : "OAuth2 Bearer or (DEV MODE ONLY) Basic Auth",
+        "defaultValue" : "Basic YWRtaW46YWRtaW4=",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      }, {
+        "name" : "X-Datacore-Project",
+        "description" : "Examples : oasis.test, oasis.main",
+        "defaultValue" : "oasis.main",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      } ],
+      "responseMessages" : [ {
+        "code" : 500,
+        "message" : "Internal server error"
+      }, {
+        "code" : 409,
+        "message" : "Conflict : while trying to update existing resource (in non-strict POST mode only), optimistic locking error (provided resource version is not up-to-date with the server's latest)"
+      }, {
+        "code" : 404,
+        "message" : "Type model not found"
+      }, {
+        "code" : 400,
+        "message" : "Bad request : missing content, missing or invalid URI, (if enabled) strict POST mode not respected (version provided or resource already exists), field parsing errors (format, consistency with Model & Mixin types...)"
+      }, {
+        "code" : 201,
+        "message" : "Created : the resource has been created"
+      }, {
+        "code" : 200,
+        "message" : "OK : the resource has been updated (if not strict POST mode)"
+      } ]
+    } ]
+  }, {
+    "path" : "/dc/change/type/{type}/{__unencoded__iri:.+}",
+    "operations" : [ {
+      "method" : "GET",
+      "summary" : "NOT IMPLEMENTED YET, (Testing only) udpates or deletes an existing data Resource in the given type.",
+      "notes" : "This is a tunneled version of the PUT / PATCH and DELETE operations over GET to ease up testing (e.g. on web browsers), prefer PUT / PATCH or DELETE if possible. \n<br/><br/>\nResource URI (Model type and IRI i.e. Internal Resource Identifier) are required but also up-to-date version sent as an ETag in an If-Match=version precondition, TODO all fields must be provided OR PATCH behaviour differ from PUT's. Delete doesn't check whether said data Resource exists beforehands.",
+      "type" : "DCResource",
+      "nickname" : "putPatchDeleteDataOnGet",
+      "parameters" : [ {
+        "name" : "type",
+        "description" : "Model type to update it in",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "__unencoded__iri",
+        "description" : "Type-relative resource id",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "method",
+        "description" : "HTTP method to tunnel over",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "query",
+        "allowMultiple" : false,
+        "enum" : [ "POST" ]
+      }, {
+        "name" : "If-Match",
+        "description" : "Resource version",
+        "required" : true,
+        "type" : "integer",
+        "format" : "int64",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "Authorization",
+        "description" : "OAuth2 Bearer or (DEV MODE ONLY) Basic Auth",
+        "defaultValue" : "Basic YWRtaW46YWRtaW4=",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      }, {
+        "name" : "X-Datacore-Project",
+        "description" : "Examples : oasis.test, oasis.main",
+        "defaultValue" : "oasis.main",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      } ],
+      "responseMessages" : [ {
+        "code" : 500,
+        "message" : "Internal server error"
+      }, {
+        "code" : 409,
+        "message" : "Conflict : while trying to update existing resource (in non-strict POST mode only), optimistic locking error (provided resource version is not up-to-date with the server's latest)"
+      }, {
+        "code" : 404,
+        "message" : "Resource does not exist, or type model not found"
+      }, {
+        "code" : 400,
+        "message" : "Bad request : missing content, missing or invalid URI, (if enabled) strict POST mode not respected (version provided or resource already exists), field parsing errors (format, consistency with Model & Mixin types...)"
+      }, {
+        "code" : 204,
+        "message" : "Delete succeeded"
+      }, {
+        "code" : 200,
+        "message" : "OK : the resource has been updated"
+      } ]
+    } ]
+  }, {
+    "path" : "/dc/query/type/{type}",
+    "operations" : [ {
+      "method" : "GET",
+      "summary" : "Executes the query in the given Model type and returns found resources.",
+      "notes" : "Returns all Datacore data of the given type that are found by the given query written in the given language. It is a non-'native', limited query in that it is implemented by several MongoDB queries whose criteria on non-data (URI) fields are limited as defined in their model. Therefore it is advised to rather do several findDataInType queries. \n<br/><br/>\nSupported query languages : \n<br/><br/>\n<strong>LDPQL :</strong>\n<br/>\nan LDPQL query is merely the HTTP query part of a GET /(type/${type}/) operation, for instance : \"name=John&age=>10&age=<20\".\n<br/><br/>\nPossible future query languages : \n<br/><br/>\n<strong>SPARQL :</strong>\n<br/>\nthis is a limited form of SPARQL's SELECT statement. By default, the first variable receives an rdf:type predicate to the given model type. All other resource variables must be referenced from within this first one (even indirectly).Fields are adressed in their dotted form without root type.\n<br/>\nAllowed : \n<br/>\nPREFIX ?, SELECT(more ??), FROM (type ?), WHERE \n<br/>\na / rdf:type, rdfs:subClassOf ? (for types & aspects) ; always AND / && (never ||), OPTIONAL ?!?\n<br/>\n 1.0^^xsd:float ?? \n<br/>\nVALUES ?? \n<br/>\nFILTER : ! / NOT EXISTS ?, !=, NOT IN, <, > \n<br/>\nand string functions : REGEX, more ???, langMatches ??, IRI ?? \n<br/>\ncount on lists, else no aggregate function (TODO LATER2 using map / reduce) \n<br/>\nLIMIT, OFFSET, ORDER BY",
+      "type" : "array",
+      "items" : {
+        "$ref" : "DCResource"
+      },
+      "nickname" : "queryDataInType",
+      "parameters" : [ {
+        "name" : "type",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "query",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "query",
+        "allowMultiple" : false
+      }, {
+        "name" : "language",
+        "defaultValue" : "SPARQL",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "query",
+        "allowMultiple" : false
+      }, {
+        "name" : "Authorization",
+        "description" : "OAuth2 Bearer or (DEV MODE ONLY) Basic Auth",
+        "defaultValue" : "Basic YWRtaW46YWRtaW4=",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      }, {
+        "name" : "X-Datacore-Project",
+        "description" : "Examples : oasis.test, oasis.main",
+        "defaultValue" : "oasis.main",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      } ],
+      "responseMessages" : [ {
+        "code" : 404,
+        "message" : "Type model not found"
+      }, {
+        "code" : 400,
+        "message" : "Bad request : field parsing errors (format, consistency with Model & Mixin types...)"
+      }, {
+        "code" : 200,
+        "message" : "OK : resources found and returned"
+      } ]
+    } ]
+  }, {
+    "path" : "/dc/query",
+    "operations" : [ {
+      "method" : "GET",
+      "summary" : "NOT IMPLEMENTED YET, Executes the query in the given Model type and returns found resources.",
+      "notes" : "Returns all Datacore data of the given type that are found by the given query written in the given language. It is a non-'native', limited query in that it is implemented by several MongoDB queries whose criteria on non-data (URI) fields are limited as defined in their model. Therefore it is advised to rather do several findDataInType queries. \n<br/><br/>\nSupported query languages could be : \n<br/><br/>\n<strong>LDPQL :</strong>\n<br/>\nan LDPQL query is merely the HTTP query part of a GET /(type/${type}/) operation, for instance : \"name=John&age=>10&age=<20\".\n<br/><br/>\n<strong>SPARQL :</strong>\n<br/>\nthis is a limited form of SPARQL's SELECT statement. When not referenced from within another root resource variable whose model type is specified (even indirectly), other root resource variables must have their model type provided in an rdf:type predicate.Fields are adressed in their dotted form with root type.\n<br/>\nAllowed : \n<br/>\nPREFIX ?, SELECT(more ??), FROM (type ?), WHERE \n<br/>\na / rdf:type, rdfs:subClassOf ? (for types & aspects) ; always AND / && (never ||), OPTIONAL ?!?\n<br/>\n 1.0^^xsd:float ?? \n<br/>\nVALUES ?? \n<br/>\nFILTER : ! / NOT EXISTS ?, !=, NOT IN, <, > \n<br/>\nand string functions : REGEX, more ???, langMatches ??, IRI ?? \n<br/>\ncount on lists, else no aggregate function (TODO LATER2 using map / reduce) \n<br/>\nLIMIT, OFFSET, ORDER BY",
+      "type" : "array",
+      "items" : {
+        "$ref" : "DCResource"
+      },
+      "nickname" : "queryData",
+      "parameters" : [ {
+        "name" : "query",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "query",
+        "allowMultiple" : false
+      }, {
+        "name" : "language",
+        "defaultValue" : "SPARQL",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "query",
+        "allowMultiple" : false
+      }, {
+        "name" : "Authorization",
+        "description" : "OAuth2 Bearer or (DEV MODE ONLY) Basic Auth",
+        "defaultValue" : "Basic YWRtaW46YWRtaW4=",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      }, {
+        "name" : "X-Datacore-Project",
+        "description" : "Examples : oasis.test, oasis.main",
+        "defaultValue" : "oasis.main",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      } ],
+      "responseMessages" : [ {
+        "code" : 404,
+        "message" : "Type model not found"
+      }, {
+        "code" : 400,
+        "message" : "Bad request : field parsing errors (format, consistency with Model & Mixin types...)"
+      }, {
+        "code" : 200,
+        "message" : "OK : resources found and returned"
+      } ]
+    } ]
+  }, {
+    "path" : "/dc/h/{type}/{__unencoded__iri}/{version}",
+    "operations" : [ {
+      "method" : "GET",
+      "summary" : "Return a matching resource of the given iri and version.",
+      "notes" : "Resources of a model can be historized by defining the isHistorizable field to true.If a resource is historized it can be retrieved with this operation.The resource is identified by an IRI and a version of resources.e.g. if resource URI = http://data-test.oasis-eu.org/dc/type/sample.marka.company/1 and you want version = 0,the parameters would be :  - type : sample.marka.company - iri : 1 (the URI is made like this : /dc/type/{type}/{__unencoded__iri}) - version : 0 (or whatever version you need)",
+      "type" : "DCResource",
+      "nickname" : "findHistorizedResource",
+      "parameters" : [ {
+        "name" : "type",
+        "description" : "Resource's model type",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "__unencoded__iri",
+        "description" : "Type-relative resource id",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "version",
+        "description" : "Resource version",
+        "required" : true,
+        "type" : "integer",
+        "format" : "int32",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "Authorization",
+        "description" : "OAuth2 Bearer or (DEV MODE ONLY) Basic Auth",
+        "defaultValue" : "Basic YWRtaW46YWRtaW4=",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      }, {
+        "name" : "X-Datacore-Project",
+        "description" : "Examples : oasis.test, oasis.main",
+        "defaultValue" : "oasis.main",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      } ],
+      "responseMessages" : [ {
+        "code" : 404,
+        "message" : "Resource not found with this IRI and version"
+      }, {
+        "code" : 400,
+        "message" : "Bad request : non-existent model"
+      }, {
+        "code" : 200,
+        "message" : "OK : resource found and returned"
+      } ]
+    } ]
+  } ],
+  "models" : {
+    "DCResource" : {
+      "id" : "DCResource",
+      "description" : "",
+      "required" : [ "@id" ],
+      "properties" : {
+        "id" : {
+          "type" : "string"
+        },
+        "properties" : {
+          "$ref" : "Map[string,Object]"
+        },
+        "modelType" : {
+          "type" : "string"
+        },
+        "@id" : {
+          "type" : "string",
+          "description" : "URI"
+        },
+        "@type" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
+        },
+        "dc:created" : {
+          "type" : "string",
+          "format" : "date-time"
+        },
+        "dc:creator" : {
+          "type" : "string"
+        },
+        "dc:contributor" : {
+          "type" : "string"
+        },
+        "dc:modified" : {
+          "type" : "string",
+          "format" : "date-time"
+        },
+        "o:version" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "version"
+        }
+      }
+    }
+  }
+}

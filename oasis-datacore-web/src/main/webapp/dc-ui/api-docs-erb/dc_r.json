@@ -1,0 +1,296 @@
+{
+  "apiVersion" : "1.0.0",
+  "swaggerVersion" : "1.2",
+  "basePath" : "<%= datacore_baseUrl %>",
+  "resourcePath" : "/dc/r",
+  "apis" : [ {
+    "path" : "/dc/r/{type}/{iri}/{version}",
+    "operations" : [ {
+      "method" : "POST",
+      "summary" : "Add rights on a resource",
+      "notes" : "You must provide the type, id and version of the resource you need to add rights on.<br/>At least one of writers, readers, owners must be defined. Those ACLs (Access Control List) may contain u_[username] or groups defined in Kernel using User Directory or Social API or (DEV MODE ONLY) mock auth conf.<br/>The DCRights object will add rights on your resource only if they are not already on it. Only owners are allowed to add rights on a resource. (The scope implementation will be added in the future)",
+      "type" : "void",
+      "nickname" : "addRightsOnResource",
+      "consumes" : [ "application/json" ],
+      "parameters" : [ {
+        "name" : "type",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "iri",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "version",
+        "required" : true,
+        "type" : "integer",
+        "format" : "int64",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "body",
+        "description" : "readers/writers/owners collections to add to existents collections (union)",
+        "required" : false,
+        "type" : "DCRights",
+        "paramType" : "body",
+        "allowMultiple" : false
+      }, {
+        "name" : "Authorization",
+        "description" : "OAuth2 Bearer or (DEV MODE ONLY) Basic Auth",
+        "defaultValue" : "Basic YWRtaW46YWRtaW4=",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      } ],
+      "responseMessages" : [ {
+        "code" : 500,
+        "message" : "Internal server error"
+      }, {
+        "code" : 404,
+        "message" : "Resource not found"
+      }, {
+        "code" : 400,
+        "message" : "Bad request"
+      }, {
+        "code" : 200,
+        "message" : "Rights have been added on the resource"
+      } ]
+    }, {
+      "method" : "DELETE",
+      "summary" : "Remove rights on a resource",
+      "notes" : "You must provide the type, id and version of the resource you need to remove rights on<br/>At least one of writers, readers, owners must be defined. Those ACLs (Access Control List) may contain u_[username] or groups defined in Kernel using User Directory or Social API or (DEV MODE ONLY) mock auth conf.<br/>Only owners are allowed to remove rights on a resource(The scope implementation will be added in the future)",
+      "type" : "void",
+      "nickname" : "removeRightsOnResource",
+      "consumes" : [ "application/json" ],
+      "parameters" : [ {
+        "name" : "type",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "iri",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "version",
+        "required" : true,
+        "type" : "integer",
+        "format" : "int64",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "body",
+        "description" : "readers/writers/owners collections to remove from existents collections (difference)",
+        "required" : false,
+        "type" : "DCRights",
+        "paramType" : "body",
+        "allowMultiple" : false
+      }, {
+        "name" : "Authorization",
+        "description" : "OAuth2 Bearer or (DEV MODE ONLY) Basic Auth",
+        "defaultValue" : "Basic YWRtaW46YWRtaW4=",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      } ],
+      "responseMessages" : [ {
+        "code" : 500,
+        "message" : "Internal server error"
+      }, {
+        "code" : 404,
+        "message" : "Resource not found"
+      }, {
+        "code" : 400,
+        "message" : "Bad request"
+      }, {
+        "code" : 200,
+        "message" : "Rights have been correctly remove from the resource"
+      } ]
+    }, {
+      "method" : "PUT",
+      "summary" : "Replace all rights on the selected resource by the DCRights in payload",
+      "notes" : "You must provide the type, id and version of the resource.<br/>At least one of writers, readers, owners must be defined. Those ACLs (Access Control List) may contain u_[username] or groups defined in Kernel using User Directory or Social API or (DEV MODE ONLY) mock auth conf.<br/>Don't forget that the DCRights you give in the body will replace entirely the one on the resource (EVEN THE OWNERS !).",
+      "type" : "void",
+      "nickname" : "replaceRightsOnResource",
+      "parameters" : [ {
+        "name" : "type",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "iri",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "version",
+        "required" : true,
+        "type" : "integer",
+        "format" : "int64",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "body",
+        "description" : "New rights",
+        "required" : false,
+        "type" : "DCRights",
+        "paramType" : "body",
+        "allowMultiple" : false
+      }, {
+        "name" : "Authorization",
+        "description" : "OAuth2 Bearer or (DEV MODE ONLY) Basic Auth",
+        "defaultValue" : "Basic YWRtaW46YWRtaW4=",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      } ],
+      "responseMessages" : [ {
+        "code" : 500,
+        "message" : "Internal server error"
+      }, {
+        "code" : 404,
+        "message" : "Resource not found"
+      }, {
+        "code" : 400,
+        "message" : "Bad request"
+      }, {
+        "code" : 200,
+        "message" : "Rights have been replace successfully"
+      } ]
+    }, {
+      "method" : "GET",
+      "summary" : "Get rights list of a resource",
+      "notes" : "You must provide the type, id and version of the resource to get the rights associated to it.",
+      "type" : "DCRights",
+      "nickname" : "getRightsOnResource",
+      "parameters" : [ {
+        "name" : "type",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "iri",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "version",
+        "required" : true,
+        "type" : "integer",
+        "format" : "int64",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "Authorization",
+        "description" : "OAuth2 Bearer or (DEV MODE ONLY) Basic Auth",
+        "defaultValue" : "Basic YWRtaW46YWRtaW4=",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      } ],
+      "responseMessages" : [ {
+        "code" : 500,
+        "message" : "Internal server error"
+      }, {
+        "code" : 404,
+        "message" : "Resource not found"
+      }, {
+        "code" : 400,
+        "message" : "Bad request"
+      }, {
+        "code" : 200,
+        "message" : "Rights have been correctly retrieved"
+      } ]
+    } ]
+  }, {
+    "path" : "/dc/r/f/{type}/{iri}/{version}",
+    "operations" : [ {
+      "method" : "PUT",
+      "summary" : "Remove all rights defined on resource except owners",
+      "notes" : "You must provide the type, id and version of the resource you need to remove writer and reader rights on.",
+      "type" : "void",
+      "nickname" : "flushRightsOnResource",
+      "parameters" : [ {
+        "name" : "type",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "iri",
+        "required" : true,
+        "type" : "string",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "version",
+        "required" : true,
+        "type" : "integer",
+        "format" : "int64",
+        "paramType" : "path",
+        "allowMultiple" : false
+      }, {
+        "name" : "Authorization",
+        "description" : "OAuth2 Bearer or (DEV MODE ONLY) Basic Auth",
+        "defaultValue" : "Basic YWRtaW46YWRtaW4=",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      } ],
+      "responseMessages" : [ {
+        "code" : 500,
+        "message" : "Internal server error"
+      }, {
+        "code" : 404,
+        "message" : "Resource not found"
+      }, {
+        "code" : 400,
+        "message" : "Bad request"
+      }, {
+        "code" : 200,
+        "message" : "Readers and writers have been correctly removed from the resource"
+      } ]
+    } ]
+  } ],
+  "models" : {
+    "DCRights" : {
+      "id" : "DCRights",
+      "properties" : {
+        "owners" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
+        },
+        "writers" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
+        },
+        "readers" : {
+          "type" : "array",
+          "items" : {
+            "type" : "string"
+          }
+        }
+      }
+    }
+  }
+}

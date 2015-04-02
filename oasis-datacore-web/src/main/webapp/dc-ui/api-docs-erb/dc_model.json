@@ -1,0 +1,34 @@
+{
+  "apiVersion" : "1.0.0",
+  "swaggerVersion" : "1.2",
+  "basePath" : "<%= datacore_baseUrl %>",
+  "resourcePath" : "/dc/model",
+  "produces" : [ "application/json" ],
+  "consumes" : [ "application/json" ],
+  "apis" : [ {
+    "path" : "/dc/model/",
+    "operations" : [ {
+      "method" : "GET",
+      "summary" : "Returns all or matching models.",
+      "notes" : "Returns all Datacore model resources.",
+      "type" : "string",
+      "nickname" : "findModel",
+      "parameters" : [ {
+        "name" : "Authorization",
+        "description" : "OAuth2 Bearer or (DEV MODE ONLY) Basic Auth",
+        "defaultValue" : "Basic YWRtaW46YWRtaW4=",
+        "required" : false,
+        "type" : "string",
+        "paramType" : "header",
+        "allowMultiple" : false
+      } ],
+      "responseMessages" : [ {
+        "code" : 500,
+        "message" : "JSON (un)marshalling error."
+      }, {
+        "code" : 200,
+        "message" : "OK : the resource has been updated"
+      } ]
+    } ]
+  } ]
+}

@@ -634,7 +634,7 @@ function postAllDataInType(relativeUrl, resources, success, error) {
       relativeUrl = parseUri(relativeUrl);
    }
    setUrl(relativeUrl, success);
-   if (!resources instanceof Array) { // single resource
+   if (!(resources instanceof Array)) { // single resource
       resources = [ resources ];
    }
    dcApi.dc.postAllDataInType({type:relativeUrl.modelType, body:JSON.stringify(resources, null, null),
@@ -687,7 +687,7 @@ function deleteDataInType(resource, success, error) {
 // resources can be a single resource or an array
 // optional : success, error
 function postAllData(resources, success, error) {
-   if (!resources instanceof Array) { // single resource
+   if (!(resources instanceof Array)) { // single resource
       resources = [ resources ];
    }
    dcApi.dc.postAllData({body:JSON.stringify(resources, null, null),

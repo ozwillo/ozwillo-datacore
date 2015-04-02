@@ -78,7 +78,7 @@
 				           <licenseUrl>http://www.gnu.org/licenses/agpl-3.0.html</licenseUrl>
 				         </apiInfo>
 				         <!-- TODO LATER apiSortComparator>com.foo.bar.YourApiComarator</apiSortComparator -->
-				         <swaggerDirectory>../oasis-datacore/oasis-datacore-web/src/main/webapp/dc-ui/api-docs</swaggerDirectory><!-- TODO -->
+				         <swaggerDirectory>${project.basedir}/src/main/webapp/dc-ui/api-docs</swaggerDirectory><!-- TODO -->
 				         <swaggerUIDocBasePath>http://localhost:8080/dc-ui/api-docs</swaggerUIDocBasePath><!-- TODO templatize ;
 				         overrides basePath in root service.json to provide access to other .json spec files,
 				         which must be therefore in this directory. Must be absolute URL else : Unable to read api 'dc'
@@ -116,7 +116,7 @@
 				           <licenseUrl>http://www.gnu.org/licenses/agpl-3.0.html</licenseUrl>
 				         </apiInfo>
 				         <!-- TODO LATER apiSortComparator>com.foo.bar.YourApiComarator</apiSortComparator -->
-				         <swaggerDirectory>../oasis-datacore/oasis-datacore-web/src/main/webapp/dc-ui/api-docs-erb</swaggerDirectory><!-- TODO -->
+				         <swaggerDirectory>${project.basedir}/src/main/webapp/dc-ui/api-docs-erb</swaggerDirectory><!-- TODO -->
 				         <swaggerUIDocBasePath>&lt;%= datacore_baseUrl %&gt;/dc-ui/api-docs</swaggerUIDocBasePath><!-- TODO templatize ;
 				         overrides basePath in root service.json to provide access to other .json spec files,
 				         which must be therefore in this directory. Must be absolute URL else : Unable to read api 'dc'
