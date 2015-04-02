@@ -4,6 +4,7 @@
       xmlns:p="http://www.springframework.org/schema/p"
       xmlns:context="http://www.springframework.org/schema/context"
       xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+      xmlns:jaxrsc="http://cxf.apache.org/jaxrs-client"
       xmlns:cxf="http://cxf.apache.org/core"
       xmlns:http-conf="http://cxf.apache.org/transports/http/configuration"
       xmlns:cache="http://www.springframework.org/schema/cache"
@@ -14,6 +15,7 @@
       http://www.springframework.org/schema/context/spring-context-3.2.xsd
       http://cxf.apache.org/core http://cxf.apache.org/schemas/core.xsd
       http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd
+      http://cxf.apache.org/jaxrs-client http://cxf.apache.org/schemas/jaxrs-client.xsd
       http://cxf.apache.org/transports/http/configuration http://cxf.apache.org/schemas/configuration/http-conf.xsd
       http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache-3.2.xsd">
 
@@ -77,15 +79,15 @@
    <!-- Spring configuration for Datacore API CXF client -->
    <!-- Change the port to 8080 to use this test with real server-->
    <!-- serviceClass="org.oasis.datacore.rest.api.DatacoreApi" -->
-   <jaxrs:client id="datacoreApiClient"
+   <jaxrsc:client id="datacoreApiClient"
          serviceClass="org.oasis.datacore.rest.client.DatacoreClientApi"
          address="${datacoreApiClient.baseUrl}"><!-- TODO auth -->
       <!-- OR rather than in annotated subinterfaces of DatacoreClientApi (which is simpler to understand),
       specify serialized media / content type here (allows more of them) :
-      <jaxrs:headers>
+      <jaxrsc:headers>
          <entry key="Consumes" value="application/json+ld"/>
-      </jaxrs:headers -->
-      <jaxrs:providers>
+      </jaxrsc:headers -->
+      <jaxrsc:providers>
          <!-- JSON provider (Jackson's) : -->
          <bean class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider">
             <constructor-arg><bean class="org.oasis.datacore.rest.api.binding.DatacoreObjectMapper"/></constructor-arg>
@@ -98,76 +100,76 @@
          <!-- bean class="org.oasis.datacore.rest.client.CachedClientRequestFilter"/>
          <bean class="org.oasis.datacore.rest.client.CachedClientResponseFilter"/ -->
          <!-- bean class="org.oasis.datacore.rest.client.cxf.TextResponseExceptionMapper"/ --><!-- OBSOLETE -->
-      </jaxrs:providers>
+      </jaxrsc:providers>
       <!-- caching ETag interceptors (rather than whole bus) : -->
-      <jaxrs:outInterceptors>
+      <jaxrsc:outInterceptors>
          <bean class="org.oasis.datacore.rest.client.cxf.QueryParametersClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.ETagClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.ProjectClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.mock.MockLoginClientOutInterceptor"/><!-- TODO mock -->
-      </jaxrs:outInterceptors>
-      <!-- jaxrs:inInterceptors>
+      </jaxrsc:outInterceptors>
+      <!-- jaxrsc:inInterceptors>
          <bean class="org.oasis.datacore.rest.client.cxf.obsolete.ETagClientInInterceptor"/>
-      </jaxrs:inInterceptors -->
-      <jaxrs:features>
+      </jaxrsc:inInterceptors -->
+      <jaxrsc:features>
          <cxf:logging/>
-      </jaxrs:features>
-      <jaxrs:properties>
+      </jaxrsc:features>
+      <jaxrsc:properties>
          <!-- Prevents logging WebApplicationException not HTTP 400 or 500 -->
          <!-- entry key="org.apache.cxf.logging.FaultListener">
             <bean class="org.oasis.datacore.rest.server.cxf.ClientServerErrorFaultListener"/>
          </entry -->
-      </jaxrs:properties>
-   </jaxrs:client>
+      </jaxrsc:properties>
+   </jaxrsc:client>
    
    <bean id="datacoreApiCachedClient" class="org.oasis.datacore.rest.client.DatacoreApiCachedClientImpl">
       <property name="delegate"><ref bean="datacoreApiClient"/></property><!-- not necessary, autowired -->
    </bean>
 
 
-   <jaxrs:client id="datacoreClientJsonApi"
+   <jaxrsc:client id="datacoreClientJsonApi"
          serviceClass="org.oasis.datacore.rest.client.DatacoreClientJsonApi"
          address="${datacoreApiClient.baseUrl}"><!-- TODO auth -->
-      <jaxrs:providers>
+      <jaxrsc:providers>
          <!-- JSON provider (Jackson's) : -->
          <bean class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider">
             <constructor-arg><bean class="org.oasis.datacore.rest.api.binding.DatacoreObjectMapper"/></constructor-arg>
          </bean>
-      </jaxrs:providers>
-      <jaxrs:outInterceptors>
+      </jaxrsc:providers>
+      <jaxrsc:outInterceptors>
          <bean class="org.oasis.datacore.rest.client.cxf.QueryParametersClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.ETagClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.ProjectClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.mock.MockLoginClientOutInterceptor"/><!-- TODO mock -->
-      </jaxrs:outInterceptors>
-      <jaxrs:features>
+      </jaxrsc:outInterceptors>
+      <jaxrsc:features>
          <cxf:logging/>
-      </jaxrs:features>
-      <jaxrs:properties></jaxrs:properties>
-   </jaxrs:client>
+      </jaxrsc:features>
+      <jaxrsc:properties></jaxrsc:properties>
+   </jaxrsc:client>
   
    <bean id="datacoreApiCachedJsonClient" class="org.oasis.datacore.rest.client.DatacoreApiCachedClientImpl">
       <property name="delegate"><ref bean="datacoreClientJsonApi"/></property>
    </bean>
 
   
-   <jaxrs:client id="datacoreClientRdfApi"
+   <jaxrsc:client id="datacoreClientRdfApi"
          serviceClass="org.oasis.datacore.rest.client.DatacoreClientRdfApi"
          address="${datacoreApiClient.baseUrl}"><!-- TODO auth -->
-      <jaxrs:providers>
+      <jaxrsc:providers>
          <ref bean="datacoreApi.JsonLdJavaRdfProvider"/>
-      </jaxrs:providers>
-      <jaxrs:outInterceptors>
+      </jaxrsc:providers>
+      <jaxrsc:outInterceptors>
          <bean class="org.oasis.datacore.rest.client.cxf.QueryParametersClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.ETagClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.ProjectClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.mock.MockLoginClientOutInterceptor"/><!-- TODO mock -->
-      </jaxrs:outInterceptors>
-      <jaxrs:features>
+      </jaxrsc:outInterceptors>
+      <jaxrsc:features>
          <cxf:logging/>
-      </jaxrs:features>
-      <jaxrs:properties></jaxrs:properties>
-   </jaxrs:client>
+      </jaxrsc:features>
+      <jaxrsc:properties></jaxrsc:properties>
+   </jaxrsc:client>
    
    <bean id="datacoreApiCachedRdfClient" class="org.oasis.datacore.rest.client.DatacoreApiCachedClientImpl">
       <property name="delegate"><ref bean="datacoreClientRdfApi"/></property>

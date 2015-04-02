@@ -12,6 +12,7 @@ import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Form;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
@@ -20,7 +21,6 @@ import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.cxf.jaxrs.client.WebClient;
-import org.apache.cxf.jaxrs.ext.form.Form;
 import org.oasis.datacore.playground.security.TokenEncrypter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -75,8 +75,8 @@ public class PlaygroundAuthenticationTokenResource extends PlaygroundAuthenticat
       Response tokenExchangeRes;
       try {
          tokenExchangeRes = tokenExchangeClient.form(new Form()
-               .set("grant_type", "authorization_code").set("code", code)
-               .set("redirect_uri", playgroundTokenExchangeRedirectUrl));
+               .param("grant_type", "authorization_code").param("code", code)
+               .param("redirect_uri", playgroundTokenExchangeRedirectUrl));
       } catch (Exception ex) {
          // TODO or ServiceUnavailableException ?
          throw new InternalServerErrorException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)

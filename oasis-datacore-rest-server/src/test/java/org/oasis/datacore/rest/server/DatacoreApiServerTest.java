@@ -21,6 +21,7 @@ import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.util.ResourceParsingHelper;
+import org.oasis.datacore.rest.api.util.UnitTestHelper;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.client.QueryParameters;
@@ -129,7 +130,7 @@ public class DatacoreApiServerTest {
          datacoreApiClient.postDataInType(londonCityData, CityCountrySample.CITY_MODEL_NAME);
          Assert.fail("POST creation in strict mode should not be allowed when version provided");
       } catch (WebApplicationException waex) {
-         String responseContent = String.valueOf(waex.getResponse().getEntity());
+         String responseContent = UnitTestHelper.readBodyAsString(waex);
          Assert.assertTrue(responseContent.toLowerCase().contains("strict"));
       } finally {
          datacoreApiImpl.setStrictPostMode(oldStrictPostMode);
@@ -149,7 +150,7 @@ public class DatacoreApiServerTest {
          datacoreApiClient.postDataInType(londonCityData, CityCountrySample.CITY_MODEL_NAME);
          Assert.fail("Creation should fail when no referenced data URI");
       } catch (WebApplicationException waex) {
-         String responseContent = String.valueOf(waex.getResponse().getEntity());
+         String responseContent = UnitTestHelper.readBodyAsString(waex);
          Assert.assertTrue(responseContent.contains("Can't find data")
                && responseContent.contains(londonCityData.getUri()));
       }
@@ -167,7 +168,7 @@ public class DatacoreApiServerTest {
          datacoreApiClient.postDataInType(londonCityData, CityCountrySample.CITY_MODEL_NAME);
          Assert.fail("Creation should fail when no referenced data URI model");
       } catch (WebApplicationException waex) {
-         String responseContent = String.valueOf(waex.getResponse().getEntity());
+         String responseContent = UnitTestHelper.readBodyAsString(waex);
          Assert.assertTrue(responseContent.contains("model does not exist")
                && responseContent.contains(nonExistingModelDataUri));
       }
@@ -184,7 +185,7 @@ public class DatacoreApiServerTest {
          datacoreApiClient.postDataInType(londonCityData, CityCountrySample.CITY_MODEL_NAME);
          Assert.fail("Creation should fail when referenced data doesn't exist");
       } catch (WebApplicationException waex) {
-         String responseContent = String.valueOf(waex.getResponse().getEntity());
+         String responseContent = UnitTestHelper.readBodyAsString(waex);
          if (!localDatacoreLinkedResourceChecker.checkLinkedResourceExists()) {
             Assert.assertTrue(responseContent.contains(
                   this.containerUrl + DatacoreApi.DC_TYPE_PATH
@@ -219,7 +220,7 @@ public class DatacoreApiServerTest {
          Assert.fail("Creation should fail when referenced data in external known Datacore "
                + "is of the wrong (here, same) model");
       } catch (BadRequestException brex) {
-         String responseContent = String.valueOf(brex.getResponse().getEntity());
+         String responseContent = UnitTestHelper.readBodyAsString(brex);
          if (!externalDatacoreLinkedResourceChecker.checkLinkedResourceExists()) {
             Assert.assertTrue(responseContent.contains("no compatible type")
                   && responseContent.contains(CityCountrySample.CITY_MODEL_NAME));
@@ -373,7 +374,7 @@ public class DatacoreApiServerTest {
          datacoreApiClient.postDataInType(londonCityData, CityCountrySample.CITY_MODEL_NAME);
          Assert.fail("Creation should fail when referenced data is of the wrong (here, same) model");
       } catch (BadRequestException brex) {
-         String responseContent = String.valueOf(brex.getResponse().getEntity());
+         String responseContent = UnitTestHelper.readBodyAsString(brex);
          if (!localDatacoreLinkedResourceChecker.checkLinkedResourceExists()) {
             Assert.assertTrue(responseContent.contains(CityCountrySample.CITY_MODEL_NAME + " does not match"));
          } else {
@@ -436,7 +437,7 @@ public class DatacoreApiServerTest {
          datacoreApiClient.postDataInType(bordeauxCityResource, CityCountrySample.CITY_MODEL_NAME); // create
          Assert.fail("POST creation with bad version should fail");
       } catch (WebApplicationException waex) {
-         Assert.assertTrue((waex.getResponse().getEntity() + "").toLowerCase().contains("version"));
+         Assert.assertTrue((UnitTestHelper.readBodyAsString(waex)).toLowerCase().contains("version"));
       }
       bordeauxCityResource.setVersion(null); // else mongo optimistic locking exception
       
@@ -526,7 +527,7 @@ public class DatacoreApiServerTest {
          postedTorinoCityResource = datacoreApiClient.postDataInType(postedTorinoCityResource, CityCountrySample.CITY_MODEL_NAME);
          Assert.fail("POST creation of city with String populationCount should fail");
       } catch (BadRequestException brex) {
-         String responseContent = String.valueOf(brex.getResponse().getEntity());
+         String responseContent = UnitTestHelper.readBodyAsString(brex);
          Assert.assertTrue(responseContent.contains(externalContainerUrl)
                && responseContent.contains("UnknownHostException"));
       }
@@ -914,7 +915,7 @@ public class DatacoreApiServerTest {
          Assert.fail("Should have raised exception because query on non indexed field reached "
                + "maxScan before document limit");
       } catch (BadRequestException brex) {
-         Assert.assertTrue((brex.getResponse().getEntity() + "").contains("maxScan"));
+         Assert.assertTrue((UnitTestHelper.readBodyAsString(brex)).contains("maxScan"));
       }
 
    }

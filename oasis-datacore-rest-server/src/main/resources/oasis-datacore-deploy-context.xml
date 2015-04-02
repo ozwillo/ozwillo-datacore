@@ -4,6 +4,7 @@
       xmlns:p="http://www.springframework.org/schema/p"
       xmlns:context="http://www.springframework.org/schema/context"
       xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+      xmlns:jaxrsc="http://cxf.apache.org/jaxrs-client"
       xmlns:cxf="http://cxf.apache.org/core"
       xmlns:httpj="http://cxf.apache.org/transports/http-jetty/configuration"
       xsi:schemaLocation=
@@ -13,6 +14,7 @@
       http://www.springframework.org/schema/context/spring-context-3.2.xsd
       http://cxf.apache.org/core http://cxf.apache.org/schemas/core.xsd
       http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd
+      http://cxf.apache.org/jaxrs-client http://cxf.apache.org/schemas/jaxrs-client.xsd
       http://cxf.apache.org/transports/http-jetty/configuration http://cxf.apache.org/schemas/configuration/http-jetty.xsd">
 
    <!-- default & overriding some properties (BEFORE import to take precedence over imported properties)

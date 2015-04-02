@@ -6,7 +6,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.cxf.jaxrs.utils.JAXRSUtils;
+import org.apache.cxf.jaxrs.utils.ExceptionUtils;
 import org.oasis.datacore.rest.client.TextWebApplicationException;
 
 /**
@@ -44,7 +44,7 @@ public class TextResponseExceptionMapper
     * @return
     */
    protected WebApplicationException convertToWebApplicationException(Response r) {
-       Class<?> exceptionClass = JAXRSUtils.getWebApplicationExceptionClass(r, 
+       Class<?> exceptionClass = ExceptionUtils.getWebApplicationExceptionClass(r, 
                                       WebApplicationException.class);
        try {
            Constructor<?> ctr = exceptionClass.getConstructor(Response.class);

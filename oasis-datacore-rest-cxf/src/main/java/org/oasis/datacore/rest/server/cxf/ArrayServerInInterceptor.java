@@ -1,5 +1,6 @@
 package org.oasis.datacore.rest.server.cxf;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Level;
@@ -63,10 +64,9 @@ public class ArrayServerInInterceptor extends AbstractPhaseInterceptor<Message> 
       }
       
       InputStream is = serverInRequestMessage.getContent(InputStream.class);
-      if (!is.markSupported()) {
-         LOG.warning("Can't attempt to support POST /dc/type of single DCResource value "
-               + "because mark not supported on content input stream");
-         return;
+      if (!is.markSupported()) { // by default supported in cxf 2.7 but not in 3.0 anymore
+         is = new BufferedInputStream(is);
+         serverInRequestMessage.setContent(InputStream.class, is);
       }
       
       boolean requestIsJsonArray = false;

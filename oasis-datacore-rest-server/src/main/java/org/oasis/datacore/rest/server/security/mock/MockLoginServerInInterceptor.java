@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.ws.rs.HttpMethod;
-import javax.ws.rs.client.ClientException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -82,7 +81,7 @@ public class MockLoginServerInInterceptor extends AbstractPhaseInterceptor<Messa
     	  }
       } catch (RuntimeException rex) {
          throw new Fault(
-               new ClientException( // or any non-Fault exception, else blocks in
+               new IllegalArgumentException( // or any non-Fault exception, else blocks in
                // abstractClient.checkClientException() (waits for missing response code)
                // see http://stackoverflow.com/questions/8316354/cxf-ws-interceptor-stop-processing-respond-with-fault
                "Unknown username " + username),

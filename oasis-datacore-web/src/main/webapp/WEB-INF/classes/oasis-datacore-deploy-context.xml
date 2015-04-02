@@ -5,6 +5,7 @@
       xmlns:context="http://www.springframework.org/schema/context"
       xmlns:mongo="http://www.springframework.org/schema/data/mongo"
       xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+      xmlns:jaxrsc="http://cxf.apache.org/jaxrs-client"
       xmlns:cxf="http://cxf.apache.org/core"
       xmlns:httpj="http://cxf.apache.org/transports/http-jetty/configuration"
 		xmlns:security="http://www.springframework.org/schema/security"
@@ -18,6 +19,7 @@
       http://www.springframework.org/schema/data/mongo/spring-mongo-1.5.xsd
       http://cxf.apache.org/core http://cxf.apache.org/schemas/core.xsd
       http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd
+      http://cxf.apache.org/jaxrs-client http://cxf.apache.org/schemas/jaxrs-client.xsd
       http://cxf.apache.org/transports/http-jetty/configuration http://cxf.apache.org/schemas/configuration/http-jetty.xsd
       http://www.springframework.org/schema/security
       http://www.springframework.org/schema/security/spring-security.xsd

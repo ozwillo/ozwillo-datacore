@@ -4,6 +4,7 @@
       xmlns:p="http://www.springframework.org/schema/p"
       xmlns:context="http://www.springframework.org/schema/context"
       xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+      xmlns:jaxrsc="http://cxf.apache.org/jaxrs-client"
       xmlns:cxf="http://cxf.apache.org/core"
       xmlns:cache="http://www.springframework.org/schema/cache"
       xsi:schemaLocation=
@@ -13,6 +14,7 @@
       http://www.springframework.org/schema/context/spring-context-3.2.xsd
       http://cxf.apache.org/core http://cxf.apache.org/schemas/core.xsd
       http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd
+      http://cxf.apache.org/jaxrs-client http://cxf.apache.org/schemas/jaxrs-client.xsd
       http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache-3.2.xsd">
 
    <import resource="classpath:META-INF/cxf/cxf.xml" />
@@ -28,27 +30,27 @@
    <context:annotation-config /><!-- actually auto enabled by previous line -->
 
    <!-- Monitoring using Audit Log API -->
-   <jaxrs:client id="auditLogAPIClient"
+   <jaxrsc:client id="auditLogAPIClient"
          serviceClass="org.oasis.datacore.kernel.client.AuditLogClientAPI"
          address="${kernel.baseUrl}">
-      <jaxrs:providers>
+      <jaxrsc:providers>
          <!-- JSON provider (Jackson's) : -->
          <bean class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider">
             <constructor-arg><bean class="org.oasis.datacore.rest.api.binding.DatacoreObjectMapper"/></constructor-arg>
             <!-- needs at least joda... -->
          </bean>
          <!-- no cache (!) -->
-      </jaxrs:providers>
+      </jaxrsc:providers>
 
-      <jaxrs:features>
+      <jaxrsc:features>
          <cxf:logging/>
-      </jaxrs:features>
-      <jaxrs:properties>
+      </jaxrsc:features>
+      <jaxrsc:properties>
          <!-- Prevents logging WebApplicationException not HTTP 400 or 500 -->
          <!-- entry key="org.apache.cxf.logging.FaultListener">
             <bean class="org.oasis.datacore.rest.server.cxf.ClientServerErrorFaultListener"/>
          </entry -->
-      </jaxrs:properties>
-   </jaxrs:client>
+      </jaxrsc:properties>
+   </jaxrsc:client>
    
 </beans>

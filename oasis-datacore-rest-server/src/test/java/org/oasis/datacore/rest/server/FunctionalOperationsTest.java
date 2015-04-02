@@ -14,10 +14,10 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
-import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.security.mock.MockAuthenticationService;
 import org.oasis.datacore.rest.api.DCResource;
+import org.oasis.datacore.rest.api.util.UnitTestHelper;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.client.QueryParameters;
 import org.oasis.datacore.sample.MarkaInvestData;
@@ -472,7 +472,7 @@ public class FunctionalOperationsTest {
 		try {
 		   listResource = api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, queryParameters, 0, 10);
       } catch (BadRequestException brex) {
-         Assert.assertTrue(brex.getResponse().getEntity().toString()
+         Assert.assertTrue(UnitTestHelper.readBodyAsString(brex)
                .contains("$elemMatch criteria value should be on list whose elements are maps"));
       }
 		
@@ -490,7 +490,7 @@ public class FunctionalOperationsTest {
 		            + ", \"nonExistingFieldB\":0"), 0, 10);
 		   Assert.fail("Should not be able to use $elemMatch on a non-list field !");
 		} catch (BadRequestException brex) {
-		   Assert.assertTrue(brex.getResponse().getEntity().toString()
+		   Assert.assertTrue(UnitTestHelper.readBodyAsString(brex)
 		         .contains("Field of type string is not compatible with operator ELEM_MATCH"));
 		}
 	}

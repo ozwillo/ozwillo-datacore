@@ -231,9 +231,6 @@
         "properties" : {
           "$ref" : "Map[string,Object]"
         },
-        "modelType" : {
-          "type" : "string"
-        },
         "@id" : {
           "type" : "string",
           "description" : "URI"
@@ -244,15 +241,18 @@
             "type" : "string"
           }
         },
-        "dc:created" : {
-          "type" : "string",
-          "format" : "date-time"
-        },
         "dc:creator" : {
           "type" : "string"
         },
         "dc:contributor" : {
           "type" : "string"
+        },
+        "modelType" : {
+          "type" : "string"
+        },
+        "dc:created" : {
+          "type" : "string",
+          "format" : "date-time"
         },
         "dc:modified" : {
           "type" : "string",
@@ -268,13 +268,10 @@
     "DCContribution" : {
       "id" : "DCContribution",
       "properties" : {
-        "title" : {
-          "type" : "string"
-        },
-        "modelType" : {
-          "type" : "string"
-        },
         "validationComment" : {
+          "type" : "string"
+        },
+        "title" : {
           "type" : "string"
         },
         "listResources" : {
@@ -282,6 +279,9 @@
           "items" : {
             "$ref" : "DCResource"
           }
+        },
+        "modelType" : {
+          "type" : "string"
         },
         "userId" : {
           "type" : "string"
