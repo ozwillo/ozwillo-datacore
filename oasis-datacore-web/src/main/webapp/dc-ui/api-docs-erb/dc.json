@@ -868,6 +868,9 @@
         "properties" : {
           "$ref" : "Map[string,Object]"
         },
+        "modelType" : {
+          "type" : "string"
+        },
         "@id" : {
           "type" : "string",
           "description" : "URI"
@@ -878,18 +881,15 @@
             "type" : "string"
           }
         },
+        "dc:created" : {
+          "type" : "string",
+          "format" : "date-time"
+        },
         "dc:creator" : {
           "type" : "string"
         },
         "dc:contributor" : {
           "type" : "string"
-        },
-        "modelType" : {
-          "type" : "string"
-        },
-        "dc:created" : {
-          "type" : "string",
-          "format" : "date-time"
         },
         "dc:modified" : {
           "type" : "string",

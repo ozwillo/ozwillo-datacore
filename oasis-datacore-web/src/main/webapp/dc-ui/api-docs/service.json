@@ -2,17 +2,17 @@
   "apiVersion" : "1.0.0",
   "swaggerVersion" : "1.2",
   "apis" : [ {
-    "path" : "/dc_r.{format}",
-    "description" : "Rights management (add/remove/flush)"
-  }, {
-    "path" : "/dc_model.{format}",
-    "description" : "DRAFT Operations about Datacore Models "
-  }, {
     "path" : "/dc.{format}",
     "description" : "Operations about Datacore Resources"
   }, {
     "path" : "/dc_c.{format}",
     "description" : "Contribution management (add/get/remove)"
+  }, {
+    "path" : "/dc_model.{format}",
+    "description" : "DRAFT Operations about Datacore Models "
+  }, {
+    "path" : "/dc_r.{format}",
+    "description" : "Rights management (add/remove/flush)"
   } ],
   "info" : {
     "title" : "Datacore Resource API",

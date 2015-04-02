@@ -549,7 +549,7 @@
 			is in another geronimo jar -->
 			<dependency>
 				<groupId>org.apache.geronimo.specs</groupId>
-				<artifactId>geronimo-javamail_1.4_spec</artifactId><!-- also brought by cxf-api -->
+				<artifactId>geronimo-javamail_1.4_spec</artifactId>
 				<version>1.7.1</version>
 			</dependency>
 
@@ -622,14 +622,14 @@
 				<artifactId>cxf-rt-frontend-jaxrs</artifactId>
 				<version>${cxf.version}</version>
 				<exclusions>
-				  <!-- exclusion>
+				  <exclusion>
 				    <groupId>javax.ws.rs</groupId>
 				    <artifactId>javax.ws.rs-api</artifactId>
 				  </exclusion>
 				  <exclusion>
 				    <groupId>javax.annotation</groupId>
 				    <artifactId>javax.annotation-api</artifactId>
-				  </exclusion -->
+				  </exclusion>
 				</exclusions>
 			</dependency>
 			<dependency>
