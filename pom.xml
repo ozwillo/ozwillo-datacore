@@ -137,8 +137,6 @@
 		<jackson.version>2.2.3</jackson.version><!-- latest, also jsonld-java's 
 			as of 201309 -->
 		<cxf.version>2.7.7</cxf.version>
-		<jaxrs.version>2.0-m10</jaxrs.version><!-- from CXF ; rather than 2.0, 
-			else ClassNotFoundException: javax.ws.rs.client.ClientException -->
 
 		<ehcache.version>2.7.4</ehcache.version><!-- for client-side cache ; spring's version -->
       
@@ -313,17 +311,24 @@
 	<dependencyManagement>
 		<dependencies>
 			<!-- Testing :
-			junit (TODO CPL 1.0 License) which depends on hamcrest-core ((new) BSD License),
-			jetty (TODO EPL 1.0 License) -->
+			- junit (CPL 1.0 License which is incompatible with GPL BUT we are not creating
+			a derivative work of it since extending junit is the normal way of using a test
+			framework, nor providing it to (api) users since it's not used operationally)
+			which depends on hamcrest-core ((new) BSD License),
+			- jetty (EPL 1.0 License which is incompatible with GPL BUT we are not providing
+			it to (api) users since it is only used in mvn jetty:run and in tests and 
+			tomcat is used operationally instead) -->
 			<dependency>
 				<groupId>junit</groupId>
 				<artifactId>junit</artifactId>
 				<version>${junit.version}</version>
+				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>org.eclipse.jetty</groupId>
-				<artifactId>jetty-server</artifactId>
+				<artifactId>jetty-server</artifactId><!-- also brought by cxf-rt-transports-http-jetty -->
 				<version>${jetty.version}</version>
+				<scope>test</scope>
 			</dependency>
 
 			<!-- Datacore -->
@@ -365,6 +370,11 @@
 	      <dependency>
 	        <groupId>org.oasis.datacore</groupId>
 	        <artifactId>oasis-datacore-kernel-client</artifactId>
+	        <version>${oasis-datacore.version}</version>
+	      </dependency>
+	      <dependency>
+	        <groupId>org.oasis.datacore</groupId>
+	        <artifactId>oasis-datacore-monitoring</artifactId>
 	        <version>${oasis-datacore.version}</version>
 	      </dependency>
 
@@ -555,7 +565,8 @@
 			<dependency>
 				<groupId>javax.ws.rs</groupId>
 				<artifactId>javax.ws.rs-api</artifactId>
-				<version>${jaxrs.version}</version>
+				<version>2.0-m10</version><!-- from CXF ; rather than 2.0, 
+			   else ClassNotFoundException: javax.ws.rs.client.ClientException -->
 			</dependency>
 			<!-- Servlet 3 (Apache 2.0 License), from CXF's Jetty and compatible with Tomcat 7 ; otherwise 
 				javax.servlet javax.servlet-api 3.1.0 ?? -->
@@ -586,18 +597,19 @@
 				<artifactId>cxf-rt-transports-http</artifactId>
 				<version>${cxf.version}</version>
 			</dependency>
-			<!-- for packaging on jetty -->
+			<!-- for testing on embedded jetty -->
 			<dependency>
 				<groupId>org.apache.cxf</groupId>
 				<artifactId>cxf-rt-transports-http-jetty</artifactId>
 				<version>${cxf.version}</version>
+				<scope>test</scope>
 			</dependency>
 			<!-- for tests (OR LATER local consumption between micro services ?) -->
 			<dependency>
 				<groupId>org.apache.cxf</groupId>
 				<artifactId>cxf-rt-transports-local</artifactId>
 				<version>${cxf.version}</version>
-				<scope>test</scope>
+				<!-- scope>test</scope --><!-- NB. would work with it -->
 			</dependency>
 			<!-- for async BUT ONLY ON JETTY -->
 			<!-- dependency>
@@ -670,6 +682,12 @@
 				<groupId>com.wordnik</groupId>
 				<artifactId>swagger-jaxrs_2.10</artifactId>
 				<version>${swagger.version}</version>
+				<exclusions>
+					<exclusion>
+						<groupId>javax.ws.rs</groupId>
+						<artifactId>jsr311-api</artifactId>
+					</exclusion>
+				</exclusions>
 			</dependency>
 			<dependency>
 				<groupId>com.wordnik</groupId>
