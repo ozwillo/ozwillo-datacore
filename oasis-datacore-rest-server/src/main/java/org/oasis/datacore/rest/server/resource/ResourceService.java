@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.model.DCModelBase;
@@ -55,6 +56,10 @@ public class ResourceService {
    private ResourceEntityMapperService resourceEntityMapperService;
    @Autowired
    private EntityService entityService;
+   
+   /** for using model caches of embedded referencing resources */
+   @Autowired
+   private EntityModelService entityModelService;
    
    /** to put creator as owner */
    @Autowired
@@ -340,7 +345,7 @@ public class ResourceService {
       
       DCEntity dataEntity = this.resourceToEntity(resource, modelType,
             canCreate, canUpdate, putRatherThanPatchMode, true);
-      DCModelBase dcModel = dataEntity.getCachedModel();
+      DCModelBase dcModel = entityModelService.getModel(dataEntity);
       
       boolean isCreation = !(resource.getVersion() != null
             && resource.getVersion() >= 0); // NB. already checked by resourceToEntity()

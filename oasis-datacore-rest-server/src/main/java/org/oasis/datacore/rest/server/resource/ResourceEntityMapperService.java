@@ -82,7 +82,7 @@ public class ResourceEntityMapperService {
    @Autowired
    private DCModelService modelService;
    
-   /** for setting up model caches of embedded referencing resources */
+   /** for using model caches of embedded referencing resources */
    @Autowired
    private EntityModelService entityModelService;
    
@@ -771,7 +771,7 @@ public class ResourceEntityMapperService {
     */
    public DCResource entityToResource(DCEntity entity, DCResource resource) {
       Map<String, Object> resourceProps = entityToResourceProps(
-            entity.getProperties(), entity.getCachedModel().getGlobalFieldMap());
+            entity.getProperties(), entityModelService.getModel(entity).getGlobalFieldMap());
       if (resource == null) {
          resource = new DCResource(resourceProps);
       } else {

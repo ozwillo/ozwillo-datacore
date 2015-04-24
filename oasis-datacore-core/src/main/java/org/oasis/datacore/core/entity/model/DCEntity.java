@@ -162,8 +162,10 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    // For now NOT indexed, "my documents" has to be found using business / modeled DCFields
    private Set<String> owners;
    
-   /** request-scoped cache built in resourceToEntity
-    * or else getEntity & LDP service findDataInType()'s executeMongoDbQuery */
+   /** request-scoped cache used in resourceToEntity,
+    * getEntity & LDP service findDataInType()'s executeMongoDbQuery.
+    * USE IT THROUGH EntityModelService.getModel() to allow LATER
+    * to replace it by better archi & more generic impl. */
    @Transient
    private transient DCModelBase cachedModel;
    /** request-scoped cache built in resourceToEntity */

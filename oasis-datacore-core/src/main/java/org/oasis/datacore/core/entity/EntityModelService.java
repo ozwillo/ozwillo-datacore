@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 /**
  * Provides helpers on Entities
  * - to manage their models, by managing their request-scoped caching on each entity
+ * (TODO LATER better archi & impl)
  * - and that have been taken out of EntityService
  * else there is a circular dependency at Spring context initialization because
  * EntityPermissionEvaluator relies on them (instead of relying on external ACL
@@ -50,7 +51,7 @@ public class EntityModelService {
    
    /**
     * (instanciable model)
-    * Helper using entity cached transient model (mainainted over the course
+    * Helper using entity cached transient model (maintained over the course
     * of a request only) if available, else retrieving & setting it
     * (not sync'd nor threaded because within single request thread).
     * Might not be there (or not instanciable) if obsolete dataEntity (i.e. its model has changed, only in test),
@@ -82,10 +83,10 @@ public class EntityModelService {
    }
    
    /**
-    * Fills Models cache in given Entity, but does not check them. 
-    * Indeed, they might not be there (or model type not instanciable) if obsolete dataEntity
-    * (i.e. its model has changed, only in test),
-    * so check it or use a method that does it ex. getCollectionName().
+    * Fills Models cache in given Entity and checks them. 
+    * Indeed, if they are not there (or model type not instanciable) ex. if obsolete dataEntity
+    * (i.e. its model has changed, only in test), it would anyway explode
+    * later in ResourceEntityMapperService.entityToResource().
     * TODO LATER better : put such cases in data health / governance inbox, through event
     * @param dataEntity
     */
@@ -98,7 +99,9 @@ public class EntityModelService {
          throw new IllegalArgumentException("Can't find model for DCEntity, "
                + "it's probably obsolete i.e. its model has changed since (only in test) : "
                + dataEntity.getUri()); // NB. if no exception will NullPointerException anyway
-         // later in ResourceEntityMapperService.entityToResource() 
+         // later in ResourceEntityMapperService.entityToResource() (so must rather be cleaned
+         // by init or backgound job, and models even prevented to be deleted, and possibly
+         // resources as well until is is sure they are not linked to anymore)
       }
       /*if (!cachedModel.isInstanciable()) { // = cachedInstanciableModel
          throw new IllegalArgumentException("DCEntity model type is not instanciable, "
