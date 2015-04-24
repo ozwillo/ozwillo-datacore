@@ -103,7 +103,7 @@
 		<java.version>1.8</java.version>
 
 		<!-- testing : -->
-		<junit.version>4.11</junit.version><!-- 4.11 solves method execution order 
+		<junit.version>4.12</junit.version><!-- cxf3' ; 4.11 solves method execution order 
 			bug -->
 		<jetty.version>8.1.12.v20130726</jetty.version><!-- cxf's -->
 
@@ -312,9 +312,9 @@
 	<dependencyManagement>
 		<dependencies>
 			<!-- Testing :
-			- junit (CPL 1.0 License which is incompatible with GPL BUT we are not creating
+			- junit 4.12 (EPL 1.0 License which is incompatible with GPL BUT we are not creating
 			a derivative work of it since extending junit is the normal way of using a test
-			framework, nor providing it to (api) users since it's not used operationally)
+			framework (TODO say it in a notice), nor providing it to (api) users since it's not used operationally)
 			which depends on hamcrest-core ((new) BSD License),
 			- jetty (EPL 1.0 License which is incompatible with GPL BUT we are not providing
 			it to (api) users since it is only used in mvn jetty:run and in tests and 
