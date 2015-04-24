@@ -519,7 +519,7 @@ function setError(errorMsg) {
 // or a {modelType, query} object where query is encoded (encode it
 // using buildUriQuery)
 // optional : success, error, start (else 0, max 500), limit (else 10 !!! max 100 !)
-function findDataByType(relativeUrl, success, error, start, limit) {
+function findDataByType(relativeUrl, success, error, start, limit, optionalHeaders) {
    if (typeof relativeUrl === 'string') {
       // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
       // because swagger.js re-encodes
@@ -534,9 +534,23 @@ function findDataByType(relativeUrl, success, error, start, limit) {
    if (limit) {
       swaggerParams.limit = limit;
    }
+   if (optionalHeaders) {
+      for (var headerName in optionalHeaders) {
+         swaggerParams[headerName] = optionalHeaders[headerName];
+      }
+   }
    dcApi.dc.findDataInType(swaggerParams,
       function(data) {
-         var resResources = displayJsonListResult(data, success);
+         var resResources;
+         if (swaggerParams['X-Datacore-Debug'] === 'true') {
+            // displaying debug info (index used) : (NB. not in other operations)
+            var explainRes = displayJsonObjectResult(data, success);
+            if (explainRes) {
+               resResources = explainRes.results;
+            }
+         } else {
+            resResources = displayJsonListResult(data, success);
+         }
          if (success) {
             success(resResources, relativeUrl);
          }
@@ -551,15 +565,21 @@ function findDataByType(relativeUrl, success, error, start, limit) {
 // relativeUrl must be an encoded URI (encode it using builUri)
 // or a {modelType, id} object
 // optional : success, error
-function getData(relativeUrl, success, error) {
+function getData(relativeUrl, success, error, optionalHeaders) {
    if (typeof relativeUrl === 'string') {
       // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
       // because swagger.js re-encodes (for resourceId, per path element because __unencoded__-prefixed per hack)
       relativeUrl = parseUri(relativeUrl);
    }
    setUrl(relativeUrl, success);
-   dcApi.dc.getData({type:relativeUrl.modelType, __unencoded__iri:relativeUrl.id,
-         'If-None-Match':-1, Authorization:getAuthHeader()},
+   var swaggerParams = {type:relativeUrl.modelType, __unencoded__iri:relativeUrl.id,
+           'If-None-Match':-1, Authorization:getAuthHeader()};
+   if (optionalHeaders) {
+       for (var headerName in optionalHeaders) {
+          swaggerParams[headerName] = optionalHeaders[headerName];
+       }
+    }
+   dcApi.dc.getData(swaggerParams,
       function(data) {
          var resResource = displayJsonObjectResult(data, success);
          if (success) {
@@ -577,20 +597,20 @@ function getData(relativeUrl, success, error) {
 // or a {containerUrl (optional), modelType, id, query} object where query is encoded (encode it
 // using buildUriQuery)
 // optional : success, error
-function findData(relativeUrl, success, error, start, limit) {
+function findData(relativeUrl, success, error, start, limit, optionalHeaders) {
    if (typeof relativeUrl === 'string') {
       relativeUrl = parseUri(relativeUrl);
    }
    if (relativeUrl.query !== null || relativeUrl.id === null) {
-		return findDataByType(relativeUrl, success, error, start, limit);
+		return findDataByType(relativeUrl, success, error, start, limit, optionalHeaders);
 	}
-	return getData(relativeUrl, success, error);
+	return getData(relativeUrl, success, error, optionalHeaders);
 }
 // relativeUrl must be an encoded URI (encode it using builUri and buildUriQuery)
 // or a {modelType, query} object where query is encoded (encode it
 // using buildUriQuery)
 // optional : success, error, start (else 0, max 500), limit (else 10 !!! max 100 !)
-function findDataByTypeRdf(relativeUrl, success, error, start, limit) {
+function findDataByTypeRdf(relativeUrl, success, error, start, limit, optionalHeaders) {
    if (typeof relativeUrl === 'string') {
       // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
       // because swagger.js re-encodes
@@ -605,6 +625,11 @@ function findDataByTypeRdf(relativeUrl, success, error, start, limit) {
    if (limit) {
       swaggerParams.limit = limit;
    }
+   if (optionalHeaders) {
+       for (var headerName in optionalHeaders) {
+          swaggerParams[headerName] = optionalHeaders[headerName];
+       }
+    }
    dcApi.dc.findDataInType(swaggerParams, {responseContentType:'text/x-nquads'},
       function(data) {
          displayTextResult(data, success);
