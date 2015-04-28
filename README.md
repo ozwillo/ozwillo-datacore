@@ -20,14 +20,14 @@ To achieve data model flexibility, it follows Semantic Web principles ("almost" 
 
 Features
    * HTTP REST API for sharing data, with OAuth2 authentication and client-side caching
-   * W3C JSON-LD-like data Resource representation
+   * W3C JSON-LD-like data Resource representation, as well as RDF (nquads, turtle)
    * W3C LDP-inspired query filters
-   * JSON Schema-like data models with Model (primary) and Mixin types. Models are the place where collaboration on data happens.
-   * scalable MongoDB storage, Java server (Apache CXF / Spring)
+   * JSON Schema-like data models with Model (primary) and Mixin types. Models are the place where collaboration on data happens. Supported field types are string, boolean, int, float, long, double, date (ISO8601), map, list, i18n (optimized for search on value only), resource (i.e. link).
+   * scalable MongoDB storage (sharded cluster ready), Java server (Apache CXF / Spring)
    * Rights (readers, writers, owners) at Resource, Model and business (Scope) levels, with query optimization
-   * Historization
+   * Historization, allowing a posteriori moderation
    * Approvable changes, up to Contributions (merging Resources from other similar Models)
-   * Client libraries : CXF/Spring3/Java, Spring4/Java (Portal's), Javascript (swagger.js), and all languages that Swagger generates to
+   * Client libraries : CXF3/Spring3/Java, Spring4/Java (Portal's), Javascript (swagger.js), and all languages that Swagger generates to (see corresponding projects)
    * Online API Playground, documentation and data browsing tool
    * Online model & data Import tool
    * and more upcoming : see [Roadmap](https://github.com/pole-numerique/oasis-datacore/issues)
@@ -48,7 +48,7 @@ Build ([Maven 3](http://maven.apache.org/download.cgi) required) : at root, do :
 
 Deployment : go in the oasis-datacore-web subproject and do : mvn jetty:run
 
-Then go have a look at API documentation and playground at http://localhost:8080/swagger-ui/index.html . To try it out, for instance do a GET /dc/type/sample.city.city to see what cities are available. For more, do the [city & country Tutorial](https://github.com/pole-numerique/oasis-datacore/wiki/Tutorial---city-&-country).
+Then go have a look at API documentation and playground at [http://localhost:8080/dc-ui/index.html](http://localhost:8080/dc-ui/index.html). To try it out, for instance do a GET ``/dc/type/geo:Area_0`` to see what geographical areas (cities...) are available. To learn more about available operations, follow the [wiki Playground tutorial](https://github.com/pole-numerique/oasis-datacore/wiki/Playground-&-Import-UI-demo-scenario---Provto-&-OpenElec) and do the [city & country Tutorial](https://github.com/pole-numerique/oasis-datacore/wiki/Tutorial---city-&-country). To learn about out to use them, have a look at the detailed API doc below.
 
 Alternatively, to deploy it in production ([Tomcat 7](http://tomcat.apache.org/download-70.cgi) required) : put the war contents in a tomcat 7 root and start it :
 
@@ -62,11 +62,9 @@ Adding Business Configuration
 
 To use Datacore for your own collaborative data use case, you must define the appropriate business-specific Models.
 
-There will be soon a Model REST API allowing to do it in JSON / HTTP.
+The preferred way is to use the Datacore online Import tool at [http://localhost:8080/dc-ui/import/index.html](http://localhost:8080/dc-ui/import/index.html). Follow the steps described in the [wiki Import tutorial](https://github.com/pole-numerique/oasis-datacore/wiki/Playground-&-Import-UI-demo-scenario---Provto-&-OpenElec).
 
-For now this can only be done in Java. Do it in a new class on the model of [MarkaInvestModel](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-core/src/main/java/org/oasis/datacore/core/sample/MarkaInvestModel.java) or [CityCountrySample](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-core/src/main/java/org/oasis/datacore/core/sample/CityCountrySample.java) (meaning a server-side class, auto initialized by annotating it by @Component, using Spring-injected DataModelServiceImpl and DatacoreApi or DCEntityService, or if they are not enough yet MongoOperations).
-
-Sample data for these models can be added using the Datacore REST API obviously, or again using Java in a new class on the model of [MarkaInvestData](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-core/src/main/java/org/oasis/datacore/core/sample/MarkaInvestData.java).
+This can also be done in Java. Do it in a new class on the model of [MarkaInvestModel](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-core/src/main/java/org/oasis/datacore/core/sample/MarkaInvestModel.java) or [CityCountrySample](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-core/src/main/java/org/oasis/datacore/core/sample/CityCountrySample.java) (meaning a server-side class, auto initialized by annotating it by @Component, using Spring-injected DataModelServiceImpl and DatacoreApi or DCEntityService, or if they are not enough yet MongoOperations). Sample data for these models can be added using the Datacore REST API obviously, or again using Java in a new class on the model of [MarkaInvestData](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-core/src/main/java/org/oasis/datacore/core/sample/MarkaInvestData.java).
 
 For more samples and Model reference documentation, have a look at the [wiki](https://github.com/pole-numerique/oasis-datacore/wiki).
 
@@ -74,7 +72,9 @@ For more samples and Model reference documentation, have a look at the [wiki](ht
 Using it from a client business application
 -------------------------------------------
 
-Use the JSON/HTTP client of your own business application's platform and / or of your choice to call the DatacoreApi server using REST JSON/HTTP calls. Here are such clients that might help you :
+Use the JSON/HTTP client of your own business application's platform and / or of your choice to call the DatacoreApi server using REST JSON/HTTP calls. Learn about all available operations and their parameters in the API documentation below the playground at [http://localhost:8080/dc-ui/index.html](http://localhost:8080/dc-ui/index.html), in the dedicated detailed panels such as the one that opens when clicking on [http://localhost:8080/dc-ui/index.html#!/dc/findDataInType_get_2](http://localhost:8080/dc-ui/index.html#!/dc/findDataInType_get_2).
+
+Here are such clients that might help you :
 
 - A **Java proxy-like cached client built on the CXF service engine** is provided by the oasis-datacore-rest-cxf subproject. Use it by [loading its Spring](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-cxf/src/main/resources/oasis-datacore-rest-client-context.xml) and injecting DatacoreCachedClient using ```@Autowired private DatacoreCachedClient datacoreApi;``` like done in [this test](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-cxf/src/test/java/org/oasis/datacore/rest/api/client/DatacoreApiCXFClientTest.java).
 
@@ -95,6 +95,16 @@ or jQuery [like Citizen Kin does](https://github.com/pole-numerique/oasis-gru/bl
 - In other languages, you can use [Swagger codegen](https://github.com/wordnik/swagger-codegen) to generate DatacoreApi clients to various languages : **php, ruby, python, Objective C, Flash...**
 
 At worst, you can talk to DatacoreApi server by writing the right JSON/HTTP requests, sending them to it and handling their responses.
+
+
+Tips for integrating it in a client business application, from a functional point of view
+-----------------------------------------------------------------------------------------
+- **painless data replacement** - put static data in the Datacore : all static data, such as a list of region names contained in a property file, or authorized values for a field in the database that are hardcoded in business code, can easily and without further impact be replaced by a heavily (each week, sync unless performance problems) globally cached call to Datacore.
+- **painless data linking** - to integrate free form data (such as common information input forms) with Datacore data : use a suggestion UI component (such as select2 in Javascript), so that the user will be inclined to choose one already existing (in the Datacore !) item, rather than typing it all out with the risks of typing mistakes or adding a redundant but slightly differently worded value. This way, we are reusing the user's knowledge to link data, rather than having to reprocess it all afterwards. And the business database has not to be structured or constrained any further than adding a column for linked Datacore Resources.
+- **easy data dynamic upload** - best practices to upload your data from your application : beyond initial manual data import using ex. Datacore online Import tool while designing models, when your application has to upload data, be it in a startup / management phase or during a user request, do for each piece of data in your database :
+ - 1. if it already has a value in its newly added Datacore Resource URI column, GET it, if version is up to date you're ready to upload (don't forget to upgrade your local Datacore Resource version column afterwards), otherwise handle conflict (see later).
+ - 2. else try to find a corresponding Resource that already exists in the Datacore, either by building its id (if not blackbox) out of fields (using indexInId model property) and doing a GET on its URI, or by looking it up using one or more query on deduplicating fields (defined in queryNames model property). If found, store URI and handle conflict (see later), else build a new id if not done yet, store URI and upload (don't forget to set your local Datacore Resource version column to 0 afterwards).
+- handling conflict : online tools are being developed for that. Until then, or if they don't fit for you, you have to develop your own, at worst by adding below your data form two links : "view local version", "view remote version", and a button "choose this one".
 
 
 Documentation
