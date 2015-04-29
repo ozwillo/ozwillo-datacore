@@ -1747,7 +1747,7 @@
    function displayParsedResource(importState) {
       $('.resourceRowCounter').html("Handled <a href=\"#importedJsonFromCsv\">" + importState.data.rowNb
             + " rows</a> (<a href=\"#datacoreResources\">" + importState.data.errors.length + " errors</a>) in "
-            + importState.data.endTime.diff(importState.data.startTime, 'seconds') + "s");
+            + ((importState.data.endTime === null) ? "?" : importState.data.endTime.diff(importState.data.startTime, 'seconds')) + "s");
       if (importState.data.errors.length != 0) {
          //$('.mydata').html(
          var errorsString = stringifyPartial(importState.data.errors, 50);
