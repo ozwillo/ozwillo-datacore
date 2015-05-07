@@ -199,8 +199,9 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
 
       if (serverRequestContext.isDebug()) {
          Map<String, Object> debugCtx = serverRequestContext.getDebug(); // never null because isDebug()
-         debugCtx.put("start", start);
-         debugCtx.put("limit", limit);
+         debugCtx.put("queryParameters", params);
+         debugCtx.put(DatacoreApi.START_PARAM, start);
+         debugCtx.put(DatacoreApi.LIMIT_PARAM, limit);
       }
       
       Query springMongoQuery = new Query(queryParsingContext.getCriteria())
