@@ -117,7 +117,7 @@ public class LoadPersistedModelsAtInit extends InitableBase {
                }
             }
          }
-      } while (!modelsInError.isEmpty() && !modelsInError.equals(previousModelsInError));
+      } while (!modelsInError.isEmpty() && !modelsInError.keySet().equals(previousModelsInError.keySet()));
 
       logger.info("Loaded " + loadedModelAbsoluteNames.size() + " models");
       logger.debug("   loaded models details : " + loadedModelAbsoluteNames);
