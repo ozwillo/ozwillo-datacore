@@ -1,5 +1,7 @@
 package org.springframework.data.mongodb.core;
 
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.data.mongodb.core.MongoTemplate.QueryCursorPreparer;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -25,12 +27,23 @@ public class CursorProviderQueryCursorPreparer extends QueryCursorPreparer {
    private boolean doExplainQuery;
    private DBObject queryExplain;
    private int maxScan;
+   /** microseconds, requires 2.6+ server http://docs.mongodb.org/manual/reference/method/cursor.maxTimeMS/#cursor.maxTimeMS */
+   private int maxTime;
 
+   /**
+    * 
+    * @param mongoTemplate
+    * @param query
+    * @param doExplainQuery
+    * @param maxScan
+    * @param maxTime microseconds, requires 2.6+ server http://docs.mongodb.org/manual/reference/method/cursor.maxTimeMS/#cursor.maxTimeMS
+    */
    public CursorProviderQueryCursorPreparer(MongoTemplate mongoTemplate,
-         Query query, boolean doExplainQuery, int maxScan) {
+         Query query, boolean doExplainQuery, int maxScan, int maxTime) {
       mongoTemplate.super(query, null);
       this.doExplainQuery = doExplainQuery;
       this.maxScan = maxScan;
+      this.maxTime = maxTime;
    }
 
    @Override
@@ -47,6 +60,9 @@ public class CursorProviderQueryCursorPreparer extends QueryCursorPreparer {
       
       if (maxScan > 0) {
          this.cursorPrepared.addSpecial(MAX_SCAN, maxScan);
+      }
+      if (maxTime > 0) {
+         this.cursorPrepared.maxTime(maxTime, TimeUnit.MICROSECONDS);
       }
       return this.cursorPrepared;
    }

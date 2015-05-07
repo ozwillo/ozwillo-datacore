@@ -98,6 +98,9 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    /** pagination - default number of documents returned : 10... */
    @Value("${datacoreApiServer.query.defaultLimit}")
    protected int defaultLimit;
+   /** microseconds after which db.killOp() if > 0, requires 2.6+ server http://docs.mongodb.org/manual/reference/method/cursor.maxTimeMS/#cursor.maxTimeMS */
+   @Value("${datacoreApiServer.query.maxTime}")
+   protected int maxTime;
 
    /** to get storage model */
    @Autowired
@@ -542,8 +545,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       // using custom CursorPreparer to get access to mongo DBCursor for explain() etc. :
       // (rather than mgo.find(springMongoQuery, DCEntity.class, collectionName)) 
       CursorProviderQueryCursorPreparer cursorProvider = new CursorProviderQueryCursorPreparer(mgo,
-            springMongoQuery, doExplainQuery, maxScan);
-      // TODO LATER mongo 2.6 maxTimeMs() http://docs.mongodb.org/manual/reference/method/cursor.maxTimeMS/#cursor.maxTimeMS
+            springMongoQuery, doExplainQuery, maxScan, maxTime);
       
       // TODO request priority : privilege INDEXED (Queriable) fields for query & sort !!!
       // TODO LATER explode in queryParsingContext.isHasNoIndexedField() if not dev nor paid...
