@@ -8,8 +8,6 @@ import org.oasis.datacore.common.context.DCRequestContextProvider;
 import org.oasis.datacore.common.context.SimpleRequestContextProvider;
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.ImmutableMap;
-
 
 /**
  * Impl'd on CXF's Exchange
@@ -21,9 +19,9 @@ import com.google.common.collect.ImmutableMap;
  *
  */
 @Component("datacore.cxfJaxrsApiProvider")
-public class DatacoreCxfJaxrsApiProvider extends CxfJaxrsApiProvider implements DCRequestContextProvider {
+public class CxfRequestContextProvider extends CxfJaxrsApiProvider implements DCRequestContextProvider {
    
-   private static final Map<String, Object> EMPTY_MAP = new ImmutableMap.Builder<String, Object>().build();
+   protected DelegateRequestContextProvider delegate = new DelegateRequestContextProvider(this);
 
    public Map<String, Object> getRequestContext() {
       Exchange exchange = this.getExchange();
@@ -43,9 +41,9 @@ public class DatacoreCxfJaxrsApiProvider extends CxfJaxrsApiProvider implements 
       }
       // helper for unit tests :
       Map<String, Object> requestContext = SimpleRequestContextProvider.getSimpleRequestContext();
-      if (requestContext == null) {
-         return EMPTY_MAP; // to avoid NullPointerExceptions
-      }
+      /*if (requestContext == null) {
+         return new HashMap<String, Object>(3); // to avoid NullPointerException outside REST ex. below LoadPersistedModelsAtInit
+      }*/
       return requestContext;
       /*if (requestContext != null || !isUnitTest()) {
          return requestContext;
@@ -55,12 +53,12 @@ public class DatacoreCxfJaxrsApiProvider extends CxfJaxrsApiProvider implements 
    
    @Override
    public Object get(String key) {
-      return this.getRequestContext().get(key);
+      return this.delegate.get(key);
    }
    
    @Override
    public void set(String key, Object value) {
-      this.getRequestContext().put(key, value);
+      this.delegate.set(key, value);
    }
    
 }

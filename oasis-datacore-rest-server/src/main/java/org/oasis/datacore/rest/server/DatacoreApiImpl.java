@@ -19,7 +19,6 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.cxf.message.Exchange;
 import org.oasis.datacore.core.entity.EntityQueryService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.query.QueryException;
@@ -43,6 +42,7 @@ import org.oasis.datacore.rest.server.resource.ResourceNotFoundException;
 import org.oasis.datacore.rest.server.resource.ResourceObsoleteException;
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.rest.server.resource.ResourceTypeNotFoundException;
+import org.oasis.datacore.server.context.DatacoreRequestContextService;
 import org.oasis.datacore.server.uri.BadUriException;
 import org.oasis.datacore.server.uri.UriService;
 import org.slf4j.Logger;
@@ -51,6 +51,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Component;
+
+import com.google.common.collect.ImmutableMap;
 
 
 /**
@@ -101,6 +103,9 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
 
    @Autowired
    private CxfJaxrsApiProvider cxfJaxrsApiProvider;
+   /** to access debug switch & put its explained results */
+   @Autowired
+   protected DatacoreRequestContextService serverRequestContext;
 
    
    public DCResource postDataInType(DCResource resource, String modelType) {
@@ -410,18 +415,8 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
 
    // TODO "native" query (W3C LDP-like) also refactored within a dedicated query engine ??
    public List<DCResource> findDataInType(String modelType, UriInfo uriInfo, Integer start, Integer limit, boolean debug) {
-      boolean explainSwitch = false;
-      Exchange exchange = cxfJaxrsApiProvider.getExchange();
-      if(exchange != null // else not called through REST
-            && (debug || "true".equalsIgnoreCase(cxfJaxrsApiProvider.getHttpHeaders().getHeaderString("X-Datacore-Debug")))) {
-         // TODO do it in custom Datacore context (or helper)
-         exchange.put("dc.params.debug", true); // keeping it for ldpEntityQueryService ; TODO constant
-         explainSwitch = true;
-      }
-      
-      // TODO request priority : privilege INDEXED (Queriable) fields for query & sort !!!
-      
-      MultivaluedMap<String, String> params = uriInfo.getQueryParameters(true);
+      MultivaluedMap<String, String> params = cxfJaxrsApiProvider.getQueryParameters(); // decodes
+      // NB. rather than uriInfo.getQueryParameters(true) because also stores it in context
       // NB. to be able to refactor in LdpNativeQueryServiceImpl, could rather do :
       /// params = JAXRSUtils.getStructuredParams((String)message.get(Message.QUERY_STRING), "&", decode, decode);
       // (as getQueryParameters itself does, or as is done in LdpEntityQueryServiceImpl)
@@ -435,18 +430,18 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
          throw new NotFoundException(toNotFoundJsonResponse(mnfex));
       } catch (QueryException qex) {
          throw new BadRequestException(JaxrsExceptionHelper.toBadRequestJsonResponse(qex));
-         // TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
-         // TODO better support for query parsing errors / warnings / detailedMode & additional
-         // non-error behaviours of query engines like "explain" switch
+         // NB. if warnings returned only if debug / explain mode
       }
       
       List<DCResource> foundDatas = resourceEntityMapperService.entitiesToResources(foundEntities);
       
-      if(explainSwitch) {
+      if (serverRequestContext.isDebug()) {
          // TODO move that to LdpEntityQueryServiceImpl !
          // NB. supports only json
          throw new WebApplicationException(Response.status(Response.Status.OK)
-               .entity("{\"explain\": " + exchange.get("dc.query.sortExplain") + ", \"results\": " + foundDatas + "}")
+               .entity(new ImmutableMap.Builder<String, Object>()
+                     .put(DEBUG_RESULT, serverRequestContext.getDebug())
+                     .put(RESOURCES_RESULT, foundDatas).build())
                .type(MediaType.APPLICATION_JSON).build());
       }
       

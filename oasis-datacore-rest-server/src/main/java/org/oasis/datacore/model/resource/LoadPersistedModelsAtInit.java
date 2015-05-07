@@ -1,8 +1,10 @@
 package org.oasis.datacore.model.resource;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.oasis.datacore.common.context.DCRequestContextProvider;
 import org.oasis.datacore.common.context.DCRequestContextProviderFactory;
@@ -15,7 +17,6 @@ import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.rest.api.DCResource;
-import org.oasis.datacore.rest.server.event.DCResourceEvent;
 import org.oasis.datacore.rest.server.event.EventService;
 import org.oasis.datacore.rest.server.resource.ResourceEntityMapperService;
 import org.oasis.datacore.rest.server.resource.ResourceException;
@@ -23,6 +24,7 @@ import org.oasis.datacore.sample.ResourceModelIniter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 
@@ -56,38 +58,34 @@ public class LoadPersistedModelsAtInit extends InitableBase {
 
    @Override
    protected void doInit() {
-      List<DCEntity> projectEntities = null;
-      for (int i = 0; projectEntities == null || !projectEntities.isEmpty() ; i += ldpEntityQueryService.getMaxLimit()) {
-         try {
-            projectEntities = ldpEntityQueryService.findDataInType(ResourceModelIniter.MODEL_PROJECT_NAME,
-                  null, i, i + ldpEntityQueryService.getMaxLimit());
-            List<DCResource> projectResources = resourceEntityMapperService.entitiesToResources(projectEntities);
-            for (DCResource projectResource : projectResources) {
-               // TODO TODO
-               /*try {
-                  eventService.triggerResourceEvent(DCResourceEvent.Types.UPDATED, projectResource);
-               } catch (ResourceException rex) {
-                  logger.error("Unexpected ResourceException reloading model resource from persistence " + projectResource, rex);
-               }*/
-            }
-         } catch (QueryException e) {
-            throw new RuntimeException(e); // should not happen
-         }
+      List<DCResource> projectResources = findDataInType(
+            ResourceModelIniter.MODEL_PROJECT_NAME, ResourceModelIniter.POINTOFVIEW_NAME_PROP);
+      List<String> loadedProjectNames = new ArrayList<String>(projectResources.size());
+      for (DCResource projectResource : projectResources) {
+         // TODO TODO
+         /*try {
+            eventService.triggerResourceEvent(DCResourceEvent.Types.UPDATED, projectResource);
+         } catch (ResourceException rex) {
+            logger.error("Unexpected ResourceException reloading model resource from persistence " + projectResource, rex);
+         }*/
       }
       
+      logger.info("Loaded " + loadedProjectNames.size() + " projects : " + loadedProjectNames);
+      logger.debug("   loaded projects details : " + loadedProjectNames);
+      
       // now, reload all models that had been persisted in mongo in last execution : TODO wrap in projects
-      List<DCResource> modelResources = findDataInType(ResourceModelIniter.MODEL_MODEL_NAME);
-      HashSet<String> previousModelsInError = null, modelsInError = null;
-      List<ResourceException> rexList = new ArrayList<ResourceException>();
+      List<DCResource> modelResources = findDataInType(
+            ResourceModelIniter.MODEL_MODEL_NAME, ResourceModelIniter.MODEL_NAME_PROP);
+      HashMap<String,ResourceException> previousModelsInError = null, modelsInError = null;
+      List<String> loadedModelAbsoluteNames = new ArrayList<String>(modelResources.size());
       do {
          previousModelsInError = modelsInError;
-         modelsInError = new HashSet<String>(); // not clear() because previousModelsInError
-         rexList.clear();
+         modelsInError = new HashMap<String,ResourceException>(); // not clear() because previousModelsInError
          
          for (DCResource modelResource : modelResources) {
             String modelProjectName = (String) modelResource.get("dcmo:pointOfViewAbsoluteName");
-            String modelAbsoluteName = modelProjectName + "." + modelResource.get("dcmo:name");
-            if (previousModelsInError != null && !previousModelsInError.contains(modelAbsoluteName)) {
+            String modelAbsoluteName = modelProjectName + "." + modelResource.get(ResourceModelIniter.MODEL_NAME_PROP);
+            if (previousModelsInError != null && !previousModelsInError.containsKey(modelAbsoluteName)) {
                continue; // not first time and already imported successfully
             }
             try {
@@ -100,6 +98,7 @@ public class LoadPersistedModelsAtInit extends InitableBase {
                         
                         DCModelBase model = mrMappingService.toModelOrMixin(modelResource);
                         dataModelAdminService.addModel(model);
+                        loadedModelAbsoluteNames.add(model.getAbsoluteName());
                         // TODO LATER once all is loaded, ((clean cache and)) repersist all in case were wrong
                      } catch (ResourceException rex) {
                         throw new RuntimeException(rex);
@@ -112,8 +111,7 @@ public class LoadPersistedModelsAtInit extends InitableBase {
             } catch (RuntimeException ex) {
                Throwable rex = ex.getCause();
                if (rex != null && rex instanceof ResourceException) {
-                  rexList.add((ResourceException) rex);
-                  modelsInError.add(modelAbsoluteName);
+                  modelsInError.put(modelAbsoluteName, (ResourceException) rex);
                } else {
                   logger.debug("Unexpected Exception reloading model resource from persistence " + modelResource, ex);
                }
@@ -121,27 +119,37 @@ public class LoadPersistedModelsAtInit extends InitableBase {
          }
       } while (!modelsInError.isEmpty() && !modelsInError.equals(previousModelsInError));
 
-      if (!rexList.isEmpty()) {
+      logger.info("Loaded " + loadedModelAbsoluteNames.size() + " models");
+      logger.debug("   loaded models details : " + loadedModelAbsoluteNames);
+      
+      if (!modelsInError.isEmpty()) {
          logger.error("Unable to reload from persistence models with absolute names : "
-               + modelsInError, rexList.get(0));
+               + modelsInError);
       }
    }
 
-   private List<DCResource> findDataInType(String modelName) {
-      List<DCResource> allModelResources = new ArrayList<DCResource>();
-      List<DCEntity> modelEntities = null;
-      for (int i = 0; modelEntities == null || !modelEntities.isEmpty() ; i += ldpEntityQueryService.getMaxLimit()) {
-         try {
-            modelEntities = ldpEntityQueryService.findDataInType(modelName,
-                  null, i, i + ldpEntityQueryService.getMaxLimit());
-            List<DCResource> modelResources = resourceEntityMapperService.entitiesToResources(modelEntities);
+   private List<DCResource> findDataInType(String modelType, String nameProp) {
+      List<DCResource> allResources = new ArrayList<DCResource>();
+      List<DCEntity> entities = null;
+      Map<String, List<String>> nextProjectsByName = new HashMap<String, List<String>>(2);
+      nextProjectsByName.put(DCResource.KEY_DCCREATED, // ResourceModelIniter.POINTOFVIEW_NAME_PROP
+            new ImmutableList.Builder<String>().add("+").build()); // older first
+      try {
+         while (!(entities = ldpEntityQueryService.findDataInType(modelType,
+               nextProjectsByName, 0, ldpEntityQueryService.getMaxLimit())).isEmpty()) {
+            List<DCResource> resources = resourceEntityMapperService.entitiesToResources(entities);
             // NB. this doesn't check model or anything
-            allModelResources.addAll(modelResources);
-         } catch (QueryException e) {
-            throw new RuntimeException(e); // should not happen
+            allResources.addAll(resources);
+            
+            // preparing next find :
+            String lastResourceName = (String) resources.get(resources.size() - 1).get(nameProp);
+            nextProjectsByName.put(nameProp, new ImmutableList.Builder<String>()
+                  .add(">\"" + lastResourceName + "\"+").build()); // older first
          }
+      } catch (QueryException qex) {
+         throw new RuntimeException(qex); // should not happen
       }
-      return allModelResources;
+      return allResources;
    }
 
    @Override

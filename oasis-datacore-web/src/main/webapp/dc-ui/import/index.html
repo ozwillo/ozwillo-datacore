@@ -167,11 +167,11 @@ softwares (such as Google Doc's) often breaks files (ex. "true" becomes VRAI, "f
 
 <a id="datacoreResources"></a>
 <div class="dc-import-subtitle">Datacore :</div>
-<span class="json dcjsonline">GET </span>
-<span class="json dcjsonline dcConf_baseUrl">NOT INITED</span>
-<input span type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 527px; display: inline;">
+<span class="json dcjsonline">GET <span class="dcConf_baseUrl">NOT INITED</span><input type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 558px"></span>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()));">go</button>
-<button onclick="javascript:return setUrl('');" style="float: right;">reset</button><br/>
+<button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, null, {'X-Datacore-Debug':'true'});" title="Debug / explain query">?</button>
+<button onclick="javascript:return findDataByTypeRdf(encodeUri($('.myurl').val()));">RDF</button>
+<button onclick="javascript:return setUrl('');" title="Reset">X</button><br/>
 <div class="block response_body">
 <a id="mydata"></a><!-- displays a short error message in red -->
 <pre class="json dcjsonarea"><code id="mydata" class="mydata"></code></pre>

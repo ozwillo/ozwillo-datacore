@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import javax.ws.rs.core.MultivaluedMap;
+
+import org.apache.cxf.jaxrs.utils.JAXRSUtils;
 import org.apache.cxf.message.Message;
 
 
@@ -16,14 +19,47 @@ import org.apache.cxf.message.Message;
  */
 public class CxfMessageHelper {
    
+   private static final String CTX_QUERY_PARAMETERS = "datacore.cxf.queryParameters";
+   
    public static String getUri(Map<String, Object> clientOutRequestMessage) {
       return (String) clientOutRequestMessage.get(Message.REQUEST_URI);
    }
    
+   /**
+    * NB. for query parameters, rather use getSingleParameterValue()
+    * @param clientOutRequestMessage
+    * @param name
+    * @return
+    */
    public static Object getJaxrsParameter(Map<String, Object> clientOutRequestMessage, String name) {
       @SuppressWarnings("unchecked")
       Map<String,Object> jaxrsParameters = (Map<String, Object>) clientOutRequestMessage.get("jaxrs.template.parameters");
       return jaxrsParameters.get(name);
+   }
+   
+   public static String getSingleParameterValue(Map<String, Object> clientInResponseMessage, String paramName) {
+      MultivaluedMap<String, String> values = getQueryParameters(clientInResponseMessage);
+      if (values == null) {
+         return null; // to avoid npex, if applied without REST context ex. in ResourceEntityMapping toResources()
+      }
+      List<String> value = values.get(paramName);
+      if (value == null || value.isEmpty()) {
+         return null;
+      }
+      return value.get(value.size() - 1);
+   }
+   
+   /** caches in message */
+   public static MultivaluedMap<String, String> getQueryParameters(Map<String, Object> clientInRequestMessage) {
+      @SuppressWarnings("unchecked")
+      MultivaluedMap<String, String> queryParameters = (MultivaluedMap<String, String>) clientInRequestMessage.get(CTX_QUERY_PARAMETERS);
+      if (queryParameters == null) {
+         //queryParameters = new UriInfoImpl(clientInRequestMessage).getQueryParameters();
+         queryParameters = JAXRSUtils.getStructuredParams((String) clientInRequestMessage.get(Message.QUERY_STRING), 
+               "&", true, true);
+         clientInRequestMessage.put(CTX_QUERY_PARAMETERS, queryParameters);
+      }
+      return queryParameters;
    }
 
    /*public static Map<Object, Object> getRequestContext(Message message) {

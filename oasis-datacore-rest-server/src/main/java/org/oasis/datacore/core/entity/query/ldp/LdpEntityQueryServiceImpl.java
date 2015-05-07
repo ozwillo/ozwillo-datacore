@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.cxf.message.Exchange;
 import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.mongodb.DatacoreMongoTemplate;
@@ -25,11 +24,13 @@ import org.oasis.datacore.core.meta.model.DCSecurity;
 import org.oasis.datacore.core.security.DCUserImpl;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
 import org.oasis.datacore.rest.api.DCResource;
+import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.server.MonitoringLogServiceImpl;
 import org.oasis.datacore.rest.server.cxf.CxfJaxrsApiProvider;
 import org.oasis.datacore.rest.server.parsing.model.DCQueryParsingContext;
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
 import org.oasis.datacore.rest.server.parsing.service.QueryParsingService;
+import org.oasis.datacore.server.context.DatacoreRequestContextService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,8 +42,6 @@ import org.springframework.data.mongodb.core.CursorProviderQueryCursorPreparer;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
-
-import com.mongodb.DBObject;
 
 
 /**
@@ -57,23 +56,26 @@ import com.mongodb.DBObject;
 @Component
 public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
 
+   public static final String DEBUG_QUERY_EXPLAIN = "queryExplain";
+   public static final String DEBUG_WARNINGS = "warnings";
+
    private static final Logger logger = LoggerFactory.getLogger(LdpEntityQueryServiceImpl.class);
    
    private static Set<String> findConfParams = new HashSet<String>();
    static {
       // TODO rather using Enum, see BSON$RegexFlag
-      findConfParams.add("start");
-      findConfParams.add("limit");
-      findConfParams.add("debug");
+      findConfParams.add(DatacoreApi.START_PARAM);
+      findConfParams.add(DatacoreApi.LIMIT_PARAM);
+      findConfParams.add(DatacoreApi.DEBUG_PARAM);
       findConfParams.add("format");
    }
    private static Map<String,DCField> dcEntityIndexedFields = new HashMap<String,DCField>();
    static {
       // TODO rather using Enum, see BSON$RegexFlag
       dcEntityIndexedFields.put(DCResource.KEY_URI, new DCField(DCEntity.KEY_URI, "string", true, 100000));
-      //dcEntityIndexedFields.put(DCResource.KEY_DCCREATED, new DCField(DCEntity.KEY_CR_AT, "date", true, 100000)); // LATER ?
+      dcEntityIndexedFields.put(DCResource.KEY_DCCREATED, new DCField(DCEntity.KEY_CR_AT, "date", true, 100000)); // useful for loading models...
       //dcEntityIndexedFields.put(DCResource.KEY_DCCREATOR, new DCField(DCEntity.KEY_CH_BY, "string", true, 100000)); // LATER ?
-      dcEntityIndexedFields.put(DCResource.KEY_DCMODIFIED, new DCField(DCEntity.KEY_CH_AT, "date", true, 100000));
+      dcEntityIndexedFields.put(DCResource.KEY_DCMODIFIED, new DCField(DCEntity.KEY_CH_AT, "date", true, 100000)); // useful for getting latest changes
       //dcEntityIndexedFields.put(DCResource.KEY_DCCONTRIBUTOR, new DCField(DCEntity.KEY_CH_BY, "string", true, 100000)); // LATER ?
       //dcEntityIndexedFields.put("o:allReaders", new DCListField(DCEntity.KEY_AR... // don't allow to look it up
    }
@@ -81,19 +83,19 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    @Value("${datacoreApiServer.query.detailedErrorsMode}")
    private boolean detailedErrorsMode = true;
    
-   /** default maximum number of documents to scan when fulfilling a query, overriden by
+   /** pagination - default maximum number of documents to scan when fulfilling a query, overriden by
     * DCFields', themselves limited by DCModel's. 0 means no limit (for tests), else ex.
     * 1000 (secure default), 100000 (on query-only nodes using secondary & timeout)... 
     * http://docs.mongodb.org/manual/reference/operator/meta/maxScan/ */
    @Value("${datacoreApiServer.query.maxScan}")
    private int maxScan;
-   /** TODO BETTER ELSE CANT PAGINATE default maximum start position : 500... */
+   /** pagination - default maximum start position : 500... */
    @Value("${datacoreApiServer.query.maxStart}")
    private int maxStart;
-   /** default maximum number of documents returned : 100... */
+   /** pagination - default maximum number of documents returned : 100... */
    @Value("${datacoreApiServer.query.maxLimit}")
    private int maxLimit;
-   /** default number of documents returned : 10... */
+   /** pagination - default number of documents returned : 10... */
    @Value("${datacoreApiServer.query.defaultLimit}")
    protected int defaultLimit;
 
@@ -121,6 +123,9 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    /** to access debug switch & put its explained results */
    @Autowired
    private CxfJaxrsApiProvider cxfJaxrsApiProvider;
+   /** to access debug switch & put its explained results */
+   @Autowired
+   protected DatacoreRequestContextService serverRequestContext;
 
    
    @Override
@@ -173,18 +178,29 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       if (start == null) { // should not happen
          start = 0;
       } else if (start > maxStart) {
-         start = maxStart; // max, else prefer ranged query ; TODO or error message ?
+         // max, else prefer ranged query
+         throw new QueryException("Can't ask for start (" + start + ") > " + maxStart
+               + ". Rather use a ranged query, that is typically with a > or < sorted "
+               + "criteria on an indexed required Resource (ex. dcmo:name) "
+               + "or native (ex. dc:modified) field ex. my:field=>\"lastValueReturned\"+ "
+               + "(with the first query having been sort only ex. my:field=\"lastValueReturned\"+).");
       }
       if (limit == null) { // should not happen
          limit = defaultLimit;
       } else if (limit > maxLimit) {
-         limit = maxLimit; // max, else prefer ranged query ; TODO or error message ?
+         limit = maxLimit; // max, else prefer ranged query, next will raise start > maxStart error
       }
       Sort sort = queryParsingContext.getSort();
       if (sort == null) {
          // TODO sort by default : configured in model (last modified date, uri,
          // iri?, types?, owners? other fields...)
          sort = new Sort(Direction.DESC, DCEntity.KEY_CH_AT); // new Sort(Direction.ASC, "_uri")...
+      }
+
+      if (serverRequestContext.isDebug()) {
+         Map<String, Object> debugCtx = serverRequestContext.getDebug(); // never null because isDebug()
+         debugCtx.put("start", start);
+         debugCtx.put("limit", limit);
       }
       
       Query springMongoQuery = new Query(queryParsingContext.getCriteria())
@@ -519,42 +535,46 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
                storageModel.getMaxScan() : maxScan;
       }
 
-      boolean debug = false;
-      //TODO debug = context.get("debug") (put by debug() operation) || context.get("headers").get("X-Datacore-Debug")
-
-      Exchange exchange = cxfJaxrsApiProvider.getExchange();
-      debug = exchange != null // else not called through REST
-            && Boolean.TRUE.equals(exchange.get("dc.params.debug")); // NB. was set by DatacoreApiImpl, TODO rather in custom context
-
-      boolean doExplainQuery = queryParsingContext.isHasNoIndexedField() || debug;
+      boolean isDebug = serverRequestContext.isDebug();
+      boolean doExplainQuery = isDebug ||  queryParsingContext.isHasNoIndexedField();
       
       // using custom CursorPreparer to get access to mongo DBCursor for explain() etc. :
       // (rather than mgo.find(springMongoQuery, DCEntity.class, collectionName)) 
       CursorProviderQueryCursorPreparer cursorProvider = new CursorProviderQueryCursorPreparer(mgo,
             springMongoQuery, doExplainQuery, maxScan);
       // TODO LATER mongo 2.6 maxTimeMs() http://docs.mongodb.org/manual/reference/method/cursor.maxTimeMS/#cursor.maxTimeMS
-
-      String collectionName = storageModel.getCollectionName(); // TODO LATER for polymorphism...
-      List<DCEntity> foundEntities = mgo.find(springMongoQuery, DCEntity.class, collectionName, cursorProvider);
       
-      if (debug) {
-         DBObject sortExplain = cursorProvider.getCursorPrepared().explain();
-         //TODO context.set("query.explain", cursorProvider.getQueryExplain()) & getQuery(),
-         // sortExplain & getSort(), getSpecial() (ex. maxScan), getOptions()?,
-         // getReadPreference(), getServerAddress(), collectionName, or even Model (type(s), fields)...
-         //Populate cxf exchange with info concerning the query.
-         try {
-            exchange.put("dc.query.explain", cursorProvider.getQueryExplain()); // TODO constants
-            exchange.put("dc.query.query", cursorProvider.getCursorPrepared().getQuery());
-            exchange.put("dc.query.sortExplain", sortExplain);
-         } catch (Exception e) {
-            if (logger.isDebugEnabled()) {
-               logger.debug("Unable to find context.");
-            }
-         }
+      // TODO request priority : privilege INDEXED (Queriable) fields for query & sort !!!
+      // TODO LATER explode in queryParsingContext.isHasNoIndexedField() if not dev nor paid...
+      
+      List<DCEntity> foundEntities = mgo.find(springMongoQuery, DCEntity.class,
+            storageModel.getCollectionName(), cursorProvider);
+      
+      if (isDebug) {
+         //Populate cxf exchange with info concerning the query :
+         //TODO also (?) context.set("query.explain", cursorProvider.getQueryExplain()) & getQuery(),
+         // sortExplain & getSort(), getSpecial() (ex. maxScan), getOptions()?
+         // or even Model (type(s), fields)...
+         // TODO constants
+         Map<String, Object> debugCtx = serverRequestContext.getDebug(); // never null because isDebug()
+         debugCtx.put("mongoQuery", cursorProvider.getCursorPrepared().getQuery());
+         debugCtx.put(DEBUG_QUERY_EXPLAIN, cursorProvider.getQueryExplain());
+         debugCtx.put("sortExplain", cursorProvider.getCursorPrepared().explain());
+         debugCtx.put("hasNoIndexedField", queryParsingContext.isHasNoIndexedField());
+         debugCtx.put("maxScan", maxScan);
+         // NB. can't get special so adding maxScan
+         debugCtx.put("options", cursorProvider.getCursorPrepared().getOptions());
+         debugCtx.put("collectionName", cursorProvider.getCursorPrepared().getCollection().getName());
+         debugCtx.put("readPreference", cursorProvider.getCursorPrepared().getReadPreference());
+         debugCtx.put("serverAddress", cursorProvider.getCursorPrepared().getServerAddress());
+         debugCtx.put(DEBUG_WARNINGS, queryParsingContext.getWarnings());
+         // NB. sort explain is end cursor explain if sort (but we always sort, at worst on _chAt)
+         //explainCtx.put("httpQuery", exchange.get("dc.query.httpQuery"))
+         //explainCtx.put("parsedQuery", exchange.get("dc.query.parsedQuery")
       }
       
-      if (maxScan != 0 && queryParsingContext.isHasNoIndexedField()) {
+      if (!isDebug // in debug mode still allow to go through to get debug info
+            && maxScan != 0 && queryParsingContext.isHasNoIndexedField()) {
          // (if maxScan == 0 it is infinite and its limit can't be reached)
          if (foundEntities.size() < springMongoQuery.getLimit()
                && ((int) cursorProvider.getQueryExplain().get("nscanned")) == maxScan) {
@@ -564,7 +584,8 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
                   + ") before document limit (found " + foundEntities.size() + "<" + springMongoQuery.getLimit()
                   + ") , meaning some documents can't be found without prohibitive cost. "
                   + "Use only indexed fields, or if you really want the few documents already "
-                  + "found lower limit, or if in Model design mode add indexes.");
+                  + "found lower limit, or if in Model design mode add indexes. "
+                  + "Retry in debug mode to get more information.");
          }
       }
    

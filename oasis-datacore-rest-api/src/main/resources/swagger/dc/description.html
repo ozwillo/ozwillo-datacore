@@ -95,7 +95,7 @@ examples, FAQ, how to & common use cases, cookbook (writing clients...) and full
 <br/><br/>
 <p>
 <a name="mydata"/>
-<span class="json dcjsonline">GET <span class="dcConf_baseUrl">NOT INITED</span><input type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 560px"></span>
+<span class="json dcjsonline">GET <span class="dcConf_baseUrl">NOT INITED</span><input type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 558px"></span>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()));">go</button>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, null, {'X-Datacore-Debug':'true'});" title="Debug / explain query">?</button>
 <button onclick="javascript:return findDataByTypeRdf(encodeUri($('.myurl').val()));">RDF</button>
@@ -170,8 +170,8 @@ javascript:return findDataByType($(this).text());
 ">/dc/type/pli:city_0?pli:name_i18n=$elemMatch{"v":"Torino","l":"it"}</a>
 <br/><br/>
 <b>Operations</b> are specified in details below within the Swagger UI playground, and especially
-<a href="#!/dc/postAllDataInType_post_0">typed updates</a> (version) and
-<a href="#!/dc/findDataInType_get_2">typed queries</a> (criteria, sort, pagination, debug).
+<a href="#!/dc/postAllDataInType_post_0" target="_blank">typed updates</a> (version) and
+<a href="#!/dc/findDataInType_get_2" target="_blank">typed queries</a> (criteria, sort, ranged query- or iterator-based pagination, debug mode).
 <br/><br/>
 <b>Typed operations</b> where type of data is provided in URL are usually more efficient : 
 '*inType' methods are faster, finder queries with type even more.

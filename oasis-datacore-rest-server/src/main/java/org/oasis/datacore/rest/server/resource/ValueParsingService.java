@@ -211,6 +211,8 @@ public class ValueParsingService {
          return parseDateFromString(stringValue);
       case LONG:
          return parseLongFromString(stringValue);
+      case DOUBLE:
+         return parseDoubleFromString(stringValue);
       default:
       }
       
@@ -325,11 +327,75 @@ public class ValueParsingService {
       try {
          return Long.valueOf(stringValue);
       } catch (NumberFormatException e) {
-         throw new ResourceParsingException("date Field value is not "
-               + "an ISO 8601 Date-formatted string : " + stringValue, e);
+         throw new ResourceParsingException("long Field value is not "
+               + "a compatible string : " + stringValue, e);
+      }
+   }
+   
+
+   public Double parseDouble(Object resourceValue, DCResourceParsingContext resourceParsingContext)
+         throws ResourceParsingException {
+
+      // TODOOOOOOOOOOOOOOOOOOOO Javascript has no double : http://javascript.about.com/od/reference/g/rlong.htm
+      // so supported through String instead (or Float as fallback)
+      /*if (!(resourceValue instanceof Double)) { // TODO
+         if (resourceValue instanceof Float) {
+            entityValue = new Double((Float) resourceValue);
+         } else if (resourceValue instanceof Integer) {
+            entityValue = new Float((Integer) resourceValue);
+            resourceParsingContext.addWarning("float Field value is a JSON integer : " + resourceValue
+                  + ", which allowed as fallback but should rather be a JSON float");
+         } else if (resourceValue instanceof String) {
+            
+         } else {
+            throw new ResourceParsingException("double Field value is not a JSON double nor a float nor a string : " + resourceValue);
+         }
+      }
+      entityValue = (Double) resourceValue; // TODO LATER also allow String  ??*/
+      
+      if (!(resourceValue instanceof String)) {
+         if (resourceValue instanceof Float) {
+            return new Double((Float) resourceValue);
+         } else if (resourceValue instanceof Double) {
+            return (Double) resourceValue; // can only happen if called locally, NOT remotely through jackson
+         } else if (resourceValue instanceof Integer) {
+            if (resourceParsingContext != null) {
+               resourceParsingContext.addWarning("double Field value is a JSON integer : " + resourceValue
+                     + ", which allowed as fallback but should rather be a JSON long");
+            }
+            return new Double((Integer) resourceValue);
+         } else {
+            // other types ex. Double, float are wrong
+            throw new ResourceParsingException("double Field value is not a string or a float : " + resourceValue);
+         }
+      } else {
+         return this.parseDoubleFromString((String) resourceValue);
       }
    }
 
+   /**
+    * Optimized using Double.valueOf() (rather than Jackson mapper)
+    * @param stringValue
+    * @return null if no value (null or empty)
+    * @throws ResourceParsingException
+    */
+   public Double parseDoubleFromString(String stringValue) throws ResourceParsingException {
+      if (stringValue == null || stringValue.isEmpty()) {
+         return null; // no value
+      }
+      /*if (stringValue.charAt(0) == '\"') {
+         throw new ResourceParsingException("date Field value is attempted to be parsed  "
+               + "from unquoted string but is quoted (maybe doubly ?) : " + stringValue);
+      }*/
+      try {
+         return Double.valueOf(stringValue);
+      } catch (NumberFormatException e) {
+         throw new ResourceParsingException("double Field value is not "
+               + "a compatible string : " + stringValue, e);
+      }
+   }
+
+   
    private String quote(String stringValue) {
       //return "\"" + stringValue + "\"";
       StringBuilder sb = new StringBuilder(stringValue.length() + 2);

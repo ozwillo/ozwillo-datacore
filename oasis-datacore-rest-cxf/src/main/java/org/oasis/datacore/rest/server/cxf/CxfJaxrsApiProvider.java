@@ -39,6 +39,18 @@ import org.oasis.datacore.rest.client.cxf.CxfMessageHelper;
  */
 public class CxfJaxrsApiProvider implements JaxrsApiProvider {
 
+   ///////////////////////// CXF specific
+
+   public Message getInMessage() {
+      return (PhaseInterceptorChain.getCurrentMessage() == null) ? null
+            : PhaseInterceptorChain.getCurrentMessage().getExchange().getInMessage();
+   }
+
+   public Exchange getExchange() {
+      return (PhaseInterceptorChain.getCurrentMessage() == null) ? null :
+            PhaseInterceptorChain.getCurrentMessage().getExchange();
+   }
+
    public MediaType getNegotiatedResponseMediaType() {
       String responseContentType = (this.getExchange() != null) ?
             (String) this.getExchange().get(HttpHeaders.CONTENT_TYPE)
@@ -61,16 +73,8 @@ public class CxfJaxrsApiProvider implements JaxrsApiProvider {
    public Request getJaxrsRequest() {
       return new RequestImpl(getInMessage());
    }
-
-   public Message getInMessage() {
-      return (PhaseInterceptorChain.getCurrentMessage() == null) ? null
-            : PhaseInterceptorChain.getCurrentMessage().getExchange().getInMessage();
-   }
-
-   public Exchange getExchange() {
-      return (PhaseInterceptorChain.getCurrentMessage() == null) ? null :
-            PhaseInterceptorChain.getCurrentMessage().getExchange();
-   }
+   
+   ///////////////////////// CXF impl of API
 
    @Override
    public List<String> getRequestHeader(String name) {
@@ -207,10 +211,10 @@ public class CxfJaxrsApiProvider implements JaxrsApiProvider {
       return new UriInfoImpl(getInMessage()).getPathParameters(decode);
    }
 
+   /** same as ...(encode=true) i.e. decodes ; context cached */
    @Override
    public MultivaluedMap<String, String> getQueryParameters() {
-      // TODO better
-      return new UriInfoImpl(getInMessage()).getQueryParameters();
+      return CxfMessageHelper.getQueryParameters(getInMessage());
    }
 
    @Override

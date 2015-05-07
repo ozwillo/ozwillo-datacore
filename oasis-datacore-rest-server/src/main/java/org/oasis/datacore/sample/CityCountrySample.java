@@ -48,6 +48,8 @@ public class CityCountrySample extends DatacoreSampleBase {
       cityModel.addField(new DCField("n:name", "string", true, 100));
       cityModel.addField(new DCResourceField("city:inCountry", COUNTRY_MODEL_NAME, true, 100));
       cityModel.addField(new DCField("city:populationCount", "int", false, 50));
+      cityModel.addField(new DCField("city:longitudeDMS", "double", false, 0));
+      cityModel.addField(new DCField("city:latitudeDMS", "double", false, 0));
       cityModel.addField(new DCField("city:founded", "date", false, 0));
       cityModel.addField(new DCField("city:isComCom", "boolean", (Object) false, 0));
          
@@ -94,10 +96,12 @@ public class CityCountrySample extends DatacoreSampleBase {
 
       DCResource lyonCity = resourceService.create(CITY_MODEL_NAME, "France/Lyon")
             .set("n:name", "Lyon").set("city:inCountry", franceCountry.getUri())
-            .set("city:populationCount", 500000);
+            .set("city:populationCount", 500000)
+            .set("city:longitudeDMS", new Float(500000.234).doubleValue()).set("city:latitudeDMS", "-500000"); // float & string as double
       DCResource londonCity = resourceService.create(CITY_MODEL_NAME, "UK/London")
             .set("n:name", "London").set("city:inCountry", ukCountry.getUri())
             .set("city:populationCount", 10000000)
+            .set("city:longitudeDMS", 500000.234).set("city:latitudeDMS", -500000.234) // double
             .set("i18n:name", DCResource.listBuilder()
                   .add(DCResource.propertiesBuilder().put("@language", "fr").put("@value", "Londres").build())
                   .add(DCResource.propertiesBuilder().put("@language", "en").put("@value", "London").build())

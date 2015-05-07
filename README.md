@@ -3,7 +3,7 @@
 OASIS - Datacore
 http://www.oasis-eu.org/
 https://github.com/pole-numerique/oasis-datacore
-Copyright (c) 2013 Open Wide - http://www.openwide.fr
+Copyright (c) 2013-2015 Open Wide - http://www.openwide.fr
 
 =====================================================
 
@@ -22,7 +22,7 @@ Features
    * HTTP REST API for sharing data, with OAuth2 authentication and client-side caching
    * W3C JSON-LD-like data Resource representation, as well as RDF (nquads, turtle)
    * W3C LDP-inspired query filters
-   * JSON Schema-like data models with Model (primary) and Mixin types. Models are the place where collaboration on data happens. Supported field types are string, boolean, int, float, long, double, date (ISO8601), map, list, i18n (optimized for search on value only), resource (i.e. link).
+   * JSON Schema-like data models with Model (primary) and Mixin (reusable) types. Models are the place where collaboration on data happens. Supported field types are string, boolean, int, float, long, double, date (ISO8601), map, list, i18n (optimized for search on value only), resource (i.e. link).
    * scalable MongoDB storage (sharded cluster ready), Java server (Apache CXF / Spring)
    * Rights (readers, writers, owners) at Resource, Model and business (Scope) levels, with query optimization
    * Historization, allowing a posteriori moderation
@@ -42,7 +42,7 @@ License : Affero GPL3, except for client libraries which are LGPL3
 Getting Started with the server
 -------------------------------
 
-Requirements : [Java JDK 7](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html), [MongoDB](http://docs.mongodb.org/manual/installation/)
+Requirements : [Java JDK 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html), [MongoDB 2.6](http://docs.mongodb.org/manual/installation/)
 
 Build ([Maven 3](http://maven.apache.org/download.cgi) required) : at root, do : mvn clean install
 
@@ -77,6 +77,8 @@ Use the JSON/HTTP client of your own business application's platform and / or of
 Here are such clients that might help you :
 
 - A **Java proxy-like cached client built on the CXF service engine** is provided by the oasis-datacore-rest-cxf subproject. Use it by [loading its Spring](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-cxf/src/main/resources/oasis-datacore-rest-client-context.xml) and injecting DatacoreCachedClient using ```@Autowired private DatacoreCachedClient datacoreApi;``` like done in [this test](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-cxf/src/test/java/org/oasis/datacore/rest/api/client/DatacoreApiCXFClientTest.java).
+
+- A **simpler Java client built on Spring 4 with REST Template** is provided, along with a similar Kernel client, by the [oasis-spring-integration](https://github.com/pole-numerique/oasis-spring-integration) top-level project. See how the portal [uses it to query geographical Resource](https://github.com/pole-numerique/oasis-portal/blob/master/portal-parent/oasis-portal-front/src/main/java/org/oasis_eu/portal/core/mongo/dao/geo/GeographicalAreaCache.java#L226) and [how he configures it](https://github.com/pole-numerique/oasis-portal/blob/master/portal-parent/oasis-portal-front/src/main/resources/application.yml#L88).
 
 - If it doesn't suit you, **other Java service engines** (such as Jersey, RESTEasy) may be used in similar fashion, though some features (HTTP ETag-based caching, generic query request) require developing interceptors / handlers / filters. Otherwise, the **Java JAXRS web client** works well with the DatacoreApi and allows to do everything, though it is a bit more "barebone".
 

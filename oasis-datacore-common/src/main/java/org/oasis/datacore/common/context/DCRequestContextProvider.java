@@ -14,12 +14,25 @@ public interface DCRequestContextProvider {
    
    public static final String PROJECT = "datacore.project";
    
+   /**
+    * Caller must handle null in case no context set (and not enforced).
+    * @return null if no context set (if enforced rather explodes)
+    */
    public Map<String, Object> getRequestContext();
    
-   /** shortcut */
+   /**
+    * (shortcut) If no context, returns null (if enforced rather explodes).
+    * Caller must handle null in case no context set (and not enforced).
+    * @param key
+    * @return null if no context, else mapped value
+    */
    public Object get(String key);
    
-   /** shortcut */
+   /**
+    * (shortcut) If no context, does nothing (if enforced rather explodes)
+    * @param key
+    * @param value
+    */
    public void set(String key, Object value);
    
 }

@@ -15,10 +15,8 @@ import java.util.Set;
 
 import javax.ws.rs.core.MediaType;
 
-import org.apache.cxf.message.Message;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.oasis.datacore.common.context.DCRequestContextProviderFactory;
 import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
@@ -32,12 +30,12 @@ import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.DCURI;
-import org.oasis.datacore.rest.client.cxf.CxfMessageHelper;
 import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
 import org.oasis.datacore.rest.server.resource.mapping.EmbeddedResourceTypeChecker;
 import org.oasis.datacore.rest.server.resource.mapping.ExternalDatacoreLinkedResourceChecker;
 import org.oasis.datacore.rest.server.resource.mapping.LocalDatacoreLinkedResourceChecker;
+import org.oasis.datacore.server.context.DatacoreRequestContextService;
 import org.oasis.datacore.server.uri.BadUriException;
 import org.oasis.datacore.server.uri.UriService;
 import org.slf4j.Logger;
@@ -98,9 +96,7 @@ public class ResourceEntityMapperService {
 
    /** to know whether expected output is semantic (JSON-LD, RDF) */
    @Autowired
-   ///@Qualifier("datacore.cxfJaxrsApiProvider")
-   //protected DCRequestContextProvider requestContextProvider;
-   protected DCRequestContextProviderFactory requestContextProviderFactory;
+   protected DatacoreRequestContextService serverRequestContext;
 
 
    /** LATER use request context */
@@ -213,10 +209,9 @@ public class ResourceEntityMapperService {
          entityValue = valueParsingService.parseLong(resourceValue, resourceParsingContext);
          
       } else if ("double".equals(dcField.getType())) {
-         if (!(resourceValue instanceof Double)) {
-            throw new ResourceParsingException("double Field value is not a JSON double : " + resourceValue);
-         }
-         entityValue = (Double) resourceValue; // TODO LATER also allow String  ??
+         // TODOOOOOOOOOOOOOOOOOOOO Javascript has no double : http://javascript.about.com/od/reference/g/rlong.htm
+         // so supported through String instead (or Float as fallback)
+         entityValue = valueParsingService.parseDouble(resourceValue, resourceParsingContext);
          
       } else if ("date".equals(dcField.getType())) {
          if (!(resourceValue instanceof String)) {
@@ -846,9 +841,8 @@ public class ResourceEntityMapperService {
          }
          return entityPropValue;
       case "i18n" :
-         Map<String, Object> requestContext = requestContextProviderFactory.getRequestContext(); // should never be null
          // looking in Request : (Server in or Client Out, context aggregates both with CXF Exchange) 
-         String acceptContentType = CxfMessageHelper.getHeaderString(requestContext, Message.ACCEPT_CONTENT_TYPE);
+         String acceptContentType = serverRequestContext.getAcceptContentType();
          if (acceptContentType != null) { // else not called through REST
             int indexOfComma = acceptContentType.indexOf(',');
             if (indexOfComma != -1) {

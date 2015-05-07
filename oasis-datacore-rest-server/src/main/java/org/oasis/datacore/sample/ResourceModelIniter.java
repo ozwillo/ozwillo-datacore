@@ -40,12 +40,17 @@ import org.springframework.stereotype.Component;
 public class ResourceModelIniter extends DatacoreSampleBase {
 
    public static final String MODEL_MODEL_NAME = "dcmo:model_0";
+   public static final String MODEL_NAME_PROP = "dcmo:name";
    public static final String MODEL_MIXIN_NAME = "dcmi:mixin_0";
    public static final String MODEL_STORAGE_NAME = MODEL_MIXIN_NAME;
    public static final String MODEL_POINTOFVIEW_NAME = "dcmpv:pointOfView_0";
+   public static final String POINTOFVIEW_NAME_PROP = "dcmpv:name";
    public static final String MODEL_PROJECT_NAME = "dcmp:project_0";
    public static final String MODEL_USECASEPOINTOFVIEW_NAME = "dcmpv:useCasePointOfView_0";
    public static final String MODEL_USECASEPOINTOFVIEWELEMENT_NAME = "dcmpv:useCasePointOfViewElement_0";
+
+   public static final String MODEL_DISPLAYABLE_NAME = "odisp:Displayable_0"; //TODO TODOOOOOOOOOOOOOOOOOOOO from o:Displayable_0
+   public static final String DISPLAYABLE_NAME_PROP = "odisp:name";
 
    @Autowired
    private ModelResourceMappingService mrMappingService;
@@ -83,8 +88,8 @@ public class ResourceModelIniter extends DatacoreSampleBase {
    public void buildModels(List<DCModelBase> modelsToCreate) {
       DCProject project = modelAdminService.getProject(DCProject.OASIS_MAIN);
       
-      DCMixin displayableModel = (DCMixin) new DCMixin("o:Displayable_0", project) // and not DCModel : fields exist within model & mixins
-         .addField(new DCI18nField("odisp:name", 100))
+      DCMixin displayableModel = (DCMixin) new DCMixin(MODEL_DISPLAYABLE_NAME, project) // and not DCModel : fields exist within model & mixins
+         .addField(new DCI18nField(DISPLAYABLE_NAME_PROP, 100))
       ;
 
       DCMixin countryLanguageSpecificModel = (DCMixin) new DCMixin("dcmls:CountryLanguageSpecific", project) // and not DCModel : fields exist within model & mixins
@@ -142,7 +147,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addMixin(modelIdentificationModel)
          .addMixin(countryLanguageSpecificModel)
          //.addMixin(displayableModel);
-         .addField(new DCField("dcmo:name", "string", true, 100))
+         .addField(new DCField(MODEL_NAME_PROP, "string", true, 100))
          .addField(new DCField("dcmo:pointOfViewAbsoluteName", "string", false, 100)) // TODO compound index on POV and name
          // NB. NOT required (for now), rather computed from current one, else should be
          // custom computed in ModelResourceDCListener in ABOUT_TO_BUILD step (but then
@@ -194,7 +199,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
 
       DCModel pointOfViewModel = (DCModel) new DCModel(MODEL_POINTOFVIEW_NAME, project)
          .addMixin(displayableModel)
-         .addField(new DCField("dcmpv:name", "string", true, 100))
+         .addField(new DCField(POINTOFVIEW_NAME_PROP, "string", true, 100))
          .addField(new DCField("dcmpv:documentation", "string", false, 100))
          .addField(new DCListField("dcmpv:pointOfViews", new DCResourceField("useless", MODEL_POINTOFVIEW_NAME))) // or not ???
          ///.addField(new DCListField("dcmp:localModels", new DCResourceField("useless", MODEL_MODEL_NAME))) // TODO or rather only dcmo:projectAbsoluteName ?
@@ -323,7 +328,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
 
       for (DCResource resource : resourcesToPost) {
          logger.debug("Persisting model " + resource.getUri());
-         /*String modelResourceName = (String) resource.get("dcmo:name"); // TODO can also be project with dcmp:name
+         /*String modelResourceName = (String) resource.get(MODEL_NAME_PROP); // TODO can also be project with dcmp:name
          String[] modelType = modelResourceName.split("_", 2); // TODO better
          String modelName = (modelType.length == 2) ? modelType[0] : modelResourceName;
          String modelVersionIfAny = (modelType.length == 2) ? modelType[1] : null;

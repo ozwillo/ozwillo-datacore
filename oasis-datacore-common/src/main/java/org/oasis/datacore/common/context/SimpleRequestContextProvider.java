@@ -8,7 +8,7 @@ import java.util.Map;
  * @author mdutoo
  *
  */
-public class SimpleRequestContextProvider implements DCRequestContextProvider {
+public class SimpleRequestContextProvider extends RequestContextProviderBase implements DCRequestContextProvider {
    
    /** null means outside context (not set) */
    private static ThreadLocal<Map<String, Object>> requestContext = new ThreadLocal<Map<String, Object>>();
@@ -93,15 +93,5 @@ public class SimpleRequestContextProvider implements DCRequestContextProvider {
     * to be overriden
     */
    protected void executeInternal() {}
-
-   @Override
-   public Object get(String key) {
-      return getRequestContext().get(key);
-   }
-   
-   @Override
-   public void set(String key, Object value) {
-      this.getRequestContext().put(key, value);
-   }
 
 }

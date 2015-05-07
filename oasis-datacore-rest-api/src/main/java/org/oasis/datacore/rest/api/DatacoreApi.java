@@ -132,6 +132,11 @@ public interface DatacoreApi {
    public String PROJECT_HEADER = "X-Datacore-Project";
    public String PROJECT_DEFAULT = "oasis.main"; // TODO oasis.test
    public String DEBUG_HEADER = "X-Datacore-Debug";
+   public String START_PARAM = "start";
+   public String LIMIT_PARAM = "limit";
+   public String DEBUG_PARAM = "debug";
+   public String DEBUG_RESULT = "debug";
+   public String RESOURCES_RESULT = "resources";
 
    public String NATIVE_QUERY_COMMON_DOC = "'operator' (if any, else defaults to '=') can be in "
          + "logical, XML (most), MongoDB (all) or sometimes Java-like form, "
@@ -151,7 +156,7 @@ public interface DatacoreApi {
          + "A given field can be specified twice (even if it's not perfect HTTP), for instance "
          + "to define \"between\" queries using &gt and < operators."
          + "\n<br/><br/>\n"
-         + "Accepted operators, in their logical/XML/MongoDB/Java forms if any (else -), are : "
+         + "<b>Available operators</b>, in their logical/XML/MongoDB/Java forms if any (else -), are : "
          + "=/-/-/==, >/&gt/$gt/- (ex. >3), </&lt;/$lt/-, >=/&gt;=/$gte/-, <=/&lt;=/$lte/-, "
          + "<>/&lt;&gt;/$ne/!=, -/-/$in/- (in JSON list, ex. $in[0,1]), -/-/$nin/- (not in JSON list)"
          + ", -/-/$regex/- (Perl's ex. $regex/Lond.*n/i or only $regexLond.*n), -/-/$exists/- "
@@ -172,15 +177,32 @@ public interface DatacoreApi {
          + "javascript:return findDataByType($(this).attr('href'));"
          + "\">/dc/type/dcmo:model_0?dc:modified=>=1943-04-02T00:00:00.000Z&dc:modified=<=2043-04-02T00:00:00.000Z</a>."
          + "\n<br/><br/>\n"
-         + "If debug is enabled, it rather returns a JSON object containing in \"results\" "
-         + "regular results and in \"explain\" the result of a "
+         + "If <b>debug</b> is enabled, it rather returns a JSON object containing in \""
+         + RESOURCES_RESULT + "\" regular results and in \"" + DEBUG_RESULT
+         + "\" various debug details about the query and its execution, such as the result of a "
          + "<a href=\"http://docs.mongodb.org/manual/reference/method/cursor.explain\">"
          + "MongoDB explain command</a>, in order to help users optimize queries."
-         + "\n<br/>\n"
+         + "\n<br/><br/>\n"
          + "Only the first results of big queries are returned, to avoid one badly "
-         + "optimized query worsen performance for all other users. First, pagination "
-         + "start and limit can't go beyond default maxima (defined in server properties"
-         + "datacoreApiServer.query.maxStart and datacoreApiServer.query.maxLimit)."
+         + "optimized query worsen performance for all other users. And similarly, "
+         + "<b>ranged queries (see below) should be preferred to pagination</b>, because "
+         + "pagination start and limit are capped (by default maxima defined in server "
+         + "properties datacoreApiServer.query.maxStart and datacoreApiServer.query.maxLimit). "
+         + "If limit goes beyond, it is reset to maxLimit. If start goes beyond, a 400 "
+         + "error is raised, and a ranged query should be used instead, that is typically "
+         + "with a > or < sorted criteria on an indexed required Resource (ex. "
+         + "GET <a href=\"/dc/type/dcmo:model_0?dcmo:name=>%22dcmo:model_0%22+\" class=\"dclink\" onclick=\""
+         + "javascript:return findDataByType($(this).attr('href'));"
+         + "\">/dc/type/dcmo:model_0?dcmo:name=>\"dcmo:model_0\"+</a>. "
+         + ") or native (ex. "
+         + "GET <a href=\"/dc/type/dcmo:model_0?dc:modified=<%222043-04-02T00:00:00.000Z%22-\" class=\"dclink\" onclick=\""
+         + "javascript:return findDataByType($(this).attr('href'));"
+         + "\">/dc/type/dcmo:model_0?dc:modified=<\"2043-04-02T00:00:00.000Z\"-</a>. "
+         + ") field (with the first query having been sort only ex. "
+         + "GET <a href=\"/dc/type/dcmo:model_0?dc:modified=-\" class=\"dclink\" onclick=\""
+         + "javascript:return findDataByType($(this).attr('href'));"
+         + "\">/dc/type/dcmo:model_0?dc:modified=-</a>. "
+         + "\n<br/>\n"
          + "Secondly, MongoDB maxScan is set on the query to the maximal queried fields' "
          + "queryLimit, and at most to default maximum (defined in server property "
          + "datacoreApiServer.query.maxScan) ; beware, maxScan differs from limit "
@@ -191,7 +213,7 @@ public interface DatacoreApi {
          + "\n<br/><br/>\n"
          + "Each additional HTTP query parameter (in Swagger UI, enter them "
          + "as a single URL query string, ex. name=London&population=>100000) "
-         + "is a Datacore query criteria in the form field=operatorValueSort. "
+         + "is a Datacore query criteria in the form <b>field=operatorValueSort</b>. "
          + "There, 'field' is the field's dotted path within its model type(s), "
          + NATIVE_QUERY_COMMON_DOC;
    public String NATIVE_QUERY_DOC_TYPES = "Returns all Datacore resources of the given type that match all (AND)"
@@ -202,7 +224,7 @@ public interface DatacoreApi {
          + "\n<br/><br/>\n"
          + "Each additional HTTP query parameter (in Swagger UI, enter them "
          + "as a single URL query string, ex. name=London&population=>100000) "
-         + "is a Datacore query criteria in the form field=operatorValueSort. "
+         + "is a Datacore query criteria in the form <b>field=operatorValueSort</b>. "
          + "There, 'field' is the field's dotted path starting by its model type(s), "
          + NATIVE_QUERY_COMMON_DOC;
    
@@ -720,9 +742,9 @@ public interface DatacoreApi {
       @ApiResponse(code = 200, message = "OK : resources found and returned")
    })
    List<DCResource> findDataInType(@PathParam("type") String modelType, @Context UriInfo uriInfo,
-         @ApiParam(value="Pagination start") @DefaultValue("0") @QueryParam("start") Integer start,
-         @ApiParam(value="Pagination limit") @DefaultValue("10") @QueryParam("limit") Integer limit,
-         @ApiParam(value="Debug", required = false) @QueryParam("debug") boolean debug)
+         @ApiParam(value="Pagination start") @DefaultValue("0") @QueryParam(START_PARAM) Integer start,
+         @ApiParam(value="Pagination limit") @DefaultValue("10") @QueryParam(LIMIT_PARAM) Integer limit,
+         @ApiParam(value="Debug", required = false) @QueryParam(DEBUG_PARAM) boolean debug)
          throws BadRequestException, NotFoundException;
 
 
@@ -767,8 +789,8 @@ public interface DatacoreApi {
       @ApiResponse(code = 200, message = "OK : resources found and returned")
    })
    List<DCResource> findData(@Context UriInfo uriInfo,
-         @ApiParam(value="Pagination start") @DefaultValue("0") @QueryParam("start") Integer start,
-         @ApiParam(value="Pagination limit") @DefaultValue("10") @QueryParam("limit") Integer limit)
+         @ApiParam(value="Pagination start") @DefaultValue("0") @QueryParam(START_PARAM) Integer start,
+         @ApiParam(value="Pagination limit") @DefaultValue("10") @QueryParam(LIMIT_PARAM) Integer limit)
          throws BadRequestException, NotFoundException;
 
    /**

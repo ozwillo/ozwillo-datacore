@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
  *
  */
 @Component
-public class DCRequestContextProviderFactory implements DCRequestContextProvider {
+public class DCRequestContextProviderFactory extends RequestContextProviderBase implements DCRequestContextProvider {
    
    private static DCRequestContextProviderFactory instance = null;
    
@@ -33,18 +33,6 @@ public class DCRequestContextProviderFactory implements DCRequestContextProvider
    @Override
    public Map<String, Object> getRequestContext() {
       return DCRequestContextProviderFactory.getProvider().getRequestContext();
-   }
-
-   /** shortcut to getProvider()'s */
-   @Override
-   public Object get(String key) {
-      return this.getRequestContext().get(key);
-   }
-
-   /** shortcut to getProvider()'s */
-   @Override
-   public void set(String key, Object value) {
-      this.getRequestContext().put(key, value);
    }
    
 }
