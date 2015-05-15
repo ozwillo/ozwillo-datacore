@@ -73,9 +73,19 @@
          </bean>
       </property ->
    </bean -->
+   
 
-   <!-- Disable validation because it might take the same time as serialization. -->
-   <mongo:mapping-converter disable-validation="true"/>
+   <!-- in order to remove _class in mongo stored objects
+   see http://www.mkyong.com/mongodb/spring-data-mongodb-remove-_class-column/ -->
+   <bean id="defaultMongoTypeMapper" class="org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper">
+      <constructor-arg name="typeKey"><null/></constructor-arg><!-- and not "_class" -->
+   </bean>
+   
+   <!-- remove _class in mongo stored objects,
+   and disable validation because it might take the same time as serialization. -->
+   <mongo:mapping-converter
+         type-mapper-ref="defaultMongoTypeMapper"
+         disable-validation="true"/>
 
   
    <!-- auditing see http://maciejwalkowiak.pl/blog/2013/05/24/auditing-entities-in-spring-data-mongodb/ -->
