@@ -62,7 +62,11 @@
 
   // first four letters of model import file
   function buildModelDomainPrefix(modelFileName) {
-     return modelFileName.substring(modelFileName.lastIndexOf('/') + 1, 3).toLowerCase();
+     var fSepI = modelFileName.lastIndexOf('\\'); // in case of windows
+     if (fSepI === -1) { // linux ?!
+         fSepI = modelFileName.lastIndexOf('/');
+     }
+     return modelFileName.substring(fSepI + 1, 3).toLowerCase();
   }
   
   function trimIfAnyElseNull(value) {
@@ -1988,6 +1992,7 @@
       }
       
       mergeStringValueOrDefaultIfAny(field, "dcmf:required", fieldRow["required"], importState.metamodel["dcmf:field_0"], importState);
+      mergeStringValueOrDefaultIfAny(field, "dcmf:aliasedStorageName", fieldRow["aliasedStorageName"], importState.metamodel["dcmf:field_0"], importState);
       mergeStringValueOrDefaultIfAny(field, "dcmf:queryLimit", fieldRow["queryLimit"],
             importState.metamodel["dcmf:field_0"], importState); // meaningless for list but required by ModelResourceMappingService for now
       mergeStringValueOrDefaultIfAny(field, "dcmf:isInMixinRef", fieldRow["isInMixinRef"],

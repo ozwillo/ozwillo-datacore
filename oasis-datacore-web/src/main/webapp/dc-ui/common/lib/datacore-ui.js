@@ -271,12 +271,15 @@ function lineBreak(depth) {
 }
 // modelType is where queries are made in, therefore it's the upper resource's
 // keyPathInResource is used to make queries in it
-var nativeFieldNames = {
-      "@id" : null, "o:version" : null, "@type" : null, "dc:created" : null,
-      "dc:creator" : null, "dc:modified" : null, "dc:contributor" : null
+var skippedNativeFieldNames = {
+      "@id" : null, "@type" : null, "o:version" : null, "dc:creator" : null, "dc:contributor" : null
+      // skip them because :
+      // - query on @id is the same as GET @id, and on a @type same as GET @type/...
+      // - others are not indexed, and query on version is meaningless anyway 
+      // BUT DONT SKIP dc:created, dc:modified
 }
 function toolifyDcResourceFieldAndColon(value, key, modelType, upperResource, keyPathInResource) {
-   if (typeof nativeFieldNames[key] !== 'undefined' // skip native fields
+   if (typeof skippedNativeFieldNames[key] !== 'undefined' // skip native fields
       || typeof upperResource === 'undefined') { // skip when hashmap of resources
       return JSON.stringify(key, null, '\t') + " : ";
    }
