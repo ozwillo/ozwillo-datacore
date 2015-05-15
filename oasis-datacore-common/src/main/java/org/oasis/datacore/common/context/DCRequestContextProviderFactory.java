@@ -18,7 +18,7 @@ public class DCRequestContextProviderFactory extends RequestContextProviderBase 
    private static DCRequestContextProviderFactory instance = null;
    
    @Autowired(required=false)
-   private DCRequestContextProvider requestContextProvider = new SimpleRequestContextProvider();
+   private DCRequestContextProvider requestContextProvider = new SimpleRequestContextProvider<Object>();
    
    public DCRequestContextProviderFactory() {
       DCRequestContextProviderFactory.instance = this;

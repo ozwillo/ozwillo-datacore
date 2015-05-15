@@ -45,7 +45,7 @@ public abstract class DCPointOfViewBase implements DCPointOfView {
    }
    
 
-   /** TO BE OVERRIDE */
+   /** TO BE OVERRIDEN */
    @Override
    public DCModelBase getModel(String type) {
       return modelMap.get(type);

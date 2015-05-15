@@ -463,8 +463,8 @@ public class DatacoreApiServerTest {
       Assert.assertNotNull("creation date should not be null", creationDate);
       String creator = postBordeauxCityResource.getCreatedBy();
       Assert.assertTrue("admin".equals(creator) || "guest".equals(creator)); // prod or dev
-      Assert.assertEquals("at creation, created & modified dates should be the same",
-            creationDate, postBordeauxCityResource.getLastModified());
+      Assert.assertEquals("at creation, created & modified dates should be have the same second",
+            creationDate.getSecondOfDay(), postBordeauxCityResource.getLastModified().getSecondOfDay());
       Assert.assertEquals("at creation, created & modified auditors should be the same",
             creator, postBordeauxCityResource.getLastModifiedBy());
       

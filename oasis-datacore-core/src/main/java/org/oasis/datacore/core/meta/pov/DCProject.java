@@ -12,11 +12,13 @@ import org.oasis.datacore.core.meta.ModelNotFoundException;
 import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
+import org.oasis.datacore.core.meta.model.DCSecurity;
 
 public class DCProject extends DCPointOfViewBase {
    
    public static final String OASIS_MAIN = "oasis.main";
    public static final String OASIS_SAMPLE = "oasis.sample";
+   public static final String OASIS_META = "oasis.meta";
 
    /* TODO organization.project ex. oasis.main */
    /*
@@ -32,15 +34,15 @@ public class DCProject extends DCPointOfViewBase {
    
    /** LATER also reuse visible ones ? */
    private LinkedHashMap<String,DCProject> visibleProjectMap = new LinkedHashMap<String, DCProject>(); // TODO merge in visibleStorageProjectMap
-   /** LATER can see model (unless alt model) but not data (by alt'ing model anonymously as not storage),
+   /** LATER can see outside model (unless alt model) but not data (by alt'ing model anonymously as not storage),
     * for this the local alt (storage) model must be created, optionally with some sample copied or rather imported data */
    private LinkedHashMap<String,DCProject> visibleDefProjectMap = new LinkedHashMap<String, DCProject>();
-   /** OPT can see data (get & refer to it IF SECURITY OK) (unless alt storage) but not change (POST) (by alt'ing its DCSecurity to readonly),
+   /** OPT can see outside data (get & refer to it IF SECURITY OK) (unless alt storage) but not change (POST) (by alt'ing its DCSecurity to readonly),
     * for this the local alt (storage only) model must be created, probably with some sample copied data, with same security + data tester ;
     * modelization is not expected to change */
    private LinkedHashMap<String,DCProject> visibleDataProjectMap = new LinkedHashMap<String, DCProject>(); // TODO OPT
-   /** (TODO or not ?) can change data (POST) (unless alt'd as not storage), i.e. allows oasis.main to redirect to others
-    * AND DELEGATE SECURITY */
+   /** (TODO or not ?) can change outside data (POST) (unless alt'd as not storage), i.e. allows oasis.main to redirect to others
+    * AND DELEGATE SECURITY i.e. no fork at all */
    private LinkedHashMap<String,DCProject> visibleStorageProjectMap = new LinkedHashMap<String, DCProject>(); // TODO or not ?
 
    /** TODO ordered cache, includes itself
@@ -124,12 +126,12 @@ public class DCProject extends DCPointOfViewBase {
             return model;
          }
       }
-      /*for (DCProject project : visibleProjectMap.values()) { // TODO cache allVisibleProjectMap
+      for (DCProject project : visibleProjectMap.values()) { // TODO cache allVisibleProjectMap
          model = project.getModel(type);
          if (model != null) {
             return model;
          }
-      }*/
+      }
       return null;
    }
 
@@ -339,9 +341,9 @@ public class DCProject extends DCPointOfViewBase {
             return existingMixin == null || existingMixin.getVersion() != mixin.getVersion(); })
             .collect(Collectors.toList());
       if (unknownMixins.size() != 0) { // TDOO check version
-         throw new ModelException(dcModel, this, "Unable to add model "
-               + " to project " + getName() + " with visible projects "
-               + visibleProjectMap + ", this model has unknown mixins : "
+         throw new ModelException(dcModel, this, "Unable to add model to project "
+               + getName() + " with visible projects " + visibleProjectMap
+               + ", this model has unknown mixins : "
                + unknownMixins.stream().map(mixin -> mixin.getName()).collect(Collectors.toList())); // TODO business exception
       }
       super.addLocalModel(dcModel);

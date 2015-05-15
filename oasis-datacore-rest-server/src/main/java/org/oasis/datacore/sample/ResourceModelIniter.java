@@ -8,6 +8,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.oasis.datacore.common.context.DCRequestContextProvider;
+import org.oasis.datacore.common.context.SimpleRequestContextProvider;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
@@ -28,6 +30,8 @@ import org.oasis.datacore.rest.server.resource.ResourceNotFoundException;
 import org.oasis.datacore.rest.server.resource.ValueParsingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import com.google.common.collect.ImmutableMap;
 
 
 /**
@@ -109,6 +113,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addField(new DCField("dcmf:type", "string", true, 100))
          .addField(new DCField("dcmf:required", "boolean", (Object) false, 0)) // defaults to false, indexing would bring not much
          .addField(new DCField("dcmf:queryLimit", "int", 0, 0)) // defaults to 0, indexing would bring not much ??
+         .addField(new DCField("dcmf:aliasedStorageName", "string", false, 0)) // defaults to 0, indexing would bring not much ??
          // list :
          .addField(new DCResourceField("dcmf:listElementField", "dcmf:field_0"))
          // map :
@@ -244,41 +249,51 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       boolean res = super.createModels(modelOrMixins, deleteCollectionsFirst);
       
       // update (override ; i.e. fillData) metamodel resources always, for now :
-      updateMetamodelResources(modelOrMixins);
+      updateMetamodelResourcesInProject(modelOrMixins);
       return res;
    }
 
    // TODO in service ?!
-   private void updateMetamodelResources(List<DCModelBase> modelOrMixins) {
+   private void updateMetamodelResourcesInProject(List<DCModelBase> modelOrMixins) {
       for (DCModelBase modelToCreate : modelOrMixins) {
-         try {
-            // filling model's provided props :
-            DCResource metamodelResource = mrMappingService.modelToResource(modelToCreate, null);
-            
-            // once props are complete, post or update & put :
-            // (only done on servers that store their own models, so no need to use client)
-            DCResource existingResource;
-            try {
-               existingResource = resourceService.get(metamodelResource.getUri(), metamodelResource.getTypes().get(0));
-               if (diff(metamodelResource, existingResource)) {
-                  // PUT rather than merge and PATCH using POST
-                  logger.debug("Persisting metamodel as update " + metamodelResource.getUri());
-                  metamodelResource.setVersion(existingResource.getVersion());
-                  resourceService.createOrUpdate(metamodelResource, metamodelResource.getTypes().get(0), false, true, true);
-               } else {
-                  logger.debug("No need to repersist metamodel, no change " + metamodelResource.getUri());
-               }
-            } catch (ResourceNotFoundException rnfex) {
-               logger.debug("Persisting metamodel as new " + metamodelResource.getUri());
-               /*datacoreApiClient.*/postDataInType(metamodelResource); // create new
+         new SimpleRequestContextProvider<Object>() { // set context project beforehands :
+            // (else Found model ... in wrong project in LoadPersistedModelsAtInit)
+            protected Object executeInternal() {
+               updateMetamodelResource(modelToCreate); return null;
             }
-         } catch (ResourceParsingException rpex) {
-            ///logger.error("Conversion error building Resource from meta DCModel " + modelToCreate, rpex);
-            throw new RuntimeException("Conversion error updating meta DCModel " + modelToCreate, rpex); // TODO report errors ex. in list & abort once all are handled ?
-         } catch (Throwable t) {
-            ///logger.error("Unkown error building Resource from meta DCModel " + modelToCreate, t);
-            throw new RuntimeException("Unknown error updating meta DCModel " + modelToCreate, t); // TODO report errors ex. in list & abort once all are handled ?
+         }.execInContext(new ImmutableMap.Builder<String, Object>()
+               .put(DCRequestContextProvider.PROJECT, modelToCreate.getProjectName()).build());
+      }
+   }
+   private void updateMetamodelResource(DCModelBase modelToCreate) {
+      try {
+         // filling model's provided props :
+         DCResource metamodelResource = mrMappingService.modelToResource(modelToCreate, null);
+         
+         // once props are complete, post or update & put :
+         // (only done on servers that store their own models, so no need to use client)
+         
+         DCResource existingResource;
+         try {
+            existingResource = resourceService.get(metamodelResource.getUri(), metamodelResource.getTypes().get(0));
+            if (diff(metamodelResource, existingResource)) {
+               // PUT rather than merge and PATCH using POST
+               logger.debug("Persisting metamodel as update " + metamodelResource.getUri());
+               metamodelResource.setVersion(existingResource.getVersion());
+               resourceService.createOrUpdate(metamodelResource, metamodelResource.getTypes().get(0), false, true, true);
+            } else {
+               logger.debug("No need to repersist metamodel, no change " + metamodelResource.getUri());
+            }
+         } catch (ResourceNotFoundException rnfex) {
+            logger.debug("Persisting metamodel as new " + metamodelResource.getUri());
+            /*datacoreApiClient.*/postDataInType(metamodelResource); // create new
          }
+      } catch (ResourceParsingException rpex) {
+         ///logger.error("Conversion error building Resource from meta DCModel " + modelToCreate, rpex);
+         throw new RuntimeException("Conversion error updating meta DCModel " + modelToCreate, rpex); // TODO report errors ex. in list & abort once all are handled ?
+      } catch (Throwable t) {
+         ///logger.error("Unkown error building Resource from meta DCModel " + modelToCreate, t);
+         throw new RuntimeException("Unknown error updating meta DCModel " + modelToCreate, t); // TODO report errors ex. in list & abort once all are handled ?
       }
    }
 
@@ -316,35 +331,22 @@ public class ResourceModelIniter extends DatacoreSampleBase {
    
    @Override
    public void fillData() {
-      List<DCResource> resourcesToPost = new ArrayList<DCResource>();
-      
       Set<String> projectNameDoneSet = new HashSet<String>(modelAdminService.getProjects().size()); // prevents looping
       LinkedHashSet<String> projectNameBeingDoneSet = new LinkedHashSet<String>(); // detects circular references, ordered
       for (DCProject project : modelAdminService.getProjects()) {
-         projectAndItsModelsToResource(project, resourcesToPost, projectNameDoneSet, projectNameBeingDoneSet);
-      }
-
-      //NB. mixins should be added before models containing them, checked in addModel
-
-      for (DCResource resource : resourcesToPost) {
-         logger.debug("Persisting model " + resource.getUri());
-         /*String modelResourceName = (String) resource.get(MODEL_NAME_PROP); // TODO can also be project with dcmp:name
-         String[] modelType = modelResourceName.split("_", 2); // TODO better
-         String modelName = (modelType.length == 2) ? modelType[0] : modelResourceName;
-         String modelVersionIfAny = (modelType.length == 2) ? modelType[1] : null;
-         String modelNameWithVersionIfAny = modelResourceName;*/
-         /*datacoreApiClient.*/postDataInType(resource);
+         // NB. no project outside those, but they still must be loaded in the order of their deps
+         projectItsDepsAndModelsToResource(project, projectNameDoneSet, projectNameBeingDoneSet);
       }
    }
    
    /**
-    * 
+    * Loads (all modelAdminService known) projects in the order of their deps
     * @param project
     * @param resourcesToPost
     * @param projectNameDoneSet prevents looping
     * @param projectNameBeingDoneSet detects circular references, ordered
     */
-   private void projectAndItsModelsToResource(DCProject project, List<DCResource> resourcesToPost,
+   private void projectItsDepsAndModelsToResource(DCProject project,
          Set<String> projectNameDoneSet, LinkedHashSet<String> projectNameBeingDoneSet) throws ProjectException {
       // prevent looping :
       if (projectNameDoneSet.contains(project.getName())) {
@@ -358,20 +360,37 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       }
       projectNameBeingDoneSet.add(project.getName());
       
+      // deps (i.e. those that are visible to it) :
       for (DCProject visibleProject : project.getLocalVisibleProjects()) {
-         projectAndItsModelsToResource(visibleProject, resourcesToPost,
+         projectItsDepsAndModelsToResource(visibleProject,
                projectNameDoneSet, projectNameBeingDoneSet);
       }
       
-      // persist project & its models (after those that are visible to it) :
+      // this project & its models :
+      // (convert and persist project & its models, after deps)
+      
+      // 1. this project & povs (in oasis.main collections) :
+      List<DCResource> resourcesToPost = new ArrayList<DCResource>();
       projectToResource(project, resourcesToPost);
-      modelsToResources(project.getLocalModels(), resourcesToPost);
       project.getUseCasePointOfViews().forEach(ucPov -> {
          ucPov.getPointOfViews()
             .forEach(povElt -> {
                modelsToResources(povElt.getLocalModels(), resourcesToPost);
             });
          });
+      for (DCResource resource : resourcesToPost) {
+         postDataInType(resource); // ex. orgpri2 project in oasis.main !!!
+      }
+      
+      // 2. its models (in their own project collections) :
+      resourcesToPost.clear();
+      //NB. mixins should be added before models containing them, checked in addModel
+      modelsToResources(project.getLocalModels(), resourcesToPost);
+      
+      // actual posting :
+      for (DCResource resource : resourcesToPost) {
+         postDataInType(resource, project.getName()); // ex. orgpri2 model in orgpri2 project
+      }
       
       projectNameDoneSet.add(project.getName());
    }

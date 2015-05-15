@@ -11,10 +11,13 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.WebApplicationException;
 
 import org.apache.commons.codec.binary.Base64;
+import org.oasis.datacore.common.context.DCRequestContextProvider;
+import org.oasis.datacore.common.context.SimpleRequestContextProvider;
 import org.oasis.datacore.contribution.service.ContributionService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.query.QueryException;
@@ -263,8 +266,7 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
    public void cleanModels(List<DCModelBase> models) {
       List<DCModelBase> toBeRemovedModels = new ArrayList<DCModelBase>(models.size());
       for (DCModelBase model : models) {
-         String modelType = model.getName();
-         toBeRemovedModels.add(getCreatedModel(modelType));
+         toBeRemovedModels.add(getCreatedModel(model));
          ///DCProject project = modelAdminService.getProject(model.getProjectName());
          ///DCModelBase storageModel = project.getStorageModel(modelType);
          if (model.isStorage()) {
@@ -339,23 +341,35 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
    }
    
    
-   
-   public DCModelBase getCreatedModel(String modelType, List<DCModelBase> modelsToCreate) {
+
+   public DCModelBase getCreatedModel(DCModelBase dcModel, List<DCModelBase> modelsToCreate) {
+      return getCreatedModel(dcModel.getName(), modelsToCreate, dcModel.getProjectName());
+   }
+   /**
+    * 
+    * @param modelType
+    * @param modelsToCreate
+    * @param projectName if null uses the current one
+    * @return
+    */
+   public DCModelBase getCreatedModel(String modelType, List<DCModelBase> modelsToCreate, String projectName) {
+      if (projectName == null) {
+         projectName = modelAdminService.getProject().getName();
+      }
+      String modelAbsoluteName = projectName + "." + modelType;
       for (DCModelBase model : modelsToCreate) {
-         if (model.getName().equals(modelType)) {
+         if (model.getAbsoluteName().equals(modelAbsoluteName)) {
             return model;
          }
       }
-      for (DCModelBase model : this.storageModels) {
-         if (model.getName().equals(modelType)) {
-            return model;
-         }
-      }
-      return null;
+      return getCreatedModel(modelAbsoluteName);
    }
-   private DCModelBase getCreatedModel(String modelType) {
+   private DCModelBase getCreatedModel(DCModelBase dcModel) {
+      return getCreatedModel(dcModel.getAbsoluteName());
+   }
+   private DCModelBase getCreatedModel(String modelAbsoluteName) {
       for (DCModelBase model : this.storageModels) {
-         if (model.getName().equals(modelType)) {
+         if (model.getAbsoluteName().equals(modelAbsoluteName)) {
             return model;
          }
       }
@@ -363,16 +377,18 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
    }
    
    
-   protected boolean hasSomeModelsWithoutResource() {
+   protected boolean hasSomeModelsWithoutResource() throws RuntimeException {
       for (DCModelBase model : this.storageModels) {
          String modelType = model.getName();
-         try {
-            List<DCEntity> resources = ldpEntityQueryService.findDataInType(modelType, null, 0, 1);
-            if (resources == null || resources.isEmpty()) {
-               return true;
-            }
-         } catch (QueryException e) {
-            throw new RuntimeException("Init error of resources of model " + modelType, e);
+         // set context project beforehands :
+         List<DCEntity> resources = new SimpleRequestContextProvider<List<DCEntity>>() {
+            protected List<DCEntity> executeInternal() throws QueryException {
+               return ldpEntityQueryService.findDataInType(modelType, null, 0, 1);
+            } // TODO better <T> T executeInternal()
+         }.execInContext(new ImmutableMap.Builder<String, Object>()
+               .put(DCRequestContextProvider.PROJECT, model.getProjectName()).build());
+         if (resources == null || resources.isEmpty()) {
+            return true;
          }
       }
       return false;
@@ -404,8 +420,8 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
    protected boolean createModel(DCModelBase model, boolean deleteCollectionsFirst) {
       if (model.isStorage()) {
          if (deleteCollectionsFirst) {
-            modelAdminService.removeModel(model.getName());
-            storageModels.remove(getCreatedModel(model.getName()));
+            modelAdminService.removeModel(model);
+            storageModels.remove(getCreatedModel(model));
          }
          // adding model
          modelAdminService.addModel(model);
@@ -566,11 +582,15 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
       }
    }
 
+   public List<DCResource> postAllDataInType(List<DCResource> resources) {
+      return resources.stream().map(r -> postDataInType(r)).collect(Collectors.toList());
+   }
+   
    /**
     * @obsolete use rather resourceService
     * Requires to have logged in first
     */
-   public DCResource postDataInType(DCResource resource) {
+   public DCResource postDataInType(DCResource resource) throws RuntimeException {
       if (refreshBeforePost()) {
          try {
             datacoreApiImpl.getData(resource.getModelType(),
@@ -598,6 +618,18 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
          }
          return (DCResource) e.getResponse().getEntity();
       }
+   }
+   /**
+    * @obsolete use rather resourceService
+    * Requires to have logged in first
+    */
+   public DCResource postDataInType(DCResource resource, String projectName) throws RuntimeException {
+      return new SimpleRequestContextProvider<DCResource>() { // set context project beforehands :
+         protected DCResource executeInternal() {
+            return /*datacoreApiClient.*/postDataInType(resource);
+         }
+      }.execInContext(new ImmutableMap.Builder<String, Object>()
+            .put(DCRequestContextProvider.PROJECT, projectName).build());
    }
 
    

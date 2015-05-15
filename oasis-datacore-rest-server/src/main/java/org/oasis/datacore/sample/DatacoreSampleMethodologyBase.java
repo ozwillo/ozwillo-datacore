@@ -50,6 +50,8 @@ public abstract class DatacoreSampleMethodologyBase extends DatacoreSampleBase {
          throw new RuntimeException("HTTP " + waex.getResponse().getStatus()
                + " web app error initing reference data :\n" + waex.getResponse().getStringHeaders() + "\n"
                + ((waex.getResponse().getEntity() != null) ? waex.getResponse().getEntity() + "\n\n" : ""), waex);
+      } catch (RuntimeException e) {
+         throw e;
       } catch (Exception e) {
          throw new RuntimeException(e);
       }
@@ -168,7 +170,7 @@ public abstract class DatacoreSampleMethodologyBase extends DatacoreSampleBase {
     * 
     * @throws Exception
     */
-   public abstract void do3FillReferenceData() throws Exception;
+   public abstract void do3FillReferenceData() throws WebApplicationException, Exception;
 
 
    /**
@@ -176,6 +178,6 @@ public abstract class DatacoreSampleMethodologyBase extends DatacoreSampleBase {
     * 
     * 4. fill sample data
     */
-   public abstract void do4FillSampleData();
+   public abstract void do4FillSampleData() throws WebApplicationException;
    
 }

@@ -55,9 +55,12 @@ public class CxfMessageHelper {
       MultivaluedMap<String, String> queryParameters = (MultivaluedMap<String, String>) clientInRequestMessage.get(CTX_QUERY_PARAMETERS);
       if (queryParameters == null) {
          //queryParameters = new UriInfoImpl(clientInRequestMessage).getQueryParameters();
-         queryParameters = JAXRSUtils.getStructuredParams((String) clientInRequestMessage.get(Message.QUERY_STRING), 
-               "&", true, true);
-         clientInRequestMessage.put(CTX_QUERY_PARAMETERS, queryParameters);
+         String queryString = (String) clientInRequestMessage.get(Message.QUERY_STRING);
+         if (queryString != null) {
+            queryParameters = JAXRSUtils.getStructuredParams((String) queryString, 
+                  "&", true, true);
+            clientInRequestMessage.put(CTX_QUERY_PARAMETERS, queryParameters);
+         } // else not in CXF case
       }
       return queryParameters;
    }
@@ -95,7 +98,7 @@ public class CxfMessageHelper {
     * @return
     */
    public static String getHeaderString(Map<String, Object> clientInResponseMessage, String header) {
-      Map<?,?> httpHeaders = (Map<?, ?>) clientInResponseMessage.get("org.apache.cxf.message.Message.PROTOCOL_HEADERS");
+      Map<?,?> httpHeaders = (Map<?, ?>) clientInResponseMessage.get(Message.PROTOCOL_HEADERS);
       if (httpHeaders == null) {
          return null; // to avoid npex, if applied without REST context ex. in ResourceEntityMapping toResources()
       }
@@ -105,6 +108,10 @@ public class CxfMessageHelper {
          return httpHeaderList.get(0);
       }
       return null;
+   }
+
+   public static boolean isCxfMessage(Map<String, Object> requestContext) {
+      return requestContext.containsKey(Message.PROTOCOL_HEADERS); // or another one
    }
   
 }

@@ -8,11 +8,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.bson.types.ObjectId;
+import org.joda.time.DateTime;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
+import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
 import org.oasis.datacore.rest.server.parsing.model.DCQueryParsingContext;
 import org.oasis.datacore.rest.server.parsing.model.QueryOperatorsEnum;
@@ -158,6 +161,18 @@ public class QueryParsingServiceImpl implements QueryParsingService {
          break;
 
       case EQUALS:
+         // TODO HACK CUSTOM first handling custom serialization fields (LATER pluggable) :
+         if (parsedData != null && dcField.getName().equals(DCResource.KEY_DCCREATED)) {
+            ObjectId createdDateObjectId = (ObjectId) parsedData;
+            // ObjectId timestamp in seconds provides dc:created, so look between this second and the next :
+            queryParsingContext.enterCriteria(queryParsingContext.getEntityFieldPath(), 2); // multi criteria, else
+            // Due to limitations of the com.mongodb.BasicDBObject, you can't add a second '_id' expression ...
+            queryParsingContext.addCriteria().gte(createdDateObjectId);
+            // NB. ObjectId starts by createdDate.getMillis() / 1000 http://steveridout.github.io/mongo-object-time/
+            DateTime nextSecondDate = new DateTime(createdDateObjectId.getDate()).plusSeconds(1);
+            queryParsingContext.addCriteria().lt(new ObjectId(nextSecondDate.toDate()));
+            break;
+         }
          // TODO if null parsedData, AND / OR !$exists
          queryParsingContext.addCriteria().is(parsedData);
          break;
@@ -188,6 +203,11 @@ public class QueryParsingServiceImpl implements QueryParsingService {
          break;
 
       case IN:
+         // TODO HACK CUSTOM first handling custom serialization fields :
+         if (dcField.getName().equals(DCResource.KEY_DCCREATED)) {
+            throw new ResourceParsingException(operatorEnum + " not yet implemented for "
+                  + DCResource.KEY_DCCREATED + ", rather use betweens"); // TODO LATER auto, see equals
+         }
          // TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
          // TODO check that indexed (or set low limit) ??
          queryParsingContext.addSort(sortEnum);
@@ -211,6 +231,11 @@ public class QueryParsingServiceImpl implements QueryParsingService {
          break;
 
       case NOT_EQUALS:
+         // TODO HACK CUSTOM first handling custom serialization fields :
+         if (dcField.getName().equals(DCResource.KEY_DCCREATED)) {
+            throw new ResourceParsingException(operatorEnum + " not yet implemented for "
+                  + DCResource.KEY_DCCREATED + ", rather use betweens"); // TODO LATER auto, see equals
+         }
          // TODO check that not i18n (which is map ! ; or use locale or allow fallback) ???
          // TODO check that indexed (or set low limit) ??
          queryParsingContext.addSort(sortEnum);
@@ -218,6 +243,11 @@ public class QueryParsingServiceImpl implements QueryParsingService {
          break;
 
       case NOT_IN:
+         // TODO HACK CUSTOM first handling custom serialization fields :
+         if (dcField.getName().equals(DCResource.KEY_DCCREATED)) {
+            throw new ResourceParsingException(operatorEnum + " not yet implemented for "
+                  + DCResource.KEY_DCCREATED + ", rather use betweens"); // TODO LATER auto, see equals
+         }
          // TODO check that not i18n (which is map ! or use value or (context) default language or allow fallback) ???
          // TODO check that indexed (or set low limit) ??
          queryParsingContext.addSort(sortEnum);
@@ -340,6 +370,13 @@ public class QueryParsingServiceImpl implements QueryParsingService {
          throw new ResourceParsingException("Field " + dcField.getName() + " cannot be parsed in "
                + parsingTypeEnum.getType() + " format");
       }*/
+      // TODO HACK CUSTOM handling custom serialization fields (LATER pluggable) :
+      if (parsedValue != null && dcField.getName().equals(DCResource.KEY_DCCREATED)) {
+         DateTime createdDate = (DateTime) parsedValue;
+         // ObjectId timestamp in seconds provides dc:created :
+         // NB. ObjectId starts by createdDate.getMillis() / 1000 http://steveridout.github.io/mongo-object-time/
+         parsedValue = new ObjectId(createdDate.toDate());
+      }
       return parsedValue;
    }
 

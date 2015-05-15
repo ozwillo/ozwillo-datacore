@@ -24,6 +24,10 @@ public class DCMapField extends DCField {
       super(name, "map", false, 0, true); // TODO required ?!?
       this.setName(name);
    }
+   public DCMapField(String name, String aliasedStorageName) {
+      this(name);
+      this.setAliasedStorageName(aliasedStorageName);
+   }
 
    public Map<String,DCField> getMapFields() {
       return mapFields;

@@ -29,6 +29,8 @@ public class DCField {
    private int queryLimit = 0;
    /** set on a POST/PUT Resource if not provided */
    private Object defaultValue = null;
+   /** name of aliased field if any or storage entity field if differs from name, if null same as name */
+   private String aliasedStorageName = null;
    
    // TODO also :
    // * default rights for Model ?! (or even Mixin ? Field ???)
@@ -49,6 +51,10 @@ public class DCField {
    /** for unmarshalling only */
    public DCField() {
       
+   }
+   public DCField(String name, String type, boolean required, int queryLimit, String aliasedStorageName) {
+      this(name, type, required, queryLimit);
+      this.aliasedStorageName = aliasedStorageName;
    }
    public DCField(String name, String type, boolean required, int queryLimit) {
       this(name, type);
@@ -97,8 +103,20 @@ public class DCField {
    public int getQueryLimit() {
       return queryLimit;
    }
+   public boolean isQueriable() {
+      return queryLimit > 0;
+   }
    public Object getDefaultValue() {
       return defaultValue;
+   }
+   public String getAliasedStorageName() {
+      return aliasedStorageName;
+   }
+   /**
+    * @return aliasedStorageName if not null, else name
+    */
+   public String getStorageName() {
+      return aliasedStorageName == null ? name : aliasedStorageName;
    }
    
    /**
@@ -132,5 +150,9 @@ public class DCField {
    public void setDefaultValue(Object defaultValue) {
       this.defaultValue = defaultValue;
    }
-   
+
+   public void setAliasedStorageName(String aliasedStorageName) {
+      this.aliasedStorageName = aliasedStorageName;
+   }
+  
 }

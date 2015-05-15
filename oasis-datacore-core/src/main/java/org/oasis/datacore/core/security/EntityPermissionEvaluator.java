@@ -78,7 +78,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       if (model == null) {
          // TODO LATER better : put it in data health / governance inbox, through event
          throw new RuntimeException("Error when checking rights of entity " + dataEntity.getUri(),
-               new ModelNotFoundException(dataEntity.getModelName(), projectService.getProject(),
+               new ModelNotFoundException(entityModelService.getModelName(dataEntity), projectService.getProject(),
                      "When getting storage, can't find (instanciable) model type for entity, "
                      + "it's probably obsolete i.e. its model (and inherited mixins) "
                      + "has changed since (only in test) : " + dataEntity.getUri()));

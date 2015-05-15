@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.oasis.datacore.core.entity.EntityModelService;
+import org.oasis.datacore.core.entity.NativeModelService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.mongodb.DatacoreMongoTemplate;
 import org.oasis.datacore.core.entity.query.QueryException;
@@ -60,6 +61,9 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    public static final String DEBUG_WARNINGS = "warnings";
 
    private static final Logger logger = LoggerFactory.getLogger(LdpEntityQueryServiceImpl.class);
+
+   public static final String MONGO_FIELD_PREFIX = "_p.";
+   private static final String DOT = ".";
    
    private static Set<String> findConfParams = new HashSet<String>();
    static {
@@ -68,16 +72,6 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       findConfParams.add(DatacoreApi.LIMIT_PARAM);
       findConfParams.add(DatacoreApi.DEBUG_PARAM);
       findConfParams.add("format");
-   }
-   private static Map<String,DCField> dcEntityIndexedFields = new HashMap<String,DCField>();
-   static {
-      // TODO rather using Enum, see BSON$RegexFlag
-      dcEntityIndexedFields.put(DCResource.KEY_URI, new DCField(DCEntity.KEY_URI, "string", true, 100000));
-      dcEntityIndexedFields.put(DCResource.KEY_DCCREATED, new DCField(DCEntity.KEY_CR_AT, "date", true, 100000)); // useful for loading models...
-      //dcEntityIndexedFields.put(DCResource.KEY_DCCREATOR, new DCField(DCEntity.KEY_CH_BY, "string", true, 100000)); // LATER ?
-      dcEntityIndexedFields.put(DCResource.KEY_DCMODIFIED, new DCField(DCEntity.KEY_CH_AT, "date", true, 100000)); // useful for getting latest changes
-      //dcEntityIndexedFields.put(DCResource.KEY_DCCONTRIBUTOR, new DCField(DCEntity.KEY_CH_BY, "string", true, 100000)); // LATER ?
-      //dcEntityIndexedFields.put("o:allReaders", new DCListField(DCEntity.KEY_AR... // don't allow to look it up
    }
 
    @Value("${datacoreApiServer.query.detailedErrorsMode}")
@@ -102,6 +96,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    @Value("${datacoreApiServer.query.maxTime}")
    protected int maxTime;
 
+   
    /** to get storage model */
    @Autowired
    private DCModelService modelService;
@@ -109,6 +104,10 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    /** to fill entity's models cache */
    @Autowired
    private EntityModelService entityModelService;
+   
+   /** NB. when moving LDP service to -core, might make it optional */
+   @Autowired
+   private NativeModelService nativeModelService;
    
    @Autowired
    @Qualifier("datacoreSecurityServiceImpl")
@@ -255,26 +254,18 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
             continue; // should not happen
          }
 
-         StringBuilder entityFieldPathSb;
+         StringBuilder entityFieldPathSb = new StringBuilder();
          
          // handling DCEntity native (indexed) fields :
          String topFieldPathElement = fieldPathElements[0];
-         boolean isDcEntityIndexedField = false;
-         DCField dcField = dcEntityIndexedFields.get(topFieldPathElement);
-         if (dcField != null) {
-            isDcEntityIndexedField = true;
-            entityFieldPathSb = new StringBuilder(dcField.getName()); // mapping @id to _uri etc.
-         } else {
-            dcField = dcModel.getGlobalField(topFieldPathElement);
-            entityFieldPathSb = new StringBuilder("_p."); // almost the same fieldPath for mongodb
-            entityFieldPathSb.append(topFieldPathElement);
-            
+         DCField dcField = getTopLevelDcOrGlobalField(dcModel, topFieldPathElement, entityFieldPathSb);
          if (dcField == null) {
             queryParsingContext.addError("In type " + dcModel.getName() + ", can't find field with path elements "
                   + Arrays.asList(fieldPathElements) + " : can't find field for first path element "
                   + fieldPathElements[0]);
             continue;
          }
+         entityFieldPathSb.append(dcField.getStorageName()); // mapping if necessary, generic (@id to _uri...) or specific 
          
          // finding the leaf field
          // TODO submethod with throw ex
@@ -292,7 +283,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          for (int i = 1; i < fieldPathElements.length; i++) {
             String fieldPathElement = fieldPathElements[i];
             
-            entityFieldPathSb.append(".");
+            entityFieldPathSb.append(DOT);
             
             if ("map".equals(dcField.getType())) {
                dcField = handleMapField(dcField, fieldPathElement,
@@ -309,7 +300,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
                     dcField = handleResourceField(dcField, fieldPathElement,
                           queryParsingContext, entityFieldPathSb, fieldPathElements, i);
                  } else {
-                    entityFieldPathSb.append(fieldPathElement);
+                    entityFieldPathSb.append(dcField.getStorageName());
                  }
                  // TODO TODO check that indexed (or set low limit) ??
                } while (dcField != null && "list".equals(dcField.getType()));
@@ -345,7 +336,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
 //            } else {
 //               dcListField = null;
 //            }
-         }
+         
          
          }
          
@@ -380,6 +371,21 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       }
    }
 
+   private DCField getTopLevelDcOrGlobalField(DCModelBase dcModel,
+         String topFieldPathElement, StringBuilder entityFieldPathSb) {
+      DCField dcField = nativeModelService.getNativeModel(dcModel).getField(topFieldPathElement); // global not required
+      if (dcField == null) {
+         // TODO LATER :
+         /*if (!dcField.isQueriable()) {
+            throw new Exception("only indexed fields are allowed at top level");
+         }*/
+         dcField = dcModel.getGlobalField(topFieldPathElement);
+         entityFieldPathSb = entityFieldPathSb.append(MONGO_FIELD_PREFIX); // almost the same fieldPath for mongodb
+      }
+      return dcField;
+   }
+
+
    /**
     * 
     * @param dcField
@@ -402,8 +408,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
                + fieldPathElement + ", because field is unkown. Allowed fields are "
                + ((DCMapField) dcField).getMapFields().keySet());
       }
-      String entityFieldPathElement = fieldPathElement;
-      entityFieldPathSb.append(entityFieldPathElement);
+      entityFieldPathSb.append(subDcField.getStorageName());
       return subDcField;
    }
 
@@ -445,8 +450,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
                + fieldPathElement + ", because field is unkown. Allowed fields are "
                + linkModel.getGlobalFieldMap().keySet());
       }
-      String entityFieldPathElement = fieldPathElement;
-      entityFieldPathSb.append(entityFieldPathElement);
+      entityFieldPathSb.append(subDcField.getStorageName());
       return subDcField;
    }
 

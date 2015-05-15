@@ -3,6 +3,7 @@ package org.oasis.datacore.core.meta.model;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -69,9 +70,10 @@ public abstract class DCModelBase {
    /** doc TODO what (business), how (impl conf & instanciation), samples... */
    private String documentation; // TODO move in another collection for performance
    private LinkedHashMap<String,DCField> fieldMap = new LinkedHashMap<String,DCField>();
-   //private List<String> fieldNames = new ArrayList<String>(); // to maintain order ; easiest to persist (json / mongo) than ordered map
-   private List<Object> fieldAndMixins = new ArrayList<Object>(); // TODO TODO only names ??? ; to maintain order ; easiest to persist (json / mongo) than ordered map
-   private LinkedHashMap<String,DCModelBase> mixinMap = new LinkedHashMap<String,DCModelBase>(); // allowing Models ; TODO or DCMixin ??
+   /** to maintain order ; persisted (json / mongo) as list */
+   private LinkedHashSet<String> fieldAndMixinNames = new LinkedHashSet<String>();
+   /** NB. (concrete) models allowed */
+   private LinkedHashMap<String,DCModelBase> mixinMap = new LinkedHashMap<String,DCModelBase>();
    // TODO allFieldNames, allFieldMap cached (?! beware versioning !!)
    /** Resource type event listeners (that use this DCModelBase's name as topic) */
    private List<Object> listeners = new ArrayList<Object>(); // TODO DC(Model/ResourceType)EventListener
@@ -175,12 +177,12 @@ public abstract class DCModelBase {
    }
    private void fillGlobalFieldMap(Map<String,DCModelBase> globalMixinMap,
          Map<String,DCField> globalFieldMap) {
-      for (Object fieldOrMixin : this.fieldAndMixins) {
-         if (fieldOrMixin instanceof DCField) {
-            DCField field = (DCField) fieldOrMixin;
+      for (String fieldOrMixinName : this.fieldAndMixinNames) {
+         DCField field = this.getField(fieldOrMixinName);
+         if (field != null) {
             globalFieldMap.put(field.getName(), field);
          } else { // if (fieldOrMixin instanceof DCModelBase) {
-            DCModelBase mixin = (DCModelBase) fieldOrMixin;
+            DCModelBase mixin = this.getMixinMap().get(fieldOrMixinName);
             globalMixinMap.put(mixin.getName(), mixin);
             mixin.fillGlobalFieldMap(globalMixinMap, globalFieldMap);
          }
@@ -223,9 +225,10 @@ public abstract class DCModelBase {
       return mixinMap;
    }
    
-   /** to be able to know the override order when storing it to Resources and back */
-   public List<Object> getFieldAndMixins() {
-      return fieldAndMixins;
+   /** ordered ; to be able to know the override order when storing it to Resources and back
+    * NB. fields and mixins can't have the same name if following semantic rules (TODO LATER else handle it) */
+   public Set<String> getFieldAndMixinNames() {
+      return fieldAndMixinNames;
    }
 
    /** TODO make it unmodifiable */
@@ -242,7 +245,7 @@ public abstract class DCModelBase {
    public DCModelBase addField(DCField field) {
       String fieldName = field.getName();
       this.fieldMap.put(fieldName , field);
-      this.fieldAndMixins.add(field);
+      this.fieldAndMixinNames.add(field.getName()); // if already exists may change order
       this.globalFieldMap = null;
       return this;
    }
@@ -251,7 +254,7 @@ public abstract class DCModelBase {
     * TODO or in builder instance ? */
    public DCModelBase addMixin(DCModelBase mixin) {
       this.getMixinMap().put(mixin.getName(), mixin);
-      this.fieldAndMixins.add(mixin);
+      this.fieldAndMixinNames.add(mixin.getName()); // if already exists may change order
       this.globalFieldMap = null;
       return this;
    }
@@ -303,11 +306,11 @@ public abstract class DCModelBase {
    }
    private void buildAbsoluteNames() {
       if (name == null || name.length() == 0) {
-         throw new RuntimeException("Empty name when creating new project " + name);
+         throw new RuntimeException("Empty name when creating new model " + name);
       }
       if (pointOfViewNames == null || pointOfViewNames.isEmpty()) {
          throw new RuntimeException("There must be at least one pointOfView level (ex. project) "
-               + "when creating new project " + name);
+               + "when creating new model " + name);
       }
       this.projectName = this.pointOfViewNames.get(0);
       this.pointOfViewAbsoluteName = this.pointOfViewNames.stream().collect(Collectors.joining("."));
@@ -450,7 +453,8 @@ public abstract class DCModelBase {
 	 */
 	@Override
 	public String toString() {
-	   return "Model[" + this.name + ";m:" + this.getGlobalMixinMap().keySet()
+	   return "Model[" + this.absoluteName + "." + this.name
+	         + ";m:" + this.getGlobalMixinMap().keySet()
 	         + "](f:" + this.getGlobalFieldMap().keySet() + ")";
 	}
    

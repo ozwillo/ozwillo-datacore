@@ -277,7 +277,6 @@ public class ResourceService {
 
       Map<String, Object> dataProps = resource.getProperties();
       
-      dataEntity.setModelName(dcModel.getName()); // TODO LATER2 check that same (otherwise ex. external approvable contrib ??)
       ///dataEntity.setId(stringUri); // NOO "invalid Object Id" TODO better
       dataEntity.setTypes(buildResourceTypes(resource, dcModel)); // TODO or no modelType, or remove modelName ??
       

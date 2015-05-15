@@ -195,7 +195,7 @@ public class IgnCityhallSample extends DatacoreSampleBase {
    }
    
    public void buildModelsCityhallIgnV1Mixin(List<DCModelBase> modelsToCreate) {
-      DCModel ignParcelleModel = (DCModel) getCreatedModel(IgnCityhallSample.IGN_PARCELLE, modelsToCreate);
+      DCModel ignParcelleModel = (DCModel) getCreatedModel(IgnCityhallSample.IGN_PARCELLE, modelsToCreate, null);
       
       // IGN patched by cityhalls - v1 (using Mixin, so in same collection)
       DCMixin cityhallIgnParcelleMixin = (DCMixin) new DCMixin(CITYHALL_IGN_PARCELLE) // bdparcellaire.
@@ -212,7 +212,7 @@ public class IgnCityhallSample extends DatacoreSampleBase {
    }
    
    public void buildModelsCityhallIgnV2Inheritance(List<DCModelBase> modelsToCreate) {
-      DCModel ignParcelleModel = (DCModel) getCreatedModel(IgnCityhallSample.IGN_PARCELLE, modelsToCreate);
+      DCModel ignParcelleModel = (DCModel) getCreatedModel(IgnCityhallSample.IGN_PARCELLE, modelsToCreate, null);
       
       // IGN patched by cityhalls - v2 (using inheritance, so in separate collection)
       ///DCModel cityhallIgnParcelleModel = new DCModel("cityhall.ign.parcelle", ignParcelleModel.getName()); // bdparcellaire.

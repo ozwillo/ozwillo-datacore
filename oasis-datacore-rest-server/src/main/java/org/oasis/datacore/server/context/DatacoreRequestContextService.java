@@ -39,8 +39,9 @@ public class DatacoreRequestContextService {
       if (debugFound != null) {
          return (boolean) debugFound; // already set
       }
-      boolean debug = "true".equalsIgnoreCase(CxfMessageHelper.getHeaderString(requestContext, DatacoreApi.DEBUG_HEADER))
-            || "true".equalsIgnoreCase(CxfMessageHelper.getSingleParameterValue(requestContext, DatacoreApi.DEBUG_PARAM));
+      boolean debug = CxfMessageHelper.isCxfMessage(requestContext)
+            && ("true".equalsIgnoreCase(CxfMessageHelper.getHeaderString(requestContext, DatacoreApi.DEBUG_HEADER))
+            || "true".equalsIgnoreCase(CxfMessageHelper.getSingleParameterValue(requestContext, DatacoreApi.DEBUG_PARAM)));
       requestContext.put(PARAM_DEBUG, debug);
       return debug;
    }

@@ -163,14 +163,19 @@ public class DataModelServiceImpl implements DCModelService {
 
    /** also adds to mixin TODO is it OK ? */
    public void addModel(DCModelBase dcModel) {
-      getProject().addLocalModel(dcModel); // NB. project can't be null
+      getProject(dcModel.getProjectName()).addLocalModel(dcModel); // TODO LATER better : check, in context...
    }
    
-   /** ONLY TO CREATE DERIVED MODELS ex. Contribution, TODO LATER rather change their name ?!? */
+   /**  @obsolete ONLY TO CREATE DERIVED MODELS ex. Contribution, TODO LATER rather change their name ?!? */
    public void addModel(DCModel dcModel, String name) {
       getProject().addModel(dcModel, name); // NB. project can't be null
    }
 
+   public void removeModel(DCModelBase dcModel) {
+      getProject(dcModel.getProjectName()).removeLocalModel(dcModel.getName()); // TODO LATER better : check, in context...
+   }
+   
+   /** @obsolete rather use removeModel(model) to use the right project */
    public void removeModel(String name) {
       getProject().removeLocalModel(name); // NB. project can't be null
    }
@@ -184,10 +189,7 @@ public class DataModelServiceImpl implements DCModelService {
       getProject().addLocalModel(mixin); // NB. project can't be null
    }
    
-   /**
-    * TODO LATER check version
-    * @param name
-    */
+   /** @obsolete ather use removeModel(model) to use the right project */
    public void removeMixin(String name) {
       getProject().removeLocalModel(name);
    }
@@ -195,5 +197,5 @@ public class DataModelServiceImpl implements DCModelService {
    public void addProject(DCProject project) {
       projectMap.put(project.getName(), project);
    }
-
+   
 }

@@ -207,15 +207,7 @@ public class ModelResourceMappingService {
       
       // fieldsAndMixinNames (to allow to rebuild them in DCModel in the right order,
       // and for introspection) :
-      ImmutableList.Builder<Object> fieldAndMixinNamesBuilder = DCResource.listBuilder();
-      for (Object fieldOrMixin : model.getFieldAndMixins()) {
-         if (fieldOrMixin instanceof DCModelBase) { // TODO LATER common DCNamedBase with getName() ?
-            fieldAndMixinNamesBuilder.add(((DCModelBase) fieldOrMixin).getName());
-         } else { // assuming DCField
-            fieldAndMixinNamesBuilder.add(((DCField) fieldOrMixin).getName());
-         }
-      }
-      modelResource.set("dcmo:fieldAndMixins", fieldAndMixinNamesBuilder.build());
+      modelResource.set("dcmo:fieldAndMixins", new ArrayList<String>(model.getFieldAndMixinNames())); // ordered set
       
       // caches (so that they can be queried for introspection as well) :
       modelResource.set("dcmo:globalMixins",
@@ -277,7 +269,8 @@ public class ModelResourceMappingService {
             .put("dcmf:name", field.getName())
             .put("dcmf:type", field.getType())
             .put("dcmf:required", field.isRequired()) // TODO not for list ; for map ?!?
-            .put("dcmf:queryLimit", field.getQueryLimit()); // TODO not for list, map
+            .put("dcmf:queryLimit", field.getQueryLimit()) // TODO not for list, map
+            .put("dcmf:aliasedStorageName", field.getAliasedStorageName());
       String defaultStringValue = valueService.valueToString(field.getDefaultValue()); // TODO or not for list & map ?!?
       if (defaultStringValue != null) {
          fieldPropBuilder.put("dcmf:defaultStringValue", defaultStringValue);
@@ -314,6 +307,45 @@ public class ModelResourceMappingService {
    //////////////////////////////////////////////////////
    // Resource to DCModel (used in ModelResourceDCListener) :
 
+   /**
+    * 
+    * @param r
+    * @return
+    * @throws ResourceException if can't find local model or visible project
+    */
+   public DCProject toProject(DCResource r) throws ResourceException {
+      // project is always be oasis.main for projects
+      //String pointOfViewAbsoluteName = dataModelService.getProject().getAbsoluteName();
+      String name = (String) r.get(ResourceModelIniter.POINTOFVIEW_NAME_PROP);
+      DCProject project = new DCProject(name);
+      
+      @SuppressWarnings("unchecked")
+      //List<Map<String, Object>> visibleProjects = (List<Map<String, Object>>) r.get("dcmp:visibleProjects");
+      List<String> visibleProjectNames = (List<String>) r.get("dcmp:localVisibleProjects");
+      if (visibleProjectNames != null) {
+         //for (Map<String, Object> visibleProject : visibleProjects) {
+         for (String visibleProjectName : visibleProjectNames) {
+            DCProject visibleProject = dataModelService.getProject(visibleProjectName);
+            if (visibleProject == null) {
+               throw new ResourceException("Can't find visibleProject " + visibleProjectName,
+                     null, r, dataModelService.getProject());
+            }
+            project.addLocalVisibleProject(visibleProject);
+            // TODO isDef/Storage...
+            /*boolean vprName = vpr.get("dcmvp:name");
+            DCVisibleProject dcVisibleProject = new DCVisibleProject();
+            boolean isStorage = vpr.get("dcmvp:isStorage");*/
+         }
+      } // else allowing model without visible projects ex. Phase 1 sandbox
+
+      // TODO POV ?!
+      
+      // NB. local models loaded independently in LoadPersistedModelsAtInit
+      // TODO LATER local models : use project.localModels to conf relationship
+      // (their fork modes i.e. description of what must be done to achieve the fork)
+      return project;
+   }
+   
    /**
     * Creates and fills DCModel or DCMixin (by calling resourceToFieldsAndMixins())
     * from given resource.
@@ -370,6 +402,7 @@ public class ModelResourceMappingService {
       } catch (ResourceParsingException rpex) {
          throw new ResourceException("Error while loading DCModel from Resource",
                rpex, r, dataModelService.getProject());
+         // happens when not yet loaded or obsolete (i.e. invalid though persisted not as such)
       }
       
       return modelOrMixin;
@@ -467,6 +500,8 @@ public class ModelResourceMappingService {
          if (mixin == null) {
             throw new ResourceParsingException("Can't find mixin "
                   + mixinName + " when updating DCModelBase from resource " + r);
+            // happens when not yet loaded or obsolete (i.e. invalid though persisted not as such)
+            // ex. Can't find mixin geo:District_0 when updating DCModelBase from resource {"@id":"http://data.oasis-eu.org/dc/type/dcmo:model_0/geo:%C4%B0l%C3%A7e_0","o:version":12,"@type":["dcmo:model_0","dcmi:mixin_0","o:Displayable_0","dcmoid:Identification","dcmls:CountryLanguageSpecific"],"dc:created":"2015-01-07T17:26:29.998+01:00","dc:modified":"2015-01-15T10:27:39.611+01:00","dc:creator":"admin","dc:contributor":"admin","dcmo:mixins":["geo:District_0"],"dcmo:isHistorizable":false,"dcmo:storageModel":"geo:Area_0","dcmo:name":"geo:İlçe_0","dcmo:fields":[{"dcmf:type":"i18n","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"geo_district:name","dcmf:required":false,"o:version":0,"dcmf:defaultLanguage":"tr","dcmf:documentation":"TR.  ~= City. Parent : TRProvince. NB. Zipcode is only SubDistrict","@id":"http://data.oasis-eu.org/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:name","dcmf:listElementField":{"dcmf:type":"map","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"i18nMap","dcmf:required":false,"o:version":0,"@id":"http://data.oasis-eu.org/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:name/i18nMap","dcmf:mapFields":[{"dcmf:type":"string","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"v","dcmf:required":true,"o:version":0,"@id":"http://data.oasis-eu.org/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:name/i18nMap/v"},{"dcmf:type":"string","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"l","dcmf:required":false,"o:version":0,"@id":"http://data.oasis-eu.org/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:name/i18nMap/l"}]},"dcmfid:indexInId":1},{"dcmf:type":"resource","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"geo_district:country","dcmf:required":false,"o:version":0,"@id":"http://data.oasis-eu.org/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:country","dcmf:resourceType":"geo:Country_0"},{"dcmf:type":"resource","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"geo_district:nuts3","dcmf:required":false,"o:version":0,"dcmf:documentation":"Ref to its parent NUTS3. NO internal field name but subresource linking","@id":"http://data.oasis-eu.org/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:nuts3","dcmfid:indexInId":0,"dcmf:resourceType":"geo:Nuts3_0"}],"dcmo:majorVersion":0,"dcmo:isDefinition":true,"dcmoid:useIdForParent":true,"dcmoid:idFieldNames":["geo_district:nuts3","geo_district:name"],"dcmoid:parentFieldNames":["geo_district:nuts3"],"dcmo:globalMixins":["geo:District_0","geo:Area_0","o:Displayable_0","o:Ancestor_0"],"dcmo:isInstanciable":true,"dcmo:importDefaultOnly":false,"dcmo:maxScan":0,"dcmo:definitionModel":"geo:İlçe_0","dcmo:globalFields":[{"dcmf:type":"i18n","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"odisp:name","dcmf:required":false,"o:version":0,"@id":"http://data.oasis-eu.org/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/odisp:name","dcmf:listElementField":{"dcmf:type":"map","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"i18nMap","dcmf:required":false,"o:version":0,"@id":"http://data.oasis-eu.org/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/odisp:name/i18nMap","dcmf:mapFields":[{"dcmf:type":"string","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"v","dcmf:required":true,"o:version":0,"@id":"http://data.oasis-eu.org/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/odisp:name/i18nMap/v"},{"dcmf:type":"string","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"l","dcmf:required":false,"o:version":0,"@id":"http://data.oasis-eu.org/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/odisp:name/i18nMap/l"}]}},{"dcmf:type":"list","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"o:ancestors","dcmf:required":false,"o:version":0,"@id":"http://data.oasis-eu.org/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/o:ancestors","dcmf:listElementField":{"dcmf:type":"resource","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"o:ancestors","dcmf:required":false,"o:version":0,"@id":"http://data.oasis-eu.org/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/o:ancestors/o:ancestors","dcmf:resourceType":"o:Ancestor_0"}},{"dcmf:type":"string","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"geo_area:idIso","dcmf:required":false,"o:version":0,"@id":"http://data.oasis-eu.org/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_area:idIso"},{"dcmf:type":"resource","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"geo_area:country","dcmf:required":false,"o:version":0,"@id":"http://data.oasis-eu.org/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_area:country","dcmf:resourceType":"geo:Country_0"},{"dcmf:type":"i18n","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"geo_district:name","dcmf:required":false,"o:version":0,"dcmf:defaultLanguage":"tr","@id":"http://data.oasis-eu.org/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:name","dcmf:listElementField":{"dcmf:type":"map","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"i18nMap","dcmf:required":false,"o:version":0,"@id":"http://data.oasis-eu.org/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:name/i18nMap","dcmf:mapFields":[{"dcmf:type":"string","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"v","dcmf:required":true,"o:version":0,"@id":"http://data.oasis-eu.org/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:name/i18nMap/v"},{"dcmf:type":"string","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"l","dcmf:required":false,"o:version":0,"@id":"http://data.oasis-eu.org/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:name/i18nMap/l"}]}},{"dcmf:type":"resource","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"geo_district:country","dcmf:required":false,"o:version":0,"@id":"http://data.oasis-eu.org/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:country","dcmf:resourceType":"geo:Country_0"},{"dcmf:type":"resource","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"geo_district:nuts3","dcmf:required":false,"o:version":0,"@id":"http://data.oasis-eu.org/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:nuts3","dcmf:resourceType":"geo:Nuts3_0"}],"dcmo:isContributable":false,"dcmo:importAutolinkedOnly":false,"dcmls:code":"TR","dcmo:isStorage":false,"dcmo:pointOfViewAbsoluteName":"oasis.main","dcmo:fieldAndMixins":["geo:District_0","geo_district:name","geo_district:country","geo_district:nuts3"]}
          }
          mixinMapBuilder.put(mixin.getName(), mixin);
       }
@@ -533,6 +568,8 @@ public class ModelResourceMappingService {
       String fieldType = (String) fieldResource.get("dcmf:type");
       boolean fieldRequired = (boolean) fieldResource.get("dcmf:required"); // TODO or default value
       int fieldQueryLimit = (int) fieldResource.get("dcmf:queryLimit"); // TODO or default value
+      String aliasedStorageName = (String) fieldResource.get("dcmf:aliasedStorageName"); // TODO or default value
+      
       DCField field;
       switch (fieldType ) {
       case "map" :
@@ -571,6 +608,8 @@ public class ModelResourceMappingService {
       default :
          field = new DCField(fieldName, fieldType, fieldRequired, fieldQueryLimit);
       }
+      
+      field.setAliasedStorageName(aliasedStorageName);
       
       // parse & set default value :
       // TODO LATER use DCResourceParsingContext in the whole model mapping process ?

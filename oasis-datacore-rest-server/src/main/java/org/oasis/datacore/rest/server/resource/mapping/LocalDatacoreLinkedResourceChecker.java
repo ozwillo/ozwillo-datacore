@@ -3,7 +3,6 @@ package org.oasis.datacore.rest.server.resource.mapping;
 import java.util.List;
 
 import org.oasis.datacore.core.entity.model.DCEntity;
-import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.model.DCResourceField;
@@ -53,9 +52,7 @@ public class LocalDatacoreLinkedResourceChecker extends LinkedResourceChecker {
    }
 
    @Override
-   protected List<String> checkLinkedResource(DCURI dcUri, DCModelBase refModelBase) throws ResourceParsingException {
-      DCModel refModel = (DCModel) refModelBase; // checked before
-      
+   protected List<String> checkLinkedResource(DCURI dcUri, DCModelBase refModel) throws ResourceParsingException {
       // (without rights ; only in checkMode, otherwise only warning)
       DCEntity linkedEntity = entityService.getByUriUnsecured(dcUri.toString(), refModel);
       if (linkedEntity == null) {

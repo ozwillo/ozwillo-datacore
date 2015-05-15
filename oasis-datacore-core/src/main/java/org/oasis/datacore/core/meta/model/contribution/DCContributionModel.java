@@ -177,8 +177,8 @@ public class DCContributionModel extends DCModel {
       return delegate.getMixinMap();
    }
 
-   public List<Object> getFieldAndMixins() {
-      return delegate.getFieldAndMixins();
+   public Set<String> getFieldAndMixinNames() {
+      return delegate.getFieldAndMixinNames();
    }
 
    public DCModelBase addMixins(DCMixin... mixins) {

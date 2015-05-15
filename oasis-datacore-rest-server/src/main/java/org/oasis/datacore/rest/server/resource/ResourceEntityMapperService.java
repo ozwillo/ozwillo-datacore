@@ -19,6 +19,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.EntityService;
+import org.oasis.datacore.core.entity.NativeModelService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
@@ -55,19 +56,6 @@ public class ResourceEntityMapperService {
    /** Checks that linked Resource external web URI returns HTTP 200 (LATER check JSONLD & types ??) */
    @Value("${datacoreApiServer.checkExternalWebUri}")
    private boolean checkExternalWebUri = true;
-   
-   private static Set<String> resourceNativeJavaFields = new HashSet<String>();
-   static {
-      // TODO rather using Enum, see BSON$RegexFlag
-      resourceNativeJavaFields.add(DCResource.KEY_URI);
-      resourceNativeJavaFields.add(DCResource.KEY_VERSION);
-      resourceNativeJavaFields.add(DCResource.KEY_TYPES);
-      // (at top level) computed ones :
-      resourceNativeJavaFields.add("created");
-      resourceNativeJavaFields.add("lastModified");
-      resourceNativeJavaFields.add("createdBy");
-      resourceNativeJavaFields.add("lastModifiedBy");
-   }
 
 
    @Autowired
@@ -83,6 +71,9 @@ public class ResourceEntityMapperService {
    /** for using model caches of embedded referencing resources */
    @Autowired
    private EntityModelService entityModelService;
+   
+   @Autowired
+   private NativeModelService nativeModelService;
    
    @Autowired
    private ValueParsingService valueParsingService;
@@ -675,6 +666,8 @@ public class ResourceEntityMapperService {
     * * checks that Resource complies with its Model (including missing fields)
     * * converts to MongoDB-storable DCEntity
     * 
+    * also handles field alias
+    * 
     * @param resourceMap
     * @param entityMap
     * @param mapFields
@@ -703,7 +696,7 @@ public class ResourceEntityMapperService {
       
       // handling each value :
       for (String key : resourceMap.keySet()) {
-         if (!isTopLevel && resourceNativeJavaFields.contains(key)) {
+         if (!isTopLevel && nativeModelService.getNativeFieldNames(null).contains(key)) { // TODO model
             // skip native fields in subResource case :
             // (they are handled above at top or in subResourceXXX())
             continue;
@@ -725,7 +718,7 @@ public class ResourceEntityMapperService {
             resourceParsingContext.enter(null, null, dcField, resourceValue);
             Object entityValue = resourceToEntityValue(resourceValue, dcField,
                   resourceParsingContext, putRatherThanPatchMode);
-            entityMap.put(key, entityValue);
+            entityMap.put(dcField.getStorageName(), entityValue); // field alias
          } catch (ResourceParsingException rpex) {
             resourceParsingContext.addError("Error while parsing Field value " + resourceValue
                   + " of JSON type " + ((resourceValue == null) ? "null" : resourceValue.getClass()), rpex);
@@ -773,11 +766,7 @@ public class ResourceEntityMapperService {
          resource.setProperties(resourceProps);
       }
       resource.setUri(entity.getUri());
-      //resource.setId(entity.getIri()); // TODO ??
-      /*ArrayList<String> types = new ArrayList<String>(entity.getTypes().size() + 1);
-      types.add(entity.getModelName()); // TODO ??
-      types.addAll(entity.getTypes());
-      resource.setTypes(types);*/
+      // NB. _id not exposed
       resource.setTypes(entity.getTypes()); // TODO or as above, or from model ?
       
       entityToResourcePersistenceComputedFields(entity, resource);
@@ -795,7 +784,7 @@ public class ResourceEntityMapperService {
    }
    
    /**
-    * 
+    * Also handles field alias
     * @param entityProperties
     * @param map
     * @return
@@ -811,7 +800,8 @@ public class ResourceEntityMapperService {
             // may be a native field, has to be handled above as subresource
             continue;
          }
-         Object resourcePropValue = entityToResourceProp(entityProperties.get(fieldName), dcField);
+         Object resourcePropValue = entityToResourceProp(
+               entityProperties.get(dcField.getStorageName()), dcField); // field alias
          if (resourcePropValue != null) {
             resourceProps.put(fieldName, resourcePropValue);
          }

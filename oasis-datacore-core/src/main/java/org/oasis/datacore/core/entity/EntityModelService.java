@@ -165,19 +165,19 @@ public class EntityModelService {
       DCModelBase model = getModel(dataEntity);
       if (model == null) {
          // TODO LATER better : put it in data health / governance inbox, through event
-         throw new ModelNotFoundException(dataEntity.getModelName(), project,
+         throw new ModelNotFoundException(this.getModelName(dataEntity), project,
                "When getting storage, can't find (instanciable) model type for entity, "
                + "it's probably obsolete i.e. its model (and inherited mixins) "
                + "has changed since (only in test, in which case the missing model "
                + "must first be created again before patching the entity) : " + dataEntity.getUri());
       }
       if (!model.isInstanciable()) {
-         String msg = "When getting storage, centity model type is not instanciable, "
+         String msg = "When getting storage, entity model type is not instanciable, "
                + "it's probably obsolete i.e. its model has changed since (only in test, in which case "
                + "the missing model must first be created again before patching the entity) : "
                + dataEntity.getUri();
          logger.debug("Error when getting entity storage",
-               new ModelException(dataEntity.getModelName(), project, msg));
+               new ModelException(this.getModelName(dataEntity), project, msg));
          // TODO LATER better : put it in data health / governance inbox, through event
          //throw new ModelException(dataEntity.getModelName(), project, msg);
       }

@@ -8,7 +8,7 @@ import java.util.Map;
  * @author mdutoo
  *
  */
-public class SimpleRequestContextProvider extends RequestContextProviderBase implements DCRequestContextProvider {
+public class SimpleRequestContextProvider<T> extends RequestContextProviderBase implements DCRequestContextProvider {
    
    /** null means outside context (not set) */
    private static ThreadLocal<Map<String, Object>> requestContext = new ThreadLocal<Map<String, Object>>();
@@ -17,6 +17,10 @@ public class SimpleRequestContextProvider extends RequestContextProviderBase imp
    private static boolean isInit;
    private static boolean shouldEnforce;
    private static boolean inited = false;
+   
+   public SimpleRequestContextProvider() {
+      
+   }
    
    @Override
    public Map<String, Object> getRequestContext() {
@@ -72,17 +76,30 @@ public class SimpleRequestContextProvider extends RequestContextProviderBase imp
       inited = true;
    }
 
-   public void execInContext(Map<String, Object> requestContext) {
+   /**
+    * 
+    * @param requestContext may be immutable, will be changed anyway
+    * @throws RuntimeException thrown, or wrapping what's thrown, by executeInternal()
+    */
+   public T execInContext(Map<String, Object> requestContext) {
       if (SimpleRequestContextProvider.requestContext.get() != null) {
          throw new RuntimeException("There already is a context, clear it first");
       }
       try {
-         if (requestContext == null) {
-            requestContext = new HashMap<String, Object>();
+         if (requestContext != null) {
+            requestContext = new HashMap<String, Object>(requestContext); // to avoid ImmutableMap
+         } else {
+            requestContext = new HashMap<String, Object>(3);
          }
-         SimpleRequestContextProvider.requestContext.set(new HashMap<String, Object>());
+         SimpleRequestContextProvider.requestContext.set(requestContext);
          
-         this.executeInternal();
+         try {
+            return this.executeInternal();
+         } catch (RuntimeException e) {
+            throw e;
+         } catch (Exception e) {
+            throw new RuntimeException(e);
+         }
          
       } finally {
          SimpleRequestContextProvider.requestContext.set(null);
@@ -91,7 +108,10 @@ public class SimpleRequestContextProvider extends RequestContextProviderBase imp
    
    /**
     * to be overriden
+    * @throws Exception actually ex. ResourceException
     */
-   protected void executeInternal() {}
+   protected T executeInternal() throws Exception {
+      return null;
+   }
 
 }

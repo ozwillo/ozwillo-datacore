@@ -16,8 +16,8 @@ import org.springframework.security.core.userdetails.User;
  */
 public class DCSecurity {
 
-	/** default is true */
-	private boolean isGuestReadable = true;
+	/** default is false (calls to Datacore are made by apps which can have "app_guest" accounts) */
+	private boolean isGuestReadable = false;
 	/** default is true (but isGuestReadable takes precedence) */
 	private boolean isAuthentifiedReadable = true;
 	/**
@@ -76,7 +76,25 @@ public class DCSecurity {
 	private Set<String> resourceReader = new HashSet<String>();
 	
 
-	public boolean isGuestReadable() {
+	/** defaults */
+   public DCSecurity() {
+      
+   }
+   
+	/** copy constructor */
+	public DCSecurity(DCSecurity original) {
+      this.isGuestReadable = original.isGuestReadable;
+      this.isAuthentifiedReadable = original.isAuthentifiedReadable;
+      this.isAuthentifiedWritable = original.isAuthentifiedWritable;
+      this.isAuthentifiedCreatable = original.isAuthentifiedCreatable;
+      this.admin = new HashSet<String>(original.admin);
+      this.resourceAdmin = new HashSet<String>(original.resourceAdmin);
+      this.resourceCreator = new HashSet<String>(original.resourceCreator);
+      this.resourceWriter = new HashSet<String>(original.resourceWriter);
+      this.resourceReader = new HashSet<String>(original.resourceReader);
+   }
+
+   public boolean isGuestReadable() {
 		return isGuestReadable;
 	}
 

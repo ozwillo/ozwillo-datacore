@@ -7,13 +7,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.bson.types.ObjectId;
 import org.joda.time.DateTime;
-import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.CreatedBy;
-import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -26,12 +25,13 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 /**
  * This class is the support for storing Datacore data in MongoDB.
+ * Where it is stored (in which collection) is driven by the metamodel.
+ * Tried to keep names short http://stackoverflow.com/questions/5916080/what-are-naming-conventions-for-mongodb
  * 
  * @author mdutoo
  *
  */
 @Document
-// HOWEVER where it is stored (in which collection) is driven by the metamodel
 public class DCEntity implements Comparable<DCEntity>, Serializable {
    private static final long serialVersionUID = -6529766074319438866L;
 
@@ -45,62 +45,57 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    public static final String KEY_W = "_w";
    public static final String KEY_O = "_o";
 
-   public static final String KEY_CR_AT = "_crAt";
+   /** creation date is retrieved from default mongo _id (seconds only) instead of @CreatedDate */
+   public static final String KEY_CR_AT = "_id"; // "_id.timestamp"; // "_crAt";
    public static final String KEY_CR_BY = "_crBy";
    public static final String KEY_CH_AT = "_chAt";
    public static final String KEY_CH_BY = "_chBy";
 
-   protected final static Logger LOG = LoggerFactory.getLogger(DCEntity.class
-         .getCanonicalName());
+   protected final static Logger LOG = LoggerFactory.getLogger(DCEntity.class.getCanonicalName());
 
    protected static final int COMPARE_LESS = -1;
    protected static final int COMPARE_EQUALS = 0;
    protected static final int COMPARE_GREATER = 1;
 
-   /** (CANT replace it by URI because not valid ObjectId
-    * (though interesting : unique save across versions / approvable / diffs) */
-   @Id // _id ; BEWARE this field must be removed before the uri field can be annotated
-   // by @Id, because Spring has an inclination towards using any existing id field first !!
-   private String id; // TODO or ObjectId ??
-   /** for optimistic locking ; NB. for Spring 0 == new so no -1 !! ; default to null i.e. new */
+   /** mongo _id ; NB. CANT replace it by URI because not valid ObjectId
+    * and interesting anyway : stores creation second, unique
+    * (including across shards) save across versions / approvable / diffs */
+   @Id // BEWARE this field should be removed before the uri field could be annotated
+   // by @Id, because Spring has an inclination towards using any existing "id" field first !!
+   private ObjectId id; // ObjectId rather than String to access its timestamp = createdAt
+   /** for optimistic locking ; NB. for Spring 0 == new so no -1 !! ; default to null i.e. new ; NOT indexed */
    @Version
    @Field(KEY_V)
    private Long version = null;
-   @Indexed(unique = true) // NB. created in DatacoreSampleBase since Spring not in a single collection
-   /** NB. could not be a valid ObjectId
+   /** NB. could not be a valid ObjectId because of its constraints (size...)
+    * unique index in each shard, while mongo ensures uniqueness of
+    * (indexInId-based) shard key http://docs.mongodb.org/manual/tutorial/enforce-unique-keys-for-sharded-collections/
+    * BUT NOT UNIQUE in ex. history. NB. created in DatacoreSampleBase since not in a single collection
     * TODO Q not obligatory if embedded ? or then only sub-uri ??
     * TODO Q contains rdf:type, because collection = use case != rdf:type ? or even several types ???
     * TODO Q contains containerUrl, if we were to have local copies of remote federated datacores ???? */
+   @Indexed(unique = true)
    @Field(KEY_URI)
    private String uri;
-   /** TODO Q OR NOT because stays the same in a collection (see query uses) ?? (not indexed for the same reason)
-    * and only @Transient and filled by service / dao or lifecycle event ??
-    * TODO LATER rather direct reference filled etc. ? */
-   @Field("_mdln") // TODO _t ? or it is rather the source / branch / responsible owner ??
-   private String modelName;
-   /*@Transient
-   private DCResourceModel model;*/ // TODO have a transient reference to model in entity ?? fill it in lifecycle event ??? AND / OR baseType ?
    /**
-    * types : type mixins plus model,
-    * TODO must be indexed if (used to discriminate i.e.) polymorphic collection
-    * TODO Q rather _ts, _a, _m ?? or only as key of submap ?!?
-    * TODO LATER rather direct references filled etc. ?
+    * types : model type (first one) plus mixin types
+    * index for (used to discriminate i.e.) polymorphic collection
+    * TODO Q LATER rather direct references filled etc. ?
     */
    @Field(KEY_T)
+   @Indexed // get on a given type in a wider storage model... NB. created in DatacoreSampleBase since not in a single collection
    private List<String> types;
 
    // more auditing see
    // http://maciejwalkowiak.pl/blog/2013/05/24/auditing-entities-in-spring-data-mongodb/
-   // timestamps : TODO required ?
-   @CreatedDate
-   @Field(KEY_CR_AT)
-   // TODO Q index ?
+   /** get first ones... cache only, creation date is retrieved from default
+    * mongo _id (seconds only) instead of @CreatedDate */
+   @Transient
    private DateTime created;
-   // keep names short
-   // http://stackoverflow.com/questions/5916080/what-are-naming-conventions-for-mongodb
+   /** index to get most recent... NB. created in DatacoreSampleBase since not in a single collection */
    @LastModifiedDate
    @Field(KEY_CH_AT)
-   @Indexed // NB. created in DatacoreSampleBase since Spring not in a single collection
+   @Indexed
    private DateTime lastModified;
 
    /**
@@ -111,9 +106,8 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
     */
    @CreatedBy
    @Field(KEY_CR_BY)
+   // TODO Q index ?
    private String createdBy;
-   // keep names short
-   // http://stackoverflow.com/questions/5916080/what-are-naming-conventions-for-mongodb
    @LastModifiedBy
    @Field(KEY_CH_BY)
    // TODO Q index ?
@@ -127,20 +121,20 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    //private Map<String,DCEntityValueBase> properties;
    //private ArrayList<HashMap<String,Object>> propertiesList; // TODO OPT alternate value properties ?
 
-   // TODO also spring mongo :
+   // NB. also spring mongo :
    // @DBRef : annotated reference (asssociations / relationships) see
    // http://satishab.blogspot.fr/2013/03/part-2-persistence-layer-with-mongo-db.html
    // @Field : alias
    // @Indexed(unique=true)
    // inheritance...
 
-   // TODO not in spring but in mongoid :
+   // TODO Q not in spring but in mongoid :
    // (previous)changes (history ?!) & reset, default values, types (binary,
    // range, regexp, symbol)
    // localization & fallbacks order
    // dynamic fields, security, readonly fields
 
-   // TODO for datacore : _container_id/uri
+   // TODO Q for datacore : _container_id/uri
 
    /** required to check query rights (which is read mass operation) in a single step.
     * Computed out of readers (only) + writers + readers. Only readers are not enough
@@ -149,7 +143,7 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
     * Alternative : allow several same values by storing as list, but there is still
     * as much requiring to be stored. */
    @Field(KEY_AR)
-   @Indexed // NB. created in DatacoreSampleBase since Spring not in a single collection
+   @Indexed // NB. created in DatacoreSampleBase since not in a single collection
    private Set<String> allReaders;
    /** ONLY REQUIRED IF MASS W & O OPERATIONS but otherwise still need to be stored somewhere */
    @Field(KEY_R)
@@ -183,21 +177,24 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
     * Deep clone constructor
     * @param dcEntity to clone or copy (extended or embeded)
     */
+   @SuppressWarnings("unchecked")
    public DCEntity(DCEntity dcEntity) {
-      this.setId(dcEntity.getId()); // TODO rm
+      this.setId(dcEntity.getId());
       this.setUri(dcEntity.getUri());
       this.setVersion(dcEntity.getVersion());
-      this.setModelName(dcEntity.getModelName());
       this.setTypes(new ArrayList<String>(dcEntity.getTypes()));
-      this.setCreated(dcEntity.getCreated());
+      
       this.setLastModified(dcEntity.getLastModified());
       this.setCreatedBy(dcEntity.getCreatedBy());
       this.setLastModifiedBy(dcEntity.getLastModifiedBy());
+      
       this.setAllReaders(dcEntity.getAllReaders());
       this.setReaders(dcEntity.getReaders());
       this.setWriters(dcEntity.getWriters());
       this.setOwners(dcEntity.getOwners());
+      
       // NB. not copying model caches in case of derived model ex. historization
+      
       this.properties = new HashMap<String, Object>(dcEntity.properties.size());
       //this.properties = new HashMap<String, DCEntityValueBase>(dcEntity.properties.size());
       for (String key : dcEntity.properties.keySet()) {
@@ -273,11 +270,11 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
       return sb.toString();
    }
 
-   public String getId() {
+   public ObjectId getId() {
       return id;
    }
 
-   public void setId(String id) {
+   public void setId(ObjectId id) {
       this.id = id;
    }
 
@@ -305,14 +302,6 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
       }
    }
 
-   public String getModelName() {
-      return modelName;
-   }
-
-   public void setModelName(String modelName) {
-      this.modelName = modelName;
-   }
-
    public List<String> getTypes() {
       return types;
    }
@@ -322,11 +311,14 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    }
 
    public DateTime getCreated() {
-      return created;
-   }
-
-   public void setCreated(DateTime created) {
-      this.created = created;
+      if (this.created == null // then cache
+            && this.id != null) { // else new
+         this.created = new DateTime(this.id.getDate()); // oid = timestamp + machine... see :
+         // http://www.mongotips.com/b/another-objectid-trick/
+         // http://stackoverflow.com/questions/26816734/spring-data-mongo-template-returning-timestamp-instead-of-plain-object-id
+         // http://steveridout.github.io/mongo-object-time/
+      }
+      return this.created;
    }
 
    public DateTime getLastModified() {
@@ -403,14 +395,6 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    public void setCachedModel(DCModelBase cachedModel) {
       this.cachedModel = cachedModel;
    }
-
-   /*public DCStorage getCachedStorage() {
-      return cachedStorage;
-   }
-
-   public void setCachedStorage(DCStorage cachedStorage) {
-      this.cachedStorage = cachedStorage;
-   }*/
 
    public DCModelBase getCachedStorageModel() {
       return cachedStorageModel;

@@ -39,6 +39,10 @@ public class DCI18nField extends DCListField {
       i18Map.addField(new DCField("l", "string", false, 0));
       this.list = new DCListField("i18List", i18Map);*/
    }
+   public DCI18nField(String name, int queryLimit, String aliasedStorageName) {
+      super(name, "i18n", createI18nMap(queryLimit));
+      this.setAliasedStorageName(aliasedStorageName);
+   }
    
    private static DCMapField createI18nMap(int queryLimit) {
       DCMapField i18Map = new DCMapField("i18nMap"); // NB. this map name is meaningless

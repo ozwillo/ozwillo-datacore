@@ -16,6 +16,11 @@ public class DCListField extends DCField {
       super(name, "list", required, 0, true);
       this.listElementField = listElementField;
    }
+   public DCListField(String name, DCField listElementField, boolean required, String aliasedStorageName) {
+      super(name, "list", required, 0, true);
+      this.listElementField = listElementField;
+      this.setAliasedStorageName(aliasedStorageName);
+   }
    /**
     * To be used only to define subtypes of "list" ex. "i18n"
     * TODO LATER define how "required" applies to i18n (ex. required only for model/resource "default" language)
