@@ -1,5 +1,11 @@
 package org.oasis.datacore.core.meta.model;
 
+
+/**
+ * delegates queryLimit, notQueriable & indexed to list field, but NOT their setters
+ * @author mdutoo
+ *
+ */
 public class DCListField extends DCField {
    
    private DCField listElementField;
@@ -7,6 +13,7 @@ public class DCListField extends DCField {
    public DCListField() {
       
    }
+   
    public DCListField(String name, DCField listElementField) {
       super(name, "list", false, 0, true);
       this.listElementField = listElementField;
@@ -37,7 +44,19 @@ public class DCListField extends DCField {
    public DCField getListElementField() {
       return listElementField;
    }
-   
+
+   @Override
+   public int getQueryLimit() {
+      return listElementField.getQueryLimit();
+   }
+   @Override
+   public boolean isNotQueriable() {
+      return listElementField.isNotQueriable();
+   }
+   @Override
+   public boolean isIndexed() {
+      return listElementField.isIndexed();
+   }
    
    ///////////////////////////////////////
    // update methods

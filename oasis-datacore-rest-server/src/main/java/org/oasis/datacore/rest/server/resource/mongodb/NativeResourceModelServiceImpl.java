@@ -1,5 +1,6 @@
 package org.oasis.datacore.rest.server.resource.mongodb;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -9,6 +10,7 @@ import javax.annotation.PostConstruct;
 import org.oasis.datacore.core.entity.NativeModelService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.model.DCField;
+import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.rest.api.DCResource;
@@ -17,8 +19,6 @@ import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexRes
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.IndexDefinitionHolder;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.stereotype.Component;
-
-import com.google.common.collect.ImmutableSet;
 
 
 /**
@@ -39,11 +39,10 @@ public class NativeResourceModelServiceImpl implements NativeModelService {
    protected MongoPersistentEntityIndexResolver indexResolver;
 
    private DCModelBase nativeResourceModel;
+   /** not in nativeResourceModel ex. security, inherits from visible nativeResourceModel */
+   private DCModelBase nonExposedNativeModel;
    private Set<String> nativeFieldNames;
-   private Set<String> nativeIndexedFieldNames;
-
-   /** not in nativeResourceModel ex. security */
-   private Set<String> nonExposedFieldNames;
+   private Set<String> nativeExposedOrNotIndexedFieldNames;
    
 
    @Override
@@ -52,37 +51,42 @@ public class NativeResourceModelServiceImpl implements NativeModelService {
    }
 
    @Override
+   public String getNativeIdFieldName(DCModelBase model) {
+      return DCResource.KEY_URI;
+   }
+
+   @Override
+   public DCModelBase getNonExposedNativeModel(DCModelBase model) {
+      return nonExposedNativeModel;
+   }
+
+   @Override
    public Set<String> getNativeFieldNames(DCModelBase model) {
       return nativeFieldNames;
    }
 
    @Override
-   public Set<String> getNativeIndexedFieldNames(DCModelBase model) {
-      return nativeIndexedFieldNames;
+   public Set<String> getNativeExposedOrNotIndexedFieldNames(DCModelBase model) {
+      return nativeExposedOrNotIndexedFieldNames;
    }
    
    @PostConstruct
    private void init() throws NativeModelException {
       indexResolver = new MongoPersistentEntityIndexResolver(mappingContext); // alas not available for autowiring
       
-      nativeResourceModel = buildNativeModel();
-      nativeFieldNames = nativeResourceModel.getFieldMap().keySet();
-      nativeIndexedFieldNames = nativeResourceModel.getFieldMap().values().stream()
-            .filter(f -> f.isQueriable()) // i.e. queryLimit > 0
-            .map(f -> f.getName()).collect(Collectors.toSet());
+      nativeResourceModel = buildNativeResourceModel();
+      nonExposedNativeModel = buildNativeNonExposedModel(nativeResourceModel);
       
-      nonExposedFieldNames = new ImmutableSet.Builder<String>()
-            .add(DCEntity.KEY_AR)
-            .add(DCEntity.KEY_R)
-            .add(DCEntity.KEY_W)
-            .add(DCEntity.KEY_O)
-            .build();
+      nativeFieldNames = nativeResourceModel.getFieldMap().keySet();
+      nativeExposedOrNotIndexedFieldNames = nonExposedNativeModel.getGlobalFieldMap().values().stream()
+            .filter(f -> f.isIndexed()) // i.e. queryLimit > 0 ; NB. for list fields, its element's
+            .map(f -> f.getName()).collect(Collectors.toSet());
       
       checkIndexedFields();
 
    }
 
-   private DCModelBase buildNativeModel() {
+   private DCModelBase buildNativeResourceModel() {
       return new DCMixin(NATIVE_MODEL_NAME)
       // NB. see details on mongo storing conf in DCEntity.java
       // TODO rather using Enum, see BSON$RegexFlag
@@ -90,37 +94,51 @@ public class NativeResourceModelServiceImpl implements NativeModelService {
             .addField(new DCField(DCResource.KEY_VERSION, "long", false, 0, DCEntity.KEY_V)) // NOT indexed, not required at creation
             .addField(new DCField(DCResource.KEY_TYPES, "string", true, 100000, DCEntity.KEY_T))
       // (at top level) computed ones :
-            .addField(new DCField(DCResource.KEY_DCCREATED, "date", false, 100000, DCEntity.KEY_CR_AT)) // DCEntity.KEY_ID // retrieved from ObjectId, index useful for getting first ones ex. when loading models...
+            .addField(new DCField(DCResource.KEY_DCCREATED, "date", false, 100000, DCEntity.KEY_ID)) // DCEntity.KEY_ID // retrieved from ObjectId, index useful for getting first ones ex. when loading models...
             .addField(new DCField(DCResource.KEY_DCMODIFIED, "date", false, 100000, DCEntity.KEY_CH_AT)) // index useful for getting latest changes
             .addField(new DCField(DCResource.KEY_DCCREATOR, "string", false, 0, DCEntity.KEY_CR_BY)) // index LATER ?
             .addField(new DCField(DCResource.KEY_DCCONTRIBUTOR, "string", false, 0, DCEntity.KEY_CH_BY)); // index LATER ?
-            //dcEntityIndexedFields.put("o:allReaders", new DCListField(DCEntity.KEY_AR... // don't allow to look it up
+   }
+
+   private DCModelBase buildNativeNonExposedModel(DCModelBase nativeResourceModel) {
+      return new DCMixin(NATIVE_MODEL_NAME)
+      // NB. see details on mongo storing conf in DCEntity.java
+      // TODO rather using Enum, see BSON$RegexFlag
+            .addMixin(nativeResourceModel) // still has visible fields
+            .addField(new DCListField(DCEntity.KEY_AR, new DCField("useless", "string", true, 100000))) // index
+            .addField(new DCListField(DCEntity.KEY_R, new DCField("useless", "string", true, 0)))
+            .addField(new DCListField(DCEntity.KEY_W, new DCField("useless", "string", true, 0)))
+            .addField(new DCListField(DCEntity.KEY_O, new DCField("useless", "string", true, 0)));
    }
 
    private void checkIndexedFields() throws NativeModelException {
       List<IndexDefinitionHolder> indexDefHolders = indexResolver.resolveIndexForClass(DCEntity.class);
-      if (indexDefHolders.size() != nativeIndexedFieldNames.size()) {
-         throw new NativeModelException("Native DCModel is not up to date with DCEntity annotations : "
-               + "queriable fields " + nativeIndexedFieldNames + " differ from index annotations "
-               + indexDefHolders.stream().map(idh -> idh.getPath()).collect(Collectors.toList()));
-      }
-      indexDefHolders : for (IndexDefinitionHolder indexDefHolder : indexDefHolders) {
-         if (nonExposedFieldNames.contains(indexDefHolder.getPath())) {
-            continue;
-         }
-         for (DCField nativeIndexedField : nativeResourceModel.getFieldMap().values()) {
-            if (indexDefHolder.getPath().equals(nativeIndexedField.getStorageName())) {
-               if (nativeIndexedField.getQueryLimit() <= 0) {
-                  throw new NativeModelException("Native DCModel is not up to date with DCEntity annotations : "
-                        + "Native model field " + nativeIndexedField.getName()
-                        + " is @Indexed but not queriable");
-               }
-               continue indexDefHolders;
+      
+      Set<String> indexedPathes = indexDefHolders.stream()
+            .map(idf -> idf.getPath()).collect(Collectors.toSet());
+      indexedPathes.add(nonExposedNativeModel.getGlobalFieldMap()
+            .get(this.getNativeIdFieldName(null)).getStorageName()); // indexed on its own
+      
+      Set<String> unusedIndexedPathes = new HashSet<String>(indexedPathes);
+      
+      for (DCField nativeIndexedField : nonExposedNativeModel.getGlobalFieldMap().values()) {
+         if (indexedPathes.contains(nativeIndexedField.getStorageName())) {
+            if (!nativeIndexedField.isIndexed()) { // NB. for list fields, its element's
+               throw new NativeModelException("Native DCModel is not up to date with DCEntity annotations : "
+                     + "Native model field " + nativeIndexedField.getName()
+                     + " is @Indexed in DCEntity (with storage name " + nativeIndexedField.getStorageName()
+                     + ") but its DCField is not indexed !");
             }
+            unusedIndexedPathes.remove(nativeIndexedField.getStorageName());
          }
+      }
+
+      if (!unusedIndexedPathes.isEmpty()) {
          throw new NativeModelException("Native DCModel is not up to date with DCEntity annotations : "
-               + "can't find DCEntity index " + indexDefHolder.getPath()
-               + " among native model fields " + nativeResourceModel.getFieldMap().keySet());
+               + "some @Indexed DCEntity fields are not used by any DCField : " + unusedIndexedPathes
+               + " (native id field " + this.getNativeIdFieldName(null)
+               + " ; DCFields : " + nativeExposedOrNotIndexedFieldNames + ", @Indexed : "
+               + indexDefHolders.stream().map(idh -> idh.getPath()).collect(Collectors.toList()));
       }
    }
    

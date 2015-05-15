@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.WebApplicationException;
@@ -19,6 +20,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.oasis.datacore.common.context.DCRequestContextProvider;
 import org.oasis.datacore.common.context.SimpleRequestContextProvider;
 import org.oasis.datacore.contribution.service.ContributionService;
+import org.oasis.datacore.core.entity.NativeModelService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
@@ -53,6 +55,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import com.google.common.collect.ImmutableMap;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
 
 
 /**
@@ -85,7 +88,9 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
     * TODO LATER extract interface */
    @Autowired
    protected DataModelServiceImpl modelAdminService;
-
+   @Autowired
+   protected NativeModelService nativeModelService;
+   
    @Autowired
    @Qualifier("datacoreApiCachedJsonClient")
    protected /*DatacoreApi*/DatacoreCachedClient datacoreApiClient;
@@ -442,7 +447,6 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
    // TODO move
    
    /**
-    * TODO LATER drop obsolete indexes
     * @param model
     * @param deleteCollectionsFirst
     * @return
@@ -481,9 +485,10 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
          
          boolean res = ensureGenericCollectionAndIndices(historizedModel);
          // compound index on uri & version :
-         mgo.getCollection(model.getCollectionName()).
-            ensureIndex(new BasicDBObject(new ImmutableMap.Builder<String, Object>()
-                  .put(DCEntity.KEY_URI, 1).put(DCEntity.KEY_V, 1).build()), null, true);
+         mgo.getCollection(model.getCollectionName()).createIndex(
+               new BasicDBObject(DCEntity.KEY_URI, 1).append(DCEntity.KEY_V, 1),
+               new BasicDBObject("unique", true));
+         // NB. does nothing if already exists http://docs.mongodb.org/manual/tutorial/create-an-index/
          return res;
       } catch (HistorizationException e) {
          throw new RuntimeException("Historization init error of Model " + model.getName(), e);
@@ -503,8 +508,9 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
 
    private boolean ensureCollectionAndIndices(DCModelBase model) {
       boolean res = ensureGenericCollectionAndIndices(model);
-      mgo.getCollection(model.getCollectionName()).
-         ensureIndex(new BasicDBObject(DCEntity.KEY_URI, 1), null, true); // TODO dropDups ??
+      mgo.getCollection(model.getCollectionName()).createIndex(
+            new BasicDBObject(DCEntity.KEY_URI, 1), new BasicDBObject("unique", true)); // TODO dropDups ??
+      // NB. does nothing if already exists http://docs.mongodb.org/manual/tutorial/create-an-index/
       return res;
    }
    private boolean ensureGenericCollectionAndIndices(DCModelBase model) {
@@ -516,48 +522,99 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
          coll = mgo.createCollection(model.getCollectionName());
       }
       
-      // generating static indexes
-      // NB. if already exist, won't do anything http://docs.mongodb.org/manual/reference/method/db.collection.ensureIndex/
-      //coll.ensureIndex(new BasicDBObject(DCEntity.KEY_URI, 1), null, true); // TODO dropDups ?? ; DONE OUTSIDE
-      coll.ensureIndex(new BasicDBObject(DCEntity.KEY_AR, 1)); // for query security
-      coll.ensureIndex(new BasicDBObject(DCEntity.KEY_CH_AT, 1)); // for default order
+      ArrayList<String> requiredIndexes = new ArrayList<String>();
+
+      // computing static indexes
+      DCModelBase nonExposedNativeModel = nativeModelService.getNonExposedNativeModel(model);
+      for (String nativeFieldName : nativeModelService.getNativeExposedOrNotIndexedFieldNames(model)) {
+         if (!DCResource.KEY_URI.equals(nativeFieldName)) {
+            DCField nativeField = nonExposedNativeModel.getGlobalField(nativeFieldName);
+            requiredIndexes.add(nativeField.getStorageName()); // for query security
+         } // else done outside this method
+      }
       
-      // generating field indices
-      ensureFieldIndices(coll, DCEntity.KEY_P + ".", model.getGlobalFieldMap().values());
+      // computing field indices
+      ensureFieldIndices(coll, DCEntity.KEY_P + ".", model.getGlobalFieldMap().values(), requiredIndexes);
+      
+      // getting existing indexes
+      List<DBObject> mongoIndexInfos = coll.getIndexInfo();
+      Set<String> nonUniqueSingleIndexedPathes = new HashSet<String>(mongoIndexInfos.size());
+      for (DBObject mongoIndexInfo : mongoIndexInfos) {
+         Object uniqueFound = mongoIndexInfo.get("unique");
+         if (uniqueFound != null && ((Boolean) uniqueFound).booleanValue()) {
+            continue;
+         }
+         Set<String> keyNames = ((DBObject) mongoIndexInfo.get("key")).keySet();
+         if (keyNames.size() != 1) {
+            continue;
+         }
+         nonUniqueSingleIndexedPathes.add((String) keyNames.iterator().next());
+      }
+
+      // getting new (for logging purpose only) & obsolete indexes (LATER OPT2 incompatible ones)
+      Set<String> newIndexes = new HashSet<String>(requiredIndexes);
+      newIndexes.removeAll(nonUniqueSingleIndexedPathes);
+      Set<String> indexesToBeDropped = new HashSet<String>(nonUniqueSingleIndexedPathes);
+      indexesToBeDropped.removeAll(requiredIndexes);
+      
+      // logging
+      if (logger.isDebugEnabled()
+            || logger.isInfoEnabled() && !newIndexes.isEmpty() || !indexesToBeDropped.isEmpty()) {
+         String msg = "Indexes of " + model.getAbsoluteName() + ": \n"
+               + "   new: " + newIndexes + "\n"
+               + "   to be dropped: " + indexesToBeDropped + "\n";
+         if (logger.isDebugEnabled()) {
+            logger.debug(msg
+                  + "   required: " + requiredIndexes + "\n"
+                  + "   existing: " + nonUniqueSingleIndexedPathes + "\n");
+         } else {
+            logger.info(msg);
+         }
+      }
+      
+      // actual removal & creation :
+      for (String indexToBeDropped : indexesToBeDropped) {
+         coll.dropIndex(new BasicDBObject(indexToBeDropped, 1)); // must match spec (key & type)
+      }
+      for (String requiredIndex : requiredIndexes) {
+         coll.createIndex(new BasicDBObject(requiredIndex, 1));
+         // NB. does nothing if same already exists http://docs.mongodb.org/manual/tutorial/create-an-index/
+      }
       
       return collectionAlreadyExists;
    }
 
-   private void ensureFieldIndices(DBCollection coll, String prefix, Collection<DCField> globalFields) {
+   private void ensureFieldIndices(DBCollection coll, String prefix,
+         Collection<DCField> globalFields, List<String> requiredIndexes) {
       for (DCField globalField : globalFields) {
-         ensureFieldIndices(coll, prefix, globalField);
+         ensureFieldIndices(coll, prefix, globalField, requiredIndexes);
       }
    }
 
-   private void ensureFieldIndices(DBCollection coll, String prefix, DCField globalField) {
-      String prefixedGlobalFieldName = prefix + globalField.getName();
-      if (globalField.getQueryLimit() > 0) {
-         coll.ensureIndex(prefixedGlobalFieldName);
-         // TODO LATER remove obsolete indexes 
-      }
+   private void ensureFieldIndices(DBCollection coll, String prefix,
+         DCField globalField, List<String> requiredIndexes) {
+      String prefixedGlobalFieldStorageName = prefix + globalField.getStorageName();
       switch (DCFieldTypeEnum.getEnumFromStringType(globalField.getType())) {
       case LIST:
          DCField listField = ((DCListField) globalField).getListElementField();
-         ensureFieldIndices(coll, prefixedGlobalFieldName + ".", listField);
+         ensureFieldIndices(coll, prefixedGlobalFieldStorageName + ".", listField, requiredIndexes);
          break;
       case MAP:
          Map<String, DCField> mapFields = ((DCMapField) globalField).getMapFields();
          // TODO WARNING : single map field can't be indexed !!!
-         ensureFieldIndices(coll, prefixedGlobalFieldName + ".", mapFields.values());
+         ensureFieldIndices(coll, prefixedGlobalFieldStorageName + ".", mapFields.values(), requiredIndexes);
          break;
       // TODO LATER index subresource as Map !!
       case I18N:
          DCField listI18nField = ((DCI18nField) globalField);
          DCField map = ((DCListField) listI18nField).getListElementField();
          Map<String, DCField> mapContent = ((DCMapField) map).getMapFields();
-         ensureFieldIndices(coll, prefixedGlobalFieldName + ".", mapContent.values());
+         ensureFieldIndices(coll, prefixedGlobalFieldStorageName + ".", mapContent.values(), requiredIndexes);
          break;
       default:
+         if (globalField.getQueryLimit() > 0) {
+            requiredIndexes.add(prefixedGlobalFieldStorageName);
+         }
          break;
       }
       // TODO LATER embedded resources

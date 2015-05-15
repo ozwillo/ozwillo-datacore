@@ -46,7 +46,7 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    public static final String KEY_O = "_o";
 
    /** creation date is retrieved from default mongo _id (seconds only) instead of @CreatedDate */
-   public static final String KEY_CR_AT = "_id"; // "_id.timestamp"; // "_crAt";
+   public static final String KEY_ID = "_id"; // "_id.timestamp"; // "_crAt";
    public static final String KEY_CR_BY = "_crBy";
    public static final String KEY_CH_AT = "_chAt";
    public static final String KEY_CH_BY = "_chBy";

@@ -44,10 +44,10 @@ public class DCI18nField extends DCListField {
       this.setAliasedStorageName(aliasedStorageName);
    }
    
-   private static DCMapField createI18nMap(int queryLimit) {
+   private static DCMapField createI18nMap(int valueQueryLimit) {
       DCMapField i18Map = new DCMapField("i18nMap"); // NB. this map name is meaningless
-      i18Map.addField(new DCField(KEY_VALUE, "string", true, queryLimit));
-      i18Map.addField(new DCField(KEY_LANGUAGE, "string", false, 0));
+      i18Map.addField(new DCField(KEY_VALUE, "string", true, valueQueryLimit));
+      i18Map.addField(new DCField(KEY_LANGUAGE, "string", false, 0)); // no index BUT queriable !!
       return i18Map;
    }
    

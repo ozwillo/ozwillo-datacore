@@ -103,7 +103,12 @@ public class DCField {
    public int getQueryLimit() {
       return queryLimit;
    }
-   public boolean isQueriable() {
+   /** LATER could prevent from using it in a query criteria at all, for now queryLimit <= 0 */
+   public boolean isNotQueriable() {
+      return queryLimit <= 0;
+   }
+   /** whether to create an index, for now queryLimit > 0 */
+   public boolean isIndexed() {
       return queryLimit > 0;
    }
    public Object getDefaultValue() {
