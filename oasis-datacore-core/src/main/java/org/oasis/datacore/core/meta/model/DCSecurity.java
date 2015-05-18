@@ -17,7 +17,7 @@ import org.springframework.security.core.userdetails.User;
 public class DCSecurity {
 
 	/** default is false (calls to Datacore are made by apps which can have "app_guest" accounts) */
-	private boolean isGuestReadable = false;
+	private boolean isGuestReadable = true; ///////////////////////// TODO TODO
 	/** default is true (but isGuestReadable takes precedence) */
 	private boolean isAuthentifiedReadable = true;
 	/**
