@@ -15,15 +15,17 @@ import org.oasis.datacore.core.meta.pov.DCProject;
  *
  */
 public interface DCModelService {
-
-   // POLY NEW
-   DCProject getProject(String type);
-   Collection<DCProject> getProjects();
+   
    /**
     * Returns the current project
     * @return
     */
    DCProject getProject();
+
+   // POLY NEW
+   DCProject getProject(String type);
+   Collection<DCProject> getProjects();
+   Collection<DCProject> getVisibleProjects(DCProject localVisibleProject);
 
    /**
     * POLY NEW replaces getModel/Mixin TODO migrate
@@ -33,42 +35,56 @@ public interface DCModelService {
    DCModelBase getModelBase(String type);
 
    /**
+    * i.e. in the current project's non visible projects, used when inheriting / hiding models
+    * when type = the own model type of the model it is loaded in as mixin
+    * @param type
+    * @return
+    */
+   DCModelBase getNonLocalModel(String type);
+
+   /**
     * NB. there can't be more than one inherited model being definition
     * (else they would be inherited by a non-definition model, which would
-    * then be definition since it would define that both must be added)
-    * @param model
+    * then be definition since it would define that both must be added).
+    * @param model uses its project
     * @return
     */
    DCModelBase getDefinitionModel(DCModelBase model);
 
    /**
     * 
-    * @param model
+    * @param model uses its project
     * @return
     */
    DCModelBase getStorageModel(DCModelBase model);
+   
+   Collection<DCModelBase> getStoredModels(DCModelBase model);
    
    /**
     * reified model types
     * @param modelType
     * @return
+    * @obsolete
     */
    DCModel getModel(String modelType);
    /**
     * shared mixin types ; includes models (?)
     * @param type
     * @return
+    * @obsolete
     */
    DCModelBase getMixin(String type);
 
    /**
     * reified model types
     * @return
+    * @obsolete
     */
    Collection<DCModel> getModels();
    /**
     * shared mixin types ; includes models TODO is it OK ?
     * @return
+    * @obsolete
     */
    Collection<DCModelBase> getMixins();
    

@@ -35,6 +35,9 @@ import com.google.common.collect.ImmutableMap;
 
 
 /**
+ * Creates metamodel (BUT disabled unless overriden in ResourceMetamodelIniter) and fills it,
+ * therefore called last after all other (Datacore)Sample(Base)s.
+ * 
  * TODO move most to ModelResourceMappingService (& Model(Admin)Service)
  * TODO LATER disable it once mongo becomes reference rather than code-defined DCModel, at least for metamodel
  * @author mdutoo
@@ -88,8 +91,13 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       return true;
    }
    
+   /** override it to call internalBuildModels() */
    @Override
    public void buildModels(List<DCModelBase> modelsToCreate) {
+      //internalBuildModels(modelsToCreate); // disabled
+   }
+   
+   protected void internalBuildModels(List<DCModelBase> modelsToCreate) {
       DCProject project = modelAdminService.getProject(DCProject.OASIS_MAIN);
       
       DCMixin displayableModel = (DCMixin) new DCMixin(MODEL_DISPLAYABLE_NAME, project) // and not DCModel : fields exist within model & mixins

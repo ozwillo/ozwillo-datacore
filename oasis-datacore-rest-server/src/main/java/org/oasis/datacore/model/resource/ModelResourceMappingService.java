@@ -102,7 +102,12 @@ public class ModelResourceMappingService {
             (String) modelResource.get("dcmpv:name"));
    }
 
-   /** TODO move to ModelResourceMappingService */
+   /**
+    * 
+    * @param project
+    * @return
+    * @throws ResourceParsingException
+    */
    public DCResource projectToResource(DCProject project) throws ResourceParsingException {
       DCResource projectResource = DCResource.create(null, ResourceModelIniter.MODEL_PROJECT_NAME)
             .set("dcmpv:name", project.getName())
@@ -130,15 +135,20 @@ public class ModelResourceMappingService {
    }
    
    
-   /** TODO move to ModelResourceMappingService
-    * if not null, modelResource is updated */
+   /**
+    * 
+    * @param model uses its project
+    * @param modelResource if not null, is updated
+    * @return
+    * @throws ResourceParsingException
+    */
    public DCResource modelToResource(DCModelBase model, DCResource modelResource) throws ResourceParsingException {
       if (modelResource == null) {
          modelResource = DCResource.create(null, ResourceModelIniter.MODEL_MODEL_NAME);
       }
       
-      DCModelBase definitionModel = dataModelService.getDefinitionModel(model);
-      DCModelBase storageModel = dataModelService.getStorageModel(model); // null if abstract
+      DCModelBase definitionModel = dataModelService.getDefinitionModel(model); // uses its project
+      DCModelBase storageModel = dataModelService.getStorageModel(model); // null if abstract ; uses its project
       
       // filling model's provided props :
       modelResource
@@ -183,7 +193,12 @@ public class ModelResourceMappingService {
       return modelResource;
    }
 
-   /** TODO move to ModelResourceMappingService */
+   /**
+    * Does not use modelService or any project
+    * @param model
+    * @param modelResource
+    * @throws ResourceParsingException
+    */
    private void modelFieldsAndMixinsToResource(DCModelBase model, DCResource modelResource) throws ResourceParsingException {
       // still fill other props, including uri-depending ones :
       DCURI dcUri;
@@ -242,9 +257,14 @@ public class ModelResourceMappingService {
       return null;
    }
 
-   /** public for tests 
-    * @param existingProps 
-    * @throws ResourceParsingException */
+   /**
+    * public for tests 
+    * @param field
+    * @param fieldUriPrefix
+    * @param existingProps
+    * @return
+    * @throws ResourceParsingException
+    */
    // TODO move to ModelResourceMappingService & modelAdminService.addModel() !
    public /*Immutable*/Map<String, Object> fieldToProps(DCField field,
          String fieldUriPrefix, Map<String,Object> existingProps) throws ResourceParsingException {
@@ -308,7 +328,7 @@ public class ModelResourceMappingService {
    // Resource to DCModel (used in ModelResourceDCListener) :
 
    /**
-    * 
+    * (not done in the context of another / current project)
     * @param r
     * @return
     * @throws ResourceException if can't find local model or visible project
@@ -328,7 +348,7 @@ public class ModelResourceMappingService {
             DCProject visibleProject = dataModelService.getProject(visibleProjectName);
             if (visibleProject == null) {
                throw new ResourceException("Can't find visibleProject " + visibleProjectName,
-                     null, r, dataModelService.getProject());
+                     null, r, project);
             }
             project.addLocalVisibleProject(visibleProject);
             // TODO isDef/Storage...
@@ -347,6 +367,7 @@ public class ModelResourceMappingService {
    }
    
    /**
+    * Uses model resource's pointOfViewAbsoluteName as project BUT must be currentProjectName.
     * Creates and fills DCModel or DCMixin (by calling resourceToFieldsAndMixins())
     * from given resource.
     * BUT does not clean / update r with ex. DCModelBase-computed fields (globalFields...
@@ -358,18 +379,17 @@ public class ModelResourceMappingService {
     * @param r
     * @param isModel
     * @return
-    * @throws ResourceException (NOT ResourceParsingException which must be wrapped)
+    * @throws ResourceException if wrapped ResourceParsingException, or
+    * pointOfViewAbsoluteName not currentProjectName
     */
    public DCModelBase toModelOrMixin(DCResource r) throws ResourceException {
       // TODO check non required fields : required queryLimit openelec's maxScan resourceType
-      
-      // get project :
-      //String pointOfViewAbsoluteName = (String) r.get("dcmo:pointOfViewAbsoluteName");
-      // NOO rather from context :
-      String pointOfViewAbsoluteName = dataModelService.getProject().getAbsoluteName();
+
       String typeName = (String) r.get("dcmo:name");
       
-      DCModelBase modelOrMixin = new DCModel(typeName, pointOfViewAbsoluteName);
+      DCProject project = getAndCheckModelResourceProject(r);
+      
+      DCModelBase modelOrMixin = new DCModel(typeName, project.getName());
 
       Long version = (Long) r.get("o:version");
       if (version == null) {
@@ -401,13 +421,23 @@ public class ModelResourceMappingService {
          this.resourceToFieldsAndMixins(modelOrMixin, r);
       } catch (ResourceParsingException rpex) {
          throw new ResourceException("Error while loading DCModel from Resource",
-               rpex, r, dataModelService.getProject());
+               rpex, r, project);
          // happens when not yet loaded or obsolete (i.e. invalid though persisted not as such)
       }
       
       return modelOrMixin;
    }
    
+   public DCProject getAndCheckModelResourceProject(DCResource r) throws ResourceException {
+      String pointOfViewAbsoluteName = (String) r.get("dcmo:pointOfViewAbsoluteName");
+      DCProject currentProject = dataModelService.getProject();
+      if (!pointOfViewAbsoluteName.equals(currentProject.getAbsoluteName())) {
+         throw new ResourceException("Writing model " + r.get("dcmo:name")
+               + " belonging to another project " + pointOfViewAbsoluteName
+               + " than current one", r, currentProject);
+      }
+      return currentProject;
+   }
    /**
     * Checks model consistency ; NOT on startup else order of load can make it fail.
     * - dcmls:CountryLanguageSpecific : only by having this mixin and another generic mixin
@@ -415,11 +445,13 @@ public class ModelResourceMappingService {
     * TODO LATER :
     * - that ref'd model exists at computing time OR BETTER make resourceType a link (DCResourceField)
     * - ...
+    * Uses modelOrMixin's project.
     * @param modelOrMixin checked
     * @param r for logging purpose
     * @throws ResourceException if consistency check fails
     */
    public void checkModelOrMixin(DCModelBase modelOrMixin, DCResource r) throws ResourceException {
+      DCProject project = dataModelService.getProject(modelOrMixin.getProjectName());
       if (modelOrMixin.getCountryLanguage() != null) {
       //if (r.get("dcmls:code") != null) {
          boolean hasGenericMixin = false;
@@ -428,7 +460,7 @@ public class ModelResourceMappingService {
             if (mixinName.equals("dcmls:CountryLanguageSpecific")) {
                continue;
             }
-            DCModelBase mixin = dataModelService.getModelBase(mixinName);
+            DCModelBase mixin = project.getModel(mixinName);
             if (mixin.getCountryLanguage() == null) {
             //if (!ldpEntityQueryService.find("dcmi:mixin_0", { 'dcmls:code' : '$exist' }).isEmpty()) {
                hasGenericMixin = true;
@@ -442,7 +474,7 @@ public class ModelResourceMappingService {
             if (mixinName.equals("dcmls:CountryLanguageSpecific")) {
                continue;
             }
-            DCModelBase mixin = dataModelService.getModelBase(mixinName);
+            DCModelBase mixin = project.getModelBase(mixinName);
             if (!mixin.hasMixin("dcmls:CountryLanguageSpecific")) { // LATER WOULD REQUIRED ANONYMOUS TYPES / OPTIONAL / CANDIDATE MIXINS
                hasGenericMixin = true;
                break;
@@ -451,7 +483,7 @@ public class ModelResourceMappingService {
          if (!hasGenericMixin) {
             throw new ResourceException("Country / language-specific (with  "
                   + "dcmls:CountryLanguageSpecific mixin) model type has no generic mixin",
-                  null, r, dataModelService.getProject());
+                  null, r, project);
          }
       } else {
          if (!UriHelper.hasUrlAlwaysSafeCharacters(modelOrMixin.getName())) {
@@ -459,18 +491,19 @@ public class ModelResourceMappingService {
                   + "dcmls:CountryLanguageSpecific mixin) model type does not follow best practice rule "
                   + "of not containing URL always safe or colon characters i.e. "
                   + UriHelper.NOT_URL_ALWAYS_SAFE_OR_COLON_CHARACTERS_REGEX,
-                  null, r, dataModelService.getProject());
+                  null, r, project);
          }
       }
    }
 
    /**
-    * public only for tests.
+    * Uses modelOrMixin's project i.e. dcmo:pointOfViewAbsoluteName ; public only for tests.
     * @param modelOrMixin created by TODO
     * @param r
     * @throws ResourceParsingException
     */
    public void resourceToFieldsAndMixins(DCModelBase modelOrMixin, DCResource r) throws ResourceParsingException {
+      DCProject project = dataModelService.getProject(modelOrMixin.getProjectName());
       // TODO (computed) security (version)
       @SuppressWarnings("unchecked")
       List<Map<String, Object>> fieldResources = (List<Map<String, Object>>) r.get("dcmo:fields");
@@ -496,7 +529,13 @@ public class ModelResourceMappingService {
       }
       Builder<String, DCModelBase> mixinMapBuilder = new ImmutableMap.Builder<String, DCModelBase>();
       for (String mixinName : mixinNames) {
-         DCModelBase mixin = dataModelService.getMixin(mixinName); // does also model
+         DCModelBase mixin;
+         if (mixinName.equals(modelOrMixin.getName())) {
+            // means to look in the current project's visible project (not to load itself)
+            mixin = project.getNonLocalModel(mixinName);
+         } else {
+            mixin = project.getModel(mixinName);
+         }
          if (mixin == null) {
             throw new ResourceParsingException("Can't find mixin "
                   + mixinName + " when updating DCModelBase from resource " + r);
@@ -527,7 +566,9 @@ public class ModelResourceMappingService {
          }
          DCModelBase mixin = mixinMap.get(fieldAndMixinName); // does also model
          if (mixin != null
-               && !fieldAndMixinName.equals(modelOrMixin.getName())) { // can't have itself as mixin
+               // can't have itself as mixin unless comes from a different (visible) project
+               && !(fieldAndMixinName.equals(modelOrMixin.getName())
+                     && modelOrMixin.getProjectName().equals(mixin.getProjectName()))) {
             modelOrMixin.addMixin(mixin);
             continue;
          }
@@ -561,8 +602,12 @@ public class ModelResourceMappingService {
       }
    }
    
-   /** public for tests 
-    * @throws ResourceParsingException */
+   /**
+    * public for tests ; doesn't use modelService nor any project
+    * @param fieldResource
+    * @return
+    * @throws ResourceParsingException
+    */
    public DCField propsToField(Map<String, Object> fieldResource) throws ResourceParsingException {
       String fieldName = (String) fieldResource.get("dcmf:name");
       String fieldType = (String) fieldResource.get("dcmf:type");
@@ -573,19 +618,17 @@ public class ModelResourceMappingService {
       DCField field;
       switch (fieldType ) {
       case "map" :
-         // NB. NOT including DCI18nField's submap which is created auto
-         @SuppressWarnings("unchecked")
-         List<Map<String, Object>> mapFieldsProps = (List<Map<String, Object>>) fieldResource.get("dcmf:mapFields");
-         DCMapField mapField = new DCMapField(fieldName);
-         mapField.setMapFields(propsToFields(mapFieldsProps));
-         field = mapField;
+         field = propsToMapField(fieldResource, fieldName);
          break;
       case "list" :
-         @SuppressWarnings("unchecked")
-         Map<String, Object> listElementFieldProps = (Map<String, Object>) fieldResource.get("dcmf:listElementField");
-         field = new DCListField(fieldName, propsToField(listElementFieldProps));
+         field = propsToListField(fieldResource, fieldName);
          break;
       case "i18n" :
+         // getting query limit (of its "v" list subfield) :
+         DCListField tmpField = propsToListField(fieldResource, fieldName);
+         fieldQueryLimit = ((DCMapField) tmpField.getListElementField()).getMapFields()
+               .get(DCI18nField.KEY_VALUE).getQueryLimit();
+         // building :
          DCI18nField i18nField = new DCI18nField(fieldName, fieldQueryLimit);
          String defaultLanguage = (String) fieldResource.get("dcmf:defaultLanguage");
          if (defaultLanguage != null) {
@@ -600,7 +643,7 @@ public class ModelResourceMappingService {
                   + fieldName);
          }
          field = new DCResourceField(fieldName, fieldResourceType, fieldRequired, fieldQueryLimit);
-         /*if (!fieldResourceType.equals(topLevelModelType) && dataModelService.getModelBase(fieldResourceType)) {
+         /*if (!fieldResourceType.equals(topLevelModelType) && project.getModelBase(fieldResourceType)) {
             throw new ResourceParsingException("model " + fieldResourceType
                   + " linked by field " + fieldName + " can't be found");
          }*/ // TODO rather check subresource mixins
@@ -636,6 +679,20 @@ public class ModelResourceMappingService {
       return field;
    }
 
+   private DCMapField propsToMapField(Map<String, Object> fieldResource, String fieldName) throws ResourceParsingException {
+      // NB. only used in building DCI18nField to get its (sublist field "v") queryLimit
+      @SuppressWarnings("unchecked")
+      List<Map<String, Object>> mapFieldsProps = (List<Map<String, Object>>) fieldResource.get("dcmf:mapFields");
+      DCMapField mapField = new DCMapField(fieldName);
+      mapField.setMapFields(propsToFields(mapFieldsProps));
+      return mapField;
+   }
+   private DCListField propsToListField(Map<String, Object> fieldResource, String fieldName) throws ResourceParsingException {
+      @SuppressWarnings("unchecked")
+      Map<String, Object> listElementFieldProps = (Map<String, Object>) fieldResource.get("dcmf:listElementField");
+      return new DCListField(fieldName, propsToField(listElementFieldProps));
+   }
+   
    /** public for tests 
     * @throws ResourceParsingException */
    public Map<String, DCField> propsToFields(

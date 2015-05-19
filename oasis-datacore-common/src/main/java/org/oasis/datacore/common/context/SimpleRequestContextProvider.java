@@ -77,21 +77,29 @@ public class SimpleRequestContextProvider<T> extends RequestContextProviderBase 
    }
 
    /**
-    * 
-    * @param requestContext may be immutable, will be changed anyway
+    * sets the given context, or adds it to existing context if any
+    * @param requestContext null means empty ; may be immutable, will be recreated anyway
     * @throws RuntimeException thrown, or wrapping what's thrown, by executeInternal()
     */
    public T execInContext(Map<String, Object> requestContext) {
-      if (SimpleRequestContextProvider.requestContext.get() != null) {
+      Map<String, Object> existingContext = SimpleRequestContextProvider.requestContext.get();
+      /*if (existingContext != null) {
          throw new RuntimeException("There already is a context, clear it first");
-      }
+      }*/
       try {
+         Map<String, Object> newContext;
          if (requestContext != null) {
-            requestContext = new HashMap<String, Object>(requestContext); // to avoid ImmutableMap
+            if (existingContext != null) {
+               newContext = new HashMap<String, Object>(existingContext); // to keep existingContext unchanged for later
+               newContext.putAll(requestContext);
+            } else {
+               newContext = new HashMap<String, Object>(requestContext); // to avoid ImmutableMap
+            }
          } else {
-            requestContext = new HashMap<String, Object>(3);
+            // shortcut for empty
+            newContext = (existingContext != null) ? existingContext : new HashMap<String, Object>(3);
          }
-         SimpleRequestContextProvider.requestContext.set(requestContext);
+         SimpleRequestContextProvider.requestContext.set(newContext);
          
          try {
             return this.executeInternal();
@@ -102,7 +110,8 @@ public class SimpleRequestContextProvider<T> extends RequestContextProviderBase 
          }
          
       } finally {
-         SimpleRequestContextProvider.requestContext.set(null);
+         // reset null or preexisting context if any :
+         SimpleRequestContextProvider.requestContext.set(existingContext);
       }
    } 
    

@@ -17,8 +17,9 @@ import org.oasis.datacore.core.meta.model.DCSecurity;
 public class DCProject extends DCPointOfViewBase {
    
    public static final String OASIS_MAIN = "oasis.main";
-   public static final String OASIS_SAMPLE = "oasis.sample";
-   public static final String OASIS_META = "oasis.meta";
+   public static final String OASIS_META = "oasis.meta"; // seen by every project in xxxxxxxxxxxxxxxxxxxxxxxxxx
+   public static final String OASIS_SAMPLE = "oasis.sample"; // tech samples (also used in unit tests in datacore-test)
+   public static final String OASIS_SANBOX = "oasis.sandbox"; // TODO sees meta, main, sample and everything in readonly
 
    /* TODO organization.project ex. oasis.main */
    /*
@@ -69,6 +70,16 @@ public class DCProject extends DCPointOfViewBase {
       if (model != null) {
          return model;
       }
+      return getNonLocalModel(type);
+   }
+   
+   /**
+    * i.e. in this project's visible projects only
+    * @param type
+    * @return
+    */
+   public DCModelBase getNonLocalModel(String type) { // TODO or in projectService ?!
+      DCModelBase model;
       // else either reused as is (mixin or storage), or not alt'd yet,
       // in which case let's alt it by default :
       for (DCProject project : visibleDefProjectMap.values()) { // TODO cache allVisibleProjectMap
@@ -251,7 +262,7 @@ public class DCProject extends DCPointOfViewBase {
       }*/
       LinkedHashMap<String, DCModelBase> allAltModelMap = new LinkedHashMap<String, DCModelBase>();
       for (DCModelBase model : modelMap.values()) {
-         allAltModelMap.put(model.getName(),model); // TODO altName
+         allAltModelMap.put(model.getName(),model); // TODO altName ??
       }
       for (DCProject project : visibleDefProjectMap.values()) { // TODO cache allVisibleProjectMap
          for (DCModelBase model : project.getModels()) {
@@ -280,12 +291,15 @@ public class DCProject extends DCPointOfViewBase {
             allAltModelMap.put(model.getName(), model); // TODO altName
          }
       }
-      /*for (DCProject project : visibleProjectMap.values()) { // TODO cache allVisibleProjectMap
-         model = project.getModel(type);
-         if (model != null) {
-            return model;
+      for (DCProject project : visibleProjectMap.values()) { // TODO cache allVisibleProjectMap
+         for (DCModelBase model : project.getModels()) {
+            if (allAltModelMap.containsKey(model.getName())) {
+               break; // already overriden / alt'd
+            }
+            ///model = getModel(model.getName()); // does default alt'ing NOOO not here
+            allAltModelMap.put(model.getName(), model); // TODO altName
          }
-      }*/
+      }
       //this.allAltModelMap = allAltModelMap; // // TODO LATER cache BUT AFTER obsolete on update
       return allAltModelMap.values();
    }
@@ -333,18 +347,33 @@ public class DCProject extends DCPointOfViewBase {
     * also adds to mixin TODO is it OK ?
     * Checks whether its used mixin models are already known (TODO in same version)
     * @param dcModel
+    * @throws RuntimeException if unknown (non local if has same name mixin) or bad version mixin
     */
    @Override
-   public void addLocalModel(DCModelBase dcModel) {
-      List<DCModelBase> unknownMixins = dcModel.getMixinMap().values().stream().filter(
-            mixin -> { DCModelBase existingMixin = getModel(mixin.getName());
-            return existingMixin == null || existingMixin.getVersion() != mixin.getVersion(); })
-            .collect(Collectors.toList());
-      if (unknownMixins.size() != 0) { // TDOO check version
+   public void addLocalModel(DCModelBase dcModel) throws RuntimeException {
+      List<DCModelBase> unknownMixins = dcModel.getMixinMap().values().stream().filter(mixin -> {
+            String type = mixin.getName();
+            DCModelBase existingMixin = (dcModel.getName().equals(type)) ?
+                  getNonLocalModel(type) : getModel(type);
+            return existingMixin == null;
+      }).collect(Collectors.toList());
+      List<DCModelBase> badVersionMixins = dcModel.getMixinMap().values().stream().filter(mixin -> {
+         String type = mixin.getName();
+         DCModelBase existingMixin = (dcModel.getName().equals(type)) ?
+               getNonLocalModel(type) : getModel(type);
+            return existingMixin != null && existingMixin.getVersion() != mixin.getVersion();
+      }).collect(Collectors.toList());
+      if (unknownMixins.size() != 0) {
          throw new ModelException(dcModel, this, "Unable to add model to project "
                + getName() + " with visible projects " + visibleProjectMap
                + ", this model has unknown mixins : "
                + unknownMixins.stream().map(mixin -> mixin.getName()).collect(Collectors.toList())); // TODO business exception
+      }
+      if (badVersionMixins.size() != 0) {
+         throw new ModelException(dcModel, this, "Unable to add model to project "
+               + getName() + " with visible projects " + visibleProjectMap
+               + ", this model has obsolete version mixins : "
+               + badVersionMixins.stream().map(mixin -> mixin.getName()).collect(Collectors.toList())); // TODO business exception
       }
       super.addLocalModel(dcModel);
       ///addMixin(dcModel); // TODO all alt mixin cache ??

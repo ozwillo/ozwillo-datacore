@@ -286,13 +286,6 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
          this.databaseSetupService.cleanDataOfCreatedModel(model);
       }
    }
-   /**
-    * Does nothing if not storage
-    * @param storageModel
-    */
-   /*public void cleanDataOfCreatedModel(DCModelBase storageModel) {
-      this.databaseSetupService.cleanDataOfCreatedModel(storageModel);
-   }*/
    
    
 
@@ -381,7 +374,7 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
          modelAdminService.addModel(model);
          storageModels.add(model);
          
-         return databaseSetupService.ensureCollectionAndIndices(model, deleteCollectionsFirst);
+         return databaseSetupService.ensureCollectionAndIndices(model, deleteCollectionsFirst); // applied on its storage
          
       } else { // mixin
          modelAdminService.addMixin(model);

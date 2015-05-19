@@ -38,16 +38,17 @@ public class ModelDCListener extends DCEventListenerBase implements DCEventListe
       case ModelDCEvent.UPDATED :
          ModelDCEvent me = (ModelDCEvent) event;
          DCModelBase modelOrMixin = me.getModel(); // TODO or get it from name since now persisted ???
-         if (modelOrMixin.isStorage()) { // TODO also on changes of index conf on inherited storage and stored models
-            modelIndexService.ensureCollectionAndIndices(modelOrMixin, false);
-         }
+         modelIndexService.ensureCollectionAndIndices(modelOrMixin, false); // applied on its storage model
+         // NB. changes of index conf on inheriting (several levels) storage models
+         // should be dispatched in ModelResourceDCListener.updateDirectlyImpactedModels() fashion
          break;
       case ModelDCEvent.DELETED :
          me = (ModelDCEvent) event;
          modelOrMixin = me.getModel(); // TODO or get it from name since now persisted ???
-         if (modelOrMixin.isStorage()) { // TODO also on changes of index conf on inherited storage and stored models
-            modelIndexService.cleanModel(modelOrMixin);
-         }
+         modelIndexService.cleanModel(modelOrMixin); // if not storage, cleans data in its storage model
+         // NB. about changes of index conf on inheriting (several levels) storage models :
+         // they should be already done when this model has been removed from those model's mixins
+         // (and otherwise should be dispatched in ModelResourceDCListener.updateDirectlyImpactedModels() fashion)
          break;
       }
    }

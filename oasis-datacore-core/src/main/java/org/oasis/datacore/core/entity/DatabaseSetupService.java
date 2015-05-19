@@ -11,14 +11,28 @@ import org.oasis.datacore.core.meta.model.DCModelBase;
 public interface DatabaseSetupService {
 
    /**
-    * @param model
+    * Computes and applies (create / drop) indexes on its storage model
+    * @param model applied on its storage model
     * @param deleteCollectionsFirst
     * @return
     */
    public boolean ensureCollectionAndIndices(DCModelBase model, boolean deleteCollectionsFirst);
 
-   public void cleanModel(DCModelBase modelOrMixin);
+   /**
+    * 
+    * Consequences of removing model on its resource storage : if storage drops collection,
+    * else cleans data (TODO and indexes specific to it only)
+    * @param modelOrMixin
+    * @return false if has no storage model
+    */
+   public boolean cleanModel(DCModelBase modelOrMixin);
 
-   void cleanDataOfCreatedModel(DCModelBase storageModel) throws RuntimeException;
+   /**
+    * Cleans, in this model's storage model's collection, data resources with its type
+    * @param model
+    * @throws RuntimeException
+    * @return false if has no storage model
+    */
+   public boolean cleanDataOfCreatedModel(DCModelBase model) throws RuntimeException;
    
 }

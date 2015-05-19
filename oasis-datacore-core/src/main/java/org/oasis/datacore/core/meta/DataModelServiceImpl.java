@@ -3,7 +3,11 @@ package org.oasis.datacore.core.meta;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+
+import javax.annotation.Resource;
 
 import org.oasis.datacore.common.context.DCRequestContextProvider;
 import org.oasis.datacore.common.context.DCRequestContextProviderFactory;
@@ -15,7 +19,7 @@ import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.core.meta.pov.ProjectException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 /**
  * TODO readonly : get & set map only for tests, LATER admin using another (inheriting) model ?!?
@@ -23,7 +27,7 @@ import org.springframework.stereotype.Component;
  * @author mdutoo
  *
  */
-@Component
+@Service("modelService")
 public class DataModelServiceImpl implements DCModelService {
    
    /** to use default projects building */
@@ -33,6 +37,9 @@ public class DataModelServiceImpl implements DCModelService {
    ///@Qualifier("datacore.cxfJaxrsApiProvider")
    //protected DCRequestContextProvider requestContextProvider;
    protected DCRequestContextProviderFactory requestContextProviderFactory;
+   /** to inject caching... */
+   @Resource(name="modelService")// or @PostConstruct ; @Autowired doesn't work http://stackoverflow.com/questions/5152686/self-injection-with-spring
+   protected DCModelService dataModelService;
    
    //TODO modelTo(ModelImplementation)CollectionMap ?
    //TODO (modelDefinitionMap) modelImplementationConfigurationMap, modelImplementationInstanciationMap, modelToImplementatioI(|C)Map
@@ -49,18 +56,76 @@ public class DataModelServiceImpl implements DCModelService {
       return project.getModel(type); // TODO if isStorageOnly, get inherited model ?
    }
    @Override
-   public DCModelBase getDefinitionModel(DCModelBase model) {
+   public DCModelBase getNonLocalModel(String type) {
       DCProject project = getProject(); // NB. can't be null
+      // NB. devmode default alt models building is done in there :
+      return project.getNonLocalModel(type);
+   }
+   @Override
+   public DCModelBase getDefinitionModel(DCModelBase model) {
+      DCProject project = getProject(model.getProjectName()); // NB. can't be null
       return project.getDefinitionModel(model);
    }
    @Override
    public DCModelBase getStorageModel(DCModelBase model) {
-      DCProject project = getProject(); // NB. can't be null
+      DCProject project = getProject(model.getProjectName()); // NB. can't be null
       return project.getStorageModel(model);
    }
+   /**
+    * TODO cache
+    * @param model must be storage
+    * @return models having given model as storage model
+    */
+   @Override
+   public Collection<DCModelBase> getStoredModels(DCModelBase model) {
+      ArrayList<DCModelBase> storedModels = new ArrayList<DCModelBase>();
+      HashSet<String> alreadyDoneModelNames = new HashSet<String>();
+      for (DCProject p : this.getProjects()) {
+         /*if (p.getName().equals(project.getName())) {
+            continue;
+         }*/
+         for (DCModelBase m : p.getModels()) { // including visible projects'
+            if (!m.getMixinNames().contains(model.getName())
+                  || alreadyDoneModelNames.contains(m.getName())) { // && !model.getName().equals(m.getName())
+               continue;
+            }
+            alreadyDoneModelNames.add(m.getName());
+            DCModelBase storageModel = p.getStorageModel(m);
+            if (storageModel == null || !storageModel.getAbsoluteName().equals(model.getAbsoluteName())) {
+               continue;
+            }
+            storedModels.add(m);
+         }
+      }
+      return storedModels;
+   }
+   
+   
    @Override
    public Collection<DCProject> getProjects() {
       return this.projectMap.values();
+   }
+   
+   // TODO cache
+   public List<DCProject> getVisibleProjects(DCProject fromProject) {
+      List<DCProject> allVisibleProjects = new ArrayList<DCProject>();
+      for (DCProject localVisibleProject : fromProject.getLocalVisibleProjects()) {
+         // TODO cycle ???
+         allVisibleProjects.addAll(dataModelService.getVisibleProjects(localVisibleProject));
+      }
+      return allVisibleProjects;
+   }
+   public List<DCProject> getProjectsSeing(DCProject project) {
+      List<DCProject> projectsSeingIt = new ArrayList<DCProject>();
+      p : for (DCProject p : dataModelService.getProjects()) {
+         for (DCProject vp : dataModelService.getVisibleProjects(p)) {
+            if (vp.getName().equals(project.getName())) {
+               projectsSeingIt.add(p);
+               continue p;
+            }
+         }
+      }
+      return projectsSeingIt;
    }
    
    @Override
@@ -107,9 +172,9 @@ public class DataModelServiceImpl implements DCModelService {
             this.addProject(project);
          }
       }
-      if (project == null) {
+      /*if (project == null) {
          throw new ProjectException(projectName, "Unknown project");
-      }
+      }*/
       return project;
    }
    public DCProject getProject() {

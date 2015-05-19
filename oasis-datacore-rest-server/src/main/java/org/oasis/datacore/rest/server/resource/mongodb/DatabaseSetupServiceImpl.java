@@ -1,8 +1,8 @@
 package org.oasis.datacore.rest.server.resource.mongodb;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
 
@@ -55,13 +56,14 @@ public class DatabaseSetupServiceImpl implements DatabaseSetupService {
    
    
    @Override
-   public void cleanModel(DCModelBase model) {
-      ///DCProject project = modelAdminService.getProject(model.getProjectName());
-      ///DCModelBase storageModel = project.getStorageModel(modelType);
+   public boolean cleanModel(DCModelBase model) {
       if (!model.isStorage()) {
-         return;
+         // TODO rm indexes specific to it in inheriting models also
+         return cleanDataOfCreatedModel(model);
+         // TODO LATER remove indexes specific to this model only (OPT and restores overriden ones if any)
       }
       mgo.dropCollection(model.getCollectionName()); // delete data // storageModel.getAbsoluteName()
+      // TODO rm indexes specific to it in inheriting models also
    
       // TODO LATER make historizable & contributable more than storage models !
       if (model.isHistorizable()) {
@@ -80,22 +82,25 @@ public class DatabaseSetupServiceImpl implements DatabaseSetupService {
          //mgo.remove(new Query(), historizationCollectionName);
          mgo.dropCollection(contributionCollectionName);
       }
+      
+      return true;
    }
    
-   /**
-    * 
-    * @param storageModel
-    * @throws RuntimeException if not storage
-    */
    @Override
-   public void cleanDataOfCreatedModel(DCModelBase storageModel) throws RuntimeException {
-      if (!storageModel.isStorage()) {
-         throw new RuntimeException("Can't clean data of non storage model "
-               + storageModel.getAbsoluteName());
+   public boolean cleanDataOfCreatedModel(DCModelBase model) {
+      DCModelBase storageModel;
+      Query deleteQuery = new Query();
+      if (model.isStorage()) {
+         storageModel = model;
+      } else { // not only if isInstanciable (ex. geocifr), also ex. geoci
+         storageModel = modelAdminService.getStorageModel(model);
+         if (storageModel == null) {
+            return false;
+         }
+         deleteQuery.addCriteria(new Criteria(DCEntity.KEY_T).is(model.getName()));
       }
-      
       // delete (rather than drop & recreate !) : 
-      mgo.remove(new Query(), storageModel.getCollectionName());
+      mgo.remove(deleteQuery , storageModel.getCollectionName());
 
       // TODO LATER make historizable & contributable more than storage models !
       if (storageModel.isHistorizable()) {
@@ -114,27 +119,31 @@ public class DatabaseSetupServiceImpl implements DatabaseSetupService {
          String contributionCollectionName = storageModel.getName() + ".c"; // TODO TODOOOOOO move
          mgo.remove(new Query(), contributionCollectionName);
       }
+      return true;
    }
    
    
-   /**
-    * @param model
-    * @param deleteCollectionsFirst
-    * @return
-    */
+   @Override
    public boolean ensureCollectionAndIndices(DCModelBase model, boolean deleteCollectionsFirst) {
+      if (!model.isStorage()) {
+         model = modelAdminService.getStorageModel(model);
+         if (model == null) {
+            return false;
+         }
+      }
       if (deleteCollectionsFirst) {
          // cleaning data first
          mgo.dropCollection(model.getCollectionName());
+         // TODO better when not storage
       }
       boolean collectionAlreadyExists = ensureCollectionAndIndices(model);
       
-      if(model.isHistorizable()) {
+      if(model.isHistorizable()) { // TODO when not isStorage
          collectionAlreadyExists = ensureHistorizedCollectionAndIndices(model, deleteCollectionsFirst)
                || collectionAlreadyExists;
       }
       
-      if (model.isContributable()) {
+      if (model.isContributable()) { // TODO when not isStorage
          collectionAlreadyExists = ensureContributedCollectionAndIndices(model, deleteCollectionsFirst);
       }
       
@@ -184,6 +193,11 @@ public class DatabaseSetupServiceImpl implements DatabaseSetupService {
       // NB. does nothing if already exists http://docs.mongodb.org/manual/tutorial/create-an-index/
       return res;
    }
+   /**
+    * 
+    * @param model must be storage
+    * @return
+    */
    private boolean ensureGenericCollectionAndIndices(DCModelBase model) {
       DBCollection coll;
       boolean collectionAlreadyExists = mgo.collectionExists(model.getCollectionName()); 
@@ -193,7 +207,7 @@ public class DatabaseSetupServiceImpl implements DatabaseSetupService {
          coll = mgo.createCollection(model.getCollectionName());
       }
       
-      ArrayList<String> requiredIndexes = new ArrayList<String>();
+      LinkedHashSet<String> requiredIndexes = new LinkedHashSet<String>();
 
       // computing static indexes
       DCModelBase nonExposedNativeModel = nativeModelService.getNonExposedNativeModel(model);
@@ -205,22 +219,19 @@ public class DatabaseSetupServiceImpl implements DatabaseSetupService {
       }
       
       // computing field indices
-      ensureFieldIndices(coll, DCEntity.KEY_P + ".", model.getGlobalFieldMap().values(), requiredIndexes);
+      // of THIS storage model's collection, from wherever stored model they come :
+      // NB. models inheriting from this one but NOT stored in it are triggered by
+      // ModelResourceDCListener.impactxxx
+      // (NB. ideally models outside this project can inherit from but can't be stored in this model)
+      Collection<DCModelBase> storedModels = modelAdminService.getStoredModels(model); // including this model
+      for (DCModelBase storedModel : storedModels) {
+         // stored in model so indexes must be ensured for its fields :
+         computeFieldIndices(coll, DCEntity.KEY_P + ".", storedModel.getGlobalFieldMap().values(), requiredIndexes);
+      }
+      ///computeFieldIndices(coll, DCEntity.KEY_P + ".", model.getGlobalFieldMap().values(), requiredIndexes);
       
       // getting existing indexes
-      List<DBObject> mongoIndexInfos = coll.getIndexInfo();
-      Set<String> nonUniqueSingleIndexedPathes = new HashSet<String>(mongoIndexInfos.size());
-      for (DBObject mongoIndexInfo : mongoIndexInfos) {
-         Object uniqueFound = mongoIndexInfo.get("unique");
-         if (uniqueFound != null && ((Boolean) uniqueFound).booleanValue()) {
-            continue;
-         }
-         Set<String> keyNames = ((DBObject) mongoIndexInfo.get("key")).keySet();
-         if (keyNames.size() != 1) {
-            continue;
-         }
-         nonUniqueSingleIndexedPathes.add((String) keyNames.iterator().next());
-      }
+      Set<String> nonUniqueSingleIndexedPathes = getNonUniqueSingleIndexedPathes(coll);
 
       // getting new (for logging purpose only) & obsolete indexes (LATER OPT2 incompatible ones)
       Set<String> newIndexes = new HashSet<String>(requiredIndexes);
@@ -247,40 +258,61 @@ public class DatabaseSetupServiceImpl implements DatabaseSetupService {
       for (String indexToBeDropped : indexesToBeDropped) {
          coll.dropIndex(new BasicDBObject(indexToBeDropped, 1)); // must match spec (key & type)
       }
-      for (String requiredIndex : requiredIndexes) {
+      for (String requiredIndex : requiredIndexes) { // or newIndexes,
+         // but anyway does nothing if same already exists http://docs.mongodb.org/manual/tutorial/create-an-index/
          coll.createIndex(new BasicDBObject(requiredIndex, 1));
-         // NB. does nothing if same already exists http://docs.mongodb.org/manual/tutorial/create-an-index/
       }
       
       return collectionAlreadyExists;
    }
 
-   private void ensureFieldIndices(DBCollection coll, String prefix,
-         Collection<DCField> globalFields, List<String> requiredIndexes) {
+   /**
+    * @param coll
+    * @return existing indexes
+    */
+   private Set<String> getNonUniqueSingleIndexedPathes(DBCollection coll) {
+      List<DBObject> mongoIndexInfos = coll.getIndexInfo();
+      Set<String> nonUniqueSingleIndexedPathes = new HashSet<String>(mongoIndexInfos.size());
+      for (DBObject mongoIndexInfo : mongoIndexInfos) {
+         Object uniqueFound = mongoIndexInfo.get("unique");
+         if (uniqueFound != null && ((Boolean) uniqueFound).booleanValue()) {
+            continue;
+         }
+         Set<String> keyNames = ((DBObject) mongoIndexInfo.get("key")).keySet();
+         if (keyNames.size() != 1) {
+            continue;
+         }
+         nonUniqueSingleIndexedPathes.add((String) keyNames.iterator().next());
+      }
+      return nonUniqueSingleIndexedPathes;
+   }
+
+   private void computeFieldIndices(DBCollection coll, String prefix,
+         Collection<DCField> globalFields, LinkedHashSet<String> requiredIndexes) {
       for (DCField globalField : globalFields) {
-         ensureFieldIndices(coll, prefix, globalField, requiredIndexes);
+         computeFieldIndices(coll, prefix, globalField, requiredIndexes);
       }
    }
 
-   private void ensureFieldIndices(DBCollection coll, String prefix,
-         DCField globalField, List<String> requiredIndexes) {
+   private void computeFieldIndices(DBCollection coll, String prefix,
+         DCField globalField, LinkedHashSet<String> requiredIndexes) {
       String prefixedGlobalFieldStorageName = prefix + globalField.getStorageName();
       switch (DCFieldTypeEnum.getEnumFromStringType(globalField.getType())) {
       case LIST:
          DCField listField = ((DCListField) globalField).getListElementField();
-         ensureFieldIndices(coll, prefixedGlobalFieldStorageName + ".", listField, requiredIndexes);
+         computeFieldIndices(coll, prefixedGlobalFieldStorageName + ".", listField, requiredIndexes);
          break;
       case MAP:
          Map<String, DCField> mapFields = ((DCMapField) globalField).getMapFields();
          // TODO WARNING : single map field can't be indexed !!!
-         ensureFieldIndices(coll, prefixedGlobalFieldStorageName + ".", mapFields.values(), requiredIndexes);
+         computeFieldIndices(coll, prefixedGlobalFieldStorageName + ".", mapFields.values(), requiredIndexes);
          break;
       // TODO LATER index subresource as Map !!
       case I18N:
          DCField listI18nField = ((DCI18nField) globalField);
          DCField map = ((DCListField) listI18nField).getListElementField();
          Map<String, DCField> mapContent = ((DCMapField) map).getMapFields();
-         ensureFieldIndices(coll, prefixedGlobalFieldStorageName + ".", mapContent.values(), requiredIndexes);
+         computeFieldIndices(coll, prefixedGlobalFieldStorageName + ".", mapContent.values(), requiredIndexes);
          break;
       default:
          if (globalField.getQueryLimit() > 0) {
