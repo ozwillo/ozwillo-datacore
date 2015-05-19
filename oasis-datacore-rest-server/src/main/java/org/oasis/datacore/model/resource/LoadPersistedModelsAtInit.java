@@ -13,6 +13,7 @@ import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
 import org.oasis.datacore.core.init.InitableBase;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
+import org.oasis.datacore.core.meta.ModelException;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.pov.DCProject;
@@ -84,14 +85,20 @@ public class LoadPersistedModelsAtInit extends InitableBase {
          for (DCResource modelResource : modelResources) {
             String modelName = (String) modelResource.get(ResourceModelIniter.MODEL_NAME_PROP);
             String modelProjectName = (String) modelResource.get("dcmo:pointOfViewAbsoluteName");
-            if (!projectName.equals(modelProjectName)) {
-               throw new RuntimeException("Found model " + modelName + " in wrong project " + modelProjectName);
-            }
             String modelAbsoluteName = modelProjectName + "." + modelName; // TODO ????
             if (previousModelsInError != null && !previousModelsInError.containsKey(modelAbsoluteName)) {
                continue; // not first time and already imported successfully
             }
             try {
+               if (!projectName.equals(modelProjectName)) {
+                  throw new ResourceException("Found model " + modelName
+                        + " having wrong project " + modelProjectName + " while loading project, "
+                        + "possibly obsolete one that must be deleted from " + projectName + "."
+                        + dataModelAdminService.getStorageModel(dataModelAdminService.getModel(
+                              ResourceModelIniter.MODEL_MODEL_NAME)).getCollectionName() + " collection.",
+                        modelResource, dataModelAdminService.getProject(projectName));
+               }
+               
                // set context project before loading :
                DCModelBase model = new SimpleRequestContextProvider<DCModelBase>() {
                   protected DCModelBase executeInternal() throws ResourceException {
@@ -135,7 +142,7 @@ public class LoadPersistedModelsAtInit extends InitableBase {
    private void loadProjects() throws QueryException {
       List<DCResource> projectResources = findDataInType(
             ResourceModelIniter.MODEL_PROJECT_NAME, ResourceModelIniter.POINTOFVIEW_NAME_PROP);
-      HashMap<String,ResourceException> previousProjectsInError = null, projectsInError = null;
+      HashMap<String,ResourceException> previousProjectsInError, projectsInError = new HashMap<String,ResourceException>();
       List<String> loadedProjectNames = new ArrayList<String>(projectResources.size());
       do {
          previousProjectsInError = projectsInError;
