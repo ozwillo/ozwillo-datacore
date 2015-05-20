@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -100,7 +101,7 @@ public class ResourceEntityMapperService {
       }
       return defaultLanguage;
    }
-   private Object toSingleLanguageI18n(String value, DCI18nField dcI18nField) {
+   private List<Map<String,String>> toSingleLanguageI18n(String value, DCI18nField dcI18nField) {
       return new ImmutableList.Builder<Map<String,String>>()
             .add(new ImmutableMap.Builder<String, String>()
                   .put(getDefaultLanguage(dcI18nField), value).build()).build();
@@ -267,8 +268,9 @@ public class ResourceEntityMapperService {
             throw new ResourceParsingException("list Field value is not a JSON Array : " + resourceValue);
          }
          List<?> dataList = (List<?>) resourceValue;
-         ArrayList<Object> entityList = new ArrayList<Object>(dataList.size());
-
+         LinkedHashMap<String, Map<String, String>> entityMapMap = new LinkedHashMap<String, Map<String, String>>(dataList.size());
+         
+         // parse each language value, keep last one for each language, accept JSON-LD syntax :
          for (Object resourceItem : dataList) {
             if(resourceItem instanceof Map<?, ?>) {
                @SuppressWarnings("unchecked")
@@ -293,14 +295,14 @@ public class ResourceEntityMapperService {
                HashMap<String, String> entityMap = new HashMap<String,String>();
                entityMap.put(DCI18nField.KEY_LANGUAGE, i18nEntityLanguage);
                entityMap.put(DCI18nField.KEY_VALUE, i18nEntityValue);
-               entityList.add(entityMap);
+               entityMapMap.put(i18nEntityLanguage, entityMap); // keeping last one of each language
             } else {
                resourceParsingContext.addError("Error while parsing i18n list element Field value as map" + resourceItem
                      + " of JSON type " + ((resourceItem == null) ? "null" : resourceItem.getClass()));
                resourceParsingContext.exit();
             }
          }
-         entityValue = entityList;
+         entityValue = new ArrayList<Object>(entityMapMap.values());
          
          }
          

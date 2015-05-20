@@ -931,7 +931,7 @@
       }*/
    }
    
-   // pathInFieldNameTree for log only ; mixin must be dcmo:isInstanciable (old "model")
+   // mixin must be dcmo:isInstanciable (old "model")
    function csvRowToDataResource(mixin, resourceRow,
          fieldNameTree, modelTypeToRowResources, importState) {
       var typeName = mixin["dcmo:name"];
@@ -941,9 +941,9 @@
          // assuming map
          typeName = 'map'; // ??
          mixinFields = mixin;
-         enrichedModelOrMixinFieldMap = importState.model.modelOrMixins[pathInFieldNameTree[0]]['dcmo:fields']; // for import-specific data lookup ; NOT globalFields (??)
-         for (var pInd = 1; pInd < pathInFieldNameTree.length; pInd++) {
-            var enrichedSubField = enrichedModelOrMixinFieldMap[pathInFieldNameTree[pInd]];
+         enrichedModelOrMixinFieldMap = importState.model.modelOrMixins[importState.data.row.pathInFieldNameTree[0]]['dcmo:fields']; // for import-specific data lookup ; NOT globalFields (??)
+         for (var pInd = 1; pInd < importState.data.row.pathInFieldNameTree.length; pInd++) {
+            var enrichedSubField = enrichedModelOrMixinFieldMap[importState.data.row.pathInFieldNameTree[pInd]];
             var enrichedSubFieldType = enrichedSubField['dcmf:type'];
             while (enrichedSubFieldType === 'list' || enrichedSubFieldType === 'i18n') {
                enrichedSubField = enrichedSubField['dcmf:listElementField'];
@@ -1171,7 +1171,7 @@
                if (typeof idValue === 'undefined' || idValue === null || idValue === "") {
                   //console.log("Missing value for id field " + idFieldName
                   //      + ", clearing others (" + Object.keys(indexToEncodedValue).length
-                  //      + ") ; below " + pathInFieldNameTree + " in :");
+                  //      + ") ; below " + importState.data.row.pathInFieldNameTree + " in :");
                   //console.log(resource);
                   if (!mixinMustBeImported) {
                      ///return null; // ex. missing a yet unbuilt link ; nothing to import, skip resource
@@ -1193,7 +1193,7 @@
                   if (typeof uri === 'undefined') {
                      //console.log("Missing uri for resource id field " + idFieldName
                      //      + ", clearing others (" + Object.keys(indexToEncodedValue).length
-                     //      + ") ; below " + pathInFieldNameTree + " in :");
+                     //      + ") ; below " + importState.data.row.pathInFieldNameTree + " in :");
                      console.log(resource);
                      resourceError(importState, 'missingUriForResourceIdField', // TODO or warning since global error anyway ?
                            { fieldName : idFieldName, value : idValue, resource : resource });
@@ -1283,7 +1283,7 @@
                   if (typeof queryValue === 'undefined' || queryValue === null || queryValue === "") {
                      //console.log("Missing value for query field " + idFieldName
                      //      + ", clearing others (" + lookupUriQuery.params.length
-                     //      + ") ; below " + pathInFieldNameTree + " in :");
+                     //      + ") ; below " + importState.data.row.pathInFieldNameTree + " in :");
                      //console.log(resource);
                      if (!mixinMustBeImported) {
                         ///return null; // ex. missing a yet unbuilt link ; nothing to import, skip resource
@@ -1306,7 +1306,7 @@
                         if (typeof uriQueryValue === 'undefined') {
                            //console.log("Missing uri for resource query field " + idFieldName
                            //      + ", clearing others (" + lookupUriQuery.params.length
-                           //      + ") ; below " + pathInFieldNameTree + " in :");
+                           //      + ") ; below " + importState.data.row.pathInFieldNameTree + " in :");
                            console.log(resource);
                            /*resourceError(importState, 'missingUriForResourceQueryField', // TODO or warning since global error anyway ?
                                  { fieldName : idFieldName, value : queryValue, resource : resource });*/
