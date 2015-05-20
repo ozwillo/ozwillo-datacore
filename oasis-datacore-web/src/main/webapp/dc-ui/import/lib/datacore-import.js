@@ -2487,7 +2487,7 @@
          importState.data.rowLimit = importStateConf.data.rowLimit;
       } // else use default
 
-      if (typeof importStateConf.data.rowStart !== 'number' && importStateConf.data.rowStart > 0) { // && importStateConf.data.rowStart < 50000
+      if (typeof importStateConf.data.rowStart === 'number' && importStateConf.data.rowStart > 0) { // && importStateConf.data.rowStart < 50000
          importState.data.rowStart = importStateConf.data.rowStart;
       } // else use default
       
