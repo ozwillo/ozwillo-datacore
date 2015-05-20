@@ -13,6 +13,10 @@ import org.oasis.datacore.core.meta.model.DCModelBase;
  */
 public interface NativeModelService {
 
+   public static final String NATIVE_MODEL_NAME = "o:Ozwillo_0";
+   public static final String DUBLINCORE_MODEL_NAME = "dc:DublinCore_0";
+   public static final String NATIVE_ENTITY_MODEL_NAME = "oent:Entity_0";
+
    /**
     * @param model
     * @return (cached) native model i.e. DCEntity's, might be specific to given model if any ex. for Contributions

@@ -30,8 +30,6 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class NativeResourceModelServiceImpl implements NativeModelService {
-
-   public static final String NATIVE_MODEL_NAME = "dc:Datacore";
    
    @Autowired
    private MongoMappingContext mappingContext;
@@ -87,21 +85,23 @@ public class NativeResourceModelServiceImpl implements NativeModelService {
    }
 
    private DCModelBase buildNativeResourceModel() {
-      return new DCMixin(NATIVE_MODEL_NAME)
-      // NB. see details on mongo storing conf in DCEntity.java
-      // TODO rather using Enum, see BSON$RegexFlag
-            .addField(new DCField(DCResource.KEY_URI, "string", true, 100000, DCEntity.KEY_URI))
-            .addField(new DCField(DCResource.KEY_VERSION, "long", false, 0, DCEntity.KEY_V)) // NOT indexed, not required at creation
-            .addField(new DCField(DCResource.KEY_TYPES, "string", true, 100000, DCEntity.KEY_T))
+      DCModelBase dublinCoreModel = new DCMixin(DUBLINCORE_MODEL_NAME)
       // (at top level) computed ones :
             .addField(new DCField(DCResource.KEY_DCCREATED, "date", false, 100000, DCEntity.KEY_ID)) // DCEntity.KEY_ID // retrieved from ObjectId, index useful for getting first ones ex. when loading models...
             .addField(new DCField(DCResource.KEY_DCMODIFIED, "date", false, 100000, DCEntity.KEY_CH_AT)) // index useful for getting latest changes
             .addField(new DCField(DCResource.KEY_DCCREATOR, "string", false, 0, DCEntity.KEY_CR_BY)) // index LATER ?
             .addField(new DCField(DCResource.KEY_DCCONTRIBUTOR, "string", false, 0, DCEntity.KEY_CH_BY)); // index LATER ?
+      return new DCMixin(NATIVE_MODEL_NAME)
+            .addMixin(dublinCoreModel)
+      // NB. see details on mongo storing conf in DCEntity.java
+      // TODO rather using Enum, see BSON$RegexFlag
+            .addField(new DCField(DCResource.KEY_URI, "string", true, 100000, DCEntity.KEY_URI))
+            .addField(new DCField(DCResource.KEY_VERSION, "long", false, 0, DCEntity.KEY_V)) // NOT indexed, not required at creation
+            .addField(new DCField(DCResource.KEY_TYPES, "string", true, 100000, DCEntity.KEY_T)); // index LATER ?
    }
 
    private DCModelBase buildNativeNonExposedModel(DCModelBase nativeResourceModel) {
-      return new DCMixin(NATIVE_MODEL_NAME)
+      return new DCMixin(NATIVE_ENTITY_MODEL_NAME)
       // NB. see details on mongo storing conf in DCEntity.java
       // TODO rather using Enum, see BSON$RegexFlag
             .addMixin(nativeResourceModel) // still has visible fields
