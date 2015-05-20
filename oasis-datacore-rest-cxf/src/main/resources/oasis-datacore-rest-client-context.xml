@@ -105,7 +105,7 @@
       <jaxrsc:outInterceptors>
          <bean class="org.oasis.datacore.rest.client.cxf.QueryParametersClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.ETagClientOutInterceptor"/>
-         <bean class="org.oasis.datacore.rest.client.cxf.ProjectClientOutInterceptor"/>
+         <bean class="org.oasis.datacore.rest.client.cxf.ContextClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.mock.MockLoginClientOutInterceptor"/><!-- TODO mock -->
       </jaxrsc:outInterceptors>
       <!-- jaxrsc:inInterceptors>
@@ -139,7 +139,7 @@
       <jaxrsc:outInterceptors>
          <bean class="org.oasis.datacore.rest.client.cxf.QueryParametersClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.ETagClientOutInterceptor"/>
-         <bean class="org.oasis.datacore.rest.client.cxf.ProjectClientOutInterceptor"/>
+         <bean class="org.oasis.datacore.rest.client.cxf.ContextClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.mock.MockLoginClientOutInterceptor"/><!-- TODO mock -->
       </jaxrsc:outInterceptors>
       <jaxrsc:features>
@@ -162,7 +162,7 @@
       <jaxrsc:outInterceptors>
          <bean class="org.oasis.datacore.rest.client.cxf.QueryParametersClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.ETagClientOutInterceptor"/>
-         <bean class="org.oasis.datacore.rest.client.cxf.ProjectClientOutInterceptor"/>
+         <bean class="org.oasis.datacore.rest.client.cxf.ContextClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.mock.MockLoginClientOutInterceptor"/><!-- TODO mock -->
       </jaxrsc:outInterceptors>
       <jaxrsc:features>

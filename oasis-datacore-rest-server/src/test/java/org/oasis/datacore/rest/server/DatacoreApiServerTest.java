@@ -15,7 +15,10 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.oasis.datacore.common.context.SimpleRequestContextProvider;
 import org.oasis.datacore.core.entity.EntityQueryService;
+import org.oasis.datacore.core.entity.NativeModelService;
+import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryServiceImpl;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.rest.api.DCResource;
@@ -35,6 +38,8 @@ import org.springframework.cache.Cache;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.google.common.collect.ImmutableMap;
 
 
 /**
@@ -869,6 +874,65 @@ public class DatacoreApiServerTest {
             new QueryParameters().add("n:name", "\"7henextcity\""), null, 10);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(postedCityStartingWithNumberCityData.getUri(), resources.get(0).getUri());
+      
+      // view :
+      
+      // view - minimal :
+      resources = new SimpleRequestContextProvider<List<DCResource>>() {
+         protected List<DCResource> executeInternal() throws QueryException {
+            return datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+                  new QueryParameters().add("n:name", "Bordeaux"), null, 10);
+         }
+      }.execInContext(new ImmutableMap.Builder<String, Object>()
+            .put(DatacoreApi.VIEW_HEADER, "").build());
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(postedBordeauxCityData.getUri(), resources.get(0).getUri());
+      Assert.assertEquals(postedBordeauxCityData.getVersion(), resources.get(0).getVersion());
+      Assert.assertTrue(resources.get(0).getTypes() == null
+            || resources.get(0).getTypes().isEmpty()); // rather [] even if ommitted in JSON !?!
+      Assert.assertNull(resources.get(0).getCreatedBy());
+      Assert.assertNull(resources.get(0).getCreated());
+      Assert.assertNull(resources.get(0).getLastModifiedBy());
+      Assert.assertNull(resources.get(0).getLastModified());
+      Assert.assertEquals(1, resources.get(0).getProperties().size());
+      Assert.assertEquals(true, resources.get(0).getProperties().get("o:partial"));
+      
+      // view - dc :
+      resources = new SimpleRequestContextProvider<List<DCResource>>() {
+         protected List<DCResource> executeInternal() throws QueryException {
+            return datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+                  new QueryParameters().add("n:name", "Bordeaux"), null, 10);
+         }
+      }.execInContext(new ImmutableMap.Builder<String, Object>()
+            .put(DatacoreApi.VIEW_HEADER, NativeModelService.DUBLINCORE_MODEL_NAME).build());
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(postedBordeauxCityData.getUri(), resources.get(0).getUri());
+      Assert.assertEquals(postedBordeauxCityData.getVersion(), resources.get(0).getVersion());
+      Assert.assertEquals(postedBordeauxCityData.getTypes(), resources.get(0).getTypes());
+      Assert.assertEquals(postedBordeauxCityData.getCreatedBy(), resources.get(0).getCreatedBy());
+      Assert.assertEquals(postedBordeauxCityData.getCreated(), resources.get(0).getCreated());
+      Assert.assertEquals(postedBordeauxCityData.getLastModifiedBy(), resources.get(0).getLastModifiedBy());
+      Assert.assertEquals(postedBordeauxCityData.getLastModified(), resources.get(0).getLastModified());
+      Assert.assertEquals(1, resources.get(0).getProperties().size());
+      Assert.assertEquals(true, resources.get(0).getProperties().get("o:partial"));
+      
+      // view - more (sample.city.city) :
+      resources = new SimpleRequestContextProvider<List<DCResource>>() {
+         protected List<DCResource> executeInternal() throws QueryException {
+            return datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+                  new QueryParameters().add("n:name", "Bordeaux"), null, 10);
+         }
+      }.execInContext(new ImmutableMap.Builder<String, Object>()
+            .put(DatacoreApi.VIEW_HEADER, CityCountrySample.CITY_MODEL_NAME).build());
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(postedBordeauxCityData.getUri(), resources.get(0).getUri());
+      Assert.assertEquals(postedBordeauxCityData.getVersion(), resources.get(0).getVersion());
+      Assert.assertEquals(postedBordeauxCityData.getTypes(), resources.get(0).getTypes());
+      Assert.assertEquals(postedBordeauxCityData.getCreatedBy(), resources.get(0).getCreatedBy());
+      Assert.assertEquals(postedBordeauxCityData.getCreated(), resources.get(0).getCreated());
+      Assert.assertEquals(postedBordeauxCityData.getLastModifiedBy(), resources.get(0).getLastModifiedBy());
+      Assert.assertEquals(postedBordeauxCityData.getLastModified(), resources.get(0).getLastModified());
+      Assert.assertEquals(postedBordeauxCityData.get("n:name"), resources.get(0).get("n:name"));
    }
 
 

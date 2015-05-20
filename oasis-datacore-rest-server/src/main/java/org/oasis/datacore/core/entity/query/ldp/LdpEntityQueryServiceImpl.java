@@ -373,7 +373,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
 
    private DCField getTopLevelDcOrGlobalField(DCModelBase dcModel,
          String topFieldPathElement, StringBuilder entityFieldPathSb) {
-      DCField dcField = nativeModelService.getNativeModel(dcModel).getField(topFieldPathElement); // global not required
+      DCField dcField = nativeModelService.getNativeModel(dcModel).getGlobalField(topFieldPathElement); // NB. global for dc:DublinCore_0
       if (dcField == null) {
          // TODO LATER :
          /*if (!dcField.isQueriable()) {

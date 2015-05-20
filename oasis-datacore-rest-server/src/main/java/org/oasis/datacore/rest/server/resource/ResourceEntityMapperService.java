@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -86,7 +87,7 @@ public class ResourceEntityMapperService {
    @Autowired
    private EmbeddedResourceTypeChecker embeddedResourceTypeChecker;
 
-   /** to know whether expected output is semantic (JSON-LD, RDF) */
+   /** to know whether expected output is semantic (JSON-LD, RDF), mixins view */
    @Autowired
    protected DatacoreRequestContextService serverRequestContext;
 
@@ -269,7 +270,7 @@ public class ResourceEntityMapperService {
          }
          List<?> dataList = (List<?>) resourceValue;
          LinkedHashMap<String, Map<String, String>> entityMapMap = new LinkedHashMap<String, Map<String, String>>(dataList.size());
-         
+
          // parse each language value, keep last one for each language, accept JSON-LD syntax :
          for (Object resourceItem : dataList) {
             if(resourceItem instanceof Map<?, ?>) {
@@ -299,7 +300,6 @@ public class ResourceEntityMapperService {
             } else {
                resourceParsingContext.addError("Error while parsing i18n list element Field value as map" + resourceItem
                      + " of JSON type " + ((resourceItem == null) ? "null" : resourceItem.getClass()));
-               resourceParsingContext.exit();
             }
          }
          entityValue = new ArrayList<Object>(entityMapMap.values());
@@ -743,7 +743,15 @@ public class ResourceEntityMapperService {
 
    
    
-   
+   /**
+    * Same as entityToResource() but doesn't apply view
+    * @param entity
+    * @param resource
+    * @return
+    */
+   public DCResource entityToResource(DCEntity entity, DCResource resource) {
+      return entityToResource(entity, resource, false);
+   }
    /**
     * Special handling :
     * - non-JODA Dates made JODA
@@ -757,46 +765,103 @@ public class ResourceEntityMapperService {
     * in sandbox / test / draft / not yet published phase.
     * TODO LATER better : put such cases in data health / governance inbox, through event
     * @param entity must have its model cached
+    * @param applyView
     * @return
     */
-   public DCResource entityToResource(DCEntity entity, DCResource resource) {
-      Map<String, Object> resourceProps = entityToResourceProps(
-            entity.getProperties(), entityModelService.getModel(entity).getGlobalFieldMap());
+   public DCResource entityToResource(DCEntity entity, DCResource resource, boolean applyView) {
+      // building resource props :
+      Map<String,Object> resourceProps = new HashMap<String,Object>(
+            entity.getProperties().size()); // (copy because resource != entity)
+      DCModelBase model = entityModelService.getModel(entity);
+      LinkedHashSet<String> viewMixinNames = applyView ? serverRequestContext.getViewMixinNames() : null;
+      if (viewMixinNames == null) {
+         entityToResourceProps(entity.getProperties(),
+               model.getGlobalFieldMap(), resourceProps);
+      } else {
+         if (viewMixinNames.contains(model.getName())) {
+            // NB. ex. viewMixinNames=sample.city.city
+            entityToResourceProps(entity.getProperties(),
+                  model.getGlobalFieldMap(), resourceProps);
+         }
+         for (DCModelBase mixin : model.getMixins()) {
+            if (viewMixinNames.contains(mixin.getName())) {
+               // NB. ex. viewMixinNames=geo will show geo:name and not its override in geoci
+               entityToResourceProps(entity.getProperties(),
+                     mixin.getGlobalFieldMap(), resourceProps);
+            }
+         }
+      }
+      
       if (resource == null) {
          resource = new DCResource(resourceProps);
       } else {
          resource.setProperties(resourceProps);
       }
+      
       resource.setUri(entity.getUri());
       // NB. _id not exposed
-      resource.setTypes(entity.getTypes()); // TODO or as above, or from model ?
       
-      entityToResourcePersistenceComputedFields(entity, resource);
+      boolean isMinimal = viewMixinNames != null && viewMixinNames.isEmpty();
+      if (isMinimal) {
+         resource.setTypes(null);
+      } else {
+         resource.setTypes(entity.getTypes()); // TODO or as above, or from model ?
+      }
+
+      // NB. the most non-minimal minimal resource view is viewMixinNames=["dc:DublinCore_0"]
+      entityToResourcePersistenceComputedFields(entity, resource, isMinimal);
       
+      // if viewMixinNames, say that resource is partial :
+      if (viewMixinNames != null) {
+         resource.set("o:partial", true); // will prevent from POST/PUTting it as is right away
+         // TODO better ex. response header, native DCField...
+      }
       return resource;
    }
    
    public void entityToResourcePersistenceComputedFields(DCEntity entity, DCResource resource) {
+      entityToResourcePersistenceComputedFields(entity, resource, false);
+   }
+   
+   public void entityToResourcePersistenceComputedFields(DCEntity entity,
+         DCResource resource, boolean isMinimal) {
       resource.setVersion(entity.getVersion());
-      
-      resource.setCreated(entity.getCreated()); // NB. if already provided, only if creation
-      resource.setCreatedBy(entity.getCreatedBy()); // NB. if already provided, only if creation
-      resource.setLastModified(entity.getLastModified());
-      resource.setLastModifiedBy(entity.getLastModifiedBy());
+
+      if (!isMinimal) {
+         resource.setCreated(entity.getCreated()); // NB. if already provided, only if creation
+         resource.setCreatedBy(entity.getCreatedBy()); // NB. if already provided, only if creation
+         resource.setLastModified(entity.getLastModified());
+         resource.setLastModifiedBy(entity.getLastModifiedBy());
+      }
    }
    
    /**
-    * Also handles field alias
+    * Also handles field alias ; used to handle maps & subresources
     * @param entityProperties
-    * @param map
-    * @return
+    * @param dcFieldMap
+    * @param resourceProps must not be null
     */
    private Map<String, Object> entityToResourceProps(
          Map<String, Object> entityProperties, Map<String, DCField> dcFieldMap) {
-      Map<String, Object> resourceProps = new HashMap<String,Object>(
+      Map<String,Object> resourceProps = new HashMap<String,Object>(
             entityProperties.size()); // (copy because resource != entity)
+      entityToResourceProps(entityProperties, dcFieldMap, resourceProps);
+      return resourceProps;
+   }
+   /**
+    * Also handles field alias ; used at top level
+    * @param entityProperties
+    * @param dcFieldMap
+    * @return new map
+    */
+   private void entityToResourceProps(
+         Map<String, Object> entityProperties, Map<String, DCField> dcFieldMap,
+         Map<String, Object> resourceProps) {
       // iterating only over existing values (not to provide any others)  :
       for (String fieldName : entityProperties.keySet()) {
+         if (resourceProps.containsKey(fieldName)) {
+            continue; // may happen if iterating on each view mixin separately
+         }
          DCField dcField = dcFieldMap.get(fieldName);
          if (dcField == null) {
             // may be a native field, has to be handled above as subresource
@@ -808,7 +873,6 @@ public class ResourceEntityMapperService {
             resourceProps.put(fieldName, resourcePropValue);
          }
       }
-      return resourceProps;
    }
 
 
@@ -912,9 +976,13 @@ public class ResourceEntityMapperService {
 
    /** see entityToResource() */
    public List<DCResource> entitiesToResources(List<DCEntity> entities) {
+      return entitiesToResources(entities, false);
+   }
+   /** see entityToResource() */
+   public List<DCResource> entitiesToResources(List<DCEntity> entities, boolean applyView) {
       ArrayList<DCResource> datas = new ArrayList<DCResource>(entities.size());
       for (DCEntity entity : entities) {
-         DCResource resource = entityToResource(entity, null);
+         DCResource resource = entityToResource(entity, null, applyView);
          datas.add(resource);
       }
       return datas;

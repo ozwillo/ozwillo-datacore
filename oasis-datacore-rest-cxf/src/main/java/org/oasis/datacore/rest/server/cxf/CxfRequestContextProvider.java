@@ -32,6 +32,16 @@ public class CxfRequestContextProvider extends CxfJaxrsApiProvider implements DC
          } else if (exchange.getOutMessage() != null) {
             fallbacks.add(exchange.getOutMessage()); // case of client out request
          }
+         
+         // stack on top of existing context if any :
+         Map<String, Object> existinRequestContext = SimpleRequestContextProvider.getSimpleRequestContext();
+         if (existinRequestContext != null // ex. in REST server
+               && !existinRequestContext.isEmpty()) {
+            fallbacks.add(existinRequestContext); // ex. in REST client, so that
+            // ContextClientOutInterceptor can set view (& project, debug) to use
+            // by REST server as was set by REST client app user
+         }
+         
          // NB. at least one of those will be not null, the way CXF works
          // and only one (unless done in (ClientIn or ServerOut) Response interceptor, which it is not for)
          return new MapWithReadonlyFallbacks<String,Object>(exchange, fallbacks);

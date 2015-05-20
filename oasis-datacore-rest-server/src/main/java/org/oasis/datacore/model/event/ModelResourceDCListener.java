@@ -183,7 +183,7 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
       for (DCProject p : dataModelAdminService.getProjectsSeing(project)) {
          DCModelBase modelOrMixinSeenFromP = p.getModel(modelOrMixin.getName());
          if (modelOrMixinSeenFromP != null) {
-            for (DCModelBase mm : modelOrMixinSeenFromP.getMixins()) {
+            for (DCModelBase mm : modelOrMixinSeenFromP.getMixins()) { // NB. m.mixins do not contain m
                if (!mm.getAbsoluteName().equals(modelOrMixin.getAbsoluteName())) {
                   // p sees this version of modelOrMixin (possibly hidden / soft forked from another project)
                   // and not another model with the same name in an orthogonal project, or a hard forked model

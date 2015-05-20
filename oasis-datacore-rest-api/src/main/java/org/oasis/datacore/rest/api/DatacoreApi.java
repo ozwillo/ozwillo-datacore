@@ -127,16 +127,24 @@ import com.wordnik.swagger.annotations.AuthorizationScope;
 public interface DatacoreApi {
    
    public String QUERY_PARAMETERS = "#queryParameters";
+   
    public String DC_TYPE_PATH = "/dc/type/"; // TODO better from JAXRS annotations using reflection ?
+   
    public String AUTHORIZATION_DEFAULT = "Basic YWRtaW46YWRtaW4="; // admin/admin from mock conf
+   
    public String PROJECT_HEADER = "X-Datacore-Project";
    public String PROJECT_DEFAULT = "oasis.main"; // TODO oasis.test
+   
    public String DEBUG_HEADER = "X-Datacore-Debug";
    public String START_PARAM = "start";
    public String LIMIT_PARAM = "limit";
    public String DEBUG_PARAM = "debug";
    public String DEBUG_RESULT = "debug";
    public String RESOURCES_RESULT = "resources";
+
+   public String VIEW_HEADER = "X-Datacore-View";
+
+   public String[] CONTEXT_HEADERS = new String[] { PROJECT_HEADER, DEBUG_HEADER, VIEW_HEADER };
 
    public String NATIVE_QUERY_COMMON_DOC = "'operator' (if any, else defaults to '=') can be in "
          + "logical, XML (most), MongoDB (all) or sometimes Java-like form, "
@@ -495,7 +503,10 @@ public interface DatacoreApi {
       @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
             value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue=AUTHORIZATION_DEFAULT),
       @ApiImplicitParam(name=PROJECT_HEADER, paramType="header", dataType="string",
-            value="Examples : oasis.test, oasis.main", defaultValue=PROJECT_DEFAULT)
+            value="Examples : oasis.test, oasis.main", defaultValue=PROJECT_DEFAULT),
+      @ApiImplicitParam(name=VIEW_HEADER, paramType="header", dataType="string",
+            value="Examples : nothing (all), empty (@id, o:version), 'dc:DublinCore_0' (also "
+                  + "@type, dc: fields), 'geo:Area_0,o:Ancestors_0' (with implied dc:DublinCore_0)")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
@@ -732,7 +743,10 @@ public interface DatacoreApi {
       @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
             value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue=AUTHORIZATION_DEFAULT),
       @ApiImplicitParam(name=PROJECT_HEADER, paramType="header", dataType="string",
-            value="Examples : oasis.test, oasis.main", defaultValue=PROJECT_DEFAULT)
+            value="Examples : oasis.test, oasis.main", defaultValue=PROJECT_DEFAULT),
+      @ApiImplicitParam(name=VIEW_HEADER, paramType="header", dataType="string",
+            value="Examples : nothing (all), empty (@id, o:version), 'dc:DublinCore_0' (also "
+                  + "@type, dc: fields), 'geo:Area_0,o:Ancestors_0' (with implied dc:DublinCore_0)")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
@@ -779,7 +793,10 @@ public interface DatacoreApi {
       @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
       value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue=AUTHORIZATION_DEFAULT),
       @ApiImplicitParam(name=PROJECT_HEADER, paramType="header", dataType="string",
-            value="Examples : oasis.test, oasis.main", defaultValue=PROJECT_DEFAULT)
+            value="Examples : oasis.test, oasis.main", defaultValue=PROJECT_DEFAULT),
+      @ApiImplicitParam(name=VIEW_HEADER, paramType="header", dataType="string",
+            value="Examples : nothing (all), empty (@id, o:version), 'dc:DublinCore_0' (also "
+                  + "@type, dc: fields), 'geo:Area_0,o:Ancestors_0' (with implied dc:DublinCore_0)")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
@@ -869,7 +886,10 @@ public interface DatacoreApi {
       @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
             value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue=AUTHORIZATION_DEFAULT),
       @ApiImplicitParam(name=PROJECT_HEADER, paramType="header", dataType="string",
-            value="Examples : oasis.test, oasis.main", defaultValue=PROJECT_DEFAULT)
+            value="Examples : oasis.test, oasis.main", defaultValue=PROJECT_DEFAULT),
+      @ApiImplicitParam(name=VIEW_HEADER, paramType="header", dataType="string",
+            value="Examples : nothing (all), empty (@id, o:version), 'dc:DublinCore_0' (also "
+                  + "@type, dc: fields), 'geo:Area_0,o:Ancestors_0' (with implied dc:DublinCore_0)")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
@@ -943,7 +963,10 @@ public interface DatacoreApi {
       @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
             value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue=AUTHORIZATION_DEFAULT),
       @ApiImplicitParam(name=PROJECT_HEADER, paramType="header", dataType="string",
-            value="Examples : oasis.test, oasis.main", defaultValue=PROJECT_DEFAULT)
+            value="Examples : oasis.test, oasis.main", defaultValue=PROJECT_DEFAULT),
+      @ApiImplicitParam(name=VIEW_HEADER, paramType="header", dataType="string",
+            value="Examples : nothing (all), empty (@id, o:version), 'dc:DublinCore_0' (also "
+                  + "@type, dc: fields), 'geo:Area_0,o:Ancestors_0' (with implied dc:DublinCore_0)")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {
@@ -973,7 +996,10 @@ public interface DatacoreApi {
       @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
             value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue=AUTHORIZATION_DEFAULT),
       @ApiImplicitParam(name=PROJECT_HEADER, paramType="header", dataType="string",
-            value="Examples : oasis.test, oasis.main", defaultValue=PROJECT_DEFAULT)
+            value="Examples : oasis.test, oasis.main", defaultValue=PROJECT_DEFAULT),
+      @ApiImplicitParam(name=VIEW_HEADER, paramType="header", dataType="string",
+            value="Examples : nothing (all), empty (@id, o:version), 'dc:DublinCore_0' (also "
+                  + "@type, dc: fields), 'geo:Area_0,o:Ancestors_0' (with implied dc:DublinCore_0)")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
    @ApiResponses(value = {

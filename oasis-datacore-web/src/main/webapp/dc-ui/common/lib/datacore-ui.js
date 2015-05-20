@@ -790,15 +790,25 @@ function displayJsonListResult(data, dontUpdateDisplay) {
    if (start !== 0) {
       var previousStart = Math.max(0, start - limit);
       var relativeUrl = data.request.path + '?start=' + previousStart + '&limit=' + limit + query;
+      var headers = {};
+      if (data.request._headers['X-Datacore-View']) {
+          headers['X-Datacore-View'] = data.request._headers['X-Datacore-View'];
+      }
       prettyJson = '<a href="' + relativeUrl + '" class="dclink" onclick="'
-            + 'javascript:return findDataByType($(this).attr(\'href\'));'
+            + 'javascript:return findDataByType($(this).attr(\'href\'), null, null, null, null, '
+            + JSON.stringify(headers).replace(/"/g, "'") + ');'
             + '">...</a>' + lineBreak(0) + prettyJson;
    }
    if (resResources.length === limit) {
       var nextStart = start + limit;
       var relativeUrl = data.request.path + '?start=' + nextStart + '&limit=' + limit + query;
+      var headers = {};
+      if (data.request._headers['X-Datacore-View']) {
+          headers['X-Datacore-View'] = data.request._headers['X-Datacore-View'];
+      }
       prettyJson += lineBreak(0) + '<a href="' + relativeUrl + '" class="dclink" onclick="'
-            + 'javascript:return findDataByType($(this).attr(\'href\'));'
+            + 'javascript:return findDataByType($(this).attr(\'href\'), null, null, null, null, '
+            + JSON.stringify(headers).replace(/"/g, "'") + ');'
             + '">...</a>';
    }
    ///var prettyJson = JSON.stringify(resResources, null, '\t').replace(/\n/g, '<br>');

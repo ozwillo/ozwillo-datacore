@@ -191,7 +191,7 @@ public class ContributionServiceImpl implements ContributionService {
 			throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST).entity(qex.getMessage()).type(MediaType.TEXT_PLAIN).build());
 		}
 
-		List<DCResource> listResources = resourceEntityMapperService.entitiesToResources(listEntities);
+		List<DCResource> listResources = resourceEntityMapperService.entitiesToResources(listEntities, true); // apply view
 		
 		List<DCContribution> listContribution = resourcesToDistinctContribution(listResources);
 		
@@ -235,7 +235,7 @@ public class ContributionServiceImpl implements ContributionService {
 			throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST).entity(qex.getMessage()).type(MediaType.TEXT_PLAIN).build());
 		}
 
-		List<DCResource> listResources = resourceEntityMapperService.entitiesToResources(listEntities);
+		List<DCResource> listResources = resourceEntityMapperService.entitiesToResources(listEntities, true); // apply view
 		
 		// We remove the ContributionMixin from the resources
 		removeContributionMixinFromResource(listResources);

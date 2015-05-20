@@ -1,6 +1,7 @@
 package org.oasis.datacore.server.context;
 
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 
 import org.apache.cxf.message.Message;
@@ -9,6 +10,7 @@ import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.client.cxf.CxfMessageHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 /**
  * Hides the specifics of dealing with (CXF...) RequestContext to provide
@@ -67,6 +69,33 @@ public class DatacoreRequestContextService {
          return null;
       }
       return CxfMessageHelper.getHeaderString(requestContext, Message.ACCEPT_CONTENT_TYPE);
+   }
+   
+   /**
+    * 
+    * @return null means all, empty means minimal (@id, o:version), only dc:DublinCore_0
+    * means minimal + @type + dc: fields, others come in addition to it
+    */
+   public LinkedHashSet<String> getViewMixinNames() {
+      Map<String, Object> requestContext = requestContextProviderFactory.getRequestContext();
+      if (requestContext == null) {
+         return null;
+      }
+      String csvMixinNames = CxfMessageHelper.getHeaderString(requestContext, DatacoreApi.VIEW_HEADER);
+      if (csvMixinNames == null) {
+         return null;
+      }
+      LinkedHashSet<String> mixinNameSet = new LinkedHashSet<String>();
+      if ((csvMixinNames = csvMixinNames.trim()).isEmpty()) {
+         return mixinNameSet; // minimal : @id, o:version
+      }
+      String[] mixinNames = StringUtils.commaDelimitedListToStringArray(csvMixinNames);
+      for (String mixinName : mixinNames) {
+         if (!(mixinName = mixinName.trim()).isEmpty()) {
+            mixinNameSet.add(mixinName);
+         }
+      }
+      return mixinNameSet;
    }
    
 }

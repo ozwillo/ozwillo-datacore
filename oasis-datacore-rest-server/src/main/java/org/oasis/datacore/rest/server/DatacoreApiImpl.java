@@ -433,7 +433,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
          // NB. if warnings returned only if debug / explain mode
       }
       
-      List<DCResource> foundDatas = resourceEntityMapperService.entitiesToResources(foundEntities);
+      List<DCResource> foundDatas = resourceEntityMapperService.entitiesToResources(foundEntities, true); // apply view
       
       if (serverRequestContext.isDebug()) {
          // TODO move that to LdpEntityQueryServiceImpl !
@@ -469,7 +469,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
          // TODO better support for query parsing errors / warnings / detailedMode & additional
          // non-error behaviours of query engines like "explain" switch
       }
-      return resourceEntityMapperService.entitiesToResources(entities);
+      return resourceEntityMapperService.entitiesToResources(entities, true); // apply view
    }
    @Override
    public List<DCResource> queryData(String query, String language) {
@@ -482,7 +482,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
          // TODO better support for query parsing errors / warnings / detailedMode & additional
          // non-error behaviours of query engines like "explain" switch
       }
-      return resourceEntityMapperService.entitiesToResources(entities);
+      return resourceEntityMapperService.entitiesToResources(entities, true); // apply view
    }
 
    
@@ -522,7 +522,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
 			            + version + "was not found", uri, null, modelService.getProject())));
 		}
 
-		DCResource resource = resourceEntityMapperService.entityToResource(historizedEntity, null);
+		DCResource resource = resourceEntityMapperService.entityToResource(historizedEntity, null, true); // apply view
 		ResponseBuilder responseBuilder = Response.ok(resource);
 
 		throw new WebApplicationException(responseBuilder.build());

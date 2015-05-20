@@ -294,7 +294,7 @@ public class ResourceService {
          throw new ResourceException(msg, resource, project);
       } // else TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
 
-      resourceEntityMapperService.entityToResource(dataEntity, resource);
+      resourceEntityMapperService.entityToResource(dataEntity, resource, true); // apply view
       // NB. rather than manually updating resource, because props may have changed
       // (ex. if POST/PATCH of a null prop => has not actually been removed)
       // ((and LATER possibly because of behaviours))
@@ -489,7 +489,7 @@ public class ResourceService {
          // rather than NO_CONTENT ; like Atol ex. deleteApplication in
          // https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/apps/ApplicationDirectoryResource.java
       }
-      DCResource resource = resourceEntityMapperService.entityToResource(entity, null);
+      DCResource resource = resourceEntityMapperService.entityToResource(entity, null, true); // apply view
       
       eventService.triggerResourceEvent(DCResourceEvent.Types.READ, resource);
       return resource;
@@ -524,7 +524,7 @@ public class ResourceService {
          // rather than NO_CONTENT ; like Atol ex. deleteApplication in
          // https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/apps/ApplicationDirectoryResource.java
       }
-      DCResource resource = resourceEntityMapperService.entityToResource(entity, null);
+      DCResource resource = resourceEntityMapperService.entityToResource(entity, null, true); // apply view
 
       eventService.triggerResourceEvent(DCResourceEvent.Types.READ, resource);
       

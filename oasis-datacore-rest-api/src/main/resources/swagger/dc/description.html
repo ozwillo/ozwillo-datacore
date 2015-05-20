@@ -95,8 +95,10 @@ examples, FAQ, how to & common use cases, cookbook (writing clients...) and full
 <br/><br/>
 <p>
 <a name="mydata"/>
-<span class="json dcjsonline">GET <span class="dcConf_baseUrl">NOT INITED</span><input type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 558px"></span>
+<span class="json dcjsonline">GET <span class="dcConf_baseUrl">NOT INITED</span><input type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 480px"></span>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()));">go</button>
+<button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, 50, {'X-Datacore-View':' '});" title="List view (view : empty i.e. minimal : @id, o:version)">l</button>
+<button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, 25, {'X-Datacore-View':'dc:DubclinCore_0'});" title="List view (view : dc:DubclinCore_0)">dc</button>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, null, {'X-Datacore-Debug':'true'});" title="Debug / explain query">?</button>
 <button onclick="javascript:return findDataByTypeRdf(encodeUri($('.myurl').val()));">RDF</button>
 <button onclick="javascript:return setUrl('');" title="Reset">X</button><br/>
@@ -171,7 +173,7 @@ javascript:return findDataByType($(this).text());
 <br/><br/>
 <b>Operations</b> are specified in details below within the Swagger UI playground, and especially
 <a href="#!/dc/postAllDataInType_post_0" target="_blank">typed updates</a> (version) and
-<a href="#!/dc/findDataInType_get_2" target="_blank">typed queries</a> (criteria, sort, ranged query- or iterator-based pagination, debug mode).
+<a href="#!/dc/findDataInType_get_2" target="_blank">typed queries</a> (criteria, sort, ranged query- or iterator-based pagination, debug mode, view).
 <br/><br/>
 <b>Typed operations</b> where type of data is provided in URL are usually more efficient : 
 '*inType' methods are faster, finder queries with type even more.

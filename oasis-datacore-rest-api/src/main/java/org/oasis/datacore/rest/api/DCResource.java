@@ -21,6 +21,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.wordnik.swagger.annotations.ApiModel;
@@ -85,6 +87,7 @@ public class DCResource {
 
    /** types : model (first one) plus type mixins */
    @JsonProperty(KEY_TYPES)
+   @JsonSerialize(include=Inclusion.NON_NULL) // in case view header = ' '
    private List<String> types;
    //@JsonProperty
    //private String type; // or this ? in addition to uri ? or model ?!? test conflict !
@@ -94,12 +97,16 @@ public class DCResource {
 
    // creation / last modified date, author ? (readonly !)
    @JsonProperty(KEY_DCCREATED)
+   @JsonSerialize(include=Inclusion.NON_NULL) // in case view header = ' '
    private DateTime created;
    @JsonProperty(KEY_DCMODIFIED)
+   @JsonSerialize(include=Inclusion.NON_NULL) // in case view header = ' '
    private DateTime lastModified;
    @JsonProperty(KEY_DCCREATOR)
+   @JsonSerialize(include=Inclusion.NON_NULL) // in case view header = ' '
    private String createdBy;
    @JsonProperty(KEY_DCCONTRIBUTOR)
+   @JsonSerialize(include=Inclusion.NON_NULL) // in case view header = ' '
    private String lastModifiedBy;
    
    /** Other (business) properties. They are of the types supported by JSON (on Jackson) :
