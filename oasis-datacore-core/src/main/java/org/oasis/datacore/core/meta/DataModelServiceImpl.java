@@ -86,7 +86,8 @@ public class DataModelServiceImpl implements DCModelService {
          }*/
          for (DCModelBase m : p.getModels()) { // including visible projects'
             if (!m.getMixinNames().contains(model.getName())
-                  || alreadyDoneModelNames.contains(m.getName())) { // && !model.getName().equals(m.getName())
+                  && !model.getName().equals(m.getName()) // NB. m.mixins do not contain m
+                  || alreadyDoneModelNames.contains(m.getName())) {
                continue;
             }
             alreadyDoneModelNames.add(m.getName());
