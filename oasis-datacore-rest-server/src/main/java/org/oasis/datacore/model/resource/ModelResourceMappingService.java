@@ -431,7 +431,8 @@ public class ModelResourceMappingService {
    public DCProject getAndCheckModelResourceProject(DCResource r) throws ResourceException {
       String pointOfViewAbsoluteName = (String) r.get("dcmo:pointOfViewAbsoluteName");
       DCProject currentProject = dataModelService.getProject();
-      if (!pointOfViewAbsoluteName.equals(currentProject.getAbsoluteName())) {
+      if (pointOfViewAbsoluteName != null
+            && !pointOfViewAbsoluteName.equals(currentProject.getAbsoluteName())) {
          throw new ResourceException("Writing model " + r.get("dcmo:name")
                + " belonging to another project " + pointOfViewAbsoluteName
                + " than current one", r, currentProject);
