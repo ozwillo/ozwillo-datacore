@@ -26,6 +26,7 @@ import org.oasis.datacore.core.security.EntityPermissionService;
 import org.oasis.datacore.core.security.mock.MockAuthenticationService;
 import org.oasis.datacore.model.resource.ModelResourceMappingService;
 import org.oasis.datacore.rest.api.DCResource;
+import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.client.QueryParameters;
 import org.oasis.datacore.rest.server.event.EventService;
@@ -252,14 +253,28 @@ public class ResourceModelTest {
    }
 
    @Test
-   public void testImpactedModelUpdate() throws Exception {
+   public void testImpactedModelAndIndexUpdate() throws Exception {
       // put in initial state (delete stuff) in case test was aborted :
       DCResource mr = datacoreApiClient.getData("dcmo:model_0", CityCountrySample.CITY_MODEL_NAME);
       DCModelBase m = mrMappingService.toModelOrMixin(mr);
       m.getField("city:founded").setRequired(false);
+      m.getField("city:founded").setQueryLimit(0);
       datacoreApiClient.postDataInType(mrMappingService.modelToResource(m, mr));
+      // checking initial state :
       Assert.assertFalse(modelAdminService.getModelBase(
             CityCountrySample.CITY_MODEL_NAME).getField("city:founded").isRequired());
+      Assert.assertEquals(0, modelAdminService.getModelBase(
+            CityCountrySample.CITY_MODEL_NAME).getField("city:founded").getQueryLimit());
+      // and that has not index :
+      //String moscowCityUri = UriHelper.buildUri(this.containerUrl,
+      //      CityCountrySample.CITY_MODEL_NAME, "Russia/Moscow");
+      QueryParameters cityFoundedDebugParams = new QueryParameters().add("city:founded", new DateTime().toString())
+            .add("city:founded", "+") // to override default sort on _chAt which could blur results
+            .add(DatacoreApi.DEBUG_PARAM, "true");
+      List<DCResource> debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            cityFoundedDebugParams, null, 10);
+      Assert.assertFalse("Should not have used index on city:founded",
+            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p.city:founded"));
       
       // create referring model :
       String frCityModelName = "sample.city.cityFR";
@@ -284,6 +299,11 @@ public class ResourceModelTest {
       // which toModelOrMixin doesn't support 
       frCityModel = (DCModel) mrMappingService.toModelOrMixin(frCityModelResource);
       Assert.assertTrue(!frCityModel.getGlobalField("city:founded").isRequired());
+      // and has not index :
+      debugRes = datacoreApiClient.findDataInType(frCityModelName,
+            cityFoundedDebugParams, null, 10);
+      Assert.assertFalse("cityFR should not have index on city:founded",
+            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p.city:founded"));
       
       // update referred model :
       
@@ -295,6 +315,8 @@ public class ResourceModelTest {
       DCField clientCityFoundedField = clientCityModel.getField("city:founded");
       Assert.assertTrue(!clientCityFoundedField.isRequired());
       clientCityFoundedField.setRequired(true);
+      Assert.assertEquals(0, clientCityFoundedField.getQueryLimit());
+      clientCityFoundedField.setQueryLimit(100);
       mrMappingService.modelToResource(clientCityModel, cityModelResource);
       try {
          
@@ -308,12 +330,14 @@ public class ResourceModelTest {
          DCModelBase cityModel = modelAdminService.getModelBase(CityCountrySample.CITY_MODEL_NAME);
          Assert.assertNotNull(cityModel);
          Assert.assertTrue(cityModel.getField("city:founded").isRequired());
+         Assert.assertEquals(100, cityModel.getField("city:founded").getQueryLimit());
 
          // check that referring model has changed :
          // in server :
          frCityModel = modelAdminService.getModelBase(frCityModelName);
          Assert.assertNotNull(frCityModel);
          Assert.assertTrue(frCityModel.getGlobalField("city:founded").isRequired());
+         Assert.assertEquals(100, frCityModel.getGlobalField("city:founded").getQueryLimit());
          // in served model resource :
          frCityModelResource = datacoreApiClient.getData(frCityModelResource);
          Assert.assertNotNull(frCityModelResource);
@@ -321,6 +345,31 @@ public class ResourceModelTest {
          // which toModelOrMixin doesn't support 
          frCityModel = (DCModel) mrMappingService.toModelOrMixin(frCityModelResource);
          Assert.assertTrue(frCityModel.getGlobalField("city:founded").isRequired());
+         Assert.assertEquals(100, frCityModel.getGlobalField("city:founded").getQueryLimit());
+         // and has indexes :
+         debugRes = datacoreApiClient.findDataInType(frCityModelName,
+               cityFoundedDebugParams, null, 10);
+         Assert.assertTrue("cityFR should have index on city:founded",
+               TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p.city:founded"));
+         
+         // removing index from referrer (by overriding it) :
+         frCityModelResource = datacoreApiClient.getData(frCityModelResource); // update
+         frCityModel = mrMappingService.toModelOrMixin(frCityModelResource);
+         DCField frCityFoundedFieldOverride = frCityModel.getGlobalField("city:founded");
+         frCityFoundedFieldOverride.setQueryLimit(0);
+         frCityModel.addField(frCityFoundedFieldOverride);
+         frCityModelResource = datacoreApiClient.postDataInType(
+               mrMappingService.modelToResource(frCityModel, frCityModelResource));
+         // and checking that referrer has not, but referred still has :
+         debugRes = datacoreApiClient.findDataInType(frCityModelName,
+               cityFoundedDebugParams, null, 10);
+         Assert.assertFalse("cityFR should have index on city:founded",
+               TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p.city:founded"));
+         debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+               cityFoundedDebugParams, null, 10);
+         Assert.assertTrue("city should also have index on city:founded",
+               TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p.city:founded"));
+         
          
          } finally {
             // putting it back in default state

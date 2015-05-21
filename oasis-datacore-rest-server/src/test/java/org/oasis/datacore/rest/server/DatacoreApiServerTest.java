@@ -1012,8 +1012,8 @@ public class DatacoreApiServerTest {
             new QueryParameters().add(DCResource.KEY_URI,  ">=" + londonCityData.getUri()
                   + "+") // adding sort in >= operator to remove default sort on _chAt
             .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
-      Assert.assertTrue(getDebugCursor(debugResult).startsWith("BtreeCursor _uri_1"));
-      List<Map<String, Object>> resources = getDebugResources(debugResult);
+      Assert.assertTrue(TestHelper.getDebugCursor(debugResult).startsWith("BtreeCursor _uri_1"));
+      List<Map<String, Object>> resources = TestHelper.getDebugResources(debugResult);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(londonCityData.getUri(), resources.get(0).get(DCResource.KEY_URI));
       
@@ -1021,8 +1021,8 @@ public class DatacoreApiServerTest {
             new QueryParameters().add(DCResource.KEY_DCMODIFIED, bordeauxCityData.getLastModified().toString())
             // NB. there is a sort on _chAt by default !
             .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
-      Assert.assertTrue(getDebugCursor(debugResult).startsWith("BtreeCursor _chAt"));
-      List<Map<String, Object>> resources2 = getDebugResources(debugResult);
+      Assert.assertTrue(TestHelper.getDebugCursor(debugResult).startsWith("BtreeCursor _chAt"));
+      List<Map<String, Object>> resources2 = TestHelper.getDebugResources(debugResult);
       Assert.assertEquals(1, resources2.size());
       Assert.assertEquals(bordeauxCityData.getLastModified(),
             ResourceParsingHelper.parseDate((String) resources2.get(0).get(DCResource.KEY_DCMODIFIED)));
@@ -1073,7 +1073,7 @@ public class DatacoreApiServerTest {
       List<DCResource> debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             params, null, 10);
       Assert.assertTrue("Should have used index on i18n v",
-            getDebugCursor(debugRes).startsWith("BtreeCursor _p.i18n:name.v"));
+            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p.i18n:name.v"));
       
       /*
        * i18n, looking for a particular language
@@ -1088,7 +1088,7 @@ public class DatacoreApiServerTest {
       langParams.add(DatacoreApi.DEBUG_PARAM, "true");
       debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME, langParams, null, 10);
       Assert.assertFalse("Should not have used index on i18n",
-            getDebugCursor(debugRes).startsWith("BtreeCursor _p.i18n:name"));
+            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p.i18n:name"));
 
       /*
        * i18n, looking up in a given language
@@ -1097,7 +1097,7 @@ public class DatacoreApiServerTest {
          .add("i18n:name.v", "+"); // to override default sort on _chAt which could blur results
       debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME, langParams, null, 10);
       Assert.assertTrue("Should have used index on i18n v",
-            getDebugCursor(debugRes).startsWith("BtreeCursor _p.i18n:name.v"));
+            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p.i18n:name.v"));
       // checking that found using $elemMatch
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters().add("i18n:name", "$elemMatch{\"v\":\"Moskva\",\"l\":\"ru\"}"), null, 10);
@@ -1109,7 +1109,7 @@ public class DatacoreApiServerTest {
             .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
             .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
       Assert.assertTrue("Should have used index on i18n v",
-            getDebugCursor(debugRes).startsWith("BtreeCursor _p.i18n:name.v"));
+            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p.i18n:name.v"));
       // checking that not found in wrong language using $elemMatch
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters().add("i18n:name", "$elemMatch{\"v\":\"Moscow\",\"l\":\"ru\"}"), null, 10);
@@ -1150,29 +1150,6 @@ public class DatacoreApiServerTest {
       
       // must not contain JSONLD-only i18n syntax :
       Assert.assertTrue(!resources.toString().contains("@language"));
-   }
-
-   private String getDebugCursor(List<DCResource> debugResult) {
-      @SuppressWarnings("unchecked")
-      Map<String, Object> queryExplain = (Map<String,Object>) getDebug(debugResult)
-         .get(LdpEntityQueryServiceImpl.DEBUG_QUERY_EXPLAIN);
-      String cursor = (String) queryExplain.get("cursor");
-      Assert.assertNotNull(cursor);
-      return cursor;
-   }
-
-   private Map<String, Object> getDebug(List<DCResource> debugResult) {
-      Assert.assertEquals(1, debugResult.size());
-      @SuppressWarnings("unchecked")
-      Map<String, Object> debug = (Map<String,Object>) debugResult.get(0).get(DatacoreApi.DEBUG_RESULT);
-      return debug;
-   }
-
-   private List<Map<String, Object>> getDebugResources(List<DCResource> debugResult) {
-      Assert.assertEquals(1, debugResult.size());
-      @SuppressWarnings("unchecked")
-      List<Map<String, Object>> resources = (List<Map<String, Object>>) debugResult.get(0).get(DatacoreApi.RESOURCES_RESULT);
-      return resources;
    }
 
 }
