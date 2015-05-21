@@ -107,15 +107,17 @@ public class DataModelServiceImpl implements DCModelService {
       return this.projectMap.values();
    }
    
-   // TODO cache
+   @Override
    public List<DCProject> getVisibleProjects(DCProject fromProject) {
       List<DCProject> allVisibleProjects = new ArrayList<DCProject>();
+      allVisibleProjects.add(fromProject);
       for (DCProject localVisibleProject : fromProject.getLocalVisibleProjects()) {
          // TODO cycle ???
          allVisibleProjects.addAll(dataModelService.getVisibleProjects(localVisibleProject));
       }
       return allVisibleProjects;
    }
+   @Override
    public List<DCProject> getProjectsSeing(DCProject project) {
       List<DCProject> projectsSeingIt = new ArrayList<DCProject>();
       p : for (DCProject p : dataModelService.getProjects()) {

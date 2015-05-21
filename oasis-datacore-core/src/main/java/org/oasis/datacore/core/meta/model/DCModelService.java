@@ -1,6 +1,7 @@
 package org.oasis.datacore.core.meta.model;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.oasis.datacore.core.meta.pov.DCProject;
 
@@ -25,7 +26,18 @@ public interface DCModelService {
    // POLY NEW
    DCProject getProject(String type);
    Collection<DCProject> getProjects();
+   /**
+    * 
+    * @param localVisibleProject
+    * @return including given project !
+    */
    Collection<DCProject> getVisibleProjects(DCProject localVisibleProject);
+   /**
+    * 
+    * @param project
+    * @return including given project !
+    */
+   List<DCProject> getProjectsSeing(DCProject project);
 
    /**
     * POLY NEW replaces getModel/Mixin TODO migrate

@@ -391,14 +391,22 @@ public class ModelResourceMappingService {
       
       DCModelBase modelOrMixin = new DCModel(typeName, project.getName());
 
-      Long version = (Long) r.get("o:version");
+      Long version = r.getVersion();
       if (version == null) {
          version = -1l; // assuming new
       }
       modelOrMixin.setVersion(version); // only in DCModelBase for info purpose
-      Long majorVersion = (Long) r.get("dcmo:majorVersion");
-      if (majorVersion == null) {
+      Object foundMajorVersion = r.get("dcmo:majorVersion");
+      Long majorVersion;
+      if (foundMajorVersion == null) {
          majorVersion = 0l; // TODO LATER compute : parse from dcmo:name
+      } else if (foundMajorVersion instanceof Long) { // in case locally built ex. in model listener
+         majorVersion = (long) foundMajorVersion;
+      } else if (foundMajorVersion instanceof Integer) {
+         majorVersion = new Long((int) foundMajorVersion);
+      } else { // LATER string case ?
+         throw new ResourceException("Error while loading DCModel from Resource : "
+               + "dcmo:majorVersion not Long not Integer " + foundMajorVersion, null, r, project);
       }
       modelOrMixin.setMajorVersion(majorVersion); // LATER
       

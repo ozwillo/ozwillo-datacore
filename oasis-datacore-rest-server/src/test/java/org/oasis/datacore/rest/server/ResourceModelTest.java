@@ -162,8 +162,12 @@ public class ResourceModelTest {
    @Test
    public void testResourceModelUpdateThroughREST() throws Exception {
       // put in initial state (delete stuff) in case test was aborted :
-      modelAdminService.getModelBase(CityCountrySample.CITY_MODEL_NAME)
-         .getField("city:founded").setRequired(false);
+      DCResource mr = datacoreApiClient.getData("dcmo:model_0", CityCountrySample.CITY_MODEL_NAME);
+      DCModelBase m = mrMappingService.toModelOrMixin(mr);
+      m.getField("city:founded").setRequired(false);
+      datacoreApiClient.postDataInType(mrMappingService.modelToResource(m, mr));
+      Assert.assertFalse(modelAdminService.getModelBase(
+            CityCountrySample.CITY_MODEL_NAME).getField("city:founded").isRequired());
       
       // change a model on client side, post it and check that ResourceService parsing changes :
       // (while testing java to resource methods and back)
@@ -249,6 +253,14 @@ public class ResourceModelTest {
 
    @Test
    public void testImpactedModelUpdate() throws Exception {
+      // put in initial state (delete stuff) in case test was aborted :
+      DCResource mr = datacoreApiClient.getData("dcmo:model_0", CityCountrySample.CITY_MODEL_NAME);
+      DCModelBase m = mrMappingService.toModelOrMixin(mr);
+      m.getField("city:founded").setRequired(false);
+      datacoreApiClient.postDataInType(mrMappingService.modelToResource(m, mr));
+      Assert.assertFalse(modelAdminService.getModelBase(
+            CityCountrySample.CITY_MODEL_NAME).getField("city:founded").isRequired());
+      
       // create referring model :
       String frCityModelName = "sample.city.cityFR";
       ArrayList<String> frCityModelMixins = new ArrayList<String>();
@@ -286,7 +298,7 @@ public class ResourceModelTest {
       mrMappingService.modelToResource(clientCityModel, cityModelResource);
       try {
          
-         // updating referred model & check that changed
+         // updating referred model using REST & check that changed
          cityModelResource = datacoreApiClient.putDataInType(cityModelResource);
          @SuppressWarnings("unchecked")
          Map<String,DCField> cityModelFields1 = mrMappingService.propsToFields(

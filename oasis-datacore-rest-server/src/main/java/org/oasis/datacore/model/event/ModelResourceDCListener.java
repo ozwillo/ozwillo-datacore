@@ -123,6 +123,9 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
          // TODO also update all impacted models !!
          aboutToEventType = ModelDCEvent.ABOUT_TO_UPDATE;
       }
+      
+      // let's actually register the DCModel :
+      project.addLocalModel(modelOrMixin);
 
       try {
          // let's update storage (index...) :
@@ -135,9 +138,6 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
          throw new AbortOperationEventException("Aborting as asked for in aboutTo event "
                + "of model or mixin " + modelOrMixin, e);
       }
-      
-      // let's actually register the DCModel :
-      project.addLocalModel(modelOrMixin);
       
       String doneEventType = (previousModel == null) ?
             ModelDCEvent.CREATED : ModelDCEvent.UPDATED;
