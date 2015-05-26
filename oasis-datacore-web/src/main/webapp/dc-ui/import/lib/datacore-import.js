@@ -1639,9 +1639,10 @@
                        if (resourcesFound instanceof Array) {
                           if (resourcesFound.length === 0) {
                              importState.data.lookupQueryToResource[lookupQuery] = null; // preventing further lookups
-                             importState.data.errors.push({ code : "lookupQueryHasNoResult",
+                             importState.data.row.iteration.errors.push({ code : "lookupQueryHasNoResult",
                                 lookupQuery : lookupQuery,
-                                row : importState.data.row.resourceRow }); // NB. not in iteration errors
+                                row : importState.data.row.resourceRow }); // NB. in iteration errors, because might improve next iteration
+                             // ex. because uri became buildable that previously depended on another missing autolinked Resource 
                              
                           } else if (resourcesFound.length === 1) {
                              resourceFound = resourcesFound[0];
@@ -1649,7 +1650,7 @@
                           } else {
                              importState.data.errors.push({ code : "lookupQueryHasMoreThanOneResult",
                                 lookupQuery : lookupQuery, resourcesFound : resourcesFound,
-                                row : importState.data.row.resourceRow }); // NB. not in iteration errors
+                                row : importState.data.row.resourceRow }); // NB. not in iteration errors, because won't improve
                           }
                        } else if (typeof resourcesFound === 'object' && resourcesFound['@id']) {
                           resourceFound = resourcesFound;
