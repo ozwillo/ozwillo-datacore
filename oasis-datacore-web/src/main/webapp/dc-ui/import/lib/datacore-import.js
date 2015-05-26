@@ -1359,11 +1359,11 @@
                   resourceWarning(importState, 'lookupQueryToRunInNextIteration',
                      { lookupQuery : lookupQuery, resource : resource });
                   return resource;
-               } else {
+               } else if (alreadyFoundResource !== null) {
                   uri = alreadyFoundResource['@id'];
                   // NB. not putting alreadyFoundResource in resources, only using it as id,
                   // but will be reused at resource POST time to avoid reGETting it
-               }
+               } // else remembered lookupQueryHasNoResult error
             }
          }
          
