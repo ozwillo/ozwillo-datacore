@@ -2427,6 +2427,9 @@
       function refreshAndPostObsoleteUntilFresh(data, origResource) {
          if (data._raw.statusCode === 409) {
             // refresh then repost :
+            if (origResource instanceof Array) { // because arg of postAllDataInType()
+                origResource = origResource[0];
+            }
             getData(origResource['@id'], function (resource) {
                // updating existing resource : 
                // NB. can't access "mixin" variable because has been changed since call is async
