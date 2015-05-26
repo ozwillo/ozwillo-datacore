@@ -1851,8 +1851,9 @@
          }
 
          // add its mixin to importableMixins :
-         var mixinName = importState.model.fieldInternalNameToMixinName[dataColumnName];
-         if (mixinName) {
+         var mixinNameSet = importState.model.fieldInternalNameToMixinNames[dataColumnName];
+         if (mixinNameSet) {
+            for (var mixinName in mixinNameSet) {
             // importable only if has an internalFieldName among data column names
             var importableMixin = importState.model.modelOrMixins[mixinName];
             if (!importableMixin['dcmo:isInstanciable']) { // TODO error
@@ -1860,6 +1861,7 @@
                      { mixin : importableMixin, dataColumnName : dataColumnName });
             } else {
                importState.data.importableMixins[mixinName] = importableMixin;  
+            }
             }
          }
       }
@@ -2265,9 +2267,12 @@
                     fieldRow["defaultValue"], "string");
               var fieldInternalName = fieldNameTreeCur[fieldName]['importconf:internalName'];
               if (fieldInternalName !== null) {
-                 importState.model.fieldNamesWithInternalNameMap[fieldName] = null; // used as a set
+                 importState.model.fieldNamesWithInternalNameMap[fieldName] = null; // used as a set, to build importedFieldNames
               }
-              importState.model.fieldInternalNameToMixinName[fieldInternalName] = mixin['dcmo:name']; // to filter importableMixins
+              if (!importState.model.fieldInternalNameToMixinNames[fieldInternalName]) {
+                  importState.model.fieldInternalNameToMixinNames[fieldInternalName] = {};
+              }
+              importState.model.fieldInternalNameToMixinNames[fieldInternalName][mixin['dcmo:name']] = null; // to filter importableMixins (NB. several ones occur because of a dotted path to ex. geoco:idIso which can have geocofr:idIso as fieldInternalName)
            } // else may have already been seen within fieldPath
            
            } // end import field if any
@@ -2600,7 +2605,7 @@
                modelOrMixins : {}, // NOOOO MUST NOT BE USED outside of csvToModel because have no global fields, rather use .data.involvedMixins
                mixinNameToFieldNameTree : {},
                fieldNamesWithInternalNameMap : {}, // used as set to get all models or mixins that are imported
-               fieldInternalNameToMixinName : {}, // to filter importableMixins
+               fieldInternalNameToMixinNames : {}, // to filter importableMixins
                ///modelOrMixinArray : null, // MUST NOT BE USED outside of csvToModel because have no global fields, rather use .data.involvedMixins
                ///mixinArray : null, // MUST NOT BE USED outside of csvToModel because have no global fields, rather use .data.involvedMixins
                modelArray : null, // MUST NOT BE USED outside of csvToModel because have no global fields, rather use .data.involvedMixins
