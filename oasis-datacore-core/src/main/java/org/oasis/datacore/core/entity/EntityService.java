@@ -16,10 +16,17 @@ import org.springframework.security.access.prepost.PreAuthorize;
  * @author mdutoo
  *
  */
-// TODO default annot @PreAuthorize(“hasRole(‘ROLE_EXCLUDE_ALL’)”) if possible ??
+// TODO default cannot @PreAuthorize(“hasRole(‘ROLE_EXCLUDE_ALL’)”) if possible ??
 // see http://www.disasterarea.co.uk/blog/protecting-service-methods-with-spring-security-annotations/
 public interface EntityService {
 
+   /**
+    * 
+    * @param version
+    * @return true if null or < 0
+    */
+   boolean isCreation(Long version);
+   
    /**
     * Creates a new entity.
     * Uses transient cached model if any.

@@ -1,7 +1,9 @@
 package org.oasis.datacore.rest.server.parsing.model;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.springframework.data.domain.Sort;
@@ -20,6 +22,8 @@ public class DCQueryParsingContext extends DCResourceParsingContext {
    private Sort sort = null;
    private int aggregatedQueryLimit = 0;
    private boolean hasNoIndexedField = false;
+   private Set<String> forbiddenMixins = new HashSet<String>();
+   private Set<String> topLevelAllowedMixins = new HashSet<String>();
    
    public DCQueryParsingContext(DCModelBase model, DCModelBase storageModel) {
       super(model, storageModel, null);
@@ -117,6 +121,18 @@ public class DCQueryParsingContext extends DCResourceParsingContext {
 
    public String getEntityFieldPath() {
       return currentEntityFieldPath;
+   }
+
+   public Set<String> getForbiddenMixins() {
+      return forbiddenMixins;
+   }
+
+   public Set<String> getTopLevelAllowedMixins() {
+      return topLevelAllowedMixins;
+   }
+   
+   public boolean getRightsHaveToBeDecidedAtResourceLevel() {
+      return !forbiddenMixins.isEmpty() || topLevelAllowedMixins.isEmpty();
    }
    
 }

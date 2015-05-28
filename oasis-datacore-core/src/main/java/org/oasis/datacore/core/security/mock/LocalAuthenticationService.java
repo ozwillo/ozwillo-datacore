@@ -18,7 +18,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 /**
- * Mock local auth service using default hardcoded user conf, available in dev mode only.
+ * Auth service using default hardcoded user conf.
+ * Outside dev mode, only for programmatically logged system users.
+ * In dev mode, also loggable through BASIC auth & also brings test users.
  * 
  * TODO separate what is mock (loginAs) from what is not (getCurrentUser(Id)/EntityGroups())
  * 
@@ -31,11 +33,14 @@ import org.springframework.stereotype.Component;
  *
  */
 @Component // always instanciated but non-test code can't call it
-public class MockAuthenticationService {
+public class LocalAuthenticationService {
 	
+   public static final String SYSTEM_USER = "system";
+   public static final String ADMIN_USER = "admin";
+   
    /** TODO LATER remove optional when there is a mock in the -core project */
    @Autowired(required = false)
-   @Qualifier("datacore.userDetailsService")
+   @Qualifier("datacore.localUserDetailsService")
    private UserDetailsService mockUserDetailsService;
    
    /**

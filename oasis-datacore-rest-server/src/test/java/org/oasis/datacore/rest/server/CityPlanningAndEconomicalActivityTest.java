@@ -13,7 +13,7 @@ import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.security.EntityPermissionService;
-import org.oasis.datacore.core.security.mock.MockAuthenticationService;
+import org.oasis.datacore.core.security.mock.LocalAuthenticationService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.client.QueryParameters;
@@ -63,7 +63,7 @@ public class CityPlanningAndEconomicalActivityTest {
    @Autowired
    private EntityPermissionService entityPermissionService;
    @Autowired
-   private MockAuthenticationService authenticationService;
+   private LocalAuthenticationService authenticationService;
    
    /** to be able to build a full uri, to check in tests
     * TODO rather client-side DCURI or rewrite uri in server */

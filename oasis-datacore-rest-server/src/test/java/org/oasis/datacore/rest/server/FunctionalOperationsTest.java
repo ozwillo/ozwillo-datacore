@@ -15,7 +15,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModelBase;
-import org.oasis.datacore.core.security.mock.MockAuthenticationService;
+import org.oasis.datacore.core.security.mock.LocalAuthenticationService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UnitTestHelper;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
@@ -54,7 +54,7 @@ public class FunctionalOperationsTest {
 	
 	/** TODO actual */
 	@Autowired
-	private MockAuthenticationService mockAuthenticationService;
+	private LocalAuthenticationService mockAuthenticationService;
 	
 	@Autowired
 	private MarkaInvestData markaInvestData;

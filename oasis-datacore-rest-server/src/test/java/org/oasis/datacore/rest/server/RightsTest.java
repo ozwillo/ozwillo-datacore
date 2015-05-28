@@ -17,7 +17,8 @@ import org.junit.runner.RunWith;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
-import org.oasis.datacore.core.security.mock.MockAuthenticationService;
+import org.oasis.datacore.core.meta.model.DCSecurity;
+import org.oasis.datacore.core.security.mock.LocalAuthenticationService;
 import org.oasis.datacore.historization.exception.HistorizationException;
 import org.oasis.datacore.historization.service.HistorizationService;
 import org.oasis.datacore.rest.api.DCResource;
@@ -59,7 +60,7 @@ public class RightsTest {
 	private MongoOperations mongoOperations;
 
 	@Autowired
-	private MockAuthenticationService mockAuthenticationService;
+	private LocalAuthenticationService mockAuthenticationService;
 
 	@Autowired
 	private MarkaInvestData markaInvestData;

@@ -42,7 +42,12 @@ public class EntityServiceImpl implements EntityService {
    private EntityModelService entityModelService;
    @Autowired
    private DataModelServiceImpl projectService; // TODO projectService ?!
-   
+
+
+   @Override
+   public boolean isCreation(Long version) {
+      return (version == null || version < 0);
+   }
    
    /* (non-Javadoc)
     * @see org.oasis.datacore.core.entity.DCEntityService#create(org.oasis.datacore.core.entity.model.DCEntity)

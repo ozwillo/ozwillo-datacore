@@ -168,6 +168,9 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    /** request-scoped cache built in resourceToEntity */
    @Transient
    private transient DCModelBase cachedDefinitionModel;
+   /** cache like, between ResourceService and EntityPermissionEvaluator */
+   @Transient
+   private transient DCEntity previousEntity;
    
    public DCEntity() {
       
@@ -179,7 +182,8 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
     */
    @SuppressWarnings("unchecked")
    public DCEntity(DCEntity dcEntity) {
-      this.setId(dcEntity.getId());
+      this.copyNonResourceFieldsFrom(dcEntity);
+      
       this.setUri(dcEntity.getUri());
       this.setVersion(dcEntity.getVersion());
       this.setTypes(new ArrayList<String>(dcEntity.getTypes()));
@@ -187,11 +191,6 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
       this.setLastModified(dcEntity.getLastModified());
       this.setCreatedBy(dcEntity.getCreatedBy());
       this.setLastModifiedBy(dcEntity.getLastModifiedBy());
-      
-      this.setAllReaders(dcEntity.getAllReaders());
-      this.setReaders(dcEntity.getReaders());
-      this.setWriters(dcEntity.getWriters());
-      this.setOwners(dcEntity.getOwners());
       
       // NB. not copying model caches in case of derived model ex. historization
       
@@ -208,6 +207,15 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
          }
          this.properties.put(key, value/*DCEntityValueBase.newValue(value)*/);
       }
+   }
+
+   public void copyNonResourceFieldsFrom(DCEntity existingDataEntity) {
+      this.setId(existingDataEntity.getId()); // else OptimisticLockingFailureException !
+      
+      this.setAllReaders(existingDataEntity.getAllReaders());
+      this.setReaders(existingDataEntity.getReaders());
+      this.setWriters(existingDataEntity.getWriters());
+      this.setOwners(existingDataEntity.getOwners());
    }
 
    public boolean isNew() {
@@ -410,6 +418,14 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
 
    public void setCachedDefinitionModel(DCModelBase cachedDefinitionModel) {
       this.cachedDefinitionModel = cachedDefinitionModel;
+   }
+   
+   public DCEntity getPreviousEntity() {
+      return previousEntity;
+   }
+
+   public void setPreviousEntity(DCEntity previousEntity) {
+      this.previousEntity = previousEntity;
    }
 
 }

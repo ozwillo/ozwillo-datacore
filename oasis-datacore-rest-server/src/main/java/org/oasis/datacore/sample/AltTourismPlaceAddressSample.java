@@ -8,6 +8,7 @@ import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCResourceField;
+import org.oasis.datacore.core.meta.model.DCSecurity;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.server.event.DCInitIdEventListener;
 import org.springframework.stereotype.Component;
@@ -40,10 +41,13 @@ public class AltTourismPlaceAddressSample extends DatacoreSampleBase {
       altTourismPlaceKind.addField(new DCField("name", "string", true, 100));
       ///altTourismPlaceKind.addListener(eventService.init(new DCInitIdEventListener(AltTourismPlaceAddressSample.ALTTOURISM_PLACEKIND, "name"))); // TODO null
       DCModel altTourismPlace = new DCModel(AltTourismPlaceAddressSample.ALTTOURISM_PLACE);
+      altTourismPlace.setSecurity(new DCSecurity());
       altTourismPlace.getSecurity().addResourceCreator("model_resource_creator_altTourism.place");
       altTourismPlace.addField(new DCField("name", "string", true, 100));
       altTourismPlace.addField(new DCResourceField("kind", AltTourismPlaceAddressSample.ALTTOURISM_PLACEKIND, true, 100)); // hotel... ; alternativeTourismPlaceKind
       eventService.init(new DCInitIdEventListener(AltTourismPlaceAddressSample.ALTTOURISM_PLACEKIND, "name"));
+
+      myAppPlaceAddress.setSecurity(altTourismPlace.getSecurity()); // TODO TODO
       
       // Mixin for shared fields
       DCMixin oasisAddress = new DCMixin(OASIS_ADDRESS);

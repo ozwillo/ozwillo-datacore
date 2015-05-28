@@ -7,11 +7,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.oasis.datacore.common.context.DCRequestContextProviderFactory;
 import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
+import org.oasis.datacore.core.meta.model.DCSecurity;
 import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.core.security.EntityPermissionService;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
@@ -44,6 +46,9 @@ import org.springframework.stereotype.Component;
  */
 @Component // TODO @Service ??
 public class ResourceService {
+   
+   /** context */
+   public static final String PUT_MODE = "putRatherThanPatchMode";
 
    // default conf : (TODO LATER might be conf'd in prop file or even request headers)
    private boolean detailedErrorsMode = true;
@@ -74,6 +79,10 @@ public class ResourceService {
    
    @Autowired
    private DCModelService modelService;
+
+   /** to pass putRatherThanPatchMode */
+   @Autowired
+   protected DCRequestContextProviderFactory requestContextProviderFactory;
 
    @Autowired
    private QueryParsingService queryParsingService;
@@ -167,18 +176,19 @@ public class ResourceService {
       
       DCProject project = modelService.getProject(); // TODO TODO explode if none 
       
-      boolean isCreation = true;
+      // checking whether creation or update & its consistency :
       Long version = resource.getVersion();
-      if (version != null && version >= 0) { // version < 0 means new
+      boolean isCreation = entityService.isCreation(version);
+      if (isCreation) {
+         if (!canCreate) {
+            throw new ResourceException("Version of data resource to update is required in PUT",
+                  resource, project);
+         }
+      } else {
          if (!canUpdate) {
             throw new ResourceException("Version is forbidden in POSTed data resource "
                   + "to create in strict POST mode", resource, project);
-         } else {
-            isCreation = false;
          }
-      } else if (!canCreate) {
-         throw new ResourceException("Version of data resource to update is required in PUT",
-               resource, project);
       }
       
       DCModelBase dcModel = modelService.getModelBase(modelType); // NB. type can't be null thanks to JAXRS
@@ -226,75 +236,70 @@ public class ResourceService {
          throw new ExternalResourceException(uri, null, null, resource, project);
          // TODO LATER OPT or true broker mode, i.e. this Datacore acts as proxy of another ?
       }
-
-      DCEntity dataEntity = null;
-      if (!canUpdate || !isCreation) {
-         dataEntity = entityService.getByUriUnsecured(stringUri, dcModel); // NB. unsecured
-         // in order to avoid having to fill readers ACL by all writers ACL
-         if (dataEntity != null) {
-            if (!canUpdate) {
-               // already exists, but only allow creation
-               throw new ResourceException("Already exists at uri (forbidden in strict POST mode) :\n"
-                           + dataEntity.toString(), resource, project); // TODO TODO security check access first !!!
-            }/* else {
-               // HTTP ETag checking (provided in an If-Match header) :
-               // NB. DISABLED FOR NOW because will be checked at db save time anyway
-               // (and to support multiple POSTs, would have to be complex or use
-               // the given dataResource.version instead)
-               String httpEntity = dataEntity.getVersion().toString(); // no need of additional uri because only for THIS resource
-               EntityTag eTag = new EntityTag(httpEntity);
-               ResponseBuilder builder = request.evaluatePreconditions(eTag); // NB. request is injected
-               if(builder != null) {
-                  // client is not up to date (send back 412)
-                  throw new WebApplicationException(builder.build());
-               }
-            }*/
-         } else {
-            if (!isCreation) {
-               throw new ResourceObsoleteException("Trying to update missing resource "
-                     + "(to rather create it, provide no version or < 0)", resource, project);
+      
+      // getting existing :
+      // (if isCreation to check that doesn't already exist, else to get ACLs)
+      DCEntity existingDataEntity = entityService.getByUriUnsecured(stringUri, dcModel); // NB. unsecured
+      // in order to avoid having to fill readers ACL by all writers ACL
+      if (existingDataEntity != null) {
+         if (isCreation) {
+            // already exists, but only allow creation
+            throw new ResourceException("Already exists at uri (forbidden in strict POST mode) :\n"
+                        + existingDataEntity.toString(), resource, project); // TODO TODO security check access first !!!
+         }/* else {
+            // HTTP ETag checking (provided in an If-Match header) :
+            // NB. DISABLED FOR NOW because will be checked at db save time anyway
+            // (and to support multiple POSTs, would have to be complex or use
+            // the given dataResource.version instead)
+            String httpEntity = dataEntity.getVersion().toString(); // no need of additional uri because only for THIS resource
+            EntityTag eTag = new EntityTag(httpEntity);
+            ResponseBuilder builder = request.evaluatePreconditions(eTag); // NB. request is injected
+            if(builder != null) {
+               // client is not up to date (send back 412)
+               throw new WebApplicationException(builder.build());
             }
-            if (!canCreate) {
-               throw new ResourceNotFoundException("Data resource doesn't exist (forbidden in PUT)",
-                     resource, project);
-            }
+         }*/
+      } else {
+         if (!isCreation) {
+            throw new ResourceObsoleteException("Trying to update missing resource "
+                  + "(to rather create it, provide no version or < 0)", resource, project);
          }
       }
       
       // supporting PUT vs default PATCH-like POST mode :
-      if (dataEntity == null) {
-         dataEntity = new DCEntity();
-         dataEntity.setCachedModel(dcModel); // TODO or in DCEntityService ?
-         dataEntity.setUri(stringUri);
-         // NB. null version
-      } else {
+      DCEntity dataEntity = new DCEntity();
+      dataEntity.setCachedModel(dcModel); // TODO or in DCEntityService ?
+      dataEntity.setUri(stringUri);
+      if (!isCreation) {
          dataEntity.setVersion(version);
-         if (putRatherThanPatchMode) {
-            dataEntity.getProperties().clear();
-         } // else reuse existing entity as base : PATCH-like behaviour
-         // NB. cached model has been set at entity get
+      } // else keep null version
+      if (existingDataEntity != null) {
+         dataEntity.setPreviousEntity(existingDataEntity);
+         dataEntity.copyNonResourceFieldsFrom(existingDataEntity); // id (else OptimisticLockingFailureException), rights
+         // BUT not props (done by EntityPermissionEvaluator when filtering, and only if !putRatherThanPatchModel)
       }
+      // NB. cached model has been set at entity get
 
       Map<String, Object> dataProps = resource.getProperties();
       
-      ///dataEntity.setId(stringUri); // NOO "invalid Object Id" TODO better
-      dataEntity.setTypes(buildResourceTypes(resource, dcModel)); // TODO or no modelType, or remove modelName ??
+      dataEntity.setTypes(buildResourceTypes(resource, dcModel)); // TODO TODO TODO TODO or no modelType, or remove modelName ??
       
       // parsing resource according to model :
       DCResourceParsingContext resourceParsingContext =
             new DCResourceParsingContext(dcModel, storageModel, uri);
+      requestContextProviderFactory.set(PUT_MODE, putRatherThanPatchMode);
       //List<DCEntity> embeddedEntitiesToAlsoUpdate = new ArrayList<DCEntity>(); // TODO embeddedEntitiesToAlsoUpdate ??
       //resourceParsingContext.setEmbeddedEntitiesToAlsoUpdate(embeddedEntitiesToAlsoUpdate);
       resourceEntityMapperService.resourceToEntityFields(dataProps, dataEntity.getProperties(),
-            dcModel.getGlobalFieldMap(), resourceParsingContext,
-            putRatherThanPatchMode, true); // TODO dcModel.getFieldNames(), abstract DCModel-DCMapField ??
+            (!putRatherThanPatchMode && existingDataEntity != null) ? existingDataEntity.getProperties() : null,
+            dcModel.getGlobalFieldMap(), resourceParsingContext); // TODO dcModel.getFieldNames(), abstract DCModel-DCMapField ??
       
       if (resourceParsingContext.hasErrors()) {
          String msg = DCResourceParsingContext.formatParsingErrorsMessage(resourceParsingContext, detailedErrorsMode);
          throw new ResourceException(msg, resource, project);
       } // else TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
 
-      resourceEntityMapperService.entityToResource(dataEntity, resource, true); // apply view
+      resourceEntityMapperService.entityToResource(dataEntity, resource, true); // apply view (& CLEARS props first)
       // NB. rather than manually updating resource, because props may have changed
       // (ex. if POST/PATCH of a null prop => has not actually been removed)
       // ((and LATER possibly because of behaviours))
@@ -355,10 +360,7 @@ public class ResourceService {
       eventService.triggerResourceEvent(aboutToEventType, resource);
       
       if (isCreation) {
-         // setting creator (group) as sole owner
-         Set<String> creatorOwners = new HashSet<String>(1);
-         creatorOwners.add(datacoreSecurityService.getUserGroup());
-         entityPermissionService.setOwners(dataEntity, creatorOwners);
+         entityPermissionService.setOwners(dataEntity, buildCreatorOwners(dcModel));
          try {
         	 historizeResource(resource, dataEntity, dcModel);
         	 entityService.create(dataEntity);
@@ -388,7 +390,8 @@ public class ResourceService {
          }
       }
       
-      resourceEntityMapperService.entityToResourcePersistenceComputedFields(dataEntity, resource);
+      //resourceEntityMapperService.entityToResourcePersistenceComputedFields(dataEntity, resource); // NOOO would miss filtered stuff gotten back from existing
+      resourceEntityMapperService.entityToResource(dataEntity, resource, true); // apply view (??)
 
       // 2nd pass : post save hooks
       // TODO better
@@ -396,6 +399,33 @@ public class ResourceService {
       eventService.triggerResourceEvent(doneEventType, resource);
       
       return resource;
+   }
+   
+
+   /** security resource creation owners if any
+    * NOOOO also user group if would not be owner */
+   private Set<String> buildCreatorOwners(DCModelBase dcModel) {
+      Set<String> creatorOwners = new HashSet<String>(1);
+      DCSecurity dcSecurity = modelService.getSecurity(dcModel);
+      if (dcSecurity != null) {
+         creatorOwners = new HashSet<String>(dcSecurity.getResourceCreationOwners());
+      } else {
+         creatorOwners = new HashSet<String>(1);
+      }
+      boolean addUserGroup = true;
+      if (!creatorOwners.isEmpty()) {
+         addUserGroup = false;
+         /*for (String g : datacoreSecurityService.getCurrentUser().getEntityGroups()) {
+            if (creatorOwners.contains(g)) {
+               notYetRights = false;
+               break;
+            }
+         }*/
+      } // else setting creator (group) as sole owner
+      if (addUserGroup) {
+         creatorOwners.add(datacoreSecurityService.getUserGroup());
+      }
+      return creatorOwners;
    }
    
 
@@ -476,23 +506,12 @@ public class ResourceService {
       }
       modelType = dcModel.getName(); // normalize ; TODO useful ?
       
-      DCEntity entity = null;
       boolean isUpToDate = entityService.isUpToDate(uri, dcModel, version);
       if (isUpToDate) {
          return null;
       }
-      
-      entity = entityService.getByUri(uri, dcModel);
-      if (entity == null) {
-         //return Response.noContent().build();
-         throw new ResourceNotFoundException("No resource with uri", uri, null, project);
-         // rather than NO_CONTENT ; like Atol ex. deleteApplication in
-         // https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/apps/ApplicationDirectoryResource.java
-      }
-      DCResource resource = resourceEntityMapperService.entityToResource(entity, null, true); // apply view
-      
-      eventService.triggerResourceEvent(DCResourceEvent.Types.READ, resource);
-      return resource;
+
+      return get(uri, dcModel);
    }
 
    /**
@@ -505,8 +524,7 @@ public class ResourceService {
     * @throws ResourceException if asked to abort from within triggered event
     */
    public DCResource get(String uri, String modelType)
-         throws ResourceTypeNotFoundException, ResourceNotFoundException, ResourceException {
-      DCProject project = modelService.getProject(); // TODO explode if none 
+         throws ResourceTypeNotFoundException, ResourceNotFoundException, ResourceException { 
       DCModelBase dcModel = modelService.getModelBase(modelType); // NB. type can't be null thanks to JAXRS
       if (dcModel == null) {
          // TODO LATER OPT client side might deem it a data health / governance problem,
@@ -514,17 +532,23 @@ public class ResourceService {
          throw new ResourceTypeNotFoundException(modelType, "Can't find model type for " + uri
                + ". Maybe it is badly spelled, or it has been deleted or renamed since (only in test). "
                + "In this case, the missing model must first be created again, "
-               + "before patching the entity.", null, null, project);
+               + "before patching the entity.", null, null, modelService.getProject()); // explodes if none
       }
-      
+      return get(uri, dcModel);
+   }
+
+   private DCResource get(String uri, DCModelBase dcModel)
+         throws ResourceNotFoundException, ResourceException {  
       DCEntity entity = entityService.getByUri(uri, dcModel);
       if (entity == null) {
          //return Response.noContent().build();
-         throw new ResourceNotFoundException("No resource with uri", uri, null, project);
+         throw new ResourceNotFoundException("No resource with uri", uri, null,
+               modelService.getProject()); // explodes if none
          // rather than NO_CONTENT ; like Atol ex. deleteApplication in
          // https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/apps/ApplicationDirectoryResource.java
       }
-      DCResource resource = resourceEntityMapperService.entityToResource(entity, null, true); // apply view
+      DCResource resource = resourceEntityMapperService.entityToResource(entity, null,
+            false); // view already applied by Entity PermissionEvaluator
 
       eventService.triggerResourceEvent(DCResourceEvent.Types.READ, resource);
       
@@ -571,7 +595,8 @@ public class ResourceService {
          throw new ResourceNotFoundException(null, uri, null, project);
       }
       
-      DCResource resource = resourceEntityMapperService.entityToResource(dataEntity, null);
+      DCResource resource = resourceEntityMapperService.entityToResource(dataEntity, null,
+            false); // view already applied by Entity PermissionEvaluator
       eventService.triggerResourceEvent(DCResourceEvent.Types.ABOUT_TO_DELETE, resource);
  	   entityService.deleteByUriId(dataEntity);
       eventService.triggerResourceEvent(DCResourceEvent.Types.DELETED, resource);

@@ -19,6 +19,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.oasis.datacore.core.context.DatacoreRequestContextService;
 import org.oasis.datacore.core.entity.EntityQueryService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.query.QueryException;
@@ -42,7 +43,6 @@ import org.oasis.datacore.rest.server.resource.ResourceNotFoundException;
 import org.oasis.datacore.rest.server.resource.ResourceObsoleteException;
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.rest.server.resource.ResourceTypeNotFoundException;
-import org.oasis.datacore.server.context.DatacoreRequestContextService;
 import org.oasis.datacore.server.uri.BadUriException;
 import org.oasis.datacore.server.uri.UriService;
 import org.slf4j.Logger;
@@ -522,7 +522,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
 			            + version + "was not found", uri, null, modelService.getProject())));
 		}
 
-		DCResource resource = resourceEntityMapperService.entityToResource(historizedEntity, null, true); // apply view
+		DCResource resource = resourceEntityMapperService.entityToResource(historizedEntity, null, true); // apply view TODO NO view already applied by Entity PermissionEvaluator
 		ResponseBuilder responseBuilder = Response.ok(resource);
 
 		throw new WebApplicationException(responseBuilder.build());

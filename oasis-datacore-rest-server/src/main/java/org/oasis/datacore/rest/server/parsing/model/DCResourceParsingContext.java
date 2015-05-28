@@ -62,6 +62,11 @@ public class DCResourceParsingContext {
       embeddedUriSet.add(dcUri);
    }
    
+   public boolean isTopLevel() {
+      return this.resourceValueStack.size() == 1; // i.e. only done yet enter(model, storageModel, uri)
+   }
+   
+   
    public void enter(DCModelBase model, DCModelBase storageModel, DCURI uri) {
       ///this.resourceValueStack.add(new DCResourceValue(model.getName() + '[' + id + ']', null, id));
       this.resourceValueStack.add(new DCResourceValue(null, model, storageModel, null, uri));

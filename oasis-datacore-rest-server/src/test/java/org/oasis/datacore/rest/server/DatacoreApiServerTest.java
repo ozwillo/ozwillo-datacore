@@ -10,6 +10,7 @@ import javax.ws.rs.WebApplicationException;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -21,6 +22,7 @@ import org.oasis.datacore.core.entity.NativeModelService;
 import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryServiceImpl;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
+import org.oasis.datacore.core.security.mock.LocalAuthenticationService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.util.ResourceParsingHelper;
@@ -96,6 +98,10 @@ public class DatacoreApiServerTest {
    /** for testing purpose */
    @Autowired
    private LdpEntityQueryServiceImpl ldpEntityQueryServiceImpl;
+   
+   /** to log ing */
+   @Autowired
+   private LocalAuthenticationService localAuthenticationService;
    
    @Autowired
    private CityCountrySample cityCountrySample;

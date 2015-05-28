@@ -6,8 +6,10 @@ import java.util.Map;
 
 import org.apache.cxf.message.Message;
 import org.oasis.datacore.common.context.DCRequestContextProviderFactory;
+import org.oasis.datacore.core.context.DatacoreRequestContextService;
 import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.client.cxf.CxfMessageHelper;
+import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -20,7 +22,7 @@ import org.springframework.util.StringUtils;
  *
  */
 @Component
-public class DatacoreRequestContextService {
+public class DatacoreRequestContextServiceImpl implements DatacoreRequestContextService {
    
    public static final String PARAM_DEBUG = "dc.params.debug";
    public static final String QUERY_EXPLAIN = "dc.query.explain";
@@ -32,6 +34,7 @@ public class DatacoreRequestContextService {
     * 
     * @return false if no context, else request debug header or param
     */
+   @Override
    public boolean isDebug() {
       Map<String, Object> requestContext = requestContextProviderFactory.getRequestContext();
       if (requestContext == null) {
@@ -52,6 +55,7 @@ public class DatacoreRequestContextService {
     * Must only be called if isDebug()
     * @return never null, ex. query explain data
     */
+   @Override
    public Map<String, Object> getDebug() {
       Map<String, Object> requestContext = requestContextProviderFactory.getRequestContext(); // not null because isDebug()
       @SuppressWarnings("unchecked")
@@ -62,7 +66,8 @@ public class DatacoreRequestContextService {
       }
       return explainCtx;
    }
-   
+
+   @Override
    public String getAcceptContentType() {
       Map<String, Object> requestContext = requestContextProviderFactory.getRequestContext();
       if (requestContext == null) {
@@ -72,10 +77,11 @@ public class DatacoreRequestContextService {
    }
    
    /**
-    * 
+    * TODO cache
     * @return null means all, empty means minimal (@id, o:version), only dc:DublinCore_0
     * means minimal + @type + dc: fields, others come in addition to it
     */
+   @Override
    public LinkedHashSet<String> getViewMixinNames() {
       Map<String, Object> requestContext = requestContextProviderFactory.getRequestContext();
       if (requestContext == null) {
@@ -96,6 +102,12 @@ public class DatacoreRequestContextService {
          }
       }
       return mixinNameSet;
+   }
+
+   @Override
+   public boolean getPutRatherThanPatchMode() {
+      Object found = requestContextProviderFactory.get(ResourceService.PUT_MODE);
+      return found != null && ((Boolean) found).booleanValue();
    }
    
 }

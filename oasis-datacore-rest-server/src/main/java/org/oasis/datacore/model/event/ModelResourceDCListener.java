@@ -69,7 +69,7 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
             
             // first cleaning up resource ; required else default values have not been set by parsing yet
             // which makes toModelOrMixin fail on ex. maxScan (null because unset) :
-            reMappingService.entityToResource(resourceService.resourceToEntity(r), r);
+            reMappingService.entityToResource(resourceService.resourceToEntity(r), r, false); // TODO write
             
             // map to model & check : 
             DCModelBase modelOrMixin = mrMappingService.toModelOrMixin(r); // checks project !

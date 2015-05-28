@@ -20,7 +20,7 @@ import org.oasis.datacore.contribution.service.ContributionService;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
-import org.oasis.datacore.core.security.mock.MockAuthenticationService;
+import org.oasis.datacore.core.security.mock.LocalAuthenticationService;
 import org.oasis.datacore.historization.service.HistorizationService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
@@ -66,7 +66,7 @@ public class ContributionTest {
 
 	/** TODO actual */
 	@Autowired
-	private MockAuthenticationService mockAuthenticationService;
+	private LocalAuthenticationService mockAuthenticationService;
 
 	@Autowired
 	private MarkaInvestData markaInvestData;

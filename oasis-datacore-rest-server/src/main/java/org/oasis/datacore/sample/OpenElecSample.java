@@ -493,7 +493,7 @@ public class OpenElecSample extends DatacoreSampleMethodologyBase {
                         new ImmutableList.Builder<String>().add((String) company.get("coita:atecoDescription")).build()).build(), 0, 1);
             DCResource ateco;
             if (atecos != null && !atecos.isEmpty()) {
-               ateco = resourceEntityMapperService.entityToResource(atecos.get(0), null);
+               ateco = resourceEntityMapperService.entityToResource(atecos.get(0), null, false);
             } else {
                ///throw new RuntimeException("Unknown ateco description " + company.get("coita:atecoDescription"));
                // WORKAROUND TO WRONG DESCRIPTIONS : (!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!)

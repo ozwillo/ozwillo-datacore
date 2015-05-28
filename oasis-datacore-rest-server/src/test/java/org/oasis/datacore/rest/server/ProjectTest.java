@@ -26,7 +26,7 @@ import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.pov.DCProject;
-import org.oasis.datacore.core.security.mock.MockAuthenticationService;
+import org.oasis.datacore.core.security.mock.LocalAuthenticationService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.util.UriHelper;
@@ -53,7 +53,7 @@ public class ProjectTest {
    private /*DatacoreApi*/DatacoreCachedClient datacoreApiClient;
    
    @Autowired
-   private MockAuthenticationService authenticationService;
+   private LocalAuthenticationService authenticationService;
    
    /** to init models */
    @Autowired
@@ -119,7 +119,7 @@ public class ProjectTest {
       //      modelServiceImpl.getModel(ORG2));
       
       // test workflow of example use of org2  :
-      // 0. pole numerique imports pub org (TODO Q or not, or also pri ???)
+      // 0. pole numerique imports pub org (TODO Q or not, or also pri ???) TODO TODO import rights !
       authenticationService.loginAs("pn");
       DCResource lyceeJeanMace2 = DCResource.create(
             UriHelper.buildUri(containerUrl, ORG2, "FR/Lycee Jean Mace"))
@@ -135,7 +135,7 @@ public class ProjectTest {
             .set("org2:jurisdiction", "FR")
             .set("org2:regNumber", "82347366")
             .set("org2:activity", "333")
-            .set("orgpri2:publishedVersion", lyceeJeanMace2.getVersion())
+            ///.set("orgpri2:publishedVersion", lyceeJeanMacePri2.getVersion()) // TODO TODO patch
             .set("orgpri2:state", "approved")
             .set("orgpri2:employeeNb", 104);
       try { datacoreApiClient.deleteData(lyceeJeanMacePri2); } catch (NotFoundException nfex) {}
@@ -148,14 +148,14 @@ public class ProjectTest {
       DCResource checkedDromeAgriCoopPri2 = new SimpleRequestContextProvider<DCResource>() {
          protected DCResource executeInternal() throws MalformedURLException, URISyntaxException {
 
-      // collaboratively creates producer private org in pri project
+      // (collaboratively) creates producer private org in pri project TODO NOOOO rather already done & has rights on it
       DCResource dromeAgriCoopPri2 = DCResource.create(
             UriHelper.buildUri(containerUrl, ORGPRI2, "FR/Drome Agri Coop"))
             .set("org2:name", "Drôme Agri Coop")
             .set("org2:jurisdiction", "FR")
             .set("org2:regNumber", "92347366")
             .set("org2:activity", "444")
-            .set("orgpri2:publishedVersion", null)
+            //.set("orgpri2:publishedVersion", null)
             .set("orgpri2:state", "changed") // or "new", null
             .set("orgpri2:employeeNb", 96);
       try { datacoreApiClient.deleteData(dromeAgriCoopPri2); } catch (NotFoundException nfex) {}
@@ -198,7 +198,7 @@ public class ProjectTest {
       try { datacoreApiClient.deleteData(dromeAgriCoop2); } catch (NotFoundException nfex) {}
       DCResource createdDromeAgriCoop2 = datacoreApiClient.postDataInType(dromeAgriCoop2);
       checkedDromeAgriCoopPri2.set("orgpri2:state", "approved"); // or "published"
-      checkedDromeAgriCoopPri2.set("orgpri2:publishedVersion", createdDromeAgriCoop2.getVersion()); // TODO LATER transaction
+      checkedDromeAgriCoopPri2.set("orgpri2:publishedVersion", checkedDromeAgriCoopPri2.getVersion()); // TODO LATER transaction
       DCResource publishedDromeAgriCoopPri2 = datacoreApiClient.postDataInType(checkedDromeAgriCoopPri2);
       // publishes an offer linked to public cantina org
       DCResource offer246bananes = DCResource.create(
@@ -206,15 +206,17 @@ public class ProjectTest {
             .set("odisp:name", "46 bananes")
             .set("agriloco:type", "banane")
             .set("agriloco:amount", 46)
-            .set("agriloco:maxPrice", 19.99)
-            .set("agriloco:deadline", new DateTime())
-            .set("agriloco:requester", lyceeJeanMace2.getUri());
+            //.set("agriloco:maxPrice", 19.99)
+            .set("agriloco:answerDeadline", new DateTime())
+            .set("agriloco:deliveryDeadline", new DateTime())
+            .set("agriloco:requester", lyceeJeanMace2.getUri())
+            .set("agriloco:state", "published");
       try { datacoreApiClient.deleteData(offer246bananes); } catch (NotFoundException nfex) {}
       DCResource postedOffer246bananes = datacoreApiClient.postDataInType(offer246bananes);
       authenticationService.logout();
       // (which actually has the same uri, but linked from model that sees public rather than private org)
       // 2. producer :
-      // answers offer, which asks him to create an ozwillo account, where he has to choose his (public) org in the portal
+      // wants to answer mail-sent offer, which asks him to create an ozwillo account, where he has to choose his (public) org in the portal
       authenticationService.loginAs("jb");
       QueryParameters org2DromeAgriCoopParams = new QueryParameters().add("org2:name", "$regex\"Drome.*\"");
       List<DCResource> org2DromeAgriCoopRes = datacoreApiClient.findDataInType(ORG2,
@@ -222,7 +224,8 @@ public class ProjectTest {
       Assert.assertEquals(1, org2DromeAgriCoopRes.size());
       Assert.assertEquals(createdDromeAgriCoop2.getUri(), org2DromeAgriCoopRes.get(0).getUri());
       Assert.assertNotNull(datacoreApiClient.getData(createdDromeAgriCoop2));
-      // he links it from its profile, as a way to ask for ownership
+      // he links it (using the portal) from its user profile, as a way to ask for ownership
+      // TODO TODO portal gives him rights right away !!! (confirm "already orga" TODO bthuillier maquette)
       DCResource jeanBonUser = DCResource.create(UriHelper.buildUri(containerUrl, USER2, "4678"))
             .set("odisp:name", "Jean Bon")
             .set("user2:country", "FR")
@@ -257,8 +260,10 @@ public class ProjectTest {
       // 3. cantina, using agrilocal app :
       // sees the producer in its "public org chosen, asking rights on private org" inbox
       // i.e. "users linking to an organization among public org stil owned by cantina"
+      // NOOOOOOOOOOOOOOOOOO here also portal gives right (rather than CG)
       authenticationService.loginAs("ljm");
-      QueryParameters lyceeJeanMace2OrgInboxParams = new QueryParameters().add("user2:organization", createdDromeAgriCoop2.getUri());
+      QueryParameters lyceeJeanMace2OrgInboxParams = new QueryParameters().add("user2:organization",
+            "$in[\"" + createdDromeAgriCoop2.getUri() + "\"]"); // in current orgs without their own owner TODO then with link to it ??
       List<DCResource> lyceeJeanMace2OrgInboxRes = datacoreApiClient.findDataInType(USER2,
             lyceeJeanMace2OrgInboxParams, null, null);
       Assert.assertEquals(1, lyceeJeanMace2OrgInboxRes.size());
@@ -267,7 +272,7 @@ public class ProjectTest {
       // TODO using API
       authenticationService.logout();
       // 4. producer :
-      // can now see and change some info in private org using portal
+      // can now see and change some info in private org using portal BUT only on pub mixin perimeter
       // (TODO Q or agrilocal ?), including answering to offer by linking to it, which at once updates public org
       authenticationService.loginAs("jb");
       DCResource jbPublishedDromeAgriCoopPri2 = new SimpleRequestContextProvider<DCResource>() {
@@ -286,8 +291,9 @@ public class ProjectTest {
             DCResource jbPublishedDromeAgriCoop2 = datacoreApiClient.postDataInType(jbDromeAgriCoop2);
             Assert.assertEquals(106, jbPublishedDromeAgriCoop2.get("orgpri2:employeeNb"));
             jbCheckedDromeAgriCoopPri2.set("orgpri2:state", "published");
-            jbCheckedDromeAgriCoopPri2.set("orgpri2:publishedVersion", jbPublishedDromeAgriCoop2.getVersion());
-            jbCheckedDromeAgriCoopPri2.set("agrilocorg:acceptedOffers", DCResource.listBuilder().add(offer246bananes.getUri()).build());
+            jbCheckedDromeAgriCoopPri2.set("orgpri2:publishedVersion", jbCheckedDromeAgriCoopPri2.getVersion());
+            jbCheckedDromeAgriCoopPri2.set("agrilocorg:proposedOffers", DCResource.listBuilder().add(offer246bananes.getUri()).build());
+            // TODO TODO TODO visible to agrilocal but not public, nicest way is in scope agri !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             DCResource jbPublishedDromeAgriCoopPri2 = datacoreApiClient.postDataInType(jbCheckedDromeAgriCoopPri2);
             Assert.assertEquals(jbPublishedDromeAgriCoop2.getVersion(), jbPublishedDromeAgriCoopPri2.get("orgpri2:publishedVersion"));
             return jbPublishedDromeAgriCoopPri2;
@@ -299,17 +305,14 @@ public class ProjectTest {
       authenticationService.loginAs("ljm");
       new SimpleRequestContextProvider<DCResource>() {
          protected DCResource executeInternal() {
-            // now can't see private org anymore
-            Assert.assertEquals(0, datacoreApiClient.findDataInType(ORGPRI2,
+            // still sees private org, TODO and even has rights on it
+            Assert.assertEquals(1, datacoreApiClient.findDataInType(ORGPRI2,
                   org2DromeAgriCoopParams, null, null));
-            try {
-               datacoreApiClient.getData(publishedDromeAgriCoopPri2);
-               Assert.fail("Should not be able to see " + publishedDromeAgriCoopPri2.getUri());
-            } catch (NotFoundException nfex) {
-            }
-            // but can see provider's answer to offer
+            datacoreApiClient.postDataInType(publishedDromeAgriCoopPri2);
+            
+            // and can see provider's answer to offer
             QueryParameters lyceeJeanMace2OfferInboxParams = new QueryParameters()
-                  .add("agrilocorg:acceptedOffers", offer246bananes.getUri());
+                  .add("agrilocorg:proposedOffers", "$in[\"" + offer246bananes.getUri() + "\"]"); // in current offers
             List<DCResource> lyceeJeanMace2OfferInboxRes = datacoreApiClient.findDataInType(USER2,
                   lyceeJeanMace2OfferInboxParams, null, null);
             Assert.assertEquals(1, lyceeJeanMace2OfferInboxRes.size());

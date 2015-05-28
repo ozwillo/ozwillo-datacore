@@ -14,7 +14,7 @@ import org.apache.cxf.jaxrs.utils.JAXRSUtils;
 import org.apache.cxf.message.Message;
 import org.apache.cxf.phase.AbstractPhaseInterceptor;
 import org.apache.cxf.phase.Phase;
-import org.oasis.datacore.core.security.mock.MockAuthenticationService;
+import org.oasis.datacore.core.security.mock.LocalAuthenticationService;
 import org.oasis.datacore.rest.client.cxf.CxfMessageHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,7 +35,7 @@ public class MockLoginServerInInterceptor extends AbstractPhaseInterceptor<Messa
    private boolean devmode;
    
    @Autowired
-   private MockAuthenticationService mockAuthenticationService;
+   private LocalAuthenticationService mockAuthenticationService;
    
    public MockLoginServerInInterceptor() {
       super(Phase.PRE_PROTOCOL);

@@ -83,7 +83,7 @@ public class DCResource {
    @ApiModelProperty(value = "version", position=1, notes="The server's up-to-date version must "
          + "be provided (save when creating it), otherwise it will fail due to optimistic locking.")
    @JsonProperty(KEY_VERSION)
-   private Long version;
+   private Long version = null; // null (or < 0) means new
 
    /** types : model (first one) plus type mixins */
    @JsonProperty(KEY_TYPES)

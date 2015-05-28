@@ -89,7 +89,7 @@ public abstract class DCModelBase {
    // instanciable :
    private boolean isHistorizable;
    private boolean isContributable;
-   private DCSecurity security = new DCSecurity(); // TODO LATER or also storage i.e. inherited from polymorphism root ?
+   private DCSecurity security = null; //  = new DCSecurity(); // TODO TODO TODO LATER or also storage i.e. inherited from polymorphism root ?
 
    // storage :
    /** Limits the specified number of documents to scan specified in DCField.queryLimit
@@ -453,7 +453,7 @@ public abstract class DCModelBase {
 	 */
 	@Override
 	public String toString() {
-	   return "Model[" + this.absoluteName + "." + this.name
+	   return "Model[" + this.absoluteName
 	         + ";m:" + this.getGlobalMixinMap().keySet()
 	         + "](f:" + this.getGlobalFieldMap().keySet() + ")";
 	}

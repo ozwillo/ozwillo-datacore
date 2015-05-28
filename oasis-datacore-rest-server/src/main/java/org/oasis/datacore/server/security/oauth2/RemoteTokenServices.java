@@ -137,6 +137,12 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 		return new OAuth2Authentication(clientAuthentication, userAuthentication);
 	}
 
+	/**
+	 * 
+	 * @param map props, including sub (user id) & sub_groups (user groups / authorities)
+	 * @param scope (actually not used, can be found in clientAuthentication part of OAuth2Authentication)
+	 * @return
+	 */
    private Authentication getUserAuthentication(Map<String, Object> map, Set<String> scope) {
 		
 		Set<GrantedAuthority> userAuthorities = new HashSet<GrantedAuthority>();

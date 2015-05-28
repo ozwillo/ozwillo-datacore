@@ -23,7 +23,7 @@ import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.security.EntityPermissionService;
-import org.oasis.datacore.core.security.mock.MockAuthenticationService;
+import org.oasis.datacore.core.security.mock.LocalAuthenticationService;
 import org.oasis.datacore.model.resource.ModelResourceMappingService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
@@ -77,7 +77,7 @@ public class ResourceModelTest {
    @Autowired
    private EntityPermissionService entityPermissionService;
    @Autowired
-   private MockAuthenticationService authenticationService;
+   private LocalAuthenticationService authenticationService;
    
    /** to be able to build a full uri, to check in tests
     * TODO rather client-side DCURI or rewrite uri in server */

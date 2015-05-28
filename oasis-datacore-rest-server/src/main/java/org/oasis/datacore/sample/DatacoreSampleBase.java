@@ -30,7 +30,6 @@ import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCResourceField;
-import org.oasis.datacore.core.security.mock.MockAuthenticationService;
 import org.oasis.datacore.historization.service.impl.HistorizationServiceImpl;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
@@ -38,6 +37,8 @@ import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.server.DatacoreApiImpl;
 import org.oasis.datacore.rest.server.event.EventService;
 import org.oasis.datacore.rest.server.resource.ResourceEntityMapperService;
+import org.oasis.datacore.rest.server.resource.ResourceException;
+import org.oasis.datacore.rest.server.resource.ResourceNotFoundException;
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.server.uri.UriService;
 import org.slf4j.Logger;
@@ -71,9 +72,6 @@ import com.google.common.collect.ImmutableMap;
 public abstract class DatacoreSampleBase extends InitableBase/*implements ApplicationListener<ContextRefreshedEvent> */{
    
    protected final Logger logger = LoggerFactory.getLogger(getClass());
-   
-   @Autowired
-   protected MockAuthenticationService mockAuthenticationService;
 
    /** impl, to be able to modify it
     * TODO LATER extract interface */
@@ -129,6 +127,11 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
    public int getOrder() {
       return 1000;
    }
+   /** don't let InitableBase login, DatacoreSampleBase logs in itself in a finer manner */
+   @Override
+   protected String getLoginAsUserName() {
+      return null;
+   }
    
    /*@Override
    public void onApplicationEvent(ContextRefreshedEvent event) {
@@ -137,7 +140,7 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
    //@PostConstruct // NOO deadlock, & same for ApplicationContextAware
    @Override
    protected void doInit() {
-      mockAuthenticationService.loginAs("admin");
+      localAuthenticationService.loginAs("admin");
       try {
          List<DCModelBase> modelsToCreate = new ArrayList<DCModelBase>();
          buildModels(modelsToCreate);
@@ -162,7 +165,7 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
          logger.error("Error initing " + this.getClass().getName(), t);
                
       } finally {
-         mockAuthenticationService.logout();
+         localAuthenticationService.logout();
       }
    }
    
@@ -197,20 +200,20 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
     * otherwise, do cleanDataOfCreatedModels(someModels) then createSomeData()
     */
    public void initData() {
-      mockAuthenticationService.loginAs("admin");
+      localAuthenticationService.loginAs("admin");
       try {
          cleanDataOfCreatedModels();
          fillData();
       } finally {
-         mockAuthenticationService.logout();
+         localAuthenticationService.logout();
       }
    }
    public void flushData() {
-      mockAuthenticationService.loginAs("admin");
+      localAuthenticationService.loginAs("admin");
       try {
          cleanDataOfCreatedModels();
       } finally {
-         mockAuthenticationService.logout();
+         localAuthenticationService.logout();
       }
    }
 
@@ -218,7 +221,7 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
     * To be called by tests only if they require to init some models explictly.
     */
    public void initModels() {
-      mockAuthenticationService.loginAs("admin");
+      localAuthenticationService.loginAs("admin");
       try {
          List<DCModelBase> modelsToCreate = new ArrayList<DCModelBase>();
          buildModels(modelsToCreate);
@@ -227,18 +230,18 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
             createModel(model, true);
          }
       } finally {
-         mockAuthenticationService.logout();
+         localAuthenticationService.logout();
       }
    }
    public void initModels(DCModelBase ... modelsToCreate) {
       initModels(Arrays.asList(modelsToCreate));
    }
    public void initModels(List<DCModelBase> modelsToCreate) {
-      mockAuthenticationService.loginAs("admin");
+      localAuthenticationService.loginAs("admin");
       try {
          createModels(modelsToCreate, true);
       } finally {
-         mockAuthenticationService.logout();
+         localAuthenticationService.logout();
       }
    }
    
@@ -443,6 +446,25 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
     * @obsolete use rather resourceService
     * Requires to have logged in first
     */
+   public DCResource postDataInTypeIfNotExists(DCResource resource) throws RuntimeException {
+      try {
+         return resourceService.get(resource.getUri(), resource.getModelType());
+
+      } catch (ResourceNotFoundException ex) {
+         /*if (Response.Status.NOT_FOUND.getStatusCode() != waex.getResponse().getStatus()) {
+            throw new RuntimeException("Unexpected error", waex);
+         }*/
+         return /*datacoreApiClient.*/postDataInType(resource);
+      } catch (RuntimeException rex) {
+         throw rex;
+      } catch (Exception ex) {
+         throw new RuntimeException(ex);
+      }
+   }
+   /**
+    * @obsolete use rather resourceService
+    * Requires to have logged in first
+    */
    public DCResource postDataInType(DCResource resource, String projectName) throws RuntimeException {
       return new SimpleRequestContextProvider<DCResource>() { // set context project beforehands :
          protected DCResource executeInternal() {
@@ -450,6 +472,34 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
          }
       }.execInContext(new ImmutableMap.Builder<String, Object>()
             .put(DCRequestContextProvider.PROJECT, projectName).build());
+   }
+   /**
+    * @obsolete use rather resourceService
+    * Requires to have logged in first
+    */
+   public DCResource postDataInTypeIfNotExists(DCResource resource, String projectName) throws RuntimeException {
+      try {
+         return new SimpleRequestContextProvider<DCResource>() { // set context project beforehands :
+            protected DCResource executeInternal() throws ResourceException {
+               return resourceService.get(resource.getUri(), resource.getModelType());
+            }
+         }.execInContext(new ImmutableMap.Builder<String, Object>()
+               .put(DCRequestContextProvider.PROJECT, projectName).build());
+         
+      } catch (RuntimeException rex) {
+         if (!(rex.getCause() instanceof ResourceNotFoundException)) {
+            throw rex;
+         }
+         /*if (Response.Status.NOT_FOUND.getStatusCode() != waex.getResponse().getStatus()) {
+            throw new RuntimeException("Unexpected error", waex);
+         }*/
+         return new SimpleRequestContextProvider<DCResource>() { // set context project beforehands :
+            protected DCResource executeInternal() throws ResourceException {
+               return /*datacoreApiClient.*/postDataInType(resource);
+            }
+         }.execInContext(new ImmutableMap.Builder<String, Object>()
+               .put(DCRequestContextProvider.PROJECT, projectName).build());
+      }
    }
 
    

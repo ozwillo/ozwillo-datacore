@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.ForbiddenException;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -23,19 +24,22 @@ import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.security.EntityPermissionService;
-import org.oasis.datacore.core.security.mock.MockAuthenticationService;
+import org.oasis.datacore.core.security.mock.LocalAuthenticationService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.client.QueryParameters;
 import org.oasis.datacore.rest.server.event.EventService;
+import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.sample.AltTourismPlaceAddressSample;
 import org.oasis.datacore.sample.IgnCityhallSample;
+import org.oasis.datacore.server.uri.BadUriException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -79,7 +83,7 @@ public class DatacoreApiServerMixinTest {
    @Autowired
    private EntityPermissionService entityPermissionService;
    @Autowired
-   private MockAuthenticationService authenticationService;
+   private LocalAuthenticationService authenticationService;
    
    /** to be able to build a full uri, to check in tests
     * TODO rather client-side DCURI or rewrite uri in server */
@@ -193,7 +197,7 @@ public class DatacoreApiServerMixinTest {
    }
    
    @Test
-   public void testAddress() throws QueryException {
+   public void testAddress() throws ResourceException, BadUriException, QueryException {
       // cleaning data AND models is required by this test :
       altTourismPlaceAddressSample.initModels();
       
@@ -495,13 +499,13 @@ public class DatacoreApiServerMixinTest {
          resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true, false);
          Assert.fail("Resource in authentified type should not be writable as guest");
-      } catch (Exception e) {
+      } catch (AccessDeniedException e) {
          Assert.assertTrue(true);
       }
       try {
          datacoreApiClient.postDataInType(altTourismPlaceSofiaMonasteryPosted); // client side
          Assert.fail("Resource in authentified type should not be writable as guest");
-      } catch (Exception e) {
+      } catch (ForbiddenException e) {
          Assert.assertTrue(true);
       }
       
@@ -510,13 +514,13 @@ public class DatacoreApiServerMixinTest {
          resourceService.createOrUpdate(buildSofiaMonastery(++i),
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false, false);
          Assert.fail("Resource in authentified type should not be creatable as guest");
-      } catch (Exception e) {
+      } catch (AccessDeniedException e) {
          Assert.assertTrue(true);
       }
       try {
          datacoreApiClient.postDataInType(buildSofiaMonastery(++i)); // client side
          Assert.fail("Resource in authentified type should not be creatable as guest");
-      } catch (Exception e) {
+      } catch (ForbiddenException e) {
          Assert.assertTrue(true);
       }
       
@@ -569,13 +573,13 @@ public class DatacoreApiServerMixinTest {
          resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true, false);
          Assert.fail("Resource in authentified type should not be writable because not yet in writer group");
-      } catch (Exception e) {
+      } catch (AccessDeniedException e) {
          Assert.assertTrue(true);
       }
       try {
          datacoreApiClient.postDataInType(altTourismPlaceSofiaMonasteryPosted); // client side
          Assert.fail("Resource in authentified type should not be writable because not yet in writer group");
-      } catch (Exception e) {
+      } catch (ForbiddenException e) {
          Assert.assertTrue(true);
       }
       
@@ -584,13 +588,13 @@ public class DatacoreApiServerMixinTest {
          resourceService.createOrUpdate(buildSofiaMonastery(++i),
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false, false);
          Assert.fail("Resource in authentified type should not be creatable because not yet in writer group");
-      } catch (Exception e) {
+      } catch (AccessDeniedException e) {
          Assert.assertTrue(true);
       }
       try {
          datacoreApiClient.postDataInType(buildSofiaMonastery(++i)); // client side
          Assert.fail("Resource in authentified type should not be creatable because not yet in writer group");
-      } catch (Exception e) {
+      } catch (ForbiddenException e) {
          Assert.assertTrue(true);
       }
       
@@ -613,14 +617,14 @@ public class DatacoreApiServerMixinTest {
          resourceService.get(altTourismPlaceSofiaMonasteryPosted.getUri(),
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE);
          Assert.fail("Resource in private type should not be readable as GUEST");
-      } catch (Exception e) {
+      } catch (AccessDeniedException e) {
          Assert.assertTrue(true);
       }
       try {
          datacoreApiClient.getData(AltTourismPlaceAddressSample.ALTTOURISM_PLACE,
                "Sofia_Monastery", 0l); // client side
          Assert.fail("Resource in private type should not be readable as GUEST");
-      } catch (Exception e) {
+      } catch (ForbiddenException e) {
          Assert.assertTrue(true);
       }
       try {
@@ -636,13 +640,13 @@ public class DatacoreApiServerMixinTest {
          resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true, false);
          Assert.fail("Resource in private type should not be writable as GUEST");
-      } catch (Exception e) {
+      } catch (AccessDeniedException e) {
          Assert.assertTrue(true);
       }
       try {
          datacoreApiClient.postDataInType(altTourismPlaceSofiaMonasteryPosted); // client side
          Assert.fail("Resource in private type should not be writable as GUEST");
-      } catch (Exception e) {
+      } catch (ForbiddenException e) {
          Assert.assertTrue(true);
       }
       
@@ -651,13 +655,13 @@ public class DatacoreApiServerMixinTest {
          resourceService.createOrUpdate(buildSofiaMonastery(++i),
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false, false);
          Assert.fail("Resource in private type should not be creatable as GUEST");
-      } catch (Exception e) {
+      } catch (AccessDeniedException e) {
          Assert.assertTrue(true);
       }
       try {
          datacoreApiClient.postDataInType(buildSofiaMonastery(++i)); // client side
          Assert.fail("Resource in private type should not be creatable as GUEST");
-      } catch (Exception e) {
+      } catch (ForbiddenException e) {
          Assert.assertTrue(true);
       }
       
@@ -668,7 +672,7 @@ public class DatacoreApiServerMixinTest {
       DCEntity altTourismPlaceSofiaMonasteryEntity = entityService.getByUri(altTourismPlaceSofiaMonastery.getUri(), altTourismPlaceModel);
       entityPermissionService.setReaders(altTourismPlaceSofiaMonasteryEntity,
             new ImmutableSet.Builder<String>().add("rm_altTourism.place.SofiaMonastery_readers").build());
-      entityService.update(altTourismPlaceSofiaMonasteryEntity);
+      entityService.changeRights(altTourismPlaceSofiaMonasteryEntity);
       // get with updated version :
       altTourismPlaceSofiaMonasteryPosted = datacoreApiClient.getData(AltTourismPlaceAddressSample.ALTTOURISM_PLACE, "Sofia_Monastery");
       authenticationService.logout(); // NB. not required since followed by login
@@ -713,13 +717,13 @@ public class DatacoreApiServerMixinTest {
          resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true, false);
          Assert.fail("Resource in private type should not be writable by user not in writer group");
-      } catch (Exception e) {
+      } catch (AccessDeniedException e) {
          Assert.assertTrue(true);
       }
       try {
          datacoreApiClient.postDataInType(altTourismPlaceSofiaMonasteryPosted); // client side
          Assert.fail("Resource in private type should not be writable by user not in writer group");
-      } catch (Exception e) {
+      } catch (ForbiddenException e) {
          Assert.assertTrue(true);
       }
       
@@ -728,13 +732,13 @@ public class DatacoreApiServerMixinTest {
          resourceService.createOrUpdate(buildSofiaMonastery(++i),
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false, false);
          Assert.fail("Resource in private type should not be creatable by user not in writer group");
-      } catch (Exception e) {
+      } catch (AccessDeniedException e) {
          Assert.assertTrue(true);
       }
       try {
          datacoreApiClient.postDataInType(buildSofiaMonastery(++i)); // client side
          Assert.fail("Resource in private type should not be creatable by user not in writer group");
-      } catch (Exception e) {
+      } catch (ForbiddenException e) {
          Assert.assertTrue(true);
       }
       
@@ -747,13 +751,13 @@ public class DatacoreApiServerMixinTest {
          resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true, false);
          Assert.fail("Resource in private type should not be writable by user in not yet set writer group");
-      } catch (Exception e) {
+      } catch (AccessDeniedException e) {
          Assert.assertTrue(true);
       }
       try {
          datacoreApiClient.postDataInType(altTourismPlaceSofiaMonasteryPosted); // client side
          Assert.fail("Resource in private type should not be writable by user in not yet set writer group");
-      } catch (Exception e) {
+      } catch (ForbiddenException e) {
          Assert.assertTrue(true);
       }
       
@@ -780,7 +784,7 @@ public class DatacoreApiServerMixinTest {
       authenticationService.loginAs("admin");
       entityPermissionService.setWriters(altTourismPlaceSofiaMonasteryEntity,
             new ImmutableSet.Builder<String>().add("rm_altTourism.place.SofiaMonastery_writers").build());
-      entityService.update(altTourismPlaceSofiaMonasteryEntity);
+      entityService.changeRights(altTourismPlaceSofiaMonasteryEntity);
       // get with updated version :
       altTourismPlaceSofiaMonasteryPosted = datacoreApiClient.getData(AltTourismPlaceAddressSample.ALTTOURISM_PLACE, "Sofia_Monastery");
       authenticationService.logout(); // NB. not required since followed by login

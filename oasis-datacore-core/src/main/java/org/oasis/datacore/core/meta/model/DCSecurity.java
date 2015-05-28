@@ -56,6 +56,9 @@ public class DCSecurity {
 	 * Write resource : NO
 	 */
 	private Set<String> resourceCreator = new HashSet<String>();
+
+	/** who to set owner at creation (u_creator if empty) */
+   private Set<String> resourceCreationOwners = new HashSet<String>();
 	
 	/**
 	 * Give access to all data no matter what permissions on the entity
@@ -149,6 +152,14 @@ public class DCSecurity {
 	public void removeResourceCreator(String group) {
 		this.resourceCreator.remove(group);
 	}
+
+   public Set<String> getResourceCreationOwners() {
+      return resourceCreationOwners;
+   }
+
+   public void setResourceCreationOwners(Set<String> resourceCreationOwners) {
+      this.resourceCreationOwners = resourceCreationOwners;
+   }
 
 	public void addReader(String group) {
 		this.resourceReader.add(group);

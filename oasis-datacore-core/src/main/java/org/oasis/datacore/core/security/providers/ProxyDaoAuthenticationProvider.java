@@ -9,6 +9,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.User;
 
+
+/**
+ * ONLY USED IN MOCK because no OAuth (including no scopes)
+ * 
+ * @author mdutoo
+ *
+ */
 public class ProxyDaoAuthenticationProvider implements AuthenticationProvider {
 
 	@Autowired
@@ -19,7 +26,8 @@ public class ProxyDaoAuthenticationProvider implements AuthenticationProvider {
 		Authentication auth = delegate.authenticate(authentication);
 		if (auth != null && auth.getPrincipal() != null && auth.getPrincipal() instanceof User) {
 			DCUserImpl dcUser = new DCUserImpl((User) auth.getPrincipal());
-			UsernamePasswordAuthenticationToken result = new UsernamePasswordAuthenticationToken(dcUser, authentication.getCredentials(), dcUser.getAuthorities());
+			UsernamePasswordAuthenticationToken result = new UsernamePasswordAuthenticationToken(
+			      dcUser, authentication.getCredentials(), dcUser.getAuthorities()); // TODO TODO KO ?? !!!!!!!!!!!!
 			result.setDetails(authentication.getDetails());
 			return result;
 		}

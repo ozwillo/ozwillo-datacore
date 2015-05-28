@@ -16,6 +16,9 @@ import org.oasis.datacore.core.meta.pov.DCProject;
  *
  */
 public interface DCModelService {
+
+   /** gets model's (possible inherited) security */
+   DCSecurity getSecurity(DCModelBase model);
    
    /**
     * Returns the current project

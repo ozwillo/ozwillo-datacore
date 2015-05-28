@@ -11,6 +11,7 @@ import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCResourceField;
+import org.oasis.datacore.core.meta.model.DCSecurity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -54,6 +55,7 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		companyModel.addField(new DCField("address", DCFieldTypeEnum.STRING.getType()));
 		companyModel.addField(new DCResourceField("city", CITY_MODEL_NAME));
 		companyModel.setHistorizable(true);
+		companyModel.setSecurity(new DCSecurity());
 		companyModel.getSecurity().addAdmin("model_admin_sample.marka.company");
 		listModel.add(companyModel);
 		
@@ -62,6 +64,7 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		fieldModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
 		fieldModel.addField(new DCField("name", DCFieldTypeEnum.STRING.getType(), true, 100));
 		fieldModel.setContributable(true);
+		fieldModel.setSecurity(new DCSecurity());
 		fieldModel.getSecurity().addReader("model_readers_sample.marka.field");
 		listModel.add(fieldModel);
 
@@ -79,6 +82,7 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		countryModel.addField(new DCField("long", DCFieldTypeEnum.LONG.getType()));
 		countryModel.addField(new DCField("population", DCFieldTypeEnum.INTEGER.getType()));
 		countryModel.addField(new DCField("language", DCFieldTypeEnum.STRING.getType()));
+      countryModel.setSecurity(new DCSecurity()); // NB. modified in test
 		listModel.add(countryModel);
 		
 		DCModel cityModel = new DCModel(CITY_MODEL_NAME);
@@ -90,6 +94,7 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		cityModel.addField(new DCField("lat", DCFieldTypeEnum.FLOAT.getType()));
 		cityModel.addField(new DCField("long", DCFieldTypeEnum.LONG.getType()));
 		cityModel.addField(new DCResourceField("country", COUNTRY_MODEL_NAME));
+		cityModel.setSecurity(new DCSecurity());
 		cityModel.getSecurity().addResourceAdmin("model_resource_admin_sample.marka.city");
 		listModel.add(cityModel);
 		

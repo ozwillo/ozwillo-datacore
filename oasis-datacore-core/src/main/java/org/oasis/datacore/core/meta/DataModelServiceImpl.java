@@ -15,6 +15,7 @@ import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
+import org.oasis.datacore.core.meta.model.DCSecurity;
 import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.core.meta.pov.ProjectException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +48,20 @@ public class DataModelServiceImpl implements DCModelService {
    //TODO having MICCRootTypesStrategy.rootTypes = cofr, coit... or MICCModelOwnerStrategy.modelOwners = cofr_owners, coit_owners...
    
    private Map<String,DCProject> projectMap = new HashMap<String, DCProject>();
+   
+
+   /** TODO cache */
+   @Override
+   public DCSecurity getSecurity(DCModelBase model) {
+      DCSecurity security;
+      while ((security = model.getSecurity()) == null) {
+         if (model.getMixins().isEmpty()) {
+            return null; // can't find primary-inherited security, TODO error
+         }
+         model = model.getMixins().iterator().next();
+      }
+      return security;
+   }
    
    // NEW TODO migrate
    @Override
@@ -178,6 +193,9 @@ public class DataModelServiceImpl implements DCModelService {
       /*if (project == null) {
          throw new ProjectException(projectName, "Unknown project");
       }*/
+      if (project == null) {
+         throw new ProjectException(projectName, "Unknown project");
+      }
       return project;
    }
    public DCProject getProject() {

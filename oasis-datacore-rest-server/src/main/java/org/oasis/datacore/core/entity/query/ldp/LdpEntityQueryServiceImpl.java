@@ -1,6 +1,5 @@
 package org.oasis.datacore.core.entity.query.ldp;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.oasis.datacore.core.context.DatacoreRequestContextService;
 import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.NativeModelService;
 import org.oasis.datacore.core.entity.model.DCEntity;
@@ -21,8 +21,8 @@ import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.model.DCResourceField;
-import org.oasis.datacore.core.meta.model.DCSecurity;
 import org.oasis.datacore.core.security.DCUserImpl;
+import org.oasis.datacore.core.security.EntityPermissionEvaluator;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
@@ -31,7 +31,6 @@ import org.oasis.datacore.rest.server.cxf.CxfJaxrsApiProvider;
 import org.oasis.datacore.rest.server.parsing.model.DCQueryParsingContext;
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
 import org.oasis.datacore.rest.server.parsing.service.QueryParsingService;
-import org.oasis.datacore.server.context.DatacoreRequestContextService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -108,10 +107,11 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    /** NB. when moving LDP service to -core, might make it optional */
    @Autowired
    private NativeModelService nativeModelService;
-   
+
+   /** to evaluate model-level rights and then get user groups */
    @Autowired
    @Qualifier("datacoreSecurityServiceImpl")
-   private DatacoreSecurityService datacoreSecurityService;
+   private DatacoreSecurityService securityService;
    
    @Autowired
    private /*MongoOperations*/DatacoreMongoTemplate mgo; // TODO remove it by hiding it in services
@@ -128,6 +128,10 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    /** to access debug switch & put its explained results */
    @Autowired
    protected DatacoreRequestContextService serverRequestContext;
+   
+   /** to evaluate model-level rights */
+   @Autowired
+   private EntityPermissionEvaluator permissionEvaluator;
 
    
    @Override
@@ -164,6 +168,12 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
 
       // parsing query parameters criteria according to model :
       DCQueryParsingContext queryParsingContext = new DCQueryParsingContext(model, storageModel);
+      if (permissionEvaluator.isThisModelAllowed(model,
+            securityService.getCurrentUser(), EntityPermissionEvaluator.READ)) {
+         queryParsingContext.getTopLevelAllowedMixins().add(model.getName());
+         // this requires checking resource-level rights, to avoid it query in a model that
+         // you have model-level rights on
+      }
       parseQueryParameters(params, queryParsingContext);
       if (queryParsingContext.hasErrors()) {
          String msg = DCResourceParsingContext.formatParsingErrorsMessage(queryParsingContext, detailedErrorsMode);
@@ -171,10 +181,9 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       } // else TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
       
       // add security :
-      boolean guestForbidden = addSecurityIfNotGuestForbidden(queryParsingContext);
-      if (guestForbidden) {
-         return new ArrayList<DCEntity>(0); // TODO or exception ??
-      }
+      addResourceLevelSecurityIfRequired(queryParsingContext);
+      // NB. no guest specific case (groups ex. EVERYONE must be given to guest
+      // and allowed on models or resources)
       
       // adding paging & sorting :
       if (start == null) { // should not happen
@@ -212,8 +221,8 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       List<DCEntity> foundEntities = executeMongoDbQuery(springMongoQuery, queryParsingContext);
       
       if (logger.isDebugEnabled()) {
-         logger.debug("Done Spring Mongo query: " + springMongoQuery
-               + "\n   in collection " + storageModel.getCollectionName()
+         logger.debug("Done Spring Mongo query as " + securityService.getCurrentUserId() + ": "
+               + springMongoQuery + "\n   in collection " + storageModel.getCollectionName()
                + " from Model " + model.getName() + " and parameters: " + params
                + "\n   with result nb " + foundEntities.size());
       }
@@ -236,6 +245,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    
    private void parseQueryParameters(Map<String, List<String>> params, DCQueryParsingContext queryParsingContext) {
       DCModelBase dcModel = queryParsingContext.peekModel();
+      DCUserImpl user = securityService.getCurrentUser();
       
       parameterLoop : for (String fieldPath : params.keySet()) {
          if (fieldPath.length() == 0) {
@@ -255,10 +265,22 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          }
 
          StringBuilder entityFieldPathSb = new StringBuilder();
-         
-         // handling DCEntity native (indexed) fields :
          String topFieldPathElement = fieldPathElements[0];
-         DCField dcField = getTopLevelDcOrGlobalField(dcModel, topFieldPathElement, entityFieldPathSb);
+         
+         // getting top-level field (DCEntity native (indexed) or not) and checking model-level rights :
+         DCField dcField = nativeModelService.getNativeModel(dcModel).getGlobalField(topFieldPathElement); // NB. global for dc:DublinCore_0
+         if (dcField == null) {
+            dcField = getFieldAndCheckIfRightsHaveToBeDecidedAtResourceLevel(
+                  dcModel, topFieldPathElement, user, queryParsingContext, true);
+            if (dcField != null) {
+               entityFieldPathSb = entityFieldPathSb.append(MONGO_FIELD_PREFIX); // almost the same fieldPath for mongodb
+            }
+         }
+         // TODO LATER :
+         /*if (!dcField.isQueriable()) {
+            throw new Exception("only indexed fields are allowed at top level");
+         }*/
+         
          if (dcField == null) {
             queryParsingContext.addError("In type " + dcModel.getName() + ", can't find field with path elements "
                   + Arrays.asList(fieldPathElements) + " : can't find field for first path element "
@@ -371,18 +393,44 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       }
    }
 
-   private DCField getTopLevelDcOrGlobalField(DCModelBase dcModel,
-         String topFieldPathElement, StringBuilder entityFieldPathSb) {
-      DCField dcField = nativeModelService.getNativeModel(dcModel).getGlobalField(topFieldPathElement); // NB. global for dc:DublinCore_0
-      if (dcField == null) {
-         // TODO LATER :
-         /*if (!dcField.isQueriable()) {
-            throw new Exception("only indexed fields are allowed at top level");
-         }*/
-         dcField = dcModel.getGlobalField(topFieldPathElement);
-         entityFieldPathSb = entityFieldPathSb.append(MONGO_FIELD_PREFIX); // almost the same fieldPath for mongodb
+   private DCField getFieldAndCheckIfRightsHaveToBeDecidedAtResourceLevel(DCModelBase dcModel,
+         String topFieldPathElement, DCUserImpl user, DCQueryParsingContext queryParsingContext,
+         boolean addToTopLevelAllowedMixins) {
+      if (user.isAdmin()
+            || queryParsingContext.getRightsHaveToBeDecidedAtResourceLevel()) {
+         return dcModel.getGlobalField(topFieldPathElement);
+         
+      } else { // rights might still be decided at model level :
+         DCModelBase fieldModel = getFieldModel(dcModel, topFieldPathElement);
+         if (fieldModel != null) {
+            // check (model-level) security :
+            if (!permissionEvaluator.isThisModelAllowed(fieldModel,
+                  user, EntityPermissionEvaluator.READ)) {
+               queryParsingContext.getForbiddenMixins().add(fieldModel.getName());
+               ///throw new Exception("Not allowed to read data of mixin "
+               ///      + dcModel.getName() + " and therefore to query on its field " + topFieldPathElement);
+            } else if (addToTopLevelAllowedMixins) {
+               queryParsingContext.getTopLevelAllowedMixins().add(fieldModel.getName());
+            }
+            return fieldModel.getField(topFieldPathElement);
+         }
       }
-      return dcField;
+      return null;
+   }
+
+   /** used to check model-level rights of each queried field ; TODO cache */
+   public DCModelBase getFieldModel(DCModelBase dcModel, String topFieldPathElement) {
+      if (dcModel.getField(topFieldPathElement) != null) {
+         return dcModel;
+      }
+      // else find it above :
+      for (DCModelBase mixin : dcModel.getMixins()) {
+         DCModelBase fieldModel = getFieldModel(mixin, topFieldPathElement);
+         if (fieldModel != null) {
+            return fieldModel;
+         }
+      }
+      return null; // means not found
    }
 
 
@@ -441,7 +489,14 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       // TODO check linkStorageModel, separate cases :
       // fully embedded (isInstanceStorage ? storagePath ? storageModel ?), refMixin,
       // external resource (in which case explode because a join is required)
-      DCField subDcField = linkModel.getGlobalField(fieldPathElement);
+      
+      // TODO handle ex. criteria on geoci?geocifr:country(geoco:Country_0).geocofr:idInsee
+      
+      // getting resource's field and checking model-level rights :
+      ///DCField subDcField = linkModel.getGlobalField(fieldPathElement);
+      DCField subDcField = getFieldAndCheckIfRightsHaveToBeDecidedAtResourceLevel(
+            linkModel, fieldPathElement, securityService.getCurrentUser(), queryParsingContext, false);
+      
       if (subDcField == null) {
          queryParsingContext.addError("In type " + queryParsingContext.peekModel().getName()
                + ", can't find field with path elements"
@@ -488,12 +543,18 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    }
 
 
-   private boolean addSecurityIfNotGuestForbidden(DCQueryParsingContext queryParsingContext) {
+   /**
+    * NB. no guest specific case (groups ex. EVERYONE must be given to guest
+    * and allowed on models or resources)
+    * @param queryParsingContext
+    * @return
+    */
+   private boolean addResourceLevelSecurityIfRequired(DCQueryParsingContext queryParsingContext) {
       // TODO Q how to make all tests still work : null case ? other prop ? disable it ??
       // TODO better : in SecurityQueryEnricher ? rather in (Query)ParsingContext ?!?
       // TODO (LATER ?) on all sub Resources !!
       // TODO LATER in findDataInAllTypes(), on all root Resources
-      DCSecurity modelSecurity = queryParsingContext.peekModel().getSecurity();
+      /*DCSecurity modelSecurity = queryParsingContext.peekModel().getSecurity();
       if (!modelSecurity.isGuestReadable()) {
          // TODO Q or (b) also GUEST OK when empty ACL ?
          // NO maybe dangerous because *adding* a group / role to ACL would *remove* GUEST from it
@@ -503,7 +564,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          // => OPT LATER
          // (in any way, there'll always be a balance to find between performance and storage)
          
-         DCUserImpl user = datacoreSecurityService.getCurrentUser();
+         DCUserImpl user = securityService.getCurrentUser();
          if (user.isGuest()) {
             return true; // TODO or exception ??
          }
@@ -512,9 +573,18 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
                && !modelSecurity.isAuthentifiedReadable() // NB. not guest
                && !modelSecurity.isResourceAdmin(user)
                && !modelSecurity.isResourceReader(user)) {
-            queryParsingContext.getCriteria().and("_ar").in(user.getEntityGroups());
+            queryParsingContext.getCriteria().and(DCEntity.KEY_AR).in(user.getEntityGroups());
          } // else (datacore global or model-scoped) admin, so no security check
       } // else public, so no security check
+      */
+      
+      if (queryParsingContext.getRightsHaveToBeDecidedAtResourceLevel()) {
+         // i.e. model queried on as well as all fields (if any) are in model-level allowed models
+         // (executeMongoDbQuery will add criteria on model queried on if not storage,
+         // and if storage then model is had as mixin by all stored models there)
+         queryParsingContext.getCriteria().and(DCEntity.KEY_AR)
+            .in(securityService.getCurrentUser().getEntityGroups());
+      }
       
       return false;
    }

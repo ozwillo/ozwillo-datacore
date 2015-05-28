@@ -19,6 +19,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.oasis.datacore.core.context.DatacoreRequestContextService;
 import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.NativeModelService;
@@ -38,7 +39,6 @@ import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
 import org.oasis.datacore.rest.server.resource.mapping.EmbeddedResourceTypeChecker;
 import org.oasis.datacore.rest.server.resource.mapping.ExternalDatacoreLinkedResourceChecker;
 import org.oasis.datacore.rest.server.resource.mapping.LocalDatacoreLinkedResourceChecker;
-import org.oasis.datacore.server.context.DatacoreRequestContextService;
 import org.oasis.datacore.server.uri.BadUriException;
 import org.oasis.datacore.server.uri.UriService;
 import org.slf4j.Logger;
@@ -87,7 +87,7 @@ public class ResourceEntityMapperService {
    @Autowired
    private EmbeddedResourceTypeChecker embeddedResourceTypeChecker;
 
-   /** to know whether expected output is semantic (JSON-LD, RDF), mixins view */
+   /** to know whether expected output is semantic (JSON-LD, RDF), mixins view, putRatherThanPatchMode */
    @Autowired
    protected DatacoreRequestContextService serverRequestContext;
 
@@ -141,13 +141,14 @@ public class ResourceEntityMapperService {
     * @param resourceValue
     * @param dcField
     * @param resourceParsingContext
-    * @param putRatherThanPatchMode TODO or in resourceParsingContext ??
+    * @param putRatherThanPatchMode if true, missing fields are allowed
+    * (because assumed to be provided in existing data entity)
     * @return
     * @throws ResourceParsingException
     */
    // TODO extract to ResourceBuilder static helper using in ResourceServiceImpl
-   private Object resourceToEntityValue(Object resourceValue, DCField dcField,
-         DCResourceParsingContext resourceParsingContext, boolean putRatherThanPatchMode)
+   private Object resourceToEntityValue(Object resourceValue, Object reusedExistingValue,
+         DCField dcField, DCResourceParsingContext resourceParsingContext)
                throws ResourceParsingException {
       
       Object entityValue;
@@ -208,9 +209,14 @@ public class ResourceEntityMapperService {
          
       } else if ("date".equals(dcField.getType())) {
          if (!(resourceValue instanceof String)) {
-            throw new ResourceParsingException("date Field value is not a string : " + resourceValue);
+            if (resourceValue instanceof DateTime) { // allow it when ex. in a local call
+               entityValue = (DateTime) resourceValue;
+            } else {
+               throw new ResourceParsingException("date Field value is not a string : " + resourceValue);
+            }
+         } else {
+            entityValue = (DateTime) valueParsingService.parseDateFromString((String) resourceValue);
          }
-         entityValue = (DateTime) valueParsingService.parseDateFromString((String) resourceValue);
          
       /*} else if ("i18n".equals(dcField.getType())) { // TODO i18n better
          entityValue = (HashMap<?,?>) resourceValue; // TODO NOOOO _i18n
@@ -227,8 +233,16 @@ public class ResourceEntityMapperService {
          @SuppressWarnings("unchecked")
          Map<String, Object> dataMap = (Map<String,Object>) resourceValue;
          HashMap<String, Object> entityMap = new HashMap<String,Object>(dataMap.size());
-         resourceToEntityFields(dataMap, entityMap, ((DCMapField) dcField).getMapFields(),
-               resourceParsingContext, putRatherThanPatchMode, false);
+         
+         Map<String, Object> reusedExistingEntityMap = null;
+         if (reusedExistingValue instanceof Map<?,?>) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> reusedExistingEntityMapFound = (Map<String,Object>) reusedExistingValue;
+            reusedExistingEntityMap = reusedExistingEntityMapFound;
+         } // else existing is overriden
+         
+         resourceToEntityFields(dataMap, entityMap, reusedExistingEntityMap,
+               ((DCMapField) dcField).getMapFields(), resourceParsingContext);
          entityValue = entityMap;
          
       } else if ("list".equals(dcField.getType())) {
@@ -243,8 +257,8 @@ public class ResourceEntityMapperService {
             Object entityItem;
             try {
                resourceParsingContext.enter(null, null, listElementField, resourceItem, i);
-               entityItem = resourceToEntityValue(resourceItem, listElementField,
-                     resourceParsingContext, putRatherThanPatchMode);
+               entityItem = resourceToEntityValue(resourceItem, null, // list is replaced if provided
+                     listElementField, resourceParsingContext);
             } catch (ResourceParsingException rpex) {
                resourceParsingContext.addError("Error while parsing list element Field value " + resourceItem
                      + " of JSON type " + ((resourceItem == null) ? "null" : resourceItem.getClass())
@@ -359,9 +373,17 @@ public class ResourceEntityMapperService {
             String entityValueUri = subResource.getUri();
             Long entityValueVersion = subResource.getVersion();
             List<String> entityValueTypesFound = subResource.getTypes();
+
+            Map<String, Object> reusedExistingEntityResource = null;
+            if (reusedExistingValue instanceof Map<?,?>) {
+               @SuppressWarnings("unchecked")
+               Map<String, Object> reusedExistingEntityResourceFound = (Map<String,Object>) reusedExistingValue;
+               reusedExistingEntityResource = reusedExistingEntityResourceFound;
+            } // else existing is overriden
             
             entityValue = subResourceToEntityFields(entityValueUri, entityValueVersion, entityValueTypesFound,
-                  subResource.getProperties(), dcResourceField, resourceParsingContext, putRatherThanPatchMode);
+                  subResource.getProperties(), reusedExistingEntityResource,
+                  dcResourceField, resourceParsingContext);
             
          } else if (resourceValue instanceof Map<?,?>) {
             // "framed" (JSONLD) / embedded : embedded subresource (potentially may be (partial) copy)
@@ -419,8 +441,15 @@ public class ResourceEntityMapperService {
                      + "a String list but " + entityValueTypesFound);
             } // else handled in subResourceToEntityFields
 
+            Map<String, Object> reusedExistingEntityResource = null;
+            if (reusedExistingValue instanceof Map<?,?>) {
+               @SuppressWarnings("unchecked")
+               Map<String, Object> reusedExistingEntityResourceFound = (Map<String,Object>) reusedExistingValue;
+               reusedExistingEntityResource = reusedExistingEntityResourceFound;
+            } // else existing is overriden
+
             entityValue = subResourceToEntityFields(entityValueUri, entityValueVersion, entityValueTypes,
-                  dataMap, dcResourceField, resourceParsingContext, putRatherThanPatchMode);
+                  dataMap, reusedExistingEntityResource, dcResourceField, resourceParsingContext);
             
          } else {
             // unknown type for resource value : to help debug model design, add error to context
@@ -441,8 +470,8 @@ public class ResourceEntityMapperService {
    // TODO rm entityValueValue OR impl rights etc. !
    private HashMap<String, Object>/*DCEntity*/ subResourceToEntityFields(String entityValueUri,
          Long entityValueVersion, List<String> entityValueTypes,
-         Map<String, Object> properties, DCResourceField dcResourceField,
-         DCResourceParsingContext resourceParsingContext, boolean putRatherThanPatchMode)
+         Map<String, Object> properties, Map<String, Object> reusedExistingProperties,
+         DCResourceField dcResourceField, DCResourceParsingContext resourceParsingContext)
                throws ResourceParsingException {
       // "framed" (JSONLD) / embedded : embedded subresource (potentially may be (partial) copy)
       boolean normalizeUrlMode = true;
@@ -547,7 +576,7 @@ public class ResourceEntityMapperService {
          } // else fully embedded subresource
          // NB. no version yet
          
-      } else if (putRatherThanPatchMode) {
+      } else if (serverRequestContext.getPutRatherThanPatchMode()) {
          entityEntityValue.getProperties().clear();
       } // else reuse existing entity as base : PATCH-like behaviour
       
@@ -587,8 +616,8 @@ public class ResourceEntityMapperService {
       // NOT FOR NOW hard to copy computed ones after save...
       
       // checking values against expected sub Model :
-      resourceToEntityFields(dataMap, entityMap, valueModelOrMixin.getGlobalFieldMap(),
-            resourceParsingContext, putRatherThanPatchMode, false);
+      resourceToEntityFields(dataMap, entityMap, reusedExistingProperties,
+            valueModelOrMixin.getGlobalFieldMap(), resourceParsingContext);
       return entityMap;
       
       /*resourceToEntityFields(dataMap, entityEntityValue.getProperties(),
@@ -678,10 +707,9 @@ public class ResourceEntityMapperService {
     */
    // TODO extract to ResourceBuilder static helper using in ResourceServiceImpl
    public void resourceToEntityFields(Map<String, Object> resourceMap,
-         Map<String, Object> entityMap, Map<String, DCField> mapFields,
-         // TODO mapFieldNames ; orderedMap ? abstract Field-Model ??
-         DCResourceParsingContext resourceParsingContext,
-         boolean putRatherThanPatchMode, boolean isTopLevel) {
+         Map<String, Object> entityMap, Map<String, Object> reusedExistingEntityMap,
+         // TODO dcModel.getFieldNames(), abstract DCModel-DCMapField ??
+         Map<String, DCField> mapFields, DCResourceParsingContext resourceParsingContext) {
       
       // gathering required fields :
       // TODO DCFields, cache & for mixins
@@ -698,7 +726,8 @@ public class ResourceEntityMapperService {
       
       // handling each value :
       for (String key : resourceMap.keySet()) {
-         if (!isTopLevel && nativeModelService.getNativeFieldNames(null).contains(key)) { // TODO model
+         if (!resourceParsingContext.isTopLevel()
+               && nativeModelService.getNativeFieldNames(null).contains(key)) { // TODO model
             // skip native fields in subResource case :
             // (they are handled above at top or in subResourceXXX())
             continue;
@@ -716,24 +745,22 @@ public class ResourceEntityMapperService {
          Object resourceValue = resourceMap.get(key);
          DCField dcField = mapFields.get(key); // TODO DCModel.getField(key)
          missingDefaultFields.remove(dcField); // (and not only if null value, to allow setting null value)
-         try {
-            resourceParsingContext.enter(null, null, dcField, resourceValue);
-            Object entityValue = resourceToEntityValue(resourceValue, dcField,
-                  resourceParsingContext, putRatherThanPatchMode);
-            entityMap.put(dcField.getStorageName(), entityValue); // field alias
-         } catch (ResourceParsingException rpex) {
-            resourceParsingContext.addError("Error while parsing Field value " + resourceValue
-                  + " of JSON type " + ((resourceValue == null) ? "null" : resourceValue.getClass()), rpex);
-         } catch (Exception ex) {
-            resourceParsingContext.addError("Unknown error while parsing Field value " + resourceValue
-                  + " of JSON type " + ((resourceValue == null) ? "null" : resourceValue.getClass()), ex);
-         } finally {
-            resourceParsingContext.exit();
-         }
+         resourceToEntityField(resourceValue, entityMap,
+               reusedExistingEntityMap != null ? reusedExistingEntityMap.get(key) : null,
+               dcField, resourceParsingContext);
       }
 
       for (DCField defaultDcField : missingDefaultFields) { // set default values :
-         entityMap.put(defaultDcField.getName(), defaultDcField.getDefaultValue());
+         String missingFieldName = defaultDcField.getName();
+         if (reusedExistingEntityMap != null) {
+            Object reusedExistingValue = reusedExistingEntityMap.get(missingFieldName);
+            if (reusedExistingValue != null) {
+               resourceToEntityField(reusedExistingValue, null, // don't add parsed value
+                     null, defaultDcField, resourceParsingContext);
+               continue; // POST/PATCH (not PUT) mode, will be added at permission checking time  
+            }
+         }
+         entityMap.put(missingFieldName, defaultDcField.getDefaultValue());
       }
       
       if (!missingRequiredFieldNames.isEmpty()) {
@@ -742,15 +769,33 @@ public class ResourceEntityMapperService {
    }
 
    
-   
    /**
-    * Same as entityToResource() but doesn't apply view
-    * @param entity
-    * @param resource
-    * @return
+    * 
+    * @param resourceValue
+    * @param entityMap if null, parsed value will not be kept / added in it
+    * @param object
+    * @param dcField
+    * @param resourceParsingContext
     */
-   public DCResource entityToResource(DCEntity entity, DCResource resource) {
-      return entityToResource(entity, resource, false);
+   private void resourceToEntityField(Object resourceValue,
+         Map<String, Object> entityMap, Object reusedExistingEntityValue,
+         DCField dcField, DCResourceParsingContext resourceParsingContext) {
+      try {
+         resourceParsingContext.enter(null, null, dcField, resourceValue);
+         Object entityValue = resourceToEntityValue(resourceValue,
+               reusedExistingEntityValue, dcField, resourceParsingContext);
+         if (entityMap != null) {
+            entityMap.put(dcField.getStorageName(), entityValue); // field alias  
+         } // else not needed ex. reused existing value
+      } catch (ResourceParsingException rpex) {
+         resourceParsingContext.addError("Error while parsing Field value " + resourceValue
+               + " of JSON type " + ((resourceValue == null) ? "null" : resourceValue.getClass()), rpex);
+      } catch (Exception ex) {
+         resourceParsingContext.addError("Unknown error while parsing Field value " + resourceValue
+               + " of JSON type " + ((resourceValue == null) ? "null" : resourceValue.getClass()), ex);
+      } finally {
+         resourceParsingContext.exit();
+      }
    }
    /**
     * Special handling :
@@ -765,7 +810,9 @@ public class ResourceEntityMapperService {
     * in sandbox / test / draft / not yet published phase.
     * TODO LATER better : put such cases in data health / governance inbox, through event
     * @param entity must have its model cached
-    * @param applyView
+    * @param resource will have its props CLEARED first
+    * @param applyView whether to apply view or not, ex. false in getData
+    * (already applied by EntityPermissionEvaluator) but true in find()
     * @return
     */
    public DCResource entityToResource(DCEntity entity, DCResource resource, boolean applyView) {
@@ -774,21 +821,18 @@ public class ResourceEntityMapperService {
             entity.getProperties().size()); // (copy because resource != entity)
       DCModelBase model = entityModelService.getModel(entity);
       LinkedHashSet<String> viewMixinNames = applyView ? serverRequestContext.getViewMixinNames() : null;
-      if (viewMixinNames == null) {
+      if (viewMixinNames == null
+            || viewMixinNames.contains(model.getName())) { // all ; NB. ex. viewMixinNames=sample.city.city
          entityToResourceProps(entity.getProperties(),
                model.getGlobalFieldMap(), resourceProps);
       } else {
-         if (viewMixinNames.contains(model.getName())) {
-            // NB. ex. viewMixinNames=sample.city.city
-            entityToResourceProps(entity.getProperties(),
-                  model.getGlobalFieldMap(), resourceProps);
-         }
          for (DCModelBase mixin : model.getMixins()) {
-            if (viewMixinNames.contains(mixin.getName())) {
-               // NB. ex. viewMixinNames=geo will show geo:name and not its override in geoci
-               entityToResourceProps(entity.getProperties(),
-                     mixin.getGlobalFieldMap(), resourceProps);
+            if (viewMixinNames != null && !viewMixinNames.contains(mixin.getName())) {
+               continue;
             }
+            // NB. ex. viewMixinNames=geo will show geo:name and not its override in geoci
+            entityToResourceProps(entity.getProperties(),
+                  mixin.getGlobalFieldMap(), resourceProps); // TODO getFieldMap OR dynamic / available mixins else model type's global fields = all fields
          }
       }
       
@@ -819,8 +863,16 @@ public class ResourceEntityMapperService {
       return resource;
    }
    
+   /**
+    * ALWAYS APPLIES VIEW (isMinimal)
+    * @param entity
+    * @param resource
+    */
    public void entityToResourcePersistenceComputedFields(DCEntity entity, DCResource resource) {
-      entityToResourcePersistenceComputedFields(entity, resource, false);
+      boolean applyView = true;
+      LinkedHashSet<String> viewMixinNames = applyView ? serverRequestContext.getViewMixinNames() : null;
+      boolean isMinimal = viewMixinNames != null && viewMixinNames.isEmpty();
+      entityToResourcePersistenceComputedFields(entity, resource, isMinimal);
    }
    
    public void entityToResourcePersistenceComputedFields(DCEntity entity,
