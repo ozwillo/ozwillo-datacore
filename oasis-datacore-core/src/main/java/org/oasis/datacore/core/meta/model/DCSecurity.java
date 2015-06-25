@@ -1,7 +1,6 @@
 package org.oasis.datacore.core.meta.model;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.LinkedHashSet;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -11,42 +10,36 @@ import org.springframework.security.core.userdetails.User;
  * often, ex. modelCreators should be a dedicated group rather than a single
  * user.
  * 
+ * NB. guestReadable is decided at modelService level,
+ * false if not devmode (calls to Datacore are made by apps which can have "app_guest" accounts),
+ * else true if no security set to ease up tests
+ * 
  * @author mdutoo, agiraudon
  * 
  */
 public class DCSecurity {
 
-	/** default is false (calls to Datacore are made by apps which can have "app_guest" accounts) */
-	private boolean isGuestReadable = true; ///////////////////////// TODO TODO
 	/** default is true (but isGuestReadable takes precedence) */
 	private boolean isAuthentifiedReadable = true;
 	/**
-	 * default is true NB. writers can't be anonymous, should at least have a
+	 * default is false NB. writers can't be anonymous, should at least have a
 	 * named account, like on wikipedia
 	 */
-	private boolean isAuthentifiedWritable = true;
+	private boolean isAuthentifiedWritable = false; // TODO
 	/**
 	 * default is true NB. creators can't be anonymous, should at least have a
 	 * named account, like on wikipedia
 	 */
 	private boolean isAuthentifiedCreatable = true;
-
-	/**
-	 * Update model : YES
-	 * Create resource : YES
-	 * Read resource : YES
-	 * Write resource : YES
-	 */
-	private Set<String> admin = new HashSet<String>();
 	
 	/**
-	 * Give access to all data no matter what permission on the entity
+	 * = resource admins ; Give access to all data no matter what permission on the entity
 	 * Update model : NO
 	 * Create resource : YES
 	 * Read resource : YES
 	 * Write resource : YES
 	 */
-	private Set<String> resourceAdmin = new HashSet<String>();
+	private LinkedHashSet<String> resourceOwners = new LinkedHashSet<String>();
 	
 	/**
 	 * Give access to all data no matter what permissions on the entity
@@ -55,10 +48,10 @@ public class DCSecurity {
 	 * Read resource : YES
 	 * Write resource : NO
 	 */
-	private Set<String> resourceCreator = new HashSet<String>();
+	private LinkedHashSet<String> resourceCreators = new LinkedHashSet<String>();
 
 	/** who to set owner at creation (u_creator if empty) */
-   private Set<String> resourceCreationOwners = new HashSet<String>();
+   private LinkedHashSet<String> resourceCreationOwners = new LinkedHashSet<String>();
 	
 	/**
 	 * Give access to all data no matter what permissions on the entity
@@ -67,7 +60,7 @@ public class DCSecurity {
 	 * Read resource : YES
 	 * Write resource : YES
 	 */
-	private Set<String> resourceWriter = new HashSet<String>();
+	private LinkedHashSet<String> resourceWriters = new LinkedHashSet<String>();
 	
 	/**
 	 * Give access to all data no matter what permissions on the entity
@@ -76,7 +69,7 @@ public class DCSecurity {
 	 * Read resource : YES
 	 * Write resource : NO
 	 */
-	private Set<String> resourceReader = new HashSet<String>();
+	private LinkedHashSet<String> resourceReaders = new LinkedHashSet<String>();
 	
 
 	/** defaults */
@@ -86,24 +79,14 @@ public class DCSecurity {
    
 	/** copy constructor */
 	public DCSecurity(DCSecurity original) {
-      this.isGuestReadable = original.isGuestReadable;
       this.isAuthentifiedReadable = original.isAuthentifiedReadable;
       this.isAuthentifiedWritable = original.isAuthentifiedWritable;
       this.isAuthentifiedCreatable = original.isAuthentifiedCreatable;
-      this.admin = new HashSet<String>(original.admin);
-      this.resourceAdmin = new HashSet<String>(original.resourceAdmin);
-      this.resourceCreator = new HashSet<String>(original.resourceCreator);
-      this.resourceWriter = new HashSet<String>(original.resourceWriter);
-      this.resourceReader = new HashSet<String>(original.resourceReader);
+      this.resourceOwners = new LinkedHashSet<String>(original.resourceOwners);
+      this.resourceCreators = new LinkedHashSet<String>(original.resourceCreators);
+      this.resourceWriters = new LinkedHashSet<String>(original.resourceWriters);
+      this.resourceReaders = new LinkedHashSet<String>(original.resourceReaders);
    }
-
-   public boolean isGuestReadable() {
-		return isGuestReadable;
-	}
-
-	public void setGuestReadable(boolean isGuestReadable) {
-		this.isGuestReadable = isGuestReadable;
-	}
 
 	public boolean isAuthentifiedReadable() {
 		return isAuthentifiedReadable;
@@ -128,67 +111,83 @@ public class DCSecurity {
 	public void setAuthentifiedCreatable(boolean isAuthentifiedCreatable) {
 		this.isAuthentifiedCreatable = isAuthentifiedCreatable;
 	}
+	
 
-	public void addAdmin(String group) {
-		this.admin.add(group);
-	}
+   public LinkedHashSet<String> getResourceOwners() {
+      return resourceOwners;
+   }
 
-	public void removeAdmin(String group) {
-		this.admin.remove(group);
-	}
+   public void setResourceOwners(LinkedHashSet<String> resourceOwners) {
+      this.resourceOwners = resourceOwners;
+   }
 
-	public void addResourceAdmin(String group) {
-		this.resourceAdmin.add(group);
-	}
+   public LinkedHashSet<String> getResourceCreators() {
+      return resourceCreators;
+   }
 
-	public void removeResourceAdmin(String group) {
-		this.resourceAdmin.remove(group);
-	}
+   public void setResourceCreators(LinkedHashSet<String> resourceCreators) {
+      this.resourceCreators = resourceCreators;
+   }
 
-	public void addResourceCreator(String group) {
-		this.resourceCreator.add(group);
-	}
-
-	public void removeResourceCreator(String group) {
-		this.resourceCreator.remove(group);
-	}
-
-   public Set<String> getResourceCreationOwners() {
+   public LinkedHashSet<String> getResourceCreationOwners() {
       return resourceCreationOwners;
    }
 
-   public void setResourceCreationOwners(Set<String> resourceCreationOwners) {
+   public void setResourceCreationOwners(LinkedHashSet<String> resourceCreationOwners) {
       this.resourceCreationOwners = resourceCreationOwners;
    }
 
+   public LinkedHashSet<String> getResourceWriters() {
+      return resourceWriters;
+   }
+
+   public void setResourceWriters(LinkedHashSet<String> resourceWriters) {
+      this.resourceWriters = resourceWriters;
+   }
+
+   public LinkedHashSet<String> getResourceReaders() {
+      return resourceReaders;
+   }
+
+   public void setResourceReaders(LinkedHashSet<String> resourceReaders) {
+      this.resourceReaders = resourceReaders;
+   }
+
+	public void addResourceOwner(String group) {
+		this.resourceOwners.add(group);
+	}
+
+	public void removeResourceOwner(String group) {
+		this.resourceOwners.remove(group);
+	}
+
+	public void addResourceCreator(String group) {
+		this.resourceCreators.add(group);
+	}
+
+	public void removeResourceCreator(String group) {
+		this.resourceCreators.remove(group);
+	}
+
 	public void addReader(String group) {
-		this.resourceReader.add(group);
+		this.resourceReaders.add(group);
 	}
 
 	public void removeReader(String group) {
-		this.resourceReader.remove(group);
+		this.resourceReaders.remove(group);
 	}
 	
 	public void addWriter(String group) {
-		this.resourceWriter.add(group);
+		this.resourceWriters.add(group);
 	}
 
 	public void removeWriter(String group) {
-		this.resourceWriter.remove(group);
+		this.resourceWriters.remove(group);
 	}
 
-	public boolean isAdmin(User user) {
+	public boolean isResourceOwner(User user) {
 		for (GrantedAuthority authority : user.getAuthorities()) {
-			if (this.admin.contains(authority.getAuthority())) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public boolean isResourceAdmin(User user) {
-		for (GrantedAuthority authority : user.getAuthorities()) {
-			if (this.resourceAdmin.contains(authority.getAuthority())) {
+			if (this.resourceOwners.contains(authority.getAuthority())) {
 				return true;
 			}
 		}
@@ -197,7 +196,7 @@ public class DCSecurity {
 
 	public boolean isResourceCreator(User user) {
 		for (GrantedAuthority authority : user.getAuthorities()) {
-			if (this.resourceCreator.contains(authority.getAuthority())) {
+			if (this.resourceCreators.contains(authority.getAuthority())) {
 				return true;
 			}
 		}
@@ -206,7 +205,7 @@ public class DCSecurity {
 	
 	public boolean isResourceReader(User user) {
 		for (GrantedAuthority authority : user.getAuthorities()) {
-			if (this.resourceReader.contains(authority.getAuthority())) {
+			if (this.resourceReaders.contains(authority.getAuthority())) {
 				return true;
 			}
 		}
@@ -215,7 +214,7 @@ public class DCSecurity {
 	
 	public boolean isResourceWriter(User user) {
 		for (GrantedAuthority authority : user.getAuthorities()) {
-			if (this.resourceWriter.contains(authority.getAuthority())) {
+			if (this.resourceWriters.contains(authority.getAuthority())) {
 				return true;
 			}
 		}

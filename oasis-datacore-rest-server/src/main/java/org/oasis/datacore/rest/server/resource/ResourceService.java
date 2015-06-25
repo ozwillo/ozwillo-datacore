@@ -268,7 +268,7 @@ public class ResourceService {
       
       // supporting PUT vs default PATCH-like POST mode :
       DCEntity dataEntity = new DCEntity();
-      dataEntity.setCachedModel(dcModel); // TODO or in DCEntityService ?
+      entityModelService.fillDataEntityCaches(dataEntity, dcModel, storageModel, null); // TODO or in DCEntityService ? TODO def
       dataEntity.setUri(stringUri);
       if (!isCreation) {
          dataEntity.setVersion(version);
@@ -405,12 +405,15 @@ public class ResourceService {
    /** security resource creation owners if any
     * NOOOO also user group if would not be owner */
    private Set<String> buildCreatorOwners(DCModelBase dcModel) {
-      Set<String> creatorOwners = new HashSet<String>(1);
+      Set<String> creatorOwners;
       DCSecurity dcSecurity = modelService.getSecurity(dcModel);
+      if (dcSecurity != null) { // try to get project defaults :
+         dcSecurity = modelService.getProject(dcModel.getProjectName()).getSecurityDefaults();
+      }
       if (dcSecurity != null) {
          creatorOwners = new HashSet<String>(dcSecurity.getResourceCreationOwners());
       } else {
-         creatorOwners = new HashSet<String>(1);
+         creatorOwners = new HashSet<String>(2);
       }
       boolean addUserGroup = true;
       if (!creatorOwners.isEmpty()) {

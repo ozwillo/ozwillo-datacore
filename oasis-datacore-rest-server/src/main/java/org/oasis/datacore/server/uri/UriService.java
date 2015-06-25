@@ -8,12 +8,12 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import org.oasis.datacore.core.meta.SimpleUriService;
 import org.oasis.datacore.rest.api.util.DCURI;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 /**
@@ -22,19 +22,14 @@ import org.springframework.util.StringUtils;
  * @author mdutoo
  *
  */
-@Component("uriService")
-public class UriService {
+//@Service("uriService") // defined in XML so that can be override by inheriting service
+public class UriService extends SimpleUriService {
    
    private final Logger logger = LoggerFactory.getLogger(getClass());
          
    /** Base URL of this endpoint. If broker mode enabled, used to detect when to use it.. */
    @Value("${datacoreApiServer.baseUrl}") 
    private String baseUrl; // "http://" + "data-lyon-1.oasis-eu.org" + "/"
-   /** Unique per container, defines it. To be able to build a full uri
-    * (for GET, DELETE, possibly to build missing or custom / relative URI...) */
-   @Value("${datacoreApiServer.containerUrl}")
-   private String containerUrlString; // "http://" + "data.oasis-eu.org"
-   private URI containerUrl; // "http://" + "data.oasis-eu.org"
    /** Known (others or all) Datacore containers (comma-separated) */
    @Value("${datacoreApiServer.knownDatacoreContainerUrls}")
    private String knownDatacoreContainerUrls;
@@ -45,7 +40,7 @@ public class UriService {
 
 
    @PostConstruct
-   public void init() throws URISyntaxException {
+   protected void init() throws URISyntaxException {
       knownDatacoreContainerUrlStringSet = StringUtils.commaDelimitedListToSet(knownDatacoreContainerUrls);
       knownDatacoreContainerUrlSet = (Set<URI>) knownDatacoreContainerUrlStringSet.stream()
             .map(stringUrl -> {
@@ -69,25 +64,17 @@ public class UriService {
    public String getBaseUrl() {
       return baseUrl;
    }
-
-   public String getContainerUrlString() {
-      return containerUrlString;
-   }
-
-   public URI getContainerUrl() {
-      return containerUrl;
-   }
-
-   /**
+   
+   /*
     * Builds a URI (for this Datacore) ; NB. to build an external URI use new DCURI(...) directly.
     * Shortcut to new DCURI(...).toString().
     * @param modelType
     * @param id
     * @return
     */
-   public String buildUri(String modelType, String id) {
+   /*public String buildUri(String modelType, String id) {
       return UriHelper.buildUri(containerUrl, modelType, id);
-   }
+   }*/
 
    /**
     * Parses any URI (Datacore or external)
@@ -163,9 +150,9 @@ public class UriService {
       boolean isExternalDatacoreUri = false;
       ///boolean isExternalWebUri = false;
       if (isRelativeUri) {
-         urlContainer = this.containerUrl;
+         urlContainer = SimpleUriService.containerUrl;
          // TODO LATER OPT also accept local type-relative uri (type-less iri) ???
-      } else if (!this.containerUrl.equals(urlContainer)) {
+      } else if (!SimpleUriService.containerUrl.equals(urlContainer)) {
          // external resource (another Datacore or any Web resource) :
          // TODO or maybe also allow this endpoint's baseUrl ??
          if (this.knownDatacoreContainerUrlSet.contains(urlContainer)) {

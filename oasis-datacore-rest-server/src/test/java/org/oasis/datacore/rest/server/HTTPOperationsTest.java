@@ -11,8 +11,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.oasis.datacore.common.context.SimpleRequestContextProvider;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
+import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.rest.api.DCResource;
+import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.util.UnitTestHelper;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.client.QueryParameters;
@@ -24,6 +27,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.google.common.collect.ImmutableMap;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:oasis-datacore-rest-server-test-context.xml" })
@@ -47,6 +52,14 @@ public class HTTPOperationsTest {
 
 	@Autowired
 	private BrandCarMotorcycleData brandCarMotorcycleData;
+
+   @Before
+   public void flushDataAndSetProject() {
+      brandCarMotorcycleData.initData(); // cleans data first
+
+      SimpleRequestContextProvider.setSimpleRequestContext(new ImmutableMap.Builder<String, Object>()
+            .put(DatacoreApi.PROJECT_HEADER, DCProject.OASIS_SAMPLE).build());
+   }
 	
 	/**
 	 * URL : /dc/type/${type}
@@ -1108,11 +1121,6 @@ public class HTTPOperationsTest {
 		} catch (Exception e) {
          Assert.fail("Exception should not happen");
 		}
-	}
-
-	@Before
-	public void flushData() {
-	   brandCarMotorcycleData.initData(); // cleans data first
 	}
 
 }

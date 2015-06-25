@@ -1,10 +1,6 @@
 package org.oasis.datacore.rest.server;
 
-import static org.oasis.datacore.sample.PublicPrivateOrganizationSample.AGRILOC_OFFER2;
-import static org.oasis.datacore.sample.PublicPrivateOrganizationSample.ORG2;
-import static org.oasis.datacore.sample.PublicPrivateOrganizationSample.ORGPRI2;
-import static org.oasis.datacore.sample.PublicPrivateOrganizationSample.ORGPRI2_PROJECT;
-import static org.oasis.datacore.sample.PublicPrivateOrganizationSample.USER2;
+import static org.oasis.datacore.sample.PublicPrivateOrganizationSample.*;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -34,6 +30,7 @@ import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.client.QueryParameters;
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.sample.PublicPrivateOrganizationSample;
+import org.oasis.datacore.sample.ResourceModelIniter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,7 +39,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.google.common.collect.ImmutableMap;
 
-@Ignore // TODO
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:oasis-datacore-rest-server-test-context.xml" })
 //@FixMethodOrder(MethodSorters.NAME_ASCENDING) // else random since java 7 NOT REQUIRED ANYMORE
@@ -94,7 +90,64 @@ public class ProjectTest {
    }
    
    @Test
-   public void test() throws MalformedURLException, URISyntaxException {
+   public void testMultiStorageProjectAllowsAltModels() throws MalformedURLException, URISyntaxException {
+      DCResource org2Org2ModelResource = new SimpleRequestContextProvider<DCResource>() {
+         protected DCResource executeInternal() throws MalformedURLException, URISyntaxException {
+            return datacoreApiClient.getData(ResourceModelIniter.MODEL_MODEL_NAME, ORG2);
+         }
+      }.execInContext(new ImmutableMap.Builder<String, Object>()
+            .put(DatacoreApi.PROJECT_HEADER, ORG2_PROJECT).build());
+      Assert.assertNotNull(org2Org2ModelResource);
+      DCResource orgpri2Org2ModelResource = new SimpleRequestContextProvider<DCResource>() {
+         protected DCResource executeInternal() throws MalformedURLException, URISyntaxException {
+            return datacoreApiClient.getData(ResourceModelIniter.MODEL_MODEL_NAME, ORG2);
+         }
+      }.execInContext(new ImmutableMap.Builder<String, Object>()
+            .put(DatacoreApi.PROJECT_HEADER, ORGPRI2_PROJECT).build());
+      Assert.assertNotNull(orgpri2Org2ModelResource);
+      Assert.assertEquals("same uri", org2Org2ModelResource.getUri(), orgpri2Org2ModelResource.getUri());
+      Assert.assertNotEquals("but not same resource (because belongs to different project in same "
+            + "multiProjectStorage model", org2Org2ModelResource.get("dcmo:pointOfViewAbsoluteName"),
+            orgpri2Org2ModelResource.get("dcmo:pointOfViewAbsoluteName"));
+      ///Assert.assertNotEquals(org2Org2ModelResource.get("dcmo:mixins"), orgpri2Org2ModelResource.getUri());
+
+      // same test on LDP query service :
+      List<DCResource> org2Org2ModelResourceFound = new SimpleRequestContextProvider<List<DCResource>>() {
+         protected List<DCResource> executeInternal() throws MalformedURLException, URISyntaxException {
+            return datacoreApiClient.findDataInType(ResourceModelIniter.MODEL_MODEL_NAME,
+                  new QueryParameters().add("dcmo:name", ORG2), null, 10);
+         }
+      }.execInContext(new ImmutableMap.Builder<String, Object>()
+            .put(DatacoreApi.PROJECT_HEADER, ORG2_PROJECT).build());
+      Assert.assertEquals(1, org2Org2ModelResourceFound.size());
+      org2Org2ModelResource = org2Org2ModelResourceFound.get(0);
+      List<DCResource> orgpri2Org2ModelResourceFound = new SimpleRequestContextProvider<List<DCResource>>() {
+         protected List<DCResource> executeInternal() throws MalformedURLException, URISyntaxException {
+            return datacoreApiClient.findDataInType(ResourceModelIniter.MODEL_MODEL_NAME,
+                  new QueryParameters().add("dcmo:name", ORG2), null, 10);
+         }
+      }.execInContext(new ImmutableMap.Builder<String, Object>()
+            .put(DatacoreApi.PROJECT_HEADER, ORGPRI2_PROJECT).build());
+      Assert.assertEquals(2, orgpri2Org2ModelResourceFound.size());
+      /* TODO make forkedUris work also in LDP query using aggregation...
+      Assert.assertEquals(1, orgpri2Org2ModelResourceFound.size());
+      orgpri2Org2ModelResource = orgpri2Org2ModelResourceFound.get(0);
+      Assert.assertEquals("same uri", org2Org2ModelResource.getUri(), orgpri2Org2ModelResource.getUri());
+      Assert.assertNotEquals("but not same resource (because belongs to different project in same "
+            + "multiProjectStorage model", org2Org2ModelResource.get("dcmo:pointOfViewAbsoluteName"),
+            orgpri2Org2ModelResource.get("dcmo:pointOfViewAbsoluteName"));
+      ///Assert.assertNotEquals(org2Org2ModelResource.get("dcmo:mixins"), orgpri2Org2ModelResource.getUri());
+      */
+      // TODO same tests on write, delete...
+   }
+
+   @Ignore // TODO
+   @Test
+   public void testOrg2() throws MalformedURLException, URISyntaxException {
+      // TODO TODO set project(s)
+      //SimpleRequestContextProvider.setSimpleRequestContext(new ImmutableMap.Builder<String, Object>()
+      //      .put(DatacoreApi.PROJECT_HEADER, DCProject.OASIS_SAMPLE).build());
+      
       // test models :
       DCProject orgpri2Project = modelServiceImpl.getProject(ORGPRI2_PROJECT);
       Assert.assertNotNull(orgpri2Project);

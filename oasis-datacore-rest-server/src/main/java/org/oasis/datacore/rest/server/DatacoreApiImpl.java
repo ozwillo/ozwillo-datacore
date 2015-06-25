@@ -222,6 +222,9 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       
       ArrayList<DCResource> res = new ArrayList<DCResource>(resources.size());
       for (DCResource resource : resources) {
+         if (resource == null) {
+            continue; // skipping null
+         }
          DCURI uri;
          try {
             uri = uriService.normalizeAdaptCheckTypeOfUri(resource.getUri(), null, 

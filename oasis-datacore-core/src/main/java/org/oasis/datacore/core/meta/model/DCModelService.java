@@ -1,6 +1,7 @@
 package org.oasis.datacore.core.meta.model;
 
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.oasis.datacore.core.meta.pov.DCProject;
@@ -16,6 +17,9 @@ import org.oasis.datacore.core.meta.pov.DCProject;
  *
  */
 public interface DCModelService {
+   
+   /** to be able to build model URIs in -core */
+   String MODEL_MODEL_NAME = "dcmo:model_0";
 
    /** gets model's (possible inherited) security */
    DCSecurity getSecurity(DCModelBase model);
@@ -42,8 +46,18 @@ public interface DCModelService {
     */
    List<DCProject> getProjectsSeing(DCProject project);
 
+   /** shortcut to build multiProjectStorage criteria, TODO request-level cache */
+   LinkedHashSet<String> getVisibleProjectNames();
+   /** (in memory for now) */
+   LinkedHashSet<String> getForkedUriProjectNames(String uri);
+   /** TODO cache */
+   LinkedHashSet<String> getVisibleProjectNames(Collection<String> namesOfProjectsForkingUri);
+   /** TODO cache */
+   LinkedHashSet<String> getVisibleProjectNames(String projectName);
+
    /**
-    * POLY NEW replaces getModel/Mixin TODO migrate
+    * POLY NEW replaces getModel/Mixin TODO migrate.
+    * Must be called within actual project else wrong if fork
     * @param type
     * @return any DCModelBase (where isStorage/Only can be tested)
     */
@@ -58,6 +72,7 @@ public interface DCModelService {
    DCModelBase getNonLocalModel(String type);
 
    /**
+    * Must be called within actual project else wrong if fork.
     * NB. there can't be more than one inherited model being definition
     * (else they would be inherited by a non-definition model, which would
     * then be definition since it would define that both must be added).
@@ -67,43 +82,28 @@ public interface DCModelService {
    DCModelBase getDefinitionModel(DCModelBase model);
 
    /**
-    * 
+    * Must be called within actual project else wrong if fork.
     * @param model uses its project
     * @return
     */
    DCModelBase getStorageModel(DCModelBase model);
    
    Collection<DCModelBase> getStoredModels(DCModelBase model);
-   
-   /**
-    * reified model types
-    * @param modelType
-    * @return
-    * @obsolete
-    */
-   DCModel getModel(String modelType);
-   /**
-    * shared mixin types ; includes models (?)
-    * @param type
-    * @return
-    * @obsolete
-    */
-   DCModelBase getMixin(String type);
 
    /**
-    * reified model types
     * @return
     * @obsolete
     */
-   Collection<DCModel> getModels();
+   Collection<DCModelBase> getModels();
+
    /**
-    * shared mixin types ; includes models TODO is it OK ?
-    * @return
-    * @obsolete
+    * 
+    * @param isInstanciable
+    * @return instanciable models OR pure shared mixin types 
     */
-   Collection<DCModelBase> getMixins();
+   Collection<DCModelBase> getModels(boolean isInstanciable);
    
    /** TODO not used for now */
-   DCField getFieldByPath(DCModel dcModel, String fieldPath);
+   DCField getFieldByPath(DCModelBase dcModel, String fieldPath);
 
 }

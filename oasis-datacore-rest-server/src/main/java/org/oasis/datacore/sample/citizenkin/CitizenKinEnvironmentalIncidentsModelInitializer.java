@@ -4,6 +4,7 @@ import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
+import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.sample.DatacoreSampleBase;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +22,18 @@ public class CitizenKinEnvironmentalIncidentsModelInitializer extends DatacoreSa
     public static final String STRING_TYPE = DCFieldTypeEnum.STRING.getType();
     public static final String DATE_TYPE = DCFieldTypeEnum.DATE.getType();
     public static final String PREFIX = "ck_environmental-incidents:";
+
+    /** main model !! */
+    @Override
+    protected boolean neverCleanData() {
+       return true;
+    }
+    
+    /** overriden to stay as before in oasis.main */
+    @Override
+    protected DCProject getProject() {
+       return getMainProject();
+    }
 
 
     @Override

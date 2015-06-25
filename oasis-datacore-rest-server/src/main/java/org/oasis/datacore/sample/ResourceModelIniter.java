@@ -17,6 +17,7 @@ import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
+import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.core.meta.pov.ProjectException;
@@ -46,18 +47,25 @@ import com.google.common.collect.ImmutableMap;
 @Component
 public class ResourceModelIniter extends DatacoreSampleBase {
 
-   public static final String MODEL_MODEL_NAME = "dcmo:model_0";
+   public static final String MODEL_MODEL_NAME = DCModelService.MODEL_MODEL_NAME;
    public static final String MODEL_NAME_PROP = "dcmo:name";
    public static final String MODEL_MIXIN_NAME = "dcmi:mixin_0";
+   public static final String MODEL_FIELD_NAME = "dcmf:field_0";
+   public static final String MODEL_SECURITY_NAME = "dcms:Security_0";
    public static final String MODEL_STORAGE_NAME = MODEL_MIXIN_NAME;
-   public static final String MODEL_POINTOFVIEW_NAME = "dcmpv:pointOfView_0";
+   public static final String MODEL_POINTOFVIEW_NAME = "dcmpv:PointOfView_0";
    public static final String POINTOFVIEW_NAME_PROP = "dcmpv:name";
-   public static final String MODEL_PROJECT_NAME = "dcmp:project_0";
-   public static final String MODEL_USECASEPOINTOFVIEW_NAME = "dcmpv:useCasePointOfView_0";
-   public static final String MODEL_USECASEPOINTOFVIEWELEMENT_NAME = "dcmpv:useCasePointOfViewElement_0";
+   public static final String MODEL_PROJECT_NAME = "dcmp:Project_0";
+   public static final String MODEL_USECASEPOINTOFVIEW_NAME = "dcmpv:UseCasePointOfView_0";
+   public static final String MODEL_USECASEPOINTOFVIEWELEMENT_NAME = "dcmpv:UseCasePointOfViewElement_0";
 
-   public static final String MODEL_DISPLAYABLE_NAME = "odisp:Displayable_0"; //TODO TODOOOOOOOOOOOOOOOOOOOO from o:Displayable_0
+   // features :
+   public static final String MODEL_DISPLAYABLE_NAME = "odisp:Displayable_0";
    public static final String DISPLAYABLE_NAME_PROP = "odisp:name";
+   public static final String MODEL_COUNTRYLANGUAGESPECIFIC_NAME = "dcmls:CountryLanguageSpecific_0";
+   public static final String COUNTRYLANGUAGESPECIFIC_PROP_NAME = "dcmls:code";
+   public static final String MODEL_ANCESTORS_NAME = "oanc:Ancestors_0";
+   public static final String ANCESTORS_NAME_PROP = "oanc:ancestors";
 
    @Autowired
    private ModelResourceMappingService mrMappingService;
@@ -65,10 +73,16 @@ public class ResourceModelIniter extends DatacoreSampleBase {
    private ValueParsingService valueService;
    
    
-   /** after all models */
+   /** after all java-generated models, but before loading other persisted ones */
    @Override
    public int getOrder() {
       return 100000;
+   }
+   
+   /** has its own project */
+   @Override
+   protected DCProject getProject() {
+      return getMetamodelProject();
    }
 
    // TODO rm, rather in dedicated initer / service 
@@ -85,9 +99,15 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       return true;
    }
    
-   /** do refreshBeforePost */
+   /** do refreshBeforePost (since neverCleanData) */
    @Override
    protected boolean refreshBeforePost() {
+      return true;
+   }
+   
+   /** do always fill data, so that generated models are repersisted
+    * even if some are already there */
+   protected boolean alwaysFillData() {
       return true;
    }
    
@@ -98,34 +118,37 @@ public class ResourceModelIniter extends DatacoreSampleBase {
    }
    
    protected void internalBuildModels(List<DCModelBase> modelsToCreate) {
-      DCProject project = modelAdminService.getProject(DCProject.OASIS_MAIN);
+      // features used by the metamodel :
       
-      DCMixin displayableModel = (DCMixin) new DCMixin(MODEL_DISPLAYABLE_NAME, project) // and not DCModel : fields exist within model & mixins
-         .addField(new DCI18nField(DISPLAYABLE_NAME_PROP, 100))
+      DCModelBase displayableModel = new DCMixin(MODEL_DISPLAYABLE_NAME) // and not DCModel : fields exist within model & mixins
+         .addField(new DCI18nField(DISPLAYABLE_NAME_PROP, 100)) // searchable, especially when is aliasedStorage of ex. geoco:name
       ;
 
-      DCMixin countryLanguageSpecificModel = (DCMixin) new DCMixin("dcmls:CountryLanguageSpecific", project) // and not DCModel : fields exist within model & mixins
-         .addField(new DCField("dcmls:code", "string", false, 0)) // LATER false & mixin optional
+      DCModelBase countryLanguageSpecificModel = new DCMixin(MODEL_COUNTRYLANGUAGESPECIFIC_NAME) // and not DCModel : fields exist within model & mixins
+         .addField(new DCField(COUNTRYLANGUAGESPECIFIC_PROP_NAME, "string", false, 0)) // LATER false & mixin optional
       ;
       
-      DCModel fieldIdentificationModel = (DCModel) new DCModel("dcmfid:Identification", project)
+      // metamodel :
+      
+      DCModelBase fieldIdentificationModel = new DCMixin("dcmfid:Identification_0")
          .addField(new DCField("dcmfid:indexInId", "int", false, 0))
          .addField(new DCField("dcmfid:indexInParents", "int", false, 0))
          .addField(new DCListField("dcmfid:queryNames", new DCField("useless", "string", false, 0), false))
          ;
       
-      DCMixin fieldModel = (DCMixin) new DCMixin("dcmf:field_0", project) // and not DCModel : fields exist within model & mixins
+      DCModelBase fieldModel = new DCMixin(MODEL_FIELD_NAME) // and not DCModel : fields exist within model & mixins
          .addMixin(displayableModel)
          .addMixin(fieldIdentificationModel)
          .addField(new DCField("dcmf:name", "string", true, 100))
          .addField(new DCField("dcmf:type", "string", true, 100))
          .addField(new DCField("dcmf:required", "boolean", (Object) false, 0)) // defaults to false, indexing would bring not much
          .addField(new DCField("dcmf:queryLimit", "int", 0, 0)) // defaults to 0, indexing would bring not much ??
-         .addField(new DCField("dcmf:aliasedStorageName", "string", false, 0)) // defaults to 0, indexing would bring not much ??
+         .addField(new DCListField("dcmf:aliasedStorageNames", new DCField("useless", "string"))) // defaults to 0, indexing would bring not much ??
+         .addField(new DCField("dcmf:readonly", "boolean", false, 0))
          // list :
-         .addField(new DCResourceField("dcmf:listElementField", "dcmf:field_0"))
+         .addField(new DCResourceField("dcmf:listElementField", MODEL_FIELD_NAME))
          // map :
-         .addField(new DCListField("dcmf:mapFields", new DCResourceField("useless", "dcmf:field_0")))
+         .addField(new DCListField("dcmf:mapFields", new DCResourceField("useless", MODEL_FIELD_NAME)))
          // resource :
          .addField(new DCField("dcmf:resourceType", "string", false, 100)) // "required" would required polymorphism ; TODO rather "resource" type ?!
          
@@ -134,15 +157,18 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addField(new DCField("dcmf:isInMixinRef", "boolean", false, 0))
          .addField(new DCField("dcmf:defaultStringValue", "string", false, 0))
          .addField(new DCField("dcmf:defaultLanguage", "string", false, 0))
-         .addField(new DCField("dcmf:internalName", "string", false, 100))
+         .addField(new DCField("dcmf:internalName", "string", false, 0)) // not searchable, rather belongs to import conf
       ;
       
-      DCModel mixinBackwardCompatibilityModel = (DCModel) new DCModel(MODEL_MIXIN_NAME)
+      DCModelBase mixinBackwardCompatibilityModel = new DCMixin(MODEL_MIXIN_NAME)
          .addMixin(displayableModel);
       ///mixinBackwardCompatibilityModel.setStorage(true);
       mixinBackwardCompatibilityModel.setInstanciable(false);
+      mixinBackwardCompatibilityModel.setStorage(true); // stores all models
+      mixinBackwardCompatibilityModel.setInstanciable(false);
+      mixinBackwardCompatibilityModel.setMultiProjectStorage(true); // stores for all projects !!
 
-      DCModel modelIdentificationModel = (DCModel) new DCModel("dcmoid:Identification", project)
+      DCModelBase modelIdentificationModel = new DCMixin("dcmoid:Identification_0")
          .addField(new DCListField("dcmoid:idFieldNames", new DCField("useless", "string", false, 0), false))
          .addField(new DCListField("dcmoid:idGenJs", new DCField("useless", "string", false, 0), false))
          .addField(new DCField("dcmoid:useIdForParent", "boolean", false, 0))
@@ -152,12 +178,24 @@ public class ResourceModelIniter extends DatacoreSampleBase {
                .addField(new DCListField("dcmoidlq:fieldNames", new DCField("useless", "string", false, 0), false)), false)
          )
          ;
+
+      DCModelBase modelSecurityModel = new DCMixin(MODEL_SECURITY_NAME)
+         .addField(new DCField("dcms:isAuthentifiedReadable", "boolean", false, 0))
+         .addField(new DCField("dcms:isAuthentifiedCreatable", "boolean", false, 0))
+         .addField(new DCField("dcms:isAuthentifiedWritable", "boolean", false, 0))
+         .addField(new DCListField("dcms:resourceCreators", new DCField("useless", "string", false, 0), false))
+         .addField(new DCListField("dcms:resourceCreationOwners", new DCField("useless", "string", false, 0), false))
+         .addField(new DCListField("dcms:resourceReaders", new DCField("useless", "string", false, 0), false))
+         .addField(new DCListField("dcms:resourceWriters", new DCField("useless", "string", false, 0), false))
+         .addField(new DCListField("dcms:resourceOwners", new DCField("useless", "string", false, 0), false))
+         ;
       
       // Mixins (or only as names ??) model and at the same time modelBase (or in same collection ?) :
-      DCModel modelOrMixinModel = (DCModel) new DCModel(MODEL_MODEL_NAME, project) // POLY MODEL_MIXIN_NAME // and not DCMixin, they must be introspectable
+      DCModelBase modelOrMixinModel = new DCMixin(MODEL_MODEL_NAME) // POLY MODEL_MIXIN_NAME // and not DCMixin, they must be introspectable
           // TODO security
          .addMixin(mixinBackwardCompatibilityModel)
          .addMixin(modelIdentificationModel)
+         .addMixin(modelSecurityModel)
          .addMixin(countryLanguageSpecificModel)
          //.addMixin(displayableModel);
          .addField(new DCField(MODEL_NAME_PROP, "string", true, 100))
@@ -165,7 +203,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          // NB. NOT required (for now), rather computed from current one, else should be
          // custom computed in ModelResourceDCListener in ABOUT_TO_BUILD step (but then
          // default values are not set by parsing yet which makes toModelOrMixin fail on ex. maxScan)
-         .addField(new DCField("dcmo:majorVersion", "long", false, 100)) // don't index and rather lookup on URI ??
+         .addField(new DCField("dcmo:majorVersion", "long", false, 0)) // don't index and rather lookup on URI
          // NB. Resource version is finer but NOT the minorVersion of the majorVersion
          // NB. NOT required (for now), rather computed from dcmo:name, else should be
          // custom computed in ModelResourceDCListener in ABOUT_TO_BUILD step (but then
@@ -175,14 +213,15 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addField(new DCField("dcmo:isDefinition", "boolean", (Object) true, 100)) // = !dcmo:isStorageOnly
          .addField(new DCField("dcmo:isStorage", "boolean", (Object) true, 100))
          .addField(new DCField("dcmo:isInstanciable", "boolean", (Object) true, 100))
+         .addField(new DCField("dcmo:isMultiProjectStorage", "boolean", (Object) false, 0))
          
-         .addField(new DCField("dcmo:documentation", "string", false, 100)) // TODO LATER required, TODO in another collection for performance
-         .addField(new DCListField("dcmo:fields", new DCResourceField("useless", "dcmf:field_0")))
-         .addField(new DCListField("dcmo:mixins", new DCField("useless", "string", false, 100)))
-         .addField(new DCListField("dcmo:fieldAndMixins", new DCField("useless", "string", false, 100), false)) // NOT required, only used if any to change override order
+         .addField(new DCField("dcmo:documentation", "string", false, 0)) // TODO LATER required, TODO in another collection for performance
+         .addField(new DCListField("dcmo:fields", new DCResourceField("useless", MODEL_FIELD_NAME)))
+         .addField(new DCListField("dcmo:mixins", new DCField("useless", "string", false, 100))) // NB. also dcmo:globalMixins
+         .addField(new DCListField("dcmo:fieldAndMixins", new DCField("useless", "string", false, 0), false)) // NOT required, only used if any to change override order, so not indexed
          
-         .addField(new DCField("dcmo:importDefaultOnly", "boolean", (Object) false, 100))
-         .addField(new DCField("dcmo:importAutolinkedOnly", "boolean", (Object) false, 100))
+         .addField(new DCField("dcmo:importDefaultOnly", "boolean", (Object) false, 0))
+         .addField(new DCField("dcmo:importAutolinkedOnly", "boolean", (Object) false, 0))
          
          // storage :
          .addField(new DCField("dcmo:maxScan", "int", 0, 0)) // not "required"
@@ -192,10 +231,10 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addField(new DCField("dcmo:isContributable", "boolean", (Object) false, 100))
          
          // TODO for app.js / openelec (NOT required) :
-         .addField(new DCField("dcmo:idGenJs", "string", false, 100))
+         .addField(new DCField("dcmo:idGenJs", "string", false, 0))
          
          // caches :
-         .addField(new DCListField("dcmo:globalFields", new DCResourceField("useless", "dcmf:field_0"))) // TODO polymorphism
+         .addField(new DCListField("dcmo:globalFields", new DCResourceField("useless", MODEL_FIELD_NAME))) // TODO polymorphism
          .addField(new DCListField("dcmo:globalMixins", new DCField("useless", "string", false, 100)))
          .addField(new DCField("dcmo:definitionModel", "string", false, 100)) // TODO LATER
          .addField(new DCField("dcmo:storageModel", "string", false, 100)) // TODO LATER
@@ -203,41 +242,56 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          // & listeners ??
          ;
       modelOrMixinModel.setStorage(false); // stored in dcmi:mixin_0
-      modelOrMixinModel.setDocumentation("id = name + '_' + version"); // TODO LATER rathter '/' separator
+      modelOrMixinModel.setInstanciable(true);
+      modelOrMixinModel.setDocumentation("id = name + '_' + version"); // TODO LATER rather '/' separator
       /*ignCommuneModel.setDocumentsetDocumentationation("{ \"uri\": \"http://localhost:8180/dc/type/country/France\", "
       + "\"name\": \"France\" }");*/
       
       // TODO prefixes & namespaces, fields ??
       // TODO security, OPT private models ???
 
-      DCModel pointOfViewModel = (DCModel) new DCModel(MODEL_POINTOFVIEW_NAME, project)
+      // project model :
+      
+      DCModelBase pointOfViewModel = new DCModel(MODEL_POINTOFVIEW_NAME)
          .addMixin(displayableModel)
          .addField(new DCField(POINTOFVIEW_NAME_PROP, "string", true, 100))
+         .addField(new DCField("dcmpv:majorVersion", "long", false, 0)) // don't index and rather lookup on URI
+         .addField(new DCField("dcmpv:unversionedName", "string", false, 0)) // for now rather lookup using regex on mere name
          .addField(new DCField("dcmpv:documentation", "string", false, 100))
          .addField(new DCListField("dcmpv:pointOfViews", new DCResourceField("useless", MODEL_POINTOFVIEW_NAME))) // or not ???
          ///.addField(new DCListField("dcmp:localModels", new DCResourceField("useless", MODEL_MODEL_NAME))) // TODO or rather only dcmo:projectAbsoluteName ?
          ;
+      pointOfViewModel.setStorage(true);
       pointOfViewModel.setInstanciable(false); // polymorphic root storage
 
-      DCModel projectModel = (DCModel) new DCModel(MODEL_PROJECT_NAME, project)
+      DCModelBase projectModel = new DCMixin(MODEL_PROJECT_NAME)
          .addMixin(pointOfViewModel)
          ///.addField(new DCField("dcmp:name", "string", true, 100))
          ///.addField(new DCField("dcmp:documentation", "string", false, 100))
          .addField(new DCListField("dcmp:localVisibleProjects", new DCResourceField("useless", MODEL_PROJECT_NAME)))
+         .addField(new DCListField("dcmp:visibleProjectNames", new DCField("useless", "string", false, 0))) // only to display for now
+         .addField(new DCListField("dcmp:forkedUris", new DCField("useless", "string", false, 0))) // only to display for now
          .addField(new DCListField("dcmp:useCasePointOfViews", new DCResourceField("useless", MODEL_PROJECT_NAME)))
          ///.addField(new DCListField("dcmp:localModels", new DCResourceField("useless", MODEL_MODEL_NAME))) // TODO or rather only dcmo:projectAbsoluteName ?
+         // security :
+         .addField(new DCResourceField("dcmp:securityConstraints", MODEL_SECURITY_NAME, false, 0)) // embedded subresource
+         .addField(new DCResourceField("dcmp:securityDefaults", MODEL_SECURITY_NAME, false, 0)) // embedded subresource
+         .addField(new DCField("dcmp:modelLevelSecurityEnabled", "boolean", (Object) false, 0))
+         .addField(new DCResourceField("dcmp:visibleSecurityConstraints", MODEL_SECURITY_NAME, false, 0)) // embedded subresource
          ;
       projectModel.setStorage(false); // store in dcmpv
+      projectModel.setInstanciable(true);
 
-      DCModel useCasePointOfViewModel = (DCModel) new DCModel(MODEL_USECASEPOINTOFVIEW_NAME, project)
+      DCModelBase useCasePointOfViewModel = new DCMixin(MODEL_USECASEPOINTOFVIEW_NAME)
          .addMixin(pointOfViewModel)
          ///.addField(new DCField("dcmp:name", "string", true, 100))
          ///.addField(new DCField("dcmp:documentation", "string", false, 100))
          .addField(new DCListField("dcmp:useCasePointOfViewElements", new DCResourceField("useless", MODEL_USECASEPOINTOFVIEWELEMENT_NAME)))
          ;
       useCasePointOfViewModel.setStorage(false); // store in dcmpv
+      projectModel.setInstanciable(true);
 
-      DCModel useCasePointOfViewElementModel = (DCModel) new DCModel(MODEL_USECASEPOINTOFVIEWELEMENT_NAME, project)
+      DCModelBase useCasePointOfViewElementModel = new DCMixin(MODEL_USECASEPOINTOFVIEWELEMENT_NAME)
          .addMixin(pointOfViewModel)
          ///.addField(new DCField("dcmp:name", "string", true, 100))
          ///.addField(new DCField("dcmp:documentation", "string", false, 100))
@@ -245,11 +299,19 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          ///.addField(new DCListField("dcmpvuce:model", new DCResourceField("useless", MODEL_MODEL_NAME))) // TODO or rather only dcmo:projectAbsoluteName ?
          ;
       useCasePointOfViewElementModel.setStorage(false); // store in dcmpv
+      useCasePointOfViewElementModel.setInstanciable(true);
+      
+      // other features :
+
+      DCModelBase ancestorsModel = new DCMixin(MODEL_ANCESTORS_NAME) // and not DCModel : fields exist within model & mixins
+         .addField(new DCI18nField(ANCESTORS_NAME_PROP, 100)) // searchable !
+      ;
       
       modelsToCreate.addAll(Arrays.asList(displayableModel, countryLanguageSpecificModel,
             fieldIdentificationModel, fieldModel,
-            mixinBackwardCompatibilityModel, modelIdentificationModel, modelOrMixinModel,
-            pointOfViewModel, projectModel, useCasePointOfViewModel, useCasePointOfViewElementModel));
+            mixinBackwardCompatibilityModel, modelIdentificationModel, modelSecurityModel, modelOrMixinModel,
+            pointOfViewModel, projectModel, useCasePointOfViewModel, useCasePointOfViewElementModel,
+            ancestorsModel));
    }
 
    @Override
@@ -258,19 +320,66 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       
       // update (override ; i.e. fillData) metamodel resources always, for now :
       updateMetamodelResourcesInProject(modelOrMixins);
+      
+      // update (default) project resources, always for now :
+      createDefaultProjects();
+      allProjectsToResource(false);
       return res;
    }
+
+   /**
+    * Create default projects, including geo & org(pri) for now.
+    */
+   private void createDefaultProjects() {
+      getMetamodelProject();
+      getMainProject();
+      getSampleProject();
+      getSandboxProject();
+      
+      DCProject geo0Project = buildContainerVersionedProjectDefaultConf("geo", 0,
+            "Geographical jurisdictions", // "Geographical jurisdictions (" + toPlaygroundLink("geo:Area_0") + ")"
+            ozwilloGeoAdmins); // geo_1 // NB. in geo_1.0, 0 would be minorVersion
+      DCProject geo1Project = buildContainerVersionedProjectDefaultConf("geo", 1,
+            "Geographical jurisdictions", // "Geographical jurisdictions (" + toPlaygroundLink("geo:Area_0") + ")"
+            ozwilloGeoAdmins); // geo_1 // NB. in geo_1.0, 0 would be minorVersion
+      DCProject geoProject = buildFacadeProjectDefaultConf(geo1Project);
+
+      DCProject org0Project = buildContainerVersionedProjectDefaultConf("org", 0,
+            "Organizations, public and private, as well as Persons", ozwilloOrgAdmins, geo0Project);
+      DCProject org1Project = buildContainerVersionedProjectDefaultConf("org", 1,
+            "Organizations, public and private, as well as Persons", ozwilloOrgAdmins, geo1Project);
+      DCProject orgProject = buildFacadeProjectDefaultConf(org1Project);
+
+      DCProject citizenkin0Project = buildContainerVersionedProjectDefaultConf("citizenkin", 0,
+            "Citizen Kin procedures", ozwilloCitizenkinAdmins, geoProject);
+      citizenkin0Project.getSecurityDefaults().setAuthentifiedCreatable(true); // anybody can create a procedure (?)
+      citizenkin0Project.getSecurityDefaults().setResourceCreationOwners(new LinkedHashSet<String>()); // owner is u_user as before BUT THIS SHOULD NOT WORK ??
+      // (for both to be used, security on CK models should be voided)
+      DCProject citizenkinProject = buildFacadeProjectDefaultConf(citizenkin0Project);
+   }
+
+   /*private String toPlaygroundLink(String modelType) {
+      String modelTypeAndQuery = modelType + '?' + 
+      return "<a href=\"/dc/type/" + modelTypeAndQuery + "\" class=\"dclink\" onclick=\""
+            + "javascript:return findDataByType($(this).attr('href'));\">/dc/type/" + modelType + "</a>";
+   }*/
 
    // TODO in service ?!
    private void updateMetamodelResourcesInProject(List<DCModelBase> modelOrMixins) {
       for (DCModelBase modelToCreate : modelOrMixins) {
-         new SimpleRequestContextProvider<Object>() { // set context project beforehands :
-            // (else Found model ... in wrong project in LoadPersistedModelsAtInit)
-            protected Object executeInternal() {
-               updateMetamodelResource(modelToCreate); return null;
-            }
-         }.execInContext(new ImmutableMap.Builder<String, Object>()
-               .put(DCRequestContextProvider.PROJECT, modelToCreate.getProjectName()).build());
+         String modelProjectName = modelToCreate.getProjectName();
+         if (modelProjectName == null || modelProjectName.equals(modelAdminService.getProject().getName())) {
+            // reuse current project
+            updateMetamodelResource(modelToCreate);
+         } else { // use its own specific project (helper to sample writers)
+            new SimpleRequestContextProvider<Object>() { // set context project beforehands :
+               // (else Found model ... in wrong project in LoadPersistedModelsAtInit)
+               protected Object executeInternal() {
+                  updateMetamodelResource(modelToCreate); return null;
+               }
+            }.execInContext(new ImmutableMap.Builder<String, Object>()
+                  .put(DCRequestContextProvider.PROJECT, modelProjectName).build());
+         }
       }
    }
    private void updateMetamodelResource(DCModelBase modelToCreate) {
@@ -309,6 +418,27 @@ public class ResourceModelIniter extends DatacoreSampleBase {
    private boolean diff(DCResource metamodelResource, DCResource existingResource) {
       return true;
    }
+   // TODO better or https://github.com/SQiShER/java-object-diff/
+   /*private List<String> diff(DCResource newResource, DCResource existing, boolean failFast) {
+      if (!existing.getUri().equals(newResource.getUri())
+            || !existing.getTypes().equals(newResource.getTypes())) {
+         // BUT not (native or not) computed fields : version, crAt, crBy, chAt, chBy
+         // nor deduced fields : id
+         return true;
+      }
+      return diff(newResource.getProperties(), existing.getProperties(), failFast, null);
+   }
+
+   private boolean diff(Map<String, Object> newProps, Map<String, Object> existingProps, String path) {
+      if (path == null) {
+         path = "";
+      }
+      HashSet<String> missingNewProps = new HashSet<String>(newProps.keySet());
+      for (Entry<String, Object> existingProp : existingProps.entrySet()) {
+         
+      }
+      return false;
+   }*/
 
    /** @obsolete */
    private DCMapField addFieldFields(DCMapField mapField) { // TODO polymorphism
@@ -339,14 +469,18 @@ public class ResourceModelIniter extends DatacoreSampleBase {
    
    @Override
    public void fillData() {
+      allProjectsToResource(true);
+   }
+   
+   private void allProjectsToResource(boolean alsoTheirModels) {
       Set<String> projectNameDoneSet = new HashSet<String>(modelAdminService.getProjects().size()); // prevents looping
       LinkedHashSet<String> projectNameBeingDoneSet = new LinkedHashSet<String>(); // detects circular references, ordered
       for (DCProject project : modelAdminService.getProjects()) {
          // NB. no project outside those, but they still must be loaded in the order of their deps
-         projectItsDepsAndModelsToResource(project, projectNameDoneSet, projectNameBeingDoneSet);
+         projectAndItsDepsToResource(project, alsoTheirModels, projectNameDoneSet, projectNameBeingDoneSet);
       }
    }
-   
+
    /**
     * Loads (all modelAdminService known) projects in the order of their deps
     * @param project
@@ -354,7 +488,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
     * @param projectNameDoneSet prevents looping
     * @param projectNameBeingDoneSet detects circular references, ordered
     */
-   private void projectItsDepsAndModelsToResource(DCProject project,
+   private void projectAndItsDepsToResource(DCProject project, boolean alsoItsModels,
          Set<String> projectNameDoneSet, LinkedHashSet<String> projectNameBeingDoneSet) throws ProjectException {
       // prevent looping :
       if (projectNameDoneSet.contains(project.getName())) {
@@ -370,7 +504,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       
       // deps (i.e. those that are visible to it) :
       for (DCProject visibleProject : project.getLocalVisibleProjects()) {
-         projectItsDepsAndModelsToResource(visibleProject,
+         projectAndItsDepsToResource(visibleProject, alsoItsModels,
                projectNameDoneSet, projectNameBeingDoneSet);
       }
       
@@ -391,13 +525,22 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       }
       
       // 2. its models (in their own project collections) :
-      resourcesToPost.clear();
-      //NB. mixins should be added before models containing them, checked in addModel
-      modelsToResources(project.getLocalModels(), resourcesToPost);
-      
-      // actual posting :
-      for (DCResource resource : resourcesToPost) {
-         postDataInType(resource, project.getName()); // ex. orgpri2 model in orgpri2 project
+      if (alsoItsModels) {
+         new SimpleRequestContextProvider<Object>() { // set context project beforehands :
+            protected Object executeInternal() {
+               // NB. calling modelsToResources() within project else getStorage/DefinitionModel() wrong
+               // NB. mixins should be added before models containing them, checked in addModel
+               resourcesToPost.clear();
+               modelsToResources(project.getLocalModels(), resourcesToPost);
+               
+               // actual posting :
+               for (DCResource resource : resourcesToPost) {
+                  postDataInType(resource); // ex. orgpri2 model in orgpri2 project
+               }
+               return null;
+            }
+         }.execInContext(new ImmutableMap.Builder<String, Object>()
+               .put(DCRequestContextProvider.PROJECT, project.getName()).build());
       }
       
       projectNameDoneSet.add(project.getName());

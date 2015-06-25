@@ -12,26 +12,36 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
+import org.oasis.datacore.common.context.DCRequestContextProvider;
+import org.oasis.datacore.common.context.SimpleRequestContextProvider;
+import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.EntityService;
+import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
+import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryServiceImpl;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
+import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.core.security.EntityPermissionService;
 import org.oasis.datacore.core.security.mock.LocalAuthenticationService;
 import org.oasis.datacore.model.resource.ModelResourceMappingService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
+import org.oasis.datacore.rest.api.util.UnitTestHelper;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.client.QueryParameters;
 import org.oasis.datacore.rest.server.event.EventService;
+import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.sample.CityCountrySample;
+import org.oasis.datacore.sample.ResourceModelIniter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,6 +50,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 
 /**
@@ -64,16 +75,17 @@ public class ResourceModelTest {
    /** to init models */
    @Autowired
    private /*static */DataModelServiceImpl modelServiceImpl;
-   ///@Autowired
-   ///private CityCountrySample cityCountrySample;
    
    /** to cleanup db
     * TODO LATER rather in service */
    @Autowired
    private /*static */MongoOperations mgo;
-   /** to setup security tests */
+   /** to setup security tests & test multiProjectStorage */
    @Autowired
    private EntityService entityService;
+   /** to enable index testing NOO only find in models */
+   @Autowired
+   private EntityModelService entityModelService;
    @Autowired
    private EntityPermissionService entityPermissionService;
    @Autowired
@@ -108,6 +120,14 @@ public class ResourceModelTest {
    private CityCountrySample cityCountrySample;
    
    
+   @Before
+   public void setProject() {
+      ///cityCountrySample.initData();
+      
+      SimpleRequestContextProvider.setSimpleRequestContext(new ImmutableMap.Builder<String, Object>()
+            .put(DatacoreApi.PROJECT_HEADER, DCProject.OASIS_SAMPLE).build());
+   }
+   
    /**
     * Logout after tests to restore default unlogged state.
     * This is required in tests that use authentication,
@@ -123,15 +143,20 @@ public class ResourceModelTest {
 
    @Test
    public void testResourceModel() throws Exception {
-      Assert.assertNotNull(modelAdminService.getModelBase("dcmo:model_0"));
-      List<DCResource> models = datacoreApiClient.findDataInType("dcmo:model_0", null, null, 10);
+      Assert.assertNotNull(modelAdminService.getModelBase(ResourceModelIniter.MODEL_MODEL_NAME));
+      List<DCResource> models = datacoreApiClient.findDataInType(ResourceModelIniter.MODEL_MODEL_NAME, null, null, 10);
       Assert.assertTrue(models != null && !models.isEmpty());
 
-      List<DCResource> arePlaceModels = datacoreApiClient.findDataInType("dcmo:model_0",
-            new QueryParameters().add("dcmo:globalMixins", "pl:place_0"), null, 10);
+      List<DCResource> arePlaceModels = new SimpleRequestContextProvider<List<DCResource>>() { // set context project beforehands :
+         protected List<DCResource> executeInternal() throws ResourceException {
+            return datacoreApiClient.findDataInType(ResourceModelIniter.MODEL_MODEL_NAME,
+                  new QueryParameters().add("dcmo:globalMixins", "pl:place_0"), null, 10); // from CityPlanningAndEconomicalActivitySample
+         }
+      }.execInContext(new ImmutableMap.Builder<String, Object>()
+            .put(DCRequestContextProvider.PROJECT, DCProject.OASIS_SAMPLE).build());
       Assert.assertTrue(arePlaceModels != null && !arePlaceModels.isEmpty());
 
-      List<DCResource> haveCountryModels = datacoreApiClient.findDataInType("dcmo:model_0",
+      List<DCResource> haveCountryModels = datacoreApiClient.findDataInType(ResourceModelIniter.MODEL_MODEL_NAME,
             new QueryParameters().add("dcmo:globalFields.dcmf:name", "plo:name"), null, 10);
       Assert.assertTrue(haveCountryModels != null && !haveCountryModels.isEmpty());
 
@@ -163,7 +188,7 @@ public class ResourceModelTest {
    @Test
    public void testResourceModelUpdateThroughREST() throws Exception {
       // put in initial state (delete stuff) in case test was aborted :
-      DCResource mr = datacoreApiClient.getData("dcmo:model_0", CityCountrySample.CITY_MODEL_NAME);
+      DCResource mr = datacoreApiClient.getData(ResourceModelIniter.MODEL_MODEL_NAME, CityCountrySample.CITY_MODEL_NAME);
       DCModelBase m = mrMappingService.toModelOrMixin(mr);
       m.getField("city:founded").setRequired(false);
       datacoreApiClient.postDataInType(mrMappingService.modelToResource(m, mr));
@@ -180,7 +205,7 @@ public class ResourceModelTest {
       villeurbanneCity = datacoreApiClient.postDataInType(villeurbanneCity);
       Assert.assertNotNull(villeurbanneCity);
       // getting model and changing it
-      DCResource cityModelResource = datacoreApiClient.getData("dcmo:model_0", CityCountrySample.CITY_MODEL_NAME);
+      DCResource cityModelResource = datacoreApiClient.getData(ResourceModelIniter.MODEL_MODEL_NAME, CityCountrySample.CITY_MODEL_NAME);
       resourceService.resourceToEntity(cityModelResource); // cleans up resource, else ex. Long props are rather Integers,
       // which toModelOrMixin doesn't support 
       DCModel clientCityModel = (DCModel) mrMappingService.toModelOrMixin(cityModelResource);
@@ -216,6 +241,9 @@ public class ResourceModelTest {
          // putting it back in default state
          clientCityFoundedField.setRequired(false);
          mrMappingService.modelToResource(clientCityModel, cityModelResource); // mrMappingService1.modelToResource(clientCityModel)
+         // get it first to update version if required :
+         DCResource latestCityModelResource = datacoreApiClient.getData(cityModelResource);
+         cityModelResource.setVersion(latestCityModelResource.getVersion());
          cityModelResource = datacoreApiClient.putDataInType(cityModelResource);
          deleteExisting(villeurbanneCity);
       }
@@ -225,7 +253,7 @@ public class ResourceModelTest {
    public void testCountryLanguageSpecificModel() throws Exception {
       String frCityModelName = "sample.city.cité"; // with problem-bound é
       ArrayList<String> frCityModelMixins = new ArrayList<String>();
-      DCResource frCityModel = resourceService.create("dcmo:model_0", frCityModelName)
+      DCResource frCityModel = resourceService.create(ResourceModelIniter.MODEL_MODEL_NAME, frCityModelName)
             .set("dcmo:name", frCityModelName).set("dcmo:mixins", frCityModelMixins).set("dcmo:maxScan", 0);
       deleteExisting(frCityModel);
       
@@ -238,11 +266,11 @@ public class ResourceModelTest {
          Assert.assertTrue(true);
       }
 
-      frCityModelMixins.add("dcmls:CountryLanguageSpecific");
+      frCityModelMixins.add(ResourceModelIniter.MODEL_COUNTRYLANGUAGESPECIFIC_NAME);
       frCityModel.set("dcmls:code", "FR");
       try {
          datacoreApiClient.postDataInType(frCityModel);
-         Assert.fail("country / language specific modelType should have generic mixin");
+         Assert.fail("country / language specific modelType should have a generic mixin");
       } catch (BadRequestException iaex) {
          Assert.assertTrue(true);
       }
@@ -255,7 +283,7 @@ public class ResourceModelTest {
    @Test
    public void testImpactedModelAndIndexUpdate() throws Exception {
       // put in initial state (delete stuff) in case test was aborted :
-      DCResource mr = datacoreApiClient.getData("dcmo:model_0", CityCountrySample.CITY_MODEL_NAME);
+      DCResource mr = datacoreApiClient.getData(ResourceModelIniter.MODEL_MODEL_NAME, CityCountrySample.CITY_MODEL_NAME);
       DCModelBase m = mrMappingService.toModelOrMixin(mr);
       m.getField("city:founded").setRequired(false);
       m.getField("city:founded").setQueryLimit(0);
@@ -279,7 +307,7 @@ public class ResourceModelTest {
       // create referring model :
       String frCityModelName = "sample.city.cityFR";
       ArrayList<String> frCityModelMixins = new ArrayList<String>();
-      DCResource frCityModelResource = resourceService.create("dcmo:model_0", frCityModelName)
+      DCResource frCityModelResource = resourceService.create(ResourceModelIniter.MODEL_MODEL_NAME, frCityModelName)
             .set("dcmo:name", frCityModelName).set("dcmo:mixins", new ImmutableList.Builder<String>()
                   .add(CityCountrySample.CITY_MODEL_NAME).build()).set("dcmo:maxScan", 0);
       deleteExisting(frCityModelResource);
@@ -308,7 +336,7 @@ public class ResourceModelTest {
       // update referred model :
       
       // getting referred model and changing it
-      DCResource cityModelResource = datacoreApiClient.getData("dcmo:model_0", CityCountrySample.CITY_MODEL_NAME);
+      DCResource cityModelResource = datacoreApiClient.getData(ResourceModelIniter.MODEL_MODEL_NAME, CityCountrySample.CITY_MODEL_NAME);
       resourceService.resourceToEntity(cityModelResource); // cleans up resource, else ex. Long props are rather Integers,
       // which toModelOrMixin doesn't support 
       DCModel clientCityModel = (DCModel) mrMappingService.toModelOrMixin(cityModelResource);
@@ -347,10 +375,12 @@ public class ResourceModelTest {
          Assert.assertTrue(frCityModel.getGlobalField("city:founded").isRequired());
          Assert.assertEquals(100, frCityModel.getGlobalField("city:founded").getQueryLimit());
          // and has indexes :
+         //entityModelService.setDisableMultiProjectStorageCriteriaForTesting(true); // NOO only find in models
          debugRes = datacoreApiClient.findDataInType(frCityModelName,
                cityFoundedDebugParams, null, 10);
          Assert.assertTrue("cityFR should have index on city:founded",
                TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p.city:founded"));
+         //entityModelService.setDisableMultiProjectStorageCriteriaForTesting(false); // NOO only find in models
          
          // removing index from referrer (by overriding it) :
          frCityModelResource = datacoreApiClient.getData(frCityModelResource); // update
@@ -360,6 +390,7 @@ public class ResourceModelTest {
          frCityModel.addField(frCityFoundedFieldOverride);
          frCityModelResource = datacoreApiClient.postDataInType(
                mrMappingService.modelToResource(frCityModel, frCityModelResource));
+         //entityModelService.setDisableMultiProjectStorageCriteriaForTesting(true); // NOO only find in models
          // and checking that referrer has not, but referred still has :
          debugRes = datacoreApiClient.findDataInType(frCityModelName,
                cityFoundedDebugParams, null, 10);
@@ -369,12 +400,16 @@ public class ResourceModelTest {
                cityFoundedDebugParams, null, 10);
          Assert.assertTrue("city should also have index on city:founded",
                TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p.city:founded"));
+         ///entityModelService.setDisableMultiProjectStorageCriteriaForTesting(false); // NOO only find in models
          
          
          } finally {
             // putting it back in default state
             clientCityFoundedField.setRequired(false);
             mrMappingService.modelToResource(clientCityModel, cityModelResource);
+            // get it first to update version if required :
+            DCResource latestCityModelResource = datacoreApiClient.getData(cityModelResource);
+            cityModelResource.setVersion(latestCityModelResource.getVersion());
             cityModelResource = datacoreApiClient.putDataInType(cityModelResource);
          }
    }
@@ -408,7 +443,7 @@ public class ResourceModelTest {
          deleteExisting(newVilleurbanneCity);
       }*/
       try {
-         deleteExisting(datacoreApiClient.getData("dcmo:model_0", newName));
+         deleteExisting(datacoreApiClient.getData(ResourceModelIniter.MODEL_MODEL_NAME, newName));
       } catch (NotFoundException nfex) {
          // expected the first time
       }
@@ -418,7 +453,7 @@ public class ResourceModelTest {
       DCModelBase newCityModel = null;
       DCResource newVilleurbanneCity = null;
       DCResource newCityModelResource = datacoreApiClient
-            .getData("dcmo:model_0", CityCountrySample.CITY_MODEL_NAME);
+            .getData(ResourceModelIniter.MODEL_MODEL_NAME, CityCountrySample.CITY_MODEL_NAME);
       newCityModelResource.setVersion(null);
       newCityModelResource.setUri(newCityModelResource.getUri().replace("sample.city.city", newName));
       newCityModelResource.set("dcmo:name", newName);
@@ -426,7 +461,6 @@ public class ResourceModelTest {
       // checking that DCModel has been updated :
       newCityModel = modelAdminService.getModelBase(newName);
       Assert.assertNotNull(newCityModel);
-      Assert.assertNotNull(modelAdminService.getMixin(newName)); // and that also available among reusable mixins
       // POSTing a new Resource in it :
       newVilleurbanneCity = resourceService.create(newName, "France/Villeurbanne")
             .set("n:name", "Villeurbanne").set("city:inCountry", getFranceCountry().getUri());
@@ -448,7 +482,6 @@ public class ResourceModelTest {
       // putting back to default state, while checking delete :
       datacoreApiClient.deleteData(newCityModelResource);
       Assert.assertNull(modelAdminService.getModelBase(newName));
-      Assert.assertNull(modelAdminService.getMixin(newName)); // checked that also removed
       Assert.assertFalse(mgo.collectionExists(newName)); // check that dropped
       try {
          datacoreApiClient.getData(newNewVilleurbanneCity);
@@ -462,4 +495,45 @@ public class ResourceModelTest {
       return datacoreApiClient.getData(CityCountrySample.COUNTRY_MODEL_NAME, "France"); 
    }
 
+   /**
+    * i.e. testCantWriteModelOutsideProject
+    * @throws Exception
+    */
+   @Test
+   public void testMultiProjectStoragePreventsHidingResource() throws Exception {
+      DCResource metaDisplayableModel = datacoreApiClient.getData(
+            ResourceModelIniter.MODEL_MODEL_NAME, ResourceModelIniter.MODEL_DISPLAYABLE_NAME);
+      Assert.assertNotNull("oasis.meta resources can be seen from oasis.sample project", metaDisplayableModel);
+      Assert.assertEquals("model resources should bear their creation project name", DCProject.OASIS_META, metaDisplayableModel.get("dcmo:pointOfViewAbsoluteName"));
+      
+      authenticationService.loginAs("admin"); // else AuthenticationCredentialsNotFoundException in calling entityService
+      try {
+      DCEntity metaDisplayableModelEntity = entityService.getByUri(metaDisplayableModel.getUri(),
+            modelServiceImpl.getModelBase(ResourceModelIniter.MODEL_MODEL_NAME));
+      Assert.assertEquals("entity should be tagged by their creation project name",
+            DCProject.OASIS_META, metaDisplayableModelEntity.getProjectName());
+      List<DCResource> metaDisplayableModelFound = datacoreApiClient.findDataInType(ResourceModelIniter.MODEL_MODEL_NAME,
+            new QueryParameters().add("dcmo:name", ResourceModelIniter.MODEL_DISPLAYABLE_NAME), null, 10);
+      Assert.assertTrue(metaDisplayableModelFound.size() == 1);
+      Assert.assertEquals(metaDisplayableModel.getUri(), metaDisplayableModelFound.get(0).getUri());
+      
+      try {
+         datacoreApiClient.postDataInType(metaDisplayableModel);
+         Assert.fail("(oasis.meta.)dcmi:mixin_0 resources can't be written"
+               + " even by admin from oasis.sample project because it is "
+               + "multiProjectStorage, otherwise they could wrongly be hidden "
+               + "(which would be a data - or model here - fork) and anyway require "
+               + "post filtering for queries");
+      } catch (BadRequestException brex) {
+         Assert.assertTrue(UnitTestHelper.readBodyAsString(brex).contains("belonging to another project"));
+         // (actually not Forbidden but ModelResourceMappingService.getAndCheckModelResourceProject()
+         // on ABOUT_TO_BUILD event before that)
+      }
+      
+      // see test of different model resources (stored in same collection) with same uri in ProjectTest
+      } finally {
+         authenticationService.logout();
+      }
+   }
+   
 }

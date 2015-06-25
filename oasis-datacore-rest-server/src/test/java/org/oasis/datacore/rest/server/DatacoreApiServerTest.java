@@ -10,7 +10,6 @@ import javax.ws.rs.WebApplicationException;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -22,6 +21,9 @@ import org.oasis.datacore.core.entity.NativeModelService;
 import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryServiceImpl;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
+import org.oasis.datacore.core.meta.model.DCField;
+import org.oasis.datacore.core.meta.model.DCI18nField;
+import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.core.security.mock.LocalAuthenticationService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
@@ -33,6 +35,7 @@ import org.oasis.datacore.rest.client.QueryParameters;
 import org.oasis.datacore.rest.server.resource.mapping.ExternalDatacoreLinkedResourceChecker;
 import org.oasis.datacore.rest.server.resource.mapping.LocalDatacoreLinkedResourceChecker;
 import org.oasis.datacore.sample.CityCountrySample;
+import org.oasis.datacore.sample.ResourceModelIniter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -108,13 +111,17 @@ public class DatacoreApiServerTest {
    
    
    @Before
-   public void reset() {
+   public void resetAndSetProject() {
       // cleanDataAndCache :
       cityCountrySample.cleanDataOfCreatedModels(); // (was already called but this first cleans up data)
       datacoreApiClient.getCache().clear(); // to avoid side effects
       
       // resetDefaults :
       ldpEntityQueryServiceImpl.setMaxScan(0); // unlimited, default in test
+      
+      // set sample project :
+      SimpleRequestContextProvider.setSimpleRequestContext(new ImmutableMap.Builder<String, Object>()
+            .put(DatacoreApi.PROJECT_HEADER, DCProject.OASIS_SAMPLE).build());
    }
    
    /**
@@ -441,7 +448,7 @@ public class DatacoreApiServerTest {
    @Test
    public void testClientCache() throws Exception {
       String bordeauxUriToEvict = testCreate("France", "Bordeaux", 300000).getUri();
-      resourceCache.evict(bordeauxUriToEvict); // create with country but clean cache
+      resourceCache.evict(getCacheId(bordeauxUriToEvict)); // create with country but clean cache
 
       try {
          datacoreApiClient.deleteData(CityCountrySample.CITY_MODEL_NAME, "France/Bordeaux");
@@ -481,7 +488,7 @@ public class DatacoreApiServerTest {
       
       // put (& patch)
       bordeauxCityResource = datacoreApiClient.postDataInType(bordeauxCityResource, CityCountrySample.CITY_MODEL_NAME); // first create...
-      resourceCache.evict(bordeauxCityResource.getUri()); /// ... and clean cache
+      resourceCache.evict(getCacheId(bordeauxCityResource.getUri())); /// ... and clean cache
       DCResource putBordeauxCityResource = datacoreApiClient.putDataInType(bordeauxCityResource, CityCountrySample.CITY_MODEL_NAME, "France/Bordeaux");
       bordeauxCityResource = checkCachedBordeauxCityDataAndDelete(putBordeauxCityResource);
       // check audit data
@@ -493,6 +500,10 @@ public class DatacoreApiServerTest {
             creationDate, postBordeauxCityResource.getLastModified());
       String modifier = postBordeauxCityResource.getLastModifiedBy();
       Assert.assertTrue("admin".equals(modifier) || "guest".equals(modifier)); // prod or dev
+   }
+
+   private String getCacheId(String uri) {
+      return modelServiceImpl.getProject().getName() + '.' + uri;
    }
 
    @Test
@@ -716,7 +727,7 @@ public class DatacoreApiServerTest {
       
       // deleting, will send ETag which must be current version :
       datacoreApiClient.deleteData(CityCountrySample.CITY_MODEL_NAME, "France/Bordeaux");
-      Assert.assertNull(resourceCache.get(cachedBordeauxCityResource.getUri())); // check that cache has been cleaned
+      Assert.assertNull(resourceCache.get(getCacheId(cachedBordeauxCityResource.getUri()))); // check that cache has been cleaned
       
       checkNoResource(CityCountrySample.CITY_MODEL_NAME, "France/Bordeaux");
 
@@ -1011,9 +1022,13 @@ public class DatacoreApiServerTest {
       datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "UK"));
       DCResource londonCityData = datacoreApiClient.postDataInType(buildCityData("London", "UK", 10000000, false));
       datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "France"));
-      DCResource bordeauxCityData = datacoreApiClient.postDataInType(buildCityData("Bordeaux", "France", 10000000, false));
+      DCResource bordeauxCityData = datacoreApiClient.postDataInType(buildCityData("Bordeaux", "France", 10000000, false)
+            .set("city:historicalEvents", DCResource.listBuilder().add(
+                  DCResource.propertiesBuilder().put("city:historicalEventDate",
+                        new DateTime(300, 4, 1, 0, 0, DateTimeZone.forID("+01:00")))
+                  .put("city:historicalEventName", "Foundation").build()).build()));
 
-      // unquoted equals (empty)
+      // native field case & sort on _uri
       List<DCResource> debugResult = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters().add(DCResource.KEY_URI,  ">=" + londonCityData.getUri()
                   + "+") // adding sort in >= operator to remove default sort on _chAt
@@ -1023,15 +1038,80 @@ public class DatacoreApiServerTest {
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(londonCityData.getUri(), resources.get(0).get(DCResource.KEY_URI));
       
+      // native field case & default sort on _chAt
       debugResult = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters().add(DCResource.KEY_DCMODIFIED, bordeauxCityData.getLastModified().toString())
             // NB. there is a sort on _chAt by default !
             .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
       Assert.assertTrue(TestHelper.getDebugCursor(debugResult).startsWith("BtreeCursor _chAt"));
-      List<Map<String, Object>> resources2 = TestHelper.getDebugResources(debugResult);
-      Assert.assertEquals(1, resources2.size());
+      resources = TestHelper.getDebugResources(debugResult);
+      Assert.assertEquals(1, resources.size());
       Assert.assertEquals(bordeauxCityData.getLastModified(),
-            ResourceParsingHelper.parseDate((String) resources2.get(0).get(DCResource.KEY_DCMODIFIED)));
+            ResourceParsingHelper.parseDate((String) resources.get(0).get(DCResource.KEY_DCMODIFIED)));
+
+      // find by custom top-level field (city name)
+      debugResult = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("n:name", "=Bordeaux")
+            // NB. there is a sort on _chAt by default !
+            .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
+      Assert.assertTrue(TestHelper.getDebugCursor(debugResult).startsWith("BtreeCursor _p.n:name"));
+      resources = TestHelper.getDebugResources(debugResult);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(bordeauxCityData.getUri(), resources.get(0).get(DCResource.KEY_URI));
+
+      // find by custom sub-level list field (city alt legal info author)
+      debugResult = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("city:historicalEvents.city:historicalEventDate", ">\"-0143-04-01T00:00:00.000Z\"")
+            // NB. there is a sort on _chAt by default !
+            .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
+      Assert.assertTrue(TestHelper.getDebugCursor(debugResult).startsWith("BtreeCursor _p.city:historicalEvents.city:historicalEventDate"));
+      resources = TestHelper.getDebugResources(debugResult);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(bordeauxCityData.getUri(), resources.get(0).get(DCResource.KEY_URI));
+   }
+   
+   @Test
+   public void testEmbeddedSubresource() throws Exception {
+      // two resources
+      datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "UK"));
+      DCResource londonCityData = datacoreApiClient.postDataInType(buildCityData("London", "UK", 10000000, false));
+      datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "France"));
+
+      try {
+         datacoreApiClient.postDataInType(buildCityData("Bordeaux", "France", 10000000, false)
+               .set("city:legalInfo", DCResource.propertiesBuilder().put("cityli:legalAuthor", "Jean Bon")
+                     .put("cityli:legalInfo1", "This is a city legal info")
+                     .put("cityli:legalInfo2", "This is another city legal info").build()));
+         Assert.fail("Subresource must have a uri");
+      } catch (BadRequestException brex) {
+         Assert.assertTrue((UnitTestHelper.readBodyAsString(brex)).contains("Can't find @id"));
+      }
+
+      DCResource bordeauxCityData = datacoreApiClient.postDataInType(buildCityData("Bordeaux", "France", 10000000, false)
+            .set("city:legalInfo", DCResource.create(containerUrl,
+                  CityCountrySample.CITYLEGALINFO_MIXIN_NAME, "France/Bordeaux/city:legalInfo")
+                  .set("cityli:legalInfoAuthor", "Jean Bon")
+                  .set("cityli:legalInfo1", "This is a city legal info")
+                  .set("cityli:legalInfo2", "This is another city legal info")));
+      Assert.assertNotNull(bordeauxCityData);
+      Assert.assertNotNull(bordeauxCityData.get("city:legalInfo") instanceof Map<?,?>);
+      @SuppressWarnings("unchecked")
+      Map<String,Object> bordeauxLegalInfo = (Map<String, Object>) bordeauxCityData.get("city:legalInfo");
+      Assert.assertEquals("Jean Bon", bordeauxLegalInfo.get("cityli:legalInfoAuthor"));
+      Assert.assertEquals(containerUrl + "/dc/type/" + CityCountrySample.CITYLEGALINFO_MIXIN_NAME
+            + "/France/Bordeaux/city:legalInfo", bordeauxLegalInfo.get(DCResource.KEY_URI));
+      
+      // find by custom subresource field (city legal info author)
+      /* TODO LATER for now can't separate subresource field from resource field so can't index
+      debugResult = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            new QueryParameters().add("city:legalInfo.cityli:legalInfoAuthor", "=Jean Bon")
+            // NB. there is a sort on _chAt by default !
+            .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
+      Assert.assertTrue(TestHelper.getDebugCursor(debugResult).startsWith("BtreeCursor _p.city:legalInfo.cityli:legalInfoAuthor"));
+      resources = TestHelper.getDebugResources(debugResult);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(bordeauxCityData.getUri(), resources.get(0).get(DCResource.KEY_URI));
+      */
    }
    
    @Test
@@ -1055,10 +1135,11 @@ public class DatacoreApiServerTest {
       cityCountrySample.initData();
       String moscowCityUri = UriHelper.buildUri(this.containerUrl,
             CityCountrySample.CITY_MODEL_NAME, "Russia/Moscow");
+      DCField cityI18nNameField = modelServiceImpl.getModelBase(CityCountrySample.CITY_MODEL_NAME).getGlobalField("city:i18nname");
+      Assert.assertNotNull(cityI18nNameField);
+      String cityI18nNameStoragePath = "_p." + cityI18nNameField.getStorageReadName() +  ".v"; // "" + cityI18nNameStoragePath if were stored in itself
       
-      /*
-       * i18n, looking up in any language
-       */
+      // i18n, looking up in any language
       QueryParameters params = new QueryParameters().add("i18n:name.v", "Moscow")
             .add("i18n:name.v", "+"); // to override default sort on _chAt which could blur results
       //params.add(DatacoreApi.DEBUG_PARAM, "true");
@@ -1079,11 +1160,9 @@ public class DatacoreApiServerTest {
       List<DCResource> debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             params, null, 10);
       Assert.assertTrue("Should have used index on i18n v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p.i18n:name.v"));
+            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor " + cityI18nNameStoragePath));
       
-      /*
-       * i18n, looking for a particular language
-       */    
+      // i18n, looking for a particular language
       QueryParameters langParams = new QueryParameters().add("i18n:name.l", "ru");
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             langParams, null, 10);
@@ -1096,14 +1175,12 @@ public class DatacoreApiServerTest {
       Assert.assertFalse("Should not have used index on i18n",
             TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p.i18n:name"));
 
-      /*
-       * i18n, looking up in a given language
-       */    
+      // i18n, looking up in a given language
       langParams.add("i18n:name.v", "Moskva")
          .add("i18n:name.v", "+"); // to override default sort on _chAt which could blur results
       debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME, langParams, null, 10);
       Assert.assertTrue("Should have used index on i18n v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p.i18n:name.v"));
+            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor " + cityI18nNameStoragePath));
       // checking that found using $elemMatch
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters().add("i18n:name", "$elemMatch{\"v\":\"Moskva\",\"l\":\"ru\"}"), null, 10);
@@ -1115,7 +1192,7 @@ public class DatacoreApiServerTest {
             .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
             .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
       Assert.assertTrue("Should have used index on i18n v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p.i18n:name.v"));
+            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor " + cityI18nNameStoragePath));
       // checking that not found in wrong language using $elemMatch
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters().add("i18n:name", "$elemMatch{\"v\":\"Moscow\",\"l\":\"ru\"}"), null, 10);
@@ -1156,6 +1233,52 @@ public class DatacoreApiServerTest {
       
       // must not contain JSONLD-only i18n syntax :
       Assert.assertTrue(!resources.toString().contains("@language"));
+   }
+   
+   @Test
+   public void testAliasedStorageNamesAndReadonly() {
+      cityCountrySample.initData();
+      String moscowCityUri = UriHelper.buildUri(this.containerUrl,
+            CityCountrySample.CITY_MODEL_NAME, "Russia/Moscow");
+      
+      QueryParameters params = new QueryParameters().add("i18n:name.v", "Moscow")
+            .add("i18n:name.v", "+"); // to override default sort on _chAt which could blur results
+      //params.add(DatacoreApi.DEBUG_PARAM, "true");
+      List<DCResource> resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            params, null, 10);
+      Assert.assertEquals(1, resources.size());
+      DCResource foundMoscowCity = resources.get(0);
+      Assert.assertEquals(moscowCityUri, resources.get(0).getUri());
+      Assert.assertEquals("Moscow", assertI18nAndGetItem(foundMoscowCity
+            .get("city:i18nname"), "en").get(DCI18nField.KEY_VALUE));
+      Assert.assertEquals("Moscow", assertI18nAndGetItem(foundMoscowCity
+            .get("i18n:name"), "en").get(DCI18nField.KEY_VALUE));
+      Assert.assertEquals("Moscow", assertI18nAndGetItem(foundMoscowCity
+            .get(ResourceModelIniter.DISPLAYABLE_NAME_PROP), "en").get(DCI18nField.KEY_VALUE));
+      
+      assertI18nAndGetItem(foundMoscowCity.get(ResourceModelIniter.DISPLAYABLE_NAME_PROP), "en")
+         .put(DCI18nField.KEY_VALUE, "NotMoscow");
+      foundMoscowCity = datacoreApiClient.postDataInType(foundMoscowCity);
+      Assert.assertEquals("A readonly field should not be persisted", "Moscow",
+            assertI18nAndGetItem(foundMoscowCity.get(ResourceModelIniter.DISPLAYABLE_NAME_PROP),
+                  "en").get(DCI18nField.KEY_VALUE));
+   }
+
+   private Map<String, String> assertI18nAndGetItem(Object foundI18n, String language) {
+      Assert.assertTrue(foundI18n != null);
+      Assert.assertTrue(foundI18n instanceof List<?>);
+      @SuppressWarnings("unchecked")
+      List<Object> foundList = (List<Object>) foundI18n;
+      Assert.assertTrue(foundList.size() != 0);
+      Assert.assertTrue(foundList.get(0) instanceof Map<?,?>);
+      @SuppressWarnings("unchecked")
+      List<Map<String,String>> i18n = (List<Map<String, String>>) foundI18n;
+      for (Map<String,String> i18nItem : i18n) {
+         if (language.equals(i18nItem.get(DCI18nField.KEY_LANGUAGE))) {
+            return i18nItem;
+         }
+      }
+      return null;
    }
 
 }

@@ -2,6 +2,7 @@ package org.oasis.datacore.core.meta.model;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 
 
@@ -24,9 +25,18 @@ public class DCMapField extends DCField {
       super(name, "map", false, 0, true); // TODO required ?!?
       this.setName(name);
    }
-   public DCMapField(String name, String aliasedStorageName) {
+   public DCMapField(String name, LinkedHashSet<String> aliasedStorageNames) {
       this(name);
-      this.setAliasedStorageName(aliasedStorageName);
+      this.setAliasedStorageNames(aliasedStorageNames);
+   }
+   public DCMapField(String name, String singleAliasedStorageName) {
+      this(name);
+      this.setSingleAliasedStorageName(singleAliasedStorageName);
+   }
+   
+   public DCMapField(String name, String singleAliasedStorageName, boolean readonly) {
+      this(name, singleAliasedStorageName);
+      this.setReadonly(readonly);
    }
 
    public Map<String,DCField> getMapFields() {

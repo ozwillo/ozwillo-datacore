@@ -186,10 +186,21 @@ public class DatabaseSetupServiceImpl implements DatabaseSetupService {
       return false; // ensureCollectionAndIndices(historizedModel); // TODO TODOOOO
    }
 
+   /**
+    * 
+    * @param model must be storage
+    * @return
+    */
    private boolean ensureCollectionAndIndices(DCModelBase model) {
       boolean res = ensureGenericCollectionAndIndices(model);
+      BasicDBObject dataEntityUniqueIndex = new BasicDBObject();
+      if (model.isMultiProjectStorage()) {
+         dataEntityUniqueIndex.append(DCEntity.KEY_B, 1);
+      }
+      // TODO isMultiVersionStorage for History
+      dataEntityUniqueIndex.append(DCEntity.KEY_URI, 1);
       mgo.getCollection(model.getCollectionName()).createIndex(
-            new BasicDBObject(DCEntity.KEY_URI, 1), new BasicDBObject("unique", true)); // TODO dropDups ??
+            dataEntityUniqueIndex, new BasicDBObject("unique", true)); // TODO dropDups ??
       // NB. does nothing if already exists http://docs.mongodb.org/manual/tutorial/create-an-index/
       return res;
    }
@@ -212,10 +223,16 @@ public class DatabaseSetupServiceImpl implements DatabaseSetupService {
       // computing static indexes
       DCModelBase nonExposedNativeModel = nativeModelService.getNonExposedNativeModel(model);
       for (String nativeFieldName : nativeModelService.getNativeExposedOrNotIndexedFieldNames(model)) {
-         if (!DCResource.KEY_URI.equals(nativeFieldName)) {
-            DCField nativeField = nonExposedNativeModel.getGlobalField(nativeFieldName);
-            requiredIndexes.add(nativeField.getStorageName()); // for query security
-         } // else done outside this method
+         DCField nativeField = nonExposedNativeModel.getGlobalField(nativeFieldName);
+         String storageReadName = nativeField.getStorageReadName();
+         if (storageReadName != null) {
+            if (!DCEntity.KEY_URI.equals(storageReadName)
+                  && !DCEntity.KEY_B.equals(storageReadName)) {
+               requiredIndexes.add(storageReadName); // for query security
+               // (and not on other storage names which must be indexed
+               // from being defined in other fields)
+            } // else done outside this method
+         } // else not stored i.e. soft computed
       }
       
       // computing field indices
@@ -226,9 +243,8 @@ public class DatabaseSetupServiceImpl implements DatabaseSetupService {
       Collection<DCModelBase> storedModels = modelAdminService.getStoredModels(model); // including this model
       for (DCModelBase storedModel : storedModels) {
          // stored in model so indexes must be ensured for its fields :
-         computeFieldIndices(coll, DCEntity.KEY_P + ".", storedModel.getGlobalFieldMap().values(), requiredIndexes);
+         computeFieldsIndices(coll, DCEntity.KEY_P, storedModel.getGlobalFieldMap().values(), requiredIndexes);
       }
-      ///computeFieldIndices(coll, DCEntity.KEY_P + ".", model.getGlobalFieldMap().values(), requiredIndexes);
       
       // getting existing indexes
       Set<String> nonUniqueSingleIndexedPathes = getNonUniqueSingleIndexedPathes(coll);
@@ -287,40 +303,57 @@ public class DatabaseSetupServiceImpl implements DatabaseSetupService {
       return nonUniqueSingleIndexedPathes;
    }
 
-   private void computeFieldIndices(DBCollection coll, String prefix,
+   /**
+    * 
+    * @param coll
+    * @param prefixWithoutDot
+    * @param globalFields map or top-level resource field (NB. subresource fields
+    * not supported for now, since can't know whether embedded or not)
+    * @param requiredIndexes
+    */
+   private void computeFieldsIndices(DBCollection coll, String prefixWithoutDot,
          Collection<DCField> globalFields, LinkedHashSet<String> requiredIndexes) {
       for (DCField globalField : globalFields) {
-         computeFieldIndices(coll, prefix, globalField, requiredIndexes);
+         computeMapOrResourceFieldPathAndIndices(coll, prefixWithoutDot, globalField, requiredIndexes);
       }
    }
 
-   private void computeFieldIndices(DBCollection coll, String prefix,
+   private void computeMapOrResourceFieldPathAndIndices(DBCollection coll, String prefixWithoutDot,
          DCField globalField, LinkedHashSet<String> requiredIndexes) {
-      String prefixedGlobalFieldStorageName = prefix + globalField.getStorageName();
+      String storageReadName = globalField.getStorageReadName();
+      if (storageReadName == null) {
+         return; // not stored i.e. soft computed therefore not queriable
+      }
+      String prefixedGlobalFieldStorageName = prefixWithoutDot + "." + storageReadName;
+      computeFieldIndices(coll, prefixedGlobalFieldStorageName, globalField, requiredIndexes);
+   }
+   private void computeFieldIndices(DBCollection coll, String prefixWithoutDot,
+         DCField globalField, LinkedHashSet<String> requiredIndexes) {
       switch (DCFieldTypeEnum.getEnumFromStringType(globalField.getType())) {
       case LIST:
-         DCField listField = ((DCListField) globalField).getListElementField();
-         computeFieldIndices(coll, prefixedGlobalFieldStorageName + ".", listField, requiredIndexes);
+         DCField listElementField = ((DCListField) globalField).getListElementField();
+         computeFieldIndices(coll, prefixWithoutDot, listElementField, requiredIndexes);
          break;
       case MAP:
          Map<String, DCField> mapFields = ((DCMapField) globalField).getMapFields();
          // TODO WARNING : single map field can't be indexed !!!
-         computeFieldIndices(coll, prefixedGlobalFieldStorageName + ".", mapFields.values(), requiredIndexes);
+         computeFieldsIndices(coll, prefixWithoutDot, mapFields.values(), requiredIndexes);
          break;
       // TODO LATER index subresource as Map !!
       case I18N:
          DCField listI18nField = ((DCI18nField) globalField);
          DCField map = ((DCListField) listI18nField).getListElementField();
+         // (skipping list element field since knowing there is a map below)
          Map<String, DCField> mapContent = ((DCMapField) map).getMapFields();
-         computeFieldIndices(coll, prefixedGlobalFieldStorageName + ".", mapContent.values(), requiredIndexes);
+         computeFieldsIndices(coll, prefixWithoutDot, mapContent.values(), requiredIndexes);
          break;
       default:
          if (globalField.getQueryLimit() > 0) {
-            requiredIndexes.add(prefixedGlobalFieldStorageName);
+            requiredIndexes.add(prefixWithoutDot);
          }
          break;
       }
-      // TODO LATER embedded resources
+      // TODO LATER embedded resources' _uri, _t...
    }
 
 }

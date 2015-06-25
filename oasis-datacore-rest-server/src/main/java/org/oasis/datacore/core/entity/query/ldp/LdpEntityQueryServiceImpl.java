@@ -179,8 +179,8 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          String msg = DCResourceParsingContext.formatParsingErrorsMessage(queryParsingContext, detailedErrorsMode);
          throw new QueryException(msg);
       } // else TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
-      
-      // add security :
+
+      entityModelService.addMultiProjectStorageCriteria(queryParsingContext.getCriteria(), storageModel, null);
       addResourceLevelSecurityIfRequired(queryParsingContext);
       // NB. no guest specific case (groups ex. EVERYONE must be given to guest
       // and allowed on models or resources)
@@ -242,7 +242,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       return foundEntities;
    }
 
-   
+
    private void parseQueryParameters(Map<String, List<String>> params, DCQueryParsingContext queryParsingContext) {
       DCModelBase dcModel = queryParsingContext.peekModel();
       DCUserImpl user = securityService.getCurrentUser();
@@ -287,7 +287,15 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
                   + fieldPathElements[0]);
             continue;
          }
-         entityFieldPathSb.append(dcField.getStorageName()); // mapping if necessary, generic (@id to _uri...) or specific 
+         String storageReadName = dcField.getStorageReadName(); // mapping if necessary, generic (@id to _uri...) or specific
+         if (storageReadName == null) {
+            queryParsingContext.addError("In type " + queryParsingContext.peekModel().getName()
+                  + ", field with path elements " + entityFieldPathSb
+                  + " is not storable (soft computed) "
+                  + "and therefore not queriable");
+            continue;
+         }
+         entityFieldPathSb.append(storageReadName);
          
          // finding the leaf field
          // TODO submethod with throw ex
@@ -322,7 +330,15 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
                     dcField = handleResourceField(dcField, fieldPathElement,
                           queryParsingContext, entityFieldPathSb, fieldPathElements, i);
                  } else {
-                    entityFieldPathSb.append(dcField.getStorageName());
+                    storageReadName = dcField.getStorageReadName(); // mapping if necessary, generic (@id to _uri...) or specific
+                    if (storageReadName == null) {
+                       queryParsingContext.addError("In type " + dcModel.getName() + ", error finding field with path elements"
+                             + Arrays.asList(fieldPathElements) + ": can't go below " + i + "th element " 
+                             + fieldPathElement + ", because field is not storable (soft computed) "
+                             + "and therefore not queriable");
+                       continue;
+                    }
+                    entityFieldPathSb.append(storageReadName);
                  }
                  // TODO TODO check that indexed (or set low limit) ??
                } while (dcField != null && "list".equals(dcField.getType()));
@@ -455,8 +471,16 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
                + ((i == 0) ? fieldPathElements.length - 1 : i) + "th path element "
                + fieldPathElement + ", because field is unkown. Allowed fields are "
                + ((DCMapField) dcField).getMapFields().keySet());
+         return null;
       }
-      entityFieldPathSb.append(subDcField.getStorageName());
+      String storageReadName = subDcField.getStorageReadName();
+      if (storageReadName == null) {
+         queryParsingContext.addError("In type " + queryParsingContext.peekModel().getName()
+               + ", find field with path elements is not storable (soft computed) "
+               + "and therefore not queriable");
+         return null;
+      }
+      entityFieldPathSb.append(storageReadName);
       return subDcField;
    }
 
@@ -505,7 +529,14 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
                + fieldPathElement + ", because field is unkown. Allowed fields are "
                + linkModel.getGlobalFieldMap().keySet());
       }
-      entityFieldPathSb.append(subDcField.getStorageName());
+      String storageReadName = subDcField.getStorageReadName();
+      if (storageReadName == null) {
+         queryParsingContext.addError("In type " + queryParsingContext.peekModel().getName()
+               + ", find field with path elements is not storable (soft computed) "
+               + "and therefore not queriable");
+         return null;
+      }
+      entityFieldPathSb.append(storageReadName);
       return subDcField;
    }
 
@@ -541,7 +572,6 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
             queryParsingContext, entityFieldPathSb, fieldPathElements, i);
       return dcField;
    }
-
 
    /**
     * NB. no guest specific case (groups ex. EVERYONE must be given to guest

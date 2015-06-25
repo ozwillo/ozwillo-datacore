@@ -23,14 +23,6 @@ public class DCContributionSecurity extends DCSecurity {
 		return delegate.hashCode();
 	}
 
-	public boolean isGuestReadable() {
-		return delegate.isGuestReadable();
-	}
-
-	public void setGuestReadable(boolean isGuestReadable) {
-		delegate.setGuestReadable(isGuestReadable);
-	}
-
 	public boolean isAuthentifiedReadable() {
 		return delegate.isAuthentifiedReadable();
 	}
@@ -55,20 +47,12 @@ public class DCContributionSecurity extends DCSecurity {
 		delegate.setAuthentifiedCreatable(isAuthentifiedCreatable);
 	}
 
-	public void addAdmin(String group) {
-		delegate.addAdmin(group);
+	public void addResourceOwner(String group) {
+		delegate.addResourceOwner(group);
 	}
 
-	public void removeAdmin(String group) {
-		delegate.removeAdmin(group);
-	}
-
-	public void addResourceAdmin(String group) {
-		delegate.addResourceAdmin(group);
-	}
-
-	public void removeResourceAdmin(String group) {
-		delegate.removeResourceAdmin(group);
+	public void removeResourceOwner(String group) {
+		delegate.removeResourceOwner(group);
 	}
 
 	public void addResourceCreator(String group) {
@@ -99,12 +83,8 @@ public class DCContributionSecurity extends DCSecurity {
 		delegate.removeWriter(group);
 	}
 
-	public boolean isAdmin(User user) {
-		return delegate.isAdmin(user);
-	}
-
-	public boolean isResourceAdmin(User user) {
-		return delegate.isResourceAdmin(user);
+	public boolean isResourceOwner(User user) {
+		return delegate.isResourceOwner(user);
 	}
 	
 	public boolean isResourceCreator(User user) {

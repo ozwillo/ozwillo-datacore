@@ -14,12 +14,15 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.oasis.datacore.common.context.SimpleRequestContextProvider;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
+import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.core.security.mock.LocalAuthenticationService;
 import org.oasis.datacore.historization.service.HistorizationService;
 import org.oasis.datacore.rest.api.DCResource;
+import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.sample.MarkaInvestData;
@@ -31,6 +34,8 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.google.common.collect.ImmutableMap;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:oasis-datacore-rest-server-test-context.xml" })
@@ -64,7 +69,7 @@ public class HistorizationTest {
 	private HistorizationService historizationService;
 
 	@Before
-	public void flushData() {
+	public void flushDataAndSetProject() {
 		truncateModel(MarkaInvestModel.CITY_MODEL_NAME);
 		truncateModel(MarkaInvestModel.COMPANY_MODEL_NAME);
 		truncateModel("h." + MarkaInvestModel.COMPANY_MODEL_NAME);
@@ -81,6 +86,8 @@ public class HistorizationTest {
 		markaInvestData.createDataSample();
 		mockAuthenticationService.logout();
 
+      SimpleRequestContextProvider.setSimpleRequestContext(new ImmutableMap.Builder<String, Object>()
+            .put(DatacoreApi.PROJECT_HEADER, DCProject.OASIS_SAMPLE).build());
 	}
    
    /**

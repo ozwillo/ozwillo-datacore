@@ -74,7 +74,7 @@ public class AltTourismPlaceAddressSample extends DatacoreSampleBase {
       DCResource myAppPlace1Posted = /*datacoreApiClient.*/postDataInType(myAppPlace1);
       
       // step 2 - now adding mixin
-      modelAdminService.getModelBase(MY_APP_PLACE).addMixin(modelAdminService.getMixin(OASIS_ADDRESS));
+      modelAdminService.getModelBase(MY_APP_PLACE).addMixin(modelAdminService.getModelBase(OASIS_ADDRESS));
       ///modelAdminService.addModel(myAppPlaceAddress); // LATER re-add...
 
       // check, at update :
@@ -101,7 +101,7 @@ public class AltTourismPlaceAddressSample extends DatacoreSampleBase {
       DCResource altTourismPlaceJoWineryPosted = /*datacoreApiClient.*/postDataInType(altTourismPlaceJoWinery);
          
       // step 2 - now adding mixin
-      modelAdminService.getModelBase(ALTTOURISM_PLACE).addMixin(modelAdminService.getMixin(OASIS_ADDRESS));
+      modelAdminService.getModelBase(ALTTOURISM_PLACE).addMixin(modelAdminService.getModelBase(OASIS_ADDRESS));
       ///modelAdminService.addModel(altTourismPlace); // LATER re-add...
       
       // (field without mixin would have failed) same but already at creation :

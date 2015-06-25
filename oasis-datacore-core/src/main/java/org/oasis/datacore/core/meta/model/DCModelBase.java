@@ -32,8 +32,8 @@ public abstract class DCModelBase {
    /** to be incremented each time there is a backward incompatible
     * (ex. field change, rather than new field) */
    private long majorVersion = 0;
-   /** regular optimistic locking version (and NOT a minor version of the major version) */
-   private long version = 0;
+   /** regular optimistic locking version (though NOT an explicit minor version of the major version) */
+   private long version = -1;
    /** TODO draft state & publish / life cycle */
    
    // POLY :
@@ -66,6 +66,10 @@ public abstract class DCModelBase {
     * NOOOO TODO POLY done using name & in Project
     * alternative : diffs & "copiedFrom" i.e. git */
    ///private boolean isAnonymous = true; // TODO = !isStorageOnly
+   /** can it also store resources of data-only forks ?
+    * (then adds DCEntity._pv list of projects where it is visible, first being its actual project)
+    * default is usually false for forked models, though true for the original oasis.meta.dcmi:mixin_0 */
+   private boolean isMultiProjectStorage = false;
    
    /** doc TODO what (business), how (impl conf & instanciation), samples... */
    private String documentation; // TODO move in another collection for performance
@@ -106,11 +110,26 @@ public abstract class DCModelBase {
    public DCModelBase() {
       
    }
+   /** requires project.addLocalModel(this model) to call setPointOfView() */
+   public DCModelBase(String name) {
+      this.name = name;
+   }
+   /** pointOfView won't be changed (but checked) when this model is added to its project */
    public DCModelBase(String name, DCPointOfView pointOfView) {
       this(name, pointOfView.getAbsoluteName());
    }
+   /** pointOfView won't be changed (but checked) when this model is added to its project */
    public DCModelBase(String name, String ... pointOfViewNames) {
       this.name = name;
+      this.pointOfViewNames = ImmutableList.copyOf(pointOfViewNames);
+      buildAbsoluteNames();
+   }
+   /** if project not known  to be called when added to project */
+   public void setPointOfView(DCPointOfView pointOfView) {
+      this.setPointOfView(pointOfView.getName());
+   }
+   /** to be called when added to project */
+   public void setPointOfView(String ... pointOfViewNames) {
       this.pointOfViewNames = ImmutableList.copyOf(pointOfViewNames);
       buildAbsoluteNames();
    }
@@ -382,6 +401,12 @@ public abstract class DCModelBase {
    }
    public void setInstanciable(boolean isInstanciable) {
       this.isInstanciable = isInstanciable;
+   }
+   public boolean isMultiProjectStorage() {
+      return isMultiProjectStorage;
+   }
+   public void setMultiProjectStorage(boolean isMultiProjectStorage) {
+      this.isMultiProjectStorage = isMultiProjectStorage;
    }
 
    

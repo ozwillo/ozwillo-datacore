@@ -123,6 +123,19 @@ public class DCResource {
       this.properties = properties;
       this.types = new ArrayList<String>();
    }
+
+   /** for subresources only */
+   public static DCResource create(String containerUrl, String modelType,
+         String primaryParentUri, String subId) throws URISyntaxException, MalformedURLException {
+      DCURI primaryParentDcUri = UriHelper.parseUri(primaryParentUri);
+      return DCResource.create(new URI(containerUrl), modelType,
+            primaryParentDcUri.getType() + '/' + primaryParentDcUri.getId() + '/' + subId);
+   }
+   public static DCResource create(URI containerUrl, String modelType,
+         DCURI primaryParentUri, String subId) throws URISyntaxException {
+      return DCResource.create(containerUrl, modelType,
+            primaryParentUri.getType() + '/' + primaryParentUri.getId() + '/' + subId);
+   }
    
    /** helper method to build new DCResources FOR TESTING
     * TODO or in builder instance ? 

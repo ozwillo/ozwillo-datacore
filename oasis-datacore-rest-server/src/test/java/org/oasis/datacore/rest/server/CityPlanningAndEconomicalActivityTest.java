@@ -5,16 +5,20 @@ import java.util.List;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
+import org.oasis.datacore.common.context.SimpleRequestContextProvider;
 import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
+import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.core.security.EntityPermissionService;
 import org.oasis.datacore.core.security.mock.LocalAuthenticationService;
 import org.oasis.datacore.rest.api.DCResource;
+import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.client.QueryParameters;
 import org.oasis.datacore.rest.server.event.EventService;
@@ -26,6 +30,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.google.common.collect.ImmutableMap;
 
 
 /**
@@ -88,7 +94,12 @@ public class CityPlanningAndEconomicalActivityTest {
 
    @Autowired
    private CityPlanningAndEconomicalActivitySample cityPlanningAndEconomicalActivitySample;
-   
+
+   @Before
+   public void setProject() {
+      SimpleRequestContextProvider.setSimpleRequestContext(new ImmutableMap.Builder<String, Object>()
+            .put(DatacoreApi.PROJECT_HEADER, DCProject.OASIS_SAMPLE).build());
+   }
    
    /**
     * Logout after tests to restore default unlogged state.

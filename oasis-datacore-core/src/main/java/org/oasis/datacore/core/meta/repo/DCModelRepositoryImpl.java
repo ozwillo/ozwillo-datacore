@@ -1,5 +1,7 @@
 package org.oasis.datacore.core.meta.repo;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -7,7 +9,7 @@ import java.util.Map;
 
 import org.joda.time.DateTime;
 import org.oasis.datacore.core.entity.model.DCEntity;
-import org.oasis.datacore.core.entity.model.DCURI;
+import org.oasis.datacore.core.meta.SimpleUriService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
@@ -18,6 +20,8 @@ import org.springframework.data.mongodb.core.query.Query;
  * custom interface class, see
  * http://stackoverflow.com/questions/17035419/spring-data-mongodb-custom-implementation-propertyreferenceexception
  * 
+ * @obsolete not used for now
+ * 
  * @author mdutoo
  *
  */
@@ -26,7 +30,7 @@ public class DCModelRepositoryImpl implements DCModelRepositoryCustom {
    @Autowired
    private MongoOperations mgo;
    
-   public DCEntity getSampleData() {
+   public DCEntity getSampleData() throws URISyntaxException {
       // TODO test
       DCEntity dcEntity = mgo.findOne(new Query(), DCEntity.class, "sample");
       
@@ -49,8 +53,8 @@ public class DCModelRepositoryImpl implements DCModelRepositoryCustom {
          props.put("i18nAlt2Field", "London"); // "real" value
          props.put("i18nAlt2Field__i18n", i18nMap); // TODO __i ??
          
-         props.put("dcRef", new DCURI("data.oasis-eu.org", "city", "London"));
-         props.put("scRef", new DCURI("social.oasis-eu.org", "user", "john"));
+         props.put("dcRef", SimpleUriService.buildUri(null, "city", "London"));
+         props.put("scRef", SimpleUriService.buildUri(new URI("http://social.oasis-eu.org"), "user", "john"));
          
          List<String> stringList = new ArrayList<String>();
          stringList.add("a");
@@ -59,8 +63,8 @@ public class DCModelRepositoryImpl implements DCModelRepositoryCustom {
          map.put("a", "a");
          map.put("b", 2);
          map.put("c", new ArrayList<String>(stringList));
-         map.put("dcRef", new DCURI("data.oasis-eu.org", "city", "London"));
-         map.put("scRef", new DCURI("social.oasis-eu.org", "user", "john"));
+         map.put("dcRef", SimpleUriService.buildUri(null, "city", "London"));
+         map.put("scRef", SimpleUriService.buildUri(new URI("http://social.oasis-eu.org"), "user", "john"));
          List<Map<String,Object>> mapList = new ArrayList<Map<String,Object>>();
          mapList.add(new HashMap<String,Object>(map));
          props.put("stringList", stringList);

@@ -3,7 +3,6 @@ package org.oasis.datacore.sample;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,14 +18,13 @@ import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
-import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.oasis.datacore.rest.server.resource.ResourceNotFoundException;
 import org.springframework.stereotype.Component;
 
-import au.com.bytecode.opencsv.CSVReader;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+
+import au.com.bytecode.opencsv.CSVReader;
 
 
 /**
@@ -65,6 +63,7 @@ import com.google.common.collect.ImmutableMap;
 @Component
 public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleMethodologyBase {
    
+   private int maxLineNb = 1000000; // allows to take less time by not importing too many lines
    
    @Override
    public void doOSelectPerimeter() {
@@ -428,7 +427,7 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleMetho
          csvReader = new CSVReader(new InputStreamReader(csvIn), ',');
          String [] line;
          //csvReader.readNext(); // no header
-         while ((line = csvReader.readNext()) != null) {
+         for (int ln = 0; (line = csvReader.readNext()) != null && ln < maxLineNb; ln++) {
             
             // filling company's provided props :
             DCResource ateco = DCResource.create(null, "coita:ateco_0")
@@ -490,7 +489,7 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleMetho
          csvReader = new CSVReader(new InputStreamReader(csvIn), ',');
          String [] line;
          csvReader.readNext(); // header
-         while ((line = csvReader.readNext()) != null) {
+         for (int ln = 0; (line = csvReader.readNext()) != null && ln < maxLineNb; ln++) {
             
             // filling company's provided props :
             final DCResource company = DCResource.create(null, "co:company_0")
@@ -621,7 +620,7 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleMetho
          csvReader = new CSVReader(new InputStreamReader(csvIn), ',');
          String [] line;
          csvReader.readNext(); // header
-         while ((line = csvReader.readNext()) != null) {
+         for (int ln = 0; (line = csvReader.readNext()) != null && ln < maxLineNb; ln++) {
             
             // filling company's provided props :
             final DCResource cityArea = DCResource.create(null, "cityarea:cityArea_0")

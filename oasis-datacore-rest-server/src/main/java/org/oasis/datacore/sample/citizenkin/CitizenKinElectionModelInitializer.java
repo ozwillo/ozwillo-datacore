@@ -27,11 +27,22 @@ public class CitizenKinElectionModelInitializer extends DatacoreSampleBase {
     public static final String DATE_TYPE = DCFieldTypeEnum.DATE.getType();
     public static final String PREFIX = "ck_electoral_roll_registration:";
 
+    /** main model !! */
+    @Override
+    protected boolean neverCleanData() {
+       return true;
+    }
+
+    /** overriden to stay as before in oasis.main */
+    @Override
+    protected DCProject getProject() {
+       return getMainProject();
+    }
+    
     @Override
     public void buildModels(List<DCModelBase> modelsToCreate) {
 
-        DCModel model = new DCModel(CITIZENKIN_PROCEDURE_ELECTORAL_ROLL_REGISTRATION,
-              modelAdminService.getProject(DCProject.OASIS_MAIN));
+        DCModel model = new DCModel(CITIZENKIN_PROCEDURE_ELECTORAL_ROLL_REGISTRATION);
         model.setDocumentation(""); // TODO
 
         model.addField(new DCField(PREFIX + "nom_de_famille", STRING_TYPE, true, 0));

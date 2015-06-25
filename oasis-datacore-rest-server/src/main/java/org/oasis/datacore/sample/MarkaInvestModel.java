@@ -41,7 +41,6 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 	
 	@Override
 	public void buildModels(List<DCModelBase> modelsToCreate) {
-				
 		DCModel companyModel = new DCModel(COMPANY_MODEL_NAME);
 		companyModel.setDocumentation(""); // TODO
 		companyModel.addField(new DCField("id", DCFieldTypeEnum.INTEGER.getType(), true, 100));
@@ -56,7 +55,7 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		companyModel.addField(new DCResourceField("city", CITY_MODEL_NAME));
 		companyModel.setHistorizable(true);
 		companyModel.setSecurity(new DCSecurity());
-		companyModel.getSecurity().addAdmin("model_admin_sample.marka.company");
+		companyModel.getSecurity().addResourceOwner("model_admin_sample.marka.company");
 		listModel.add(companyModel);
 		
 		DCModel fieldModel = new DCModel(FIELD_MODEL_NAME);
@@ -95,7 +94,7 @@ public class MarkaInvestModel extends DatacoreSampleBase {
 		cityModel.addField(new DCField("long", DCFieldTypeEnum.LONG.getType()));
 		cityModel.addField(new DCResourceField("country", COUNTRY_MODEL_NAME));
 		cityModel.setSecurity(new DCSecurity());
-		cityModel.getSecurity().addResourceAdmin("model_resource_admin_sample.marka.city");
+		cityModel.getSecurity().addResourceOwner("model_resource_admin_sample.marka.city");
 		listModel.add(cityModel);
 		
 		DCModel userModel = new DCModel(USER_MODEL_NAME);

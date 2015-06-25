@@ -1,5 +1,7 @@
 package org.oasis.datacore.core.meta.model;
 
+import java.util.LinkedHashSet;
+
 
 /**
  * TODO LATER better, more flexible type constraints : several types, mixins...
@@ -22,9 +24,20 @@ public class DCResourceField extends DCField {
       super(name, DCFieldTypeEnum.RESOURCE.getType(), required, queryLimit, true);
       this.setResourceType(resourceType);
    }
-   public DCResourceField(String name, String resourceType, boolean required, int queryLimit, String aliasedStorageName) {
+   public DCResourceField(String name, String resourceType, boolean required, int queryLimit,
+         LinkedHashSet<String> aliasedStorageNames) {
       this(name, resourceType, required, queryLimit);
-      this.setAliasedStorageName(aliasedStorageName);
+      this.setAliasedStorageNames(aliasedStorageNames);
+   }
+   public DCResourceField(String name, String resourceType, boolean required, int queryLimit,
+         String singleAliasedStorageName) {
+      this(name, resourceType, required, queryLimit);
+      this.setSingleAliasedStorageName(singleAliasedStorageName);
+   }
+   public DCResourceField(String name, String resourceType, boolean required, int queryLimit,
+         String singleAliasedStorageName, boolean readonly) {
+      this(name, resourceType, required, queryLimit, singleAliasedStorageName);
+      this.setReadonly(readonly);
    }
 
    public DCResourceField(String name, String resourceType) {

@@ -1,9 +1,7 @@
 package org.oasis.datacore.core.entity;
 
 
-import java.io.File;
-import java.io.IOException;
-import java.net.UnknownHostException;
+import java.net.URISyntaxException;
 import java.util.Map;
 
 import org.joda.time.DateTime;
@@ -19,12 +17,9 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.CommandResult;
-import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.mongodb.MongoClient;
 import com.mongodb.MongoException.DuplicateKey;
 import com.mongodb.WriteConcern;
 
@@ -47,7 +42,7 @@ public class DatacoreEntityTest {
 
    @Test
    @Ignore
-   public void testSampleData() {
+   public void testSampleData() throws URISyntaxException {
       DCEntity sampleEntity = dcEntityService.getSampleData();
       Map<String, Object> props = sampleEntity.getProperties();
       Assert.assertEquals("http://data.oasis-eu.org/sample/1", sampleEntity.getUri());

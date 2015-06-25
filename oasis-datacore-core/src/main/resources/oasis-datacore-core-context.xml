@@ -16,6 +16,8 @@
    Lowest order takes precedence, here -1 to allow ex. to be overriden by test at -2. -->
    <context:property-placeholder location="classpath:oasis-datacore-core.properties"
       order="0" ignore-unresolvable="true"/><!-- so defaults to importing PropertyPlaceholder/*Resolver -->
+
+   <bean name="uriService" class="org.oasis.datacore.core.meta.SimpleUriService"/><!-- (overriden in -server) -->
    
    <context:component-scan base-package="org.oasis.datacore.core" />
    <context:annotation-config /><!-- actually auto enabled by previous line -->

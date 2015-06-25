@@ -1,7 +1,6 @@
 package org.oasis.datacore.core.meta.model;
 
 import org.oasis.datacore.core.meta.pov.DCPointOfView;
-import org.oasis.datacore.core.meta.pov.DCProject;
 
 
 /**
@@ -26,12 +25,14 @@ public class DCModel extends DCModelBase {
 	/** for unmarshalling only */
 	public DCModel() {
 		super();
+      this.setInstanciable(true);
       this.setStorage(true);
 	}
-
-	/** @obsolete */
+	
    public DCModel(String name) {
-      this(name, DCProject.OASIS_MAIN);
+      super(name);
+      this.setInstanciable(true);
+      this.setStorage(true);
    }
 
 	public DCModel(String name, DCPointOfView pointOfView) {
@@ -40,6 +41,7 @@ public class DCModel extends DCModelBase {
 
    public DCModel(String name, String pointOfViewAbsoluteName) {
       super(name, pointOfViewAbsoluteName);
+      this.setInstanciable(true);
       this.setStorage(true);
    }
 

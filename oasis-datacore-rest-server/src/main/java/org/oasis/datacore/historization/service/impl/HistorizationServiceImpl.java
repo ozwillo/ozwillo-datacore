@@ -1,6 +1,7 @@
 package org.oasis.datacore.historization.service.impl;
 
 import org.apache.commons.lang.StringUtils;
+import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModel;
@@ -24,6 +25,8 @@ public class HistorizationServiceImpl implements HistorizationService {
 
 	@Autowired
 	private DCModelService dcModelService;
+   @Autowired
+   private EntityModelService entityModelService;
 	
 	@Autowired
 	private MongoOperations mongoOperations;
@@ -63,7 +66,8 @@ public class HistorizationServiceImpl implements HistorizationService {
 			DCEntity historyEntity = new DCEntity(entity);
 			// NB. cloning else updates version and OptimisticLockingException at actual createOrUpdate !!
 			mongoOperations.insert(historyEntity, historizationModel.getCollectionName());
-			historyEntity.setCachedModel(historizationModel); // in case accessed later outside
+			entityModelService.fillDataEntityCaches(historyEntity, historizationModel,
+			      historizationModel, null); // in case accessed later outside ; TODO def
 		}
 		
 	}
@@ -102,8 +106,8 @@ public class HistorizationServiceImpl implements HistorizationService {
 			DCModelBase historizationModel = new DCModel(historizationModelName,
 			      originalModel.getPointOfViewAbsoluteName());
 			historizationModel.addMixin(originalModel);
-         //historizationModel.setStorage(true); // & inherited model must have "a" storage
-         //historizationModel.setInstanciable(true);
+         //historizationModel.setStorage(true); // default ; & inherited model must have "a" storage
+         //historizationModel.setInstanciable(true); // default
          historizationModel.setDefinition(false); // does not change inherited definition
 			//historizationModel.setHistorizable(false); // TODO prevent changes
 			dataModelServiceImpl.addModel(historizationModel);
@@ -148,7 +152,7 @@ public class HistorizationServiceImpl implements HistorizationService {
 			throw new HistorizationException("The historization model of : " + originalModel.getName() + " dont exist, you must activate historization on your model before requesting historized resources");
 		}
 		DCEntity dataEntity = mongoOperations.findOne(new Query(new Criteria("_uri").is(uri).and("_v").is(version)), DCEntity.class, historizationModel.getCollectionName());
-		dataEntity.setCachedModel(historizationModel);
+		entityModelService.fillDataEntityCaches(dataEntity, historizationModel, historizationModel, null);
 		return dataEntity;
 	    
 	}

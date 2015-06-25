@@ -1,15 +1,15 @@
 package org.oasis.datacore.model.resource;
 
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.oasis.datacore.core.meta.SimpleUriService;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
@@ -18,6 +18,7 @@ import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.model.DCResourceField;
+import org.oasis.datacore.core.meta.model.DCSecurity;
 import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.DCURI;
@@ -29,7 +30,6 @@ import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.oasis.datacore.rest.server.resource.ValueParsingService;
 import org.oasis.datacore.sample.ResourceModelIniter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.ImmutableList;
@@ -38,13 +38,6 @@ import com.google.common.collect.ImmutableMap.Builder;
 
 @Component
 public class ModelResourceMappingService {
-   
-   /////@Value("${datacoreApiClient.containerUrl}") // DOESN'T WORK 
-   @Value("${datacoreApiServer.containerUrl}")
-   private String containerUrlString = "";
-   //@Value("#{new java.net.URI('{datacoreApiServer.containerUrl)}')}")
-   @Value("#{uriService.getContainerUrl()}")
-   private URI containerUrl = null;
    
    @Autowired
    private DCModelService dataModelService;
@@ -61,18 +54,18 @@ public class ModelResourceMappingService {
 
    /** public for tests */
    public String buildModelUri(DCResource modelResource) {
-      return UriHelper.buildUri(containerUrl, "dcmo:model_0",
+      return SimpleUriService.buildModelUri(
             (String) modelResource.get("dcmo:name")/* + '_' + modelResource.get("dcmo:majorVersion")*/); // LATER refactor
    }
    /** only for tests */
    public String buildModelUri(DCModelBase model) {
-      return UriHelper.buildUri(containerUrl, "dcmo:model_0",
+      return SimpleUriService.buildModelUri(
             (String) model.getName()/* + '_' + model.getMajorVersion()*/); // LATER refactor
    }
    
    /** public for tests */
    public String buildFieldUriPrefix(DCURI dcUri) {
-      return new DCURI(dcUri.getContainerUrl(), "dcmf:field_0",
+      return SimpleUriService.buildUri(ResourceModelIniter.MODEL_FIELD_NAME,
             dcUri.getType() + '/' + dcUri.getId()).toString();
    }
 
@@ -83,7 +76,7 @@ public class ModelResourceMappingService {
     * @return
     */
    public String buildNameUri(String modelType, String name) {
-      return UriHelper.buildUri(containerUrl, modelType, name);
+      return SimpleUriService.buildUri(modelType, name);
    }
    
    /**
@@ -98,7 +91,7 @@ public class ModelResourceMappingService {
       if (types == null || types.isEmpty()) {
          throw new RuntimeException("Missing Model type");
       }
-      return UriHelper.buildUri(containerUrl, types.get(0),
+      return SimpleUriService.buildUri(types.get(0),
             (String) modelResource.get("dcmpv:name"));
    }
 
@@ -111,26 +104,46 @@ public class ModelResourceMappingService {
    public DCResource projectToResource(DCProject project) throws ResourceParsingException {
       DCResource projectResource = DCResource.create(null, ResourceModelIniter.MODEL_PROJECT_NAME)
             .set("dcmpv:name", project.getName())
+            .set("dcmpv:majorVersion", project.getMajorVersion())
+            .set("dcmpv:unversionedName", project.getUnversionedName())
+            // NB. NOT o:version which is only in DCProject for info purpose
          
             // NB. minor version is Resource version
             .set("dcmpv:documentation", project.getDocumentation())// TODO in another collection for performance
-         
-            // TODO security
             
             // POLY cache : TODO
             ;
+      
+      String uri = this.buildPointOfViewUri(projectResource);
 
       //projectResource.set("dcmpv:pointOfViews", pointOfViewsToNames(project.getLocalVisibleProjects())); // TODO as cache ?!
       projectResource.set("dcmp:localVisibleProjects", project.getLocalVisibleProjects().stream()
             .map(p -> this.buildNameUri(ResourceModelIniter.MODEL_PROJECT_NAME, p.getName())).collect(Collectors.toList())); // NOT toSet else JSON'd as HashMap
+      projectResource.set("dcmp:visibleProjectNames", new ArrayList<String>(
+            dataModelService.getVisibleProjectNames(project.getName()))); // only to display for now
+      projectResource.set("dcmp:forkedUris", new ArrayList<String>(
+            project.getForkedUris())); // only to display for now
       projectResource.set("dcmp:useCasePointOfViews", project.getUseCasePointOfViews().stream()
             .map(ucpov -> {
                //useCasePointOfViewToResource(ucpov); // TODO TODO & useCasePointOfViewElementToResource(ucpovelt)
                //ucpov.getPointOfViews().stream().map(ucpovelt -> mrMappingService.buildPointOfViewUri(ucpovelt)).collect(Collectors.toList())); // NOT toSet else JSON'd as HashMap
                return this.buildNameUri(ResourceModelIniter.MODEL_POINTOFVIEW_NAME, ucpov.getName());
             }).collect(Collectors.toList())); // NOT toSet else JSON'd as HashMap
+      if (project.getSecurityConstraints() != null) {
+         projectResource.set("dcmp:securityConstraints", securityToResource(
+               project.getSecurityConstraints(), uri, "dcmp:securityConstraints"));
+      }
+      if (project.getSecurityDefaults() != null) {
+         projectResource.set("dcmp:securityDefaults", securityToResource(
+               project.getSecurityDefaults(), uri, "dcmp:securityDefaults"));
+      }
+      projectResource.set("dcmp:modelLevelSecurityEnabled", project.isModelLevelSecurityEnabled());
+      if (project.getSecurityDefaults() != null) {
+         projectResource.set("dcmp:visibleSecurityConstraints", securityToResource(
+               project.getVisibleSecurityConstraints(), uri, "dcmp:visibleSecurityConstraints"));
+      }
 
-      projectResource.setUri(this.buildPointOfViewUri(projectResource));
+      projectResource.setUri(uri);
       return projectResource;
    }
    
@@ -150,6 +163,8 @@ public class ModelResourceMappingService {
       DCModelBase definitionModel = dataModelService.getDefinitionModel(model); // uses its project
       DCModelBase storageModel = dataModelService.getStorageModel(model); // null if abstract ; uses its project
       
+      DCSecurity security = model.getSecurity();
+      
       // filling model's provided props :
       modelResource
             .set("dcmo:name", model.getName())
@@ -161,6 +176,7 @@ public class ModelResourceMappingService {
             .set("dcmo:isDefinition", model.isDefinition()) // = !dcmo:isStorageOnly
             .set("dcmo:isStorage", model.isStorage())
             .set("dcmo:isInstanciable", model.isInstanciable())
+            .set("dcmo:isMultiProjectStorage", model.isMultiProjectStorage())
          
             // NB. minor version is Resource version
             .set("dcmo:documentation", model.getDocumentation())// TODO in another collection for performance
@@ -169,9 +185,7 @@ public class ModelResourceMappingService {
             ///.set("dcmo:collectionName", model.getCollectionName()) // POLY RATHER storageModel.getName()
             .set("dcmo:maxScan", model.getMaxScan())
             
-            // TODO security
-            
-            // instanciable :
+            // TODO if instanciable :
             .set("dcmo:isHistorizable", model.isHistorizable())
             .set("dcmo:isContributable", model.isContributable())
             
@@ -181,8 +195,10 @@ public class ModelResourceMappingService {
       if (storageModel != null) {
          modelResource.set("dcmo:storageModel", storageModel.getName());
       }
-      //modelResource.setVersion(model.getVersion()); // not at creation (or < 0),
-      // rather update DCModel.version from its resource after each put
+      securityToResource(security, modelResource);
+      if (model.getVersion() >= 0) {
+         modelResource.setVersion(model.getVersion());
+      } // not at creation, rather update DCModel.version from its resource after each put
 
       // once id source props are complete, build URI out of them :
       String uri = this.buildModelUri(modelResource);
@@ -193,6 +209,30 @@ public class ModelResourceMappingService {
       return modelResource;
    }
 
+   private void securityToResource(DCSecurity security, DCResource modelResource) {
+      modelResource
+         // (writing set as list else is json map)
+         .set("dcms:isAuthentifiedReadable", (security != null) ? security.isAuthentifiedReadable() : null)
+         .set("dcms:isAuthentifiedCreatable", (security != null) ? security.isAuthentifiedCreatable() : null)
+         .set("dcms:isAuthentifiedWritable", (security != null) ? security.isAuthentifiedWritable() : null)
+         .set("dcms:resourceCreators", (security != null) ? new ArrayList<String>(security.getResourceCreators()) : null)
+         .set("dcms:resourceCreationOwners", (security != null) ? new ArrayList<String>(security.getResourceCreationOwners()) : null)
+         .set("dcms:resourceReaders", (security != null) ? new ArrayList<String>(security.getResourceReaders()) : null)
+         .set("dcms:resourceWriters", (security != null) ? new ArrayList<String>(security.getResourceWriters()) : null)
+         .set("dcms:resourceOwners", (security != null) ? new ArrayList<String>(security.getResourceOwners()) : null);
+   }
+   private Object securityToResource(DCSecurity securityConstraints, String uri, String subId) {
+      try {
+         DCResource securityResource = DCResource.create(SimpleUriService.getContainerUrl(),
+               ResourceModelIniter.MODEL_SECURITY_NAME, UriHelper.parseUri(uri), subId);
+         securityResource.setVersion(0l); // dummy (OR should be top level's ??)
+         securityToResource(securityConstraints, securityResource);
+         return securityResource;
+      } catch (URISyntaxException | MalformedURLException ex) {
+         throw new RuntimeException(ex);
+      }
+   }
+   
    /**
     * Does not use modelService or any project
     * @param model
@@ -284,13 +324,17 @@ public class ModelResourceMappingService {
             //.put("@id", field.getName().replaceAll(":", "__")
             //      .replaceAll("[!?]", "")) // relative (?), TODO TODO better solution for '!' start
             .put("@id", fieldUri)
-            .put("@type", DCResource.listBuilder().add("dcmf:field_0").build()) // OR default one ?
+            .put("@type", DCResource.listBuilder().add(ResourceModelIniter.MODEL_FIELD_NAME).build()) // OR default one ?
             .put("o:version", 0l) // dummy (OR should be top level's ??)
             .put("dcmf:name", field.getName())
             .put("dcmf:type", field.getType())
             .put("dcmf:required", field.isRequired()) // TODO not for list ; for map ?!?
-            .put("dcmf:queryLimit", field.getQueryLimit()) // TODO not for list, map
-            .put("dcmf:aliasedStorageName", field.getAliasedStorageName());
+            .put("dcmf:queryLimit", field.getQueryLimit()); // TODO not for list, map
+      if (field.getAliasedStorageNames() != null) {
+         fieldPropBuilder.put("dcmf:aliasedStorageNames", new ArrayList<String>(field.getAliasedStorageNames()));
+         // (written as list else json map)
+      }
+      fieldPropBuilder.put("dcmf:readonly", field.isReadonly());
       String defaultStringValue = valueService.valueToString(field.getDefaultValue()); // TODO or not for list & map ?!?
       if (defaultStringValue != null) {
          fieldPropBuilder.put("dcmf:defaultStringValue", defaultStringValue);
@@ -338,6 +382,26 @@ public class ModelResourceMappingService {
       //String pointOfViewAbsoluteName = dataModelService.getProject().getAbsoluteName();
       String name = (String) r.get(ResourceModelIniter.POINTOFVIEW_NAME_PROP);
       DCProject project = new DCProject(name);
+
+      Long version = r.getVersion();
+      if (version == null) {
+         version = -1l; // assuming new
+      }
+      project.setVersion(version); // only in DCModelBase for info purpose
+      // LET MAJOR VERSION & UNVERSIONED NAME BE PARSED FROM NAME
+      /*try {
+         // parsing major version : (could be Long if locally built ex. in model listener)
+         Long majorVersion = valueService.parseLong(r.get("dcmpv:majorVersion"), null);
+         if (majorVersion == null) {
+            majorVersion = 0l; // TODO LATER compute & check : parse from dcmo:name
+         }
+         project.setMajorVersion(majorVersion); // LATER
+      } catch (ResourceParsingException rpex) {
+         throw new ResourceException("Error parsing project", rpex, r, project);
+      }
+      if (r.get("dcmpv:unversionedName") != null) {
+         project.setUnversionedName((String) r.get("dcmpv:unversionedName"));
+      }*/
       
       @SuppressWarnings("unchecked")
       //List<Map<String, Object>> visibleProjects = (List<Map<String, Object>>) r.get("dcmp:visibleProjects");
@@ -382,6 +446,7 @@ public class ModelResourceMappingService {
     * @throws ResourceException if wrapped ResourceParsingException, or
     * pointOfViewAbsoluteName not currentProjectName
     */
+   @SuppressWarnings("unchecked")
    public DCModelBase toModelOrMixin(DCResource r) throws ResourceException {
       // TODO check non required fields : required queryLimit openelec's maxScan resourceType
 
@@ -396,24 +461,24 @@ public class ModelResourceMappingService {
          version = -1l; // assuming new
       }
       modelOrMixin.setVersion(version); // only in DCModelBase for info purpose
-      Object foundMajorVersion = r.get("dcmo:majorVersion");
-      Long majorVersion;
-      if (foundMajorVersion == null) {
-         majorVersion = 0l; // TODO LATER compute : parse from dcmo:name
-      } else if (foundMajorVersion instanceof Long) { // in case locally built ex. in model listener
-         majorVersion = (long) foundMajorVersion;
-      } else if (foundMajorVersion instanceof Integer) {
-         majorVersion = new Long((int) foundMajorVersion);
-      } else { // LATER string case ?
-         throw new ResourceException("Error while loading DCModel from Resource : "
-               + "dcmo:majorVersion not Long not Integer " + foundMajorVersion, null, r, project);
+      try {
+         // parsing major version : (could be Long if locally built ex. in model listener)
+         Long majorVersion = valueService.parseLong(r.get("dcmo:majorVersion"), null);
+         if (majorVersion == null) {
+            majorVersion = 0l; // TODO LATER compute & check : parse from dcmo:name
+         }
+         modelOrMixin.setMajorVersion(majorVersion); // LATER
+      } catch (ResourceParsingException rpex) {
+         throw new ResourceException("Error parsing model", rpex, r, project);
       }
-      modelOrMixin.setMajorVersion(majorVersion); // LATER
       
       modelOrMixin.setDocumentation((String) r.get("dcmo:documentation")); // OPT
-      
+
+      // storage :
       // NB. collectionName is deduced from storage typeName
       modelOrMixin.setMaxScan((int) r.get("dcmo:maxScan"));
+      
+      // TODO if instanciable :
       modelOrMixin.setHistorizable((boolean) r.get("dcmo:isHistorizable"));
       modelOrMixin.setContributable((boolean) r.get("dcmo:isContributable"));
 
@@ -421,9 +486,37 @@ public class ModelResourceMappingService {
       modelOrMixin.setDefinition((boolean) r.get("dcmo:isDefinition"));
       modelOrMixin.setStorage((boolean) r.get("dcmo:isStorage"));
       modelOrMixin.setInstanciable((boolean) r.get("dcmo:isInstanciable"));
+      modelOrMixin.setMultiProjectStorage(r.get("dcmo:isMultiProjectStorage") != null ?
+            (boolean) r.get("dcmo:isMultiProjectStorage") : false);
       
       // features :
       modelOrMixin.setCountryLanguage((String) r.get("dcmls:code"));
+
+      // security :
+      if (r.get("dcms:isAuthentifiedReadable") != null) {
+         getOrSetSecurity(modelOrMixin).setAuthentifiedReadable((boolean) r.get("dcms:isAuthentifiedReadable"));
+      }
+      if (r.get("dcms:isAuthentifiedCreatable") != null) {
+         getOrSetSecurity(modelOrMixin).setAuthentifiedCreatable((boolean) r.get("dcms:isAuthentifiedCreatable"));
+      }
+      if (r.get("dcms:isAuthentifiedWritable") != null) {
+         getOrSetSecurity(modelOrMixin).setAuthentifiedWritable((boolean) r.get("dcms:isAuthentifiedWritable"));
+      }
+      if (r.get("dcms:resourceCreators") != null) {
+         getOrSetSecurity(modelOrMixin).setResourceCreators(new LinkedHashSet<String>((List<String>) r.get("dcms:resourceCreators")));
+      }
+      if (r.get("dcms:resourceCreationOwners") != null) {
+         getOrSetSecurity(modelOrMixin).setResourceCreationOwners(new LinkedHashSet<String>((List<String>) r.get("dcms:resourceCreationOwners")));
+      }
+      if (r.get("dcms:resourceReaders") != null) {
+         getOrSetSecurity(modelOrMixin).setResourceReaders(new LinkedHashSet<String>((List<String>) r.get("dcms:resourceReaders")));
+      }
+      if (r.get("dcms:resourceWriters") != null) {
+         getOrSetSecurity(modelOrMixin).setResourceWriters(new LinkedHashSet<String>((List<String>) r.get("dcms:resourceWriters")));
+      }
+      if (r.get("dcms:resourceOwners") != null) {
+         getOrSetSecurity(modelOrMixin).setResourceOwners(new LinkedHashSet<String>((List<String>) r.get("dcms:resourceOwners")));
+      }
       
       try {
          this.resourceToFieldsAndMixins(modelOrMixin, r);
@@ -436,6 +529,14 @@ public class ModelResourceMappingService {
       return modelOrMixin;
    }
    
+   private DCSecurity getOrSetSecurity(DCModelBase modelOrMixin) {
+      DCSecurity security = modelOrMixin.getSecurity();
+      if (security == null) {
+         security = new DCSecurity();
+         modelOrMixin.setSecurity(security);
+      }
+      return security;
+   }
    public DCProject getAndCheckModelResourceProject(DCResource r) throws ResourceException {
       String pointOfViewAbsoluteName = (String) r.get("dcmo:pointOfViewAbsoluteName");
       DCProject currentProject = dataModelService.getProject();
@@ -466,7 +567,7 @@ public class ModelResourceMappingService {
          boolean hasGenericMixin = false;
          for (String mixinName : modelOrMixin.getGlobalMixinNames()) { // OR not global to avoid
             // language-specific inheritance trees with a single generic mixin, but not perfect either
-            if (mixinName.equals("dcmls:CountryLanguageSpecific")) {
+            if (mixinName.equals(ResourceModelIniter.MODEL_COUNTRYLANGUAGESPECIFIC_NAME)) {
                continue;
             }
             DCModelBase mixin = project.getModel(mixinName);
@@ -589,7 +690,7 @@ public class ModelResourceMappingService {
 
       // in case of obsolete and not recomputed fieldAndMixins, adding new (i.e. remaining)
       // fields in case of obsolete and not recomputed fieldAndMixins :
-      Set<String> fieldAndMixinNameSet = new HashSet<String>(fieldAndMixinNames);
+      Set<String> fieldAndMixinNameSet = new LinkedHashSet<String>(fieldAndMixinNames);
       for (String fieldName : fieldMap.keySet()) {
          if (fieldAndMixinNameSet != null && fieldAndMixinNameSet.contains(fieldName)) {
             continue;
@@ -622,7 +723,6 @@ public class ModelResourceMappingService {
       String fieldType = (String) fieldResource.get("dcmf:type");
       boolean fieldRequired = (boolean) fieldResource.get("dcmf:required"); // TODO or default value
       int fieldQueryLimit = (int) fieldResource.get("dcmf:queryLimit"); // TODO or default value
-      String aliasedStorageName = (String) fieldResource.get("dcmf:aliasedStorageName"); // TODO or default value
       
       DCField field;
       switch (fieldType ) {
@@ -660,8 +760,16 @@ public class ModelResourceMappingService {
       default :
          field = new DCField(fieldName, fieldType, fieldRequired, fieldQueryLimit);
       }
-      
-      field.setAliasedStorageName(aliasedStorageName);
+
+      if (fieldResource.get("dcmf:aliasedStorageNames") != null) {
+         @SuppressWarnings("unchecked")
+         LinkedHashSet<String> aliasedStorageNames = new LinkedHashSet<String>(
+               (List<String>) fieldResource.get("dcmf:aliasedStorageNames"));
+         field.setAliasedStorageNames(aliasedStorageNames);
+      }
+      if (fieldResource.get("dcmf:readonly") != null) {
+         field.setReadonly((boolean) fieldResource.get("dcmf:readonly"));
+      }
       
       // parse & set default value :
       // TODO LATER use DCResourceParsingContext in the whole model mapping process ?

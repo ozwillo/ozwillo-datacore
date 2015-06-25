@@ -79,6 +79,9 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
    private boolean enabled = true;
 
    private List<Initable> initables = new ArrayList<Initable>();
+
+   /** whether init done */
+   private boolean inited;
    
    
    @Override
@@ -96,6 +99,8 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
             }
          }
       }
+      
+      this.inited = true;
    }
 
    public void register(Initable initable) {
@@ -107,6 +112,10 @@ public class InitService implements ApplicationListener<ContextRefreshedEvent> {
     	  }
       }
       this.initables.add(i + 1, initable);
+   }
+
+   public boolean isInited() {
+      return inited;
    }
 
 }

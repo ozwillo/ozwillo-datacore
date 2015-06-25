@@ -38,6 +38,7 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    public static final String KEY_URI = "_uri";
    public static final String KEY_V = "_v";
    public static final String KEY_T = "_t";
+   public static final String KEY_B = "_b";
    public static final String KEY_P = "_p";
 
    public static final String KEY_AR = "_ar";
@@ -85,6 +86,10 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    @Field(KEY_T)
    @Indexed // get on a given type in a wider storage model... NB. created in DatacoreSampleBase since not in a single collection
    private List<String> types;
+   /** ("branch") its project, filled only when model.isMultiProjectStorage, used in unique index with _uri */
+   @Field(KEY_B)
+   @Indexed // get on a given project in a wider storage model... NB. created in DatacoreSampleBase since not in a single nor all collections
+   private String projectName;
 
    // more auditing see
    // http://maciejwalkowiak.pl/blog/2013/05/24/auditing-entities-in-spring-data-mongodb/
@@ -187,6 +192,10 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
       this.setUri(dcEntity.getUri());
       this.setVersion(dcEntity.getVersion());
       this.setTypes(new ArrayList<String>(dcEntity.getTypes()));
+      if (dcEntity.getProjectName() != null) {
+         this.setProjectName(dcEntity.getProjectName());
+      } // else not multiStorageProject
+      // (if new entity won't be in a multiStorageProject, will be erased in entityService)
       
       this.setLastModified(dcEntity.getLastModified());
       this.setCreatedBy(dcEntity.getCreatedBy());
@@ -265,6 +274,10 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    @Override
    public String toString() {
       StringBuilder sb = new StringBuilder("DCEntity[ ");
+      if (this.projectName != null) { // multiProjectStorage : log entity project / branch
+         sb.append(this.projectName);
+         sb.append('.');
+      }
       sb.append(this.uri); // includes modelName (& iri)
       sb.append(" (");
       sb.append(this.version);
@@ -316,6 +329,14 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
 
    public void setTypes(List<String> types) {
       this.types = types;
+   }
+   
+   public String getProjectName() {
+      return projectName;
+   }
+
+   public void setProjectName(String projectName) {
+      this.projectName = projectName;
    }
 
    public DateTime getCreated() {

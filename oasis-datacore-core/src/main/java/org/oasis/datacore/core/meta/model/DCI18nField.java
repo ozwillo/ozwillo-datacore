@@ -1,5 +1,7 @@
 package org.oasis.datacore.core.meta.model;
 
+import java.util.LinkedHashSet;
+
 
 /**
  * i18n field, as a list of l to v maps
@@ -39,9 +41,17 @@ public class DCI18nField extends DCListField {
       i18Map.addField(new DCField("l", "string", false, 0));
       this.list = new DCListField("i18List", i18Map);*/
    }
-   public DCI18nField(String name, int queryLimit, String aliasedStorageName) {
+   public DCI18nField(String name, int queryLimit, LinkedHashSet<String> aliasedStorageNames) {
       super(name, "i18n", createI18nMap(queryLimit));
-      this.setAliasedStorageName(aliasedStorageName);
+      this.setAliasedStorageNames(aliasedStorageNames);
+   }
+   public DCI18nField(String name, int queryLimit, String singleAliasedStorageName) {
+      super(name, "i18n", createI18nMap(queryLimit));
+      this.setSingleAliasedStorageName(singleAliasedStorageName);
+   }
+   public DCI18nField(String name, int queryLimit, String singleAliasedStorageName, boolean readonly) {
+      this(name, queryLimit, singleAliasedStorageName);
+      this.setReadonly(readonly);
    }
    
    private static DCMapField createI18nMap(int valueQueryLimit) {

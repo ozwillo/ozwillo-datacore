@@ -12,9 +12,11 @@ import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.ModelNotFoundException;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCSecurity;
+import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.core.Authentication;
 
@@ -41,6 +43,10 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
    public static final String CHANGE_RIGHTS = "changeRights";
    public static final String GET_RIGHTS = "getRights";
 
+   /** to use compute guest readable */
+   @Value("${datacore.devmode}")
+   private boolean devmode;
+   
    @Autowired
    @Qualifier("datacoreSecurityServiceImpl")
    private DatacoreSecurityService datacoreSecurityService;
@@ -54,8 +60,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
 
    /** to know mixins view, putRatherThanPatchMode */
    @Autowired(required=false)
-   protected DatacoreRequestContextService serverRequestContext = null;
-
+   private DatacoreRequestContextService serverRequestContext = null;
    
    /**
     * targetDomainObject must be DCEntity (or null if not found)
@@ -87,6 +92,10 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       
       //if (hasRole("admin") || hasRole("t_" + model.getName() + "_admin")) {
       DCUserImpl user = datacoreSecurityService.getCurrentUser();
+      
+      if (user.isGuest() && !devmode) {
+         return false; // forbidden outside devmode
+      }
       
       DCModelBase model = entityModelService.getModel(dataEntity);
       if (model == null) {
@@ -124,12 +133,12 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
          // to allow efficient query filtering by rights criteria
          // => TODO that in PermissionAdminApi/Service
          return user.isAdmin()
-               || model.getSecurity().isResourceAdmin(user) // TODO or inherited
+               || model.getSecurity().isResourceOwner(user) // TODO or inherited
                || hasAnyEntityAclGroup(user, dataEntity.getOwners()); // NB. no public owners !!
       
       case GET_RIGHTS :
          return user.isAdmin()
-               || model.getSecurity().isResourceAdmin(user) // TODO or inherited
+               || model.getSecurity().isResourceOwner(user) // TODO or inherited
                || hasAnyEntityAclGroup(user, dataEntity.getOwners());
          
       case WRITE :
@@ -163,7 +172,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
    }
 
    /**
-    * 
+    * Also applies mixins view filtering
     * @param dataEntity
     * @param existingDataEntity if non null, is filled and if putRatherThanPatchMode cleaned
     * @param model
@@ -178,15 +187,23 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       LinkedHashSet<String> seenPropNameSet = new LinkedHashSet<String>(propNb);
       return filterMixinsAndCheckPermission(dataEntity, existingDataEntity,
             model, user, permission, putRatherThanPatchMode,
-            seenPropNameSet, propNb);
+            seenPropNameSet, propNb, null);
    }
    private boolean filterMixinsAndCheckPermission(DCEntity dataEntity, DCEntity existingDataEntity,
          DCModelBase model, DCUserImpl user, String permission, boolean putRatherThanPatchMode,
-         LinkedHashSet<String> seenPropNameSet, int propNb) {
-      boolean isThisModelAllowed = isThisModelAllowed(dataEntity, model, user, permission);
+         LinkedHashSet<String> seenPropNameSet, int propNb, Boolean isInheritingMixinAllowed) {
+      boolean isThisModelAllowed = isThisModelAllowed(dataEntity, model,
+            user, permission, isInheritingMixinAllowed);
       Map<String, Object> props = dataEntity.getProperties();
       Map<String, Object> existingProps = (existingDataEntity == null) ? null
             : existingDataEntity.getProperties();
+      
+      // #71 applying mixins view filtering :
+      // TODO LATER (mixin) views also / rather as mongo field projection (and possibly even
+      // to enforce "read" rights, though if resource-level rights are enabled entity is required
+      // to compute rights, and anyway post filtering in EntityPermissionEvaluator & entityToResource
+      // will still be required to apply model/mixin-level rights)
+      // http://docs.mongodb.org/manual/tutorial/project-fields-from-query-results/
       boolean modelAllowedAndInViewMixins = isThisModelAllowed && viewMixinNamesContain(model.getName());
       
       // remove (and remember seen), in the order of mixins :
@@ -229,7 +246,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       for (DCModelBase mixin : model.getMixins()) {
          isAnyMixinAllowed = filterMixinsAndCheckPermission(dataEntity, existingDataEntity, mixin, user, permission,
                putRatherThanPatchMode,
-               seenPropNameSet, propNb) || isAnyMixinAllowed;
+               seenPropNameSet, propNb, isThisModelAllowed) || isAnyMixinAllowed;
          // NB. ex. viewMixinNames=geo will show geo:name and not its override in geoci
          if (propNb == seenPropNameSet.size()) {
             return isAnyMixinAllowed; // everything has been filtered, filtering can be ended up right away
@@ -240,7 +257,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
 
    /** shortcut to check only at model level */
    public boolean isThisModelAllowed(DCModelBase model, DCUserImpl user, String permission) {
-      return isThisModelAllowed(null, model, user, permission);
+      return isThisModelAllowed(null, model, user, permission, null);
    }
 
    /**
@@ -251,33 +268,129 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
     * @param model
     * @param user
     * @param permission
+    * @param isInheritingMixinIn if null, not yet found any security in inheritance tree
+    * meaning get the next (primary inherited) one
     * @return
     */
-   public boolean isThisModelAllowed(DCEntity dataEntity, DCModelBase model, DCUserImpl user, String permission) {
+   public boolean isThisModelAllowed(DCEntity dataEntity, DCModelBase model,
+         DCUserImpl user, String permission, Boolean isInheritingMixinAllowed) {
+      DCProject currentProject = modelService.getProject();
+      DCProject project = modelService.getProject(model.getProjectName()); // model project
+      
+      // constraints in case of visible project :
+      // (is it allowed to read / write in another project ?)
+      boolean shouldCheckVisibleProjectConstraints = true;
+      if (!model.getProjectName().equals(currentProject.getName())
+            // TODO TODO HACK avoid visible constraints in case of facade projects :
+            && !isFacadeProject(model.getProjectName())) {
+         DCModelBase storageModel = (dataEntity != null) ? // else none yet (been queried by LDP)
+               entityModelService.getStorageModel(dataEntity) : modelService.getStorageModel(model);
+         if (storageModel.isMultiProjectStorage()) { // especially oasis.meta.dcmi:mixin_0 in case of model resources !
+            // (even oasis.sandbox models are stored in oasis.meta.dcmi:mixin_0 collection,
+            // only soft forks i.e. inheriting overrides couldn't be handled this way)
+            // no need to check, entity will anyway be written in its own project
+            if (dataEntity == null // none yet (been queried by LDP ???), should be checked later
+                  || dataEntity.getProjectName() == null) { // new (or not yet migrated), will be in the current project
+               shouldCheckVisibleProjectConstraints = false;
+            } else {
+               shouldCheckVisibleProjectConstraints = !dataEntity.getProjectName().equals(currentProject.getName());
+               project = modelService.getProject(dataEntity.getProjectName()); // entity project
+            }
+         }
+         
+         if (shouldCheckVisibleProjectConstraints) {
+            DCSecurity modelVisibleSecurityConstraints = project.getVisibleSecurityConstraints();
+            if (modelVisibleSecurityConstraints != null
+                  && !isThisSecurityAllowed(null, modelVisibleSecurityConstraints, user, permission)) {
+               return false; // ex. no (auth'd) "write" for geo outside itself i.e. from another project ex. org
+            }
+         }
+      }
+      // project-level constraints :
+      DCSecurity projectSecurityConstraints = project.getSecurityConstraints();
+      if (projectSecurityConstraints != null
+            && !isThisSecurityAllowed(null, // WHATEVER THE RESOURCE
+                  projectSecurityConstraints, user, permission)) {
+         return false; // ex. no "read" outside 
+      }
+      
       if (user.isAdmin()) {
-         return true;
+         return true; // (after constraints else admin won't have them)
       }
-      DCSecurity security = modelService.getSecurity(model); // TODO cache !!!
+      
+      // case of project-level only security :
+      if (!project.isModelLevelSecurityEnabled()) {
+         DCSecurity projectSecurityDefaults = project.getSecurityDefaults();
+         if (projectSecurityDefaults == null) {
+            return isDefaultSecurityAllowed(user, permission);
+         }
+         return !isThisSecurityAllowed(null, // WHATEVER THE RESOURCE
+               projectSecurityDefaults, user, permission);
+      }
+      
+      DCSecurity security = model.getSecurity();
       if (security == null) {
-         return false; // can't find primary-inherited security, TODO error
+         if (isInheritingMixinAllowed != null) {
+            return isInheritingMixinAllowed;
+         }
+         // else first security from top, get primary-inherited one :
+         security = modelService.getSecurity(model); // TODO cache !!!
+         if (security == null) {
+            security = project.getSecurityDefaults();
+            if (security == null) {
+               return isDefaultSecurityAllowed(user, permission);
+            }
+         }
       }
+      
+      return isThisSecurityAllowed(dataEntity, security, user, permission);
+   }
+
+   /**
+    * TODO TODO HACK avoid visible constraints in case of facade projects
+    * @param projectName
+    * @return
+    */
+   private boolean isFacadeProject(String projectName) {
+      return modelService.getProject(projectName).getUnversionedName().equals(modelService.getProject().getName());
+   }
+
+   public boolean isDefaultSecurityAllowed(DCUserImpl user, String permission) {
+      if (devmode/* || project.defaultSecurity == phase1*/) {
+         if (user.isGuest()) { // allow even guest READ in devmode, to help developers
+            return READ.equals(permission);
+         }
+         return true; // default Phase 1 (model design step) security 
+      }
+      // no (primary-inherited) security at all ex. Phase 1, TODO return project default
+      return false;
+   }
+
+   /**
+    * 
+    * @param dataEntity works also if null
+    * @param security not null
+    * @param user
+    * @param permission
+    * @return
+    */
+   public boolean isThisSecurityAllowed(DCEntity dataEntity, DCSecurity security, DCUserImpl user, String permission) {
       // else has its own security :
-      if (security.isResourceAdmin(user)) { // TODO cache this one !
+      if (security.isResourceOwner(user)) { // TODO cache this one !
          return true;
       }
 
       switch (permission) {
-      case "read" :
+      case READ :
          // to be used in @PostAuthorize on GET
          // NB. allReaders have to contain ALSO writers & owners (i.e. be precomputed)
          // to allow efficient query filtering by rights criteria
          // => TODO that in PermissionAdminApi/Service
-         return security.isGuestReadable()
-               || security.isAuthentifiedReadable() && !user.isGuest()
+         return security.isAuthentifiedReadable() && !user.isGuest()
                || security.isResourceReader(user) // TODO cache this one
                || dataEntity != null && hasAnyEntityAclGroup(user, dataEntity.getAllReaders());
          
-      case "write" :
+      case WRITE :
          // NB. writers have NOT to contain also writers & owners (i.e. be precomputed)
          // because no mass write operations (yet)
          return security.isAuthentifiedWritable() && !user.isGuest()
@@ -286,20 +399,20 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
                && (hasAnyEntityAclGroup(user, dataEntity.getWriters()) // TODO cache this last one
                || hasAnyEntityAclGroup(user, dataEntity.getOwners())); // TODO remove BEFORE merging existing
          
-      case "create" :
+      case CREATE :
          // to be used in @PreAuthorize on update ????
          ///return entityService.getModel(dataEntity).getSecurity().hasCreator(user); /// TODO or this ?
          return security.isAuthentifiedCreatable() && !user.isGuest()
                || security.isResourceCreator(user); // TODO cache this last one
          
-      case "changeRights" :
+      case CHANGE_RIGHTS :
          // to be used in @PostAuthorize on GET
          // NB. readers have to contain ALSO writers & owners (i.e. be precomputed)
          // to allow efficient query filtering by rights criteria
          // => TODO that in PermissionAdminApi/Service
          return dataEntity != null && hasAnyEntityAclGroup(user, dataEntity.getOwners()); // NB. no public owners !!
       
-      case "getRights" :
+      case GET_RIGHTS :
        return dataEntity != null && hasAnyEntityAclGroup(user, dataEntity.getOwners()); 
        
       // NB. (model type) admin has already been done (first thing even)
@@ -309,6 +422,11 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       }
    }
 
+   /**
+    * Used to apply mixins view filtering
+    * @param mixinName
+    * @return
+    */
    private boolean viewMixinNamesContain(String mixinName) {
       LinkedHashSet<String> viewMixinNames;
       return serverRequestContext == null
@@ -316,6 +434,17 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
                   || viewMixinNames.contains(mixinName);
    }
 
+
+   /**
+    * 
+    * @param model
+    * @return false if not devmode (calls to Datacore are made by apps which can have "app_guest" accounts),
+    * else true if no security set to ease up tests
+    */
+   public boolean isGuestReadable(DCSecurity modelSecurity) {
+      return devmode && modelSecurity == null;
+   }
+   
    /**
     * TODO reuse SecurityExpressionRoot.has(Any)Role code ??
     * @param user 

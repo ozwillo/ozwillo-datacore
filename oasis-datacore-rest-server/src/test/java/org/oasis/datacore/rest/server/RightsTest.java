@@ -14,14 +14,16 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.oasis.datacore.common.context.SimpleRequestContextProvider;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
-import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCSecurity;
+import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.core.security.mock.LocalAuthenticationService;
 import org.oasis.datacore.historization.exception.HistorizationException;
 import org.oasis.datacore.historization.service.HistorizationService;
 import org.oasis.datacore.rest.api.DCResource;
+import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rights.rest.api.DCRights;
 import org.oasis.datacore.rights.rest.api.RightsApi;
@@ -34,6 +36,8 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.google.common.collect.ImmutableMap;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:oasis-datacore-rest-server-test-context.xml" })
@@ -69,7 +73,7 @@ public class RightsTest {
 	private HistorizationService historizationService;
 
 	@Before
-	public void flushData() {
+	public void flushDataAndSetProject() {
 		/*
 		truncateModel(MarkaInvestModel.CITY_MODEL_NAME);
 		truncateModel(MarkaInvestModel.COMPANY_MODEL_NAME);
@@ -88,6 +92,9 @@ public class RightsTest {
 		markaInvestData.createDataSample();
 		mockAuthenticationService.logout();*/
       markaInvestData.initData(); // cleans data first
+
+      SimpleRequestContextProvider.setSimpleRequestContext(new ImmutableMap.Builder<String, Object>()
+            .put(DatacoreApi.PROJECT_HEADER, DCProject.OASIS_SAMPLE).build());
 	}
 	
 	/**
@@ -167,7 +174,7 @@ public class RightsTest {
 		mockAuthenticationService.loginAs("bob");
 		DCModelBase countryModel = modelAdminService.getModelBase(MarkaInvestModel.COUNTRY_MODEL_NAME);
 		Assert.assertNotNull(countryModel);
-		countryModel.getSecurity().setGuestReadable(false);
+      countryModel.setSecurity(new DCSecurity()); // most probably null (default)
 		countryModel.getSecurity().setAuthentifiedReadable(false);
 		try {
 			datacoreApi.getData(MarkaInvestModel.COUNTRY_MODEL_NAME, "1");
@@ -191,7 +198,7 @@ public class RightsTest {
 		
 		DCModelBase countryModel = modelAdminService.getModelBase(MarkaInvestModel.COUNTRY_MODEL_NAME);
 		Assert.assertNotNull(countryModel);
-		countryModel.getSecurity().setGuestReadable(false);
+      countryModel.setSecurity(new DCSecurity()); // most probably null (default)
 		countryModel.getSecurity().setAuthentifiedReadable(false);
 		countryModel.getSecurity().setAuthentifiedWritable(false);
 		countryModel.getSecurity().setAuthentifiedCreatable(false);	
@@ -247,7 +254,7 @@ public class RightsTest {
 		
 		DCModelBase countryModel = modelAdminService.getModelBase(MarkaInvestModel.COUNTRY_MODEL_NAME);
 		Assert.assertNotNull(countryModel);
-		countryModel.getSecurity().setGuestReadable(false);
+      countryModel.setSecurity(new DCSecurity()); // most probably null (default)
 		countryModel.getSecurity().setAuthentifiedReadable(false);
 		countryModel.getSecurity().setAuthentifiedWritable(false);
 		countryModel.getSecurity().setAuthentifiedCreatable(false);	

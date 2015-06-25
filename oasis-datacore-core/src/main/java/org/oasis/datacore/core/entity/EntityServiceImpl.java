@@ -1,5 +1,7 @@
 package org.oasis.datacore.core.entity;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -7,8 +9,7 @@ import java.util.Map;
 
 import org.joda.time.DateTime;
 import org.oasis.datacore.core.entity.model.DCEntity;
-import org.oasis.datacore.core.entity.model.DCURI;
-import org.oasis.datacore.core.meta.DataModelServiceImpl;
+import org.oasis.datacore.core.meta.SimpleUriService;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
@@ -40,13 +41,23 @@ public class EntityServiceImpl implements EntityService {
    // NB. MongoTemplate would be required to check last operation result, but we rather use WriteConcerns
    @Autowired
    private EntityModelService entityModelService;
-   @Autowired
-   private DataModelServiceImpl projectService; // TODO projectService ?!
 
 
    @Override
    public boolean isCreation(Long version) {
       return (version == null || version < 0);
+   }
+
+   private void addMultiProjectStorageValue(DCEntity dataEntity, DCModelBase storageModel) {
+      if (storageModel.isMultiProjectStorage()) {
+         if (dataEntity.getProjectName() == null) {
+            // recompute to make sure its up-to-date : (TODO LATER optimize / cache)
+            dataEntity.setProjectName(entityModelService.getProject().getName());
+         } // else don't change, else it would not be visible anymore from projects the current one depends on
+         // NOO EntityPermissionEvaluator prevents it from being written from another project
+      } else {
+         dataEntity.setProjectName(null);
+      }
    }
    
    /* (non-Javadoc)
@@ -58,7 +69,9 @@ public class EntityServiceImpl implements EntityService {
       if (version != null && version >= 0) { // version < 0 not allowed (though it is in Resources)
          throw new OptimisticLockingFailureException("Trying to create entity with version");
       }
-      String collectionName = entityModelService.getCollectionName(dataEntity); // TODO for view Models or weird type names ?!?
+      DCModelBase storageModel = entityModelService.getStorageModel(dataEntity); // TODO for view Models or weird type names ?!?
+      String collectionName = storageModel.getCollectionName(); // TODO for view Models or weird type names ?!?
+      addMultiProjectStorageValue(dataEntity, storageModel);
       
       // security : checking type default rights
       // TODO using annotated hasPermission
@@ -66,7 +79,8 @@ public class EntityServiceImpl implements EntityService {
          throw new ForbiddenException();
       }*/
       
-      // if exists, will fail (no need to enforce any version) 
+      // if exists (with same uri, and if multiProjectStorage same project),
+      // will fail (no need to enforce any version) 
       mgo.insert(dataEntity, collectionName);
    }
    
@@ -75,13 +89,18 @@ public class EntityServiceImpl implements EntityService {
     */
    @Override
    public DCEntity getByUri(String uri, DCModelBase dcModel) throws NonTransientDataAccessException {
-      String collectionName = entityModelService.getCollectionName(dcModel); // TODO for view Models or weird type names ?!?
+      DCModelBase storageModel = entityModelService.getStorageModel(dcModel);
+      // (explodes if none or it URI has been forked below)
+      String collectionName = storageModel.getCollectionName(); // TODO for view Models or weird type names ?!?
+      Criteria criteria = new Criteria(DCEntity.KEY_URI).is(uri);
+      entityModelService.addMultiProjectStorageCriteria(criteria, storageModel, uri);
       //entityService.findById(uri, type/collectionName); // TODO
       //dataEntity = dataRepo.findOne(uri); // NO can't be used because can't specify collection
       //dataEntity = mgo.findById(uri, DCEntity.class, collectionName);
-      DCEntity dataEntity = mgo.findOne(new Query(new Criteria(DCEntity.KEY_URI).is(uri)), DCEntity.class, collectionName);
+      DCEntity dataEntity = mgo.findOne(new Query(criteria) , DCEntity.class, collectionName);
+
       if (dataEntity != null) {
-         dataEntity.setCachedModel(dcModel);
+         entityModelService.fillDataEntityCaches(dataEntity, dcModel, storageModel, null); // TODO def
       }
       return dataEntity;
    }
@@ -100,12 +119,14 @@ public class EntityServiceImpl implements EntityService {
       if (version == null || version < 0) {
          return false;
       }
-      
-      String collectionName = entityModelService.getCollectionName(dcModel);
+
+      DCModelBase storageModel = entityModelService.getStorageModel(dcModel);
+      String collectionName = storageModel.getCollectionName();
+      Criteria criteria = new Criteria(DCEntity.KEY_URI).is(uri).and(DCEntity.KEY_V).is(version);
+      entityModelService.addMultiProjectStorageCriteria(criteria, storageModel, uri);
       //entityService.findById(uri, type/collectionName); // TODO
       //dataEntity = dataRepo.findOne(uri); // NO can't be used because can't specify collection
       //dataEntity = mgo.findById(uri, DCEntity.class, collectionName);
-      Criteria criteria = new Criteria(DCEntity.KEY_URI).is(uri).and(DCEntity.KEY_V).is(version); // TODO or parse Long ??
       long count = mgo.count(new Query(criteria), collectionName);
       // NB. efficient because should not be more than 1 ; or TODO LATER or better execute ?
       return count != 0;
@@ -120,6 +141,7 @@ public class EntityServiceImpl implements EntityService {
       if (dataEntity.getVersion() == null) { // (version < 0 not allowed, could be checked but won't be found anyway)
          throw new OptimisticLockingFailureException("Trying to update entity without version >= 0");
       }
+      addMultiProjectStorageValue(dataEntity, entityModelService.getStorageModel(dataEntity));
       String collectionName = entityModelService.getCollectionName(dataEntity); // TODO for view Models or weird type names ?!?
       
       // security : checking rights
@@ -129,7 +151,7 @@ public class EntityServiceImpl implements EntityService {
       // TODO better using annotated hasPermission ?
       // TODO or only as operation criteria ?? ($and _w $in currentUserRoles)
       
-      mgo.save(dataEntity, collectionName);
+      mgo.save(dataEntity, collectionName); // (spring data ensures atomically same version)
    }
    
    /* (non-Javadoc)
@@ -137,16 +159,18 @@ public class EntityServiceImpl implements EntityService {
     */
    @Override
    public void deleteByUriId(DCEntity dataEntity) throws NonTransientDataAccessException {
-	   
-	   String collectionName = entityModelService.getCollectionName(dataEntity); // TODO for view Models or weird type names ?!?
+
+      DCModelBase storageModel = entityModelService.getStorageModel(dataEntity);
+      String collectionName = storageModel.getCollectionName(); // TODO for view Models or weird type names ?!?
       
       // NB. could first check 1. that uri exists & has version and 2. user has write rights
       // and fail if not, but in Mongo & REST spirit it's enough to merely ensure that
       // it doesn't exist at the end
       
-      Query query = new Query(Criteria.where(DCEntity.KEY_URI).is(dataEntity.getUri()).and(DCEntity.KEY_V).is(dataEntity.getVersion())
-            /*.and("_w").in(currentUserRoles)*/);
-      mgo.remove(query, collectionName);
+      Criteria criteria = Criteria.where(DCEntity.KEY_URI).is(dataEntity.getUri()).and(DCEntity.KEY_V).is(dataEntity.getVersion())
+            /*.and("_w").in(currentUserRoles)*/;
+      entityModelService.addMultiProjectStorageCriteria(criteria, storageModel, dataEntity.getUri());
+      mgo.remove(new Query(criteria), collectionName); // TODO wouldn't spring data ensures atomically same version ??
       // NB. obviously won't conflict / throw MongoDataIntegrityViolationException
       
       // NB. for proper error handling, we use WriteConcerns that ensures that errors are raised,
@@ -175,6 +199,7 @@ public class EntityServiceImpl implements EntityService {
 		}
 		
 		String collectionName = entityModelService.getCollectionName(dataEntity);
+      addMultiProjectStorageValue(dataEntity, entityModelService.getStorageModel(dataEntity));
 		mgo.save(dataEntity, collectionName);
 		
 	}
@@ -185,7 +210,7 @@ public class EntityServiceImpl implements EntityService {
 	}
    
    @Override
-   public DCEntity getSampleData() {
+   public DCEntity getSampleData() throws URISyntaxException {
       String sampleCollectionName = "sample";
       
       DCEntity dcEntity = mgo.findOne(new Query(), DCEntity.class, sampleCollectionName);
@@ -211,8 +236,8 @@ public class EntityServiceImpl implements EntityService {
       props.put("i18nAlt2Field", "London"); // "real" value
       props.put("i18nAlt2Field__i18n", i18nMap); // TODO __i ??
       
-      props.put("dcRef", new DCURI("http://data.oasis-eu.org", "city", "London").toString());
-      props.put("scRef", new DCURI("http://social.oasis-eu.org", "user", "john").toString());
+      props.put("dcRef", SimpleUriService.buildUri(null, "city", "London"));
+      props.put("scRef", SimpleUriService.buildUri(new URI("http://social.oasis-eu.org"), "user", "john"));
       
       List<String> stringList = new ArrayList<String>();
       stringList.add("a");
@@ -221,8 +246,8 @@ public class EntityServiceImpl implements EntityService {
       map.put("a", "a");
       map.put("b", 2);
       map.put("c", new ArrayList<String>(stringList));
-      map.put("dcRef", new DCURI("http://data.oasis-eu.org", "city", "London").toString());
-      map.put("scRef", new DCURI("http://social.oasis-eu.org", "user", "john").toString());
+      map.put("dcRef", SimpleUriService.buildUri(null, "city", "London"));
+      map.put("scRef", SimpleUriService.buildUri(new URI("http://social.oasis-eu.org"), "user", "john"));
       List<Map<String,Object>> mapList = new ArrayList<Map<String,Object>>();
       mapList.add(new HashMap<String,Object>(map));
       props.put("stringList", stringList);

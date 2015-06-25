@@ -150,7 +150,7 @@ public class ValueParsingService {
          switch (fieldTypeEnum) {
          case LIST:
             // attempt to read as single value array
-            List<Object> singleValueList = new ArrayList<Object>(1);
+            List<Object> singleValueList = new ArrayList<Object>(2);
             try {
                singleValueList.add(mapper.reader(Object.class).readValue(value)); // TODO list field
             } catch (Exception e) {
@@ -293,7 +293,9 @@ public class ValueParsingService {
    public Long parseLong(Object resourceValue, DCResourceParsingContext resourceParsingContext)
          throws ResourceParsingException {
       if (!(resourceValue instanceof String)) {
-         if (resourceValue instanceof Long) {
+         if (resourceValue == null) {
+            return null; // should have been tested beforehands !
+         } else if (resourceValue instanceof Long) {
             return (Long) resourceValue; // can only happen if called locally, NOT remotely through jackson
          } else if (resourceValue instanceof Integer) {
             if (resourceParsingContext != null) {

@@ -1,5 +1,7 @@
 package org.oasis.datacore.core.entity;
 
+import java.net.URISyntaxException;
+
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.springframework.dao.DuplicateKeyException;
@@ -115,7 +117,9 @@ public interface EntityService {
    @PreAuthorize("hasPermission(#dataEntity, 'getRights')")
    void getRights(DCEntity dataEntity);
    
-   /** TODO (re)move ?*/
-   DCEntity getSampleData();
+   /** TODO (re)move ?
+    * @obsolete
+    * @throws URISyntaxException */
+   DCEntity getSampleData() throws URISyntaxException;
 
 }

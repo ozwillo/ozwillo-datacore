@@ -1,5 +1,7 @@
 package org.oasis.datacore.core.meta.model;
 
+import java.util.LinkedHashSet;
+
 
 /**
  * delegates queryLimit, notQueriable & indexed to list field, but NOT their setters
@@ -23,10 +25,20 @@ public class DCListField extends DCField {
       super(name, "list", required, 0, true);
       this.listElementField = listElementField;
    }
-   public DCListField(String name, DCField listElementField, boolean required, String aliasedStorageName) {
+   public DCListField(String name, DCField listElementField, boolean required, LinkedHashSet<String> aliasedStorageNames) {
       super(name, "list", required, 0, true);
       this.listElementField = listElementField;
-      this.setAliasedStorageName(aliasedStorageName);
+      this.setAliasedStorageNames(aliasedStorageNames);
+   }
+   public DCListField(String name, DCField listElementField, boolean required, String singleAliasedStorageName) {
+      super(name, "list", required, 0, true);
+      this.listElementField = listElementField;
+      this.setSingleAliasedStorageName(singleAliasedStorageName);
+   }
+   public DCListField(String name, DCField listElementField, boolean required,
+         String singleAliasedStorageName, boolean readonly) {
+      this(name, listElementField, required, singleAliasedStorageName);
+      this.setReadonly(readonly);
    }
    /**
     * To be used only to define subtypes of "list" ex. "i18n"

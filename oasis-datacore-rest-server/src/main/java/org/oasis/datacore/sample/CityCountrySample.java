@@ -1,6 +1,7 @@
 package org.oasis.datacore.sample;
 
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.joda.time.DateTime;
@@ -8,12 +9,15 @@ import org.joda.time.DateTimeZone;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
+import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.rest.api.DCResource;
 import org.springframework.stereotype.Component;
+
+import com.google.common.collect.ImmutableSet;
 
 
 /**
@@ -45,6 +49,7 @@ public class CityCountrySample extends DatacoreSampleBase {
       DCModel cityModel = new DCModel(CITY_MODEL_NAME);
       cityModel.setDocumentation("{ \"uri\": \"http://localhost:8080/dc/type/city/France/Lyon\", "
             + "\"inCountry\": \"http://localhost:8080/dc/type/country/France\", \"name\": \"Lyon\" }");
+      cityModel.addMixin(getMetamodelProject().getModel(ResourceModelIniter.MODEL_DISPLAYABLE_NAME));
       cityModel.addField(new DCField("n:name", "string", true, 100));
       cityModel.addField(new DCResourceField("city:inCountry", COUNTRY_MODEL_NAME, true, 100));
       cityModel.addField(new DCField("city:populationCount", "int", false, 50));
@@ -53,8 +58,11 @@ public class CityCountrySample extends DatacoreSampleBase {
       cityModel.addField(new DCField("city:founded", "date", false, 0));
       cityModel.addField(new DCField("city:isComCom", "boolean", (Object) false, 0));
          
-      // i18n sample :
-      cityModel.addField(new DCI18nField("i18n:name", 100));
+      // i18n & aliasedStorageNames sample :
+      cityModel.addField(new DCI18nField(ResourceModelIniter.DISPLAYABLE_NAME_PROP, 100, ResourceModelIniter.DISPLAYABLE_NAME_PROP, true));
+      cityModel.addField(new DCI18nField("i18n:name", 100, ResourceModelIniter.DISPLAYABLE_NAME_PROP, true));
+      cityModel.addField(new DCI18nField("city:i18nname", 100, new LinkedHashSet<String>(new ImmutableSet.Builder<String>()
+            .add(ResourceModelIniter.DISPLAYABLE_NAME_PROP).add("i18n:name").build())));
       // more complete Resource sample (may be used also as embedded referenced Resource) :
       cityModel.addField(new DCListField("city:pointsOfInterest",
             new DCResourceField("zzz", POI_MODEL_NAME))); // sample of
@@ -62,12 +70,19 @@ public class CityCountrySample extends DatacoreSampleBase {
       // numéro de version, uri atteignable
       // BUT BEWARE may not be up to date (see version) nor complete (TODO mixins deriving from models i.e. less fields BUT with same uri i.e. vue)
 
-      // embedded Resource (map mixin) sample : pas de numéro de version, uri pas utilisable
+      // embedded Resource (map mixin) sample : pas de numéro de version, uri pas utilisable TODO LATER
       DCMixin cityLegalInfoMixin = new DCMixin(CITYLEGALINFO_MIXIN_NAME);
+      cityLegalInfoMixin.addField(new DCField("cityli:legalInfoAuthor", "string", false, 100)); // used in list indexed field test
       cityLegalInfoMixin.addField(new DCField("cityli:legalInfo1", "string"));
       cityLegalInfoMixin.addField(new DCField("cityli:legalInfo2", "string"));
+      cityLegalInfoMixin.setInstanciable(false); // embedded and not referencing
       cityModel.addField(new DCResourceField("city:legalInfo", CITYLEGALINFO_MIXIN_NAME));
       ///cityModel.addMixin(cityLegalInfoMixin);
+
+      // map list (list of map mixin) sample : pas de numéro de version, uri pas utilisable
+      cityModel.addField(new DCListField("city:historicalEvents", new DCMapField("zzz")
+            .addField(new DCField("city:historicalEventDate", "date", true, 100))
+            .addField(new DCI18nField("city:historicalEventName", 0))));
 
       modelsToCreate.addAll(Arrays.asList((DCModelBase) poiModel, cityModel, countryModel, cityLegalInfoMixin));
    }
@@ -102,14 +117,14 @@ public class CityCountrySample extends DatacoreSampleBase {
             .set("n:name", "London").set("city:inCountry", ukCountry.getUri())
             .set("city:populationCount", 10000000)
             .set("city:longitudeDMS", 500000.234).set("city:latitudeDMS", -500000.234) // double
-            .set("i18n:name", DCResource.listBuilder()
+            .set("city:i18nname", DCResource.listBuilder()
                   .add(DCResource.propertiesBuilder().put("@language", "fr").put("@value", "Londres").build())
                   .add(DCResource.propertiesBuilder().put("@language", "en").put("@value", "London").build())
                   .build());
       DCResource torinoCity = resourceService.create(CITY_MODEL_NAME, "Italia/Torino")
             .set("n:name", "Torino").set("city:inCountry", italiaCountry.getUri())
             .set("city:populationCount", 900000)
-            .set("i18n:name", DCResource.listBuilder()
+            .set("city:i18nname", DCResource.listBuilder()
                   .add(DCResource.propertiesBuilder().put("@language", "fr").put("@value", "Turin").build())
                   .add(DCResource.propertiesBuilder().put("@language", "it").put("@value", "Torino").build())
                   .build())
@@ -117,7 +132,7 @@ public class CityCountrySample extends DatacoreSampleBase {
       DCResource moscowCity = resourceService.create(CITY_MODEL_NAME, "Russia/Moscow")
             .set("n:name", "Moscow").set("city:inCountry", russiaCountry.getUri())
             .set("city:populationCount", 10000000).set("city:founded", new DateTime(1147, 4, 4, 0, 0, DateTimeZone.UTC).toString())
-            .set("i18n:name", DCResource.listBuilder()
+            .set("city:i18nname", DCResource.listBuilder()
                   .add(DCResource.propertiesBuilder().put("@language", "fr").put("@value", "Moscou").build())
                   .add(DCResource.propertiesBuilder().put("@language", "en").put("@value", "Moscow").build())
                   .add(DCResource.propertiesBuilder().put("@language", "ru").put("@value", "Moskva").build())

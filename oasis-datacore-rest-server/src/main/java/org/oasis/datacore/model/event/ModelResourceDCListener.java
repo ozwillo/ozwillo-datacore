@@ -1,9 +1,14 @@
 package org.oasis.datacore.model.event;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.oasis.datacore.common.context.DCRequestContextProvider;
+import org.oasis.datacore.common.context.SimpleRequestContextProvider;
+import org.oasis.datacore.core.init.InitService;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
@@ -19,6 +24,8 @@ import org.oasis.datacore.rest.server.resource.ResourceEntityMapperService;
 import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import com.google.common.collect.ImmutableMap;
 
 
 /**
@@ -46,6 +53,10 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
    private ResourceService resourceService;
    @Autowired
    private ResourceEntityMapperService reMappingService;
+   /** to know whether inited, until when we can't updateDirectlyImpactedModels
+    * (because some are probably not even persisted yet) */
+   @Autowired
+   private InitService initService;
 
    public ModelResourceDCListener() {
       super();
@@ -152,7 +163,8 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
                + "of model or mixin " + modelOrMixin, e);
       }
 
-      if (doneEventType == ModelDCEvent.UPDATED) {
+      if (initService.isInited()
+            && doneEventType == ModelDCEvent.UPDATED) {
          // updating impacted models and their persistence :
          updateDirectlyImpactedModels(modelOrMixin);
       } // else creation which has no impact
@@ -164,6 +176,11 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
     */
    private void updateDirectlyImpactedModels(DCModelBase modelOrMixin) {
       DCProject project = dataModelService.getProject(modelOrMixin.getProjectName());
+      
+      // let's remember seen models :
+      // (else the same models may be seen several times from different projects
+      // having their project as visible)
+      Set<String> modelOrMixinAbsoluteNameSeenSet = new HashSet<String>();
       
       // let's computed directly impacted models :
       // (whose update will trigger update of indirectly impacted ones, recursively)
@@ -192,6 +209,9 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
             }
          }
          for (DCModelBase existingModel : p.getModels()) { // including (non overriden) visible projects'
+            if (!modelOrMixinAbsoluteNameSeenSet.add(existingModel.getAbsoluteName())) {
+               continue; // already seen
+            }
             // adding directly impacted models :
             // (OR LATER disable eventing and add globally impacted models in one step)
             if (impactsGlobalFields(modelOrMixin, existingModel)) {
@@ -216,19 +236,25 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
                }).collect(Collectors.toList()));
       }
       
-      for (DCModelBase modelsWithImpactedGlobalField : modelsWithImpactedGlobalFields) {
-         try {
-            // getting existing to get its version (required to update it) :
-            DCResource existingImpactedModelResource = resourceService.getIfVersionDiffers(
-                  mrMappingService.buildModelUri(modelsWithImpactedGlobalField), "dcmo:model_0", -1l);
-            this.mrMappingService.modelToResource(modelsWithImpactedGlobalField, existingImpactedModelResource);
-            // TODO LATER check if consistency still valid
-            resourceService.createOrUpdate(existingImpactedModelResource, "dcmo:model_0", false, true, true);
-         } catch (Exception ex) {
-            logger.error("Unknown error while repersisting model with impacted global fields "
-                  + modelsWithImpactedGlobalField.getAbsoluteName() + " by change in model "
-                  + modelOrMixin.getAbsoluteName(), ex);
-         }
+      for (DCModelBase modelWithImpactedGlobalFields : modelsWithImpactedGlobalFields) {
+         new SimpleRequestContextProvider<DCResource>() { // set context project beforehands :
+            protected DCResource executeInternal() throws ResourceException {
+               try {
+                  // getting existing to get its version (required to update it) :
+                  DCResource existingImpactedModelResource = resourceService.getIfVersionDiffers(
+                        mrMappingService.buildModelUri(modelWithImpactedGlobalFields), "dcmo:model_0", -1l);
+                  mrMappingService.modelToResource(modelWithImpactedGlobalFields, existingImpactedModelResource);
+                  // TODO LATER check if consistency still valid
+                  return resourceService.createOrUpdate(existingImpactedModelResource, "dcmo:model_0", false, true, true);
+               } catch (Exception ex) {
+                  logger.error("Unknown error while repersisting model with impacted global fields "
+                        + modelWithImpactedGlobalFields.getAbsoluteName() + " by change in model "
+                        + modelOrMixin.getAbsoluteName(), ex);
+                  return null;
+               }
+            }
+         }.execInContext(new ImmutableMap.Builder<String, Object>()
+               .put(DCRequestContextProvider.PROJECT, modelWithImpactedGlobalFields.getProjectName()).build());
       }
 
       /////////////////////////

@@ -1,6 +1,7 @@
 package org.oasis.datacore.core.meta.pov;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +10,7 @@ import java.util.stream.Collectors;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.ModelException;
 import org.oasis.datacore.core.meta.ModelNotFoundException;
+import org.oasis.datacore.core.meta.SimpleUriService;
 import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
@@ -19,7 +21,7 @@ public class DCProject extends DCPointOfViewBase {
    public static final String OASIS_MAIN = "oasis.main";
    public static final String OASIS_META = "oasis.meta"; // seen by every project in xxxxxxxxxxxxxxxxxxxxxxxxxx
    public static final String OASIS_SAMPLE = "oasis.sample"; // tech samples (also used in unit tests in datacore-test)
-   public static final String OASIS_SANBOX = "oasis.sandbox"; // TODO sees meta, main, sample and everything in readonly
+   public static final String OASIS_SANBOX = "oasis.sandbox"; // TODO sees (in readonly) meta, main, sample
 
    /* TODO organization.project ex. oasis.main */
    /*
@@ -35,6 +37,7 @@ public class DCProject extends DCPointOfViewBase {
    
    /** LATER also reuse visible ones ? */
    private LinkedHashMap<String,DCProject> visibleProjectMap = new LinkedHashMap<String, DCProject>(); // TODO merge in visibleStorageProjectMap
+   private HashSet<String> forkedUris = new HashSet<String>();
    /** LATER can see outside model (unless alt model) but not data (by alt'ing model anonymously as not storage),
     * for this the local alt (storage) model must be created, optionally with some sample copied or rather imported data */
    private LinkedHashMap<String,DCProject> visibleDefProjectMap = new LinkedHashMap<String, DCProject>();
@@ -54,6 +57,30 @@ public class DCProject extends DCPointOfViewBase {
    private LinkedHashMap<String,DCProject> allVisibleProjectMap = null;
    private LinkedHashMap<String,DCModelBase> allAltModelMap = null;
 
+   /** to be checked firsthand if any WHATEVER THE RESOURCE (null dataEntity)
+    * when checking rights in a model ;
+    * TODO resourceReaders should be in sync with project rights : readers OR OVERRIDEN
+    * (but project resource writers then rather with owners) ;
+    * TODO null resourceReaders means no check (and empty none ?) */
+   private DCSecurity securityConstraints = null;
+   /** used when !modelLevelSecurityEnabled or no security found in model hierarchy ;
+    * null means global defaults (depends on devmode) */
+   private DCSecurity securityDefaults = null;
+   /** allows different security levels in models (even in same resource) ;
+    * if disabled, model security has not to be defined and is replaced by securityDefaults,
+    * and is the same across all models of this project. Defaults to false. */
+   private boolean modelLevelSecurityEnabled = false;
+   /** allows generic conf & constraints on the project to visible project relation
+    * without having to manage & store a visibleProjectRelation object ; 
+    * to be checked firsthand if any WHATEVER THE RESOURCE (null dataEntity)
+    * when checking rights in a model from another current project ;
+    * TODO resourceReaders should be in sync with project rights : readers OR OVERRIDEN
+    * (but project resource writers then rather with owners) ;
+    * TODO null resourceReaders means no check (and empty none ?),
+    * !isAuthentifiedWritable no write from another project */
+   private DCSecurity visibleSecurityConstraints = null;
+   // NB. no forkStorageConstraint else won't know to store a in b or c if c sees b which sees a... 
+
    /** for unmarshalling only */
    public DCProject() {
       super();
@@ -63,14 +90,26 @@ public class DCProject extends DCPointOfViewBase {
    public DCProject(String name) {
       super(name);
    }
+   public DCProject(String unversionedName, long majorVersion) {
+      super(unversionedName, majorVersion);
+   }
 
+   /**
+    * 
+    * @param type
+    * @return null if its URI forked, else getNonLocalModel(type)
+    */
    public DCModelBase getModel(String type) { // TODO or in projectService ?!
       // TODO rather from cache allAltModelMap
       DCModelBase model = super.getModel(type); // existing local alt model
       if (model != null) {
          return model;
       }
-      return getNonLocalModel(type);
+      DCModelBase nonLocalModel = getNonLocalModel(type);
+      if (forkedUris.contains(SimpleUriService.buildModelUri(type))) {
+         return null;
+      }
+      return nonLocalModel;
    }
    
    /**
@@ -150,7 +189,13 @@ public class DCProject extends DCPointOfViewBase {
       // NB. other impls i.e. routing strategies are allowed by DCUseCasePointOfView
       return modelMap.get(type);
    }
-   
+
+   /**
+    * Visits models in their order of inheritance,
+    * using getModel(parentName) (allows definition forking by forking only definition models)
+    * @param model
+    * @return null if abstract model
+    */
    // can't return null (explodes)
    public DCModelBase getDefinitionModel(DCModelBase model) {
       // TODO cache :
@@ -177,7 +222,12 @@ public class DCProject extends DCPointOfViewBase {
             + "while looking for definition of type " + model.getName()
             + " in project " + this.getName());
    }
-   /** returns null if abstract model */
+   /**
+    * Visits models in their order of inheritance,
+    * using getModel(parentName) (allows data forking by forking only storage models)
+    * @param model
+    * @return null if abstract model
+    */
    public DCModelBase getStorageModel(DCModelBase model) {
       // TODO cache :
       if (model == null) {
@@ -384,6 +434,10 @@ public class DCProject extends DCPointOfViewBase {
       modelMap.put(name, dcModel);
    }
 
+   public HashSet<String> getForkedUris() {
+      return forkedUris;
+   }
+
    /*
     * TODO LATER also check version
     * @param name
@@ -423,6 +477,49 @@ public class DCProject extends DCPointOfViewBase {
 
    public void setDocumentation(String documentation) {
       this.documentation = documentation;
+   }
+   
+   
+   public DCSecurity getSecurityConstraints() {
+      return securityConstraints;
+   }
+
+   public void setSecurityConstraints(DCSecurity securityConstraints) {
+      this.securityConstraints = securityConstraints;
+   }
+
+   public DCSecurity getSecurityDefaults() {
+      return securityDefaults;
+   }
+
+   public void setSecurityDefaults(DCSecurity securityDefaults) {
+      this.securityDefaults = securityDefaults;
+   }
+
+   public boolean isModelLevelSecurityEnabled() {
+      return modelLevelSecurityEnabled;
+   }
+
+   public void setModelLevelSecurityEnabled(boolean modelLevelSecurityEnabled) {
+      this.modelLevelSecurityEnabled = modelLevelSecurityEnabled;
+   }
+
+   public DCSecurity getVisibleSecurityConstraints() {
+      return visibleSecurityConstraints;
+   }
+
+   public void setVisibleSecurityConstraints(DCSecurity visibleSecurityConstraints) {
+      this.visibleSecurityConstraints = visibleSecurityConstraints;
+   }
+   
+   
+   public String toString() {
+      return "project " + this.getName()
+            + "; " + this.getLocalVisibleProjects().stream()
+            .map(p -> p.getName()).collect(Collectors.toList())
+            + "\n   " + this.getLocalModels().stream()
+            .map(m -> m.getName()).collect(Collectors.toList())
+            ;
    }
    
 }

@@ -1,5 +1,6 @@
 package org.oasis.datacore.core.meta.model;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
@@ -29,8 +30,14 @@ public class DCField {
    private int queryLimit = 0;
    /** set on a POST/PUT Resource if not provided */
    private Object defaultValue = null;
-   /** name of aliased field if any or storage entity field if differs from name, if null same as name */
-   private String aliasedStorageName = null;
+   /** name of aliased field if any (or storage entity field if differs from name),
+    * if null same as name, if empty means soft computed therefore not queriable */
+   private LinkedHashSet<String> aliasedStorageNames = null;
+   /** caches [name] */
+   private LinkedHashSet<String> defaultAliasedStorageNames = null;
+   /** means is filled by another field with aliasedStorageName, to avoid both being not in sync ;
+    * meaning has a single aliasedStorageName (where it is read from), unless it is computed live */
+   private boolean readonly = false;
    
    // TODO also :
    // * default rights for Model ?! (or even Mixin ? Field ???)
@@ -52,10 +59,23 @@ public class DCField {
    public DCField() {
       
    }
-   public DCField(String name, String type, boolean required, int queryLimit, String aliasedStorageName) {
-      this(name, type, required, queryLimit);
-      this.aliasedStorageName = aliasedStorageName;
+   
+   public DCField(String name, String type, boolean required, int queryLimit,
+         String singleAliasedStorageName, boolean readonly) {
+      this(name, type, required, queryLimit, singleAliasedStorageName);
+      this.readonly = readonly;
    }
+   
+   public DCField(String name, String type, boolean required, int queryLimit, LinkedHashSet<String> aliasedStorageNames) {
+      this(name, type, required, queryLimit);
+      this.aliasedStorageNames = aliasedStorageNames;
+   }
+   
+   public DCField(String name, String type, boolean required, int queryLimit, String singleAliasedStorageName) {
+      this(name, type, required, queryLimit);
+      this.setSingleAliasedStorageName(singleAliasedStorageName);
+   }
+   
    public DCField(String name, String type, boolean required, int queryLimit) {
       this(name, type);
       this.required = required;
@@ -66,7 +86,7 @@ public class DCField {
          throw new ClassCastException("DCField only supports basic fields and not " + type
                + " (name: " + name + ")");
       }
-      this.name = name;
+      this.setName(name); // inits defaultAliasedStorageNames
       this.type = type;
    }
    /** NB. if there can be defaultValue then the field is not required ! */
@@ -84,7 +104,7 @@ public class DCField {
    }
    /** to be used in inheriting classes only, to skip constraint on type */
    protected DCField(String name, String type, boolean superConstructor) {
-      this.name = name;
+      this.setName(name); // inits defaultAliasedStorageNames
       this.type = type;
    }
    
@@ -114,14 +134,24 @@ public class DCField {
    public Object getDefaultValue() {
       return defaultValue;
    }
-   public String getAliasedStorageName() {
-      return aliasedStorageName;
+   public LinkedHashSet<String> getAliasedStorageNames() {
+      return aliasedStorageNames;
    }
    /**
-    * @return aliasedStorageName if not null, else name
+    * @return aliasedStorageNames if not null (if empty means soft computed therefore not stored),
+    * else name
     */
-   public String getStorageName() {
-      return aliasedStorageName == null ? name : aliasedStorageName;
+   public LinkedHashSet<String> getStorageNames() {
+      return aliasedStorageNames == null ? defaultAliasedStorageNames : aliasedStorageNames;
+   }
+   /**
+    * @return first of aliasedStorageNames if not null nor empty
+    * (if empty means soft computed therefore not queriable), else name
+    */
+   public String getStorageReadName() {
+      return aliasedStorageNames == null ? name
+            : aliasedStorageNames.isEmpty() ? null // i.e. soft computed therefore not queriable
+                  : aliasedStorageNames.iterator().next();
    }
    
    /**
@@ -138,6 +168,8 @@ public class DCField {
 
    public void setName(String name) {
       this.name = name;
+      this.defaultAliasedStorageNames = new LinkedHashSet<String>(2);
+      this.defaultAliasedStorageNames.add(name);
    }
 
    public void setType(String type) {
@@ -156,8 +188,29 @@ public class DCField {
       this.defaultValue = defaultValue;
    }
 
-   public void setAliasedStorageName(String aliasedStorageName) {
-      this.aliasedStorageName = aliasedStorageName;
+   public void setAliasedStorageNames(LinkedHashSet<String> aliasedStorageNames) {
+      this.aliasedStorageNames = aliasedStorageNames;
+   }
+
+   /**
+    * 
+    * @param singleAliasedStorageName null means empty i.e. not stored (soft computed)
+    */
+   public void setSingleAliasedStorageName(String singleAliasedStorageName) {
+      this.aliasedStorageNames = new LinkedHashSet<String>(2);
+      if (singleAliasedStorageName != null) {
+         this.aliasedStorageNames.add(singleAliasedStorageName);
+      } else {// else not stored (soft computed)
+      System.out.println("zaa");
+      }
+   }
+
+   public boolean isReadonly() {
+      return readonly;
+   }
+
+   public void setReadonly(boolean readonly) {
+      this.readonly = readonly;
    }
   
 }

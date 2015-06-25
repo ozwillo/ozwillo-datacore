@@ -22,6 +22,8 @@
    
    
    <!-- Server : -->
+   <bean name="uriService" class="org.oasis.datacore.server.uri.UriService"/><!-- override -core's -->
+   
    <!-- scanning for caching & context -->
    <!-- context:component-scan base-package="org.oasis.datacore.rest.api" />
    <context:component-scan base-package="org.oasis.datacore.rest.client" / -->
@@ -118,7 +120,6 @@
       <jaxrs:serviceBeans>
          <!-- api : -->
          <ref bean="datacoreApiImpl"/>
-         <ref bean="datacore.model.apiImpl"/>
          <ref bean="datacore.rights.apiImpl" /> 
          <ref bean="datacore.contribution.apiImpl" />
          
@@ -154,7 +155,8 @@
          <bean class="org.oasis.datacore.rest.server.cxf.ArrayServerInInterceptor">
             <property name="objectMapper"><ref bean="datacoreApiServer.objectMapper"/></property>
          </bean>
-         <!-- bean class="org.oasis.datacore.rest.server.cxf.ContextServerInInterceptor"/ --><!-- useless since RequestContext wraps CXF context -->
+         <bean class="org.oasis.datacore.rest.server.cxf.ContextServerInInterceptor"/><!-- for Datacore Request Context headers ;
+         NB. others can still be accessed through RequestContext since it wraps CXF context -->
          <bean class="org.oasis.datacore.monitoring.TimeTaggerInInterceptor"/>
          <bean class="org.oasis.datacore.monitoring.ContextInInterceptor"/>
       </jaxrs:inInterceptors>

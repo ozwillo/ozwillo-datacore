@@ -12,6 +12,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.oasis.datacore.common.context.SimpleRequestContextProvider;
 import org.oasis.datacore.contribution.exception.ContributionDatacoreCheckFailException;
 import org.oasis.datacore.contribution.exception.ContributionWithNoModelException;
 import org.oasis.datacore.contribution.exception.ContributionWithoutResourcesException;
@@ -20,9 +21,11 @@ import org.oasis.datacore.contribution.service.ContributionService;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
+import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.core.security.mock.LocalAuthenticationService;
 import org.oasis.datacore.historization.service.HistorizationService;
 import org.oasis.datacore.rest.api.DCResource;
+import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.oasis.datacore.rest.server.resource.ResourceTypeNotFoundException;
@@ -36,6 +39,8 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * TODO reenable once rewritten on PointOfView
@@ -88,6 +93,10 @@ public class ContributionTest {
 	   // in POSTed data resource to create in strict POST mode", rather clean & create :
 	   markaInvestData.cleanDataOfCreatedModels();
       markaInvestData.createDataSample();
+
+      // set project :
+      SimpleRequestContextProvider.setSimpleRequestContext(new ImmutableMap.Builder<String, Object>()
+            .put(DatacoreApi.PROJECT_HEADER, DCProject.OASIS_SAMPLE).build());
 	}
 	
 	private void createData() {
@@ -96,7 +105,6 @@ public class ContributionTest {
 		mockAuthenticationService.logout();
 		DCModelBase fieldModel = modelAdminService.getModelBase(MarkaInvestModel.FIELD_MODEL_NAME);
 		Assert.assertNotNull(fieldModel);
-		fieldModel.getSecurity().setGuestReadable(true);
 		fieldModel.getSecurity().setAuthentifiedReadable(true);
 		fieldModel.getSecurity().setAuthentifiedCreatable(true);
 		fieldModel.getSecurity().setAuthentifiedWritable(true);
@@ -132,7 +140,6 @@ public class ContributionTest {
 		///flushData();
 		DCModelBase fieldModel = modelAdminService.getModelBase(MarkaInvestModel.FIELD_MODEL_NAME);
 		Assert.assertNotNull(fieldModel);
-		fieldModel.getSecurity().setGuestReadable(true);
 		fieldModel.getSecurity().setAuthentifiedReadable(true);
 		fieldModel.getSecurity().setAuthentifiedCreatable(true);
 		fieldModel.getSecurity().setAuthentifiedWritable(true);
@@ -145,7 +152,6 @@ public class ContributionTest {
 		datacoreApiClient.postAllDataInType(markaInvestData.getData().get(MarkaInvestModel.FIELD_MODEL_NAME), MarkaInvestModel.FIELD_MODEL_NAME);
 		DCModelBase fieldModel = modelAdminService.getModelBase(MarkaInvestModel.FIELD_MODEL_NAME);
 		Assert.assertNotNull(fieldModel);
-		fieldModel.getSecurity().setGuestReadable(false);
 		fieldModel.getSecurity().setAuthentifiedReadable(false);
 		fieldModel.getSecurity().setAuthentifiedCreatable(false);
 		fieldModel.getSecurity().setAuthentifiedWritable(false);

@@ -1,7 +1,6 @@
 package org.oasis.datacore.core.meta.model;
 
 import org.oasis.datacore.core.meta.pov.DCPointOfView;
-import org.oasis.datacore.core.meta.pov.DCProject;
 
 
 /**
@@ -21,11 +20,14 @@ public class DCMixin extends DCModelBase {
    /** for unmarshalling only */
    public DCMixin() {
       super();
+      this.setStorage(false);
+      this.setInstanciable(false);
    }
    
-   /** @obsolete */
    public DCMixin(String name) {
-      this(name, DCProject.OASIS_MAIN);
+      super(name);
+      this.setStorage(false);
+      this.setInstanciable(false);
    }
 
    /*public DCMixin(String name, DCPointOfView ... pointOfViews) {

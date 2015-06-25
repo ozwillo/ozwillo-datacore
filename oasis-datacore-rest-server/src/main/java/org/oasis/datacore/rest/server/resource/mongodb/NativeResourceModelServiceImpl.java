@@ -105,6 +105,7 @@ public class NativeResourceModelServiceImpl implements NativeModelService {
       // NB. see details on mongo storing conf in DCEntity.java
       // TODO rather using Enum, see BSON$RegexFlag
             .addMixin(nativeResourceModel) // still has visible fields
+            .addField(new DCField(DCEntity.KEY_B, "string", true, 100000)) // if multiProjectStorage compound index with _uri
             .addField(new DCListField(DCEntity.KEY_AR, new DCField("useless", "string", true, 100000))) // index
             .addField(new DCListField(DCEntity.KEY_R, new DCField("useless", "string", true, 0)))
             .addField(new DCListField(DCEntity.KEY_W, new DCField("useless", "string", true, 0)))
@@ -116,20 +117,28 @@ public class NativeResourceModelServiceImpl implements NativeModelService {
       
       Set<String> indexedPathes = indexDefHolders.stream()
             .map(idf -> idf.getPath()).collect(Collectors.toSet());
-      indexedPathes.add(nonExposedNativeModel.getGlobalFieldMap()
-            .get(this.getNativeIdFieldName(null)).getStorageName()); // indexed on its own
+      
+      // native id field :
+      String idStorageReadName = nonExposedNativeModel.getGlobalFieldMap()
+            .get(this.getNativeIdFieldName(null)).getStorageReadName();
+      if (idStorageReadName == null) {
+         throw new NativeModelException("Native id field should be storable");
+      }
+      indexedPathes.add(idStorageReadName); // indexed on its own
       
       Set<String> unusedIndexedPathes = new HashSet<String>(indexedPathes);
       
       for (DCField nativeIndexedField : nonExposedNativeModel.getGlobalFieldMap().values()) {
-         if (indexedPathes.contains(nativeIndexedField.getStorageName())) {
+         String storageReadName = nativeIndexedField.getStorageReadName();
+         if (storageReadName != null // else not stored i.e. soft computed therefore unqueriable
+               && indexedPathes.contains(storageReadName)) {
             if (!nativeIndexedField.isIndexed()) { // NB. for list fields, its element's
                throw new NativeModelException("Native DCModel is not up to date with DCEntity annotations : "
                      + "Native model field " + nativeIndexedField.getName()
-                     + " is @Indexed in DCEntity (with storage name " + nativeIndexedField.getStorageName()
+                     + " is @Indexed in DCEntity (with storage name " + storageReadName
                      + ") but its DCField is not indexed !");
             }
-            unusedIndexedPathes.remove(nativeIndexedField.getStorageName());
+            unusedIndexedPathes.remove(storageReadName);
          }
       }
 

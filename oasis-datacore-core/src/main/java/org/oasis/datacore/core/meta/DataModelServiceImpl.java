@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
@@ -34,6 +36,7 @@ public class DataModelServiceImpl implements DCModelService {
    /** to use default projects building */
    @Value("${datacore.devmode}")
    private boolean devmode;
+   
    @Autowired
    ///@Qualifier("datacore.cxfJaxrsApiProvider")
    //protected DCRequestContextProvider requestContextProvider;
@@ -48,7 +51,11 @@ public class DataModelServiceImpl implements DCModelService {
    //TODO having MICCRootTypesStrategy.rootTypes = cofr, coit... or MICCModelOwnerStrategy.modelOwners = cofr_owners, coit_owners...
    
    private Map<String,DCProject> projectMap = new HashMap<String, DCProject>();
-   
+
+   /** not in project because more efficient without complex cache,
+    * LATER maybe make it a cache */
+   private HashMap<String,LinkedHashSet<String>> forkedUriToProjectNames = null;
+
 
    /** TODO cache */
    @Override
@@ -78,12 +85,14 @@ public class DataModelServiceImpl implements DCModelService {
    }
    @Override
    public DCModelBase getDefinitionModel(DCModelBase model) {
-      DCProject project = getProject(model.getProjectName()); // NB. can't be null
+      DCProject project = getProject(); // NB. can't be null
+      // (and not getProject(model.getProjectName()) else dcmi:mixin_0 fork not returned for dcmo:model_0)
       return project.getDefinitionModel(model);
    }
    @Override
    public DCModelBase getStorageModel(DCModelBase model) {
-      DCProject project = getProject(model.getProjectName()); // NB. can't be null
+      DCProject project = getProject(); // NB. can't be null
+      // (and not getProject(model.getProjectName()) else dcmi:mixin_0 fork not returned for dcmo:model_0)
       return project.getStorageModel(model);
    }
    /**
@@ -123,14 +132,19 @@ public class DataModelServiceImpl implements DCModelService {
    }
    
    @Override
-   public List<DCProject> getVisibleProjects(DCProject fromProject) {
-      List<DCProject> allVisibleProjects = new ArrayList<DCProject>();
-      allVisibleProjects.add(fromProject);
-      for (DCProject localVisibleProject : fromProject.getLocalVisibleProjects()) {
-         // TODO cycle ???
-         allVisibleProjects.addAll(dataModelService.getVisibleProjects(localVisibleProject));
-      }
+   public LinkedHashSet<DCProject> getVisibleProjects(DCProject fromProject) {
+      LinkedHashSet<DCProject> allVisibleProjects = new LinkedHashSet<DCProject>();
+      fillVisibleProjects(fromProject, allVisibleProjects);
       return allVisibleProjects;
+   }
+   public void fillVisibleProjects(DCProject fromProject, LinkedHashSet<DCProject> filledVisibleProjects) {
+      filledVisibleProjects.add(fromProject);
+      for (DCProject localVisibleProject : fromProject.getLocalVisibleProjects()) {
+         // TODO cycle ??? TODO better order !!
+         if (!filledVisibleProjects.contains(localVisibleProject)) {
+            this.fillVisibleProjects(localVisibleProject, filledVisibleProjects);
+         } // else ex. project seen by everybody
+      }
    }
    @Override
    public List<DCProject> getProjectsSeing(DCProject project) {
@@ -145,32 +159,70 @@ public class DataModelServiceImpl implements DCModelService {
       }
       return projectsSeingIt;
    }
+
+   @Override
+   public LinkedHashSet<String> getVisibleProjectNames() {
+      return new LinkedHashSet<String>(this.getVisibleProjects(this.getProject()).stream()
+            .map(p -> p.getName()).collect(Collectors.toList()));
+   }
+   @Override
+   public LinkedHashSet<String> getForkedUriProjectNames(String uri) {
+      if (forkedUriToProjectNames == null) {
+         // NB. not required to be synchronized, because there's no problem if it's
+         // done twice at the same time
+         this.forkedUriToProjectNames = buildForkedUriToProjectNames(
+               this.projectMap.values(), new HashMap<String,LinkedHashSet<String>>(),
+               new HashSet<DCProject>(this.projectMap.size()));
+      }
+      return forkedUriToProjectNames.get(uri);
+   }
+   private HashMap<String, LinkedHashSet<String>> buildForkedUriToProjectNames(
+         Collection<DCProject> projects, HashMap<String, LinkedHashSet<String>> res,
+         HashSet<DCProject> alreadyHandledProjects) {
+      for (DCProject project : projects) {
+         if (alreadyHandledProjects.contains(project)) {
+            continue;
+         }
+         buildForkedUriToProjectNames(project.getLocalVisibleProjects(), res, alreadyHandledProjects);
+         if (project.getForkedUris() != null) {
+            for (String forkedUri : project.getForkedUris()) {
+               LinkedHashSet<String> forkingProjects = res.get(forkedUri);
+               if (forkingProjects == null) {
+                  forkingProjects = new LinkedHashSet<String>();
+                  res.put(forkedUri, forkingProjects);
+               }
+               forkingProjects.add(project.getName());
+            }
+         }
+         alreadyHandledProjects.add(project);
+      }
+      return res;
+   }
+
+   @Override
+   public LinkedHashSet<String> getVisibleProjectNames(Collection<String> projectNames) {
+      LinkedHashSet<DCProject> allVisibleProjects = new LinkedHashSet<DCProject>();
+      for (String projectName : projectNames) {
+         fillVisibleProjects(this.getProject(projectName), allVisibleProjects);
+      }
+      return new LinkedHashSet<String>(allVisibleProjects.stream()
+            .map(p -> p.getName()).collect(Collectors.toList()));
+   }
+
+   @Override
+   public LinkedHashSet<String> getVisibleProjectNames(String projectName) {
+      LinkedHashSet<DCProject> allVisibleProjects = new LinkedHashSet<DCProject>();
+      fillVisibleProjects(this.getProject(projectName), allVisibleProjects);
+      return new LinkedHashSet<String>(allVisibleProjects.stream()
+            .map(p -> p.getName()).collect(Collectors.toList()));
+   }
    
    @Override
-   public DCModel getModel(String type) {
-      DCProject project = getProject(); // NB. can't be null
-      // NB. devmode default alt models building is done in there :
-      DCModelBase model = project.getModel(type);
-      if (model == null) {
-         return null;
-      }
-      if (!model.isStorage()) {
-         return null; // actually a mixin NOOOOOOOOOOOOOO TODO Instanciable
-      }
-      return (DCModel) model; // TODO handle changes of isStorage
-   }
-   // includes models (?)
-   @Override
-   public DCModelBase getMixin(String type) {
-      DCProject project = getProject(); // NB. can't be null
-      // NB. devmode default alt models building is done in there :
-      return project.getModel(type); // TODO if isStorageOnly, get inherited model
-   }
    public DCProject getProject(String projectName) {
       DCProject project = projectMap.get(projectName);
       if (project == null) { // && devmode
          // devmode default projects building :
-         if (projectName.endsWith(".test")) {
+         /*if (projectName.endsWith(".test")) {
             String testedProjectName = projectName.substring(0,
                   projectName.length() - ".test".length());
             DCProject testedProject = projectMap.get(testedProjectName);
@@ -188,23 +240,18 @@ public class DataModelServiceImpl implements DCModelService {
          } else if (DCProject.OASIS_SAMPLE.equals(projectName)) {
             project = new DCProject(DCProject.OASIS_SAMPLE);
             this.addProject(project);
-         }
-      }
-      /*if (project == null) {
-         throw new ProjectException(projectName, "Unknown project");
-      }*/
-      if (project == null) {
-         throw new ProjectException(projectName, "Unknown project");
+         }*/
       }
       return project;
    }
+   @Override
    public DCProject getProject() {
       String projectName = (String) requestContextProviderFactory.get(DCRequestContextProvider.PROJECT);
       if (projectName == null) {
          projectName = DCProject.OASIS_MAIN; // default TODO TODO rather oasis.test
       }
       if (projectName == null) { // TODO or default
-         throw new ProjectException("current", "Unable to find current project");
+         throw new ProjectException("[current]", "Unable to find current project");
       }
       DCProject project = getProject(projectName);
       if (project == null) {
@@ -212,34 +259,27 @@ public class DataModelServiceImpl implements DCModelService {
       }
       return project;
    }
-   public DCProject getMainProject() {
-      return getProject(DCProject.OASIS_MAIN);
-   }
-   public DCProject getSampleProject() {
-      return getProject(DCProject.OASIS_SAMPLE);
-   }
 
    @Override
-   public DCField getFieldByPath(DCModel dcModel, String fieldPath) {
+   public DCField getFieldByPath(DCModelBase dcModel, String fieldPath) {
       // see impl in DatacoreApiImpl BUT pb providing also lastHighestListField
       throw new UnsupportedOperationException();
    }
 
    @Override
-   public Collection<DCModel> getModels() {
-      ArrayList<DCModel> models = new ArrayList<DCModel>();
+   public Collection<DCModelBase> getModels() {
+      return getProject().getModels();
+   }
+
+   @Override
+   public Collection<DCModelBase> getModels(boolean isInstanciable) {
+      ArrayList<DCModelBase> models = new ArrayList<DCModelBase>();
       for (DCModelBase model : getProject().getModels()) {
-         if (model.isStorage()) {
-            models.add((DCModel) model); // TODO handle changes to isStorage
+         if (model.isInstanciable() == isInstanciable) {
+            models.add(model);
          }
       }
       return models;
-   }
-
-   // also contains models TODO is it OK ?
-   @Override
-   public Collection<DCModelBase> getMixins() {
-      return getProject().getModels(); // TODO TODO // NB. project can't be null
    }
    
    
@@ -249,39 +289,73 @@ public class DataModelServiceImpl implements DCModelService {
 
    /** also adds to mixin TODO is it OK ? */
    public void addModel(DCModelBase dcModel) {
-      getProject(dcModel.getProjectName()).addLocalModel(dcModel); // TODO LATER better : check, in context...
+      getModelProjectOrSetCurrent(dcModel).addLocalModel(dcModel); // TODO LATER better : check, in context...
+   }
+   
+   private DCProject getModelProjectOrSetCurrent(DCModelBase dcModel) {
+      String projectName = dcModel.getProjectName();
+      DCProject project;
+      if (projectName != null) {
+         project = getProject(projectName);
+      } else {
+         project = getProject(); // current
+         dcModel.setPointOfView(project); // sets its projectName
+      }
+      return project;
    }
    
    /**  @obsolete ONLY TO CREATE DERIVED MODELS ex. Contribution, TODO LATER rather change their name ?!? */
    public void addModel(DCModel dcModel, String name) {
-      getProject().addModel(dcModel, name); // NB. project can't be null
+      getModelProjectOrSetCurrent(dcModel).addModel(dcModel, name); // NB. project can't be null
    }
 
    public void removeModel(DCModelBase dcModel) {
-      getProject(dcModel.getProjectName()).removeLocalModel(dcModel.getName()); // TODO LATER better : check, in context...
+      getModelProjectOrSetCurrent(dcModel).removeLocalModel(dcModel.getName()); // TODO LATER better : check, in context...
    }
    
    /** @obsolete rather use removeModel(model) to use the right project */
    public void removeModel(String name) {
       getProject().removeLocalModel(name); // NB. project can't be null
    }
-
-   /**
-    * Checks whether its used mixin models are already known (in same version)
-    * LATER do the same for fields ?
-    * @param mixin
-    */
-   public void addMixin(DCModelBase mixin) {
-      getProject().addLocalModel(mixin); // NB. project can't be null
-   }
-   
-   /** @obsolete ather use removeModel(model) to use the right project */
-   public void removeMixin(String name) {
-      getProject().removeLocalModel(name);
-   }
    
    public void addProject(DCProject project) {
       projectMap.put(project.getName(), project);
+      this.forkedUriToProjectNames = null;
+   }
+   
+   public void removeProject(DCProject project) {
+      projectMap.remove(project.getName());
+      this.forkedUriToProjectNames = null;
+   }
+   
+   public void updateProject(DCProject project) {
+      this.forkedUriToProjectNames = null;
+   }
+
+   /** helper */
+   public void addForkedUri(DCProject project, String forkedUri) {
+      if (project.getForkedUris().add(forkedUri)) {
+         this.updateProject(project);
+      }
+   }
+
+   /** helper */
+   public void removeForkedUri(DCProject project, String forkedUri) {
+      if (project.getForkedUris().remove(forkedUri)) {
+         this.updateProject(project);
+      }
+   }
+
+   public void addLocalModel(DCProject project, DCModelBase localModel) {
+      this.addLocalModel(project, localModel, false);
+   }
+
+   public void addLocalModel(DCProject project, DCModelBase localModel, boolean forkModel) {
+      project.addLocalModel(localModel);
+      if (forkModel) {
+         // allowing fork of localModel :
+         this.addForkedUri(project, SimpleUriService.buildModelUri(localModel.getName()));
+      }
    }
    
 }

@@ -13,7 +13,6 @@ import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
 import org.oasis.datacore.core.init.InitableBase;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
-import org.oasis.datacore.core.meta.ModelException;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.pov.DCProject;
@@ -57,6 +56,7 @@ public class LoadPersistedModelsAtInit extends InitableBase {
    //protected DCRequestContextProvider requestContextProvider;
    protected DCRequestContextProviderFactory requestContextProviderFactory;
 
+   /** after all java-generated models have been built, and metamodel persisted */
    @Override
    public int getOrder() {
       return 1000000;
@@ -94,7 +94,7 @@ public class LoadPersistedModelsAtInit extends InitableBase {
                   throw new ResourceException("Found model " + modelName
                         + " having wrong project " + modelProjectName + " while loading project, "
                         + "possibly obsolete one that must be deleted from " + projectName + "."
-                        + dataModelAdminService.getStorageModel(dataModelAdminService.getModel(
+                        + dataModelAdminService.getStorageModel(dataModelAdminService.getModelBase(
                               ResourceModelIniter.MODEL_MODEL_NAME)).getCollectionName() + " collection.",
                         modelResource, dataModelAdminService.getProject(projectName));
                }
@@ -136,7 +136,10 @@ public class LoadPersistedModelsAtInit extends InitableBase {
    }
 
    /**
-    * Loads projects & povs & models from oasis.main project only, and from there their models.
+    * Loads projects & their models from oasis.meta project only, and from there their models.
+    * Project that are already in memory are kept (and only enriched by : additional visible projects),
+    * allowing to hardcode default projects until projet management UI is complete. They must
+    * however be persisted, else their models won't be loaded.
     * @throws QueryException
     */
    private void loadProjects() throws QueryException {

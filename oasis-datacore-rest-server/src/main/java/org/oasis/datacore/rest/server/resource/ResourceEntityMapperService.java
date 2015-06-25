@@ -395,12 +395,12 @@ public class ResourceEntityMapperService {
             Map<String, Object> dataMap = (Map<String,Object>) resourceValue;
             Object entityValueUriFound = dataMap.get(DCResource.KEY_URI);
             if (entityValueUriFound == null) {
-               throw new ResourceParsingException("Can't find uri among properties of Object value of "
-                     + "resource Field but only " + dataMap);
+               throw new ResourceParsingException("Can't find " + DCResource.KEY_URI
+                     + " among properties of Object value of resource Field but only " + dataMap);
             } else if (!(entityValueUriFound instanceof String)) {
-               throw new ResourceParsingException("Property uri of Object value of "
-                     + "resource Field is not a String but " + entityValueUriFound
-                     + " (" + entityValueUriFound.getClass() + ")");
+               throw new ResourceParsingException("Property " + DCResource.KEY_URI
+                     + " of Object value of resource Field is not a String but "
+                     + entityValueUriFound + " (" + entityValueUriFound.getClass() + ")");
             }
             String entityValueUri = (String) entityValueUriFound;
             
@@ -417,19 +417,21 @@ public class ResourceEntityMapperService {
                   // Javascript don't support Long so allow them as String :
                   entityValueVersion = Long.parseLong((String) entityValueVersionFound);
                } catch (NumberFormatException nfex) {
-                  resourceParsingContext.addWarning("Embedded resource version is not "
-                        + "a long-formatted String but " + entityValueVersion);
+                  resourceParsingContext.addWarning("Embedded resource " + DCResource.KEY_VERSION
+                        + " is not a long-formatted String but " + entityValueVersion);
                }
             } else if (entityValueVersionFound != null) {
-               resourceParsingContext.addWarning("Embedded resource version is not "
-                     + "an int, a long or a long-formatted String but " + entityValueVersion);
+               resourceParsingContext.addWarning("Embedded resource " + DCResource.KEY_VERSION
+                     + " is not an int, a long or a long-formatted String but " + entityValueVersion);
             } // else handled in subResourceToEntityFields
 
             // get types if any :
             Object entityValueTypesFound = dataMap.get(DCResource.KEY_TYPES);
             List<String> entityValueTypes = null;
             if (entityValueTypesFound instanceof List<?>) {
-               entityValueTypes = (List<String>) entityValueTypesFound;
+               @SuppressWarnings("unchecked")
+               List<String> entityValueTypesFoundList = (List<String>) entityValueTypesFound;
+               entityValueTypes = entityValueTypesFoundList;
                if (entityValueTypes.isEmpty()) {
                   // allowed
                   resourceParsingContext.addWarning("No embedded resource types");
@@ -480,8 +482,8 @@ public class ResourceEntityMapperService {
       
       Map<String, Object> dataMap = properties;
       if (entityValueUri == null) {
-         throw new ResourceParsingException("Can't find uri among properties of Object value of "
-               + "resource Field but only " + dataMap);
+         throw new ResourceParsingException("Can't find " + DCResource.KEY_URI
+               + " among properties of Object value of resource Field but only " + dataMap);
       }
       // check uri, type & get entity (as above) :
       DCURI dcUri;
@@ -539,7 +541,10 @@ public class ResourceEntityMapperService {
          
       } else {
          // assuming fully embedded Resource, similar to new entity
-         valueModelOrMixin = modelService.getMixin(entityValueTypes.get(0)); // ?? NB. does also model
+         valueModelOrMixin = modelService.getModelBase(entityValueTypes.get(0)); // ?? NB. does also model
+         if (valueModelOrMixin.isInstanciable()) {
+            // TODO KO ?
+         }
          // ALLOWS EX. /dc/type/city/Paris/townhall embedded resource of mixin type townhall
          // TODO TODO better with polymorphic storage (rather DCModel.getStorageModel() than inherited) & contextual point of view
          // ex. of alias URI : /dc/type/city/FR/Valence#townhall or /dc/type/city/FR-Valence/townhall
@@ -784,8 +789,10 @@ public class ResourceEntityMapperService {
          resourceParsingContext.enter(null, null, dcField, resourceValue);
          Object entityValue = resourceToEntityValue(resourceValue,
                reusedExistingEntityValue, dcField, resourceParsingContext);
-         if (entityMap != null) {
-            entityMap.put(dcField.getStorageName(), entityValue); // field alias  
+         if (entityMap != null && !dcField.isReadonly()) {
+            for (String storageName : dcField.getStorageNames()) { // NB. can't be null (but none means not stored i.e. soft computed)
+               entityMap.put(storageName, entityValue); // field alias
+            }
          } // else not needed ex. reused existing value
       } catch (ResourceParsingException rpex) {
          resourceParsingContext.addError("Error while parsing Field value " + resourceValue
@@ -826,6 +833,14 @@ public class ResourceEntityMapperService {
          entityToResourceProps(entity.getProperties(),
                model.getGlobalFieldMap(), resourceProps);
       } else {
+         // #71 applying mixins view filtering :
+         // TODO LATER (mixin) views also / rather as mongo field projection (and possibly even
+         // to enforce "read" rights, though if resource-level rights are enabled entity is required
+         // to compute rights, and anyway post filtering in EntityPermissionEvaluator & entityToResource
+         // will still be required to apply model/mixin-level rights)
+         // http://docs.mongodb.org/manual/tutorial/project-fields-from-query-results/
+         // #71 apply mixins view filtering :
+         
          for (DCModelBase mixin : model.getMixins()) {
             if (viewMixinNames != null && !viewMixinNames.contains(mixin.getName())) {
                continue;
@@ -909,21 +924,20 @@ public class ResourceEntityMapperService {
    private void entityToResourceProps(
          Map<String, Object> entityProperties, Map<String, DCField> dcFieldMap,
          Map<String, Object> resourceProps) {
-      // iterating only over existing values (not to provide any others)  :
-      for (String fieldName : entityProperties.keySet()) {
+      for (DCField field : dcFieldMap.values()) {
+         String fieldName = field.getName();
          if (resourceProps.containsKey(fieldName)) {
             continue; // may happen if iterating on each view mixin separately
          }
-         DCField dcField = dcFieldMap.get(fieldName);
-         if (dcField == null) {
-            // may be a native field, has to be handled above as subresource
-            continue;
-         }
-         Object resourcePropValue = entityToResourceProp(
-               entityProperties.get(dcField.getStorageName()), dcField); // field alias
-         if (resourcePropValue != null) {
-            resourceProps.put(fieldName, resourcePropValue);
-         }
+         String storageReadName = field.getStorageReadName();
+         if (storageReadName != null
+               && entityProperties.containsKey(storageReadName)) { // only filtered values (not to provide any others)
+            Object resourcePropValue = entityToResourceProp(
+                  entityProperties.get(storageReadName), field); // field alias
+            if (resourcePropValue != null) {
+               resourceProps.put(fieldName, resourcePropValue);
+            }
+         } // else not stored i.e. soft computed
       }
    }
 
@@ -1002,7 +1016,7 @@ public class ResourceEntityMapperService {
             return entityPropValue;
          } else if (entityPropValue instanceof Map<?,?>) {
             String resourceType = ((DCResourceField) dcField).getResourceType();
-            DCModelBase mixinOrModel = modelService.getMixin(resourceType); // does also model
+            DCModelBase mixinOrModel = modelService.getModelBase(resourceType);
             if (mixinOrModel == null) {
                throw new IllegalArgumentException("Can't find mixin or model "
                      + resourceType + " referenced by subresource field "

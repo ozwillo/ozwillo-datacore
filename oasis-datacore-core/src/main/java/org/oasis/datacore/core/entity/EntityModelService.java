@@ -1,17 +1,20 @@
 package org.oasis.datacore.core.entity;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.ModelException;
 import org.oasis.datacore.core.meta.ModelNotFoundException;
+import org.oasis.datacore.core.meta.SimpleUriService;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.pov.DCProject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Component;
 
 
@@ -48,7 +51,14 @@ public class EntityModelService {
 
    @Autowired
    private DataModelServiceImpl projectService;
-   
+
+   /** for index testing ON MODELS ONLY in ResourceModelTest, else index is always _b_1__uri_1 */
+   private boolean disableMultiProjectStorageCriteriaForTesting = false;
+      
+   /** shortcut, to avoid having to inject also ModelService in EntityService */
+   public DCProject getProject() {
+      return modelService.getProject();
+   }
    /**
     * (instanciable model)
     * Helper using entity cached transient model (maintained over the course
@@ -120,9 +130,14 @@ public class EntityModelService {
                + "it's probably obsolete i.e. its model has changed since (only in test) : "
                + dataEntity.getUri()); // TODO custom ex ?
       }*/
-      dataEntity.setCachedModel(cachedModel); // = cachedInstanciableModel
-      dataEntity.setCachedStorageModel(cachedStorageModel);
-      dataEntity.setCachedDefinitionModel(cachedDefinitionModel);
+      fillDataEntityCaches(dataEntity, cachedModel, cachedStorageModel, cachedDefinitionModel);
+   }
+   /** to be called on newly built / retrieved dataEntity */
+   public void fillDataEntityCaches(DCEntity dataEntity,
+         DCModelBase model, DCModelBase storageModel, DCModelBase definitionModel) {
+      dataEntity.setCachedModel(model); // = cachedInstanciableModel
+      dataEntity.setCachedStorageModel(storageModel);
+      dataEntity.setCachedDefinitionModel(definitionModel);
    }
 
    public String getModelName(DCEntity dataEntity) {
@@ -136,11 +151,11 @@ public class EntityModelService {
    /**
     * 
     * @param model
-    * @return
+    * @return not null
     * @throws ModelNotFoundException if storage model not found
     * TODO LATER better : put it in data health / governance inbox, through event
     */
-   public String getCollectionName(DCModelBase model) throws ModelNotFoundException {
+   public DCModelBase getStorageModel(DCModelBase model) throws ModelNotFoundException {
       DCModelBase storageModel = modelService.getStorageModel(model);
       if (storageModel == null) {
          // TODO LATER better : put it in data health / governance inbox, through event
@@ -150,7 +165,27 @@ public class EntityModelService {
                + "has changed since (only in test, in which case the missing model "
                + "must first be created again before patching the entity).");
       }
-      return storageModel.getCollectionName();
+      
+      if (!storageModel.isMultiProjectStorage()) { // NOO rather done in project.getModel() (?)
+         // check if not forked :
+         LinkedHashSet<String> forkedUriInvisibleProjectNames =
+               getForkedUriInvisibleProjectNames(SimpleUriService.buildModelUri(model.getName()));
+         if (forkedUriInvisibleProjectNames != null) {
+               ///&& !namesOfProjectsForkingUri.contains(storageModel.getProjectName())) { // else stored in forking project (most common case)
+            // (unless uri is visible through another visible project than projects that fork it,
+            // but then it would be an inconsistent configuration)
+            if (forkedUriInvisibleProjectNames.contains(storageModel.getProjectName())) {
+               // TODO TODO TODOOOO do we still get there since project.getModel() checks forked URI ?
+               throw new ModelNotFoundException(model, modelService.getProject(),
+                     "Can't find storage model of model in visible models of projects "
+                     + "(though it is in visible projects but among those where "
+                     + "its URI has been made invisible by forking it above : "
+                     + forkedUriInvisibleProjectNames);
+            }
+         }
+      } // else must be checked using entity criteria
+      
+      return storageModel;
    }
    
    /**
@@ -158,7 +193,7 @@ public class EntityModelService {
     * TODO LATER better : put it in data health / governance inbox, through event
     * @param dataEntity
     * @return
-    * @throws ModelNotFoundException if model or storage not found (same remark)
+    * @throws ModelNotFoundException if model or storage not found (same remark) or not instanciable
     */
    public String getCollectionName(DCEntity dataEntity) throws ModelNotFoundException {
       DCProject project = projectService.getProject(); // NB. can't be null ; TODO add method with param
@@ -181,16 +216,56 @@ public class EntityModelService {
          // TODO LATER better : put it in data health / governance inbox, through event
          //throw new ModelException(dataEntity.getModelName(), project, msg);
       }
-      DCModelBase storageModel = modelService.getStorageModel(model);
-      if (storageModel == null) {
-         // TODO LATER better : put it in data health / governance inbox, through event
-         throw new ModelNotFoundException(model, modelService.getProject(),
-               "Can't find storage (model) for DCEntity, it's probably obsolete "
-               + "i.e. its model (and inherited mixins) has changed since (only in test, in which case "
-               + "the missing model must first be created again before patching the entity.) : "
-               + dataEntity.getUri());
+      return getStorageModel(model).getCollectionName();
+   }
+
+   public LinkedHashSet<String> getForkedUriInvisibleProjectNames(String forkedUri) {
+      LinkedHashSet<String> forkedUriProjectNames = modelService.getForkedUriProjectNames(forkedUri);
+      if (forkedUriProjectNames == null) {
+            ///|| namesOfProjectsForkingUri.contains(storageModel.getProjectName())) { // else stored in forking project (most common case)
+         return null; // none
       }
-      return storageModel.getCollectionName();
+      LinkedHashSet<String> visibleProjectNames = modelService.getVisibleProjectNames();
+      String[] forkedUriProjectNameArray = forkedUriProjectNames.toArray(new String[forkedUriProjectNames.size()]);
+      for (int i = forkedUriProjectNameArray.length - 1; i >= 0; i--) { // starting from last
+         String forkedUriProjectName = forkedUriProjectNameArray[i];
+         if (visibleProjectNames.contains(forkedUriProjectName)) {
+            LinkedHashSet<String> forkedUriInvisibleProjectNames = new LinkedHashSet<String>(modelService
+                  .getVisibleProjectNames(forkedUriProjectName));
+            forkedUriInvisibleProjectNames.remove(forkedUriProjectName); // uri still OK in forking projects
+            // (unless uri is visible through another visible project than projects that fork it,
+            // but then it would be an inconsistent configuration)
+            return forkedUriInvisibleProjectNames;
+         }
+      }
+      return null;
+   }
+
+   public LinkedHashSet<String> getVisibleProjectNames(String uri) {
+      LinkedHashSet<String> visibleProjectNames = modelService.getVisibleProjectNames();
+      if (uri != null) {
+         LinkedHashSet<String> forkedUriInvisibleProjectNames = getForkedUriInvisibleProjectNames(uri);
+         if (forkedUriInvisibleProjectNames != null) {
+            LinkedHashSet<String> uriVisibleProjectNames = new LinkedHashSet<String>(visibleProjectNames);
+            uriVisibleProjectNames.removeAll(forkedUriInvisibleProjectNames);
+            return uriVisibleProjectNames;
+         }
+      } // else LDP
+      return visibleProjectNames;
    }
    
+   /** shared between entity and LDP query services */
+   public void addMultiProjectStorageCriteria(Criteria criteria, DCModelBase storageModel, String uri) {
+      // TODO handle uri null i.e. LDP query case, using $first aggregation on _uri sorted by _b
+      if (storageModel.isMultiProjectStorage() && !disableMultiProjectStorageCriteriaForTesting) {
+         criteria.and(DCEntity.KEY_B).in(this.getVisibleProjectNames(uri));
+      } // (else forkedUris would have been handled in project.get(Storage)Model())
+   }
+
+   public boolean isDisableMultiProjectStorageCriteriaForTesting() {
+      return disableMultiProjectStorageCriteriaForTesting;
+   }
+   public void setDisableMultiProjectStorageCriteriaForTesting(boolean disableMultiProjectStorageCriteriaForTesting) {
+      this.disableMultiProjectStorageCriteriaForTesting = disableMultiProjectStorageCriteriaForTesting;
+   }
 }

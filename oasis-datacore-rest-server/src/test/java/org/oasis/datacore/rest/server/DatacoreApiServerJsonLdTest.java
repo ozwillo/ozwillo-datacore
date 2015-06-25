@@ -13,9 +13,12 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.oasis.datacore.common.context.SimpleRequestContextProvider;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryServiceImpl;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
+import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.rest.api.DCResource;
+import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.binding.DatacoreObjectMapper;
 import org.oasis.datacore.rest.api.util.JsonLdJavaRdfProvider;
 import org.oasis.datacore.rest.api.util.UriHelper;
@@ -33,6 +36,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import com.github.jsonldjava.core.JsonLdOptions;
 import com.github.jsonldjava.core.JsonLdProcessor;
 import com.github.jsonldjava.utils.JsonUtils;
+import com.google.common.collect.ImmutableMap;
 
 
 /**
@@ -94,9 +98,12 @@ public class DatacoreApiServerJsonLdTest {
    
    
    @Before
-   public void cleanDataAndCache() {
+   public void cleanDataAndCacheAndSetProject() {
       cityCountrySample.cleanDataOfCreatedModels(); // (was already called but this first cleans up data)
       datacoreApiClient.getCache().clear(); // to avoid side effects
+      
+      SimpleRequestContextProvider.setSimpleRequestContext(new ImmutableMap.Builder<String, Object>()
+            .put(DatacoreApi.PROJECT_HEADER, DCProject.OASIS_SAMPLE).build());
    }
    @After
    public void resetDefaults() {
@@ -248,7 +255,7 @@ public class DatacoreApiServerJsonLdTest {
       
       options.format = "text/turtle";
       String turtlefRdf = (String) JsonLdProcessor.toRDF(jsonObject, options);
-      Assert.assertTrue(turtlefRdf.startsWith("<http://data-test.oasis-eu.org/dc/type/sample.city.city/Russia/Moscow> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <sample.city.city> ;"));
+      Assert.assertTrue(turtlefRdf.startsWith("<http://data-test.oasis-eu.org/dc/type/sample.city.city/Russia/Moscow> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <sample.city.city>"));
       Assert.assertTrue(turtlefRdf.contains("<city:populationCount> 10000000"));
       Assert.assertTrue(turtlefRdf.contains("\"Moskva\"@ru"));
       ///System.out.println(JsonUtils.toPrettyString(turtlefRdf));
