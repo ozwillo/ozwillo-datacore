@@ -3,10 +3,12 @@ package org.oasis.datacore.playground.security.rest;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.Path;
@@ -25,7 +27,9 @@ import org.oasis.datacore.playground.security.TokenEncrypter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 /**
@@ -56,17 +60,28 @@ public class PlaygroundAuthenticationTokenResource extends PlaygroundAuthenticat
    
    @Autowired
    private TokenEncrypter tokenEncrypter;
+
+   /** to parse user & token info */
+   public ObjectMapper jsonNodeMapper = new ObjectMapper();
    
    @PostConstruct
    protected void init() {
       cookieSecure = !devmode; // cookie secure requires HTTPS see https://www.owasp.org/index.php/SecureFlag
    }
-
+   
    @GET
    @Path("")
    public void handleKernelCodeRedirectAndExchangeForToken(
-         @QueryParam("code") String code, @QueryParam("state") String state)
+         @QueryParam("code") @DefaultValue("") String code, @QueryParam("state") String state,
+         @QueryParam("error") @DefaultValue("") String error,
+         @QueryParam("error_description") @DefaultValue("") String errorDescription)
                throws BadRequestException, ClientErrorException, InternalServerErrorException {
+      if (code == null || code.trim().length() == 0) {
+         throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+               .entity("Kernel callback raises error : " + error + " (" + errorDescription + ")")
+                     .type(MediaType.TEXT_PLAIN).build());
+      }
+      
       String clientIdColonSecret = datacoreOAuthClientId + ':' + datacoreOAuthClientSecret;
       String tokenExchangeBasicAuth = "Basic " + new String(Base64.encodeBase64(clientIdColonSecret.getBytes()));
       WebClient tokenExchangeClient = WebClient.create(accountsTokenEndpointUrl) // "http://requestb.in/saf6sosa"
@@ -99,11 +114,11 @@ public class PlaygroundAuthenticationTokenResource extends PlaygroundAuthenticat
       }
       JsonNode errorNode = tokenExchangeResJsonNode.get("error");
       if (errorNode != null) {
-         String error = errorNode.asText(); // NB. more lenient thant textValue()
+         String errorMsg = errorNode.asText(); // NB. more lenient thant textValue()
          int errorStatus = (Status.Family.SUCCESSFUL != tokenExchangeRes.getStatusInfo().getFamily())
                ? tokenExchangeRes.getStatus() : Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
          throw new WebApplicationException(Response.status(errorStatus)
-               .entity("Returned tokenExchangeResBody for exchanging code is error : " + error)
+               .entity("Returned tokenExchangeResBody for exchanging code is error : " + errorMsg)
                      .type(MediaType.TEXT_PLAIN).build());
       }
       // also checking for error status even if no JSON error info :
@@ -148,19 +163,21 @@ public class PlaygroundAuthenticationTokenResource extends PlaygroundAuthenticat
       }
       // parsing response to get token :
       // NB. no need to go beyond explicit bare JSON parsing (MessageBodyProvider etc.)
-      String userInfoResBody = userInfoRes.readEntity(String.class);
-      /*JsonNode userInfoResJsonNode;
+      String userInfoResBody = userInfoRes.readEntity(String.class); // ex. {"email":"m.d@openwide.fr","email_verified":true,"locale":"und","name":"Marc Dutoo","nickname":"Marc Dutoo","sub":"9...c","updated_at":1426608912,"zoneinfo":"Europe/Paris"}
+      Map<String,Object> userInfo;
       try {
-         userInfoResJsonNode = jsonNodeMapper.readTree(userInfoResBody);
+         @SuppressWarnings("unchecked")
+         Map<String,Object> parsedUserInfo = jsonNodeMapper.readValue(userInfoResBody, Map.class);
+         userInfo = parsedUserInfo;
       } catch (IOException ioex) {
          int errorStatus = (Status.Family.SUCCESSFUL != userInfoRes.getStatusInfo().getFamily())
                ? userInfoRes.getStatus() : Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
          throw new WebApplicationException(Response.status(errorStatus)
-               .entity("Error parsing as JSON tokenExchangeResBody returned by Kernel ("
+               .entity("Error parsing as JSON userInfoResBody returned by Kernel ("
                      + userInfoResBody + ") : " + ioex.getMessage())
                      .type(MediaType.TEXT_PLAIN).build());
       }
-      JsonNode errorNode = tokenExchangeResJsonNode.get("error");
+      /*JsonNode errorNode = tokenExchangeResJsonNode.get("error");
       if (errorNode != null) {
          String error = errorNode.asText(); // NB. more lenient thant textValue()
          int errorStatus = (Status.Family.SUCCESSFUL != tokenExchangeRes.getStatusInfo().getFamily())
@@ -177,6 +194,46 @@ public class PlaygroundAuthenticationTokenResource extends PlaygroundAuthenticat
                      .type(MediaType.TEXT_PLAIN).build());
       }*/
       
+      // getting token info (sub_groups...) :
+      WebClient tokenInfoClient = WebClient.create(kernelTokenInfoEndpointUrl)
+            .header(HttpHeaders.AUTHORIZATION, tokenExchangeBasicAuth);
+      Response tokenInfoRes;
+      try {
+         tokenInfoRes = tokenInfoClient.form(new Form()
+               .param("token_type_hint", "access_token").param("token", token));
+      } catch (Exception ex) {
+         // TODO or ServiceUnavailableException ?
+         throw new InternalServerErrorException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+               .entity("Error calling Kernel to get token info  : " + ex.getMessage())
+                     .type(MediaType.TEXT_PLAIN).build());
+      }
+      // parsing response to get token :
+      // NB. no need to go beyond explicit bare JSON parsing (MessageBodyProvider etc.)
+      String tokenInfoResBody = tokenInfoRes.readEntity(String.class); // ex. {"active":true,"exp":1433778460,"iat":1433774860,"scope":"datacore","client_id":"dc","sub":"9cf96195-dab0-41f8-9300-08881da13abc","token_type":"Bearer","sub_groups":["0...e","c...7","5...e"]}
+      try {
+         @SuppressWarnings("unchecked")
+         Map<String,Object> tokenInfo = jsonNodeMapper.readValue(tokenInfoResBody, Map.class);
+         userInfo.putAll(tokenInfo);
+      } catch (IOException ioex) {
+         int errorStatus = (Status.Family.SUCCESSFUL != userInfoRes.getStatusInfo().getFamily())
+               ? userInfoRes.getStatus() : Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
+         throw new WebApplicationException(Response.status(errorStatus)
+               .entity("Error parsing as JSON tokenInfoResBody returned by Kernel ("
+                     + tokenInfoResBody + ") : " + ioex.getMessage())
+                     .type(MediaType.TEXT_PLAIN).build());
+      }
+      
+      String userTokenInfo;
+      try {
+         userTokenInfo = jsonNodeMapper.writeValueAsString(userInfo);
+      } catch (JsonProcessingException jpex) {
+         int errorStatus = (Status.Family.SUCCESSFUL != userInfoRes.getStatusInfo().getFamily())
+               ? userInfoRes.getStatus() : Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
+         throw new WebApplicationException(Response.status(errorStatus)
+               .entity("Error writing as JSON userTokenInfo ("
+                     + userInfo + ") : " + jpex.getMessage())
+                     .type(MediaType.TEXT_PLAIN).build());
+      }
       
       // set auth cookie while redirecting to app :
       try {
@@ -184,11 +241,12 @@ public class PlaygroundAuthenticationTokenResource extends PlaygroundAuthenticat
          NewCookie encryptedTokenCookie = new NewCookie("authorization", authHeader,
                "/", // WARNING if no ;Path=/ it is not set after a redirect see http://stackoverflow.com/questions/1621499/why-cant-i-set-a-cookie-and-redirect
                null, null, cookieMaxAge, cookieSecure);
-         NewCookie userInfoCookie = new NewCookie("userinfo", userInfoResBody,
+         NewCookie userInfoCookie = new NewCookie("userinfo", userTokenInfo,
                "/", // WARNING if no ;Path=/ it is not set after a redirect see http://stackoverflow.com/questions/1621499/why-cant-i-set-a-cookie-and-redirect
                null, null, cookieMaxAge, cookieSecure);
          throw new WebApplicationException(Response.seeOther(new URI(playgroundUiUrl))
-               .cookie(encryptedTokenCookie).cookie(userInfoCookie).build()); 
+               .cookie(encryptedTokenCookie).cookie(userInfoCookie)
+               .build());
          // or + 
       } catch (URISyntaxException usex) {
          throw new WebApplicationException(usex, Response.serverError()
