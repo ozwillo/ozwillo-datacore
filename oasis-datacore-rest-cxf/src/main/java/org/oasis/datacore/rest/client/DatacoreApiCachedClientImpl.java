@@ -14,7 +14,9 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.cxf.interceptor.OutInterceptors;
+import org.oasis.datacore.common.context.DCRequestContextProviderFactory;
 import org.oasis.datacore.rest.api.DCResource;
+import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.util.DCURI;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.cxf.ETagClientOutInterceptor;
@@ -57,6 +59,10 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
    @Qualifier("datacore.rest.client.cache.rest.api.DCResource")
    private Cache resourceCache; // EhCache getNativeCache
 
+   /** to get project ; not accessed statically to get CXF-based impl */
+   @Autowired
+   private DCRequestContextProviderFactory requestContextProviderFactory;
+
    /** to be able to build a full uri to evict cached data */
    ///@Value("${datacoreApiClient.baseUrl}")
    ///private String baseUrl; // useless
@@ -75,11 +81,16 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
    private String buildUri(String type, String iri) {
       return UriHelper.buildUri(this.containerUrl, type, iri);
    }
+   
+   public String getProject() {
+      String project = (String) requestContextProviderFactory.get(DatacoreApi.PROJECT_HEADER);
+      return project == null ? "oasis.main" : project;
+   }
 
    /* (non-Javadoc)
     * @see org.oasis.datacore.rest.client.DatacoreCachedClient#postDataInType(org.oasis.datacore.rest.api.DCResource)
     */
-   @CachePut(value={"org.oasis.datacore.rest.api.DCResource"}, key="#resource.uri")
+   @CachePut(value={"org.oasis.datacore.rest.api.DCResource"}, key="#root.target.getProject() + '.' + #resource.uri")
    @Override
    public DCResource postDataInType(DCResource resource) {
       String modelType = resource.getModelType(); // NB. if null lets server explode
@@ -91,7 +102,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
     * done in wrapper logic (Spring CachePut annotation would use possibly not yet created uri from argument)
     * TODO LATER save if no diff (in non strict post mode)
     */
-   @CachePut(value={"org.oasis.datacore.rest.api.DCResource"}, key="#resource.uri")
+   @CachePut(value={"org.oasis.datacore.rest.api.DCResource"}, key="#root.target.getProject() + '.' + #resource.uri")
    @Override
    public DCResource postDataInType(DCResource resource, String modelType) {
       resource = delegate.postDataInType(resource, modelType); // TODO better than client side helper :
@@ -101,8 +112,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
       resource = delegate.postAllDataInType(resources, type).get(0);
       */
 
-      // put in cache :
-      ///resourceCache.put(resource.getUri(), resource); // NB. if no error, resource can't be null
+      ///putInCache(resource);
       return resource;
    }
 
@@ -115,10 +125,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
    public List<DCResource> postAllDataInType(List<DCResource> resources, String modelType) {
       resources = delegate.postAllDataInType(resources, modelType);
 
-      // put in cache :
-      for (DCResource resource : resources) {
-         resourceCache.put(resource.getUri(), resource); // NB. if no error, resource can't be null
-      }
+      putInCache(resources);
       return resources;
    }
 
@@ -131,10 +138,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
    public List<DCResource> postAllData(List<DCResource> resources) {
       resources = delegate.postAllData(resources);
 
-      // put in cache :
-      for (DCResource resource : resources) {
-         resourceCache.put(resource.getUri(), resource); // NB. if no error, resource can't be null
-      }
+      putInCache(resources);
       return resources;
    }
 
@@ -142,7 +146,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
     * Always evict (after invocation) and replace by updated data, using Spring CachePut annotation
     * TODO LATER save if no diff
     */
-   @CachePut(value={"org.oasis.datacore.rest.api.DCResource"}, key="#resource.uri") // after invocation
+   @CachePut(value={"org.oasis.datacore.rest.api.DCResource"}, key="#root.target.getProject() + '.' + #resource.uri") // after invocation
    @Override
    public DCResource putDataInType(DCResource resource, String modelType, String iri) {
       return delegate.putDataInType(resource, modelType, iri);
@@ -153,7 +157,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
     * Copies that method's cache annotations, because they are not applied when calling it
     * (because it doesn't call the cached wrapper but the impl instance).
     */
-   @CachePut(value={"org.oasis.datacore.rest.api.DCResource"}, key="#resource.uri") // after invocation
+   @CachePut(value={"org.oasis.datacore.rest.api.DCResource"}, key="#root.target.getProject() + '.' + #resource.uri") // after invocation
    @Override
    public DCResource putDataInType(DCResource resource) throws IllegalArgumentException {
       String modelType = resource.getModelType(); // NB. if null lets server explode
@@ -179,10 +183,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
    public List<DCResource> putAllDataInType(List<DCResource> resources, String modelType) {
       resources = delegate.putAllDataInType(resources, modelType);
 
-      // put in cache :
-      for (DCResource resource : resources) {
-         resourceCache.put(resource.getUri(), resource); // NB. if no error, resource can't be null
-      }
+      putInCache(resources);
       return resources;
    }
 
@@ -195,10 +196,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
    public List<DCResource> putAllData(List<DCResource> resources) {
       resources = delegate.putAllData(resources);
 
-      // put in cache :
-      for (DCResource resource : resources) {
-         resourceCache.put(resource.getUri(), resource); // NB. if no error, resource can't be null
-      }
+      putInCache(resources);
       return resources;
    }
 
@@ -278,23 +276,24 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
       protected abstract DCResource doGetData();
       public DCResource performCachedGetData(String uri) {
          // NB. request is only for server etag, on client side it is done rather in interceptor
+         String cacheId = getProject() + '.' + uri;
          try {
             DCResource resource = doGetData();
 
             // put in cache :
             if (resource != null) {
-               resourceCache.put(resource.getUri(), resource);
+               resourceCache.put(cacheId, resource);
             } else {
                // server still has null it costs nothing to send it back,
                // so no ETag support in this case, but still empty cache
-               resourceCache.evict(uri);
+               resourceCache.evict(cacheId);
             }
             return resource;
 
          } catch (RedirectionException rex) {
             if (Status.NOT_MODIFIED.getStatusCode() == rex.getResponse().getStatus()) {
                // HTTP 304 (not modified) : get from cache
-               ValueWrapper cachedDataWrapper = resourceCache.get(uri); // NB. ValueWrapper wraps cached null
+               ValueWrapper cachedDataWrapper = resourceCache.get(cacheId); // NB. ValueWrapper wraps cached null
                if (cachedDataWrapper != null) {
                   DCResource cachedData = (DCResource) cachedDataWrapper.get();
                   if (cachedData != null) {
@@ -309,6 +308,16 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
             throw rex;
          }
       }
+   }
+
+   private void putInCache(List<DCResource> resources) {
+      String projectPrefix = getProject() + '.';
+      for (DCResource resource : resources) {
+         resourceCache.put(projectPrefix + resource.getUri(), resource); // NB. if no error, resource can't be null
+      }
+   }
+   private void putInCache(DCResource resource) {
+      resourceCache.put(getProject() + '.' + resource.getUri(), resource); // NB. if no error, resource can't be null
    }
 
    /* (non-Javadoc)
@@ -341,7 +350,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
 
       // evict from cache :
       String uri = buildUri(modelType, iri);
-      resourceCache.evict(uri);
+      resourceCache.evict(getProject() + '.' + uri);
    }
    
    /**
@@ -356,7 +365,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
 
       // evict from cache :
       String uri = buildUri(modelType, iri);
-      resourceCache.evict(uri);
+      resourceCache.evict(getProject() + '.' + uri);
    }
 
 
@@ -385,8 +394,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
          UriInfo uriInfo/*, @Context Request request*/) {
       DCResource resource = delegate.postDataInTypeOnGet(modelType, method, uriInfo);
 
-      // put in cache :
-      resourceCache.put(resource.getUri(), resource); // NB. if no error, resource can't be null
+      putInCache(resource);
       return resource;
    }
 
@@ -401,10 +409,9 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
       if (HttpMethod.DELETE.equals(method)) {
          // evict from cache :
          String uri = buildUri(modelType, iri);
-         resourceCache.evict(uri);
+         resourceCache.evict(getProject() + '.' + uri);
       } else { // PUT, PATCH
-         // put in cache :
-         resourceCache.put(resource.getUri(), resource); // NB. if no error, resource can't be null
+         putInCache(resource);
       }
       return resource;
    }
@@ -419,10 +426,9 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
       if (HttpMethod.DELETE.equals(method)) {
          // evict from cache :
          String uri = buildUri(modelType, iri);
-         resourceCache.evict(uri);
+         resourceCache.evict(getProject() + '.' + uri);
       } else { // PUT, PATCH
-         // put in cache :
-         resourceCache.put(resource.getUri(), resource); // NB. if no error, resource can't be null
+         putInCache(resource);
       }
       return resource;
    }

@@ -7,7 +7,6 @@ import org.apache.cxf.interceptor.Fault;
 import org.apache.cxf.message.Message;
 import org.apache.cxf.phase.AbstractPhaseInterceptor;
 import org.apache.cxf.phase.Phase;
-import org.oasis.datacore.common.context.DCRequestContextProvider;
 import org.oasis.datacore.common.context.DCRequestContextProviderFactory;
 import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.client.cxf.CxfMessageHelper;
@@ -40,7 +39,7 @@ public class ContextServerInInterceptor extends AbstractPhaseInterceptor<Message
       for (String contextHeader : DatacoreApi.CONTEXT_HEADERS) {
          String headerValue = CxfMessageHelper.getHeaderString(serverInRequestMessage, contextHeader);
          if (headerValue != null) {
-            requestContextProviderFactory.set(DCRequestContextProvider.PROJECT, headerValue);
+            requestContextProviderFactory.set(contextHeader, headerValue);
          }
       }
    }

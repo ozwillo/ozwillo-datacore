@@ -10,7 +10,9 @@ import org.apache.cxf.interceptor.Fault;
 import org.apache.cxf.message.Message;
 import org.apache.cxf.phase.AbstractPhaseInterceptor;
 import org.apache.cxf.phase.Phase;
+import org.oasis.datacore.common.context.DCRequestContextProviderFactory;
 import org.oasis.datacore.rest.api.DCResource;
+import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.util.UriHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -34,6 +36,10 @@ public class ETagClientOutInterceptor extends AbstractPhaseInterceptor<Message> 
    @Autowired
    @Qualifier("datacore.rest.client.cache.rest.api.DCResource")
    private Cache resourceCache; // EhCache getNativeCache
+
+   /** to get project ; not accessed statically to get CXF-based impl */
+   @Autowired
+   private DCRequestContextProviderFactory requestContextProviderFactory;
 
    @Value("${datacoreApiClient.containerUrl}") //:http://data-test.oasis-eu.org/
    private String containerUrl;
@@ -63,7 +69,7 @@ public class ETagClientOutInterceptor extends AbstractPhaseInterceptor<Message> 
             String endpointUri = CxfMessageHelper.getUri(clientOutRequestMessage);
             String uri = toContainerUrl(endpointUri);
             //DCData cachedData = cache.get(uri);
-            ValueWrapper cachedResourceWrapper = resourceCache.get(uri); // NB. ValueWrapper wraps cached null
+            ValueWrapper cachedResourceWrapper = resourceCache.get(getCacheId(uri)); // NB. ValueWrapper wraps cached null
             if (cachedResourceWrapper != null) {
                DCResource cachedResource = (DCResource) cachedResourceWrapper.get();
                if (cachedResource != null) {
@@ -87,7 +93,7 @@ public class ETagClientOutInterceptor extends AbstractPhaseInterceptor<Message> 
             String endpointUri = CxfMessageHelper.getUri(clientOutRequestMessage);
             String uri = toContainerUrl(endpointUri);
             //DCData cachedData = cache.get(uri);
-            ValueWrapper cachedResourceWrapper = resourceCache.get(uri); // NB. ValueWrapper wraps cached null
+            ValueWrapper cachedResourceWrapper = resourceCache.get(getCacheId(uri)); // NB. ValueWrapper wraps cached null
             if (cachedResourceWrapper != null) {
                DCResource cachedResource = (DCResource) cachedResourceWrapper.get();
                String etag = cachedResource.getVersion().toString();
@@ -155,6 +161,15 @@ public class ETagClientOutInterceptor extends AbstractPhaseInterceptor<Message> 
                "Endpoint URI is not an URL : " + endpointUri, e),
                Fault.FAULT_CODE_CLIENT);
       }
+   }
+
+   private Object getCacheId(String uri) {
+      return getProject() + '.' + uri;
+   }
+   
+   public String getProject() {
+      String project = (String) requestContextProviderFactory.get(DatacoreApi.PROJECT_HEADER);
+      return project == null ? "oasis.main" : project;
    }
 
 }

@@ -23,7 +23,9 @@ public class CxfRequestContextProvider extends CxfJaxrsApiProvider implements DC
    
    protected DelegateRequestContextProvider delegate = new DelegateRequestContextProvider(this);
 
+   @Override
    public Map<String, Object> getRequestContext() {
+      Map<String, Object> existingLocalRequestContext = SimpleRequestContextProvider.getSimpleRequestContext();
       Exchange exchange = this.getExchange();
       if (exchange != null) { // REST !
          ArrayList<Map<String,Object>> fallbacks = new ArrayList<Map<String,Object>>(2);
@@ -34,10 +36,9 @@ public class CxfRequestContextProvider extends CxfJaxrsApiProvider implements DC
          }
          
          // stack on top of existing context if any :
-         Map<String, Object> existinRequestContext = SimpleRequestContextProvider.getSimpleRequestContext();
-         if (existinRequestContext != null // ex. in REST server
-               && !existinRequestContext.isEmpty()) {
-            fallbacks.add(existinRequestContext); // ex. in REST client, so that
+         if (existingLocalRequestContext != null // ex. in REST server
+               && !existingLocalRequestContext.isEmpty()) {
+            fallbacks.add(existingLocalRequestContext); // ex. in REST client, so that
             // ContextClientOutInterceptor can set view (& project, debug) to use
             // by REST server as was set by REST client app user
          }
@@ -46,16 +47,19 @@ public class CxfRequestContextProvider extends CxfJaxrsApiProvider implements DC
          // and only one (unless done in (ClientIn or ServerOut) Response interceptor, which it is not for)
          return new MapWithReadonlyFallbacks<String,Object>(exchange, fallbacks);
       } // else not REST
-      if (SimpleRequestContextProvider.shouldEnforce()) {
+      
+      if (existingLocalRequestContext == null && SimpleRequestContextProvider.shouldEnforce()) {
          throw new RuntimeException("There is no context");
       }
+      return SimpleRequestContextProvider.getSimpleRequestContext();
+      // NB. don't explode if null, to allow to check whether there is any
+      /*
       // helper for unit tests :
-      Map<String, Object> requestContext = SimpleRequestContextProvider.getSimpleRequestContext();
-      /*if (requestContext == null) {
+      if (requestContext == null) {
          return new HashMap<String, Object>(3); // to avoid NullPointerException outside REST ex. below LoadPersistedModelsAtInit
-      }*/
+      }
       return requestContext;
-      /*if (requestContext != null || !isUnitTest()) {
+      if (requestContext != null || !isUnitTest()) {
          return requestContext;
       }
       throw new RuntimeException("SimpleRequestContextProvider should have been set up in unit test");*/

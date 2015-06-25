@@ -74,7 +74,7 @@ public class CxfMessageHelper {
    }*/
 
    public static void setHeader(Map<String, Object> clientOutRequestMessage, String name, String value) {
-      ArrayList<String> headerList = new ArrayList<String>(1);
+      ArrayList<String> headerList = new ArrayList<String>(2);
       headerList.add(value);
       getRequestHeaders(clientOutRequestMessage).put(name, headerList); // (though HTTP headers are case-insensitive per spec)
    }
