@@ -376,8 +376,10 @@ public class ModelResourceMappingService {
     * @param r
     * @return
     * @throws ResourceException if can't find local model or visible project
+    * @throws URISyntaxException 
+    * @throws MalformedURLException 
     */
-   public DCProject toProject(DCResource r) throws ResourceException {
+   public DCProject toProject(DCResource r) throws ResourceException, MalformedURLException, URISyntaxException {
       // project is always be oasis.main for projects
       //String pointOfViewAbsoluteName = dataModelService.getProject().getAbsoluteName();
       String name = (String) r.get(ResourceModelIniter.POINTOFVIEW_NAME_PROP);
@@ -405,10 +407,11 @@ public class ModelResourceMappingService {
       
       @SuppressWarnings("unchecked")
       //List<Map<String, Object>> visibleProjects = (List<Map<String, Object>>) r.get("dcmp:visibleProjects");
-      List<String> visibleProjectNames = (List<String>) r.get("dcmp:localVisibleProjects");
-      if (visibleProjectNames != null) {
+      List<String> visibleProjectUris = (List<String>) r.get("dcmp:localVisibleProjects");
+      if (visibleProjectUris != null) {
          //for (Map<String, Object> visibleProject : visibleProjects) {
-         for (String visibleProjectName : visibleProjectNames) {
+         for (String visibleProjectUri : visibleProjectUris) {
+            String visibleProjectName = UriHelper.parseUri(visibleProjectUri).getId();
             DCProject visibleProject = dataModelService.getProject(visibleProjectName);
             if (visibleProject == null) {
                throw new ResourceException("Can't find visibleProject " + visibleProjectName,

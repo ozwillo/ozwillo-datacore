@@ -154,18 +154,20 @@ public class LoadPersistedModelsAtInit extends InitableBase {
          for (DCResource projectResource : projectResources) {
             //String projectProjectName = (String) projectResource.get("dcmo:pointOfViewAbsoluteName");
             String projectName = (String) projectResource.get(ResourceModelIniter.POINTOFVIEW_NAME_PROP);
-            if (previousProjectsInError != null && !previousProjectsInError.containsKey(projectName)) {
+            if (loadedProjectNames.contains(projectName)) {
                continue; // not first time and already imported successfully
             }
             try {
                // NB. not in context either since ini oasis.main project
                DCProject project = mrMappingService.toProject(projectResource); // NB. loads visible projects but not models
-               DCProject foundProject = dataModelAdminService.getProject(project.getName());
-               if (foundProject != null) {
-                  // keeping existing project, ONLY REQUIRED IN CASE OF METAMODEL
-                  // TODO LATER put them in oasis.model and handle it separately
-                  project.getLocalVisibleProjects().stream().forEach(lvp -> foundProject.addLocalVisibleProject(lvp));
-                  project = foundProject;
+               DCProject hardcodedProject = dataModelAdminService.getProject(project.getName());
+               if (hardcodedProject != null) {
+                  // keeping existing project conf (hardcoded for now)
+                  project = hardcodedProject;
+                  // though copy visible projects if changed : (??)
+                  for (DCProject lvp : hardcodedProject.getLocalVisibleProjects()) {
+                     project.addLocalVisibleProject(lvp);
+                  }
                }
                dataModelAdminService.addProject(project); // must add project BEFORE adding models
                loadModels(projectName); // NB. NOT yet using project.visibleProjects to conf relationship
