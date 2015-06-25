@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:p="http://www.springframework.org/schema/p"
+      xmlns:context="http://www.springframework.org/schema/context"
+      xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+      xmlns:cxf="http://cxf.apache.org/core"
+      xmlns:cache="http://www.springframework.org/schema/cache"
+      xsi:schemaLocation=
+      "http://www.springframework.org/schema/beans
+      http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+      http://www.springframework.org/schema/context
+      http://www.springframework.org/schema/context/spring-context-3.2.xsd
+      http://cxf.apache.org/core http://cxf.apache.org/schemas/core.xsd
+      http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd
+      http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache-3.2.xsd">
+
+   <!-- overriding some properties (BEFORE import to take precedence over imported properties) -->
+   <context:property-placeholder location="classpath:oasis-datacore-rest-client-test.properties"
+      order="-2" ignore-unresolvable="true"/><!-- so defaults to importing PropertyPlaceholder/*Resolver -->
+   
+   <import resource="classpath:oasis-datacore-rest-client-context.xml" />
+   
+   
+   <!-- provides HTTP protocol info to JAXRS server impl -->
+   <bean id="datacore.cxfJaxrsApiProvider" class="org.oasis.datacore.rest.server.cxf.CxfJaxrsApiProvider"/>
+   
+   <!-- injected in ArrayServerInInterceptor -->
+   <bean id="datacoreApiCXFTestMockServer.objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper"/>
+   <bean id="datacoreApiCXFTestMockServer.jacksonJsonProvider" class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider">
+      <constructor-arg><ref bean="datacoreApiCXFTestMockServer.objectMapper"/></constructor-arg>
+   </bean>
+   <!-- Helps supporting POST of single DCResource. Let Jackson accepting single value as ARRRAY.
+   See more details in ArrayServerInInterceptor -->
+   <bean factory-bean="datacoreApiCXFTestMockServer.jacksonJsonProvider" factory-method="enable">
+      <constructor-arg value="ACCEPT_SINGLE_VALUE_AS_ARRAY"/>
+      <constructor-arg value="true"/><!-- NOT USED -->
+   </bean>
+   
+   <!-- Spring configuration for Datacore API CXF mock server -->
+   <jaxrs:server id="datacoreApiCXFTestMockServer" address="${datacoreApiClient.baseUrl}">
+      <jaxrs:serviceBeans>
+         <bean class="org.oasis.datacore.rest.api.client.DatacoreApiMockServerImpl"/>
+      </jaxrs:serviceBeans>
+      <jaxrs:providers>
+         <ref bean="datacoreApiCXFTestMockServer.jacksonJsonProvider"/>
+      </jaxrs:providers>
+      <!-- Single value array POST handling interceptors (rather than whole bus) : -->
+      <jaxrs:inInterceptors>
+         <bean class="org.oasis.datacore.rest.server.cxf.ArrayServerInInterceptor">
+            <property name="objectMapper"><ref bean="datacoreApiCXFTestMockServer.objectMapper"/></property>
+         </bean>
+      </jaxrs:inInterceptors>
+      <jaxrs:outInterceptors>
+         <bean class="org.oasis.datacore.rest.server.cxf.ArrayServerOutInterceptor"/>
+      </jaxrs:outInterceptors>
+      <!-- TODO also autn --><!-- bean id="authorizationFilter" class="com.bar.providers.AuthorizationRequestHandler"/ -->
+      <jaxrs:features>
+         <cxf:logging/>
+      </jaxrs:features>
+   </jaxrs:server>
+
+</beans>

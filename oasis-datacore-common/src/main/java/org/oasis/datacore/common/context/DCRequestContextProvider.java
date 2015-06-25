@@ -12,10 +12,10 @@ import java.util.Map;
  */
 public interface DCRequestContextProvider {
    
-   public static final String PROJECT = "datacore.project";
+   public static final String PROJECT = "X-Datacore-Project"; // must be the same as in DatacoreApi
    
    /**
-    * Caller must handle null in case no context set (and not enforced).
+    * Caller must handle null in case no context set, to allow to check whether there is one.
     * @return null if no context set (if enforced rather explodes)
     */
    public Map<String, Object> getRequestContext();
