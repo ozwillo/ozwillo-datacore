@@ -67,6 +67,39 @@ function initUserInfoUi() {
       initUserInfo();
       ///return false;
    });
+
+   $.ajax({
+      url:"/dc/type/dcmp:Project_0?limit=100",
+      headers: { Authorization:getAuthHeader() }, // , 'X-Datacore-View':'dcmpv:PointOfView_0' (any project should do)
+      success: function(userProjects) {
+         var optionsHtml = '';
+         for (var i in userProjects) {
+            var projectName = userProjects[i]['dcmpv:name'];
+            optionsHtml += '<option onclick="javascript:'
+               + 'setProject($(this).attr(\'value\'));return false;" value="'
+               + projectName + '">' + projectName;
+            var visibleProjectNames = userProjects[i]['dcmp:visibleProjectNames'];
+            if (visibleProjectNames && visibleProjectNames.length !== 0) {
+               var startsByItself = visibleProjectNames[0] === projectName;
+               if (!startsByItself || visibleProjectNames.length !== 1) {
+                  var vpnJoined = visibleProjectNames.join(', ');
+                  if (startsByItself) {
+                     vpnJoined = vpnJoined.substring(projectName.length + 2);
+                  }
+                  optionsHtml += ' (visible : ' + vpnJoined;
+                  var forkedUris = userProjects[i]['dcmp:forkedUris'];
+                  if (forkedUris && forkedUris.length !== 0) {
+                     optionsHtml += ', forked URIs : ' + forkedUris.join(', ');
+                  }
+                  optionsHtml += ')';
+               }
+            }
+            optionsHtml += '</option>\n';
+         }
+         $('#project').html(optionsHtml);
+         $('#project').val('oasis.sandbox'); // by default don't pollute anything
+      }
+   });
 }
 
 

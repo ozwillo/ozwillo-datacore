@@ -33,11 +33,53 @@
       
       initPlayground(); // also window.dcApi
       
-      // update model domain prefix on file change :
       $('.modelFile').change(function(e){
          $in=$(this);
          ///$in.next().html($in.val());
+         
+         // update model domain prefix on file change :
          $('.domainPrefix').val(buildModelDomainPrefix($in.val()));
+
+         // init from & until mixin selects :
+         $(".modelFile").parse({ config : {
+            download: true,
+            header: true,
+            comments: true, // skip # or // starting lines
+            ///preview: importState.model.rowLimit, // ex. '1' user input means importing
+            // title line + model default line + 1 more (field) line
+            complete: function(results) {
+               // gathering mixin names :
+               var mixinNames = [];
+               var currentMixin = null;
+               for (var ri in results.data) {
+                  var fieldRow = results.data[ri];
+                  var mixinName = fieldRow["Mixin"];
+                  if (mixinName.trim().length === 0
+                        || mixinName.indexOf('//') === 0 || mixinName.indexOf('#') === 0) {
+                     continue; // skipping comment line, TODO rm should be done auto by papaparse comments = true
+                  }
+                  if (mixinName === currentMixin) {
+                     continue; // was already added
+                  }
+                  currentMixin = mixinName;
+                  mixinNames.push(mixinName);
+               }
+               mixinNames.push('(last)');
+               window.mixinNames = mixinNames; // TODO better pass it to importState to compute skippedMixinNameSet
+               
+               // building optiions :
+               var mixinOptionsHtml = '';
+               for (var i in mixinNames) {
+                  var mixinName = mixinNames[i];
+                  mixinOptionsHtml += '<option value="'
+                     + mixinName + '">' + mixinName + '</option>\n';
+               }
+               $('.fromMixin').html(mixinOptionsHtml);
+               $('.fromMixin').val(mixinNames[0]);
+               $('.untilMixin').html(mixinOptionsHtml);
+               $('.untilMixin').val(mixinNames[mixinNames.length - 1]);
+            }
+         }});
       });
   });
    
@@ -47,7 +89,10 @@
             model : {
                fileName : $(".modelFile").val(),
                file : $(".modelFile"),
-               rowLimit : parseInt($(".modelRowLimit").val(), 10)
+               rowLimit : parseInt($(".modelRowLimit").val(), 10),
+               fromMixin : $('.fromMixin').val(),
+               untilMixin : $('.untilMixin').val(),
+               mixinNames : window.mixinNames
             },
             data : {
                fileName : $(".resourceFile").val(),
@@ -66,8 +111,9 @@
 
 <div id=dc-header>
 <div class="dc-ui-wrap">
-   <a class="dc-logo" href="http://oasis-eu.org">OASIS - Datacore Import UI</a>
-   <div class="dc-ui-userinfo">
+   <a class="dc-logo" href="http://oasis-eu.org">OASIS - Datacore Resource API</a>
+   <select id="project" class="dc-ui-project"></select>
+   <div class="dc-ui-userinfo" style="margin-top:8px">
       <div class='input' id="userinfo"></div>
       <div class='input'><a id="logout" href="#">logout</a></div>
    </div>
@@ -83,6 +129,12 @@
 &nbsp;&nbsp;&nbsp;&nbsp;
 <span title="-1 means all (default)">Model row limit</span> :
 <input type="text" class="modelRowLimit" value="-1" style="width: 50px"/>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<span title="Models (and resources of these models) will be posted starting from first line with this mixin (but others will still be parsed and retrieved)">from</span> :
+<select class="fromMixin" style="width: 150px"></select>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<span title="Models (and resources of these models) will be posted until first line with this mixin, excluded (but others will still be parsed and retrieved)">until</span> :
+<select class="untilMixin" style="width: 150px"></select>
 <br/><br/>
 <input type="file" class="modelFile"/>
 &nbsp;&nbsp;&nbsp;&nbsp;
@@ -177,17 +229,19 @@ softwares (such as Google Doc's) often breaks files (ex. "true" becomes VRAI, "f
 </div>
 
 <a id="datacoreResources"></a>
-<div class="dc-import-subtitle">Datacore :</div>
-<span class="json dcjsonline">GET <span class="dcConf_baseUrl">NOT INITED</span><input type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 480px"></span>
-<button onclick="javascript:return findData(encodeUri($('.myurl').val()));">go</button>
+<div class="dc-import-subtitle">Datacore (<span class="dcConf_baseUrl json dcjsonline">NOT INITED</span>) :</div>
+<span class="json dcjsonline"><input type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 620px" value="/dc/type/dcmo:model_0"></span>
+<button onclick="javascript:return findData(encodeUri($('.myurl').val()));">GET</button>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, 50, {'X-Datacore-View':' '});" title="List view (view : empty i.e. minimal : @id, o:version)">l</button>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, 25, {'X-Datacore-View':'dc:DubclinCore_0'});" title="List view (view : dc:DubclinCore_0)">dc</button>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, null, {'X-Datacore-Debug':'true'});" title="Debug / explain query">?</button>
-<button onclick="javascript:return findDataByTypeRdf(encodeUri($('.myurl').val()));">RDF</button>
-<button onclick="javascript:return setUrl('');" title="Reset">X</button><br/>
+<button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, null, {'Accept':'text/x-nquads'});" title="RDF N-Quads output">RDF</button>
+<button onclick="javascript:return editOrPostData(encodeUri($('.myurl').val()));" id="editOrPost" title="edit data, then post changes">edit</button>
+<button onclick="javascript:return setUrl('');" title="Reset URL">X</button><br/>
 <div class="block response_body">
 <a id="mydata"></a><!-- displays a short error message in red -->
-<pre class="json dcjsonarea"><code id="mydata" class="mydata"></code></pre>
+<pre id="mynoteditabledata" class="json dcjsonarea"><code id="mydata" class="mydata"></code></pre>
+<textarea id="myeditabledata" style="display: none" class="json dcjsonarea myeditabledata"></textarea>
 </div>
 
 </div>

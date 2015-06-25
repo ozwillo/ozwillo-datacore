@@ -13,13 +13,19 @@ a.dclink:hover {
    background-color:#FFFE55;
 }
 /* needs to override .dc-ui-wrap on pre code */
-.swagger-ui-wrap .dcjsonarea, .dc-ui-wrap .dcjsonarea {
+.swagger-ui-wrap .dcjsonarea, .dc-ui-wrap .dcjsonarea, .myeditabledata {
    font-family: Consolas,'Liberation Mono',Menlo,Courier,monospace;
    background-color: #f8f8f8;
    border: 1px solid #ddd;
    border-radius: 3px;
    max-height: 400px;
    overflow-y: auto;
+}
+.myeditabledata {
+   width: 100%;
+   height: 400px;
+   line-height: 1.6em;
+   resize: vertical;
 }
 .dcjsonline {
 	font-family: Consolas,'Liberation Mono',Menlo,Courier,monospace;
@@ -50,6 +56,10 @@ dc header
   clear: none;
   float: right;
 }
+#dc-header .dc-ui-project {
+  width: 200px;
+  margin-left:10px;
+}
 
 
 /********
@@ -62,7 +72,7 @@ dc import
 .dc-import-subtitle {
   font-size: 1.1em;
   font-weight: bold;
-  width: 150px;
+  width: 450px;
   padding: 15px 0 10px 0;
 }
 

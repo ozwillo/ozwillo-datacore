@@ -548,14 +548,32 @@
          return; // native fields ex. @id
       }
       var fieldType = field["dcmf:type"];
-      if (fieldType === 'list' || fieldType === 'i18n') {
+      if (fieldType === 'i18n') { // TODO LATER wider field.isSet (in mergeList)
+         // OR RATHER embedded subresource with (local ?) @id used as key ! 
+         // NB. existingValue has at least one value, because tested above
+         var newValueArray = newValue instanceof Array ? newValue : [newValue];
+         for (var nvInd in newValueArray) {
+            if (!newValueArray[nvInd]['v']) {
+               newValueArray[nvInd]['v'] = ''; // rather than merely skip, else couldn't remove translations
+               // (but not if no existingValue since mergeValue is not called then)
+            }
+            for (var elInd in existingValue) {
+               if (existingValue[elInd]['l'] === newValueArray[nvInd]['l']) {
+                   existingValue[elInd] = newValueArray[nvInd];
+                  return;
+               }
+            }
+            // not found, add it :
+            existingValue.push(newValueArray[nvInd]);
+         }
+      } else if (fieldType === 'list') {
          // NB. existingValue has at least one value, because tested above
          if (newValue instanceof Array) {
             for (var nvInd in newValue) {
                mergeListValue(existingValue, newValue[nvInd], nvInd, field["dcmf:listElementField"], importState, noError); // TODO or key subfield specified on list field ???
             }
          } else { // TODO better for non primitive values...
-            mergeListValue(existingValue, newValue, 0, field["dcmf:listElementField"], importState, noError);
+            mergeListValue(existingValue, newValue, -1, field["dcmf:listElementField"], importState, noError);
          }
          
       } else if (fieldType === 'map') {
@@ -615,6 +633,10 @@
    
    function mergeStringValueOrDefaultIfAny(existingResource, key, newStringValue, mixin, importState,
          defaultStringValue) { // optional
+       if (!mixin) {
+           console.log('err', existingResource, key, newStringValue, mixin, importState,
+                   defaultStringValue);
+       }
       var mergeField = findField(key, mixin["dcmo:globalFields"]);
       var newValue = convertValue(newStringValue, mergeField, importState);
       if (newValue === null) {
@@ -640,7 +662,8 @@
 
    function importedResourcePosted(resourcesOrErrorData, importStateRes, importState, kind, counter, origResources,
          success, error) { // optional
-      if (typeof resourcesOrErrorData === 'object' && typeof resourcesOrErrorData["_headers"] === 'object') {
+      if (resourcesOrErrorData !== null && typeof resourcesOrErrorData === 'object'
+            && typeof resourcesOrErrorData["_raw"] === 'object') {
          // error response
          // adding exactly one error item per request in error :
          //var postedError = { data : resourcesOrErrorData._body._body,
@@ -665,7 +688,7 @@
          }
          
       } else {
-         // no error (when ??), merely displaying posted resources :
+         // no error (null data when already handled ex. skipped resources), merely displaying posted resources :
          for (var rInd in resourcesOrErrorData) {
             var postedResource = resourcesOrErrorData[rInd];
             var postedUri = postedResource['@id'];
@@ -686,7 +709,7 @@
       importStateRes.sentNb = Object.keys(importStateRes.sentResourceUriSet).length; // updating
       importStateRes.postedNb = Object.keys(importStateRes.postedResources).length; // updating
       importStateRes.postedErrorNb = Object.keys(importStateRes.postedErrors).length; // updating
-      var done = importStateRes.toBePostedNb === importStateRes.sentNb; //  + importStateRes.postedErrors.length);
+      var done = importStateRes.toBePostedNb === importStateRes.sentNb + importStateRes.skippedNb; //  + importStateRes.postedErrors.length);
       // TODO BETTER if last one has to be retried because of conflict
       
       if (true/*importStateRes.sentNb % 10 == 0 || importStateRes.sentNb > importStateRes.toBePostedNb - 10*/) {
@@ -704,6 +727,31 @@
             msg += " title=\"" + resourcesSummary + "\"";
          }
          msg += ">" + importStateRes.postedNb + /*' / ' + importStateRes.toBePostedNb +*/" " + kind + "s</a> (";
+         
+         // adding skipped msg :
+         msg += 'skipped <a href="#"';
+         if (done && importStateRes.skippedNb !== 0) {
+            var skippedSummary = 'of models : ' + Object.keys(importStateRes.skippedModelTypeSet).join(', ') + '\n';
+            skippedSummary += 'in projects : ' + Object.keys(importStateRes.skippedProjectSet).join(', ') + '\n';
+            for (var rInd in importStateRes.skippedResourceUris) {
+               if (rInd < 15 || rInd > importStateRes.skippedNb - 10) {
+                  var parsedUri = parseUri(importStateRes.skippedResourceUris[rInd]);
+                  skippedSummary += '../' + parsedUri.modelType + '/' + parsedUri.id + ' \n';
+               } else if (rInd === 15) {
+                   skippedSummary += "...\n";
+               }
+            }
+            msg += " title=\"" + skippedSummary + "\"";
+         }
+         msg += '>' + importStateRes.skippedNb;
+         if (importStateRes.skippedNb !== 0) {
+            msg += ' of '
+                  + Object.keys(importStateRes.skippedModelTypeSet).length + ' models in '
+                  + Object.keys(importStateRes.skippedProjectSet).length + ' projects';
+         }
+         msg += '</a>, ';
+         
+         // adding errors msg :
          if (importStateRes.postedErrorNb === 0) {
             msg += "no error)";
             if (done) {
@@ -1012,11 +1060,19 @@
                      mixinHasValue = true;
                      var valueList = resource[fieldName];
                      if (typeof valueList === 'undefined') {
-                        valueList = [];
-                     }
+                        if (fieldType !== 'i18n' || listItemValue.v) {
+                           valueList = [listItemValue];
+                           resource[fieldName] = valueList; // must be set now else would be reput in a list
+                        } // else skip empty translation
+                        // (otherwise when field is used in id, would create an id containing 'undefined')
+                     
                      // NB. to import without specifying language, use default language and don't specify listItemIndex
-                     valueList.push(listItemValue);
-                     resource[fieldName] = valueList; // must be set now else would be reput in a list
+                     } else if (fieldType === 'i18n') { // TODO LATER wider field.isSet (in mergeList)
+                        // OR RATHER embedded subresource with (local ?) @id used as key !
+                        mergeValue(resource, fieldName, listItemValue, enrichedModelOrMixinFieldMap, importState); // noError
+                     } else {
+                        valueList.push(listItemValue);
+                     }
                   }
                }
             }
@@ -1117,16 +1173,23 @@
                var valueList = resource[fieldName];
                if (typeof valueList === 'undefined') {
                   valueList = [];
+                  resource[fieldName] = valueList;
                }
-               if (fieldType === 'i18n' && typeof value === 'string') { // importing with default language without .v suffix
+               if (fieldType === 'i18n') {
                   var defaultLanguage = field['dcmf:defaultLanguage']; // TODO also list of i18n !
                   if (typeof defaultLanguage === 'undefined') {
                      resourceError(importState, 'i18nWithoutLanguageNorDefaultOne');
                      continue;
                   }
-                  value = { l : defaultLanguage, v : value };
+                  if (typeof value === 'string') { // importing with default language without .v suffix)
+                     value = { l : defaultLanguage, v : value };
+                  }
+                  // TODO LATER wider field.isSet (in mergeList)
+                  // OR RATHER embedded subresource with (local ?) @id used as key !
+                  mergeValue(resource, fieldName, value, enrichedModelOrMixinFieldMap, importState); // noError
+               } else {
+                  valueList.push(value);
                }
-               valueList.push(value);
                value = valueList;
             }
             resource[fieldName] = value;
@@ -1424,10 +1487,10 @@
          // (re)computing ancestors :
          // (only now that id is known i.e. we are able to find or create it, even if already exists in case changes)
          // (done not only when id built, but everytime until no unknown resource in line in case of autolinking)
-         if (mixin['dcmo:isInstanciable'] && contains(mixin["dcmo:globalMixins"], "o:Ancestor_0")) {
+         if (mixin['dcmo:isInstanciable'] && contains(mixin["dcmo:globalMixins"], "oanc:Ancestor_0")) {
             // && mixin["dcmo:isInstanciable"] only if old "model" (already checked)
             ///var ancestorNb = 1 + (mixin['dcmoid:parentFieldNames'] ? mixin['dcmoid:parentFieldNames'].length : 0);
-            /*if (resource['o:ancestors'] && resource['o:ancestors'].length !== 0) { /// === ancestorNb
+            /*if (resource['oanc:ancestors'] && resource['oanc:ancestors'].length !== 0) { /// === ancestorNb
                // already computed all ancestors (can't know exact number of ancestors, only of parents)
                
             } else {*/
@@ -1482,12 +1545,12 @@
                            ancestors = null; // reset since incomplete
                            resourceError(importState, 'cantFindAncestorAmongParsedResources', {
                                  resource : resource, ancestorUri : parentUri });
-                        } else if (!hasMixin(ancestor["@type"][0], "o:Ancestor_0", importState)) {
+                        } else if (!hasMixin(ancestor["@type"][0], "oanc:Ancestor_0", importState)) {
                            ancestors = null; // reset since incomplete ; TODO or accept as its own single ancestor ?
                            resourceError(importState, 'ancestorHasNotAncestorMixin', {
                               resource : resource, ancestor : ancestor });
                         } else {
-                           var ancestorAncestors = ancestor["o:ancestors"];
+                           var ancestorAncestors = ancestor["oanc:ancestors"];
                            if (typeof ancestorAncestors === 'undefined') {
                               ancestors = null; // reset since incomplete
                               resourceError(importState, 'ancestorHasNotDefinedAncestors', {
@@ -1513,7 +1576,7 @@
   
                if (ancestors !== null) {
                   ancestors.push(resource['@id']); // itself, but only if dcmo:isInstanciable, else added at instance building elsewhere 
-                  mergeValue(resource, 'o:ancestors', ancestors, enrichedModelOrMixinFieldMap, importState);
+                  mergeValue(resource, 'oanc:ancestors', ancestors, enrichedModelOrMixinFieldMap, importState);
                }
             ///}
          }
@@ -1537,7 +1600,7 @@
             // adding it :
             importState.data.resources[irUri] = importedResource;
             
-            // scheduling refresh, in order not to loose fields that are not imported this time ex. o:ancestors :
+            // scheduling refresh, in order not to loose fields that are not imported this time ex. oanc:ancestors :
             importState.data.row.lookupQueriesToRun.push(irUri);
             resourceWarning(importState, 'refreshUriToRunInNextIteration',
                { refreshUri : irUri, resource : importedResource });
@@ -1579,7 +1642,7 @@
              var mixin = importState.data.importableMixins[mixinName];
              
              if (!mixin["dcmo:isInstanciable"]) {
-                continue; // don't import models that are strictly mixins ex. o:Ancestor_0 or geo:Area_0
+                continue; // don't import models that are strictly mixins ex. oanc:Ancestor_0 or geo:Area_0
              }
              if (importState.data.row.blockedModelTypeSet[mixinName]) {
                 continue; // don't import models where no value has been found in this row
@@ -1633,7 +1696,7 @@
                  csvToData(importState, getResourceRow, nextRow); // next iteration
               } else {
                  var lookupQuery = importState.data.row.lookupQueriesToRun.pop();
-                 findData(lookupQuery, function(resourcesFound) { // NB. works on query AND GET uri
+                 findData(lookupQuery, function(resourcesFound, relativeUrl, data, importState) { // NB. works on query AND GET uri
                     if (resourcesFound) {
                        var resourceFound = null;
                        if (resourcesFound instanceof Array) {
@@ -1659,7 +1722,7 @@
                           importState.data.lookupQueryToResource[lookupQuery] = resourceFound;
                           var rfId = resourceFound['@id'];
                           if (importState.data.resources[rfId]) {
-                             // already there : merging, in order not to loose fields that are not imported this time ex. o:ancestors
+                             // already there : merging, in order not to loose fields that are not imported this time ex. oanc:ancestors
                              var modelOrMixin = importState.model.modelOrMixins[resourceFound['@type'][0]];
                              // merge : (gets o:version and missing existing fields, not all @type but recomputed on server anyway)
                              mergeValues(importState.data.resources[rfId], resourceFound, modelOrMixin['dcmo:globalFields'], importState, true);
@@ -1676,7 +1739,7 @@
                        row : importState.data.row.resourceRow }); // NB. not in iteration errors
                     } // else mere GET refresh query
                     csvToData(importState, getResourceRow, nextRow); // next iteration
-                 }, 0, 2); // 2 results are enough to know whether unique
+                 }, 0, 2, null, importState); // 2 results are enough to know whether unique
               }
               return;
            }
@@ -1725,28 +1788,82 @@
             return abortImport();
          }
          
+         // check project first :
+         var resource = importState.data.resources[uri];
+         if (resource['o:version']) { // has already been retrieved, ex. in queryNames lookup
+            // should we skip posting ?
+            if (skipModelOrProject(resource, importState.data.posted, importState)) {
+               continue;
+            }
+         }
+         
          // TODO mass version update !
-         getData(uri, function (returnedResource) {
-            // updating existing resource : 
+         getData(uri, function (returnedResource, relativeUrl, data, importState) {
+            // existing resource... 
             // NB. can't access original "resource" variable because has been changed since call is async
             var upToDateResourceUri = parseUri(returnedResource["@id"]); // ex. "http://data.oasis-eu.org/dc/type/geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
             // and .modelType ex. "geo:CityGroup_0", .id ex. "FR/CC les Châteaux"
             var upToDateResource = importState.data.resources[upToDateResourceUri.uri];
             if (typeof upToDateResource === 'undefined') {
-               console.log("upToDateResource uri", upToDateResourceUri);
+               console.log("upToDateResource uri", upToDateResourceUri); // should not happen
+               importedDataPosted({ _raw : { statusCode : 400 }, _headers:{}, _body:{ _body:
+                   'Can\'t find locally resource for posted uri ' + upToDateResourceUri.uri } }, returnedResource); // go on
+               return;
             }
+            // should we skip posting ?
+            if (skipModelOrProject(returnedResource, importState.data.posted, importState)) {
+               // not same project : skip TODO better log & only if security constraint
+               /*importedDataPosted({ _raw : { statusCode : 403 }, _headers:{}, _body:{ _body:
+                   'Forbidden to post resource ' + returnedResource["@id"] + ' whose model is in project '
+                   + resourceModel['dcmo:pointOfViewAbsoluteName'] + ' that is not current one' } }, upToDateResource);*/
+               importedDataPosted(null, returnedResource); // go on (null data because error already handled)
+               return;
+            }
+            // TODO LATER OPT check project again, in case returnedResource has a different modelType ???
+            // updating version :
             upToDateResource["o:version"] = returnedResource["o:version"];
             postAllDataInType({ modelType: upToDateResourceUri.modelType }, upToDateResource,
                   importedDataPosted, importedDataPosted);
-         }, function (data) {
-            // creating new resource :
+         }, function (data, relativeUrl, importState) {
             var resourceUri = parseUri(data.request.path); // ex. "/dc/type/geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
             // and .modelType ex. "geo:CityGroup_0", .id ex. "FR/CC les Châteaux"
             var upToDateResource = importState.data.resources[resourceUri.uri];
+            // checking error first (rights...) :
+            if (data._raw.statusCode !== 404) { // TODO more specific 403 Forbidden ?
+               importedDataPosted(data, upToDateResource);
+               return;
+            } // else does not exist
+            // TODO better skipping error
+            // so creating new resource :
             postAllDataInType({ modelType: resourceUri.modelType }, upToDateResource,
                   importedDataPosted, importedDataPosted);
-         });
+         }, null, importState);
       }
+   }
+  
+   // must be applied on an already retrieved resource
+   function getProjectOfResource(resource, importState) {
+      return resource['dcmo:pointOfViewAbsoluteName'] // case of model resource
+            || importState.model.modelOrMixins[resource['@type'][0]]['dcmo:pointOfViewAbsoluteName'];
+      // (wouldn't be found if dcmo:model_0, rather in importState.metamodel)
+   }
+  
+   // must be applied on an already retrieved resource
+   function skipModelOrProject(resource, importStateRes, importState) {
+      var modelType = resource['dcmo:name'] // case of model resource
+            || resource['@type'][0];
+      if (importState.model.importedMixinNameSet[modelType]) { // skip model
+         var project = getProjectOfResource(resource, importState);
+         if (project === importState.project) { // skip project
+            return false;
+         }
+         importStateRes.skippedProjectSet[project] = true;
+      }
+
+      importStateRes.skippedResourceUris.push(resource["@id"]);
+      importStateRes.skippedNb++;
+      importStateRes.skippedModelTypeSet[modelType] = true;
+      return true;
    }
       
    function displayParsedResource(importState) {
@@ -1872,7 +1989,7 @@
          'dcmo:globalFields.dcmf:name', '$in'
          // globalFields else won't get ex. CountryFR inheriting from Country but with no additional field (??)
          + JSON.stringify(importState.data.importedFieldNames, null, null)
-      ).s() }, function(fieldNameMixinsFound) {
+      ).s() }, function(fieldNameMixinsFound, relativeUrl, data, importState) {
             if (fieldNameMixinsFound.length === 100) { // max limit
                return abortImport("Too many mixins (>= 100) found for field names to import");
             }
@@ -1919,7 +2036,7 @@
             if (success) {
                success(importState);
             }
-      }, null, 0, 100); // max limit (else 10 !!!)
+      }, null, 0, 100, null, importState);// max limit 100 (else 10 !!!)
    }
    
   
@@ -1995,7 +2112,7 @@
       }
       
       mergeStringValueOrDefaultIfAny(field, "dcmf:required", fieldRow["required"], importState.metamodel["dcmf:field_0"], importState);
-      mergeStringValueOrDefaultIfAny(field, "dcmf:aliasedStorageName", fieldRow["aliasedStorageName"], importState.metamodel["dcmf:field_0"], importState);
+      mergeStringValueOrDefaultIfAny(field, "dcmf:aliasedStorageNames", fieldRow["aliasedStorageNames"], importState.metamodel["dcmf:field_0"], importState);
       mergeStringValueOrDefaultIfAny(field, "dcmf:queryLimit", fieldRow["queryLimit"],
             importState.metamodel["dcmf:field_0"], importState); // meaningless for list but required by ModelResourceMappingService for now
       mergeStringValueOrDefaultIfAny(field, "dcmf:isInMixinRef", fieldRow["isInMixinRef"],
@@ -2108,7 +2225,7 @@
            if (typeof mixin == 'undefined') {
               mixin = {
                  "dcmo:name" : mixinName,
-                 "dcmo:pointOfViewAbsoluteName" : importState.projectAbsoluteName, // TODO LATER + pointOfViewName + '.' + pointOfViewEltName 
+                 "dcmo:pointOfViewAbsoluteName" : importState.project, // TODO LATER + pointOfViewName + '.' + pointOfViewEltName 
                  "@id" : buildUri(mixinTypeName, mixinName),
                  "@type" : [ mixinTypeName ], // NB. there are others but they will be recomputed on server side anyway
                  // more init :
@@ -2150,10 +2267,10 @@
            // country / language specific : (requires inheriting a generic mixin)
            var specificToCountryLanguage = fieldRow["specificToCountryLanguage"];
            if (specificToCountryLanguage && specificToCountryLanguage.trim() !== '') {
-              if (!contains(mixin['@type'], 'dcmls:CountryLanguageSpecific')) {
+              if (!contains(mixin['@type'], 'dcmls:CountryLanguageSpecific_0')) {
                  // NB. for now actually it is already there by default,
                  // TODO LATER rather optional / candidate mixin (FR/IT...)CountryLanguageSpecific
-                 mixin['@type'].push('dcmls:CountryLanguageSpecific');
+                 mixin['@type'].push('dcmls:CountryLanguageSpecific_0');
               }
               mixin['dcmls:code'] = specificToCountryLanguage.trim();
            }
@@ -2429,6 +2546,7 @@
       return cleanField;
    }
    
+   // only for models
    function refreshAndSchedulePost(modelOrMixinArray, relativeTypeUrl, postedCallback, importState) {
       function refreshAndPostObsoleteUntilFresh(data, origResource) {
          if (data._raw.statusCode === 409) {
@@ -2446,7 +2564,7 @@
                      postedCallback, refreshAndPostObsoleteUntilFresh);
             }, postedCallback);
          } else {
-            postedCallback(data, origResource);
+            postedCallback(data, origResource); // can't handle error, pass it along
          }
       }
       
@@ -2455,26 +2573,50 @@
             return abortImport();
          }
          var mixin = modelOrMixinArray[mInd];
+         var uri = mixin["@id"];
+
+         if (mixin['o:version']) { // has already been retrieved (how, in metamodel ???)
+            if (skipModelOrProject(mixin, importState.model.posted, importState)) {
+               continue;
+            }
+         }
          
          // posting one at a time rather than all at once because version has
          // to be refreshed and it is easier to do it in sync this way
-         var uri = mixin["@id"];
-         getData(uri, function (resource) {
-            // updating existing resource : 
+         getData(uri, function (resource, relativeUrl, data, importState) {
+            // existing resource...
             // NB. can't access "mixin" variable because has been changed since call is async
             var upToDateMixin = findMixin(resource["dcmo:name"], modelOrMixinArray);
+            // updating version :
             upToDateMixin["o:version"] = resource["o:version"];
+            // should we skip posting ?
+            if (skipModelOrProject(resource, importState.model.posted, importState)) {
+               // not same project : skip TODO better log & only if security constraint
+               /*importedDataPosted({ _raw : { statusCode : 403 }, _headers:{}, _body:{ _body:
+                   'Forbidden to post resource ' + resource["@id"] + ' whose model is in project '
+                   + resourceModel['dcmo:pointOfViewAbsoluteName'] + ' that is not current one' } }, upToDateMixin);*/
+               postedCallback(null, resource); // go on (null data because error already handled)
+               return;
+            }
+            // TODO LATER OPT check project again, in case returnedResource has a different modelType ???
             postAllDataInType(relativeTypeUrl, upToDateMixin,
                   postedCallback, refreshAndPostObsoleteUntilFresh);
-         }, function (data) { // error because resource does not exist
-            // creating new resource :
-            var relativeUrl = data.request.path
+         }, function (data, relativeUrl, importState) { // error because resource does not exist
+            // new resource...
+            var relativeUrl = data.request.path;
             var resourceIri = relativeUrl.substring(relativeUrl.indexOf("/dc/type/") + "/dc/type/".length);
             var typeName = decodeURIComponent(resourceIri.substring(resourceIri.indexOf("/") + 1)); // else "elec%3ADepartment_0" ; AND NOT decodeURI
             var upToDateMixin = findMixin(typeName, modelOrMixinArray);
+            // checking error first (rights...) :
+            if (data._raw.statusCode !== 404) { // TODO more specific 403 Forbidden ?
+               postedCallback(data, upToDateMixin); // pass error upwards
+               return;
+            }
+            // TODO better skipped error
+            // so creating :
             postAllDataInType(relativeTypeUrl, upToDateMixin,
                   postedCallback, postedCallback);
-         });
+         }, null, importState);
       }
    }
 
@@ -2485,6 +2627,29 @@
       if (typeof importStateConf.model.rowLimit === 'number') { // && importStateConf.model.rowLimit < 500
          importState.model.rowLimit = importStateConf.model.rowLimit;
       } // else use default
+      if (typeof importStateConf.model.fromMixin === 'string' && importStateConf.model.fromMixin.length !== 0) {
+         importState.model.fromMixin = importStateConf.model.fromMixin;
+      } // else use default
+      if (typeof importStateConf.model.untilMixin === 'string' && importStateConf.model.untilMixin.length !== 0) {
+         importState.model.untilMixin = importStateConf.model.untilMixin;
+      } // else use default
+      // building importedMixinNameSet out of it :
+      if (importStateConf.model.mixinNames) {
+         importState.model.mixinNames = importStateConf.model.mixinNames;
+         var beforeFirst = true;
+         for (var i in importState.model.mixinNames) {
+            if (beforeFirst) {
+               if (importState.model.mixinNames[i] !== importState.model.fromMixin) {
+                  continue;
+               }
+               beforeFirst = false;
+            }
+            if (importState.model.mixinNames[i] === importState.model.untilMixin) {
+               break;
+            }
+            importState.model.importedMixinNameSet[importState.model.mixinNames[i]] = true;
+         }
+      }
       
       if (importStateConf.model.fileName && importStateConf.model.fileName !== "") {
          importState.model.fileName = importStateConf.model.fileName;
@@ -2567,8 +2732,6 @@
          $('.dc-import-button').html('aborted');
          //abortImport(); // not only in loops, also there so that it's sure to happen
          return;
-      } else {
-         $('.dc-import-button').html('abort');
       }
       
       resetModelCounters();
@@ -2592,13 +2755,19 @@
                   "i18n" : "i18n"
             },
             domainPrefix : 'elec', // first three letters of model import file, changed on file select by UI calling buildModelDomainPrefix()
-            projectAbsoluteName : 'oasis.main', // TODO allow to choose
+            project : getProject(),
             mixinMajorVersion : 0, // TODO better
             metamodel : {},
+            metamodelProject : 'oasis.meta',
+            ///metamodelPrefix : 'dcm', // dcmo:model_0, dcmi:mixin_0...
             model : {
                // conf :
                domainPrefix : 'elec',
                rowLimit : -1,
+               fromMixin : null,
+               untilMixin : null,
+               mixinNames : [],
+               importedMixinNameSet : {}, // used as set, built from mixinNames & from/untilMixin
                // state :
                file : null,
                fileName : 'samples/openelec/oasis-donnees-metiers-openelec.csv',
@@ -2623,6 +2792,10 @@
                   postedNb : 0,
                   sentResourceUriSet : {}, // used as set
                   sentNb : 0,
+                  skippedResourceUris : [], // not a set to allow only displaying the first ones
+                  skippedNb : 0,
+                  skippedProjectSet : {}, // used as set
+                  skippedModelTypeSet : {}, // used as set
                   postedResourceUris : [], // to have their order (NOO already in postedResources)
                   postedSuccessNb : 0, // computed from postedResources
                   postedErrors : {},
@@ -2679,6 +2852,10 @@
                   postedNb : 0,
                   sentResourceUriSet : {}, // used as set
                   sentNb : 0,
+                  skippedResourceUris : [], // not a set to allow only displaying the first ones
+                  skippedNb : 0,
+                  skippedProjectSet : {}, // used as set
+                  skippedModelTypeSet : {}, // used as set
                   postedResourceUris : [], // to have their order (NOO already in postedResources)
                   postedSuccessNb : 0, // computed from postedResources
                   postedErrors : {},
@@ -2687,7 +2864,6 @@
                }
             }
       }
-      window.importState = importState; // making available globally for abort
 
 
       // load custom conf if any :
@@ -2695,10 +2871,22 @@
          loadConf(importStateConf, importState);
       } // else using defaults
       
+      // do checks before setting up start :
+      if (!importState.model.file && importState.project !== 'oasis.sandbox') {
+         alert('Please choose a model file !');
+         return;
+      }
+
+      // setting up start :
+      window.importState = importState; // making available globally for abort
+      $('.dc-import-button').html('abort');
+      
+      
       // loading existing metamodel : 
-      findDataByType({ modelType : 'dcmo:model_0', query : new UriQuery(
-         'dcmo:name', '$regexdcm.*'
-      ).s() }, function (resources) {
+      findDataByType({ modelType : 'dcmo:model_0' }, function (resources, relativeUrl, data, importState) {
+      /*findDataByType({ modelType : 'dcmo:model_0', query : new UriQuery(
+         'dcmo:name', '$regex' + importState.metamodelPrefix + '.*'
+      ).s() }, function (resources) {*/
          for (var mmInd in resources) {
             var modelResource = resources[mmInd];
             importState["metamodel"][modelResource["dcmo:name"]] = modelResource;
@@ -2750,6 +2938,7 @@
                + new Date().getTime(), modelParsingConf); // to prevent browser caching
       }
 
-      });
+      }, null, null, 100, // max limit
+      { 'X-Datacore-Project' : importState.metamodelProject }, importState); // everything in metamodel project
       return false;
    }
