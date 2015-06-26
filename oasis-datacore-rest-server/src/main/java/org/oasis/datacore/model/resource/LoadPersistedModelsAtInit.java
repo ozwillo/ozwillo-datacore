@@ -79,7 +79,8 @@ public class LoadPersistedModelsAtInit extends InitableBase {
             ResourceModelIniter.MODEL_MODEL_NAME, ResourceModelIniter.MODEL_NAME_PROP,
             new ImmutableMap.Builder<String,List<String>>().put("dcmo:pointOfViewAbsoluteName",
                   new ImmutableList.Builder<String>().add(projectName).build()).build(), projectName);
-      HashMap<String,ResourceException> previousModelsInError = null, modelsInError = null;
+      HashMap<String,ResourceException> previousModelsInError = null;
+      HashMap<String,ResourceException> modelsInError = new HashMap<String,ResourceException>();
       List<String> loadedModelAbsoluteNames = new ArrayList<String>(modelResources.size());
       do {
          previousModelsInError = modelsInError;
