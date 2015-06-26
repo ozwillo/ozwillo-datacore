@@ -73,9 +73,12 @@ public class LoadPersistedModelsAtInit extends InitableBase {
 
    
    private void loadModels(String projectName) throws QueryException {
-      // now, reload all models that had been persisted in mongo in last execution : TODO wrap in projects
+      // now, reload all models that had been persisted in mongo in last execution :
+      // (ONLY those local to this project)
       List<DCResource> modelResources = findDataInType(
-            ResourceModelIniter.MODEL_MODEL_NAME, ResourceModelIniter.MODEL_NAME_PROP, projectName);
+            ResourceModelIniter.MODEL_MODEL_NAME, ResourceModelIniter.MODEL_NAME_PROP,
+            new ImmutableMap.Builder<String,List<String>>().put("dcmo:pointOfViewAbsoluteName",
+                  new ImmutableList.Builder<String>().add(projectName).build()).build(), projectName);
       HashMap<String,ResourceException> previousModelsInError = null, modelsInError = null;
       List<String> loadedModelAbsoluteNames = new ArrayList<String>(modelResources.size());
       do {
@@ -120,14 +123,16 @@ public class LoadPersistedModelsAtInit extends InitableBase {
                   throw rex;
                }
                modelsInError.put(modelAbsoluteName, (ResourceException) rex.getCause());
+            } catch (ResourceException rex) {
+               modelsInError.put(modelAbsoluteName, rex);
             } catch (Exception rex) {
-               logger.debug("Unexpected Exception reloading model resource from persistence " + modelResource, rex);
+               throw new RuntimeException("Unexpected Exception reloading model resource from persistence " + modelResource, rex);
             }
          }
       } while (!modelsInError.isEmpty() && !modelsInError.keySet().equals(previousModelsInError.keySet()));
 
-      logger.info("Loaded " + loadedModelAbsoluteNames.size() + " models");
-      logger.debug("   loaded models details : " + loadedModelAbsoluteNames);
+      logger.info("Loaded in " + projectName + " project " + loadedModelAbsoluteNames.size() + " models");
+      logger.info("   loaded models details : " + loadedModelAbsoluteNames); // .debug(
       
       if (!modelsInError.isEmpty()) {
          logger.error("Unable to reload from persistence models with absolute names : "
@@ -144,7 +149,7 @@ public class LoadPersistedModelsAtInit extends InitableBase {
     */
    private void loadProjects() throws QueryException {
       List<DCResource> projectResources = findDataInType(
-            ResourceModelIniter.MODEL_PROJECT_NAME, ResourceModelIniter.POINTOFVIEW_NAME_PROP);
+            ResourceModelIniter.MODEL_PROJECT_NAME, ResourceModelIniter.POINTOFVIEW_NAME_PROP, null);
       HashMap<String,ResourceException> previousProjectsInError, projectsInError = new HashMap<String,ResourceException>();
       List<String> loadedProjectNames = new ArrayList<String>(projectResources.size());
       do {
@@ -178,38 +183,47 @@ public class LoadPersistedModelsAtInit extends InitableBase {
             } catch (ResourceException rex) {
                projectsInError.put(projectName, (ResourceException) rex); // missing local model or visible project
             } catch (Exception rex) {
-               logger.debug("Unexpected Exception reloading project resource from persistence " + projectResource, rex);
+               throw new RuntimeException("Unexpected Exception reloading project resource from persistence " + projectResource, rex);
             }
          }
       } while (!projectsInError.isEmpty() && !projectsInError.keySet().equals(previousProjectsInError.keySet()));
       
       logger.info("Loaded " + loadedProjectNames.size() + " projects : " + loadedProjectNames);
-      logger.debug("   loaded projects details : " + loadedProjectNames);
    }
 
    /**
     * Do range query based paginated queries to get all Resources (in current pov or main project).
     * @param modelType
-    * @param nameProp indexed field to be used to do range queries
+    * @param rangePaginationNameProp indexed field to be used to do range queries
+    * @param query null or additional criteria
     * @return
     * @throws QueryException if at any pagination step query fails (and prevents to go further),
     * actually if the first one is OK the next ones should also be
     */
-   private List<DCResource> findDataInType(String modelType, String nameProp) throws QueryException {
+   private List<DCResource> findDataInType(String modelType, String rangePaginationNameProp,
+         Map<String, List<String>> query) throws QueryException {
       List<DCResource> allResources = new ArrayList<DCResource>();
       List<DCEntity> entities = null;
-      Map<String, List<String>> nextProjectsByName = new HashMap<String, List<String>>(2);
-      nextProjectsByName.put(DCResource.KEY_DCCREATED, // ResourceModelIniter.POINTOFVIEW_NAME_PROP
+      if (query == null) {
+         query = new HashMap<String, List<String>>(2);
+      } else {
+         // deep copy in case immutable :
+         query = new HashMap<String, List<String>>(query);
+         for (Map.Entry<String, List<String>> entry : query.entrySet()) {
+            query.put(entry.getKey(), new ArrayList<String>(entry.getValue()));
+         }
+      }
+      query.put(rangePaginationNameProp, // DCResource.KEY_DCCREATED // ResourceModelIniter.POINTOFVIEW_NAME_PROP
             new ImmutableList.Builder<String>().add("+").build()); // older first
       while (!(entities = ldpEntityQueryService.findDataInType(modelType,
-            nextProjectsByName, 0, ldpEntityQueryService.getMaxLimit())).isEmpty()) {
+            query, 0, ldpEntityQueryService.getMaxLimit())).isEmpty()) {
          List<DCResource> resources = resourceEntityMapperService.entitiesToResources(entities);
          // NB. this doesn't check model or anything
          allResources.addAll(resources);
          
          // preparing next find :
-         String lastResourceName = (String) resources.get(resources.size() - 1).get(nameProp);
-         nextProjectsByName.put(nameProp, new ImmutableList.Builder<String>()
+         String lastResourceName = (String) resources.get(resources.size() - 1).get(rangePaginationNameProp);
+         query.put(rangePaginationNameProp, new ImmutableList.Builder<String>()
                .add(">\"" + lastResourceName + "\"+").build()); // older first
       }
       return allResources;
@@ -218,17 +232,19 @@ public class LoadPersistedModelsAtInit extends InitableBase {
    /**
     * Same but in project or pov
     * @param modelType
-    * @param nameProp
+    * @param rangePaginationNameProp
+    * @param query
     * @param project
     * @return
     * @throws QueryException
     */
-   private List<DCResource> findDataInType(String modelType, String nameProp, String project) throws QueryException {
+   private List<DCResource> findDataInType(String modelType, String rangePaginationNameProp,
+         Map<String, List<String>> query, String project) throws QueryException {
       try {
          List<DCResource> allResources = new SimpleRequestContextProvider<List<DCResource>>() {
             // set context project before loading :
             protected List<DCResource> executeInternal() throws QueryException {
-               return findDataInType(modelType, nameProp);
+               return findDataInType(modelType, rangePaginationNameProp, query);
             }
          }.execInContext(new ImmutableMap.Builder<String, Object>()
                .put(DCRequestContextProvider.PROJECT, project).build());
