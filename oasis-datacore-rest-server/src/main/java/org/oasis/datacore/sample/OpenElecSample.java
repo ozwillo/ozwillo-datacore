@@ -21,13 +21,14 @@ import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.server.resource.ResourceNotFoundException;
 import org.springframework.stereotype.Component;
 
-import au.com.bytecode.opencsv.CSVReader;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import au.com.bytecode.opencsv.CSVReader;
+
 
 /**
+ * @obsolete TODO rm
  * Draft of OpenElec Models.
  * 
  * Used by tests & demo
@@ -43,7 +44,7 @@ import com.google.common.collect.ImmutableMap;
  * @author mdutoo
  *
  */
-@Component
+//@Component
 public class OpenElecSample extends DatacoreSampleMethodologyBase {
    
 
