@@ -1,4 +1,4 @@
-//var containerUrl = "http://data.oasis-eu.org/"; // rather in dcConf filled at init by /dc/playground/configuration
+//var containerUrl = "http://data.ozwillo.com/"; // rather in dcConf filled at init by /dc/playground/configuration
 
 
 //////////////////////////////////////////////////:
@@ -169,7 +169,7 @@
          iri : resourceIri // NOT encoded !!
          };
    }
-   //var dcResourceUriRegex = /^http:\/\/data\.oasis-eu\.org\/dc\/type\/([^\/]+)\/(.+)$/g;
+   //var dcResourceUriRegex = /^http:\/\/data\.ozwillo\.com\/dc\/type\/([^\/]+)\/(.+)$/g;
    //var dcResourceUriRegex = /^(http[s]?):\/\/+([^\/]+)\/+dc\/+type\/+([^\/\?]+)\/*([^\?]+)?\??(.*)$/g; // NOO seems stateful, else sometimes matches gets null
    // also supports relative uri (iri) and query, but modelType is required
    function parseUri(resourceUri) { // TODO regex
@@ -369,7 +369,7 @@ function toolifyDcList(values, depth, key, modelType, upperResource, keyPathInRe
 }
 function toolifyDcResourceUri(value) {
    // TODO LATER rather encodeUriPathComponent('dcmo:model_0') etc. (however, $1 and $2 are already encoded)
-   return '"' + value.replace(/^http:\/\/data\.oasis-eu\.org\/dc\/type\/([^\/]+)\/(.+)$/g,
+   return '"' + value.replace(/^http:\/\/data\.ozwillo\.com\/dc\/type\/([^\/]+)\/(.+)$/g,
          dcConf.containerUrl + '/dc/'
          + '<a href="/dc/type/dcmo:model_0/$1" class="dclink" onclick="'
          + 'javascript:return getData($(this).attr(\'href\'));'
@@ -428,6 +428,9 @@ function stringifyPartial(arrayOrHashmap, rowNb) {
    var partialRes = getPartial(arrayOrHashmap, rowNb);
    return JSON.stringify(partialRes.res, null, '\t').replace(/\n/g, '<br>')
          + ((partialRes.isPartial) ? '<br/>...' : '');
+}
+function stringifyForAttribute(headers) {
+   return headers ? JSON.stringify(headers, null, null).replace(/"/g, "'") : null;
 }
 
 
@@ -552,7 +555,7 @@ function buildProjectPortalQuery(options) {
 function buildProjectPortalQueryLink(options, linkText) {
    return '<a href="/dc/type/' + buildProjectPortalQuery(options) + '" class="dclink" onclick="'
       + 'javascript:return findData($(this).attr(\'href\'), projectPortalSuccess, null, null, 25, {\'X-Datacore-View\':\' \'}, '
-      + JSON.stringify(options).replace(/\"/g, '\'') + ');">' + linkText + '</a>';
+      + (options ? + stringifyForAttribute(options) : 'null') + ');">' + linkText + '</a>';
 }
 function buildProjectPortalTitleHtml(options) {
    if (!options) {
@@ -582,7 +585,7 @@ function projectPortalSuccess(storageModels, relativeUrl, data, options) {
    var html = buildListOfStorageModelLinks(storageModels);
    html = addPaginationLinks(data.request, html, storageModels,
            'function (storageModels, relativeUrl, data) { projectPortalSuccess(storageModels, relativeUrl, data, '
-           + JSON.stringify(options) + '); }');
+           + stringifyForAttribute(options) + '); }');
    html = buildProjectPortalTitleHtml(options) + html;
    $('.mydata').html(html);
 }
@@ -981,7 +984,7 @@ function addPaginationLinks(request, prettyJson, resList, successFunctionName) {
       }
       prettyJson = '<a href="' + relativeUrl + '" class="dclink" onclick="'
             + 'javascript:return findDataByType($(this).attr(\'href\'), ' + successFunctionName + ', null, null, null, '
-            + JSON.stringify(headers).replace(/"/g, "'") + ');'
+            + stringifyForAttribute(headers) + ');'
             + '">...</a>' + lineBreak(0) + prettyJson;
    }
    if (!resList || typeof resList === 'string' // RDF case : always display
@@ -996,7 +999,7 @@ function addPaginationLinks(request, prettyJson, resList, successFunctionName) {
        }
       prettyJson += lineBreak(0) + '<a href="' + relativeUrl + '" class="dclink" onclick="'
             + 'javascript:return findDataByType($(this).attr(\'href\'), ' + successFunctionName + ', null, null, null, '
-            + JSON.stringify(headers).replace(/"/g, "'") + ');'
+            + stringifyForAttribute(headers) + ');'
             + '">...</a>';
    }
    return prettyJson;

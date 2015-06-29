@@ -16,14 +16,14 @@ import org.springframework.stereotype.Component;
  * Resource that handles playground's OASIS OAuth2 login redirection.
  * 
  * OASIS OAuth2 is done as in https://github.com/pole-numerique/oasis/blob/master/HOWTO/login.md
- * * redirect browser to https://oasis-demo.atolcd.com/a/auth?response_type=code&client_id=29ef97c0-bb33-4f96-be22-3fd480e05d5f&scope=openid%20datacore&redirect_uri=https://portal.oasis-eu.org/callback
+ * * redirect browser to https://oasis-demo.atolcd.com/a/auth?response_type=code&client_id=29ef97c0-bb33-4f96-be22-3fd480e05d5f&scope=openid%20datacore&redirect_uri=https://portal.ozwillo.com/callback
  * + TODO LATER state and nonce randoms : provide and check at the end
- * * (see *Token*java) then handle browser redirect to https://portal.oasis-eu.org/callback?code=eyJpZCI6IjA2MzBhNGRjLThhMWYtNDdkNi05NDY3LWU1N2NmNzM0ZDE3Yy9mUTNoY05nWmpvLWdhejFuUU9RME9nIiwiaWF0IjoxNDE1MjcyNDM3NzQ0LCJleHAiOjE0MTUyNzI0OTc3NDR9
+ * * (see *Token*java) then handle browser redirect to https://portal.ozwillo.com/callback?code=eyJpZCI6IjA2MzBhNGRjLThhMWYtNDdkNi05NDY3LWU1N2NmNzM0ZDE3Yy9mUTNoY05nWmpvLWdhejFuUU9RME9nIiwiaWF0IjoxNDE1MjcyNDM3NzQ0LCJleHAiOjE0MTUyNzI0OTc3NDR9
  * to get token, by POST to  
  *    'Authorization:Basic ' + new Buffer(conf.app_client_id + ':' + conf.app_client_secret).toString("base64")
       grant_type: 'authorization_code',
       //redirect_uri: 'http://requestb.in/' + requestBinId // NO since Sept. 2014 has to be an approved app ex. portal
-      redirect_uri: 'https://portal.oasis-eu.org/callback',
+      redirect_uri: 'https://portal.ozwillo.com/callback',
       code: code
  * and JSON.parse(body).access_token
  * * put it in a cookie (LATER encrypted, using server-generated salt ?!?!) 

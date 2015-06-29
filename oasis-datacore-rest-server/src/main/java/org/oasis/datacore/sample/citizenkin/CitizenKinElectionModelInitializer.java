@@ -3,7 +3,11 @@ package org.oasis.datacore.sample.citizenkin;
 import java.util.Arrays;
 import java.util.List;
 
-import org.oasis.datacore.core.meta.model.*;
+import org.oasis.datacore.core.meta.model.DCField;
+import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
+import org.oasis.datacore.core.meta.model.DCListField;
+import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.sample.DatacoreSampleBase;
 import org.springframework.stereotype.Component;
@@ -26,7 +30,7 @@ public class CitizenKinElectionModelInitializer extends DatacoreSampleBase {
     public static final String STRING_TYPE = DCFieldTypeEnum.STRING.getType();
     public static final String DATE_TYPE = DCFieldTypeEnum.DATE.getType();
     public static final String PREFIX = "ck_electoral_roll_registration:";
-
+    
     /** main model !! */
     @Override
     protected boolean neverCleanData() {
@@ -36,7 +40,7 @@ public class CitizenKinElectionModelInitializer extends DatacoreSampleBase {
     /** overriden to stay as before in oasis.main */
     @Override
     protected DCProject getProject() {
-       return getMainProject();
+       return projectInitService.getMainProject();
     }
     
     @Override

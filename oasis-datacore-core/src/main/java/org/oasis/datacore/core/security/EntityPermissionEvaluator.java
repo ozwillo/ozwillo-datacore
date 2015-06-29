@@ -324,7 +324,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
          if (projectSecurityDefaults == null) {
             return isDefaultSecurityAllowed(user, permission);
          }
-         return !isThisSecurityAllowed(null, // WHATEVER THE RESOURCE
+         return isThisSecurityAllowed(null, // WHATEVER THE RESOURCE
                projectSecurityDefaults, user, permission);
       }
       

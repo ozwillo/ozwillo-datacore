@@ -65,7 +65,7 @@ public class ContextInInterceptor extends AbstractPhaseInterceptor<Message> {
             if(resource instanceof ArrayList<?>) {
                ArrayList<DCResource> dcRes = (ArrayList<DCResource>) resource;
                if (!dcRes.isEmpty()
-                     && dcRes.get(0) != null) { // happens when ex. bad containerUrl : http://data.oasis-eu.orgdc/type...
+                     && dcRes.get(0) != null) { // happens when ex. bad containerUrl : http://data.ozwillo.comdc/type...
                   ex.put("dc.req.model", dcRes.get(0).getModelType());
                }
             }

@@ -21,6 +21,7 @@ import org.oasis.datacore.rest.server.event.EventService;
 import org.oasis.datacore.rest.server.resource.ResourceEntityMapperService;
 import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.oasis.datacore.sample.ResourceModelIniter;
+import org.oasis.datacore.sample.meta.ProjectInitService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -47,6 +48,8 @@ public class LoadPersistedModelsAtInit extends InitableBase {
    private DCModelService dataModelService;
    @Autowired
    private DataModelServiceImpl dataModelAdminService;
+   @Autowired
+   private ProjectInitService projectInitService;
    
    @Autowired
    protected EventService eventService;
@@ -60,6 +63,12 @@ public class LoadPersistedModelsAtInit extends InitableBase {
    @Override
    public int getOrder() {
       return 1000000;
+   }
+   
+   /** has its own project */
+   @Override
+   protected DCProject getProject() {
+      return projectInitService.getMetamodelProject();
    }
 
    @Override
@@ -98,9 +107,9 @@ public class LoadPersistedModelsAtInit extends InitableBase {
                   throw new ResourceException("Found model " + modelName
                         + " having wrong project " + modelProjectName + " while loading project, "
                         + "possibly obsolete one that must be deleted from " + projectName + "."
-                        + dataModelAdminService.getStorageModel(dataModelAdminService.getModelBase(
+                        + dataModelService.getStorageModel(dataModelService.getModelBase(
                               ResourceModelIniter.MODEL_MODEL_NAME)).getCollectionName() + " collection.",
-                        modelResource, dataModelAdminService.getProject(projectName));
+                        modelResource, dataModelService.getProject(projectName));
                }
                
                // set context project before loading :
@@ -166,7 +175,7 @@ public class LoadPersistedModelsAtInit extends InitableBase {
             try {
                // NB. not in context either since ini oasis.main project
                DCProject project = mrMappingService.toProject(projectResource); // NB. loads visible projects but not models
-               DCProject hardcodedProject = dataModelAdminService.getProject(project.getName());
+               DCProject hardcodedProject = dataModelService.getProject(project.getName());
                if (hardcodedProject != null) {
                   // keeping existing project conf (hardcoded for now)
                   project = hardcodedProject;

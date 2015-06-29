@@ -25,10 +25,10 @@ public class SimpleUriService {
     * Unique per container, defines it. To be able to build a full uri
     * (for GET, DELETE, possibly to build missing or custom / relative URI...) */
    @Value("${datacoreApiServer.containerUrl}")
-   protected String containerUrlString; // "http://" + "data.oasis-eu.org"
-   protected static String staticContainerUrlString; // "http://" + "data.oasis-eu.org"
+   protected String containerUrlString; // "http://" + "data.ozwillo.com"
+   protected static String staticContainerUrlString; // "http://" + "data.ozwillo.com"
    /** cache, built in init() */
-   protected static URI containerUrl; // "http://" + "data.oasis-eu.org"
+   protected static URI containerUrl; // "http://" + "data.ozwillo.com"
 
 
    /**
@@ -47,7 +47,7 @@ public class SimpleUriService {
     * @param containerUrl if null, conf'd default
     * @param modelType
     * @param id
-    * @return escaped ex. http://data.oasis-eu.org/dc/type/geo:CityGroup_0/FR/CC%20les%20Ch%C3%A2teaux
+    * @return escaped ex. http://data.ozwillo.com/dc/type/geo:CityGroup_0/FR/CC%20les%20Ch%C3%A2teaux
     * and to get an URI, new URI(returned)
     */
    public static String buildUri(URI containerUrl, String modelType, String id) {
@@ -59,10 +59,10 @@ public class SimpleUriService {
       try {
          URI escapedUri = new URI(containerUrl.getScheme(), null,
                containerUrl.getHost(), containerUrl.getPort(), path, null, null).normalize();
-         // ex. escapedUri = http://data.oasis-eu.org/dc/type/geo:CityGroup_0/FR/CC%20les%20Châteaux
+         // ex. escapedUri = http://data.ozwillo.com/dc/type/geo:CityGroup_0/FR/CC%20les%20Châteaux
          return escapedUri.toASCIIString();
          // and to get an URI, new URI(escapedUri.toASCIIString()), else UTF-8 ex. â not encoded
-         // ex. http://data.oasis-eu.org/dc/type/geo:CityGroup_0/FR/CC%20les%20Ch%C3%A2teaux
+         // ex. http://data.ozwillo.com/dc/type/geo:CityGroup_0/FR/CC%20les%20Ch%C3%A2teaux
       } catch (URISyntaxException usex) {
          // can't happen since containerUrl & this.containerUrl are nice URIs
          logger.error("Error building URI", usex);

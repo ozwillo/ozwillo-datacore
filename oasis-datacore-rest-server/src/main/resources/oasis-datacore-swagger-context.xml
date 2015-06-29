@@ -34,7 +34,7 @@
       <property name="resourcePackage" value="org.oasis.datacore.rest.api"/>
       <property name="version" value="1.0.0"/>
       <property name="basePath" value="${datacoreApiServer.baseUrl}"/>
-      <property name="title" value="Datacore Resource API"/>
+      <property name="title" value="Datacore API"/>
       <property name="description">
          <!-- 20141112 TODO no more need to resolve placeholders (done in ajax) -->
          <!-- bean factory-bean="springPlaceholderResolver" factory-method="resolveEmbeddedValue">
@@ -45,7 +45,7 @@
             <!-- /constructor-arg>
          </bean -->
       </property>
-      <property name="contact" value="http://www.oasis-eu.org"/>
+      <property name="contact" value="http://www.ozwillo.com"/>
       <property name="license" value="Affero GPL (except for client libraries, which are LGPL)"/>
       <property name="licenseUrl" value="http://www.gnu.org/licenses/agpl-3.0.html"/>
       <property name="scan" value="true"/>

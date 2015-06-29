@@ -1,4 +1,4 @@
-//var containerUrl = "http://data.oasis-eu.org/"; // rather in dcConf filled at init by /dc/playground/configuration
+//var containerUrl = "http://data.ozwillo.com/"; // rather in dcConf filled at init by /dc/playground/configuration
 
    
 //////////////////////////////////////////////////:
@@ -29,7 +29,7 @@
    // full TLS impl https://github.com/digitalbazaar/forge
    // https://code.google.com/p/crypto-js/
    
-   var hashids = new Hashids("OASIS Datacore Playground Import Tool"); // https://github.com/ivanakimov/hashids.js 298e9a7f8241f074256f50f0ffa3631f8f4f03e1
+   var hashids = new Hashids("Ozwillo Datacore Playground Import Tool"); // https://github.com/ivanakimov/hashids.js 298e9a7f8241f074256f50f0ffa3631f8f4f03e1
    // examples :
    //var id = hashids.encode(1, 2, 3);
    //var numbers = hashids.decode(id);
@@ -1788,20 +1788,17 @@
             return abortImport();
          }
          
-         // check project first :
          var resource = importState.data.resources[uri];
-         if (resource['o:version']) { // has already been retrieved, ex. in queryNames lookup
-            // should we skip posting ?
-            if (skipModelOrProject(resource, importState.data.posted, importState)) {
-               continue;
-            }
+         if (skipModel(resource, importState.data.posted, importState)
+               || skipProject(resource, importState.data.posted, importState)) {
+            continue;
          }
          
          // TODO mass version update !
          getData(uri, function (returnedResource, relativeUrl, data, importState) {
             // existing resource... 
             // NB. can't access original "resource" variable because has been changed since call is async
-            var upToDateResourceUri = parseUri(returnedResource["@id"]); // ex. "http://data.oasis-eu.org/dc/type/geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
+            var upToDateResourceUri = parseUri(returnedResource["@id"]); // ex. "http://data.ozwillo.com/dc/type/geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
             // and .modelType ex. "geo:CityGroup_0", .id ex. "FR/CC les Châteaux"
             var upToDateResource = importState.data.resources[upToDateResourceUri.uri];
             if (typeof upToDateResource === 'undefined') {
@@ -1811,14 +1808,14 @@
                return;
             }
             // should we skip posting ?
-            if (skipModelOrProject(returnedResource, importState.data.posted, importState)) {
+            ///if (skipProject(returnedResource, importState.data.posted, importState)) {
                // not same project : skip TODO better log & only if security constraint
                /*importedDataPosted({ _raw : { statusCode : 403 }, _headers:{}, _body:{ _body:
                    'Forbidden to post resource ' + returnedResource["@id"] + ' whose model is in project '
                    + resourceModel['dcmo:pointOfViewAbsoluteName'] + ' that is not current one' } }, upToDateResource);*/
-               importedDataPosted(null, returnedResource); // go on (null data because error already handled)
+               /*importedDataPosted(null, returnedResource); // go on (null data because error already handled)
                return;
-            }
+            }*/
             // TODO LATER OPT check project again, in case returnedResource has a different modelType ???
             // updating version :
             upToDateResource["o:version"] = returnedResource["o:version"];
@@ -1849,21 +1846,31 @@
    }
   
    // must be applied on an already retrieved resource
-   function skipModelOrProject(resource, importStateRes, importState) {
+   function skipProject(resource, importStateRes, importState) {
+      var project = getProjectOfResource(resource, importState);
+      if (project !== importState.project) { // skip project
+         var modelType = resource['dcmo:name'] // case of model resource
+               || resource['@type'][0];
+         importStateRes.skippedProjectSet[project] = true;
+
+         importStateRes.skippedResourceUris.push(resource["@id"]);
+         importStateRes.skippedNb++; // to fill "done" condition
+         importStateRes.skippedModelTypeSet[modelType] = true;
+         return true;
+      }
+      return false;
+   }
+  
+   function skipModel(resource, importStateRes, importState) {
       var modelType = resource['dcmo:name'] // case of model resource
             || resource['@type'][0];
-      if (importState.model.importedMixinNameSet[modelType]) { // skip model
-         var project = getProjectOfResource(resource, importState);
-         if (project === importState.project) { // skip project
-            return false;
-         }
-         importStateRes.skippedProjectSet[project] = true;
+      if (!importState.model.importedMixinNameSet[modelType]) { // skip model
+         importStateRes.skippedResourceUris.push(resource["@id"]);
+         importStateRes.skippedNb++; // to fill "done" condition
+         importStateRes.skippedModelTypeSet[modelType] = true;
+         return true;
       }
-
-      importStateRes.skippedResourceUris.push(resource["@id"]);
-      importStateRes.skippedNb++;
-      importStateRes.skippedModelTypeSet[modelType] = true;
-      return true;
+      return false;
    }
       
    function displayParsedResource(importState) {
@@ -2190,7 +2197,7 @@
       var mixinNameToFieldNameTree = importState.model.mixinNameToFieldNameTree;
       var mixins = importState.model.modelOrMixins;
         
-      var loopMaxIndex = 20;
+      var loopMaxIndex = 3; // 20
       var loopIndex = -1;
       do {
          importState.model.errors = [];
@@ -2575,10 +2582,8 @@
          var mixin = modelOrMixinArray[mInd];
          var uri = mixin["@id"];
 
-         if (mixin['o:version']) { // has already been retrieved (how, in metamodel ???)
-            if (skipModelOrProject(mixin, importState.model.posted, importState)) {
-               continue;
-            }
+         if (skipModel(mixin, importState.model.posted, importState)) {
+            continue;
          }
          
          // posting one at a time rather than all at once because version has
@@ -2590,7 +2595,7 @@
             // updating version :
             upToDateMixin["o:version"] = resource["o:version"];
             // should we skip posting ?
-            if (skipModelOrProject(resource, importState.model.posted, importState)) {
+            if (skipProject(resource, importState.model.posted, importState)) {
                // not same project : skip TODO better log & only if security constraint
                /*importedDataPosted({ _raw : { statusCode : 403 }, _headers:{}, _body:{ _body:
                    'Forbidden to post resource ' + resource["@id"] + ' whose model is in project '

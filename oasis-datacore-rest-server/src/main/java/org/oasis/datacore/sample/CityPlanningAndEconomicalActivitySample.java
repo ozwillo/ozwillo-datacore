@@ -112,7 +112,7 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleMetho
       // - and first of all, the rules that govern their URIs. Some good practices :
       //    - avoid adding internal / technical / business id (unique) fields to allow
       // applications to reconcile with it. Rather, build your Resources' URIs out of those ids,
-      // ex. atecoCode "myCode" => uri : "http://data.oasis-eu.org/dc/modelType/ateco/myCode"
+      // ex. atecoCode "myCode" => uri : "http://data.ozwillo.com/dc/modelType/ateco/myCode"
       // - available field types : string, boolean, int, float, long, double, date, map, list, i18n, resource
       //    - "queryLimit":100 means that this field is indexed (wouldn't be if rather 0)
       // and may therefore be queried but at most 100 results will be returned (which can be detected

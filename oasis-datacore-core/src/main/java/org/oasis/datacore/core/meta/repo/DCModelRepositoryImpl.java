@@ -36,7 +36,7 @@ public class DCModelRepositoryImpl implements DCModelRepositoryCustom {
       
       if (dcEntity == null) {
          dcEntity = new DCEntity();
-         dcEntity.setUri("http://data.oasis-eu.org/sample/1");
+         dcEntity.setUri("http://data.ozwillo.com/sample/1");
          Map<String, Object> props = dcEntity.getProperties();
          
          props.put("string", "some text");
@@ -54,7 +54,7 @@ public class DCModelRepositoryImpl implements DCModelRepositoryCustom {
          props.put("i18nAlt2Field__i18n", i18nMap); // TODO __i ??
          
          props.put("dcRef", SimpleUriService.buildUri(null, "city", "London"));
-         props.put("scRef", SimpleUriService.buildUri(new URI("http://social.oasis-eu.org"), "user", "john"));
+         props.put("scRef", SimpleUriService.buildUri(new URI("http://social.ozwillo.com"), "user", "john"));
          
          List<String> stringList = new ArrayList<String>();
          stringList.add("a");
@@ -64,7 +64,7 @@ public class DCModelRepositoryImpl implements DCModelRepositoryCustom {
          map.put("b", 2);
          map.put("c", new ArrayList<String>(stringList));
          map.put("dcRef", SimpleUriService.buildUri(null, "city", "London"));
-         map.put("scRef", SimpleUriService.buildUri(new URI("http://social.oasis-eu.org"), "user", "john"));
+         map.put("scRef", SimpleUriService.buildUri(new URI("http://social.ozwillo.com"), "user", "john"));
          List<Map<String,Object>> mapList = new ArrayList<Map<String,Object>>();
          mapList.add(new HashMap<String,Object>(map));
          props.put("stringList", stringList);

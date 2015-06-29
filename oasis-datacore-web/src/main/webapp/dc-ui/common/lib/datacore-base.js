@@ -69,7 +69,7 @@ function initUserInfoUi() {
    });
 
    $.ajax({
-      url:"/dc/type/dcmp:Project_0?limit=100",
+      url:"/dc/type/dcmp:Project_0?dcmpv:name=%2B&limit=100", // sorted on dcmpv:name (%2B = + ; would allow range pagination)
       headers: { Authorization:getAuthHeader() }, // , 'X-Datacore-View':'dcmpv:PointOfView_0' (any project should do)
       success: function(userProjects) {
          var optionsHtml = '';

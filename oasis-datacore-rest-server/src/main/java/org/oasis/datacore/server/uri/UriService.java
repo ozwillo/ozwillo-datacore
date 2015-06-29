@@ -29,7 +29,7 @@ public class UriService extends SimpleUriService {
          
    /** Base URL of this endpoint. If broker mode enabled, used to detect when to use it.. */
    @Value("${datacoreApiServer.baseUrl}") 
-   private String baseUrl; // "http://" + "data-lyon-1.oasis-eu.org" + "/"
+   private String baseUrl; // "http://" + "data-lyon-1.ozwillo.com" + "/"
    /** Known (others or all) Datacore containers (comma-separated) */
    @Value("${datacoreApiServer.knownDatacoreContainerUrls}")
    private String knownDatacoreContainerUrls;

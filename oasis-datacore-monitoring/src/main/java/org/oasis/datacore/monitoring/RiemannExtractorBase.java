@@ -108,7 +108,7 @@ abstract class RiemannExtractorBase implements InitializingBean {
       if (modelObject != null) {
          model = modelObject.toString();
       } else {
-         model = "dcModelNotFound"; // happens when ex. bad containerUrl : http://data.oasis-eu.orgdc/type...
+         model = "dcModelNotFound"; // happens when ex. bad containerUrl : http://data.ozwillo.comdc/type...
       }
             
       try {

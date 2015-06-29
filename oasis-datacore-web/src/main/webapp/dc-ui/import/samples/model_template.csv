@@ -39,5 +39,5 @@ No inherited field definition should be redefined",,i.e. reuses but overrides de
 And path",,,,,,,,,,,"0 if not indexed (default), else ex. 100",ex. geo:name for both geoco:name and geoci:name fields allows to search in both at once in abstract geoname field. Can also be multiple ex. orgfr:siret is stored in org:id and orgfr:numeroFiscal in org:vatNumber but orges/it:vatNumber is stored in both org:vatNumber and org:id (which should then be readonly to avoid changing it without changing org:vatNumber).,"if true, this field won't be written. Useful with fields that are computed or filled by others with multiple aliasedStorageNames."
 ,,,,,,,,,,en,,,,true,true,true,,,,,,,,,false,false,true,,,,,true,true,,,,
 odisp:Displayable_0,odisp:name,,i18n,,,"fill it in instance models, or replace their :name or store it in it",,,,,,,,false,false,,,,,,,,,,,,,,,,,,,,100,,
-oanc:Ancestor_0,oanc:ancestors,,o:Ancestor_0,,true,"auto computed OR can be provided (as URL, one per line or comma separated), in the same data file or additional ones",__computed,,,,,,,false,false,,,,,,,,,,,,,,,,true,,,,,,
+oanc:Ancestor_0,oanc:ancestors,,oanc:Ancestor_0,,true,"auto computed OR can be provided (as URL, one per line or comma separated), in the same data file or additional ones",__computed,,,,,,,false,false,,,,,,,,,,,,,,,,true,,,,,,
 START IN THIS CELL,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,

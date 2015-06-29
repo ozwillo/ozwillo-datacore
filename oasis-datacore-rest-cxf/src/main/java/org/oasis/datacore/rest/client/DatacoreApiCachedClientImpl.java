@@ -66,7 +66,7 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
    /** to be able to build a full uri to evict cached data */
    ///@Value("${datacoreApiClient.baseUrl}")
    ///private String baseUrl; // useless
-   @Value("${datacoreApiClient.containerUrl}") //:http://data-test.oasis-eu.org/
+   @Value("${datacoreApiClient.containerUrl}") //:http://data-test.ozwillo.com/
    private String containerUrlString;
    @Value("#{new java.net.URI('${datacoreApiClient.containerUrl}')}")
    //@Value("#{uriService.getContainerUrl()}")

@@ -29,6 +29,7 @@ import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
 import org.oasis.datacore.rest.server.resource.ResourceNotFoundException;
 import org.oasis.datacore.rest.server.resource.ValueParsingService;
+import org.oasis.datacore.sample.meta.ProjectInitService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -64,11 +65,13 @@ public class ResourceModelIniter extends DatacoreSampleBase {
    public static final String DISPLAYABLE_NAME_PROP = "odisp:name";
    public static final String MODEL_COUNTRYLANGUAGESPECIFIC_NAME = "dcmls:CountryLanguageSpecific_0";
    public static final String COUNTRYLANGUAGESPECIFIC_PROP_NAME = "dcmls:code";
-   public static final String MODEL_ANCESTORS_NAME = "oanc:Ancestors_0";
+   public static final String MODEL_ANCESTORS_NAME = "oanc:Ancestor_0";
    public static final String ANCESTORS_NAME_PROP = "oanc:ancestors";
 
    @Autowired
    private ModelResourceMappingService mrMappingService;
+   @Autowired
+   private ProjectInitService projectInitService;
    @Autowired
    private ValueParsingService valueService;
    
@@ -82,7 +85,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
    /** has its own project */
    @Override
    protected DCProject getProject() {
-      return getMetamodelProject();
+      return projectInitService.getMetamodelProject();
    }
 
    // TODO rm, rather in dedicated initer / service 
@@ -304,7 +307,8 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       // other features :
 
       DCModelBase ancestorsModel = new DCMixin(MODEL_ANCESTORS_NAME) // and not DCModel : fields exist within model & mixins
-         .addField(new DCI18nField(ANCESTORS_NAME_PROP, 100)) // searchable !
+         .addField(new DCListField(ANCESTORS_NAME_PROP, new DCResourceField("useless",
+               MODEL_ANCESTORS_NAME, false, 100))) // searchable !
       ;
       
       modelsToCreate.addAll(Arrays.asList(displayableModel, countryLanguageSpecificModel,
@@ -331,31 +335,24 @@ public class ResourceModelIniter extends DatacoreSampleBase {
     * Create default projects, including geo & org(pri) for now.
     */
    private void createDefaultProjects() {
-      getMetamodelProject();
-      getMainProject();
-      getSampleProject();
-      getSandboxProject();
-      
-      DCProject geo0Project = buildContainerVersionedProjectDefaultConf("geo", 0,
-            "Geographical jurisdictions", // "Geographical jurisdictions (" + toPlaygroundLink("geo:Area_0") + ")"
-            ozwilloGeoAdmins); // geo_1 // NB. in geo_1.0, 0 would be minorVersion
-      DCProject geo1Project = buildContainerVersionedProjectDefaultConf("geo", 1,
-            "Geographical jurisdictions", // "Geographical jurisdictions (" + toPlaygroundLink("geo:Area_0") + ")"
-            ozwilloGeoAdmins); // geo_1 // NB. in geo_1.0, 0 would be minorVersion
-      DCProject geoProject = buildFacadeProjectDefaultConf(geo1Project);
+      DCProject geo0Project = projectInitService.buildContainerVersionedProjectDefaultConf("geo", 0, // geo_1 // NB. in geo_1.0, 0 would be minorVersion
+            "Geographical jurisdictions", null); // "Geographical jurisdictions (" + toPlaygroundLink("geo:Area_0") + ")"
+      DCProject geo1Project =projectInitService. buildContainerVersionedProjectDefaultConf("geo", 1, // geo_1 // NB. in geo_1.0, 0 would be minorVersion
+            "Geographical jurisdictions", null); // "Geographical jurisdictions (" + toPlaygroundLink("geo:Area_0") + ")"
+      DCProject geoProject = projectInitService.buildFacadeProjectDefaultConf(geo1Project);
 
-      DCProject org0Project = buildContainerVersionedProjectDefaultConf("org", 0,
-            "Organizations, public and private, as well as Persons", ozwilloOrgAdmins, geo0Project);
-      DCProject org1Project = buildContainerVersionedProjectDefaultConf("org", 1,
-            "Organizations, public and private, as well as Persons", ozwilloOrgAdmins, geo1Project);
-      DCProject orgProject = buildFacadeProjectDefaultConf(org1Project);
+      DCProject org0Project = projectInitService.buildContainerVersionedProjectDefaultConf("org", 0,
+            "Organizations, public and private, as well as Persons", null, geo0Project);
+      DCProject org1Project = projectInitService.buildContainerVersionedProjectDefaultConf("org", 1,
+            "Organizations, public and private, as well as Persons", null, geo1Project);
+      DCProject orgProject = projectInitService.buildFacadeProjectDefaultConf(org1Project);
 
-      DCProject citizenkin0Project = buildContainerVersionedProjectDefaultConf("citizenkin", 0,
-            "Citizen Kin procedures", ozwilloCitizenkinAdmins, geoProject);
+      DCProject citizenkin0Project = projectInitService.buildContainerVersionedProjectDefaultConf("citizenkin", 0,
+            "Citizen Kin procedures", null, geoProject);
       citizenkin0Project.getSecurityDefaults().setAuthentifiedCreatable(true); // anybody can create a procedure (?)
       citizenkin0Project.getSecurityDefaults().setResourceCreationOwners(new LinkedHashSet<String>()); // owner is u_user as before BUT THIS SHOULD NOT WORK ??
       // (for both to be used, security on CK models should be voided)
-      DCProject citizenkinProject = buildFacadeProjectDefaultConf(citizenkin0Project);
+      DCProject citizenkinProject = projectInitService.buildFacadeProjectDefaultConf(citizenkin0Project);
    }
 
    /*private String toPlaygroundLink(String modelType) {

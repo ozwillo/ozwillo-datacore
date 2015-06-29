@@ -72,7 +72,7 @@ public class DatacoreRestClientConfiguration {
     @Bean(name = "datacoreApiClient")
     public static DatacoreClientApi delegate(
             @Value("${datacoreApiClient.baseUrl}") String baseAddress, //:http://localhost:10080/
-            @Value("${datacoreApiClient.containerUrl}") String containerUrl //:http://data-test.oasis-eu.org/
+            @Value("${datacoreApiClient.containerUrl}") String containerUrl //:http://data-test.ozwillo.com/
             ) throws Exception {
 
         SpringBusFactory bf = new SpringBusFactory();

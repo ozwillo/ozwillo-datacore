@@ -21,11 +21,12 @@ public class RemoteUserAuthentication extends AbstractAuthenticationToken implem
 	private String email;
 	private User user;
 
-	public RemoteUserAuthentication(String username, Collection<? extends GrantedAuthority> authorities) {
+	public RemoteUserAuthentication(String username,
+	      Collection<? extends GrantedAuthority> authorities, DCUserImpl dcUserImpl) {
 		super(authorities);
 		this.username = username;
 		this.setAuthenticated(true);
-		this.user = new DCUserImpl(new User(username, "", authorities));
+		this.user = dcUserImpl;
 	}
 
 	@Override

@@ -10,6 +10,7 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.oasis.datacore.core.security.service.impl.DatacoreSecurityServiceImpl;
 import org.oasis.datacore.playground.security.TokenEncrypter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -21,6 +22,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.codec.Base64;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
@@ -62,6 +65,10 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 	/** [OASIS] */
    @Autowired
    private TokenEncrypter tokenEncrypter;
+   /** to init user */
+   @Autowired
+   private DatacoreSecurityServiceImpl securityServiceImpl;
+   
 
 	public RemoteTokenServices() {
 		restTemplate = new RestTemplate();
@@ -153,9 +160,21 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 			userAuthorities.addAll(getAuthorities(values));
 		}
 		
-		return new RemoteUserAuthentication((String)map.get("sub"), userAuthorities);
+		return createRemoteUserAuthentication((String)map.get("sub"), userAuthorities);
 			
 	}
+   
+   public Authentication createRemoteUserAuthentication(String username,
+         Collection<? extends GrantedAuthority> userAuthorities) {
+      return new RemoteUserAuthentication(username, userAuthorities,
+            securityServiceImpl.buildUser(loadUser(username, userAuthorities)));
+   }
+   
+   /** impl of Spring UserDetails loading */
+   public UserDetails loadUser(String username,
+         Collection<? extends GrantedAuthority> authorities) {
+      return new User(username, "", authorities);
+   }
 
 	@Override
 	public OAuth2AccessToken readAccessToken(String accessToken) {

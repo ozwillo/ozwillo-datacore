@@ -11,7 +11,7 @@
 	</parent>
 
 	<artifactId>oasis-datacore-rest-server</artifactId>
-	<name>OASIS Datacore REST Server</name>
+	<name>Ozwillo Datacore REST Server</name>
 
 
 	<dependencies>

@@ -93,10 +93,10 @@ public class MongoBasicTest {
 		   
 			DBObject city = new BasicDBObject(
 					"_id_source", "42")
-	               .append("_uri", "http://data.oasis-eu.org/city/France/Lyon")
+	               .append("_uri", "http://data.ozwillo.com/city/France/Lyon")
 	               .append("name", "Lyon")
 	               .append("countryName", "France")
-	               .append("inCountry", "http://data.oasis-eu.org/country/France");
+	               .append("inCountry", "http://data.ozwillo.com/country/France");
 
 			coll.insert(city);		
 			mongo.close();
@@ -193,10 +193,10 @@ public class MongoBasicTest {
 		   
 			DBObject city = new BasicDBObject(
 					"_id_source", "42")
-	               .append("_uri", "http://data.oasis-eu.org/city/France/Lyon")
+	               .append("_uri", "http://data.ozwillo.com/city/France/Lyon")
 	               .append("name", "Lyon")
 	               .append("countryName", "France")
-	               .append("inCountry", "http://data.oasis-eu.org/country/France")
+	               .append("inCountry", "http://data.ozwillo.com/country/France")
 	               .append("description", "Lyon is known for its historical and architectural landmarks and is a UNESCO World Heritage Site.");
 			
 			coll.ensureIndex(new BasicDBObject("description", "text"), null, true);

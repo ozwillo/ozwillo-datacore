@@ -1,5 +1,5 @@
 /**
- * OASIS Datacore
+ * Ozwillo Datacore
  * Copyright (c) 2013 Open Wide
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Contact : http://www.oasis-eu.org/ oasis-eu-datacore-dev@googlegroups.com
+ * Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
  */
 package org.oasis.datacore.rest.api;
 
@@ -986,7 +986,7 @@ public interface DatacoreApi {
       			 notes = "Resources of a model can be historized by defining the isHistorizable field to true."
       					 + "If a resource is historized it can be retrieved with this operation."
       					 + "The resource is identified by an IRI and a version of resources."
-      					 + "e.g. if resource URI = http://data-test.oasis-eu.org/dc/type/sample.marka.company/1 and you want version = 0,"
+      					 + "e.g. if resource URI = http://data-test.ozwillo.com/dc/type/sample.marka.company/1 and you want version = 0,"
       					 + "the parameters would be : "
       					 + " - type : sample.marka.company"
       					 + " - iri : 1 (the URI is made like this : /dc/type/{type}/{__unencoded__iri})"

@@ -9,7 +9,7 @@
   </parent>
   
   <artifactId>oasis-datacore-kernel-client</artifactId>
-  <name>OASIS Datacore Kernel Client</name>
+  <name>Ozwillo Datacore Kernel Client</name>
   <description>Provides a client to interact with the kernel.</description>
    
    

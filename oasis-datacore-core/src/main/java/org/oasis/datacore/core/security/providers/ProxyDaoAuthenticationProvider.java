@@ -1,6 +1,7 @@
 package org.oasis.datacore.core.security.providers;
 
 import org.oasis.datacore.core.security.DCUserImpl;
+import org.oasis.datacore.core.security.service.impl.DatacoreSecurityServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -8,6 +9,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 
 
 /**
@@ -21,11 +23,15 @@ public class ProxyDaoAuthenticationProvider implements AuthenticationProvider {
 	@Autowired
 	private DaoAuthenticationProvider delegate;
 
+	/** to init user */
+   @Autowired
+   private DatacoreSecurityServiceImpl securityServiceImpl;
+
 	@Override
 	public Authentication authenticate(Authentication authentication) throws AuthenticationException {
 		Authentication auth = delegate.authenticate(authentication);
 		if (auth != null && auth.getPrincipal() != null && auth.getPrincipal() instanceof User) {
-			DCUserImpl dcUser = new DCUserImpl((User) auth.getPrincipal());
+			DCUserImpl dcUser = securityServiceImpl.buildUser((UserDetails) auth.getPrincipal());
 			UsernamePasswordAuthenticationToken result = new UsernamePasswordAuthenticationToken(
 			      dcUser, authentication.getCredentials(), dcUser.getAuthorities()); // TODO TODO KO ?? !!!!!!!!!!!!
 			result.setDetails(authentication.getDetails());

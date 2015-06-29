@@ -9,7 +9,7 @@ import org.oasis.datacore.rest.api.util.UriHelper;
 
 public class UriHelperTest {
 
-   private String containerUrl = "http://data.oasis-eu.org";
+   private String containerUrl = "http://data.ozwillo.com";
    private String testRelativeUri = "/dc//type/sample.marka.field//1";
    
    @Test
@@ -23,8 +23,8 @@ public class UriHelperTest {
    @Test
    public void testNormalizeUrlModeHttps() throws Exception {
       String[] res = UriHelper.getUriNormalizedContainerAndPathWithoutSlash(
-            "https://data.oasis-eu.org" + testRelativeUri, containerUrl, true, false);
-      Assert.assertEquals("https://data.oasis-eu.org", res[0]);
+            "https://data.ozwillo.com" + testRelativeUri, containerUrl, true, false);
+      Assert.assertEquals("https://data.ozwillo.com", res[0]);
       Assert.assertEquals("dc/type/sample.marka.field/1", res[1]);
    }
    
@@ -52,7 +52,7 @@ public class UriHelperTest {
    public void testNormalizeUrlModeAbsoluteUrlFailsOnBadUrl() throws Exception {
       try {
          UriHelper.getUriNormalizedContainerAndPathWithoutSlash(
-               "unknown://data.oasis-eu.org" + testRelativeUri, containerUrl, true, false);
+               "unknown://data.ozwillo.com" + testRelativeUri, containerUrl, true, false);
          Assert.fail("Should fail on unknown URL protocol");
       } catch (MalformedURLException e) {
          Assert.assertTrue(true);
@@ -63,7 +63,7 @@ public class UriHelperTest {
    public void testNormalizeUrlModeAbsoluteUrlFailsOnNonHttpOrSUrl() throws Exception {
       try {
          UriHelper.getUriNormalizedContainerAndPathWithoutSlash(
-               "ftp://data.oasis-eu.org" + testRelativeUri, containerUrl, true, false);
+               "ftp://data.ozwillo.com" + testRelativeUri, containerUrl, true, false);
          Assert.fail("Should fail on non HTTP(S) URL");
       } catch (MalformedURLException e) {
          Assert.assertTrue(true);
@@ -80,14 +80,14 @@ public class UriHelperTest {
       
       // test matchBaseUrlMode HTTPS BEWARE DOESN'T CHECK URI OR URL CHARS
       res = UriHelper.getUriNormalizedContainerAndPathWithoutSlash(
-            "https://data.oasis-eu.org/dc//type/sample.marka.field//1", containerUrl, false, true);
-      Assert.assertEquals("https://data.oasis-eu.org", res[0]);
+            "https://data.ozwillo.com/dc//type/sample.marka.field//1", containerUrl, false, true);
+      Assert.assertEquals("https://data.ozwillo.com", res[0]);
       Assert.assertEquals("dc/type/sample.marka.field/1", res[1]);
 
       // test matchBaseUrlMode absolute URL fails on non HTTP(S) URL BEWARE DOESN'T CHECK URI OR URL CHARS
       try {
          UriHelper.getUriNormalizedContainerAndPathWithoutSlash(
-               "ftp://data.oasis-eu.org" + testRelativeUri, containerUrl, false, true);
+               "ftp://data.ozwillo.com" + testRelativeUri, containerUrl, false, true);
          Assert.fail("Should fail on bad non HTTP(S) URL");
       } catch (MalformedURLException e) {
          Assert.assertTrue(true);
@@ -136,7 +136,7 @@ public class UriHelperTest {
       String modelType = "geo:CityGroup_0";
       
       // test that reserved chars are not encoded in path (except obviously ?)
-      String uri = UriHelper.buildUri(containerUrl, modelType, "FR/CC les Châteaux"); // "http://data.oasis-eu.org/dc/type/geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
+      String uri = UriHelper.buildUri(containerUrl, modelType, "FR/CC les Châteaux"); // "http://data.ozwillo.com/dc/type/geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
       Assert.assertEquals(containerUrl + DatacoreApi.DC_TYPE_PATH + modelType + "/FR/CC%20les%20Ch%C3%A2teaux", uri);
       String reservedChars = "$&+,/:;=@"; // NOT ?
       uri = UriHelper.buildUri(containerUrl, modelType, reservedChars);
@@ -146,7 +146,7 @@ public class UriHelperTest {
       }
       
       // test that unsafe chars are encoded in path
-      uri = UriHelper.buildUri(containerUrl, modelType, "FR/CC les Châteaux"); // "http://data.oasis-eu.org/dc/type/geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
+      uri = UriHelper.buildUri(containerUrl, modelType, "FR/CC les Châteaux"); // "http://data.ozwillo.com/dc/type/geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
       Assert.assertEquals(containerUrl + DatacoreApi.DC_TYPE_PATH + modelType + "/FR/CC%20les%20Ch%C3%A2teaux", uri);
       String unsafeChars = " \"<>#%{}|\\^[]`"; // NOT ~ ?!!
       uri = UriHelper.buildUri(containerUrl, modelType, unsafeChars);

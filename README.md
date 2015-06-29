@@ -1,17 +1,17 @@
 =====================================================
 
 OASIS - Datacore
-http://www.oasis-eu.org/
+http://www.ozwillo.com/
 https://github.com/pole-numerique/oasis-datacore
 Copyright (c) 2013-2015 Open Wide - http://www.openwide.fr
 
 =====================================================
 
 
-About OASIS Datacore
+About Ozwillo Datacore
 --------------------
 
-OASIS Datacore is a Cloud of shared Open Linked Data.
+Ozwillo Datacore is a Cloud of shared Open Linked Data.
 
 Its goal is cross-business data collaboration and integration. By linking data from different business together, it allows to create value by developing new OASIS services on top of it.
 

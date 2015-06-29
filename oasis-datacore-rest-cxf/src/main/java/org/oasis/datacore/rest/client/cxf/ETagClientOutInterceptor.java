@@ -41,7 +41,7 @@ public class ETagClientOutInterceptor extends AbstractPhaseInterceptor<Message> 
    @Autowired
    private DCRequestContextProviderFactory requestContextProviderFactory;
 
-   @Value("${datacoreApiClient.containerUrl}") //:http://data-test.oasis-eu.org/
+   @Value("${datacoreApiClient.containerUrl}") //:http://data-test.ozwillo.com/
    private String containerUrl;
 
    public ETagClientOutInterceptor() {

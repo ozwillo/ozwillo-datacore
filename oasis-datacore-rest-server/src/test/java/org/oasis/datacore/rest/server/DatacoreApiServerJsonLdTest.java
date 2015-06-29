@@ -255,7 +255,7 @@ public class DatacoreApiServerJsonLdTest {
       
       options.format = "text/turtle";
       String turtlefRdf = (String) JsonLdProcessor.toRDF(jsonObject, options);
-      Assert.assertTrue(turtlefRdf.startsWith("<http://data-test.oasis-eu.org/dc/type/sample.city.city/Russia/Moscow> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <sample.city.city>"));
+      Assert.assertTrue(turtlefRdf.startsWith("<http://data-test.ozwillo.com/dc/type/sample.city.city/Russia/Moscow> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <sample.city.city>"));
       Assert.assertTrue(turtlefRdf.contains("<city:populationCount> 10000000"));
       Assert.assertTrue(turtlefRdf.contains("\"Moskva\"@ru"));
       ///System.out.println(JsonUtils.toPrettyString(turtlefRdf));

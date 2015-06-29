@@ -1,4 +1,4 @@
-OASIS Datacore Web
+Ozwillo Datacore Web
 
 Provides Datacore server webapp as well as online tools.
 

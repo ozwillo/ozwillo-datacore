@@ -37,7 +37,7 @@ public class UriHelper {
    /** to detect whether relative (rather than absolute) uri
     groups are delimited by () see http://stackoverflow.com/questions/6865377/java-regex-capture-group
     URI scheme : see http://stackoverflow.com/questions/3641722/valid-characters-for-uri-schemes */
-   private static final Pattern anyBaseUrlPattern = Pattern.compile("^([a-zA-Z][a-zA-Z0-9\\.\\-\\+]*)://[^/]+"); // TODO or "^http[s]?://data\\.oasis-eu\\.org/" ?
+   private static final Pattern anyBaseUrlPattern = Pattern.compile("^([a-zA-Z][a-zA-Z0-9\\.\\-\\+]*)://[^/]+"); // TODO or "^http[s]?://data\\.ozwillo\\.com/" ?
    private static final Pattern multiSlashPattern = Pattern.compile("/+");
    private static final Pattern frontSlashesPattern = Pattern.compile("^/*");
    private static final Pattern notUrlAlwaysSafeCharactersPattern = Pattern.compile(NOT_URL_ALWAYS_SAFE_OR_COLON_CHARACTERS_REGEX);
@@ -53,7 +53,7 @@ public class UriHelper {
     * @deprecated rather pass a java.net.URI containerUrl
     * Only for client, not used by server. Does new DCURI(...).toString()
     * and also checks syntax & normalizes URL.
-    * @param containerUrl ex. http://data.oasis-eu.org/dc/type
+    * @param containerUrl ex. http://data.ozwillo.com/dc/type
     * @param modelType must not contain URL_ALWAYS_SAFE_CHARACTERS (best practice)
     * @param id (NB. unencoded, characters outside URL_SAFE_PATH_SEGMENT_CHARACTERS will be encoded)
     * @return
@@ -66,7 +66,7 @@ public class UriHelper {
    /**
     * Only for client, not used by server. Does new DCURI(...).toString()
     * and also checks syntax & normalizes URL.
-    * @param containerUrl ex. http://data.oasis-eu.org/dc/type
+    * @param containerUrl ex. http://data.ozwillo.com/dc/type
     * @param modelType must not contain URL_ALWAYS_SAFE_CHARACTERS (best practice)
     * @param id (NB. unencoded, characters outside URL_SAFE_PATH_SEGMENT_CHARACTERS will be encoded)
     * @return
@@ -79,7 +79,7 @@ public class UriHelper {
    /**
     * Only for client, not used by server. Does new DCURI(...).toString()
     * and also checks syntax & normalizes URL.
-    * @param containerUrl ex. http://data.oasis-eu.org/dc/type
+    * @param containerUrl ex. http://data.ozwillo.com/dc/type
     * @param modelType must not contain URL_ALWAYS_SAFE_CHARACTERS (best practice)
     * @param id (NB. unencoded, characters outside URL_SAFE_PATH_SEGMENT_CHARACTERS will be encoded,
     * save if dontEncodePathElements
@@ -155,7 +155,7 @@ public class UriHelper {
     * In given (endpoint URL) URI, replaces container URL part by the given one.
     * @param endpointUri encoded ex. http://localhost:8080/dc/type/city.sample.country/France
     * @param containerUrl must NOT have ending slash ; encoded
-    * @return ex.http://data.oasis-eu.org/dc/type/city.sample.country/France
+    * @return ex.http://data.ozwillo.com/dc/type/city.sample.country/France
     * @throws URISyntaxException 
     * @throws MalformedURLException 
     */
@@ -265,7 +265,7 @@ public class UriHelper {
     * absolute checks it has an http or https protocol
     * Else merely splits at the given containerUrl's length.
     * Does not URL decode.
-    * @param stringUriValue (encoded) absolute ex. http://data.oasis-eu.org/dc//type/sample.marka.field//1
+    * @param stringUriValue (encoded) absolute ex. http://data.ozwillo.com/dc//type/sample.marka.field//1
     * or relative (then uses provided containerUrl) ex. type//sample.marka.field///1
     * @param containerUrl used only for default mode or if given URI is relative,
     * not used to check absolute URL
@@ -273,7 +273,7 @@ public class UriHelper {
     * @param matchBaseUrlMode
     * @return the given Datacore URI's container URL (i.e. base URL, or null if URI is relative)
     * and URL Path without slash
-    * ex. [ "http://data.oasis-eu.org/", "dc/type/sample.marka.field/1" ]
+    * ex. [ "http://data.ozwillo.com/", "dc/type/sample.marka.field/1" ]
     * @throws ResourceParsingException
     */
    public static String[] getUriNormalizedContainerAndPathWithoutSlash(String stringUriValue,
@@ -308,7 +308,7 @@ public class UriHelper {
          
       } else if (matchBaseUrlMode) {
          // checking that URI is an HTTP(S) one
-         Matcher replaceBaseUrlMatcher = anyBaseUrlPattern.matcher(stringUriValue); // ex. http://data.oasis-eu.org/dc//type/sample.marka.field//1
+         Matcher replaceBaseUrlMatcher = anyBaseUrlPattern.matcher(stringUriValue); // ex. http://data.ozwillo.com/dc//type/sample.marka.field//1
          if (!replaceBaseUrlMatcher.find()) {
             // maybe a relative URI
             /*if (normalizeUrlMode) {
@@ -329,7 +329,7 @@ public class UriHelper {
             if (!isHttpOrS(protocol)) {
                throw new MalformedURLException("Datacore URIs should be HTTP(S)");
             }
-            uriBaseUrl = replaceBaseUrlMatcher.group(0); // full match, includes end slash, ex. http://data.oasis-eu.org/
+            uriBaseUrl = replaceBaseUrlMatcher.group(0); // full match, includes end slash, ex. http://data.ozwillo.com/
             
             // building urlPathWithoutSlash, see http://www.tutorialspoint.com/java/java_string_replacefirst.htm
             StringBuffer sbuf = new StringBuffer();

@@ -15,7 +15,16 @@
 
    <!-- context:property-placeholder location="classpath:oasis-datacore-security.properties,classpath:oasis-datacore-rest-api.properties,classpath:oasis-datacore-rest-server.properties,classpath*:oasis-datacore-deploy*.properties"
       order="-1" ignore-unresolvable="true"/ -->
-
+   
+   
+   <bean id="datacore.security.projectOwners" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+	   <property name="locations">
+	      <list>
+	         <value>classpath*:oasis-datacore-security-project-owners.properties</value>
+	      </list>
+	   </property>
+	</bean>
+   
 
    <!-- Spring Security permissions : -->
    <security:global-method-security pre-post-annotations="enabled">

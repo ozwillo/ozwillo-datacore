@@ -12,7 +12,7 @@ import org.oasis.datacore.rest.api.util.UriHelper;
 
 public class BuildResourceTest {
 
-   private String containerUrlString = "http://data.oasis-eu.org/";
+   private String containerUrlString = "http://data.ozwillo.com/";
    private URI containerUrl;
    
    @Before

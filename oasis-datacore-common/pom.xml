@@ -12,7 +12,7 @@
   </parent>
 
 	<artifactId>oasis-datacore-common</artifactId>
-	<name>OASIS Datacore Common</name>
+	<name>Ozwillo Datacore Common</name>
    <description>Provides common libs to core, client and server.
    </description>
 

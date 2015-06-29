@@ -10,7 +10,7 @@
 	</parent>
 
 	<artifactId>oasis-datacore-api-client</artifactId>
-	<name>OASIS Datacore API Client</name>
+	<name>Ozwillo Datacore API Client</name>
 
 
 	<dependencies>

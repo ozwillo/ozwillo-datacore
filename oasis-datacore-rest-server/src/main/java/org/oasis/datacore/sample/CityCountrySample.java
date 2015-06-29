@@ -15,6 +15,8 @@ import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.rest.api.DCResource;
+import org.oasis.datacore.sample.meta.ProjectInitService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.ImmutableSet;
@@ -34,6 +36,9 @@ public class CityCountrySample extends DatacoreSampleBase {
    public static String POI_MODEL_NAME = "sample.city.pointOfInterest";
    public static String CITYLEGALINFO_MIXIN_NAME = "sample.city.city.legalInfo";
 
+   @Autowired
+   private ProjectInitService projectInitService;
+
    @Override
    public void buildModels(List<DCModelBase> modelsToCreate) {
       DCModel countryModel = new DCModel(COUNTRY_MODEL_NAME);
@@ -49,7 +54,7 @@ public class CityCountrySample extends DatacoreSampleBase {
       DCModel cityModel = new DCModel(CITY_MODEL_NAME);
       cityModel.setDocumentation("{ \"uri\": \"http://localhost:8080/dc/type/city/France/Lyon\", "
             + "\"inCountry\": \"http://localhost:8080/dc/type/country/France\", \"name\": \"Lyon\" }");
-      cityModel.addMixin(getMetamodelProject().getModel(ResourceModelIniter.MODEL_DISPLAYABLE_NAME));
+      cityModel.addMixin(projectInitService.getMetamodelProject().getModel(ResourceModelIniter.MODEL_DISPLAYABLE_NAME));
       cityModel.addField(new DCField("n:name", "string", true, 100));
       cityModel.addField(new DCResourceField("city:inCountry", COUNTRY_MODEL_NAME, true, 100));
       cityModel.addField(new DCField("city:populationCount", "int", false, 50));

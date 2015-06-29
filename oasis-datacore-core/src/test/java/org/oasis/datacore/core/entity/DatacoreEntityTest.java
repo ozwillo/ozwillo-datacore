@@ -45,7 +45,7 @@ public class DatacoreEntityTest {
    public void testSampleData() throws URISyntaxException {
       DCEntity sampleEntity = dcEntityService.getSampleData();
       Map<String, Object> props = sampleEntity.getProperties();
-      Assert.assertEquals("http://data.oasis-eu.org/sample/1", sampleEntity.getUri());
+      Assert.assertEquals("http://data.ozwillo.com/sample/1", sampleEntity.getUri());
       Assert.assertEquals("some text", props.get("string"));
       Assert.assertEquals(2, props.get("int"));
       Assert.assertEquals(true, props.get("boolean"));
@@ -63,21 +63,21 @@ public class DatacoreEntityTest {
    @Test
    public void testMongoNoDuplicateUriIndex() {
 	   DBCollection coll = !mt.collectionExists("test.unicity") ? mt.createCollection("test.unicity") : mt.getCollection("test.unicity");
-	   String duplicatedUri = "http://data.oasis-eu.org/city/France/Lyon";
+	   String duplicatedUri = "http://data.ozwillo.com/city/France/Lyon";
 
 	   DBObject city1 = new BasicDBObject(
 				"_id_source", "42")
                .append("_uri", duplicatedUri)
                .append("name", "Lyon")
                .append("countryName", "France")
-               .append("inCountry", "http://data.oasis-eu.org/country/France");
+               .append("inCountry", "http://data.ozwillo.com/country/France");
 
 	   DBObject city2 = new BasicDBObject(
 				"_id_source", "21")
                .append("_uri", duplicatedUri)
                .append("name", "Strasbourg")
                .append("countryName", "France")
-               .append("inCountry", "http://data.oasis-eu.org/country/France");
+               .append("inCountry", "http://data.ozwillo.com/country/France");
 
 	   //Be sure the collection is empty
 	   coll.remove(new BasicDBObject());
@@ -119,10 +119,10 @@ public class DatacoreEntityTest {
 
 	   DBObject city = new BasicDBObject(
 				"_id_source", "42")
-              .append("_uri", "http://data.oasis-eu.org/city/France/Lyon")
+              .append("_uri", "http://data.ozwillo.com/city/France/Lyon")
               .append("name", "Lyon")
               .append("countryName", "France")
-              .append("inCountry", "http://data.oasis-eu.org/country/France");
+              .append("inCountry", "http://data.ozwillo.com/country/France");
 
 	   coll.ensureIndex(new BasicDBObject("_uri", 1), null, true);
 	   coll.insert(city);
@@ -131,7 +131,7 @@ public class DatacoreEntityTest {
 	   Assert.assertTrue(findLyon.count() == 1);
 	   Assert.assertEquals("Should have BasicCursor on non-indexed field.", "BasicCursor", findLyon.explain().get("cursor"));
 
-	   DBCursor findUri = coll.find(new BasicDBObject("_uri", "http://data.oasis-eu.org/city/France/Lyon"));
+	   DBCursor findUri = coll.find(new BasicDBObject("_uri", "http://data.ozwillo.com/city/France/Lyon"));
 	   Assert.assertTrue(findUri.count() == 1);
 	   Assert.assertEquals("Should have BtreeCursor on indexed field.", "BtreeCursor _uri_1", findUri.explain().get("cursor"));
 

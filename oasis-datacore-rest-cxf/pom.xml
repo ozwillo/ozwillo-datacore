@@ -12,7 +12,7 @@
   </parent>
 
 	<artifactId>oasis-datacore-rest-cxf</artifactId>
-	<name>OASIS Datacore REST Client</name>
+	<name>Ozwillo Datacore REST Client</name>
    <description>Provides an independent Jackson / CXF client to Datacore REST API.
    Also used in REST server to test it.</description>
 

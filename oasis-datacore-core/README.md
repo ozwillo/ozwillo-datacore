@@ -1,4 +1,4 @@
-OASIS Datacore Core
+Ozwillo Datacore Core
 
 Provides Datacore model and secured, MongoDB-based Entity persistence.
 

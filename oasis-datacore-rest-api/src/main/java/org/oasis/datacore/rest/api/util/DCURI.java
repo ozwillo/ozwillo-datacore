@@ -21,10 +21,10 @@ import org.oasis.datacore.rest.api.DatacoreApi;
  */
 public class DCURI {
 
-   /** Container base URL ex. http://data.oasis-eu.org/ . Protocol is assumed to be HTTP
+   /** Container base URL ex. http://data.ozwillo.com/ . Protocol is assumed to be HTTP
     * (if HTTPS, there must be a redirection) */
    private URI containerUrl;
-   /** String version of container base URL ex. http://data.oasis-eu.org/ . Protocol is assumed to be HTTP
+   /** String version of container base URL ex. http://data.ozwillo.com/ . Protocol is assumed to be HTTP
     * (if HTTPS, there must be a redirection) */
    private String container;
    /** Base Model type ex. "city.sample.city".
@@ -145,9 +145,9 @@ public class DCURI {
          // ex. (decoded) path = "/dc/type/geo:CityGroup_0/FR/CC les Châteaux"
          URI escapedUri = new URI(containerUrl.getScheme(), null,
             containerUrl.getHost(), containerUrl.getPort(), getPath(), null, null).normalize();
-         // ex. escapedUri = http://data.oasis-eu.org/dc/type/geo:CityGroup_0/FR/CC%20les%20Châteaux
+         // ex. escapedUri = http://data.ozwillo.com/dc/type/geo:CityGroup_0/FR/CC%20les%20Châteaux
          cachedUri = new URI(escapedUri.toASCIIString()); // else UTF-8 ex. â not encoded
-         // ex. cachedUri = http://data.oasis-eu.org/dc/type/geo:CityGroup_0/FR/CC%20les%20Ch%C3%A2teaux
+         // ex. cachedUri = http://data.ozwillo.com/dc/type/geo:CityGroup_0/FR/CC%20les%20Ch%C3%A2teaux
       }
       return cachedUri;
    }
@@ -176,7 +176,7 @@ public class DCURI {
       if (cachedUnencodedStringUri != null) {
          return cachedUnencodedStringUri;
       }
-      cachedUnencodedStringUri = container + getPath();  // NB. container is ex. http://data.oasis-eu.org
+      cachedUnencodedStringUri = container + getPath();  // NB. container is ex. http://data.ozwillo.com
       return cachedUnencodedStringUri;
    }
    @Override

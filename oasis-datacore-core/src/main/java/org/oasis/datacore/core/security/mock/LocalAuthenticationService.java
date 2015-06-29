@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Set;
 
 import org.oasis.datacore.core.security.DCUserImpl;
+import org.oasis.datacore.core.security.service.impl.DatacoreSecurityServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -37,11 +38,21 @@ public class LocalAuthenticationService {
 	
    public static final String SYSTEM_USER = "system";
    public static final String ADMIN_USER = "admin";
+
+   /** guest login & group NOO forbidden
+    * @obsolete */
+   public final static String GUEST = "guest";
+   /** local mock admin group, to specify in datacore.security.admins prop  */
+   public final static String ADMIN_GROUP = "admin";
    
    /** TODO LATER remove optional when there is a mock in the -core project */
    @Autowired(required = false)
    @Qualifier("datacore.localUserDetailsService")
    private UserDetailsService mockUserDetailsService;
+
+   /** to init user */
+   @Autowired
+   private DatacoreSecurityServiceImpl securityServiceImpl;
    
    /**
     * WARNING can only log in a mock auth hardcoded conf user, not ex. an OAuth user
@@ -49,13 +60,16 @@ public class LocalAuthenticationService {
     * @param username
     */
    public void loginAs(String username) {
+      if (mockUserDetailsService == null) {
+         return; // ex. in -core tests
+      }
       UserDetails userDetails = mockUserDetailsService.loadUserByUsername(username);
       if (userDetails == null) {
          SecurityContextHolder.clearContext();
          throw new RuntimeException("Unknown user " + username);
       }
       
-      DCUserImpl user = new DCUserImpl((User) userDetails); // NB. also precomputes its permissions 
+      DCUserImpl user = securityServiceImpl.buildUser((User) userDetails); // NB. also precomputes its permissions 
       
       Authentication authentication = new TestingAuthenticationToken(user, "",
             new ArrayList<GrantedAuthority>(userDetails.getAuthorities()));

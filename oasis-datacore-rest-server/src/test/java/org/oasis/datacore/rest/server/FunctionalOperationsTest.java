@@ -458,7 +458,7 @@ public class FunctionalOperationsTest {
 		List<DCResource> listResource = null;
 				
 		queryParameters = new QueryParameters();
-		queryParameters.add("companies", "$all[\"http://data-test.oasis-eu.org/dc/type/sample.marka.company/2\"]");
+		queryParameters.add("companies", "$all[\"http://data-test.ozwillo.com/dc/type/sample.marka.company/2\"]");
 		listResource = api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, queryParameters, 0, 10);
 		Assert.assertNotNull(listResource);
 		Assert.assertFalse("Resource list should not be empty", listResource.isEmpty());
@@ -474,7 +474,7 @@ public class FunctionalOperationsTest {
 				
 		queryParameters = new QueryParameters();
 		queryParameters.add("companies", "$elemMatch{\"nonExistingFieldA\":"
-		      + "\"http://data-test.oasis-eu.org/dc/type/sample.marka.company/1\""
+		      + "\"http://data-test.ozwillo.com/dc/type/sample.marka.company/1\""
 		      + ", \"nonExistingFieldB\":0}");
 		try {
 		   listResource = api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, queryParameters, 0, 10);
@@ -493,7 +493,7 @@ public class FunctionalOperationsTest {
 		try {
 		   api.findDataInType(MarkaInvestModel.USER_MODEL_NAME, new QueryParameters()
 		      .add("firstName", "$elemMatch{\"nonExistingFieldA\":"
-		            + "\"http://data-test.oasis-eu.org/dc/type/sample.marka.company/1\"}"
+		            + "\"http://data-test.ozwillo.com/dc/type/sample.marka.company/1\"}"
 		            + ", \"nonExistingFieldB\":0"), 0, 10);
 		   Assert.fail("Should not be able to use $elemMatch on a non-list field !");
 		} catch (BadRequestException brex) {

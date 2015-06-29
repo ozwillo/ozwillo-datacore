@@ -1,21 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- OASIS Datacore Copyright (c) 2013 Open Wide This program is free software: 
-	you can redistribute it and/or modify it under the terms of the GNU Lesser 
-	General Public License as published by the Free Software Foundation, either 
-	version 3 of the License, or (at your option) any later version. This program 
-	is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
-	without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR 
-	PURPOSE. See the GNU Lesser General Public License for more details. You 
-	should have received a copy of the GNU Lesser General Public License along 
-	with this program. If not, see <http://www.gnu.org/licenses/>. Contact : 
-	http://www.oasis-eu.org/ oasis-eu-datacore-dev@googlegroups.com -->
+<!--
+Ozwillo Datacore
+Copyright (c) 2013-2015 Open Wide
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.oasis.datacore</groupId>
 	<artifactId>oasis-datacore</artifactId>
-	<name>OASIS Datacore</name>
-	<description>OASIS Datacore is a collaborative Open Linked Data Cloud platform.</description>
+	<name>Ozwillo Datacore</name>
+	<description>Ozwillo Datacore is a collaborative Open Linked Data Cloud platform.</description>
 	<version>1.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
@@ -31,10 +36,10 @@
 
 	<organization>
 		<name>OASIS Consortium</name>
-		<url>http://www.oasis-eu.org/</url>
+		<url>http://www.ozwillo.com/</url>
 	</organization>
 
-	<url>http://www.oasis-eu.org/</url>
+	<url>http://www.ozwillo.com/</url>
 	<scm>
 		<connection>scm:git:git://github.com/pole-numerique/oasis-datacore.git</connection>
 		<developerConnection>scm:git:git@github.com:pole-numerique/oasis-datacore.git</developerConnection>
@@ -43,10 +48,20 @@
 
 	<mailingLists>
 		<mailingList>
-			<name>OASIS Datacore developers mailing-list</name>
-			<archive>https://groups.google.com/forum/?fromgroups#!forum/oasis-datacore-dev</archive>
-			<post>oasis-datacore-dev@googlegroups.com</post>
+			<name>Ozwillo Announcements</name>
+			<archive>https://groups.google.com/forum/?fromgroups#!forum/ozwillo-core</archive>
+			<post>ozwillo-core@googlegroups.com</post>
 		</mailingList>
+		<mailingList>
+			<name>Ozwillo Discussion</name>
+			<archive>https://groups.google.com/forum/?fromgroups#!forum/ozwillo-talk</archive>
+			<post>ozwillo-talk@googlegroups.com</post>
+		</mailingList>
+		<!-- mailingList>
+			<name>Ozwillo Datacore developers mailing-list</name>
+			<archive>https://groups.google.com/forum/?fromgroups#!forum/ozwillo-datacore-dev</archive>
+			<post>ozwillo-datacore-dev@googlegroups.com</post>
+		</mailingList -->
 	</mailingLists>
 	<issueManagement>
 		<url>https://github.com/pole-numerique/oasis-datacoree/issues</url>
