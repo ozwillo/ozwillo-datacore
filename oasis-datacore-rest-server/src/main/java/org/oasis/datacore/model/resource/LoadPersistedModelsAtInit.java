@@ -81,15 +81,19 @@ public class LoadPersistedModelsAtInit extends InitableBase {
    }
 
    
-   private void loadModels(String projectName) throws QueryException {
+   /**
+    * public for tests
+    * @param projectName
+    * @throws QueryException
+    */
+   public void loadModels(String projectName) throws QueryException {
       // now, reload all models that had been persisted in mongo in last execution :
       // (ONLY those local to this project)
       List<DCResource> modelResources = findDataInType(
             ResourceModelIniter.MODEL_MODEL_NAME, ResourceModelIniter.MODEL_NAME_PROP,
             new ImmutableMap.Builder<String,List<String>>().put("dcmo:pointOfViewAbsoluteName",
                   new ImmutableList.Builder<String>().add(projectName).build()).build(), projectName);
-      HashMap<String,ResourceException> previousModelsInError = null;
-      HashMap<String,ResourceException> modelsInError = new HashMap<String,ResourceException>();
+      HashMap<String,ResourceException> previousModelsInError = null, modelsInError = null;
       List<String> loadedModelAbsoluteNames = new ArrayList<String>(modelResources.size());
       do {
          previousModelsInError = modelsInError;
@@ -139,7 +143,8 @@ public class LoadPersistedModelsAtInit extends InitableBase {
                throw new RuntimeException("Unexpected Exception reloading model resource from persistence " + modelResource, rex);
             }
          }
-      } while (!modelsInError.isEmpty() && !modelsInError.keySet().equals(previousModelsInError.keySet()));
+      } while (!modelsInError.isEmpty() && (previousModelsInError == null // first time
+            || !modelsInError.keySet().equals(previousModelsInError.keySet()))); // did not improve anymore
 
       logger.info("Loaded in " + projectName + " project " + loadedModelAbsoluteNames.size() + " models");
       logger.info("   loaded models details : " + loadedModelAbsoluteNames); // .debug(
@@ -155,9 +160,10 @@ public class LoadPersistedModelsAtInit extends InitableBase {
     * Project that are already in memory are kept (and only enriched by : additional visible projects),
     * allowing to hardcode default projects until projet management UI is complete. They must
     * however be persisted, else their models won't be loaded.
+    * public for tests
     * @throws QueryException
     */
-   private void loadProjects() throws QueryException {
+   public void loadProjects() throws QueryException {
       List<DCResource> projectResources = findDataInType(
             ResourceModelIniter.MODEL_PROJECT_NAME, ResourceModelIniter.POINTOFVIEW_NAME_PROP, null);
       HashMap<String,ResourceException> previousProjectsInError, projectsInError = new HashMap<String,ResourceException>();

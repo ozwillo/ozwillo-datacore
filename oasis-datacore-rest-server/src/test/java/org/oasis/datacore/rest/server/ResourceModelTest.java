@@ -22,8 +22,8 @@ import org.oasis.datacore.common.context.SimpleRequestContextProvider;
 import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
+import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
-import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryServiceImpl;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCModel;
@@ -31,6 +31,7 @@ import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.core.security.EntityPermissionService;
 import org.oasis.datacore.core.security.mock.LocalAuthenticationService;
+import org.oasis.datacore.model.resource.LoadPersistedModelsAtInit;
 import org.oasis.datacore.model.resource.ModelResourceMappingService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
@@ -75,6 +76,9 @@ public class ResourceModelTest {
    /** to init models */
    @Autowired
    private /*static */DataModelServiceImpl modelServiceImpl;
+   /** to be tested */
+   @Autowired
+   private LoadPersistedModelsAtInit loadPersistedModelsAtInitService;
    
    /** to cleanup db
     * TODO LATER rather in service */
@@ -534,6 +538,44 @@ public class ResourceModelTest {
       } finally {
          authenticationService.logout();
       }
+   }
+   
+   @Test
+   public void testLoadPersistedModels() throws QueryException {
+      DCModelBase origCityModel = modelAdminService.getModelBase(CityCountrySample.CITY_MODEL_NAME);
+      Assert.assertNotNull(origCityModel);
+      Assert.assertNotNull(datacoreApiClient
+            .getData(ResourceModelIniter.MODEL_MODEL_NAME, CityCountrySample.CITY_MODEL_NAME));
+      
+      // removing model then reloading its project's models :
+      modelAdminService.removeModel(origCityModel);
+      Assert.assertNull("model removed", modelAdminService.getModelBase(CityCountrySample.CITY_MODEL_NAME));
+      Assert.assertNotNull("model removed but its resource should still be there", datacoreApiClient
+            .getData(ResourceModelIniter.MODEL_MODEL_NAME, CityCountrySample.CITY_MODEL_NAME));
+      // reloading :
+      try {
+         authenticationService.loginAs("admin"); // else AuthenticationCredentialsNotFoundException in calling entityService
+         loadPersistedModelsAtInitService.loadModels(DCProject.OASIS_SAMPLE);
+      } finally {
+         authenticationService.logout();
+      }
+      Assert.assertNotNull(modelAdminService.getModelBase(CityCountrySample.CITY_MODEL_NAME));
+
+      // removing model then reloading all models :
+      modelAdminService.removeModel(origCityModel);
+      Assert.assertNull("model removed", modelAdminService.getModelBase(CityCountrySample.CITY_MODEL_NAME));
+      Assert.assertNotNull("model removed but its resource should still be there", datacoreApiClient
+            .getData(ResourceModelIniter.MODEL_MODEL_NAME, CityCountrySample.CITY_MODEL_NAME));
+      // then reloading its project's models :
+      try {
+         authenticationService.loginAs("admin"); // else AuthenticationCredentialsNotFoundException in calling entityService
+         loadPersistedModelsAtInitService.loadProjects();
+      } finally {
+         authenticationService.logout();
+      }
+      Assert.assertNotNull(modelAdminService.getModelBase(CityCountrySample.CITY_MODEL_NAME));
+      
+      // TODO also test removing project
    }
    
 }
