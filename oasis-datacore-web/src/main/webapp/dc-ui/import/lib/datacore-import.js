@@ -2197,7 +2197,7 @@
       var mixinNameToFieldNameTree = importState.model.mixinNameToFieldNameTree;
       var mixins = importState.model.modelOrMixins;
         
-      var loopMaxIndex = 3; // 20
+      var loopMaxIndex = 8; // 3 // 20
       var loopIndex = -1;
       do {
          importState.model.errors = [];
@@ -2719,10 +2719,12 @@
       }
       
       if (msg) {
-         msg = "Aborted. " + msg + " ";
+         console.log('Aborted', msg);
          if (msg instanceof Error) {
-            msg += " in " + msg.fileName + " at " + msg.fileNumber;
+            msg = "Aborted. " + msg.message + " at " + msg.fileName + " " + msg.lineNumber + ":" + msg.columnNumber + ". ";
             ///throw msg; // to get the error line in the debugger
+         } else {
+            msg = "Aborted. " + msg + ". ";
          }
       } else {
          msg = "Aborted. "
