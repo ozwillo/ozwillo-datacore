@@ -2641,18 +2641,24 @@
       // building importedMixinNameSet out of it :
       if (importStateConf.model.mixinNames) {
          importState.model.mixinNames = importStateConf.model.mixinNames;
+        
+         
          var beforeFirst = true;
          for (var i in importState.model.mixinNames) {
-            if (beforeFirst) {
+        	
+        	 
+        	 if (beforeFirst) {
                if (importState.model.mixinNames[i] !== importState.model.fromMixin) {
                   continue;
                }
                beforeFirst = false;
             }
+          
+            
             if (importState.model.mixinNames[i] === importState.model.untilMixin) {
                break;
-            }
-            importState.model.importedMixinNameSet[importState.model.mixinNames[i]] = true;
+            }            
+            importState.model.importedMixinNameSet[buildMixinName(importState.model.mixinNames[i], importState)] = true;
          }
       }
       
@@ -2771,8 +2777,8 @@
                rowLimit : -1,
                fromMixin : null,
                untilMixin : null,
-               mixinNames : [],
-               importedMixinNameSet : {}, // used as set, built from mixinNames & from/untilMixin
+               mixinNames : [], // not normalized (no : prefix), fills from/untilMixin selects
+               importedMixinNameSet : {}, // normalized names (: prefix), used as set, built from mixinNames & from/untilMixin
                // state :
                file : null,
                fileName : 'samples/openelec/oasis-donnees-metiers-openelec.csv',
