@@ -312,7 +312,7 @@ public class ResourceEntityMapperService {
                entityMap.put(DCI18nField.KEY_VALUE, i18nEntityValue);
                entityMapMap.put(i18nEntityLanguage, entityMap); // keeping last one of each language
             } else {
-               resourceParsingContext.addError("Error while parsing i18n list element Field value as map" + resourceItem
+               resourceParsingContext.addError("Error while parsing i18n list element Field value as map " + resourceItem
                      + " of JSON type " + ((resourceItem == null) ? "null" : resourceItem.getClass()));
             }
          }

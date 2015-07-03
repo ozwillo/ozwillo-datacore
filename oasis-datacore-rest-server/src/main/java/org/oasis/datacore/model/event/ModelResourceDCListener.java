@@ -22,8 +22,11 @@ import org.oasis.datacore.rest.server.event.DCResourceEvent;
 import org.oasis.datacore.rest.server.event.DCResourceEventListener;
 import org.oasis.datacore.rest.server.resource.ResourceEntityMapperService;
 import org.oasis.datacore.rest.server.resource.ResourceException;
+import org.oasis.datacore.rest.server.resource.ResourceObsoleteException;
 import org.oasis.datacore.rest.server.resource.ResourceService;
+import org.oasis.datacore.sample.ResourceModelIniter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -90,13 +93,30 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
             // model consistency check : (NOT on startup else order of load can make it fail)
             mrMappingService.checkModelOrMixin(modelOrMixin, r);
             
+         } catch (ResourceObsoleteException roex) { // specific handling for better logging
+            // abort else POSTer won't know that his model can't be used (to POST resources)
+            throw new AbortOperationEventException("Resource obsolete error while converting "
+                  + "or enriching to model or mixin " + r.get(ResourceModelIniter.MODEL_MODEL_NAME)
+                  + " with dcmo:pointOfViewAbsoluteName=" + r.get("dcmo:pointOfViewAbsoluteName")
+                  + " in project " + dataModelAdminService.getProject().getName()
+                  + ", aborting POSTing resource", roex);
          } catch (ResourceException rex) {
             // abort else POSTer won't know that his model can't be used (to POST resources)
             throw new AbortOperationEventException(rex);
+         } catch (AccessDeniedException adex) { // specific handling for better logging
+            // abort else POSTer won't know that his model can't be used (to POST resources)
+            throw new AbortOperationEventException("Access denied error while converting "
+                  + "or enriching to model or mixin " + r.get(ResourceModelIniter.MODEL_MODEL_NAME)
+                  + " with dcmo:pointOfViewAbsoluteName=" + r.get("dcmo:pointOfViewAbsoluteName")
+                  + " in project " + dataModelAdminService.getProject().getName()
+                  + ", aborting POSTing resource", adex);
          } catch (Throwable t) {
             // abort else POSTer won't know that his model can't be used (to POST resources)
             throw new AbortOperationEventException("Unknown error while converting "
-                  + "or enriching to model or mixin, aborting POSTing resource", t);
+                  + "or enriching to model or mixin " + r.get(ResourceModelIniter.MODEL_MODEL_NAME)
+                  + " with dcmo:pointOfViewAbsoluteName=" + r.get("dcmo:pointOfViewAbsoluteName")
+                  + " in project " + dataModelAdminService.getProject().getName()
+                  + ", aborting POSTing resource", t);
          }
          return;
       case DCResourceEvent.CREATED :
