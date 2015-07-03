@@ -1,4 +1,4 @@
-## OASIS Datacore Samples
+## Ozwillo Datacore Samples
 
 This project contains various technical experimentations, tests and examples, as well as business-oriented examples.
 Its goal is to help emergence of Datacore's API and implementation in a use case-driven manner.

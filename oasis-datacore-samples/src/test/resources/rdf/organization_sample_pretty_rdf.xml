@@ -6,22 +6,22 @@
   xmlns:foaf="http://xmlns.com/foaf/0.1/"
   xmlns:swpo="http://sw-portal.deri.org/ontologies/swportal#"
 >
-  <foaf:Person rdf:about="http://data.oasis-eu.org/person-BrunoThuillier">
+  <foaf:Person rdf:about="http://data.ozwillo.com/person-BrunoThuillier">
     <foaf:name>Bruno Thuillier</foaf:name>
     <org:memberOf>
-      <org:Organization rdf:about="http://data.oasis-eu.org/org-PoleNumerique">
-        <org:hasSite rdf:resource="http://data.oasis-eu.org/site-Rhovalparc"/>
+      <org:Organization rdf:about="http://data.ozwillo.com/org-PoleNumerique">
+        <org:hasSite rdf:resource="http://data.ozwillo.com/site-Rhovalparc"/>
         <foaf:name>Pôle Numérique</foaf:name>
       </org:Organization>
     </org:memberOf>
     <foaf:currentProject>
-      <foaf:Project rdf:about="http://data.oasis-eu.org/project-OASIS">
+      <foaf:Project rdf:about="http://data.ozwillo.com/project-OASIS">
         <foaf:name>OASIS</foaf:name>
-        <foaf:homepage rdf:resource="http://www.oasis-eu.org/"/>
+        <foaf:homepage rdf:resource="http://www.ozwillo.com/"/>
       </foaf:Project>
     </foaf:currentProject>
   </foaf:Person>
-  <org:Site rdf:about="http://data.oasis-eu.org/site-Rhovalparc">
+  <org:Site rdf:about="http://data.ozwillo.com/site-Rhovalparc">
     <foaf:name>Rhovalparc</foaf:name>
     <swpo:hasAddress>
       <swpo:PostalAddress rdf:nodeID="ub13bL21C1">

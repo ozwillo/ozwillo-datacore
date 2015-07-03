@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class DatacoreClient {
    
-   public static final String DATACORE_BASE_URI = "http://data.oasis-eu.org/";
+   public static final String DATACORE_BASE_URI = "http://data.ozwillo.com/";
    public static final String LANGUAGE_SPARQL = "SPARQL";
 
    public DCObject get(String uri) {
@@ -60,7 +60,7 @@ public class DatacoreClient {
    /**
     * get by rdf type
     * TODO paging, sorting...
-    * @param rdfTypeOrBase rdf:type : TODO Q if ns full rdf:type, else will be prepended by "http://data.oasis-eu.org/"
+    * @param rdfTypeOrBase rdf:type : TODO Q if ns full rdf:type, else will be prepended by "http://data.ozwillo.com/"
     * @param sourceId TODO itself by default
     * @param dataQualityMin TODO its own default one by default
     * @return

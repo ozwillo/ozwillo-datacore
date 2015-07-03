@@ -49,7 +49,7 @@ public class ConverterAndEventTest {
       examplesColl.ensureIndex(new BasicDBObject("_id", null), null, true);
       examplesColl.ensureIndex(new BasicDBObject("uri", null), null, false); // TODO Q false ?????
       
-      String docBaseUri = "http://data.oasis-eu.org/document/";
+      String docBaseUri = "http://data.ozwillo.com/document/";
       
       // create new
       Document doc = new Document();
@@ -61,7 +61,7 @@ public class ConverterAndEventTest {
       Example example = new Example();
       example.setAbout(doc);
       example.setText("# Datacore API example :\n"
-            + "wget http://data.oasis-eu.org/city/France/Lyon");
+            + "wget http://data.ozwillo.com/city/France/Lyon");
       mgo.save(example, "examples"); // TODO or @Document
       // check fields inited by converters :
       Assert.assertNotNull(example.getId());
@@ -97,10 +97,10 @@ public class ConverterAndEventTest {
       // has produced the following lifecycle events :
       /*
 onBeforeConvert Document org.oasis.datacore.sample.converter.Document@51a79b
-onBeforeSave Document org.oasis.datacore.sample.converter.Document@51a79b to dbo { "_class" : "org.oasis.datacore.sample.converter.Document" , "_id" : { "$oid" : "5233016b930e343b15a91e4d"} , "uri" : "http://data.oasis-eu.org/document/projets/oasis/Oasis API.html" , "name" : "Oasis API.html" , "comments" : [ { "_id" :  null  , "user" : "john" , "text" : "hello"} , { "_id" :  null  , "user" : "jim" , "text" : "hi"}]}
-onAfterSave Document org.oasis.datacore.sample.converter.Document@51a79b to dbo { "_class" : "org.oasis.datacore.sample.converter.Document" , "_id" : { "$oid" : "5233016b930e343b15a91e4d"} , "uri" : "http://data.oasis-eu.org/document/projets/oasis/Oasis API.html" , "name" : "Oasis API.html" , "comments" : [ { "_id" :  null  , "user" : "john" , "text" : "hello"} , { "_id" :  null  , "user" : "jim" , "text" : "hi"}]}
-onAfterLoad Document { "_id" : { "$oid" : "5233016b930e343b15a91e4d"} , "_class" : "org.oasis.datacore.sample.converter.Document" , "uri" : "http://data.oasis-eu.org/document/projets/oasis/Oasis API.html" , "name" : "Oasis API.html" , "comments" : [ { "_id" :  null  , "user" : "john" , "text" : "hello"} , { "_id" :  null  , "user" : "jim" , "text" : "hi"}]}
-onAfterConvert Document dbo { "_id" : { "$oid" : "5233016b930e343b15a91e4d"} , "_class" : "org.oasis.datacore.sample.converter.Document" , "uri" : "http://data.oasis-eu.org/document/projets/oasis/Oasis API.html" , "name" : "Oasis API.html" , "comments" : [ { "_id" :  null  , "user" : "john" , "text" : "hello"} , { "_id" :  null  , "user" : "jim" , "text" : "hi"}]} to org.oasis.datacore.sample.converter.Document@6a6bb8      
+onBeforeSave Document org.oasis.datacore.sample.converter.Document@51a79b to dbo { "_class" : "org.oasis.datacore.sample.converter.Document" , "_id" : { "$oid" : "5233016b930e343b15a91e4d"} , "uri" : "http://data.ozwillo.com/document/projets/oasis/Oasis API.html" , "name" : "Oasis API.html" , "comments" : [ { "_id" :  null  , "user" : "john" , "text" : "hello"} , { "_id" :  null  , "user" : "jim" , "text" : "hi"}]}
+onAfterSave Document org.oasis.datacore.sample.converter.Document@51a79b to dbo { "_class" : "org.oasis.datacore.sample.converter.Document" , "_id" : { "$oid" : "5233016b930e343b15a91e4d"} , "uri" : "http://data.ozwillo.com/document/projets/oasis/Oasis API.html" , "name" : "Oasis API.html" , "comments" : [ { "_id" :  null  , "user" : "john" , "text" : "hello"} , { "_id" :  null  , "user" : "jim" , "text" : "hi"}]}
+onAfterLoad Document { "_id" : { "$oid" : "5233016b930e343b15a91e4d"} , "_class" : "org.oasis.datacore.sample.converter.Document" , "uri" : "http://data.ozwillo.com/document/projets/oasis/Oasis API.html" , "name" : "Oasis API.html" , "comments" : [ { "_id" :  null  , "user" : "john" , "text" : "hello"} , { "_id" :  null  , "user" : "jim" , "text" : "hi"}]}
+onAfterConvert Document dbo { "_id" : { "$oid" : "5233016b930e343b15a91e4d"} , "_class" : "org.oasis.datacore.sample.converter.Document" , "uri" : "http://data.ozwillo.com/document/projets/oasis/Oasis API.html" , "name" : "Oasis API.html" , "comments" : [ { "_id" :  null  , "user" : "john" , "text" : "hello"} , { "_id" :  null  , "user" : "jim" , "text" : "hi"}]} to org.oasis.datacore.sample.converter.Document@6a6bb8      
        */
       // so EMBEDDED ELEMENTS ARE NOT LISTENED TO !!
    }

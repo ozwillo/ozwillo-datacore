@@ -17,7 +17,7 @@ package org.oasis.datacore.data.meta;
  */
 public class DCReferenceField extends DCField {
    
-   /** Container host ex. data.oasis-eu.org, by default set to the current container's.
+   /** Container host ex. data.ozwillo.com, by default set to the current container's.
     * Protocol is assumed to be HTTP (if HTTPS, there must be a redirection) */
    private String container;
    /** Base type ex. city. Corresponds to a type of use and a data governance configuration.

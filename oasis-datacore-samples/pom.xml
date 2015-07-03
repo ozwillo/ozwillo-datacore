@@ -12,7 +12,7 @@
   </parent>
   
 	<artifactId>oasis-datacore-samples</artifactId>
-	<name>OASIS Datacore Samples</name>
+	<name>Ozwillo Datacore Samples</name>
 
 
 	<dependencies>

@@ -6,17 +6,17 @@
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:swpo="http://sw-portal.deri.org/ontologies/swportal#"
 >
-  <rdf:Description rdf:about="http://data.oasis-eu.org/org-PoleNumerique">
-    <org:hasSite rdf:resource="http://data.oasis-eu.org/site-Rhovalparc"/>
+  <rdf:Description rdf:about="http://data.ozwillo.com/org-PoleNumerique">
+    <org:hasSite rdf:resource="http://data.ozwillo.com/site-Rhovalparc"/>
     <rdf:type rdf:resource="http://www.w3.org/ns/org#Organization"/>
     <foaf:name>Pôle Numérique</foaf:name>
   </rdf:Description>
-  <rdf:Description rdf:about="http://data.oasis-eu.org/project-OASIS">
+  <rdf:Description rdf:about="http://data.ozwillo.com/project-OASIS">
     <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Project"/>
     <foaf:name>OASIS</foaf:name>
-    <foaf:homepage rdf:resource="http://www.oasis-eu.org/"/>
+    <foaf:homepage rdf:resource="http://www.ozwillo.com/"/>
   </rdf:Description>
-  <rdf:Description rdf:about="http://data.oasis-eu.org/site-Rhovalparc">
+  <rdf:Description rdf:about="http://data.ozwillo.com/site-Rhovalparc">
     <rdf:type rdf:resource="http://www.w3.org/ns/org#Site"/>
     <swpo:hasAddress rdf:nodeID="ub11bL21C1"/>
     <foaf:name>Rhovalparc</foaf:name>
@@ -26,11 +26,11 @@
     <rdf:type rdf:resource="http://rdf.insee.fr/def/geo#Commune"/>
     <igeo:codeINSEE>26362</igeo:codeINSEE>
   </rdf:Description>
-  <rdf:Description rdf:about="http://data.oasis-eu.org/person-BrunoThuillier">
+  <rdf:Description rdf:about="http://data.ozwillo.com/person-BrunoThuillier">
     <rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Person"/>
     <foaf:name>Bruno Thuillier</foaf:name>
-    <org:memberOf rdf:resource="http://data.oasis-eu.org/org-PoleNumerique"/>
-    <foaf:currentProject rdf:resource="http://data.oasis-eu.org/project-OASIS"/>
+    <org:memberOf rdf:resource="http://data.ozwillo.com/org-PoleNumerique"/>
+    <foaf:currentProject rdf:resource="http://data.ozwillo.com/project-OASIS"/>
   </rdf:Description>
   <rdf:Description rdf:nodeID="ub11bL21C1">
     <swpo:inCity rdf:resource="http://id.insee.fr/geo/commune/26362"/>

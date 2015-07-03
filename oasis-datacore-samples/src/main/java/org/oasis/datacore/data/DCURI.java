@@ -11,7 +11,7 @@ package org.oasis.datacore.data;
  */
 public class DCURI {
 
-   /** Container host ex. data.oasis-eu.org. Protocol is assumed to be HTTP
+   /** Container host ex. data.ozwillo.com. Protocol is assumed to be HTTP
     * (if HTTPS, there must be a redirection) */
    private String container;
    /** Base type ex. city. Corresponds to a type of use and a data governance configuration.

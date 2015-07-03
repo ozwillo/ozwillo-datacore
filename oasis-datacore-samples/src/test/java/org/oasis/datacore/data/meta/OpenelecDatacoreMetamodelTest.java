@@ -45,7 +45,7 @@ public class OpenelecDatacoreMetamodelTest {
       DCEntity lyonCity = new DCEntity();
       lyonCity.setProperties(new HashMap<String,Object>());
       lyonCity.getProperties().put("name", "Lyon"); // TODO Q or subentity ? or even sub-resource ?????? and how to index, localized ??????????????,
-      String lyonCityUri = "http://data.oasis-eu.org/city/France/Lyon"; // uri (from id query params !?) TODO type as field, not prefix
+      String lyonCityUri = "http://data.ozwillo.com/city/France/Lyon"; // uri (from id query params !?) TODO type as field, not prefix
       lyonCity.setUri(lyonCityUri); // TODO Q not obligatory if embedded ? or then only sub-uri ??
       mgo.save(lyonCity, "city"); // TODO Q collection = use case != rdf:type ? or even several types ???
       Assert.assertNotNull(lyonCity.getId());
@@ -66,7 +66,7 @@ public class OpenelecDatacoreMetamodelTest {
       bureau.setAdresse3("69003 Lyon");
       bureau.setCode_canton("canton1");
        */
-      String bureauDeVoteUri = "http://data.oasis-eu.org/bureauDeVote/Lyon325"; // uri (from id query params !?)
+      String bureauDeVoteUri = "http://data.ozwillo.com/bureauDeVote/Lyon325"; // uri (from id query params !?)
       bureauDeVote.setUri(bureauDeVoteUri); // TODO Q not obligatory if embedded ? or then only sub-uri ??
       mgo.save(bureauDeVote, "bureauDeVote");
       Assert.assertNotNull(bureauDeVote.getId());

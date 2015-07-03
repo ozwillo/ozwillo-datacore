@@ -1,34 +1,34 @@
 {
   "@graph": [
     {
-      "@id": "http://data.oasis-eu.org/project-OASIS",
+      "@id": "http://data.ozwillo.com/project-OASIS",
       "@type": "http://xmlns.com/foaf/0.1/Project",
       "http://xmlns.com/foaf/0.1/homepage": {
-        "@id": "http://www.oasis-eu.org/"
+        "@id": "http://www.ozwillo.com/"
       },
       "http://xmlns.com/foaf/0.1/name": "OASIS"
     },
     {
-      "@id": "http://data.oasis-eu.org/org-PoleNumerique",
+      "@id": "http://data.ozwillo.com/org-PoleNumerique",
       "@type": "http://www.w3.org/ns/org#Organization",
       "http://www.w3.org/ns/org#hasSite": {
-        "@id": "http://data.oasis-eu.org/site-Rhovalparc"
+        "@id": "http://data.ozwillo.com/site-Rhovalparc"
       },
       "http://xmlns.com/foaf/0.1/name": "P\u00f4le Num\u00e9rique"
     },
     {
-      "@id": "http://data.oasis-eu.org/person-BrunoThuillier",
+      "@id": "http://data.ozwillo.com/person-BrunoThuillier",
       "@type": "http://xmlns.com/foaf/0.1/Person",
       "http://www.w3.org/ns/org#memberOf": {
-        "@id": "http://data.oasis-eu.org/org-PoleNumerique"
+        "@id": "http://data.ozwillo.com/org-PoleNumerique"
       },
       "http://xmlns.com/foaf/0.1/currentProject": {
-        "@id": "http://data.oasis-eu.org/project-OASIS"
+        "@id": "http://data.ozwillo.com/project-OASIS"
       },
       "http://xmlns.com/foaf/0.1/name": "Bruno Thuillier"
     },
     {
-      "@id": "http://data.oasis-eu.org/site-Rhovalparc",
+      "@id": "http://data.ozwillo.com/site-Rhovalparc",
       "@type": "http://www.w3.org/ns/org#Site",
       "http://sw-portal.deri.org/ontologies/swportal#hasAddress": {
         "@type": "http://sw-portal.deri.org/ontologies/swportal#PostalAddress",

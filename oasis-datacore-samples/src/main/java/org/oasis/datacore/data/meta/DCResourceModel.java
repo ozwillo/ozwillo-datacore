@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class DCResourceModel {
 
-   public static final String DATACORE_BASE_URI = "http://data.oasis-eu.org/";
+   public static final String DATACORE_BASE_URI = "http://data.ozwillo.com/";
    
    /** Unique ; also serves as collection name (so a model serves for a single collection,
     * because it models a single use context / case, which is the base type of the entity). */

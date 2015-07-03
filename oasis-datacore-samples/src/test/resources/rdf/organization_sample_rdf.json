@@ -19,11 +19,11 @@
       }
     ]
   }, 
-  "http://data.oasis-eu.org/org-PoleNumerique": {
+  "http://data.ozwillo.com/org-PoleNumerique": {
     "http://www.w3.org/ns/org#hasSite": [
       {
         "type": "uri", 
-        "value": "http://data.oasis-eu.org/site-Rhovalparc"
+        "value": "http://data.ozwillo.com/site-Rhovalparc"
       }
     ], 
     "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": [
@@ -39,17 +39,17 @@
       }
     ]
   }, 
-  "http://data.oasis-eu.org/person-BrunoThuillier": {
+  "http://data.ozwillo.com/person-BrunoThuillier": {
     "http://www.w3.org/ns/org#memberOf": [
       {
         "type": "uri", 
-        "value": "http://data.oasis-eu.org/org-PoleNumerique"
+        "value": "http://data.ozwillo.com/org-PoleNumerique"
       }
     ], 
     "http://xmlns.com/foaf/0.1/currentProject": [
       {
         "type": "uri", 
-        "value": "http://data.oasis-eu.org/project-OASIS"
+        "value": "http://data.ozwillo.com/project-OASIS"
       }
     ], 
     "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": [
@@ -65,7 +65,7 @@
       }
     ]
   }, 
-  "http://data.oasis-eu.org/site-Rhovalparc": {
+  "http://data.ozwillo.com/site-Rhovalparc": {
     "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": [
       {
         "type": "uri", 
@@ -85,7 +85,7 @@
       }
     ]
   }, 
-  "http://data.oasis-eu.org/project-OASIS": {
+  "http://data.ozwillo.com/project-OASIS": {
     "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": [
       {
         "type": "uri", 
@@ -101,7 +101,7 @@
     "http://xmlns.com/foaf/0.1/homepage": [
       {
         "type": "uri", 
-        "value": "http://www.oasis-eu.org/"
+        "value": "http://www.ozwillo.com/"
       }
     ]
   }, 

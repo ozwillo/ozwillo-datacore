@@ -3,7 +3,7 @@
 @prefix org:<http://www.w3.org/ns/org#>.
 @prefix igeo:<http://rdf.insee.fr/def/geo#>.
 @prefix swpo:<http://sw-portal.deri.org/ontologies/swportal#>.
-@prefix oasis:<http://data.oasis-eu.org/>.
+@prefix oasis:<http://data.ozwillo.com/>.
 ### The commune of Valence. A full description is provided by INSEE at this URI.
 <http://id.insee.fr/geo/commune/26362>
 a igeo:Commune;
@@ -32,4 +32,4 @@ foaf:currentProject oasis:project-OASIS.
 oasis:project-OASIS
 a foaf:Project;
 foaf:name "OASIS";
-foaf:homepage <http://www.oasis-eu.org/>.
+foaf:homepage <http://www.ozwillo.com/>.
