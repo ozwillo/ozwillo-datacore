@@ -285,7 +285,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
             && !isFacadeProject(model.getProjectName())) {
          DCModelBase storageModel = (dataEntity != null) ? // else none yet (been queried by LDP)
                entityModelService.getStorageModel(dataEntity) : modelService.getStorageModel(model);
-         if (storageModel.isMultiProjectStorage()) { // especially oasis.meta.dcmi:mixin_0 in case of model resources !
+         if (storageModel != null && storageModel.isMultiProjectStorage()) { // especially oasis.meta.dcmi:mixin_0 in case of model resources !
             // (even oasis.sandbox models are stored in oasis.meta.dcmi:mixin_0 collection,
             // only soft forks i.e. inheriting overrides couldn't be handled this way)
             // no need to check, entity will anyway be written in its own project
