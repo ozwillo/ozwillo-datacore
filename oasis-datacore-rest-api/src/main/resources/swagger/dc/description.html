@@ -89,11 +89,13 @@ and for container URL <span class="dcConf_containerUrl_link">NOT INITED</span>
 (URL that must be used to build Datacore Data resource URIs).
 <br/><br/>
 <b>URIs</b> that uniquely identify Datacore Data resource are in the form
-<span class="dcjsonline">$containerUrl/dc/type/$type/$iri</span>, where 
+<span class="dcjsonline">$containerUrl/dc/type/$type/$id</span>, where 
 $containerUrl is unique for a container (ex. http://data.ozwillo.com), $type is 
-among available model types and $iri is the resource's Internal Resource Identifier (IRI). 
+among available model types and $id is the resource's business ID (therefore
+relative to tjee model type). Also note that <span class="dcjsonline">/dc/type/$type/$id</span>
+is the Resource's Internal Resource Identifier (IRI). 
 <br/><br/>
-&nbsp;&nbsp;- IRIs have 3 constraints : they must be valid URL endings, unique (not enforced yet), 
+&nbsp;&nbsp;- IDs have 3 constraints : they must be valid URL endings, unique (not enforced yet), 
 and if possible readable and representative of the resource.
 <br/><br/>
 &nbsp;&nbsp;- URIs must be <a href="http://perishablepress.com/stop-using-unsafe-characters-in-urls/">
@@ -103,7 +105,7 @@ including reserved characters <span class="dcjsonline">$&+,/:;=?@</span>
 outside of their purpose</a> such as '?' within <span class="dcjsonline">$type</span>)
 must be URL-encoded, and it's bad practice for model names to contain some.<br/><br/>
 &nbsp;&nbsp;- URIs of embedded Resources (as sub Resource within another top level Resource)
-are by default <span class="dcjsonline">$containerUrl/dc/type/$subResourceType/$resourceIri/$subResourceJsonPath</span>,
+are by default <span class="dcjsonline">$containerUrl/dc/type/$subResourceType/$resourceId/$subResourceJsonPath</span>,
 but can be something else if parsing is defined consistently within $subResourceType.
 <br/><br/>
 <b>Values</b> are formatted in JSON as follows :

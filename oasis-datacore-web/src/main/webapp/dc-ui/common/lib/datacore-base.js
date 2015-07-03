@@ -97,7 +97,7 @@ function initUserInfoUi() {
             optionsHtml += '</option>\n';
          }
          $('#project').html(optionsHtml);
-         $('#project').val('oasis.sandbox'); // by default don't pollute anything
+         $('#project').val(getProject());
       }
    });
 }

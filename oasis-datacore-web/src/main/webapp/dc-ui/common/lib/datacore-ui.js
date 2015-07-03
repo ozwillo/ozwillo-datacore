@@ -527,7 +527,7 @@ function requestToRelativeUrl(request) {
 
 function getProject() {
    if (!window.currentProject || window.currentProject.length === 0) {
-      return 'oasis.sample'; // oasis.sandbox oasis.main (oasis.sample)
+      return 'oasis.sandbox'; // by default don't pollute anything // oasis.sandbox oasis.main (oasis.sample)
    }
    return window.currentProject;
 }
@@ -555,11 +555,11 @@ function buildProjectPortalQuery(options) {
 function buildProjectPortalQueryLink(options, linkText) {
    return '<a href="/dc/type/' + buildProjectPortalQuery(options) + '" class="dclink" onclick="'
       + 'javascript:return findData($(this).attr(\'href\'), projectPortalSuccess, null, null, 25, {\'X-Datacore-View\':\' \'}, '
-      + (options ? + stringifyForAttribute(options) : 'null') + ');">' + linkText + '</a>';
+      + (options ? stringifyForAttribute(options) : 'null') + ');">' + linkText + '</a>';
 }
 function buildProjectPortalTitleHtml(options) {
    if (!options) {
-      options = {}; // to ease up building alt options 
+      options = { pureMixins:false, global:false }; // to ease up building alt options 
    }
    var html = '';
    if (!options.pureMixins || options.storageModels) {
@@ -638,13 +638,14 @@ function findDataByType(relativeUrl, success, error, start, limit, optionalHeade
    if (limit) {
       swaggerParams.limit = limit;
    }
-   var supplParams = null; // {parent:handlerOptions};
+   var supplParams = null; // handlerOptions == null ? null : {parent:handlerOptions};
    if (optionalHeaders) {
       for (var headerName in optionalHeaders) {
          swaggerParams[headerName] = optionalHeaders[headerName];
       }
       if (optionalHeaders['Accept']) {
-         supplParams = {responseContentType: optionalHeaders['Accept']};
+         supplParams = supplParams == null ? {} : supplParams;
+         supplParams['responseContentType'] = optionalHeaders['Accept']; // for RDF (no other way)
       }
    }
    if (!swaggerParams['X-Datacore-Project']) {
@@ -699,14 +700,15 @@ function getData(relativeUrl, success, error, optionalHeaders, handlerOptions) {
    setUrl(relativeUrl, success);
    var swaggerParams = {type:relativeUrl.modelType, __unencoded__iri:relativeUrl.id,
            'If-None-Match':-1, Authorization:getAuthHeader()};
-   var supplParams = null; // {parent:handlerOptions};
+   var supplParams = null; // handlerOptions == null ? null : {parent:handlerOptions};
    if (optionalHeaders) {
       for (var headerName in optionalHeaders) {
          swaggerParams[headerName] = optionalHeaders[headerName];
       }
       if (optionalHeaders['Accept']) {
-         supplParams = {responseContentType: optionalHeaders['Accept']};
-       }
+         supplParams = supplParams == null ? {} : supplParams;
+         supplParams['responseContentType'] = optionalHeaders['Accept']; // for RDF
+      }
    }
    if (!swaggerParams['X-Datacore-Project']) {
       swaggerParams['X-Datacore-Project'] = getProject();
@@ -715,7 +717,7 @@ function getData(relativeUrl, success, error, optionalHeaders, handlerOptions) {
       var resResourceOrText;
       var contentType = data.request._headers['Accept'];
       if (contentType && contentType.indexOf('text/') === 0) { // ex. RDF : 'text/x-nquads'
-         resResourceOrText = displayTextResult(data, success);;
+         resResourceOrText = displayTextResult(data, success);
       } else {
          resResourceOrText = displayJsonObjectResult(data, success);
       }
