@@ -37,7 +37,9 @@ public class ArrayServerOutInterceptor extends AbstractPhaseInterceptor<Message>
       @SuppressWarnings("static-access")
       String type = (String) serverOutResponseMessage.get(serverOutResponseMessage.CONTENT_TYPE);
 
-      if (!ArrayServerInInterceptor.isPostDcTypeOperation(serverInRequestMessage) || !MediaType.APPLICATION_JSON.isCompatibleWith(MediaType.valueOf(type))) {
+      if (!ArrayServerInInterceptor.isPostDcTypeOperation(serverInRequestMessage)
+            || type == null // happens when body is not JSON ex. "eee" (but Content-Type still is JSON)
+            || !MediaType.APPLICATION_JSON.isCompatibleWith(MediaType.valueOf(type))) {
          // NB. other failed alternatives :
          // org.apache.cxf.jaxrs.model.OperationResourceInfo has java method & uriTemplate
          // org.apache.cxf.resource.operation.name is DatacoreApiImpl#postAllDataInType

@@ -145,6 +145,8 @@
             <property name="addMessageToResponse" value="true"/>
          </bean -->
          <bean class="org.oasis.datacore.rest.server.security.AccessDeniedExceptionMapper"/><!-- to HTTP 403 -->
+         <bean class="com.fasterxml.jackson.jaxrs.base.JsonParseExceptionMapper"/><!-- to get HTTPP 400 rather than 500 error
+         when malformed JSON http://stackoverflow.com/questions/17109405/jax-rs-exception-handling http://markmail.org/message/3bgzqq7ewgtxauh2 -->
          
          <!-- swagger dynamic spec server, for apidoc : -->
          <ref bean="swagger.resourceWriter" />
