@@ -679,9 +679,10 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          //explainCtx.put("httpQuery", exchange.get("dc.query.httpQuery"))
          //explainCtx.put("parsedQuery", exchange.get("dc.query.parsedQuery")
       }
-      
+
       if (!isDebug // in debug mode still allow to go through to get debug info
             && maxScan != 0 && queryParsingContext.isHasNoIndexedField()) {
+
          // (if maxScan == 0 it is infinite and its limit can't be reached)
          if (foundEntities.size() < springMongoQuery.getLimit()
                && ((int) cursorProvider.getQueryExplain().get("nscanned")) == maxScan) {

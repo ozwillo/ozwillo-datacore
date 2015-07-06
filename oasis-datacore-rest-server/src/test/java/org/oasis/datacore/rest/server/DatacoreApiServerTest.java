@@ -1000,6 +1000,8 @@ public class DatacoreApiServerTest {
 
       // limiting maxScan to (less or equal than) document nb :
       ldpEntityQueryServiceImpl.setMaxScan(2);
+      Assert.assertTrue("city:founded should not be indexed", modelServiceImpl.getModelBase(
+            CityCountrySample.CITY_MODEL_NAME).getField("city:founded").getQueryLimit() <= 0);
       try {
          // unquoted equals (empty)
          resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,

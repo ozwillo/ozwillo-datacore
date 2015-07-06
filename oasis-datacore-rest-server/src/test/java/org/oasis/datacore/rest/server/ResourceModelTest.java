@@ -410,6 +410,7 @@ public class ResourceModelTest {
          } finally {
             // putting it back in default state
             clientCityFoundedField.setRequired(false);
+            clientCityFoundedField.setQueryLimit(0);
             mrMappingService.modelToResource(clientCityModel, cityModelResource);
             // get it first to update version if required :
             DCResource latestCityModelResource = datacoreApiClient.getData(cityModelResource);
@@ -427,7 +428,7 @@ public class ResourceModelTest {
          DCResource existingResource = datacoreApiClient.getData(resource);
          // if already exists, delete it first :
          datacoreApiClient.deleteData(existingResource); // and not resource,
-         // else could keep its city;founded value
+         // else could keep its city:founded value
       } catch (NotFoundException nfex) {
          // expected the first time
       }
