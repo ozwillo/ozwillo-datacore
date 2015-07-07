@@ -32,7 +32,8 @@ function initUserInfo() {
       }
       $('#logout').show();
    } else {
-      if (dcConf.devmode) {
+      if (dcConf.localauthdevmode) {
+         // log test admin :
          userinfo = {
                nickname : 'Administrator',
                sub_groups : 'admin,u_john,tutor_jim,rm_altTourism.place.SofiaMonastery_readers',
@@ -40,11 +41,8 @@ function initUserInfo() {
                anonymous : true
          };
       } else {
-         userinfo = {
-               nickname : 'Anonymous',
-               sub_groups : 'guest',
-               anonymous : true
-         };
+         // redirect to login :
+         window.location = "/dc/playground/login";
       }
       $('#logout').hide();
    }
@@ -107,7 +105,7 @@ function initUserInfoUi() {
 // PLAYGROUND UI (without Swagger UI)
 
 function initPlayground() {
-   // getting dc playground conf ex. devmode :
+   // getting dc playground conf ex. localauthdevmode :
    initDcConf(function(result){
       window.dcConf = JSON.parse(result);
       console.log("conf", dcConf);
@@ -152,7 +150,7 @@ function buildUrl(base, url) {
 //PLAYGROUND UI - WITH SWAGGER UI
 
 function initPlaygroundWithSwaggerUi() {
-   // getting dc playground conf ex. devmode :
+   // getting dc playground conf ex. localauthdevmode :
    initDcConf(function(result){
       window.dcConf = JSON.parse(result);
       console.log("conf", dcConf);
@@ -211,7 +209,7 @@ function initDcApiWithSwaggerUi(success) {
 //PLAYGROUND UI - CONF & COMPLETE
 
 function initDcConf(success) {
-   // getting dc playground conf ex. devmode :
+   // getting dc playground conf ex. localauthdevmode :
    $.ajax({
       url:"/dc/playground/configuration",
       headers: { Authorization:getAuthHeader() },

@@ -532,7 +532,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
                
                // actual posting :
                for (DCResource resource : resourcesToPost) {
-                  postDataInType(resource); // ex. orgpri2 model in orgpri2 project
+                  postDataInType(resource); // ex. orgpri2 model in orgpri2 project TODO already exists samples_org2.pri.org2:Organization_0
                }
                return null;
             }

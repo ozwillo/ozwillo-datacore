@@ -20,7 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 /**
- * USED ONLY BY TESTS i.e. fails if devmode=falls
+ * USED ONLY BY TESTS i.e. fails if localauthdevmode=falls
  * Logs in (without any check) as provided user available in conf'd UserDetailsService.
  * Done as CXF interceptor because looks in HTTP request.
  * 
@@ -31,8 +31,8 @@ import org.springframework.beans.factory.annotation.Value;
 public class MockLoginServerInInterceptor extends AbstractPhaseInterceptor<Message> {
    private static final Logger LOG = LogUtils.getLogger(MockLoginServerInInterceptor.class);
 
-   @Value("${datacore.devmode}")
-   private boolean devmode;
+   @Value("${datacore.localauthdevmode}")
+   private boolean localauthdevmode;
    
    @Autowired
    private LocalAuthenticationService mockAuthenticationService;
@@ -43,8 +43,8 @@ public class MockLoginServerInInterceptor extends AbstractPhaseInterceptor<Messa
 
    @Override
    public void handleMessage(Message serverInRequestMessage) throws Fault {
-      if (!devmode) {
-         throw new IllegalArgumentException(this.getClass().getName() + " must never be used when devmode=false");
+      if (!localauthdevmode) {
+         throw new IllegalArgumentException(this.getClass().getName() + " must never be used when localauthdevmode=false");
       }
       
       String username = null;

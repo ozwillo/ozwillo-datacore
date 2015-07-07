@@ -21,6 +21,8 @@ public abstract class PlaygroundResourceBase {
 
    @Value("${datacore.devmode}")
    protected boolean devmode;
+   @Value("${datacore.localauthdevmode}")
+   protected boolean localauthdevmode;
    @Value("${datacoreApiServer.baseUrl}")
    protected String baseUrl;
    @Value("${datacoreApiServer.containerUrl}")

@@ -11,7 +11,7 @@ import org.springframework.security.core.userdetails.User;
  * user.
  * 
  * NB. guestReadable is decided at modelService level,
- * false if not devmode (calls to Datacore are made by apps which can have "app_guest" accounts),
+ * false if not localauthdevmode (calls to Datacore are made by apps which can have "app_guest" accounts),
  * else true if no security set to ease up tests
  * 
  * @author mdutoo, agiraudon

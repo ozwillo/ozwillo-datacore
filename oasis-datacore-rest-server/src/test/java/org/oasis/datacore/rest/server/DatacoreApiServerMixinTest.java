@@ -351,10 +351,10 @@ public class DatacoreApiServerMixinTest {
       // logging in as guest
       authenticationService.loginAs("guest");
       
-      // allow model to devmode guest
+      // allow model to localauthdevmode guest
       altTourismPlaceModel.setSecurity(null);
 
-      // check that find allowed as devmode guest
+      // check that find allowed as localauthdevmode guest
       List<DCEntity> allowedMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel.getName(),
             new ImmutableMap.Builder<String, List<String>>().put("name",
                   new ImmutableList.Builder<String>().add("Sofia_Monastery").build()).build(), 0, 10);
@@ -365,7 +365,7 @@ public class DatacoreApiServerMixinTest {
       Assert.assertTrue("query filtering should have allowed it because in guest type",
             allowedMonasteryClientRes != null && allowedMonasteryClientRes.size() == 1);
       
-      // check that read (in addition to find) allowed as devmode guest
+      // check that read (in addition to find) allowed as localauthdevmode guest
       try {
          resourceService.get(altTourismPlaceSofiaMonasteryPosted.getUri(),
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE);
@@ -381,7 +381,7 @@ public class DatacoreApiServerMixinTest {
          Assert.fail("Resource in guest type should be readable as guest");
       }
       
-      // check that write not allowed as devmode guest
+      // check that write not allowed as localauthdevmode guest
       try {
          resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true, false);
@@ -396,7 +396,7 @@ public class DatacoreApiServerMixinTest {
          Assert.assertTrue(true);
       }
       
-      // check that create not allowed as devmode guest
+      // check that create not allowed as localauthdevmode guest
       try {
          resourceService.createOrUpdate(buildSofiaMonastery(++i),
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false, false);
@@ -415,7 +415,7 @@ public class DatacoreApiServerMixinTest {
       authenticationService.logout(); // NB. not required since followed by login
       authenticationService.loginAs("john");
       
-      // remove devmode guest
+      // remove localauthdevmode guest
       altTourismPlaceModel.setSecurity(new DCSecurity());
       altTourismPlaceModel.getSecurity().addResourceCreator("model_resource_creator_altTourism.place");
       altTourismPlaceModel.getSecurity().setAuthentifiedWritable(true); // NOT default
@@ -482,7 +482,7 @@ public class DatacoreApiServerMixinTest {
       authenticationService.logout(); // NB. not required since followed by login
       authenticationService.loginAs("guest");
 
-      // check that read not allowed anymore as devmode guest (because not null security)
+      // check that read not allowed anymore as localauthdevmode guest (because not null security)
       try {
          resourceService.get(altTourismPlaceSofiaMonasteryPosted.getUri(),
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE);
@@ -505,7 +505,7 @@ public class DatacoreApiServerMixinTest {
          Assert.fail("Get cached up-to-date data is always allowed (only requires entityService.isUpToDate()");
       }
       
-      // check that write still not allowed as devmode guest (because not null security)
+      // check that write still not allowed as localauthdevmode guest (because not null security)
       try {
          resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true, false);
@@ -520,7 +520,7 @@ public class DatacoreApiServerMixinTest {
          Assert.assertTrue(true);
       }
       
-      // check that create still not allowed as devmode guest (because not null security)
+      // check that create still not allowed as localauthdevmode guest (because not null security)
       try {
          resourceService.createOrUpdate(buildSofiaMonastery(++i),
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false, false);
@@ -535,7 +535,7 @@ public class DatacoreApiServerMixinTest {
          Assert.assertTrue(true);
       }
       
-      // check that not found anymore as devmode guest (because not null security)
+      // check that not found anymore as localauthdevmode guest (because not null security)
       authenticationService.loginAs("guest");
       List<DCEntity> forbiddenMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel.getName(),
             new ImmutableMap.Builder<String, List<String>>().put("name",

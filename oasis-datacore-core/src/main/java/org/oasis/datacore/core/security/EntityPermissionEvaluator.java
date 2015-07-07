@@ -44,8 +44,8 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
    public static final String GET_RIGHTS = "getRights";
 
    /** to use compute guest readable */
-   @Value("${datacore.devmode}")
-   private boolean devmode;
+   @Value("${datacore.localauthdevmode}")
+   private boolean localauthdevmode;
    
    @Autowired
    @Qualifier("datacoreSecurityServiceImpl")
@@ -93,8 +93,8 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       //if (hasRole("admin") || hasRole("t_" + model.getName() + "_admin")) {
       DCUserImpl user = datacoreSecurityService.getCurrentUser();
       
-      if (user.isGuest() && !devmode) {
-         return false; // forbidden outside devmode
+      if (user.isGuest() && !localauthdevmode) {
+         return false; // forbidden outside localauthdevmode
       }
       
       DCModelBase model = entityModelService.getModel(dataEntity);
@@ -356,8 +356,8 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
    }
 
    public boolean isDefaultSecurityAllowed(DCUserImpl user, String permission) {
-      if (devmode/* || project.defaultSecurity == phase1*/) {
-         if (user.isGuest()) { // allow even guest READ in devmode, to help developers
+      if (localauthdevmode/* || project.defaultSecurity == phase1*/) {
+         if (user.isGuest()) { // allow even guest READ in localauthdevmode, to help developers
             return READ.equals(permission);
          }
          return true; // default Phase 1 (model design step) security 
@@ -438,11 +438,11 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
    /**
     * 
     * @param model
-    * @return false if not devmode (calls to Datacore are made by apps which can have "app_guest" accounts),
+    * @return false if not localauthdevmode (calls to Datacore are made by apps which can have "app_guest" accounts),
     * else true if no security set to ease up tests
     */
    public boolean isGuestReadable(DCSecurity modelSecurity) {
-      return devmode && modelSecurity == null;
+      return localauthdevmode && modelSecurity == null;
    }
    
    /**
