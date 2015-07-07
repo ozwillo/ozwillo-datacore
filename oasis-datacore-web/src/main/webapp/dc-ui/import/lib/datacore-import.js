@@ -534,15 +534,12 @@
       var existingValue = existingResource[key];
       if (typeof existingValue === 'undefined' || existingValue == null
             || typeof newValue === 'string' && existingValue.length == 0 // empty string
-            || typeof newValue instanceof Array && existingValue.length === 0) { // empty list
+            || newValue instanceof Array && existingValue.length === 0) { // empty list
          existingResource[key] = newValue; // TODO more empty, conflicts
          return;
       }
-      if (typeof existingValue instanceof Array) {
-         // string as single value list but should not happen
-         existingValue.push(newValue);
-         return;
-      }
+      // NB. if existingValue is an Array, don't automatically push newValue in it as if it were
+      // a single value list, check field type first (else translation string goes in i18n list)
       var field = findField(key, allFields);
       if (field === null) {
          return; // native fields ex. @id
@@ -559,7 +556,7 @@
             }
             for (var elInd in existingValue) {
                if (existingValue[elInd]['l'] === newValueArray[nvInd]['l']) {
-                   existingValue[elInd] = newValueArray[nvInd];
+                  existingValue[elInd] = newValueArray[nvInd];
                   return;
                }
             }
@@ -1007,6 +1004,9 @@
          }
          mixinFields = mixin["dcmo:globalFields"];
          enrichedModelOrMixinFieldMap = importState.model.modelOrMixins[typeName]["dcmo:globalFields"]; // for import-specific data lookup
+         if (!enrichedModelOrMixinFieldMap) {
+             throw "Was not able to retrieve model " + typeName + " from server using query on parsed field names";
+         }
       }
       var resource = null;
       if (modelTypeToRowResources != null // means top level resource, parsed with actual concrete instance model type
@@ -1790,7 +1790,7 @@
          
          var resource = importState.data.resources[uri];
          if (skipModel(resource, importState.data.posted, importState)
-               || skipProject(resource, importState.data.posted, importState)) {
+               || skipProject(resource, importState.data.posted, importState)) { // NB. resource has already been refreshed
             continue;
          }
          
@@ -2582,6 +2582,7 @@
          var mixin = modelOrMixinArray[mInd];
          var uri = mixin["@id"];
 
+         // skip model already here (models will anyway be refreshed in query on parsed fields)
          if (skipModel(mixin, importState.model.posted, importState)) {
             continue;
          }
