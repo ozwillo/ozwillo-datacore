@@ -646,9 +646,10 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
             maxScan = (maxScan > storageModel.getMaxScan()) ?
                   storageModel.getMaxScan() : maxScan;
          }
-         if (springMongoQuery.getLimit() < maxScan) {
+         /*if (springMongoQuery.getLimit() < maxScan) {
             maxScan = springMongoQuery.getLimit(); // should not need more
-         }
+         }*/ // NOO else criterized unindexed queries are sure to fail
+         // ex. HTTPOperationsTest.testDeleteDcTypeIri()'s find
          maxScan = maxScan * 3; // for sort maxScan (because sort "scanned" is ex. 120 when query "scanned" is 83)
          // but also because in the same example limit was 50
       }
