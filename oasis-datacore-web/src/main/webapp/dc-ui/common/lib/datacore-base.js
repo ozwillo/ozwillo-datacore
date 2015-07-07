@@ -42,7 +42,7 @@ function initUserInfo() {
          };
       } else {
          // redirect to login :
-         window.location = "/dc/playground/login";
+         window.location.href = "/dc/playground/login"; // .href simulates a link http://stackoverflow.com/questions/1655065/redirecting-to-a-relative-url-in-javascript
       }
       $('#logout').hide();
    }
