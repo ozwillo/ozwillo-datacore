@@ -997,16 +997,25 @@ public class DatacoreApiServerTest {
             new QueryParameters().add(DatacoreApi.DEBUG_PARAM, "true"), null, null);
       // should not fail : query has no non indexed field
       Assert.assertEquals(1, resources.size());
+      
+      // three resources
+      DCResource valenceCityData = buildCityData("Valence", "France", 100000, false);
+      DateTime valenceFoundedDate = new DateTime(500, 4, 1, 0, 0, DateTimeZone.forID("+01:00"));
+      valenceCityData.setProperty("city:founded", valenceFoundedDate);
+      DCResource postedValenceCityData = datacoreApiClient.postDataInType(valenceCityData);
 
-      // limiting maxScan to (less or equal than) document nb :
-      ldpEntityQueryServiceImpl.setMaxScan(2);
+      // limiting maxScan to (less or equal than) document nb / 3 :
+      int resourceNb = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+            null, null, 10).size();
+      ldpEntityQueryServiceImpl.setMaxScan(resourceNb / 3);
       Assert.assertTrue("city:founded should not be indexed", modelServiceImpl.getModelBase(
             CityCountrySample.CITY_MODEL_NAME).getField("city:founded").getQueryLimit() <= 0);
       try {
          // unquoted equals (empty)
+         QueryParameters queryOnNonIndexedFields = new QueryParameters()
+               .add("city:founded", nonExistingFoundedDate + "+");
          resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-               new QueryParameters().add("city:founded", nonExistingFoundedDate
-                     + "+"), null, 10); // adding sort to remove default sort on _chAt
+               queryOnNonIndexedFields, null, 10); // adding sort to remove default sort on _chAt
          //Assert.assertEquals(0, resources.size());
          //Assert.assertEquals(postedBordeauxCityData.getUri(), resources.get(0).getUri());
          Assert.fail("Should have raised exception because query on non indexed field reached "

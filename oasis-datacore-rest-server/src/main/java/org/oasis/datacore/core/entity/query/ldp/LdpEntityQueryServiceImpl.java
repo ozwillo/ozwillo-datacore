@@ -201,6 +201,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       } else if (limit > maxLimit) {
          limit = maxLimit; // max, else prefer ranged query, next will raise start > maxStart error
       }
+      // NB. limit will be limited through $maxScan by models' queryLimit and storageModel' maxScan
       Sort sort = queryParsingContext.getSort();
       if (sort == null) {
          // TODO sort by default : configured in model (last modified date, uri,
@@ -632,19 +633,28 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       // compute overall maxScan :
       // (BEWARE it is NOT the max amount of doc returned because sorts or multiple
       // criteria can eat some scans)
-      int maxScan = this.maxScan;
-      if (queryParsingContext.getAggregatedQueryLimit() > maxScan) {
-         // allow at least enough scan for expected results
-         maxScan = queryParsingContext.getAggregatedQueryLimit();
-      }
-      if (storageModel.getMaxScan() > 0) {
-         // limit maxScan : take smallest
-         maxScan = (maxScan > storageModel.getMaxScan()) ?
-               storageModel.getMaxScan() : maxScan;
+      boolean applyMaxScan = queryParsingContext.isHasNoIndexedField(); // true // to test only
+      int maxScan = 0;
+      if (applyMaxScan) {
+         maxScan = this.maxScan;
+         if (queryParsingContext.getAggregatedQueryLimit() > maxScan) {
+            // allow at least enough scan for expected results
+            maxScan = queryParsingContext.getAggregatedQueryLimit();
+         }
+         if (storageModel.getMaxScan() > 0) {
+            // limit maxScan : take smallest
+            maxScan = (maxScan > storageModel.getMaxScan()) ?
+                  storageModel.getMaxScan() : maxScan;
+         }
+         if (springMongoQuery.getLimit() < maxScan) {
+            maxScan = springMongoQuery.getLimit(); // should not need more
+         }
+         maxScan = maxScan * 3; // for sort maxScan (because sort "scanned" is ex. 120 when query "scanned" is 83)
+         // but also because in the same example limit was 50
       }
 
       boolean isDebug = serverRequestContext.isDebug();
-      boolean doExplainQuery = isDebug ||  queryParsingContext.isHasNoIndexedField();
+      boolean doExplainQuery = isDebug || applyMaxScan;
       
       // using custom CursorPreparer to get access to mongo DBCursor for explain() etc. :
       // (rather than mgo.find(springMongoQuery, DCEntity.class, collectionName)) 
@@ -680,20 +690,23 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          //explainCtx.put("parsedQuery", exchange.get("dc.query.parsedQuery")
       }
 
-      if (!isDebug // in debug mode still allow to go through to get debug info
-            && maxScan != 0 && queryParsingContext.isHasNoIndexedField()) {
-
+      if (maxScan != 0 && doExplainQuery) { // if !doExplainQuery can't check "scanned"
          // (if maxScan == 0 it is infinite and its limit can't be reached)
          if (foundEntities.size() < springMongoQuery.getLimit()
-               && ((int) cursorProvider.getQueryExplain().get("nscanned")) == maxScan) {
-            // NB. and not nscannedObjects which may be lower because some scans have been eaten
-            // by sorts, multiple criteria etc. see http://docs.mongodb.org/manual/reference/method/cursor.explain/
-            throw new QueryException("Query with non indexed fields has reached maxScan (" + maxScan
-                  + ") before document limit (found " + foundEntities.size() + "<" + springMongoQuery.getLimit()
-                  + ") , meaning some documents can't be found without prohibitive cost. "
-                  + "Use only indexed fields, or if you really want the few documents already "
-                  + "found lower limit, or if in Model design mode add indexes. "
-                  + "Retry in debug mode to get more information.");
+               && (((int) cursorProvider.getQueryExplain().get("nscanned")) >= maxScan
+               || ((int) cursorProvider.getCursorPrepared().explain().get("nscanned")) >= maxScan)) {
+            if (isDebug) {
+               serverRequestContext.getDebug().put("hasReachedMaxScan", true);
+            } else {
+               // NB. and not nscannedObjects which may be lower because some scans have been eaten
+               // by sorts, multiple criteria etc. see http://docs.mongodb.org/manual/reference/method/cursor.explain/
+               throw new QueryException("Query or sort with non indexed fields has reached maxScan (" + maxScan
+                     + ") before document limit (found " + foundEntities.size() + "<" + springMongoQuery.getLimit()
+                     + ") , meaning some documents can't be found without prohibitive cost. "
+                     + "Use only indexed fields, or if you really want the few documents already "
+                     + "found lower limit, or if in Model design mode add indexes. "
+                     + "Retry in debug mode to get more information.");
+            }
          }
       }
    
