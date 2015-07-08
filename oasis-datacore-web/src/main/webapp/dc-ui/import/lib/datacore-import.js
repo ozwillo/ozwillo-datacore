@@ -1333,12 +1333,12 @@
          } else if (mixin['dcmoid:lookupQueries']) {
             var lookupQueryFields;
             var lookupUriQuery = null;
-            var lookupQueryFound = true;
             var qField;
             for (var qInd in mixin['dcmoid:lookupQueries']) {
                lookupQueryFields = mixin['dcmoid:lookupQueries'][qInd]['dcmoidlq:fieldNames'];
+              if (lookupQueryFields.length !== 0) {
                lookupUriQuery = new UriQuery();
-                  for (var fInd in lookupQueryFields) {
+               for (var fInd in lookupQueryFields) {
                   var idFieldName = lookupQueryFields[fInd];
                /*var indexInQuery = idField["dcmfid:indexInQuery"]; // NB. this import-specific conf has been enriched in refreshed involvedMixins' global fields
                if (typeof indexInQuery === 'number') {*/
@@ -1356,8 +1356,8 @@
                               { fieldName : idFieldName, resource : resource });*/
                         ///return resource; // abort resource creation in this loop (don't add it to uri'd resources yet)
                      }
-                     lookupQueryFound = false;
-                     break; // next lookup query
+                     lookupUriQuery = null; // in case no more loops
+                     break; // next lookup query (if any)
                      
                   }
                   qField = enrichedModelOrMixinFieldMap[idFieldName];
@@ -1370,10 +1370,10 @@
                            //console.log("Missing uri for resource query field " + idFieldName
                            //      + ", clearing others (" + lookupUriQuery.params.length
                            //      + ") ; below " + importState.data.row.pathInFieldNameTree + " in :");
-                           console.log(resource);
+                           ///console.log(resource);
                            /*resourceError(importState, 'missingUriForResourceQueryField', // TODO or warning since global error anyway ?
                                  { fieldName : idFieldName, value : queryValue, resource : resource });*/
-                           //
+                           lookupUriQuery = null;
                            break; // next lookup query/return resource; // without adding it to uri'd resources
                         } else {
                            lookupUriQuery.p(idFieldName + '.@id', uriQueryValue); // TODO test
@@ -1396,7 +1396,7 @@
                      if (valueInLanguage === null) {
                         resourceWarning(importState, 'i18nIsInQueryButHasNoValueForDefaultLanguage',
                               { fieldName : idFieldName, resource : resource, defaultLanguage : defaultLanguage });
-                        ///return null;
+                        lookupUriQuery = null;
                         break; // next lookup query
                      } else {
                         // NB. could support querying without knowing the language, but must have a
@@ -1408,13 +1408,14 @@
                      lookupUriQuery.p(idFieldName, queryValue);
                   }
                }
-               if (lookupUriQuery !== null && lookupQueryFound) {
+              }
+               if (lookupUriQuery !== null) { // else one field was missing (or no fields in query)
                   break; // found a complete query,
                   // NB. multi criteria (ex. "between") not supported for lookup queries
                }
             }
             
-            if (lookupUriQuery !== null && lookupQueryFound) {
+            if (lookupUriQuery !== null) {
                lookupQuery = "/dc/type/" + encodeUriPathComponent(mixin['dcmo:name']) + '?' + lookupUriQuery.s();
                var alreadyFoundResource = importState.data.lookupQueryToResource[lookupQuery];
                if (typeof alreadyFoundResource === 'undefined') {
@@ -1441,10 +1442,9 @@
                   resource : resource });
             }
             if (mixin['dcmoid:lookupQueries'] && mixin['dcmoid:lookupQueries'].length !== 0) {
-               if (lookupQuery === null) {
+               if (lookupUriQuery === null) {
                   resourceError(importState, 'missingValueForQueryField',
-                     { lookupUriQueryParams : lookupUriQuery.params,
-                     /*lookupQueryFields : lookupQueryFields,*/ lookupQueries : mixin['dcmoid:lookupQueries'],
+                     { lookupQueries : mixin['dcmoid:lookupQueries'],
                      resource : resource,
                      message : "ERROR missingValueForQueryField" });
                } else {
