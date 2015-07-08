@@ -343,12 +343,17 @@ public class ResourceModelIniter extends DatacoreSampleBase {
 
       DCProject org0Project = projectInitService.buildContainerVersionedProjectDefaultConf("org", 0,
             "Organizations, public and private, as well as Persons", null, geo0Project);
+      org0Project.setModelLevelSecurityEnabled(true);
+      org0Project.getSecurityDefaults().setAuthentifiedCreatable(true); // anybody can create an org
       DCProject org1Project = projectInitService.buildContainerVersionedProjectDefaultConf("org", 1,
             "Organizations, public and private, as well as Persons", null, geo1Project);
+      org1Project.setModelLevelSecurityEnabled(true);
+      org1Project.getSecurityDefaults().setAuthentifiedCreatable(true); // anybody can create an org
       DCProject orgProject = projectInitService.buildFacadeProjectDefaultConf(org1Project);
 
       DCProject citizenkin0Project = projectInitService.buildContainerVersionedProjectDefaultConf("citizenkin", 0,
             "Citizen Kin procedures", null, geoProject);
+      citizenkin0Project.setModelLevelSecurityEnabled(true);
       citizenkin0Project.getSecurityDefaults().setAuthentifiedCreatable(true); // anybody can create a procedure (?)
       citizenkin0Project.getSecurityDefaults().setResourceCreationOwners(new LinkedHashSet<String>()); // owner is u_user as before BUT THIS SHOULD NOT WORK ??
       // (for both to be used, security on CK models should be voided)
