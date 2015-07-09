@@ -3,6 +3,7 @@ package org.oasis.datacore.model.resource;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.oasis.datacore.rest.server.resource.ValueParsingService;
 import org.oasis.datacore.sample.ResourceModelIniter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
 import com.google.common.collect.ImmutableList;
@@ -82,17 +84,17 @@ public class ModelResourceMappingService {
    /**
     * NOT USED
     * public for tests
-    * @param modelResource
+    * @param projectResource
     * @return
     * @throws RuntimeException if missing model type, TODO better ex. ResourceParsingException
     */
-   public String buildPointOfViewUri(DCResource modelResource) throws RuntimeException {
-      List<String> types = modelResource.getTypes();
+   public String buildPointOfViewUri(DCResource projectResource) throws RuntimeException {
+      List<String> types = projectResource.getTypes();
       if (types == null || types.isEmpty()) {
          throw new RuntimeException("Missing Model type");
       }
       return SimpleUriService.buildUri(types.get(0),
-            (String) modelResource.get("dcmpv:name"));
+            (String) projectResource.get(ResourceModelIniter.POINTOFVIEW_NAME_PROP));
    }
 
    /**
@@ -102,7 +104,11 @@ public class ModelResourceMappingService {
     * @throws ResourceParsingException
     */
    public DCResource projectToResource(DCProject project) throws ResourceParsingException {
-      DCResource projectResource = DCResource.create(null, ResourceModelIniter.MODEL_PROJECT_NAME)
+      DCResource projectResource = DCResource.create(null, ResourceModelIniter.MODEL_PROJECT_NAME);
+      return projectToResource(project, projectResource);
+   }
+   public DCResource projectToResource(DCProject project, DCResource projectResource) throws ResourceParsingException {
+      projectResource
             .set("dcmpv:name", project.getName())
             .set("dcmpv:majorVersion", project.getMajorVersion())
             .set("dcmpv:unversionedName", project.getUnversionedName())
@@ -123,6 +129,8 @@ public class ModelResourceMappingService {
             dataModelService.getVisibleProjectNames(project.getName()))); // only to display for now
       projectResource.set("dcmp:forkedUris", new ArrayList<String>(
             project.getForkedUris())); // only to display for now
+      projectResource.set("dcmp:frozenModelNames", new ArrayList<String>(
+            project.getFrozenModelNames()));
       projectResource.set("dcmp:useCasePointOfViews", project.getUseCasePointOfViews().stream()
             .map(ucpov -> {
                //useCasePointOfViewToResource(ucpov); // TODO TODO & useCasePointOfViewElementToResource(ucpovelt)
@@ -384,6 +392,11 @@ public class ModelResourceMappingService {
       //String pointOfViewAbsoluteName = dataModelService.getProject().getAbsoluteName();
       String name = (String) r.get(ResourceModelIniter.POINTOFVIEW_NAME_PROP);
       DCProject project = new DCProject(name);
+      return toProject(r, project);
+   }
+   public DCProject toProject(DCResource r, DCProject project) throws ResourceException, MalformedURLException, URISyntaxException {
+      // project is always be oasis.main for projects
+      //String pointOfViewAbsoluteName = dataModelService.getProject().getAbsoluteName();
 
       Long version = r.getVersion();
       if (version == null) {
@@ -430,6 +443,15 @@ public class ModelResourceMappingService {
       // NB. local models loaded independently in LoadPersistedModelsAtInit
       // TODO LATER local models : use project.localModels to conf relationship
       // (their fork modes i.e. description of what must be done to achieve the fork)
+
+      @SuppressWarnings("unchecked")
+      List<String> forkedUris = (List<String>) r.get("dcmp:forkedUris");
+      project.setForkedUris(new HashSet<String>(forkedUris));
+      @SuppressWarnings("unchecked")
+      List<String> frozenModelNames = (List<String>) r.get("dcmp:frozenModelNames");
+      project.setFrozenModelNames(new HashSet<String>(frozenModelNames));
+      project.setModelLevelSecurityEnabled((boolean) r.get("dcmp:modelLevelSecurityEnabled"));
+      
       return project;
    }
    
@@ -565,6 +587,12 @@ public class ModelResourceMappingService {
     */
    public void checkModelOrMixin(DCModelBase modelOrMixin, DCResource r) throws ResourceException {
       DCProject project = dataModelService.getProject(modelOrMixin.getProjectName());
+      
+      if (project.getFrozenModelNames().contains(modelOrMixin.getName())) {
+         throw new AccessDeniedException("Can't update frozen model "
+               + modelOrMixin.getName() + " in project " + project.getName());
+      }
+      
       if (modelOrMixin.getCountryLanguage() != null) {
       //if (r.get("dcmls:code") != null) {
          boolean hasGenericMixin = false;

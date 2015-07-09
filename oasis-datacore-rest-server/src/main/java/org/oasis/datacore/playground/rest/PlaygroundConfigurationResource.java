@@ -16,6 +16,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
  * Resource that provides playground configuration info to UI.
+ * Should be public, to allow UI to know through localauthdevmode whether to redirect to login or not.
  * 
  * @author mdutoo
  *

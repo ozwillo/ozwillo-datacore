@@ -11,7 +11,6 @@ import org.oasis.datacore.common.context.SimpleRequestContextProvider;
 import org.oasis.datacore.core.init.InitService;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModelBase;
-import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.model.resource.ModelResourceMappingService;
 import org.oasis.datacore.rest.api.DCResource;
@@ -33,21 +32,18 @@ import com.google.common.collect.ImmutableMap;
 
 /**
  * Inits from Resource and replaces DCModel (or removes it)
- * TODO TODO also at startup !!
- * TODO LATER checks BEFOREHANDS for update compatibility, else abort using AbortOperationEventException
- * TODO LATER also update models (& mixins) that reuse the updated one
- * (DispatchModelUpdateListener that on ModelDCEvent.UPDATED looks for inheriting models and recreates
- * them, OR BETTER (transactional ??) sync task engine that avoids doing it in the wrong order
+ * NB. at startup done by LoadPersistedModelsAtInit
+ * TODO LATER check BEFOREHANDS for update compatibility, else abort using AbortOperationEventException
+ * also updates models (& mixins) that reuse the updated one, including in other projects
+ * (TODO BETTER (transactional ??) sync task engine that avoids doing it in the wrong order
  * or even merges tasks) , and abort on delete !
- * TODO move most to ModelResourceMappingService & Model(Admin)Service !
+ * TODO move most to Model(Admin)Service !
  * 
  * @author mdutoo
  *
  */
 public class ModelResourceDCListener extends DCResourceEventListener implements DCEventListener {
 
-   @Autowired
-   private DCModelService dataModelService;
    @Autowired
    private DataModelServiceImpl dataModelAdminService;
    @Autowired
@@ -95,28 +91,28 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
             
          } catch (ResourceObsoleteException roex) { // specific handling for better logging
             // abort else POSTer won't know that his model can't be used (to POST resources)
-            throw new AbortOperationEventException("Resource obsolete error while converting "
-                  + "or enriching to model or mixin " + r.get(ResourceModelIniter.MODEL_MODEL_NAME)
+            throw new AbortOperationEventException(new ResourceObsoleteException("Resource obsolete error while converting "
+                  + "or enriching to model or mixin " + r.get(ResourceModelIniter.MODEL_NAME_PROP)
                   + " with dcmo:pointOfViewAbsoluteName=" + r.get("dcmo:pointOfViewAbsoluteName")
                   + " in project " + dataModelAdminService.getProject().getName()
-                  + ", aborting POSTing resource", roex);
+                  + ", aborting POSTing resource", roex, r, dataModelAdminService.getProject()));
          } catch (ResourceException rex) {
             // abort else POSTer won't know that his model can't be used (to POST resources)
             throw new AbortOperationEventException(rex);
          } catch (AccessDeniedException adex) { // specific handling for better logging
             // abort else POSTer won't know that his model can't be used (to POST resources)
-            throw new AbortOperationEventException("Access denied error while converting "
-                  + "or enriching to model or mixin " + r.get(ResourceModelIniter.MODEL_MODEL_NAME)
+            throw new AbortOperationEventException(new AccessDeniedException("Access denied error while converting "
+                  + "or enriching to model or mixin " + r.get(ResourceModelIniter.MODEL_NAME_PROP)
                   + " with dcmo:pointOfViewAbsoluteName=" + r.get("dcmo:pointOfViewAbsoluteName")
                   + " in project " + dataModelAdminService.getProject().getName()
-                  + ", aborting POSTing resource", adex);
+                  + ", aborting POSTing resource", adex));
          } catch (Throwable t) {
             // abort else POSTer won't know that his model can't be used (to POST resources)
-            throw new AbortOperationEventException("Unknown error while converting "
-                  + "or enriching to model or mixin " + r.get(ResourceModelIniter.MODEL_MODEL_NAME)
+            throw new AbortOperationEventException(new ResourceException("Unknown error while converting "
+                  + "or enriching to model or mixin " + r.get(ResourceModelIniter.MODEL_NAME_PROP)
                   + " with dcmo:pointOfViewAbsoluteName=" + r.get("dcmo:pointOfViewAbsoluteName")
                   + " in project " + dataModelAdminService.getProject().getName()
-                  + ", aborting POSTing resource", t);
+                  + ", aborting POSTing resource", t, r, dataModelAdminService.getProject()));
          }
          return;
       case DCResourceEvent.CREATED :
@@ -136,8 +132,13 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
       }
    }
 
-   /** TODO move to DCModelService ; must be done in modelOrMixin project */
-   public void createOrUpdate(DCModelBase modelOrMixin) throws AbortOperationEventException {
+   /**
+    * TODO move to DCModelService ; must be done in modelOrMixin project
+    * @param modelOrMixin
+    * @param r to allow to create ResourceException
+    * @throws AbortOperationEventException
+    */
+   public void createOrUpdate(DCModelBase modelOrMixin, DCResource r) throws AbortOperationEventException {
       // replacing it :
       // TODO TODO RATHER ALL AT ONCE to avoid
       // * having an inconsistent set of models when ResourceService parses Resources
@@ -166,8 +167,8 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
          // TODO abort to say error to client ?
          // TODO save state in model or wrapper stored in mongo ?? log all events in mongo ???
          // TODO try to restore previousDocument ???
-         throw new AbortOperationEventException("Aborting as asked for in aboutTo event "
-               + "of model or mixin " + modelOrMixin, e);
+         throw new AbortOperationEventException(new ResourceException("Aborting as asked for in aboutTo event "
+               + "of model or mixin " + modelOrMixin, e, r, dataModelAdminService.getProject()));
       }
       
       String doneEventType = (previousModel == null) ?
@@ -179,8 +180,8 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
          // TODO abort to say error to client ?
          // TODO save state in model or wrapper stored in mongo ?? log all events in mongo ???
          // TODO try to restore previousDocument ???
-         throw new AbortOperationEventException("Aborting as asked for in done event "
-               + "of model or mixin " + modelOrMixin, e);
+         throw new AbortOperationEventException(new ResourceException("Aborting as asked for in done event "
+               + "of model or mixin " + modelOrMixin, e, r, dataModelAdminService.getProject()));
       }
 
       if (initService.isInited()
@@ -335,14 +336,17 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
          // NB. r has been cleaned up / enriched with up-to-date computed fields
          // (globalFields, pointOfViewAbsoluteName...) before in ABOUT_TO_CREATE/UPDATE
          // step
-         createOrUpdate(modelOrMixin);
+         createOrUpdate(modelOrMixin, r);
+      } catch (AbortOperationEventException aoeex) {
+         throw aoeex;
       } catch (ResourceException rex) {
          // abort else POSTer won't know that his model can't be used (to POST resources)
          throw new AbortOperationEventException(rex);
       } catch (Throwable t) {
          // abort else POSTer won't know that his model can't be used (to POST resources)
-         throw new AbortOperationEventException("Unknown error while converting "
-               + "or enriching to model or mixin, aborting POSTing resource", t);
+         throw new AbortOperationEventException(new ResourceException(
+               "Unknown error while converting or enriching to model or mixin, "
+               + "aborting POSTing resource", t, r, dataModelAdminService.getProject()));
       }
    }
 
@@ -360,8 +364,8 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
          // TODO abort to say error to client ?
          // TODO save state in model or wrapper stored in mongo ?? log all events in mongo ???
          // TODO try to restore previousDocument ???
-         throw new AbortOperationEventException("Aborting as asked for in done event "
-               + "of model or mixin " + typeName, e);
+         throw new AbortOperationEventException(new ResourceException("Aborting as asked for in done event "
+               + "of model or mixin " + typeName, e, r, dataModelAdminService.getProject()));
       }
       
       DCModelBase modelOrMixin = project.getModel(typeName);
@@ -379,12 +383,14 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
       try {
          eventService.triggerEvent(new ModelDCEvent(ModelDCEvent.DELETED,
                ModelDCEvent.MODEL_DEFAULT_BUSINESS_DOMAIN, modelOrMixin, null));
+      } catch (AbortOperationEventException aoeex) {
+         throw aoeex;
       } catch (Throwable e) {
          // TODO abort to say error to client ?
          // TODO save state in model or wrapper stored in mongo ?? log all events in mongo ???
          // TODO try to restore previousDocument ???
-         throw new AbortOperationEventException("Aborting as asked for in done event "
-               + "of model or mixin " + modelOrMixin, e);
+         throw new AbortOperationEventException(new ResourceException("Aborting as asked for in done event "
+               + "of model or mixin " + modelOrMixin, e, r, dataModelAdminService.getProject()));
       }
    }
 

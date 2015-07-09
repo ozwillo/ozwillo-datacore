@@ -1,7 +1,9 @@
 package org.oasis.datacore.rest.server.event;
 
+import org.oasis.datacore.core.meta.SimpleUriService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.DCURI;
+import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.oasis.datacore.server.uri.BadUriException;
 
 
@@ -53,10 +55,10 @@ public class DCInitIdEventListener extends DCResourceEventListener implements DC
             // TODO can't happen when called in postData (but in test shortcuts or build()
             // after create(String containerUrl, String modelType), yes)
             if (id == null) {
-               throw new AbortOperationEventException("Missing id field " + idFieldName
-                     + " in resource with null uri of types " + r.getTypes());
+               throw new AbortOperationEventException(new ResourceException("Missing id field "
+                     + idFieldName + " in resource with null uri of types " + r.getTypes(), r, null));
             }
-            r.setUri(uriService.buildUri(r.getModelType(), id.toString()));
+            r.setUri(SimpleUriService.buildUri(r.getModelType(), id.toString()));
             
          } else if (id == null) {
             String uri = r.getUri();
@@ -65,7 +67,8 @@ public class DCInitIdEventListener extends DCResourceEventListener implements DC
                r.set(this.idFieldName, dcUri.getId());
             } catch (BadUriException e) {
                // should not happen
-               throw new AbortOperationEventException("Error parsing existing uri before creation", e);
+               throw new AbortOperationEventException(new ResourceException(
+                     "Error parsing existing uri before creation", e, r, null));
             }
          }
       }

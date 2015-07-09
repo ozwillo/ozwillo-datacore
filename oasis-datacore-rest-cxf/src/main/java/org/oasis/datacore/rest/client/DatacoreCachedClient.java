@@ -55,5 +55,11 @@ public interface DatacoreCachedClient extends DatacoreClientApi {
     * Provide access to cache, ex. to clear it or evict some Resources from it
     */
    Cache getCache();
+
+
+   ///////////////////////////////////////////////////////////////////////
+   // HELPERS WITH PROJECT
+   
+   DCResource postDataInTypeInProject(DCResource r, String projectName);
    
 }

@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public abstract class DCResourceEventListener extends DCEventListenerBase {
    
    @Autowired
-   private DCModelService modelService;
+   protected DCModelService dataModelService;
    
    public DCResourceEventListener() {
       super();

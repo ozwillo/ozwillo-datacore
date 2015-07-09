@@ -7,9 +7,11 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.oasis.datacore.common.context.DCRequestContextProvider;
 import org.oasis.datacore.common.context.SimpleRequestContextProvider;
+import org.oasis.datacore.core.meta.SimpleUriService;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
@@ -24,9 +26,11 @@ import org.oasis.datacore.core.meta.pov.ProjectException;
 import org.oasis.datacore.model.event.ModelDCEvent;
 import org.oasis.datacore.model.event.ModelDCListener;
 import org.oasis.datacore.model.event.ModelResourceDCListener;
+import org.oasis.datacore.model.event.ProjectResourceDCListener;
 import org.oasis.datacore.model.resource.ModelResourceMappingService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
+import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.oasis.datacore.rest.server.resource.ResourceNotFoundException;
 import org.oasis.datacore.rest.server.resource.ValueParsingService;
 import org.oasis.datacore.sample.meta.ProjectInitService;
@@ -93,6 +97,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
    protected void doInit() {
       super.doInit();
       eventService.init(new ModelResourceDCListener(MODEL_MODEL_NAME)); // TODO or from listeners set in DCModel ??
+      eventService.init(new ProjectResourceDCListener(MODEL_PROJECT_NAME));
       eventService.init(new ModelDCListener(ModelDCEvent.MODEL_DEFAULT_BUSINESS_DOMAIN));
    }
    
@@ -274,6 +279,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addField(new DCListField("dcmp:localVisibleProjects", new DCResourceField("useless", MODEL_PROJECT_NAME)))
          .addField(new DCListField("dcmp:visibleProjectNames", new DCField("useless", "string", false, 0))) // only to display for now
          .addField(new DCListField("dcmp:forkedUris", new DCField("useless", "string", false, 0))) // only to display for now
+         .addField(new DCListField("dcmp:frozenModelNames", new DCField("useless", "string", false, 0)))
          .addField(new DCListField("dcmp:useCasePointOfViews", new DCResourceField("useless", MODEL_PROJECT_NAME)))
          ///.addField(new DCListField("dcmp:localModels", new DCResourceField("useless", MODEL_MODEL_NAME))) // TODO or rather only dcmo:projectAbsoluteName ?
          // security :
@@ -330,6 +336,8 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       allProjectsToResource(false);
       return res;
    }
+   
+   private List<DCProject> projectsNotToPersist = new ArrayList<DCProject>();
 
    /**
     * Create default projects, including geo & org(pri) for now.
@@ -337,7 +345,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
    private void createDefaultProjects() {
       DCProject geo0Project = projectInitService.buildContainerVersionedProjectDefaultConf("geo", 0, // geo_1 // NB. in geo_1.0, 0 would be minorVersion
             "Geographical jurisdictions", null); // "Geographical jurisdictions (" + toPlaygroundLink("geo:Area_0") + ")"
-      DCProject geo1Project =projectInitService. buildContainerVersionedProjectDefaultConf("geo", 1, // geo_1 // NB. in geo_1.0, 0 would be minorVersion
+      DCProject geo1Project = projectInitService. buildContainerVersionedProjectDefaultConf("geo", 1, // geo_1 // NB. in geo_1.0, 0 would be minorVersion
             "Geographical jurisdictions", null); // "Geographical jurisdictions (" + toPlaygroundLink("geo:Area_0") + ")"
       DCProject geoProject = projectInitService.buildFacadeProjectDefaultConf(geo1Project);
 
@@ -358,6 +366,22 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       citizenkin0Project.getSecurityDefaults().setResourceCreationOwners(new LinkedHashSet<String>()); // owner is u_user as before BUT THIS SHOULD NOT WORK ??
       // (for both to be used, security on CK models should be voided)
       DCProject citizenkinProject = projectInitService.buildFacadeProjectDefaultConf(citizenkin0Project);
+      
+      // create if not exist :
+      DCProject[] defaultProjects = new DCProject[] { geo0Project, geo1Project, geoProject,
+            org0Project, org1Project, orgProject,
+            citizenkin0Project, citizenkinProject };
+      for (DCProject defaultProject : defaultProjects) {
+         try {
+            resourceService.get(SimpleUriService.buildUri(ResourceModelIniter.MODEL_PROJECT_NAME,
+                  defaultProject.getName()), ResourceModelIniter.MODEL_PROJECT_NAME);
+            projectsNotToPersist.add(defaultProject);
+         } catch (ResourceNotFoundException e) {
+            // not found, persist
+         } catch (ResourceException e) {
+            logger.warn("Unkown error trying to get existing default project " + defaultProject.getName());
+         }
+      }
    }
 
    /*private String toPlaygroundLink(String modelType) {
@@ -473,11 +497,21 @@ public class ResourceModelIniter extends DatacoreSampleBase {
    public void fillData() {
       allProjectsToResource(true);
    }
-   
+
    private void allProjectsToResource(boolean alsoTheirModels) {
-      Set<String> projectNameDoneSet = new HashSet<String>(modelAdminService.getProjects().size()); // prevents looping
+      Set<String> projectsNotToPersistNames = new HashSet<String>(
+            projectsNotToPersist.stream().map(p -> p.getName()).collect(Collectors.toSet()));
+      Collection<DCProject> allProjects = modelAdminService.getProjects();
+      logger.info("Persisting all projects : " + allProjects + " ; save : " + projectsNotToPersistNames);
+      projectsToResource(alsoTheirModels, allProjects, projectsNotToPersistNames);
+   }
+   private void projectsToResource(boolean alsoTheirModels,
+         Collection<DCProject> projects, Set<String> projectNameDoneSet) {
+      if (projectNameDoneSet == null) {
+         projectNameDoneSet = new HashSet<String>(projects.size()); // prevents looping
+      }
       LinkedHashSet<String> projectNameBeingDoneSet = new LinkedHashSet<String>(); // detects circular references, ordered
-      for (DCProject project : modelAdminService.getProjects()) {
+      for (DCProject project : projects) {
          // NB. no project outside those, but they still must be loaded in the order of their deps
          projectAndItsDepsToResource(project, alsoTheirModels, projectNameDoneSet, projectNameBeingDoneSet);
       }

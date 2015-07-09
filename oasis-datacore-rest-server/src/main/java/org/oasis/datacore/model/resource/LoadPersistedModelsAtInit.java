@@ -179,19 +179,8 @@ public class LoadPersistedModelsAtInit extends InitableBase {
                continue; // not first time and already imported successfully
             }
             try {
-               // NB. not in context either since ini oasis.main project
-               DCProject project = mrMappingService.toProject(projectResource); // NB. loads visible projects but not models
-               DCProject hardcodedProject = dataModelService.getProject(project.getName());
-               if (hardcodedProject != null) {
-                  // keeping existing project conf (hardcoded for now)
-                  project = hardcodedProject;
-                  // though copy visible projects if changed : (??)
-                  for (DCProject lvp : hardcodedProject.getLocalVisibleProjects()) {
-                     project.addLocalVisibleProject(lvp);
-                  }
-               }
-               dataModelAdminService.addProject(project); // must add project BEFORE adding models
-               loadModels(projectName); // NB. NOT yet using project.visibleProjects to conf relationship
+               DCProject project = loadProject(projectResource, projectName);
+
                loadedProjectNames.add(project.getName());
                // TODO LATER once all is loaded, ((clean cache and)) repersist all in case were wrong
                projectsInError.remove(projectName);
@@ -205,6 +194,32 @@ public class LoadPersistedModelsAtInit extends InitableBase {
       } while (!projectsInError.isEmpty() && !projectsInError.keySet().equals(previousProjectsInError.keySet()));
       
       logger.info("Loaded " + loadedProjectNames.size() + " projects : " + loadedProjectNames);
+   }
+
+   /**
+    * public for test
+    * @param projectResource
+    * @param projectName
+    * @return
+    * @throws ResourceException
+    */
+   public DCProject loadProject(DCResource projectResource, String projectName)
+         throws ResourceException, Exception {
+      // NB. not in context either since in oasis.main project
+      DCProject existingOrHardcodedProject = dataModelService.getProject(projectName);
+      DCProject project = (existingOrHardcodedProject == null) ? mrMappingService.toProject(projectResource)
+            : mrMappingService.toProject(projectResource,existingOrHardcodedProject); // NB. loads visible projects but not models (yet)
+      /*if (hardcodedProject != null) {
+         // keeping existing project conf (hardcoded for now)
+         project = hardcodedProject;
+         // though copy visible projects if changed : (??)
+         for (DCProject lvp : hardcodedProject.getLocalVisibleProjects()) {
+            project.addLocalVisibleProject(lvp);
+         }
+      }*/
+      dataModelAdminService.addProject(project); // must add project BEFORE adding models
+      loadModels(projectName); // NB. NOT yet using project.visibleProjects to conf relationship
+      return project;
    }
 
    /**

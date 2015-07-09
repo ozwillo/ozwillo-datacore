@@ -14,7 +14,9 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.cxf.interceptor.OutInterceptors;
+import org.oasis.datacore.common.context.DCRequestContextProvider;
 import org.oasis.datacore.common.context.DCRequestContextProviderFactory;
+import org.oasis.datacore.common.context.SimpleRequestContextProvider;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.util.DCURI;
@@ -27,6 +29,8 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.Cache.ValueWrapper;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.stereotype.Component;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * This wrapper adds caching to DatacoreApi client, to use it inject
@@ -509,7 +513,19 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
    public void setCache(Cache cache) {
       this.resourceCache = cache;
    }
+   
+   
+   ///////////////////////////////////////////////////////////////////////
+   // HELPERS WITH PROJECT
 
+   public DCResource postDataInTypeInProject(DCResource r, String projectName) {
+      return new SimpleRequestContextProvider<DCResource>() {
+         protected DCResource executeInternal() {
+            return postDataInType(r);
+         }
+      }.execInContext(new ImmutableMap.Builder<String, Object>()
+            .put(DCRequestContextProvider.PROJECT, projectName).build());
+   }
 
    /*public String getBaseUrl() {
       return baseUrl;

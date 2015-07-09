@@ -2,10 +2,12 @@ package org.oasis.datacore.rest.server;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.NotFoundException;
 
 import org.joda.time.DateTime;
@@ -286,7 +288,7 @@ public class ResourceModelTest {
 
    @Test
    public void testImpactedModelAndIndexUpdate() throws Exception {
-      // put in initial state (delete stuff) in case test was aborted :
+      // put in initial state in case test was aborted :
       DCResource mr = datacoreApiClient.getData(ResourceModelIniter.MODEL_MODEL_NAME, CityCountrySample.CITY_MODEL_NAME);
       DCModelBase m = mrMappingService.toModelOrMixin(mr);
       m.getField("city:founded").setRequired(false);
@@ -577,6 +579,76 @@ public class ResourceModelTest {
       Assert.assertNotNull(modelAdminService.getModelBase(CityCountrySample.CITY_MODEL_NAME));
       
       // TODO also test removing project
+   }
+
+   
+   @Test
+   public void testFrozenModels() throws Exception {
+      // put in initial state in case test was aborted AND check that model can then be changed :
+      DCResource pr = datacoreApiClient.getData(ResourceModelIniter.MODEL_PROJECT_NAME, DCProject.OASIS_SAMPLE);
+      DCProject p = mrMappingService.toProject(pr);
+      p.setFrozenModelNames(new HashSet<String>());
+      pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
+            DCProject.OASIS_META); // can't write outside project
+      DCResource mr = datacoreApiClient.getData(ResourceModelIniter.MODEL_MODEL_NAME, CityCountrySample.CITY_MODEL_NAME);
+      DCModelBase m = mrMappingService.toModelOrMixin(mr);
+      m.getField("city:founded").setRequired(false);
+      mr = datacoreApiClient.postDataInType(mrMappingService.modelToResource(m, mr));
+      m = mrMappingService.toModelOrMixin(mr); // to update version
+      // checking initial state :
+      Assert.assertTrue(modelAdminService.getProject(
+            DCProject.OASIS_SAMPLE).getFrozenModelNames().isEmpty());
+      Assert.assertFalse(modelAdminService.getModelBase(
+            CityCountrySample.CITY_MODEL_NAME).getField("city:founded").isRequired());
+      
+      // add frozen model :
+      //pr.set("dcmp:frozenModelNames", DCResource.listBuilder().add(CityCountrySample.CITY_MODEL_NAME).build());
+      p.getFrozenModelNames().add(CityCountrySample.CITY_MODEL_NAME);
+      try {
+      pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
+            DCProject.OASIS_META); // can't write outside project
+      p = mrMappingService.toProject(pr);
+      Assert.assertEquals("frozen model should have been added",
+            1, modelAdminService.getProject(DCProject.OASIS_SAMPLE).getFrozenModelNames().size());
+      Assert.assertEquals(modelAdminService.getProject(DCProject.OASIS_SAMPLE).getFrozenModelNames()
+            .iterator().next(), CityCountrySample.CITY_MODEL_NAME);
+      // try to change frozen model :
+      m.getField("city:founded").setRequired(true);
+      try {
+         mr = datacoreApiClient.postDataInType(mrMappingService.modelToResource(m, mr));
+         m = mrMappingService.toModelOrMixin(mr); // to update version in case fails
+         Assert.fail("Should not be able to change a frozen model");
+      } catch (ForbiddenException fex) {
+         Assert.assertTrue(UnitTestHelper.readBodyAsString(fex).contains("Access denied error while converting")); // "Can't update frozen model"
+         Assert.assertEquals("The frozen model shouldn't have been persisted", mr.getVersion(), datacoreApiClient
+               .getData(ResourceModelIniter.MODEL_MODEL_NAME, CityCountrySample.CITY_MODEL_NAME).getVersion());
+      }
+
+      // clearing and reloading :
+      modelAdminService.getProject(p.getName()).getFrozenModelNames().clear();
+      try {
+         authenticationService.loginAs("admin"); // else AuthenticationCredentialsNotFoundException in calling entityService
+         loadPersistedModelsAtInitService.loadProject(datacoreApiClient.getData(ResourceModelIniter
+               .MODEL_PROJECT_NAME, DCProject.OASIS_SAMPLE), DCProject.OASIS_SAMPLE);
+      } finally {
+         authenticationService.logout();
+      }
+      Assert.assertEquals("frozen model should have been loaded from persistence",
+            1, modelAdminService.getProject(p.getName()).getFrozenModelNames().size());
+      Assert.assertEquals(modelAdminService.getProject(p.getName()).getFrozenModelNames()
+            .iterator().next(), CityCountrySample.CITY_MODEL_NAME);
+      
+      // restore initial state :
+      } finally {
+         p.getFrozenModelNames().clear();
+         pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
+               DCProject.OASIS_META); // can't write outside project
+         p = mrMappingService.toProject(pr);
+         Assert.assertTrue(modelAdminService.getProject(
+               DCProject.OASIS_SAMPLE).getFrozenModelNames().isEmpty());
+         m.getField("city:founded").setRequired(false);
+         mr = datacoreApiClient.postDataInType(mrMappingService.modelToResource(m, mr));
+      }
    }
    
 }

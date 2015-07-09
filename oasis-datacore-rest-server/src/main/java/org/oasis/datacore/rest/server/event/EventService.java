@@ -8,11 +8,11 @@ import java.util.Map;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.server.event.DCResourceEvent.Types;
 import org.oasis.datacore.rest.server.resource.ResourceException;
-import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
 @Component // TODO @Service ??
@@ -23,10 +23,6 @@ public class EventService {
    /** to autowire programmatically-created listeners */
    @Autowired
    private AutowireCapableBeanFactory beanFactory;
-   
-   /** only for initing listenerBases with it if asked */
-   @Autowired
-   private ResourceService resourceService;
    
    private Map<String,List<DCEventListener>> topic2EventListenerMap = new HashMap<String,List<DCEventListener>>();
 
@@ -98,8 +94,10 @@ public class EventService {
          DCResource resource, DCResource previousResource) throws ResourceException {
       try {
          this.triggerEvent(new DCResourceEvent(aboutToEventType, resource, previousResource));
-      } catch (ResourceException e) {
-         throw e;
+      } catch (ResourceException rex) {
+         throw rex;
+      } catch (AccessDeniedException adex) {
+         throw adex;
       } catch (Throwable e) { // includes regular AbortOperationEventException
          throw new RuntimeException("Aborted in " + aboutToEventType + " resource "
                + resource.getUri(), e); // TODO ResourceAbortException ??
@@ -121,6 +119,10 @@ public class EventService {
     * @param name
     */
    public void register(DCEventListener eventListener, String eventTypeName) {
+      if (eventTypeName == null || eventTypeName.trim().isEmpty()) {
+         throw new IllegalArgumentException("Can't register listener "
+               + eventListener + " against an empty event / topic");
+      }
       List<DCEventListener> listeners = this.topic2EventListenerMap.get(eventTypeName);
       if (listeners == null) {
          listeners = new ArrayList<DCEventListener>();

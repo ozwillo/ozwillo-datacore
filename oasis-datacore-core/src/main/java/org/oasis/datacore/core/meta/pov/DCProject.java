@@ -38,6 +38,7 @@ public class DCProject extends DCPointOfViewBase {
    /** LATER also reuse visible ones ? */
    private LinkedHashMap<String,DCProject> visibleProjectMap = new LinkedHashMap<String, DCProject>(); // TODO merge in visibleStorageProjectMap
    private HashSet<String> forkedUris = new HashSet<String>();
+   private HashSet<String> frozenModelNames = new HashSet<String>();
    /** LATER can see outside model (unless alt model) but not data (by alt'ing model anonymously as not storage),
     * for this the local alt (storage) model must be created, optionally with some sample copied or rather imported data */
    private LinkedHashMap<String,DCProject> visibleDefProjectMap = new LinkedHashMap<String, DCProject>();
@@ -431,6 +432,18 @@ public class DCProject extends DCPointOfViewBase {
       return forkedUris;
    }
 
+   public void setForkedUris(HashSet<String> forkedUris) {
+      this.forkedUris = forkedUris;
+   }
+
+   public HashSet<String> getFrozenModelNames() {
+      return frozenModelNames;
+   }
+
+   public void setFrozenModelNames(HashSet<String> frozenModelNames) {
+      this.frozenModelNames = frozenModelNames;
+   }
+
    /*
     * TODO LATER also check version
     * @param name
@@ -506,6 +519,21 @@ public class DCProject extends DCPointOfViewBase {
    }
    
    
+   @Override
+   public boolean equals(Object o) {
+      if (!(o instanceof DCProject)) {
+         return false;
+      }
+      DCProject p = ((DCProject) o);
+      return this.getName().equals(p.getName());
+   }
+
+   @Override
+   public int hashCode() {
+      return this.getName().hashCode();
+   }
+   
+
    public String toString() {
       return "project " + this.getName()
             + "; " + this.getLocalVisibleProjects().stream()
