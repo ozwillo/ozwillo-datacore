@@ -729,7 +729,8 @@
          msg += 'skipped <a href="#"';
          if (done && importStateRes.skippedNb !== 0) {
             var skippedSummary = 'of models : ' + Object.keys(importStateRes.skippedModelTypeSet).join(', ') + '\n';
-            skippedSummary += 'in projects : ' + Object.keys(importStateRes.skippedProjectSet).join(', ') + '\n';
+            skippedSummary += 'in projects : ' + Object.keys(importStateRes.skippedProjectSet).join(', ') + '.\n';
+            skippedSummary += 'resources :\n';
             for (var rInd in importStateRes.skippedResourceUris) {
                if (rInd < 15 || rInd > importStateRes.skippedNb - 10) {
                   var parsedUri = parseUri(importStateRes.skippedResourceUris[rInd]);
@@ -1854,7 +1855,7 @@
          importStateRes.skippedProjectSet[project] = true;
 
          importStateRes.skippedResourceUris.push(resource["@id"]);
-         importStateRes.skippedNb++; // to fill "done" condition
+         importStateRes.skippedNb++; // to fullfill "done" condition
          importStateRes.skippedModelTypeSet[modelType] = true;
          return true;
       }
@@ -1866,7 +1867,22 @@
             || resource['@type'][0];
       if (!importState.model.importedMixinNameSet[modelType]) { // skip model
          importStateRes.skippedResourceUris.push(resource["@id"]);
-         importStateRes.skippedNb++; // to fill "done" condition
+         importStateRes.skippedNb++; // to fullfill "done" condition
+         importStateRes.skippedModelTypeSet[modelType] = true;
+         return true;
+      }
+      return false;
+   }
+  
+   function skipForbidden(resource, importStateRes, importState) {
+      if (resource instanceof Array) { // because arg of postAllDataInType()
+          resource = resource[0];
+      }
+      var modelType = resource['dcmo:name'] // case of model resource
+            || resource['@type'][0];
+      if (importStateRes.skipForbidden) { // skip
+         importStateRes.skippedResourceUris.push(resource["@id"]);
+         importStateRes.skippedNb++; // to fullfill "done" condition
          importStateRes.skippedModelTypeSet[modelType] = true;
          return true;
       }
@@ -2570,6 +2586,11 @@
                postAllDataInType(data.request.path, origResource,
                      postedCallback, refreshAndPostObsoleteUntilFresh);
             }, postedCallback);
+            
+         } else if (data._raw.statusCode === 403
+               && skipForbidden(origResource, importState.model.posted, importState)) { // skip model
+            postedCallback(null, origResource);
+            
          } else {
             postedCallback(data, origResource); // can't handle error, pass it along
          }
@@ -2639,6 +2660,9 @@
       if (typeof importStateConf.model.untilMixin === 'string' && importStateConf.model.untilMixin.length !== 0) {
          importState.model.untilMixin = importStateConf.model.untilMixin;
       } // else use default
+      if (typeof importStateConf.model.posted.skipForbidden !== 'undefined') {
+          importState.model.posted.skipForbidden = importStateConf.model.posted.skipForbidden;
+      }
       // building importedMixinNameSet out of it :
       if (importStateConf.model.mixinNames) {
          importState.model.mixinNames = importStateConf.model.mixinNames;
@@ -2797,6 +2821,7 @@
                warnings : [],
                errors : [],
                posted : {
+                  skipForbidden : false,
                   startTime : null, // moment()
                   endTime : null, // moment()
                   errors : [], // not used yet
