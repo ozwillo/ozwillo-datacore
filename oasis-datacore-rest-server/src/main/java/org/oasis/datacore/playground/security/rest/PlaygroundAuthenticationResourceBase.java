@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 public class PlaygroundAuthenticationResourceBase extends PlaygroundResourceBase {
 
    protected static final String RESPONSE_ACCESS_TOKEN = "access_token";
+   protected static final String RESPONSE_ID_TOKEN = "id_token";
    protected static final String BEARER_AUTH_PREFIX = "Bearer ";
    
    @Value("${accounts.authEndpointUrl}")

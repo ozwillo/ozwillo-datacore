@@ -35,6 +35,8 @@
 	   <!-- Datacore playground OASIS Kernel OAuth2 auth : -->
 		<security:intercept-url pattern="/dc/playground/login*" access="IS_AUTHENTICATED_ANONYMOUSLY" />
 		<security:intercept-url pattern="/dc/playground/token*" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<security:intercept-url pattern="/dc/playground/configuration*" access="IS_AUTHENTICATED_ANONYMOUSLY" /><!-- so configuration can be read by playground --> 
+		
 		
 		<!-- TODO LATER DEVMODE ONLY Datacore playground UI anonymous access :
 		else 401 : undefined http://localhost:8080/api-docs -->

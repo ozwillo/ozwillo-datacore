@@ -129,19 +129,21 @@ public class PlaygroundAuthenticationTokenResource extends PlaygroundAuthenticat
                      .type(MediaType.TEXT_PLAIN).build());
       }
       String token = null;
+      String id_token = null;
       try {
          token = tokenExchangeResJsonNode.get(RESPONSE_ACCESS_TOKEN).textValue();
+         id_token = tokenExchangeResJsonNode.get(RESPONSE_ID_TOKEN).textValue();
          // NB. also expires_in, scope, id_token
       } catch (Exception ex) {
          throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-               .entity("Error getting " + RESPONSE_ACCESS_TOKEN
+               .entity("Error getting " + RESPONSE_ACCESS_TOKEN+ "or " + RESPONSE_ID_TOKEN
                      + " from tokenExchangeResJsonNode returned by Kernel ("
                      + tokenExchangeResJsonNode + ") : " + ex.getMessage())
                      .type(MediaType.TEXT_PLAIN).build());
       }
-      if (token == null) {
+      if (token == null || id_token == null) {
          throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-               .entity("No " + RESPONSE_ACCESS_TOKEN
+               .entity("No " + RESPONSE_ACCESS_TOKEN + "or " + RESPONSE_ID_TOKEN
                      + " in tokenExchangeResJsonNode returned by Kernel ("
                      + tokenExchangeResJsonNode + ")")
                      .type(MediaType.TEXT_PLAIN).build());
@@ -214,6 +216,7 @@ public class PlaygroundAuthenticationTokenResource extends PlaygroundAuthenticat
          @SuppressWarnings("unchecked")
          Map<String,Object> tokenInfo = jsonNodeMapper.readValue(tokenInfoResBody, Map.class);
          userInfo.putAll(tokenInfo);
+         userInfo.put(RESPONSE_ID_TOKEN,id_token);
       } catch (IOException ioex) {
          int errorStatus = (Status.Family.SUCCESSFUL != userInfoRes.getStatusInfo().getFamily())
                ? userInfoRes.getStatus() : Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
