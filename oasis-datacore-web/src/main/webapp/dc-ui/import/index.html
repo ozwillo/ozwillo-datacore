@@ -92,7 +92,10 @@
                rowLimit : parseInt($(".modelRowLimit").val(), 10),
                fromMixin : $('.fromMixin').val(),
                untilMixin : $('.untilMixin').val(),
-               mixinNames : window.mixinNames
+               mixinNames : window.mixinNames,
+               posted : {
+                  skipForbidden : $(".skipForbidden").is(':checked')   
+               }
             },
             data : {
                fileName : $(".resourceFile").val(),
@@ -125,17 +128,20 @@
 
 <div class="dc-import-section">
 <div class="dc-import-subtitle">Models :</div>
-<span title="Used to generate model prefixes">Model domain prefix</span> :
+<span title="Used to generate model prefixes">Domain prefix</span> :
 <input type="text" class="domainPrefix" value="elec" style="width: 50px"/>
-&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;
 <span title="-1 means all (default)">Model row limit</span> :
 <input type="text" class="modelRowLimit" value="-1" style="width: 50px"/>
-&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;
 <span title="Models (and resources of these models) will be posted starting from first line with this mixin (but others will still be parsed and retrieved)">from</span> :
 <select class="fromMixin" style="width: 150px"></select>
-&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;
 <span title="Models (and resources of these models) will be posted until first line with this mixin, excluded (but others will still be parsed and retrieved)">until</span> :
 <select class="untilMixin" style="width: 150px"></select>
+&nbsp;&nbsp;
+<span title="">skip forbidden</span> :
+<input type="checkbox" class="skipForbidden"/>
 <br/><br/>
 <input type="file" class="modelFile"/>
 &nbsp;&nbsp;&nbsp;&nbsp;
