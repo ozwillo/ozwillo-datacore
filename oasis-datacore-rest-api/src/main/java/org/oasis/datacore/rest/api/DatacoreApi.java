@@ -980,7 +980,7 @@ public interface DatacoreApi {
          throws BadRequestException, NotFoundException;
    
    
-   @Path("/h/{type}/{__unencoded__iri}/{version}")
+   @Path("/h/{type}/{__unencoded__iri:.+}/{version}")
    @GET
    @ApiOperation(value = "Return a matching resource of the given iri and version.",
       			 notes = "Resources of a model can be historized by defining the isHistorizable field to true."

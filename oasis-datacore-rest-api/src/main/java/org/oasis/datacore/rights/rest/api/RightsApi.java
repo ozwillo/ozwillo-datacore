@@ -39,7 +39,7 @@ import com.wordnik.swagger.annotations.AuthorizationScope;
 public interface RightsApi {
 
 	 	
-	   @Path("/{type}/{iri}/{version}")
+	   @Path("/{type}/{iri:.+}/{version}")
 	   @POST
 	   @Consumes(value = { MediaType.APPLICATION_JSON })
 	   @ApiOperation(
@@ -75,7 +75,7 @@ public interface RightsApi {
 			@ApiParam(value = "readers/writers/owners collections to add to existents collections (union)") DCRights dcRights
 	   );
 	   
-	   @Path("/{type}/{iri}/{version}")
+	   @Path("/{type}/{iri:.+}/{version}")
 	   @DELETE
 	   @Consumes(value = { MediaType.APPLICATION_JSON })
 	   @ApiOperation(
@@ -110,7 +110,7 @@ public interface RightsApi {
 			@ApiParam(value = "readers/writers/owners collections to remove from existents collections (difference)") DCRights dcRights
 	   );
 	   
-	   @Path("/f/{type}/{iri}/{version}")
+	   @Path("/f/{type}/{iri:.+}/{version}")
 	   @PUT
 	   @ApiOperation(
 			   value = "Remove all rights defined on resource except owners",
@@ -138,7 +138,7 @@ public interface RightsApi {
 			@PathParam("version") long version
 	   );
 	   
-	   @Path("/{type}/{iri}/{version}")
+	   @Path("/{type}/{iri:.+}/{version}")
 	   @PUT
 	   @ApiOperation(
 			   value = "Replace all rights on the selected resource by the DCRights in payload",
@@ -171,7 +171,7 @@ public interface RightsApi {
 	   );
 	   
 	   
-	   @Path("/{type}/{iri}/{version}")
+	   @Path("/{type}/{iri:.+}/{version}")
 	   @GET
 	   @ApiOperation(
 			   value = "Get rights list of a resource",
