@@ -446,11 +446,16 @@ public class ModelResourceMappingService {
 
       @SuppressWarnings("unchecked")
       List<String> forkedUris = (List<String>) r.get("dcmp:forkedUris");
-      project.setForkedUris(new HashSet<String>(forkedUris));
+      project.setForkedUris((forkedUris == null ? new HashSet<String>() // in case of old project without it
+            : new HashSet<String>(forkedUris)));
       @SuppressWarnings("unchecked")
       List<String> frozenModelNames = (List<String>) r.get("dcmp:frozenModelNames");
-      project.setFrozenModelNames(new HashSet<String>(frozenModelNames));
-      project.setModelLevelSecurityEnabled((boolean) r.get("dcmp:modelLevelSecurityEnabled"));
+      project.setFrozenModelNames((frozenModelNames == null ? new HashSet<String>() // in case of old project without it
+            : new HashSet<String>(frozenModelNames)));
+      Object isModelLevelSecurityEnabledFound = r.get("dcmp:modelLevelSecurityEnabled");
+      if (isModelLevelSecurityEnabledFound != null) {
+         project.setModelLevelSecurityEnabled((boolean) isModelLevelSecurityEnabledFound);
+      } // otherwise old project without it
       
       return project;
    }
