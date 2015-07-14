@@ -60,8 +60,12 @@ function initUserInfoUi() {
    
    $('#logout').on('click', function(e) {
       e.preventDefault();
-		
-      var id_client = JSON.parse(readCookie("userinfo"))['id_token'];
+      
+      var userinfo = JSON.parse(readCookie("userinfo"));
+      if (!userinfo) {
+         initUserInfo(); // relog
+      }
+      var id_client = userinfo['id_token'];
       deleteCookie('authorization');
       deleteCookie('userinfo');
       window.location.assign('https://accounts.ozwillo-dev.eu/a/logout?id_token_hint='+id_client+'&post_logout_redirect_uri='+document.URL);
