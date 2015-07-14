@@ -146,16 +146,27 @@
          id : decodeURI(encId),
          uri : dcConf.containerUrl + resourceIri
          };*/
-      var matches = /^\/+dc\/+type\/+([^\/\?]+)\/*([^\?]+)?\??(.*)$/g.exec(resourceIri);
-      var modelType = decodeURIComponent(matches[1]); // required
+      var matches = /^\/+dc\/+(type|h)\/+([^\/\?]+)\/*([^\?]+)?\??(.*)$/g.exec(resourceIri);
+      var isHistory = matches[1] // else is a find
+         && matches[1] === 'h';
+      var modelType = decodeURIComponent(matches[2]); // required
       // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
       // because swagger.js re-encodes
-      var id = matches[2];
-      var query = matches[3]; // no decoding, else would need to be first split along & and =
-      if (id) {
-         id = decodeURI(id);
-      } else {
-         id = null;
+      var encodedId = matches[3];
+      var query = matches[4]; // no decoding, else would need to be first split along & and =
+      var version = null;
+      if (isHistory) {
+          try {
+            var versionSlashIndex = encodedId.lastIndexOf('/');
+            version = parseInt(encodedId.substring(versionSlashIndex + 1));
+            if (encodedId) {
+               encodedId = encodedId.substring(0, versionSlashIndex);
+            }
+         } catch (e) {}
+      }
+      var id = null;
+      if (encodedId) {
+         id = decodeURI(encodedId);
       }
       if (!query) {
          query = null;
@@ -164,10 +175,12 @@
          containerUrl : dcConf.containerUrl,
          modelType : modelType,
          id : id,
+         encodedId : encodedId,
+         version : version,
          query : query,
          uri : dcConf.containerUrl + resourceIri, // NOT encoded !!
          iri : resourceIri // NOT encoded !!
-         };
+      };
    }
    //var dcResourceUriRegex = /^http:\/\/data\.ozwillo\.com\/dc\/type\/([^\/]+)\/(.+)$/g;
    //var dcResourceUriRegex = /^(http[s]?):\/\/+([^\/]+)\/+dc\/+type\/+([^\/\?]+)\/*([^\?]+)?\??(.*)$/g; // NOO seems stateful, else sometimes matches gets null
@@ -195,13 +208,25 @@
          id : decodeURI(encId),
          uri : resourceUri
          };*/
-      var matches = /^(http[s]?):\/\/+([^\/]+)\/+dc\/+type\/+([^\/\?]+)\/*([^\?]+)?\??(.*)$/g.exec(resourceUri);
+      var matches = /^(http[s]?):\/\/+([^\/]+)\/+dc\/+(type|h)\/+([^\/\?]+)\/*([^\?]+)?\??(.*)$/g.exec(resourceUri);
       var containerUrl = matches[1] + '://' + matches[2];
-      var modelType = decodeURIComponent(matches[3]); // required
+      var isHistory = matches[3] // else is a find
+         && matches[3] === 'h';
+      var modelType = decodeURIComponent(matches[4]); // required
       // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
       // because swagger.js re-encodes
-      var encodedId = matches[4];
-      var query = matches[5]; // no decoding, else would need to be first split along & and =
+      var encodedId = matches[5];
+      var query = matches[6]; // no decoding, else would need to be first split along & and =
+      var version = null;
+      if (isHistory) {
+          try {
+            var versionSlashIndex = encodedId.lastIndexOf('/');
+            version = parseInt(encodedId.substring(versionSlashIndex + 1));
+            if (encodedId) {
+               encodedId = encodedId.substring(0, versionSlashIndex);
+            }
+         } catch (e) {}
+      }
       var id = null;
       if (encodedId) {
          id = decodeURI(encodedId);
@@ -215,6 +240,7 @@
          modelType : modelType,
          id : id,
          encodedId : encodedId,
+         version : version, // only if isHistory
          query : query,
          uri : resourceUri // NOT encoded !!
          };
@@ -490,10 +516,14 @@ function setUrl(relativeUrl, dontUpdateDisplay) {
          relativeUrl = parseUri(relativeUrl);
       }
       // build unencoded URI, for better readability :
-      var unencodedRelativeUrl = '/dc/type/' + relativeUrl.modelType;
+      var unencodedRelativeUrl = '/dc/' + (relativeUrl.version != null && typeof relativeUrl.version !== 'undefined' // NOT (version) which is false
+         ? 'h' : 'type') + '/' + relativeUrl.modelType;
       if (relativeUrl.id) {
          unencodedRelativeUrl += '/' + relativeUrl.id;
       }
+      if (relativeUrl.version != null && typeof relativeUrl.version !== 'undefined') { // NOT (version) which is false
+          unencodedRelativeUrl += '/' + relativeUrl.version;
+       }
       if (relativeUrl.query) {
          unencodedRelativeUrl += '?' + buildUriQuery(parseUriQuery(relativeUrl.query), true);
       }
@@ -638,7 +668,7 @@ function findDataByType(relativeUrl, success, error, start, limit, optionalHeade
    if (limit) {
       swaggerParams.limit = limit;
    }
-   var supplParams = null; // handlerOptions == null ? null : {parent:handlerOptions};
+   var supplParams = null; // handlerOptions == null ? null : {parent:handlerOptions}; // NO else no error callback
    if (optionalHeaders) {
       for (var headerName in optionalHeaders) {
          swaggerParams[headerName] = optionalHeaders[headerName];
@@ -700,14 +730,14 @@ function getData(relativeUrl, success, error, optionalHeaders, handlerOptions) {
    setUrl(relativeUrl, success);
    var swaggerParams = {type:relativeUrl.modelType, __unencoded__iri:relativeUrl.id,
            'If-None-Match':-1, Authorization:getAuthHeader()};
-   var supplParams = null; // handlerOptions == null ? null : {parent:handlerOptions};
+   var supplParams = null; // handlerOptions == null ? null : {parent:handlerOptions}; // NO else no error callback
    if (optionalHeaders) {
       for (var headerName in optionalHeaders) {
          swaggerParams[headerName] = optionalHeaders[headerName];
       }
       if (optionalHeaders['Accept']) {
          supplParams = supplParams == null ? {} : supplParams;
-         supplParams['responseContentType'] = optionalHeaders['Accept']; // for RDF
+         supplParams['responseContentType'] = optionalHeaders['Accept']; // for RDF (no other way)
       }
    }
    if (!swaggerParams['X-Datacore-Project']) {
@@ -733,12 +763,17 @@ function getData(relativeUrl, success, error, optionalHeaders, handlerOptions) {
          error(data, relativeUrl, handlerOptions);
       }
    };
+   var dcApiFunction = dcApi.dc.getData;
+   if (relativeUrl.version != null && typeof relativeUrl.version !== 'undefined') { // NOT (version) which is false
+      dcApiFunction = dcApi.dc.findHistorizedResource;
+      swaggerParams['version'] = relativeUrl.version + ''; // toString else swagger hack encodeUriPathComponent fails
+   }
    if (supplParams) {
-      dcApi.dc.getData(swaggerParams, supplParams, mySuccess);
+      dcApiFunction(swaggerParams, supplParams, mySuccess);
       // NB. to still allow RDF, see https://github.com/swagger-api/swagger-js/issues/101
       // "Unable to pass 'opts' for method invocation (swagger.js)?"
    } else {
-      dcApi.dc.getData(swaggerParams, mySuccess, myError);
+      dcApiFunction(swaggerParams, mySuccess, myError);
    }
    return false;
 }
@@ -754,6 +789,29 @@ function findData(relativeUrl, success, error, start, limit, optionalHeaders, ha
       return findDataByType(relativeUrl, success, error, start, limit, optionalHeaders, handlerOptions);
    }
    return getData(relativeUrl, success, error, optionalHeaders, handlerOptions);
+}
+function getPreviousData(relativeUrl, success, error, optionalHeaders, handlerOptions) {
+   var historyUrl;
+   if (typeof relativeUrl === 'string') {
+      // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
+      // because swagger.js re-encodes
+       relativeUrl = parseUri(relativeUrl);
+   }
+   if (relativeUrl.version != null && typeof relativeUrl.version !== 'undefined') { // NOT (version) which is false
+      // get previous one :
+      var previousUrl = relativeUrl.uri.replace(new RegExp('/'
+            + relativeUrl.version + '$'), '/' + (relativeUrl.version - 1));
+      getData(previousUrl, success, error, optionalHeaders, handlerOptions);
+      return;
+   }
+   // first retrieve last version :
+   getData(relativeUrl, function(resResourceOrText, relativeUrl, data) { // , handlerOptions
+      // get previous one :
+      var version = parseInt(resResourceOrText['o:version']);
+      var historyUrl = relativeUrl.uri.replace('/type', '/h') + '/' + (version - 1);
+      getData(historyUrl, success, error, optionalHeaders, handlerOptions);
+   }, null, {'X-Datacore-View':' ',
+      'X-Datacore-Project':(optionalHeaders ? optionalHeaders['X-Datacore-Project'] : null)});
 }
 
 
