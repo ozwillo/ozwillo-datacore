@@ -139,7 +139,7 @@ public class JaxrsExceptionHelper {
       while (t != null) { // there is often at least one ex. for Resource(Parsing)Exception
          ImmutableMap.Builder<String, String> causeBuilder = new ImmutableMap.Builder<String, String>();
          causeBuilder.put("code", t.getClass().getName());
-         causeBuilder.put("message", t.getMessage());
+         causeBuilder.put("message", t.getMessage() == null ? "" : t.getMessage());
          causeBuilder.put("location", t.getStackTrace()[0].toString());
          causeListBuilder.add(causeBuilder.build());
          if (t.getCause() != null) {
