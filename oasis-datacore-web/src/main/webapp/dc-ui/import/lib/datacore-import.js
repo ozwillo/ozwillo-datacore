@@ -2006,17 +2006,16 @@
             }
          }
       }
-      
-      // BEWARE limited to 10 by default !!!!!! and 100 max !!
+      enrichImportedModelOrMixins(importState, success);
+   }
+   var dcMaxLimit = 100; // BEWARE limited to 10 by default !!!!!! and 100 max !!
+   function enrichImportedModelOrMixins (importState, success, lastEnrichedModelOrMixinName) {
       findDataByType({ modelType : 'dcmo:model_0', query : new UriQuery(
          'dcmo:globalFields.dcmf:name', '$in'
          // globalFields else won't get ex. CountryFR inheriting from Country but with no additional field (??)
          + JSON.stringify(importState.data.importedFieldNames, null, null)
-      ).s() }, function(fieldNameMixinsFound, relativeUrl, data, importState) {
-            if (fieldNameMixinsFound.length === 100) { // max limit
-               return abortImport("Too many mixins (>= 100) found for field names to import");
-            }
-            
+      ).p('dcmo:name', (lastEnrichedModelOrMixinName ? '>' + lastEnrichedModelOrMixinName : '') +  '+').s() },
+         function(fieldNameMixinsFound, relativeUrl, data, importState) {
             for (var fnmInd in fieldNameMixinsFound) {
                var involvedMixin = fieldNameMixinsFound[fnmInd];
                var modelOrMixin = importState.model.modelOrMixins[involvedMixin["dcmo:name"]];
@@ -2055,11 +2054,15 @@
                   importState.data.importableMixins[involvedMixin["dcmo:name"]] = involvedMixin;
                }
             }
-
-            if (success) {
+            
+            if (fieldNameMixinsFound.length === dcMaxLimit) { // max limit
+               //return abortImport("Too many mixins (>= 100) found for field names to import");
+               lastEnrichedModelOrMixinName = fieldNameMixinsFound[fieldNameMixinsFound.length - 1]['dcmo:name'];
+               enrichImportedModelOrMixins(importState, success, lastEnrichedModelOrMixinName);
+            } else if (success) {
                success(importState);
             }
-      }, null, 0, 100, null, importState);// max limit 100 (else 10 !!!)
+      }, null, 0, dcMaxLimit, null, importState);
    }
    
   

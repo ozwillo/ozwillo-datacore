@@ -105,6 +105,7 @@
          this.params[param] = [];
       }
       this.params[param].push(value);
+      return this;
    }
    UriQuery.prototype.s = function() {
       return buildUriQuery(this.params);
