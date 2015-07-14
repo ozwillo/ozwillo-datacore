@@ -2,7 +2,9 @@ package org.oasis.datacore.historization.service.impl;
 
 import org.apache.commons.lang.StringUtils;
 import org.oasis.datacore.core.entity.EntityModelService;
+import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
+import org.oasis.datacore.core.entity.model.DCEntityBase;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
@@ -25,8 +27,15 @@ public class HistorizationServiceImpl implements HistorizationService {
 
 	@Autowired
 	private DCModelService dcModelService;
+   /** to get storage model collection name & fillDataEntityCaches */
    @Autowired
    private EntityModelService entityModelService;
+   /** to 1. remove (in case previous insert failed)
+    * and 2. rights of GET history (which are those of historized entity, which must therefore be retrieved)
+    * TODO still avoid showing history of a deleted resource without checking its rights
+    * TODO Q also alternative policy to accept rights at time of historizing ? */
+   @Autowired
+   private EntityService entityService;
 	
 	@Autowired
 	private MongoOperations mongoOperations;
@@ -34,7 +43,7 @@ public class HistorizationServiceImpl implements HistorizationService {
 	@Autowired
 	private DataModelServiceImpl dataModelServiceImpl;
 	
-	private final static String HISTORIZATION_COLLECTION_SUFFIX = ".h";
+	public final static String HISTORIZATION_COLLECTION_SUFFIX = ".h";
 	
 	
 	/**
@@ -51,28 +60,36 @@ public class HistorizationServiceImpl implements HistorizationService {
 			
 			// Before inserting we search if the entity already exist in the historized model
 			// We check by URI
-			Query query = new Query();
-			query.addCriteria(Criteria.where("_uri").is(entity.getUri()));
-			DCEntity existantEntity = mongoOperations.findOne(query, DCEntity.class, historizationModel.getCollectionName());
-			
-			// TODO TODOOOO better in a single operation !!?
-			
-			// If it already exists we delete the existant entity
-			if(existantEntity != null) {
-				mongoOperations.remove(existantEntity, historizationModel.getCollectionName());
-			}
+         // If it already exists we delete the existant entity
+         HistorizedEntity historizedEntity = createHistorizedEntity(entity);
+			Query query = new Query(Criteria.where(DCEntity.KEY_URI).is(historizedEntity.getUri())
+			      .and(DCEntity.KEY_V).is(historizedEntity.getVersion()));
+			mongoOperations.remove(query, HistorizedEntity.class, historizationModel.getCollectionName());
 			
 			// Then we insert the new one
-			DCEntity historyEntity = new DCEntity(entity);
 			// NB. cloning else updates version and OptimisticLockingException at actual createOrUpdate !!
-			mongoOperations.insert(historyEntity, historizationModel.getCollectionName());
-			entityModelService.fillDataEntityCaches(historyEntity, historizationModel,
+			mongoOperations.insert(historizedEntity, getHistorizedCollectionNameFromOriginalModel(model));
+			entityModelService.fillDataEntityCaches(historizedEntity, historizationModel,
 			      historizationModel, null); // in case accessed later outside ; TODO def
 		}
 		
 	}
 
-	@Override
+	/**
+	 * 
+	 * @param entity
+	 * @return with next version of entity
+	 */
+	private HistorizedEntity createHistorizedEntity(DCEntity entity) {
+      // TODO Auto-generated method stub
+	   HistorizedEntity historizedEntity = new HistorizedEntity(entity);
+      long existingEntityVersion = entity.getVersion() == null ? 0 : entity.getVersion() + 1;
+      historizedEntity.setVersion(existingEntityVersion);
+      historizedEntity.setId(null);
+	   return historizedEntity;
+   }
+
+   @Override
 	public DCModelBase getOrCreateHistorizationModel(DCModelBase originalModel) throws HistorizationException {
 		if(originalModel != null) {
 		   DCModelBase historizationModel = getHistorizationModel(originalModel);
@@ -131,7 +148,7 @@ public class HistorizationServiceImpl implements HistorizationService {
 	}
 
 	@Override
-	public DCEntity getHistorizedEntity(String uri, int version, DCModelBase originalModel) throws HistorizationException {
+	public DCEntityBase getHistorizedEntity(String uri, int version, DCModelBase originalModel) throws HistorizationException {
 		
 		if(StringUtils.isEmpty(uri)) {
 			throw new HistorizationException("URI must not be null or empty");
@@ -140,10 +157,18 @@ public class HistorizationServiceImpl implements HistorizationService {
 		if(originalModel == null) {
 			throw new HistorizationException("Original model must not be null");
 		}
+      
+      if (!originalModel.isHistorizable()) {
+         throw new HistorizationException("Original model must be historizable");
+      }
+      
+      if (version < 0) {
+         throw new HistorizationException("Version must not be negative");
+      }
 
-		DCEntity originalDataEntity = mongoOperations.findOne(new Query(new Criteria("_uri").is(uri).and("_v").is(version)), DCEntity.class, originalModel.getCollectionName());
-		
-		if(originalDataEntity == null) {
+      // check existence (not deleted) and rights :
+		DCEntity originalDataEntity = entityService.getByUri(uri, originalModel) ;		
+		if (originalDataEntity == null) {
 			return null;
 		}
 		
@@ -151,8 +176,11 @@ public class HistorizationServiceImpl implements HistorizationService {
 		if(historizationModel == null) {
 			throw new HistorizationException("The historization model of : " + originalModel.getName() + " dont exist, you must activate historization on your model before requesting historized resources");
 		}
-		DCEntity dataEntity = mongoOperations.findOne(new Query(new Criteria("_uri").is(uri).and("_v").is(version)), DCEntity.class, historizationModel.getCollectionName());
-		entityModelService.fillDataEntityCaches(dataEntity, historizationModel, historizationModel, null);
+		HistorizedEntity dataEntity = mongoOperations.findOne(new Query(new Criteria(DCEntity.KEY_URI).is(uri).and(DCEntity.KEY_V).is(version)),
+		      HistorizedEntity.class, getHistorizedCollectionNameFromOriginalModel(originalModel));
+		if (dataEntity != null) {
+	      entityModelService.fillDataEntityCaches(dataEntity, historizationModel, historizationModel, null);
+		} // else ex. version not (yet) historized
 		return dataEntity;
 	    
 	}
@@ -161,7 +189,7 @@ public class HistorizationServiceImpl implements HistorizationService {
 	public String getHistorizedCollectionNameFromOriginalModel(DCModelBase originalModel) throws HistorizationException {
 		
 		if(originalModel != null && originalModel.isHistorizable()) {
-			return originalModel.getName() + HISTORIZATION_COLLECTION_SUFFIX;
+			return entityModelService.getCollectionName(originalModel) + HISTORIZATION_COLLECTION_SUFFIX;
 		} else {
 			throw new HistorizationException("Original model cannot be null or non-historizable");
 		}

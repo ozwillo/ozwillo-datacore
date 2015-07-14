@@ -1,6 +1,7 @@
 package org.oasis.datacore.core.entity.model;
 
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,7 +18,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Transient;
-import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -32,7 +32,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
  *
  */
 @Document
-public class DCEntity implements Comparable<DCEntity>, Serializable {
+public abstract class DCEntityBase implements Comparable<DCEntityBase>, Serializable {
    private static final long serialVersionUID = -6529766074319438866L;
 
    public static final String KEY_URI = "_uri";
@@ -52,7 +52,7 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    public static final String KEY_CH_AT = "_chAt";
    public static final String KEY_CH_BY = "_chBy";
 
-   protected final static Logger LOG = LoggerFactory.getLogger(DCEntity.class.getCanonicalName());
+   protected final static Logger LOG = LoggerFactory.getLogger(DCEntityBase.class.getCanonicalName());
 
    protected static final int COMPARE_LESS = -1;
    protected static final int COMPARE_EQUALS = 0;
@@ -65,7 +65,6 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    // by @Id, because Spring has an inclination towards using any existing "id" field first !!
    private ObjectId id; // ObjectId rather than String to access its timestamp = createdAt
    /** for optimistic locking ; NB. for Spring 0 == new so no -1 !! ; default to null i.e. new ; NOT indexed */
-   @Version
    @Field(KEY_V)
    private Long version = null;
    /** NB. could not be a valid ObjectId because of its constraints (size...)
@@ -175,9 +174,9 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    private transient DCModelBase cachedDefinitionModel;
    /** cache like, between ResourceService and EntityPermissionEvaluator */
    @Transient
-   private transient DCEntity previousEntity;
+   private transient DCEntityBase previousEntity;
    
-   public DCEntity() {
+   public DCEntityBase() {
       
    }
    
@@ -186,7 +185,7 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
     * @param dcEntity to clone or copy (extended or embeded)
     */
    @SuppressWarnings("unchecked")
-   public DCEntity(DCEntity dcEntity) {
+   public DCEntityBase(DCEntityBase dcEntity) {
       this.copyNonResourceFieldsFrom(dcEntity);
       
       this.setUri(dcEntity.getUri());
@@ -207,8 +206,13 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
       //this.properties = new HashMap<String, DCEntityValueBase>(dcEntity.properties.size());
       for (String key : dcEntity.properties.keySet()) {
          Object value = dcEntity.properties.get(key);
-         if (value instanceof DCEntity) {
-            value = new DCEntity((DCEntity) value);
+         if (value instanceof DCEntityBase) {
+            try {
+               Constructor<? extends Object> copyCons = value.getClass().getConstructor(new Class[] { DCEntityBase.class });
+               value = copyCons.newInstance((DCEntityBase) value);
+            } catch (Exception ex) {
+               throw new RuntimeException(ex);
+            }
          } else if (value instanceof List<?>) {
             value = new ArrayList<Object>((List<?>) value);
          } else if (value instanceof Map<?,?>) {
@@ -218,7 +222,7 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
       }
    }
 
-   public void copyNonResourceFieldsFrom(DCEntity existingDataEntity) {
+   public void copyNonResourceFieldsFrom(DCEntityBase existingDataEntity) {
       this.setId(existingDataEntity.getId()); // else OptimisticLockingFailureException !
       
       this.setAllReaders(existingDataEntity.getAllReaders());
@@ -232,7 +236,7 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
       return this.getVersion() == null; // Spring's
    }
 
-   public int compareTo(DCEntity o) {
+   public int compareTo(DCEntityBase o) {
       if (this.isNew()) {
          return COMPARE_LESS;
       }
@@ -254,7 +258,7 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
       if (!this.getClass().isInstance(o)) {
          return false;
       }
-      DCEntity oge = (DCEntity) o;
+      DCEntityBase oge = (DCEntityBase) o;
       if (this.isNew() || oge.isNew()) { // TODO TODO doesn't work once gone in
                                          // oasis datacore =>
                                          // setId(getDcObject().getUri()) ???
@@ -441,11 +445,11 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
       this.cachedDefinitionModel = cachedDefinitionModel;
    }
    
-   public DCEntity getPreviousEntity() {
+   public DCEntityBase getPreviousEntity() {
       return previousEntity;
    }
 
-   public void setPreviousEntity(DCEntity previousEntity) {
+   public void setPreviousEntity(DCEntityBase previousEntity) {
       this.previousEntity = previousEntity;
    }
 

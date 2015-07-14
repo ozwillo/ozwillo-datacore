@@ -8,6 +8,7 @@ import java.util.Set;
 import org.oasis.datacore.core.context.DatacoreRequestContextService;
 import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.model.DCEntity;
+import org.oasis.datacore.core.entity.model.DCEntityBase;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.ModelNotFoundException;
 import org.oasis.datacore.core.meta.model.DCModelBase;
@@ -181,7 +182,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
     * @param putRatherThanPatchMode requires existingDataEntity non null
     * @return
     */
-   private boolean filterMixinsAndCheckPermission(DCEntity dataEntity, DCEntity existingDataEntity,
+   private boolean filterMixinsAndCheckPermission(DCEntityBase dataEntity, DCEntityBase existingDataEntity,
          DCModelBase model, DCUserImpl user, String permission, boolean putRatherThanPatchMode) {
       int propNb = dataEntity.getProperties().size();
       LinkedHashSet<String> seenPropNameSet = new LinkedHashSet<String>(propNb);
@@ -189,7 +190,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
             model, user, permission, putRatherThanPatchMode,
             seenPropNameSet, propNb, null);
    }
-   private boolean filterMixinsAndCheckPermission(DCEntity dataEntity, DCEntity existingDataEntity,
+   private boolean filterMixinsAndCheckPermission(DCEntityBase dataEntity, DCEntityBase existingDataEntity,
          DCModelBase model, DCUserImpl user, String permission, boolean putRatherThanPatchMode,
          LinkedHashSet<String> seenPropNameSet, int propNb, Boolean isInheritingMixinAllowed) {
       boolean isThisModelAllowed = isThisModelAllowed(dataEntity, model,
@@ -272,7 +273,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
     * meaning get the next (primary inherited) one
     * @return
     */
-   public boolean isThisModelAllowed(DCEntity dataEntity, DCModelBase model,
+   public boolean isThisModelAllowed(DCEntityBase dataEntity, DCModelBase model,
          DCUserImpl user, String permission, Boolean isInheritingMixinAllowed) {
       DCProject currentProject = modelService.getProject();
       DCProject project = modelService.getProject(model.getProjectName()); // model project
@@ -374,7 +375,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
     * @param permission
     * @return
     */
-   public boolean isThisSecurityAllowed(DCEntity dataEntity, DCSecurity security, DCUserImpl user, String permission) {
+   public boolean isThisSecurityAllowed(DCEntityBase dataEntity, DCSecurity security, DCUserImpl user, String permission) {
       // else has its own security :
       if (security.isResourceOwner(user)) { // TODO cache this one !
          return true;

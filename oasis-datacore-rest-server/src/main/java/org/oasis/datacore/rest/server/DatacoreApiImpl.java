@@ -22,6 +22,7 @@ import javax.ws.rs.core.UriInfo;
 import org.oasis.datacore.core.context.DatacoreRequestContextService;
 import org.oasis.datacore.core.entity.EntityQueryService;
 import org.oasis.datacore.core.entity.model.DCEntity;
+import org.oasis.datacore.core.entity.model.DCEntityBase;
 import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryService;
 import org.oasis.datacore.core.meta.ModelException;
@@ -513,7 +514,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
                + "before patching the entity.", null, null, modelService.getProject())));
 		}
 		modelType = dcModel.getName();
-		DCEntity historizedEntity = null;
+		DCEntityBase historizedEntity = null;
 		try {
 			historizedEntity = historizationService.getHistorizedEntity(uri, version, dcModel);
 		} catch (HistorizationException hex) {

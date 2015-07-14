@@ -128,6 +128,16 @@ public class HistorizationTest {
 		DCResource companyHistorizedResource = datacoreApiClient.findHistorizedResource(MarkaInvestModel.COMPANY_MODEL_NAME, companyId, companyInserted.getVersion().intValue());
 		Assert.assertNotNull("Historized resource hasn't be stored correctly", companyHistorizedResource);
 		Assert.assertEquals("Historized resource version should be the same as the inserted resource", companyInserted.getVersion(), companyHistorizedResource.getVersion());
+		
+		// TODO test update & version
+		DCResource updatedCompany = datacoreApiClient.postDataInType(companyInserted);
+		Assert.assertEquals("version should be incremented on update", companyInserted.getVersion() + 1,
+		      (long) updatedCompany.getVersion());
+		DCResource regottenCompanyHistorizedResource = datacoreApiClient.findHistorizedResource(MarkaInvestModel.COMPANY_MODEL_NAME, companyId, companyInserted.getVersion().intValue());
+		Assert.assertEquals("Historized resource version should not have changed", companyHistorizedResource.getVersion(), regottenCompanyHistorizedResource.getVersion());
+      DCResource updatedCompanyHistorizedResource = datacoreApiClient.findHistorizedResource(MarkaInvestModel.COMPANY_MODEL_NAME, companyId, updatedCompany.getVersion().intValue());
+      Assert.assertEquals("Historized resource update should also exist", updatedCompany.getVersion(), updatedCompanyHistorizedResource.getVersion());
+		
 		mockAuthenticationService.logout();
 	}
 

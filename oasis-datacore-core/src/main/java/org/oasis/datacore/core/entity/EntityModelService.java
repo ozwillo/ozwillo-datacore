@@ -4,6 +4,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.oasis.datacore.core.entity.model.DCEntity;
+import org.oasis.datacore.core.entity.model.DCEntityBase;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.ModelException;
 import org.oasis.datacore.core.meta.ModelNotFoundException;
@@ -69,7 +70,7 @@ public class EntityModelService {
     * @param dataEntity
     * @return
     */
-   public DCModelBase getModel(DCEntity dataEntity) {
+   public DCModelBase getModel(DCEntityBase dataEntity) {
       checkAndFillDataEntityCaches(dataEntity);
       return dataEntity.getCachedModel();
    }
@@ -81,7 +82,7 @@ public class EntityModelService {
 
    /** Might not be there if obsolete dataEntity (i.e. its model has changed), so check it
     * or use a method that does it ex. getCollectionName() */
-   public DCModelBase getStorageModel(DCEntity dataEntity) {
+   public DCModelBase getStorageModel(DCEntityBase dataEntity) {
       checkAndFillDataEntityCaches(dataEntity);
       return dataEntity.getCachedStorageModel();
    }
@@ -100,7 +101,7 @@ public class EntityModelService {
     * TODO LATER better : put such cases in data health / governance inbox, through event
     * @param dataEntity
     */
-   public void checkAndFillDataEntityCaches(DCEntity dataEntity) {
+   public void checkAndFillDataEntityCaches(DCEntityBase dataEntity) {
       if (dataEntity.getCachedModel() != null) {
          return;
       }
@@ -133,14 +134,14 @@ public class EntityModelService {
       fillDataEntityCaches(dataEntity, cachedModel, cachedStorageModel, cachedDefinitionModel);
    }
    /** to be called on newly built / retrieved dataEntity */
-   public void fillDataEntityCaches(DCEntity dataEntity,
+   public void fillDataEntityCaches(DCEntityBase dataEntity,
          DCModelBase model, DCModelBase storageModel, DCModelBase definitionModel) {
       dataEntity.setCachedModel(model); // = cachedInstanciableModel
       dataEntity.setCachedStorageModel(storageModel);
       dataEntity.setCachedDefinitionModel(definitionModel);
    }
 
-   public String getModelName(DCEntity dataEntity) {
+   public String getModelName(DCEntityBase dataEntity) {
       List<String> types = dataEntity.getTypes();
       if (types != null && !types.isEmpty()) {
          return types.get(0);
@@ -196,11 +197,10 @@ public class EntityModelService {
     * @throws ModelNotFoundException if model or storage not found (same remark) or not instanciable
     */
    public String getCollectionName(DCEntity dataEntity) throws ModelNotFoundException {
-      DCProject project = projectService.getProject(); // NB. can't be null ; TODO add method with param
       DCModelBase model = getModel(dataEntity);
       if (model == null) {
          // TODO LATER better : put it in data health / governance inbox, through event
-         throw new ModelNotFoundException(this.getModelName(dataEntity), project,
+         throw new ModelNotFoundException(this.getModelName(dataEntity), projectService.getProject(), // NB. project can't be null ; TODO add method with param
                "When getting storage, can't find (instanciable) model type for entity, "
                + "it's probably obsolete i.e. its model (and inherited mixins) "
                + "has changed since (only in test, in which case the missing model "
@@ -212,7 +212,19 @@ public class EntityModelService {
                + "the missing model must first be created again before patching the entity) : "
                + dataEntity.getUri();
          logger.debug("Error when getting entity storage",
-               new ModelException(this.getModelName(dataEntity), project, msg));
+               new ModelException(model.getName(), projectService.getProject(), msg)); // NB. project can't be null ; TODO add method with param
+         // TODO LATER better : put it in data health / governance inbox, through event
+         //throw new ModelException(dataEntity.getModelName(), project, msg);
+      }
+      return getCollectionName(model);
+   }
+   public String getCollectionName(DCModelBase model) throws ModelNotFoundException {
+      if (!model.isInstanciable()) {
+         String msg = "When getting storage, entity model type is not instanciable, "
+               + "it's probably obsolete i.e. its model has changed since (only in test, in which case "
+               + "the missing model must first be created again before patching the entity)";
+         logger.debug("Error when getting entity storage",
+               new ModelException(model.getName(), projectService.getProject(), msg)); // NB. project can't be null ; TODO add method with param
          // TODO LATER better : put it in data health / governance inbox, through event
          //throw new ModelException(dataEntity.getModelName(), project, msg);
       }

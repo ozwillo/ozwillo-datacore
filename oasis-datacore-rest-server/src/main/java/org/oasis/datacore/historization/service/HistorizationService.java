@@ -1,6 +1,7 @@
 package org.oasis.datacore.historization.service;
 
 import org.oasis.datacore.core.entity.model.DCEntity;
+import org.oasis.datacore.core.entity.model.DCEntityBase;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.historization.exception.HistorizationException;
 
@@ -69,7 +70,7 @@ public interface HistorizationService {
 	 * @return
 	 * @throws HistorizationException
 	 */
-	public DCEntity getHistorizedEntity(String uri, int version, DCModelBase originalModel) throws HistorizationException;
+	public DCEntityBase getHistorizedEntity(String uri, int version, DCModelBase originalModel) throws HistorizationException;
 	
 	/**
 	 * Return the mongo collection name of the historized model (if original model is historizable)

@@ -19,7 +19,6 @@ import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.historization.exception.HistorizationException;
 import org.oasis.datacore.historization.service.impl.HistorizationServiceImpl;
-import org.oasis.datacore.rest.api.DCResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +61,9 @@ public class DatabaseSetupServiceImpl implements DatabaseSetupService {
          return cleanDataOfCreatedModel(model);
          // TODO LATER remove indexes specific to this model only (OPT and restores overriden ones if any)
       }
+      if (model.getCollectionName().endsWith(HistorizationServiceImpl.HISTORIZATION_COLLECTION_SUFFIX)) {
+         return false;
+      }
       mgo.dropCollection(model.getCollectionName()); // delete data // storageModel.getAbsoluteName()
       // TODO rm indexes specific to it in inheriting models also
    
@@ -99,19 +101,18 @@ public class DatabaseSetupServiceImpl implements DatabaseSetupService {
          }
          deleteQuery.addCriteria(new Criteria(DCEntity.KEY_T).is(model.getName()));
       }
+      if (storageModel.getCollectionName().endsWith(HistorizationServiceImpl.HISTORIZATION_COLLECTION_SUFFIX)) {
+         return false;
+      }
       // delete (rather than drop & recreate !) : 
-      mgo.remove(deleteQuery , storageModel.getCollectionName());
+      mgo.remove(deleteQuery, storageModel.getCollectionName());
 
       // TODO LATER make historizable & contributable more than storage models !
-      if (storageModel.isHistorizable()) {
+      if (model.isHistorizable()) {
          try {
-            DCModelBase historizedModel = historizationService.getHistorizationModel(storageModel);
-            if (historizedModel == null) {
-               historizedModel = historizationService.createHistorizationModel(storageModel); // TODO ??????
-            }
-            mgo.remove(new Query(), historizedModel.getCollectionName());
+            mgo.remove(deleteQuery, historizationService.getHistorizedCollectionNameFromOriginalModel(model));
          } catch (HistorizationException e) {
-            throw new RuntimeException("Historization init error of Model " + storageModel.getName(), e);
+            throw new RuntimeException("Historization init error for Model " + model.getName(), e);
          }
       }
       
@@ -130,6 +131,9 @@ public class DatabaseSetupServiceImpl implements DatabaseSetupService {
          if (model == null) {
             return false;
          }
+      }
+      if (model.getCollectionName().endsWith(HistorizationServiceImpl.HISTORIZATION_COLLECTION_SUFFIX)) {
+         return false;
       }
       if (deleteCollectionsFirst) {
          // cleaning data first
@@ -158,18 +162,20 @@ public class DatabaseSetupServiceImpl implements DatabaseSetupService {
          if (historizedModel == null) {
             historizedModel = historizationService.createHistorizationModel(model);
          }
+         String historizedCollectionName = historizationService.getHistorizedCollectionNameFromOriginalModel(model);
          if (deleteCollectionsFirst) {
             // cleaning data first
-            mgo.dropCollection(historizedModel.getCollectionName());
+            mgo.dropCollection(historizedCollectionName);
          }
          
-         boolean res = ensureGenericCollectionAndIndices(historizedModel);
+         //boolean collectionAlreadyExists = ensureGenericCollectionAndIndices(historizedModel); // NOO only use is GET(uri, version)
+         boolean collectionAlreadyExists = mgo.collectionExists(historizedCollectionName); 
          // compound index on uri & version :
-         mgo.getCollection(model.getCollectionName()).createIndex(
+         mgo.getCollection(historizedCollectionName).createIndex(
                new BasicDBObject(DCEntity.KEY_URI, 1).append(DCEntity.KEY_V, 1),
                new BasicDBObject("unique", true));
          // NB. does nothing if already exists http://docs.mongodb.org/manual/tutorial/create-an-index/
-         return res;
+         return collectionAlreadyExists;
       } catch (HistorizationException e) {
          throw new RuntimeException("Historization init error of Model " + model.getName(), e);
       }

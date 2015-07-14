@@ -24,6 +24,7 @@ import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.NativeModelService;
 import org.oasis.datacore.core.entity.model.DCEntity;
+import org.oasis.datacore.core.entity.model.DCEntityBase;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 import org.oasis.datacore.core.meta.model.DCI18nField;
@@ -822,7 +823,7 @@ public class ResourceEntityMapperService {
     * (already applied by EntityPermissionEvaluator) but true in find()
     * @return
     */
-   public DCResource entityToResource(DCEntity entity, DCResource resource, boolean applyView) {
+   public DCResource entityToResource(DCEntityBase entity, DCResource resource, boolean applyView) {
       // building resource props :
       Map<String,Object> resourceProps = new HashMap<String,Object>(
             entity.getProperties().size()); // (copy because resource != entity)
@@ -890,7 +891,7 @@ public class ResourceEntityMapperService {
       entityToResourcePersistenceComputedFields(entity, resource, isMinimal);
    }
    
-   public void entityToResourcePersistenceComputedFields(DCEntity entity,
+   public void entityToResourcePersistenceComputedFields(DCEntityBase entity,
          DCResource resource, boolean isMinimal) {
       resource.setVersion(entity.getVersion());
 

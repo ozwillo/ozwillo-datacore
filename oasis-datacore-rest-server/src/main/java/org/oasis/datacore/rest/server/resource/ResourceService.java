@@ -362,9 +362,9 @@ public class ResourceService {
       if (isCreation) {
          entityPermissionService.setOwners(dataEntity, buildCreatorOwners(dcModel));
          try {
-        	 historizeResource(resource, dataEntity, dcModel);
-        	 entityService.create(dataEntity);
-        	 // NB. if creation fails will exist in history, but OK if 1. hidden on GET and 2. rewritten on recreate
+        	   historizeResource(resource, dataEntity, dcModel);
+        	   entityService.create(dataEntity);
+        	   // NB. if creation fails will exist in history, but OK if 1. hidden on GET and 2. rewritten on recreate
          } catch (DuplicateKeyException dkex) {
             // detected by unique index on _uri
             // TODO unicity across shards : index not sharded so also handle duplicates a posteriori

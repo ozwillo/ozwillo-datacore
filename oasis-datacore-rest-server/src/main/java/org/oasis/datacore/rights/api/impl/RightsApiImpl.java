@@ -13,15 +13,15 @@ import javax.ws.rs.core.Response;
 
 import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
-import org.oasis.datacore.core.meta.model.DCModel;
+import org.oasis.datacore.core.meta.SimpleUriService;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
+import org.oasis.datacore.core.security.DCUserImpl;
 import org.oasis.datacore.core.security.EntityPermissionService;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
 import org.oasis.datacore.rights.enumeration.RightsActionType;
 import org.oasis.datacore.rights.rest.api.DCRights;
 import org.oasis.datacore.rights.rest.api.RightsApi;
-import org.oasis.datacore.server.uri.UriService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -38,9 +38,6 @@ public class RightsApiImpl implements RightsApi {
 	@Autowired
 	private EntityService entityService;
    
-   @Autowired
-   private UriService uriService;
-	
 	@Autowired
 	private DatacoreSecurityService datacoreSecurityService;
 
@@ -54,7 +51,7 @@ public class RightsApiImpl implements RightsApi {
 			throw new NotFoundException(Response.status(Response.Status.NOT_FOUND).entity("Model " + modelType + " was not found").type(MediaType.TEXT_PLAIN).build());
 		}
 
-		String uri = uriService.buildUri(modelType, iri);
+		String uri = SimpleUriService.buildUri(modelType, iri);
 		DCEntity entity = entityService.getByUriUnsecured(uri, model);
 
 		if (entity == null) {
@@ -79,7 +76,7 @@ public class RightsApiImpl implements RightsApi {
 			throw new NotFoundException(Response.status(Response.Status.NOT_FOUND).entity("Model " + modelType + " was not found").type(MediaType.TEXT_PLAIN).build());
 		}
 
-		String uri = uriService.buildUri(modelType, iri);
+		String uri = SimpleUriService.buildUri(modelType, iri);
 		DCEntity entity = entityService.getByUriUnsecured(uri, model);
 
 		if (entity == null) {
@@ -108,7 +105,7 @@ public class RightsApiImpl implements RightsApi {
 			throw new NotFoundException(Response.status(Response.Status.NOT_FOUND).entity("Model " + modelType + " was not found").type(MediaType.TEXT_PLAIN).build());
 		}
 		
-		String uri = uriService.buildUri(modelType, iri);
+		String uri = SimpleUriService.buildUri(modelType, iri);
 		DCEntity entity = entityService.getByUriUnsecured(uri, model);
 		
 		if(entity == null) {
@@ -133,7 +130,7 @@ public class RightsApiImpl implements RightsApi {
 			throw new NotFoundException(Response.status(Response.Status.NOT_FOUND).entity("Model " + modelType + " was not found").type(MediaType.TEXT_PLAIN).build());
 		}
 		
-		String uri = uriService.buildUri(modelType, iri);
+		String uri = SimpleUriService.buildUri(modelType, iri);
 		DCEntity entity = entityService.getByUriUnsecured(uri, model);
 		
 		if(entity == null) {
@@ -151,7 +148,7 @@ public class RightsApiImpl implements RightsApi {
 			// we put the current user (how might me owner)
 			// if he is not the changeRights will not work and this will not affect the entity
 			entity.setOwners(new HashSet<String>());
-			entity.getOwners().add("u_" + datacoreSecurityService.getCurrentUserId()); 
+			entity.getOwners().add(DCUserImpl.USER_ORGANIZATION_PREFIX + datacoreSecurityService.getCurrentUserId()); 
 		}
 		
 		entity.setReaders(new HashSet<String>());
@@ -205,7 +202,7 @@ public class RightsApiImpl implements RightsApi {
 			throw new NotFoundException(Response.status(Response.Status.NOT_FOUND).entity("Model " + modelType + " was not found").type(MediaType.TEXT_PLAIN).build());
 		}
 		
-		String uri = uriService.buildUri(modelType, iri);
+		String uri = SimpleUriService.buildUri(modelType, iri);
 		DCEntity entity = entityService.getByUriUnsecured(uri, model);
 		
 		if(entity == null) {
