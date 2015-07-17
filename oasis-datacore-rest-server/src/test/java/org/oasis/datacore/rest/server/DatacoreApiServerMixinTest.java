@@ -2,6 +2,7 @@ package org.oasis.datacore.rest.server;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -477,76 +478,6 @@ public class DatacoreApiServerMixinTest {
       // make model secured (still authentified readable)
       altTourismPlaceModel.getSecurity().setAuthentifiedWritable(false);
       altTourismPlaceModel.getSecurity().setAuthentifiedCreatable(false);
-      
-      // logging in as guest
-      authenticationService.logout(); // NB. not required since followed by login
-      authenticationService.loginAs("guest");
-
-      // check that read not allowed anymore as localauthdevmode guest (because not null security)
-      try {
-         resourceService.get(altTourismPlaceSofiaMonasteryPosted.getUri(),
-               AltTourismPlaceAddressSample.ALTTOURISM_PLACE);
-         Assert.fail("Resource in authentified type should not be readable as guest");
-      } catch (Exception e) {
-         Assert.assertTrue(true);
-      }
-      try {
-         datacoreApiClient.getData(AltTourismPlaceAddressSample.ALTTOURISM_PLACE,
-               "Sofia_Monastery", 0l); // client side
-         Assert.fail("Resource in authentified type should not be readable as guest");
-      } catch (Exception e) {
-         Assert.assertTrue(true);
-      }
-      try {
-         datacoreApiClient.getData(AltTourismPlaceAddressSample.ALTTOURISM_PLACE,
-               "Sofia_Monastery"); // client side
-         Assert.assertTrue(true);
-      } catch (Exception e) {
-         Assert.fail("Get cached up-to-date data is always allowed (only requires entityService.isUpToDate()");
-      }
-      
-      // check that write still not allowed as localauthdevmode guest (because not null security)
-      try {
-         resourceService.createOrUpdate(altTourismPlaceSofiaMonasteryPosted,
-               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, false, true, false);
-         Assert.fail("Resource in authentified type should not be writable as guest");
-      } catch (AccessDeniedException e) {
-         Assert.assertTrue(true);
-      }
-      try {
-         datacoreApiClient.postDataInType(altTourismPlaceSofiaMonasteryPosted); // client side
-         Assert.fail("Resource in authentified type should not be writable as guest");
-      } catch (ForbiddenException e) {
-         Assert.assertTrue(true);
-      }
-      
-      // check that create still not allowed as localauthdevmode guest (because not null security)
-      try {
-         resourceService.createOrUpdate(buildSofiaMonastery(++i),
-               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false, false);
-         Assert.fail("Resource in authentified type should not be creatable as guest");
-      } catch (AccessDeniedException e) {
-         Assert.assertTrue(true);
-      }
-      try {
-         datacoreApiClient.postDataInType(buildSofiaMonastery(++i)); // client side
-         Assert.fail("Resource in authentified type should not be creatable as guest");
-      } catch (ForbiddenException e) {
-         Assert.assertTrue(true);
-      }
-      
-      // check that not found anymore as localauthdevmode guest (because not null security)
-      authenticationService.loginAs("guest");
-      List<DCEntity> forbiddenMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel.getName(),
-            new ImmutableMap.Builder<String, List<String>>().put("name",
-                  new ImmutableList.Builder<String>().add("Sofia_Monastery").build()).build(), 0, 10);
-      Assert.assertTrue("query filtering should have forbidden authentified model",
-            forbiddenMonasteryRes == null || forbiddenMonasteryRes.isEmpty());
-      List<DCResource> forbiddenMonasteryClientRes = datacoreApiClient.findDataInType(AltTourismPlaceAddressSample.ALTTOURISM_PLACE,
-            new QueryParameters().add("name", "Sofia_Monastery"), 0, 10); // client side
-      Assert.assertTrue("query filtering should have forbidden authentified model",
-            forbiddenMonasteryClientRes == null || forbiddenMonasteryClientRes.isEmpty());
-      authenticationService.logout(); // NB. not required since followed by login
 
       // logging in as user with not yet set rights
       authenticationService.logout(); // NB. not required since followed by login
@@ -613,12 +544,12 @@ public class DatacoreApiServerMixinTest {
       altTourismPlaceModel.getSecurity().setAuthentifiedReadable(false);
       
       // check that not found because in not yet set reader group
-      forbiddenMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel.getName(),
+      List<DCEntity> forbiddenMonasteryRes = ldpEntityQueryService.findDataInType(altTourismPlaceModel.getName(),
             new ImmutableMap.Builder<String, List<String>>().put("name",
                   new ImmutableList.Builder<String>().add("Sofia_Monastery").build()).build(), 0, 10);
       Assert.assertTrue("query filtering should have forbidden it because in not yet set reader group",
             forbiddenMonasteryRes == null || forbiddenMonasteryRes.isEmpty());
-      forbiddenMonasteryClientRes = datacoreApiClient.findDataInType(AltTourismPlaceAddressSample.ALTTOURISM_PLACE,
+      List<DCResource> forbiddenMonasteryClientRes = datacoreApiClient.findDataInType(AltTourismPlaceAddressSample.ALTTOURISM_PLACE,
             new QueryParameters().add("name", "Sofia_Monastery"), 0, 10); // client side
       Assert.assertTrue("query filtering should have forbidden it because in not yet set reader group",
             forbiddenMonasteryClientRes == null || forbiddenMonasteryClientRes.isEmpty());
@@ -825,6 +756,25 @@ public class DatacoreApiServerMixinTest {
          Assert.assertEquals("jim", resource.getCreatedBy()); // check auditor
          Set<String> owners = entityService.getByUriUnsecured(resource.getUri(), altTourismPlaceModel).getOwners();
          Assert.assertTrue(owners != null && owners.size() == 1 &&  "u_jim".equals(owners.iterator().next())); // check creator as owner
+      } catch (Exception e) {
+         Assert.fail("Resource in private type should be creatable by user in writer group");
+      }
+      try {
+         DCResource resource = datacoreApiClient.postDataInType(buildSofiaMonastery(++i)); // client side
+         Assert.assertEquals("jim", resource.getCreatedBy()); // check auditor
+      } catch (Exception e) {
+         Assert.fail("Resource in private type should be creatable by user in writer group");
+      }
+
+      // check that when not empty resource creation owners, those own created resources
+      altTourismPlaceModel.getSecurity().setResourceCreationOwners(new LinkedHashSet<>(
+            new ImmutableSet.Builder<String>().add("rm_altTourism.place.SofiaMonastery_writers").build()));
+      try {
+         DCResource resource = resourceService.createOrUpdate(buildSofiaMonastery(++i),
+               AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false, false);
+         Assert.assertEquals("jim", resource.getCreatedBy()); // check auditor
+         Set<String> owners = entityService.getByUriUnsecured(resource.getUri(), altTourismPlaceModel).getOwners();
+         Assert.assertTrue(owners != null && owners.size() == 1 &&  "rm_altTourism.place.SofiaMonastery_writers".equals(owners.iterator().next())); // check creator as owner
       } catch (Exception e) {
          Assert.fail("Resource in private type should be creatable by user in writer group");
       }

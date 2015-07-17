@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.oasis.datacore.core.security.mock.LocalAuthenticationService;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,6 +14,9 @@ import org.springframework.security.core.userdetails.UserDetails;
  * The username is his id and therefore MUST be unique.
  * A user's personal organization group is "u_<username>".
  * TODO implement it on its own and not on top of hardcoded conf'd User anymore ?
+ * 
+ * NB. no guest mode (but apps can create their own system users for
+ * various purposes)
  * 
  * @author mdutoo
  *
@@ -29,7 +31,6 @@ public class DCUserImpl extends User {
    public static final String USER_ORGANIZATION_PREFIX = "u_";
 
    private Set<String> roles = new HashSet<String>();
-   private boolean isGuest;
    private boolean isAdmin;
    private Set<String> entityGroups = new HashSet<String>();
    
@@ -43,13 +44,6 @@ public class DCUserImpl extends User {
    }
 
    private void initGroups(Set<String> admins) {
-      if (this.getUsername().equals(LocalAuthenticationService.GUEST)) {
-         this.isGuest = true;
-         this.roles.add(LocalAuthenticationService.GUEST);
-         this.entityGroups.add(LocalAuthenticationService.GUEST);
-         return;
-      }
-      
       String personalOrganizationGroup = usernameToPersonalOrganizationGroup(this.getUsername()); // TODO or not ???
       if (admins.contains(personalOrganizationGroup)) {
          this.isAdmin = true;
@@ -89,17 +83,11 @@ public class DCUserImpl extends User {
 
    private static Collection<? extends GrantedAuthority> initAuthorities(
          Collection<? extends GrantedAuthority> authorities) {
-      // TODO could add guest here if not already done...
       return Collections.unmodifiableSet(new HashSet<GrantedAuthority>(authorities));
    }
 
    public Set<String> getRoles() {
       return roles;
-   }
-
-   /** TODO or isAuthentified ? */
-   public boolean isGuest() {
-      return isGuest;
    }
 
    public boolean isAdmin() {

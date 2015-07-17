@@ -10,9 +10,8 @@ import org.springframework.security.core.userdetails.User;
  * often, ex. modelCreators should be a dedicated group rather than a single
  * user.
  * 
- * NB. guestReadable is decided at modelService level,
- * false if not localauthdevmode (calls to Datacore are made by apps which can have "app_guest" accounts),
- * else true if no security set to ease up tests
+ * NB. no guest mode (but apps can create their own system users for
+ * various purposes)
  * 
  * @author mdutoo, agiraudon
  * 
@@ -42,7 +41,12 @@ public class DCSecurity {
 	private LinkedHashSet<String> resourceOwners = new LinkedHashSet<String>();
 	
 	/**
-	 * Give access to all data no matter what permissions on the entity
+	 * Set as owners in ACLs of resource at creation. If model's is null,
+	 * uses its project's as defaults. If empty, resourceService will set
+	 * newly created resource owners to the current user's u_[org_id].
+	 * Somehow redundant when resource creators are already resourceOwners, but
+	 * can be useful if resourceOwners are changed so that original owners
+	 * remain (or to copy entities across collections in mongo).
 	 * Update model : NO
 	 * Create resource : YES
 	 * Read resource : YES

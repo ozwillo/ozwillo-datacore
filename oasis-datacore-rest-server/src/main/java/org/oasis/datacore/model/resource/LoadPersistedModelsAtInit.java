@@ -2,8 +2,10 @@ package org.oasis.datacore.model.resource;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.oasis.datacore.common.context.DCRequestContextProvider;
 import org.oasis.datacore.common.context.DCRequestContextProviderFactory;
@@ -93,11 +95,11 @@ public class LoadPersistedModelsAtInit extends InitableBase {
             ResourceModelIniter.MODEL_MODEL_NAME, ResourceModelIniter.MODEL_NAME_PROP,
             new ImmutableMap.Builder<String,List<String>>().put("dcmo:pointOfViewAbsoluteName",
                   new ImmutableList.Builder<String>().add(projectName).build()).build(), projectName);
-      HashMap<String,ResourceException> previousModelsInError = null, modelsInError = null;
+      LinkedHashMap<String,ResourceException> previousModelsInError = null, modelsInError = null; // LinkedHashMap to keep order
       List<String> loadedModelAbsoluteNames = new ArrayList<String>(modelResources.size());
       do {
          previousModelsInError = modelsInError;
-         modelsInError = new HashMap<String,ResourceException>(); // not clear() because previousModelsInError
+         modelsInError = new LinkedHashMap<String,ResourceException>(); // not clear() because previousModelsInError
          
          for (DCResource modelResource : modelResources) {
             String modelName = (String) modelResource.get(ResourceModelIniter.MODEL_NAME_PROP);
@@ -150,8 +152,10 @@ public class LoadPersistedModelsAtInit extends InitableBase {
       logger.info("   loaded models details : " + loadedModelAbsoluteNames); // .debug(
       
       if (!modelsInError.isEmpty()) {
-         logger.error("Unable to reload from persistence models with absolute names : "
-               + modelsInError);
+         List<String> errMsgs = modelsInError.entrySet().stream()
+               .map(entry -> entry.getKey() + '=' + entry.getValue().getCause())
+               .collect(Collectors.toList());
+         logger.error("Unable to reload from persistence models with absolute names : " + errMsgs);
       }
    }
 
@@ -166,11 +170,12 @@ public class LoadPersistedModelsAtInit extends InitableBase {
    public void loadProjects() throws QueryException {
       List<DCResource> projectResources = findDataInType(
             ResourceModelIniter.MODEL_PROJECT_NAME, ResourceModelIniter.POINTOFVIEW_NAME_PROP, null);
-      HashMap<String,ResourceException> previousProjectsInError, projectsInError = new HashMap<String,ResourceException>();
+      LinkedHashMap<String,ResourceException> previousProjectsInError, projectsInError
+            = new LinkedHashMap<String,ResourceException>(); // LinkedHashMap to keep order
       List<String> loadedProjectNames = new ArrayList<String>(projectResources.size());
       do {
          previousProjectsInError = projectsInError;
-         projectsInError = new HashMap<String,ResourceException>(); // not clear() because previousModelsInError
+         projectsInError = new LinkedHashMap<String,ResourceException>(); // not clear() because previousModelsInError
          
          for (DCResource projectResource : projectResources) {
             //String projectProjectName = (String) projectResource.get("dcmo:pointOfViewAbsoluteName");

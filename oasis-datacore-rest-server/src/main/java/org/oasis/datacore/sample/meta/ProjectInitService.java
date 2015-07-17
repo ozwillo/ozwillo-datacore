@@ -83,7 +83,13 @@ public class ProjectInitService {
       DCProject project = modelAdminService.getProject(DCProject.OASIS_SAMPLE);
       if (project == null) {
          project = new DCProject(DCProject.OASIS_SAMPLE);
+
+         // ONLY FOR OLD MODELS THAT DIDNT HAVE SECURITY override rights policy (though projects not restored from persistence for now) :
+         setDefaultGlobalPublicSecurity(project, buildDefaultProjectOwners(project.getName()));
+         
          project.setModelLevelSecurityEnabled(true); // let unit tests tweak model-level security as necessary
+         project.getSecurityDefaults().setResourceCreators(null); // else DatacoreApiServerMixinTest.testAddress fails
+         
          modelAdminService.addProject(project);
          ///dataForkMetamodelIn(project); // NO still store them all in oasis.meta, TODO LATER add projectName in their URI
          project.addLocalVisibleProject(getMetamodelProject()); // ... so for now rather this
@@ -96,6 +102,7 @@ public class ProjectInitService {
       if (project == null) {
          project = buildProjectDefaultConf(DCProject.OASIS_MAIN,
                "(facade) Makes visible all published projects", null);
+         // TODO ADD SECURITY TO CITIZEN KIN MODELS
          // TODO TODO add ALL other projects ; & should not have any local models
       }
       return project;

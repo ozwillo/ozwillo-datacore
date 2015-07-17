@@ -33,6 +33,9 @@ import org.springframework.security.core.Authentication;
  * Must NOT depend on EntityService, else circular dependency / cycle / loop at Spring init,
  * see details on EntityModelService.
  * 
+ * NB. no guest mode (but apps can create their own system users for
+ * various purposes).
+ * 
  * @author mdutoo
  *
  */
@@ -44,7 +47,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
    public static final String CHANGE_RIGHTS = "changeRights";
    public static final String GET_RIGHTS = "getRights";
 
-   /** to use compute guest readable */
+   /** to use compute guest readable NOO */
    @Value("${datacore.localauthdevmode}")
    private boolean localauthdevmode;
    
@@ -93,10 +96,6 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       
       //if (hasRole("admin") || hasRole("t_" + model.getName() + "_admin")) {
       DCUserImpl user = datacoreSecurityService.getCurrentUser();
-      
-      if (user.isGuest() && !localauthdevmode) {
-         return false; // forbidden outside localauthdevmode
-      }
       
       DCModelBase model = entityModelService.getModel(dataEntity);
       if (model == null) {
@@ -358,9 +357,6 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
 
    public boolean isDefaultSecurityAllowed(DCUserImpl user, String permission) {
       if (localauthdevmode/* || project.defaultSecurity == phase1*/) {
-         if (user.isGuest()) { // allow even guest READ in localauthdevmode, to help developers
-            return READ.equals(permission);
-         }
          return true; // default Phase 1 (model design step) security 
       }
       // no (primary-inherited) security at all ex. Phase 1, TODO return project default
@@ -387,14 +383,14 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
          // NB. allReaders have to contain ALSO writers & owners (i.e. be precomputed)
          // to allow efficient query filtering by rights criteria
          // => TODO that in PermissionAdminApi/Service
-         return security.isAuthentifiedReadable() && !user.isGuest()
+         return security.isAuthentifiedReadable()
                || security.isResourceReader(user) // TODO cache this one
                || dataEntity != null && hasAnyEntityAclGroup(user, dataEntity.getAllReaders());
          
       case WRITE :
          // NB. writers have NOT to contain also writers & owners (i.e. be precomputed)
          // because no mass write operations (yet)
-         return security.isAuthentifiedWritable() && !user.isGuest()
+         return security.isAuthentifiedWritable()
                || security.isResourceWriter(user)
                || dataEntity != null
                && (hasAnyEntityAclGroup(user, dataEntity.getWriters()) // TODO cache this last one
@@ -403,7 +399,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       case CREATE :
          // to be used in @PreAuthorize on update ????
          ///return entityService.getModel(dataEntity).getSecurity().hasCreator(user); /// TODO or this ?
-         return security.isAuthentifiedCreatable() && !user.isGuest()
+         return security.isAuthentifiedCreatable()
                || security.isResourceCreator(user); // TODO cache this last one
          
       case CHANGE_RIGHTS :
@@ -434,17 +430,6 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
             || (viewMixinNames = serverRequestContext.getViewMixinNames()) == null
                   || viewMixinNames.contains(mixinName);
    }
-
-
-   /**
-    * 
-    * @param model
-    * @return false if not localauthdevmode (calls to Datacore are made by apps which can have "app_guest" accounts),
-    * else true if no security set to ease up tests
-    */
-   public boolean isGuestReadable(DCSecurity modelSecurity) {
-      return localauthdevmode && modelSecurity == null;
-   }
    
    /**
     * TODO reuse SecurityExpressionRoot.has(Any)Role code ??
@@ -458,7 +443,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       }
       
       Set<String> currentUserEntityGroups = user.getEntityGroups();
-      // TODO replace by GrantedAuth + GUEST
+      // TODO replace by GrantedAuth
       // TODO BEWARE currentUserEntityGroups should only contain "actual" groups, NOT groups controlling
       // access to features ex. (model type) admin, kernel api ex. log, app feature-specific group
 

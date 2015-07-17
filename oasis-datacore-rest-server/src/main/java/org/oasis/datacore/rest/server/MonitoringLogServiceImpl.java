@@ -51,7 +51,6 @@ public class MonitoringLogServiceImpl {
 		    
 		    try {
 			    map.put("userId", datacoreSecurityService.getCurrentUserId());
-			    map.put("guest", datacoreSecurityService.getCurrentUser().isGuest());
 			    map.put("admin", datacoreSecurityService.getCurrentUser().isAdmin());
 		    } catch(Exception e) {
 		    	map.put("security", "No security context.");

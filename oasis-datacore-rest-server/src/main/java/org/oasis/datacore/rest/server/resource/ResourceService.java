@@ -407,7 +407,7 @@ public class ResourceService {
    private Set<String> buildCreatorOwners(DCModelBase dcModel) {
       Set<String> creatorOwners;
       DCSecurity dcSecurity = modelService.getSecurity(dcModel);
-      if (dcSecurity != null) { // try to get project defaults :
+      if (dcSecurity == null) { // at worse try to get project defaults :
          dcSecurity = modelService.getProject(dcModel.getProjectName()).getSecurityDefaults();
       }
       if (dcSecurity != null) {
