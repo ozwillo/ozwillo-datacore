@@ -223,11 +223,14 @@ public class ModelResourceMappingService {
          .set("dcms:isAuthentifiedReadable", (security != null) ? security.isAuthentifiedReadable() : null)
          .set("dcms:isAuthentifiedCreatable", (security != null) ? security.isAuthentifiedCreatable() : null)
          .set("dcms:isAuthentifiedWritable", (security != null) ? security.isAuthentifiedWritable() : null)
-         .set("dcms:resourceCreators", (security != null) ? new ArrayList<String>(security.getResourceCreators()) : null)
-         .set("dcms:resourceCreationOwners", (security != null) ? new ArrayList<String>(security.getResourceCreationOwners()) : null)
-         .set("dcms:resourceReaders", (security != null) ? new ArrayList<String>(security.getResourceReaders()) : null)
-         .set("dcms:resourceWriters", (security != null) ? new ArrayList<String>(security.getResourceWriters()) : null)
-         .set("dcms:resourceOwners", (security != null) ? new ArrayList<String>(security.getResourceOwners()) : null);
+         .set("dcms:resourceCreators", (security != null) ? toList(security.getResourceCreators()) : null)
+         .set("dcms:resourceCreationOwners", (security != null) ? toList(security.getResourceCreationOwners()) : null)
+         .set("dcms:resourceReaders", (security != null) ? toList(security.getResourceReaders()) : null)
+         .set("dcms:resourceWriters", (security != null) ? toList(security.getResourceWriters()) : null)
+         .set("dcms:resourceOwners", (security != null) ? toList(security.getResourceOwners()) : null);
+   }
+   private List<String> toList(Set<String> resourceCreators) {
+      return resourceCreators == null ? null : new ArrayList<String>(resourceCreators);
    }
    private Object securityToResource(DCSecurity securityConstraints, String uri, String subId) {
       try {
