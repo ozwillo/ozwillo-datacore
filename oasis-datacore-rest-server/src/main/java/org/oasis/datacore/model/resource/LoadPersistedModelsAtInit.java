@@ -153,7 +153,8 @@ public class LoadPersistedModelsAtInit extends InitableBase {
       
       if (!modelsInError.isEmpty()) {
          List<String> errMsgs = modelsInError.entrySet().stream()
-               .map(entry -> entry.getKey() + '=' + entry.getValue().getCause())
+               .map(entry -> entry.getKey() + '=' + (entry.getValue().getCause() == null ?
+                     entry.getValue() : entry.getValue().getCause()))
                .collect(Collectors.toList());
          logger.error("Unable to reload from persistence models with absolute names : " + errMsgs);
       }
