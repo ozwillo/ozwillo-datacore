@@ -58,6 +58,7 @@ public class PlaygroundConfigurationResource extends PlaygroundResourceBase {
       confMap.put("containerUrl", containerUrl);
       confMap.put("apiDocsUrl", apiDocsUrl);
       confMap.put("kernelBaseUrl", kernelBaseUrl);
+      confMap.put("accountsBaseUrl", accountsBaseUrl);
       confMap.put("playgroundUiUrl", playgroundUiUrl);
       confMap.put("knownDatacoreContainerUrls", knownDatacoreContainerUrls);
       confMap.put("queryMaxScan", queryMaxScan);

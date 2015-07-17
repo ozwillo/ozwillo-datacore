@@ -31,6 +31,8 @@ public abstract class PlaygroundResourceBase {
    protected String apiDocsUrl;
    @Value("${kernel.baseUrl}")
    protected String kernelBaseUrl;
+   @Value("${accounts.baseUrl}")
+   protected String accountsBaseUrl;
    
    ////////////////////////////////////////////////
    // NOT REQUIRED BY OAUTH :

@@ -68,7 +68,7 @@ function initUserInfoUi() {
       var id_client = userinfo['id_token'];
       deleteCookie('authorization');
       deleteCookie('userinfo');
-      window.location.assign('https://accounts.ozwillo-dev.eu/a/logout?id_token_hint='+id_client+'&post_logout_redirect_uri='+document.URL);
+      window.location.assign(dcConf.accountsBaseUrl + '/a/logout?id_token_hint='+id_client+'&post_logout_redirect_uri='+document.URL);
       return ;//if no return don't work window.location.assign
    });
 
