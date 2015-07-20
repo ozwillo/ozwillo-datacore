@@ -28,6 +28,7 @@ import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
 import org.oasis.datacore.rest.server.resource.ResourceEntityMapperService;
 import org.oasis.datacore.rest.server.resource.ResourceException;
+import org.oasis.datacore.rest.server.resource.ResourceTypeNotFoundException;
 import org.oasis.datacore.rest.server.resource.ValueParsingService;
 import org.oasis.datacore.sample.ResourceModelIniter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -557,7 +558,7 @@ public class ModelResourceMappingService {
          throw new ResourceException("Error while loading DCModel from Resource",
                rpex, r, project);
          // happens when not yet loaded or obsolete (i.e. invalid though persisted not as such)
-      }
+      } // else if ResourceTypeNotFoundException because mixin not found all info is already provided
       
       return modelOrMixin;
    }
@@ -651,7 +652,8 @@ public class ModelResourceMappingService {
     * @param r
     * @throws ResourceParsingException
     */
-   public void resourceToFieldsAndMixins(DCModelBase modelOrMixin, DCResource r) throws ResourceParsingException {
+   public void resourceToFieldsAndMixins(DCModelBase modelOrMixin, DCResource r)
+         throws ResourceTypeNotFoundException, ResourceParsingException {
       DCProject project = dataModelService.getProject(modelOrMixin.getProjectName());
       // TODO (computed) security (version)
       @SuppressWarnings("unchecked")
@@ -686,10 +688,10 @@ public class ModelResourceMappingService {
             mixin = project.getModel(mixinName);
          }
          if (mixin == null) {
-            throw new ResourceParsingException("Can't find mixin "
-                  + mixinName + " when updating DCModelBase from resource " + r.getUri()
+            throw new ResourceTypeNotFoundException(mixinName, "Can't find mixin "
+                  + "when updating DCModelBase from resource " + r.getUri()
                   + " (currently known : " + dataModelService.getModels().stream()
-                  .map(m -> m.getName()).collect(Collectors.toList()) + ")"); // getAbsoluteName()
+                  .map(m -> m.getName()).collect(Collectors.toList()) + ")", null, r, project); // getAbsoluteName()
             // happens when not yet loaded or obsolete (i.e. invalid though persisted not as such)
             // ex. Can't find mixin geo:District_0 when updating DCModelBase from resource {"@id":"http://data.ozwillo.com/dc/type/dcmo:model_0/geo:%C4%B0l%C3%A7e_0","o:version":12,"@type":["dcmo:model_0","dcmi:mixin_0","o:Displayable_0","dcmoid:Identification","dcmls:CountryLanguageSpecific"],"dc:created":"2015-01-07T17:26:29.998+01:00","dc:modified":"2015-01-15T10:27:39.611+01:00","dc:creator":"admin","dc:contributor":"admin","dcmo:mixins":["geo:District_0"],"dcmo:isHistorizable":false,"dcmo:storageModel":"geo:Area_0","dcmo:name":"geo:İlçe_0","dcmo:fields":[{"dcmf:type":"i18n","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"geo_district:name","dcmf:required":false,"o:version":0,"dcmf:defaultLanguage":"tr","dcmf:documentation":"TR.  ~= City. Parent : TRProvince. NB. Zipcode is only SubDistrict","@id":"http://data.ozwillo.com/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:name","dcmf:listElementField":{"dcmf:type":"map","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"i18nMap","dcmf:required":false,"o:version":0,"@id":"http://data.ozwillo.com/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:name/i18nMap","dcmf:mapFields":[{"dcmf:type":"string","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"v","dcmf:required":true,"o:version":0,"@id":"http://data.ozwillo.com/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:name/i18nMap/v"},{"dcmf:type":"string","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"l","dcmf:required":false,"o:version":0,"@id":"http://data.ozwillo.com/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:name/i18nMap/l"}]},"dcmfid:indexInId":1},{"dcmf:type":"resource","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"geo_district:country","dcmf:required":false,"o:version":0,"@id":"http://data.ozwillo.com/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:country","dcmf:resourceType":"geo:Country_0"},{"dcmf:type":"resource","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"geo_district:nuts3","dcmf:required":false,"o:version":0,"dcmf:documentation":"Ref to its parent NUTS3. NO internal field name but subresource linking","@id":"http://data.ozwillo.com/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:nuts3","dcmfid:indexInId":0,"dcmf:resourceType":"geo:Nuts3_0"}],"dcmo:majorVersion":0,"dcmo:isDefinition":true,"dcmoid:useIdForParent":true,"dcmoid:idFieldNames":["geo_district:nuts3","geo_district:name"],"dcmoid:parentFieldNames":["geo_district:nuts3"],"dcmo:globalMixins":["geo:District_0","geo:Area_0","o:Displayable_0","o:Ancestor_0"],"dcmo:isInstanciable":true,"dcmo:importDefaultOnly":false,"dcmo:maxScan":0,"dcmo:definitionModel":"geo:İlçe_0","dcmo:globalFields":[{"dcmf:type":"i18n","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"odisp:name","dcmf:required":false,"o:version":0,"@id":"http://data.ozwillo.com/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/odisp:name","dcmf:listElementField":{"dcmf:type":"map","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"i18nMap","dcmf:required":false,"o:version":0,"@id":"http://data.ozwillo.com/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/odisp:name/i18nMap","dcmf:mapFields":[{"dcmf:type":"string","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"v","dcmf:required":true,"o:version":0,"@id":"http://data.ozwillo.com/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/odisp:name/i18nMap/v"},{"dcmf:type":"string","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"l","dcmf:required":false,"o:version":0,"@id":"http://data.ozwillo.com/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/odisp:name/i18nMap/l"}]}},{"dcmf:type":"list","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"o:ancestors","dcmf:required":false,"o:version":0,"@id":"http://data.ozwillo.com/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/o:ancestors","dcmf:listElementField":{"dcmf:type":"resource","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"o:ancestors","dcmf:required":false,"o:version":0,"@id":"http://data.ozwillo.com/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/o:ancestors/o:ancestors","dcmf:resourceType":"o:Ancestor_0"}},{"dcmf:type":"string","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"geo_area:idIso","dcmf:required":false,"o:version":0,"@id":"http://data.ozwillo.com/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_area:idIso"},{"dcmf:type":"resource","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"geo_area:country","dcmf:required":false,"o:version":0,"@id":"http://data.ozwillo.com/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_area:country","dcmf:resourceType":"geo:Country_0"},{"dcmf:type":"i18n","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"geo_district:name","dcmf:required":false,"o:version":0,"dcmf:defaultLanguage":"tr","@id":"http://data.ozwillo.com/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:name","dcmf:listElementField":{"dcmf:type":"map","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"i18nMap","dcmf:required":false,"o:version":0,"@id":"http://data.ozwillo.com/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:name/i18nMap","dcmf:mapFields":[{"dcmf:type":"string","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"v","dcmf:required":true,"o:version":0,"@id":"http://data.ozwillo.com/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:name/i18nMap/v"},{"dcmf:type":"string","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"l","dcmf:required":false,"o:version":0,"@id":"http://data.ozwillo.com/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:name/i18nMap/l"}]}},{"dcmf:type":"resource","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"geo_district:country","dcmf:required":false,"o:version":0,"@id":"http://data.ozwillo.com/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:country","dcmf:resourceType":"geo:Country_0"},{"dcmf:type":"resource","dcmf:queryLimit":0,"@type":["dcmf:field_0"],"dcmf:name":"geo_district:nuts3","dcmf:required":false,"o:version":0,"@id":"http://data.ozwillo.com/dc/type/dcmf:field_0/dcmo:model_0/geo:%C4%B0l%C3%A7e_0/geo_district:nuts3","dcmf:resourceType":"geo:Nuts3_0"}],"dcmo:isContributable":false,"dcmo:importAutolinkedOnly":false,"dcmls:code":"TR","dcmo:isStorage":false,"dcmo:pointOfViewAbsoluteName":"oasis.main","dcmo:fieldAndMixins":["geo:District_0","geo_district:name","geo_district:country","geo_district:nuts3"]}
          }
@@ -746,10 +748,10 @@ public class ModelResourceMappingService {
          }
          DCModelBase mixin = mixinMap.get(mixinName); // does also model
          if (mixin == null) {
-            throw new ResourceParsingException("Can't find mixin "
-                  + mixinName + " when updating DCModelBase from resource " + r.getUri()
+            throw new ResourceTypeNotFoundException(mixinName, "Can't find mixin "
+                  + " when updating DCModelBase from resource " + r.getUri()
                   + " (currently known : " + dataModelService.getModels().stream()
-                  .map(m -> m.getName()).collect(Collectors.toList()) + ")"); // getAbsoluteName()
+                  .map(m -> m.getName()).collect(Collectors.toList()) + ")", null, r, project); // getAbsoluteName()
          }
          modelOrMixin.addMixin(mixin);
       }

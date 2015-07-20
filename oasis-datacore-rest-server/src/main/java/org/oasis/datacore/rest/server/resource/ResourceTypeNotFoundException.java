@@ -11,6 +11,7 @@ public class ResourceTypeNotFoundException extends ResourceException {
    
    public ResourceTypeNotFoundException(String modelType, String ownMessage, Throwable cause, DCResource resource, DCProject project) {
       super(buildMessage(modelType, ownMessage, project), cause, resource, project);
+      this.modelType = modelType;
       this.ownMessage = ownMessage;
    }
    public ResourceTypeNotFoundException(DCResource resource, DCProject project) {

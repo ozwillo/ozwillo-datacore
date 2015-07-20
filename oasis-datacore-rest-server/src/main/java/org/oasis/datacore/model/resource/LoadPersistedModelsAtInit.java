@@ -3,8 +3,10 @@ package org.oasis.datacore.model.resource;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.oasis.datacore.common.context.DCRequestContextProvider;
@@ -22,6 +24,7 @@ import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.server.event.EventService;
 import org.oasis.datacore.rest.server.resource.ResourceEntityMapperService;
 import org.oasis.datacore.rest.server.resource.ResourceException;
+import org.oasis.datacore.rest.server.resource.ResourceTypeNotFoundException;
 import org.oasis.datacore.sample.ResourceModelIniter;
 import org.oasis.datacore.sample.meta.ProjectInitService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -152,11 +155,34 @@ public class LoadPersistedModelsAtInit extends InitableBase {
       logger.info("   loaded models details : " + loadedModelAbsoluteNames); // .debug(
       
       if (!modelsInError.isEmpty()) {
+         logger.error("Unable to reload from persistence models with absolute names :");
+         
+         LinkedHashSet<String> rootMixinsNotFound = new LinkedHashSet<String>();
+         for (Entry<String, ResourceException> entry : modelsInError.entrySet()) {
+            if (entry.getValue() instanceof ResourceTypeNotFoundException) {
+               ResourceTypeNotFoundException rtnfex = (ResourceTypeNotFoundException) entry.getValue();
+               String causeNotFoundMixinAbsoluteName = rtnfex.getModelType();
+               String notFoundInProjectName = rtnfex.getProject().getName();
+               boolean foundCause = false;
+               for (String visibleProjectName : dataModelService.getVisibleProjectNames(notFoundInProjectName)) {
+                  String causeNotFoundMixinPossibleAbsoluteName = visibleProjectName + '.' + causeNotFoundMixinAbsoluteName;
+                  if (modelsInError.containsKey(causeNotFoundMixinPossibleAbsoluteName)) {
+                     foundCause = true;
+                     break; // found one !
+                  }
+               }
+               if (!foundCause) {
+                  rootMixinsNotFound.add(causeNotFoundMixinAbsoluteName);
+               }
+            }
+         }
+         logger.error("   Root mixins not found (" + rootMixinsNotFound.size() + ") : " + rootMixinsNotFound);
+
          List<String> errMsgs = modelsInError.entrySet().stream()
                .map(entry -> entry.getKey() + '=' + (entry.getValue().getCause() == null ?
                      entry.getValue() : entry.getValue().getCause()))
                .collect(Collectors.toList());
-         logger.error("Unable to reload from persistence models with absolute names : " + errMsgs);
+         logger.error("   All models in error (" + errMsgs.size() + ") : " + errMsgs + "\n");
       }
    }
 
