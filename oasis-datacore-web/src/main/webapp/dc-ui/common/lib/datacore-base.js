@@ -220,8 +220,11 @@ function initDcConf(success) {
    $.ajax({
       url:"/dc/playground/configuration",
       headers: { Authorization:getAuthHeader() },
-      success: success
-         });
+      success: success,
+      error: function(jqXHR, textStatus, errorThrown) { // such as when 401 Not Authorized
+          window.location.assign('/'); // which will require auth and redirect to login page
+      }
+   });
 }
 function initDcConfReplacements() {
    for (var key in dcConf) {
