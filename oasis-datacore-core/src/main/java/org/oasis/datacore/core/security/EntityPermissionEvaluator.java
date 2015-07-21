@@ -133,12 +133,12 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
          // to allow efficient query filtering by rights criteria
          // => TODO that in PermissionAdminApi/Service
          return user.isAdmin()
-               || model.getSecurity().isResourceOwner(user) // TODO or inherited
+               || getSecurity(model).isResourceOwner(user) // TODO or inherited
                || hasAnyEntityAclGroup(user, dataEntity.getOwners()); // NB. no public owners !!
       
       case GET_RIGHTS :
          return user.isAdmin()
-               || model.getSecurity().isResourceOwner(user) // TODO or inherited
+               || getSecurity(model).isResourceOwner(user) // TODO or inherited
                || hasAnyEntityAclGroup(user, dataEntity.getOwners());
          
       case WRITE :
@@ -169,6 +169,15 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       default :
          throw new RuntimeException("Unknown permission " + permissionName); //TODO better
       }
+   }
+
+   private DCSecurity getSecurity(DCModelBase model) {
+      DCSecurity security = model.getSecurity();
+      if (security == null) {
+         DCProject project = modelService.getProject(model.getProjectName()); // model project
+         security = project.getSecurityDefaults();
+      }
+      return security;
    }
 
    /**
