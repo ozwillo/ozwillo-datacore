@@ -45,13 +45,14 @@ but also drafted and published (<b>upcoming</b>).
 examples, FAQ, how to & common use cases, cookbook (writing clients...) and full documentation.
 <p>
 <div class="dc-import-subtitle">Datacore (<span class="dcConf_baseUrl json dcjsonline">NOT INITED</span>) :</div>
-<span class="json dcjsonline"><input type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 620px" value="/dc/type/dcmo:model_0"></span>
+<span class="json dcjsonline"><input type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 583px" value="/dc/type/dcmo:model_0"></span>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()));">GET</button>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, 50, {'X-Datacore-View':' '});" title="List view (view : empty i.e. minimal : @id, o:version)">l</button>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, 25, {'X-Datacore-View':'dc:DubclinCore_0'});" title="List view (view : dc:DubclinCore_0)">dc</button>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, null, {'X-Datacore-Debug':'true'});" title="Debug / explain query">?</button>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, null, {'Accept':'text/x-nquads'});" title="RDF N-Quads output">RDF</button>
 <button onclick="javascript:return editOrPostData(encodeUri($('.myurl').val()));" id="editOrPost" title="edit data, then post changes">edit</button>
+<button onclick="javascript:return deleteResources(encodeUri($('.myurl').val()));">X</button>
 <button onclick="javascript:return getPreviousData(encodeUri($('.myurl').val()));">H</button>
 <!-- button onclick="javascript:return setUrl('');" title="Reset URL">X</button><br/ -->
 <div class="block response_body">
@@ -256,6 +257,37 @@ makes its current stable version visible whatever its number,
 &nbsp;&nbsp;- <span class="dcjsonline">org_1</span> (major version 1)
 contains all public and private organizations as well as persons and also sees <span class="dcjsonline">geo_1</span>,
 while <span class="dcjsonline">org</span> makes its current stable version visible whatever its number.
+<br/><br/>
+<b>Here are more project-level features :</b>
+<br/>
+&nbsp;&nbsp;- <span class="dcjsonline">dcmp:securityConstraints</span> :
+if any, checked firsthand whatever the resource.   
+<br/>
+&nbsp;&nbsp;- <span class="dcjsonline">dcmp:securityDefaults</span> :
+used when !modelLevelSecurityEnabled or no security found in model hierarchy ; null means global
+defaults (depends on devmode)
+<br/>
+&nbsp;&nbsp;- <span class="dcjsonline">dcmp:modelLevelSecurityEnabled</span> : allows different
+security levels in models (even in same resource) ; if disabled, model security has not to be defined
+and is replaced by securityDefaults, and is the same across all models of this project. Defaults to false.
+<br/>
+&nbsp;&nbsp;- <span class="dcjsonline">dcmp:visibleSecurityConstraints</span> : allows generic conf
+&amp; constraints on the project to visible project relation without having to manage &amp; store a
+visibleProjectRelation object ; is checked firsthand if any WHATEVER THE RESOURCE (null dataEntity)
+when checking rights in a model from another current project. Typically used to prevent from writing
+from a project in one of its dependency project's models.
+<br/>
+&nbsp;&nbsp;- <span class="dcjsonline">dcmp:forkedUris</span> : add a model URI there to allow to
+fork it i.e. to import it in this project even if it is already in one of its visible projects.
+<br/>
+&nbsp;&nbsp;- <span class="dcjsonline">dcmp:frozenModelNames</span> : allows to freeze (forbid change on)
+some of this project's models or all of them using the '*' wildcard, once they are stable and in order
+to be able to use them (create resources in them) without risking these becoming obsolete at some point.
+<br/>
+&nbsp;&nbsp;- <span class="dcjsonline">dcmp:allowedModelPrefixes</span> : if any, only models whose
+name starts by any one of those prefixes ('*' wildcard also allowed, to ease switching it on and off)
+can be changed in this project, in order to avoid to add models that belong to another project by
+mistake, such as POSTing an org model while importing geo elements using the master model file.
 <br/><br/>
 
 <a id="playgroundUserManual"></a>

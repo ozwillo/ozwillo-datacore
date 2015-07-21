@@ -949,6 +949,76 @@ function editOrPostData(relativeUrl) {
    }
 }
 
+function deleteResources(relativeUrl) {
+   findData(relativeUrl, deleteResourcesCallback);
+}
+function deleteResourcesCallback(resources, relativeUrl) {
+   if (!resources) {
+      return;
+   }
+   var resources = resources instanceof Array ? resources : [ resources ];
+   if (resources.length == 0) {
+      return;
+   }
+   if (!window.confirm('You\'re about to delete ' + resources.length
+            + ' resources coming from query ' + relativeUrl.uri + ' ! are you sure ?')) {
+      return;
+   }
+   deleteNextResourcesCallback(null, null, null,
+         { resources : resources, i : 0, finalCallback : displayDeletedResources,
+         optionalHeaders : null, uriToSuccessStatus : {}, uriToErrorInfo : {} });
+}
+// deleteState = { resources : resources, i : -1 }
+function deleteNextResourcesCallback(resResource, resource, data, deleteState) {
+   if (!deleteState) { // error case
+      deleteState = data;
+      data = resResource;
+   }
+   if (data && data._raw) {
+      if (~~(data._raw.statusCode / 100) !== 2) {
+         var errInfo = { statusCode : data._raw.statusCode };
+         var resBody = data._raw.xhr.response;
+         if (resBody && resBody.length !== 0) {
+            errInfo['body'] = data._raw.xhr.response;
+         }
+         deleteState.uriToErrorInfo[resource['@id']] = errInfo;
+      } else {
+         deleteState.uriToSuccessStatus[resource['@id']] = data._raw.statusCode;
+      }
+   } // else first time
+   if (deleteState.resources.length === deleteState.i) {
+      displayDeletedResources(deleteState);
+      return;
+   }
+   var i = deleteState.i++;
+   deleteDataInType(deleteState.resources[i],
+         deleteNextResourcesCallback, deleteNextResourcesCallback,
+         deleteState.optionalHeaders, deleteState);
+}
+function displayDeletedResources(deleteState) {
+   var html;
+   if (deleteState.uriToErrorInfo.length === 0) {
+      html = 'Deleted all ' + Object.keys(deleteState.uriToSuccessStatus).length + ' resources.';
+   } else {
+      html = 'Deleted ' + Object.keys(deleteState.uriToSuccessStatus).length + ' resources over '
+            + deleteState.resources.length + ', detailed errors :';
+      html += '<br/>';
+      for (var uri in deleteState.uriToErrorInfo) {
+         html += toolifyDcResourceUri(uri) + ' : ' + JSON.stringify(
+               deleteState.uriToErrorInfo[uri], null, '\t').replace(/\n/g, '<br/>');
+         html += '<br/>';
+      }
+   }
+   $('.mydata').html(html);
+}
+// still TODO :
+function deleteResourcesOrModel(resource, success, error, optionalHeaders, handlerOptions) {
+   var isModel = resources[0]['dcmo:name'] ? true : false;  
+}
+function deleteModelAndItsResources(resource, success, error, optionalHeaders, handlerOptions) {
+    
+}
+
 
 ///////////////////////////////////////////////////
 // DISPLAY CALLBACKS
