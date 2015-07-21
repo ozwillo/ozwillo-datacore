@@ -2,7 +2,7 @@ package org.oasis.datacore.rest.server;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -587,7 +587,7 @@ public class ResourceModelTest {
       // put in initial state in case test was aborted AND check that model can then be changed :
       DCResource pr = datacoreApiClient.getData(ResourceModelIniter.MODEL_PROJECT_NAME, DCProject.OASIS_SAMPLE);
       DCProject p = mrMappingService.toProject(pr);
-      p.setFrozenModelNames(new HashSet<String>());
+      p.setFrozenModelNames(new LinkedHashSet<String>());
       pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
             DCProject.OASIS_META); // can't write outside project
       DCResource mr = datacoreApiClient.getData(ResourceModelIniter.MODEL_MODEL_NAME, CityCountrySample.CITY_MODEL_NAME);
@@ -623,6 +623,30 @@ public class ResourceModelTest {
          Assert.assertEquals("The frozen model shouldn't have been persisted", mr.getVersion(), datacoreApiClient
                .getData(ResourceModelIniter.MODEL_MODEL_NAME, CityCountrySample.CITY_MODEL_NAME).getVersion());
       }
+      
+      // rather use wildcard
+      //pr.set("dcmp:frozenModelNames", DCResource.listBuilder().add(DCProject.MODEL_NAMES_WILDCARD).build());
+      p.getFrozenModelNames().clear();
+      p.getFrozenModelNames().add(DCProject.MODEL_NAMES_WILDCARD);
+      p.getFrozenModelNames().add("anyother:Modelname");
+      pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
+            DCProject.OASIS_META); // can't write outside project
+      p = mrMappingService.toProject(pr);
+      Assert.assertEquals("frozen models should have been added",
+            2, modelAdminService.getProject(DCProject.OASIS_SAMPLE).getFrozenModelNames().size());
+      Assert.assertEquals(modelAdminService.getProject(DCProject.OASIS_SAMPLE).getFrozenModelNames()
+            .iterator().next(), DCProject.MODEL_NAMES_WILDCARD); // (order is preserved)
+      // try to change frozen model :
+      m.getField("city:founded").setRequired(true);
+      try {
+         mr = datacoreApiClient.postDataInType(mrMappingService.modelToResource(m, mr));
+         m = mrMappingService.toModelOrMixin(mr); // to update version in case fails
+         Assert.fail("Should not be able to change a frozen model");
+      } catch (ForbiddenException fex) {
+         Assert.assertTrue(UnitTestHelper.readBodyAsString(fex).contains("Access denied error while converting")); // "Can't update frozen model"
+         Assert.assertEquals("The frozen model shouldn't have been persisted", mr.getVersion(), datacoreApiClient
+               .getData(ResourceModelIniter.MODEL_MODEL_NAME, CityCountrySample.CITY_MODEL_NAME).getVersion());
+      }
 
       // clearing and reloading :
       modelAdminService.getProject(p.getName()).getFrozenModelNames().clear();
@@ -633,10 +657,10 @@ public class ResourceModelTest {
       } finally {
          authenticationService.logout();
       }
-      Assert.assertEquals("frozen model should have been loaded from persistence",
-            1, modelAdminService.getProject(p.getName()).getFrozenModelNames().size());
+      Assert.assertEquals("frozen model names should have been loaded from persistence",
+            2, modelAdminService.getProject(p.getName()).getFrozenModelNames().size());
       Assert.assertEquals(modelAdminService.getProject(p.getName()).getFrozenModelNames()
-            .iterator().next(), CityCountrySample.CITY_MODEL_NAME);
+            .iterator().next(), DCProject.MODEL_NAMES_WILDCARD);
       
       // restore initial state :
       } finally {
@@ -646,6 +670,109 @@ public class ResourceModelTest {
          p = mrMappingService.toProject(pr);
          Assert.assertTrue(modelAdminService.getProject(
                DCProject.OASIS_SAMPLE).getFrozenModelNames().isEmpty());
+         m.getField("city:founded").setRequired(false);
+         mr = datacoreApiClient.postDataInType(mrMappingService.modelToResource(m, mr));
+      }
+   }
+
+   
+   @Test
+   public void testAllowedModelPrefixes() throws Exception {
+      // put in initial state in case test was aborted AND check that model can then be changed :
+      DCResource pr = datacoreApiClient.getData(ResourceModelIniter.MODEL_PROJECT_NAME, DCProject.OASIS_SAMPLE);
+      DCProject p = mrMappingService.toProject(pr);
+      p.setAllowedModelPrefixes(new LinkedHashSet<String>());
+      pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
+            DCProject.OASIS_META); // can't write outside project
+      DCResource mr = datacoreApiClient.getData(ResourceModelIniter.MODEL_MODEL_NAME, CityCountrySample.CITY_MODEL_NAME);
+      DCModelBase m = mrMappingService.toModelOrMixin(mr);
+      m.getField("city:founded").setRequired(false);
+      mr = datacoreApiClient.postDataInType(mrMappingService.modelToResource(m, mr));
+      m = mrMappingService.toModelOrMixin(mr); // to update version
+      // checking initial state :
+      Assert.assertTrue(modelAdminService.getProject(
+            DCProject.OASIS_SAMPLE).getAllowedModelPrefixes().isEmpty());
+      Assert.assertFalse(modelAdminService.getModelBase(
+            CityCountrySample.CITY_MODEL_NAME).getField("city:founded").isRequired());
+      
+      // add another allowed prefix :
+      //pr.set("dcmp:allowedModelPrefixes", DCResource.listBuilder().add("anyotherprefix").build());
+      p.getAllowedModelPrefixes().add("anyotherprefix");
+      try {
+      pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
+            DCProject.OASIS_META); // can't write outside project
+      p = mrMappingService.toProject(pr);
+      Assert.assertEquals("allowed prefix should have been added",
+            1, modelAdminService.getProject(DCProject.OASIS_SAMPLE).getAllowedModelPrefixes().size());
+      Assert.assertEquals(modelAdminService.getProject(DCProject.OASIS_SAMPLE).getAllowedModelPrefixes()
+            .iterator().next(), "anyotherprefix");
+      // try to change model without any allowed prefix :
+      m.getField("city:founded").setRequired(true);
+      try {
+         mr = datacoreApiClient.postDataInType(mrMappingService.modelToResource(m, mr));
+         m = mrMappingService.toModelOrMixin(mr); // to update version in case fails
+         Assert.fail("Should not be able to change a model without any allowed prefix");
+      } catch (ForbiddenException fex) {
+         Assert.assertTrue(UnitTestHelper.readBodyAsString(fex).contains("Access denied error while converting")); // "Can't update model without any allowed model prefix"
+         Assert.assertEquals("The model without any allowed prefix shouldn't have been persisted",
+               mr.getVersion(), datacoreApiClient.getData(ResourceModelIniter.MODEL_MODEL_NAME,
+                     CityCountrySample.CITY_MODEL_NAME).getVersion());
+      }
+      
+      // add the right allowed prefix :
+      //pr.set("dcmp:allowedModelPrefixes", DCResource.listBuilder().add("sample.city.").build());
+      p.getAllowedModelPrefixes().add("sample.city.");
+      pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
+            DCProject.OASIS_META); // can't write outside project
+      p = mrMappingService.toProject(pr);
+      Assert.assertEquals("allowed prefix should have been added",
+            2, modelAdminService.getProject(DCProject.OASIS_SAMPLE).getAllowedModelPrefixes().size());
+      // try to change model with allowed prefix :
+      m.getField("city:founded").setRequired(true);
+      mr = datacoreApiClient.postDataInType(mrMappingService.modelToResource(m, mr));
+      Assert.assertNotEquals("Model with allowed prefix should have been updated",
+            (long) m.getVersion(), (long) mr.getVersion());
+      m = mrMappingService.toModelOrMixin(mr); // to update version
+      
+      // rather use wildcard
+      //pr.set("dcmp:allowedModelPrefixes", DCResource.listBuilder().add(DCProject.MODEL_NAMES_WILDCARD).build());
+      p.getAllowedModelPrefixes().clear();
+      p.getAllowedModelPrefixes().add("anyotherprefix");
+      p.getAllowedModelPrefixes().add(DCProject.MODEL_NAMES_WILDCARD);
+      pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
+            DCProject.OASIS_META); // can't write outside project
+      p = mrMappingService.toProject(pr);
+      Assert.assertEquals("allowed prefixes should have been added",
+            2, modelAdminService.getProject(DCProject.OASIS_SAMPLE).getAllowedModelPrefixes().size());
+      // try to change model with allowed prefix :
+      m.getField("city:founded").setRequired(true);
+      mr = datacoreApiClient.postDataInType(mrMappingService.modelToResource(m, mr));
+      Assert.assertNotEquals("Model should have been updated because of allowed prefix wildcard",
+            (long) m.getVersion(), (long) mr.getVersion());
+      m = mrMappingService.toModelOrMixin(mr); // to update version
+
+      // clearing and reloading :
+      modelAdminService.getProject(p.getName()).getAllowedModelPrefixes().clear();
+      try {
+         authenticationService.loginAs("admin"); // else AuthenticationCredentialsNotFoundException in calling entityService
+         loadPersistedModelsAtInitService.loadProject(datacoreApiClient.getData(ResourceModelIniter
+               .MODEL_PROJECT_NAME, DCProject.OASIS_SAMPLE), DCProject.OASIS_SAMPLE);
+      } finally {
+         authenticationService.logout();
+      }
+      Assert.assertEquals("allowed prefixes should have been loaded from persistence",
+            2, modelAdminService.getProject(p.getName()).getAllowedModelPrefixes().size());
+      Assert.assertEquals(modelAdminService.getProject(p.getName()).getAllowedModelPrefixes()
+            .iterator().next(), "anyotherprefix");
+      
+      // restore initial state :
+      } finally {
+         p.getAllowedModelPrefixes().clear();
+         pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
+               DCProject.OASIS_META); // can't write outside project
+         p = mrMappingService.toProject(pr);
+         Assert.assertTrue(modelAdminService.getProject(
+               DCProject.OASIS_SAMPLE).getAllowedModelPrefixes().isEmpty());
          m.getField("city:founded").setRequired(false);
          mr = datacoreApiClient.postDataInType(mrMappingService.modelToResource(m, mr));
       }

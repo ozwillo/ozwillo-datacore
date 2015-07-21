@@ -3,7 +3,6 @@ package org.oasis.datacore.model.resource;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -132,6 +131,8 @@ public class ModelResourceMappingService {
             project.getForkedUris())); // only to display for now
       projectResource.set("dcmp:frozenModelNames", new ArrayList<String>(
             project.getFrozenModelNames()));
+      projectResource.set("dcmp:allowedModelPrefixes", new ArrayList<String>(
+            project.getAllowedModelPrefixes()));
       projectResource.set("dcmp:useCasePointOfViews", project.getUseCasePointOfViews().stream()
             .map(ucpov -> {
                //useCasePointOfViewToResource(ucpov); // TODO TODO & useCasePointOfViewElementToResource(ucpovelt)
@@ -450,12 +451,16 @@ public class ModelResourceMappingService {
 
       @SuppressWarnings("unchecked")
       List<String> forkedUris = (List<String>) r.get("dcmp:forkedUris");
-      project.setForkedUris((forkedUris == null ? new HashSet<String>() // in case of old project without it
-            : new HashSet<String>(forkedUris)));
+      project.setForkedUris((forkedUris == null ? new LinkedHashSet<String>() // in case of old project without it
+            : new LinkedHashSet<String>(forkedUris)));
       @SuppressWarnings("unchecked")
       List<String> frozenModelNames = (List<String>) r.get("dcmp:frozenModelNames");
-      project.setFrozenModelNames((frozenModelNames == null ? new HashSet<String>() // in case of old project without it
-            : new HashSet<String>(frozenModelNames)));
+      project.setFrozenModelNames((frozenModelNames == null ? new LinkedHashSet<String>() // in case of old project without it
+            : new LinkedHashSet<String>(frozenModelNames)));
+      @SuppressWarnings("unchecked")
+      List<String> allowedModelPrefixes = (List<String>) r.get("dcmp:allowedModelPrefixes");
+      project.setAllowedModelPrefixes((allowedModelPrefixes == null ? new LinkedHashSet<String>() // in case of old project without it
+            : new LinkedHashSet<String>(allowedModelPrefixes)));
       Object isModelLevelSecurityEnabledFound = r.get("dcmp:modelLevelSecurityEnabled");
       if (isModelLevelSecurityEnabledFound != null) {
          project.setModelLevelSecurityEnabled((boolean) isModelLevelSecurityEnabledFound);
@@ -597,10 +602,8 @@ public class ModelResourceMappingService {
    public void checkModelOrMixin(DCModelBase modelOrMixin, DCResource r) throws ResourceException {
       DCProject project = dataModelService.getProject(modelOrMixin.getProjectName());
       
-      if (project.getFrozenModelNames().contains(modelOrMixin.getName())) {
-         throw new AccessDeniedException("Can't update frozen model "
-               + modelOrMixin.getName() + " in project " + project.getName());
-      }
+      checkFrozenModelName(modelOrMixin, project);
+      checkAllowedModelPrefixes(modelOrMixin, project);
       
       if (modelOrMixin.getCountryLanguage() != null) {
       //if (r.get("dcmls:code") != null) {
@@ -645,7 +648,32 @@ public class ModelResourceMappingService {
          }
       }
    }
-
+   private void checkFrozenModelName(DCModelBase modelOrMixin, DCProject project) throws AccessDeniedException {
+      LinkedHashSet<String> frozenModelNames = project.getFrozenModelNames();
+      if (frozenModelNames.contains(DCProject.MODEL_NAMES_WILDCARD)
+            || frozenModelNames.contains(modelOrMixin.getName())) {
+         throw new AccessDeniedException("Can't update frozen model "
+               + modelOrMixin.getName() + " in project " + project.getName());
+      }
+   }
+   private void checkAllowedModelPrefixes(DCModelBase modelOrMixin, DCProject project) {
+      LinkedHashSet<String> allowedModelPrefixes = project.getAllowedModelPrefixes();
+      if (allowedModelPrefixes != null && !allowedModelPrefixes.isEmpty()) {
+         if (allowedModelPrefixes.contains(DCProject.MODEL_NAMES_WILDCARD)) {
+            return; // found wildcard !
+         }
+         String modelName = modelOrMixin.getName();
+         for (String allowedModelPrefix : allowedModelPrefixes) {
+            if (modelName.startsWith(allowedModelPrefix)) {
+               return; // found one !
+            }
+         }
+         throw new AccessDeniedException("Can't update model without any allowed model prefix ("
+               + allowedModelPrefixes + ") " + modelOrMixin.getName() + " in project " + project.getName());
+      }
+   }
+   
+   
    /**
     * Uses modelOrMixin's project i.e. dcmo:pointOfViewAbsoluteName ; public only for tests.
     * @param modelOrMixin created by TODO

@@ -1,8 +1,8 @@
 package org.oasis.datacore.core.meta.pov;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -22,6 +22,9 @@ public class DCProject extends DCPointOfViewBase {
    public static final String OASIS_META = "oasis.meta"; // seen by every project in xxxxxxxxxxxxxxxxxxxxxxxxxx
    public static final String OASIS_SAMPLE = "oasis.sample"; // tech samples (also used in unit tests in datacore-test)
    public static final String OASIS_SANBOX = "oasis.sandbox"; // TODO sees (in readonly) meta, main, sample
+   
+   /** for frozen model names & allowed model prefixes */
+   public static final String MODEL_NAMES_WILDCARD = "*";
 
    /* TODO organization.project ex. oasis.main */
    /*
@@ -37,8 +40,10 @@ public class DCProject extends DCPointOfViewBase {
    
    /** LATER also reuse visible ones ? */
    private LinkedHashMap<String,DCProject> visibleProjectMap = new LinkedHashMap<String, DCProject>(); // TODO merge in visibleStorageProjectMap
-   private HashSet<String> forkedUris = new HashSet<String>();
-   private HashSet<String> frozenModelNames = new HashSet<String>();
+   private LinkedHashSet<String> forkedUris = new LinkedHashSet<String>();
+   private LinkedHashSet<String> frozenModelNames = new LinkedHashSet<String>();
+   private LinkedHashSet<String> allowedModelPrefixes = new LinkedHashSet<String>();
+   
    /** LATER can see outside model (unless alt model) but not data (by alt'ing model anonymously as not storage),
     * for this the local alt (storage) model must be created, optionally with some sample copied or rather imported data */
    private LinkedHashMap<String,DCProject> visibleDefProjectMap = new LinkedHashMap<String, DCProject>();
@@ -428,20 +433,28 @@ public class DCProject extends DCPointOfViewBase {
       modelMap.put(name, dcModel);
    }
 
-   public HashSet<String> getForkedUris() {
+   public LinkedHashSet<String> getForkedUris() {
       return forkedUris;
    }
 
-   public void setForkedUris(HashSet<String> forkedUris) {
+   public void setForkedUris(LinkedHashSet<String> forkedUris) {
       this.forkedUris = forkedUris;
    }
 
-   public HashSet<String> getFrozenModelNames() {
+   public LinkedHashSet<String> getFrozenModelNames() {
       return frozenModelNames;
    }
 
-   public void setFrozenModelNames(HashSet<String> frozenModelNames) {
+   public void setFrozenModelNames(LinkedHashSet<String> frozenModelNames) {
       this.frozenModelNames = frozenModelNames;
+   }
+
+   public LinkedHashSet<String> getAllowedModelPrefixes() {
+      return allowedModelPrefixes;
+   }
+
+   public void setAllowedModelPrefixes(LinkedHashSet<String> allowedModelPrefixes) {
+      this.allowedModelPrefixes = allowedModelPrefixes;
    }
 
    /*

@@ -280,6 +280,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addField(new DCListField("dcmp:visibleProjectNames", new DCField("useless", "string", false, 0))) // only to display for now
          .addField(new DCListField("dcmp:forkedUris", new DCField("useless", "string", false, 0))) // only to display for now
          .addField(new DCListField("dcmp:frozenModelNames", new DCField("useless", "string", false, 0)))
+         .addField(new DCListField("dcmp:allowedModelPrefixes", new DCField("useless", "string", false, 0)))
          .addField(new DCListField("dcmp:useCasePointOfViews", new DCResourceField("useless", MODEL_PROJECT_NAME)))
          ///.addField(new DCListField("dcmp:localModels", new DCResourceField("useless", MODEL_MODEL_NAME))) // TODO or rather only dcmo:projectAbsoluteName ?
          // security :
