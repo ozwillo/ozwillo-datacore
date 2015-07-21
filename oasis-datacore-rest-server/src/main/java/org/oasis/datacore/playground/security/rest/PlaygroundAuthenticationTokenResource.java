@@ -98,9 +98,17 @@ public class PlaygroundAuthenticationTokenResource extends PlaygroundAuthenticat
                .entity("Error calling Kernel to exchange token from code  : " + ex.getMessage())
                      .type(MediaType.TEXT_PLAIN).build());
       }
+      String tokenExchangeResBody = tokenExchangeRes.readEntity(String.class);
+      if (Status.Family.SUCCESSFUL != tokenExchangeRes.getStatusInfo().getFamily()) {
+         // ex. bad client_id/secret...
+         throw new WebApplicationException(Response.status(tokenExchangeRes.getStatus())
+               .entity(tokenExchangeRes.getStatus() + " kernel error exchanging code for access_token ("
+                     + tokenExchangeResBody + ")")
+                     .type(MediaType.TEXT_PLAIN).build());
+      }
+      
       // parsing response to get token :
       // NB. no need to go beyond explicit bare JSON parsing (MessageBodyProvider etc.)
-      String tokenExchangeResBody = tokenExchangeRes.readEntity(String.class);
       JsonNode tokenExchangeResJsonNode;
       try {
          tokenExchangeResJsonNode = jsonNodeMapper.readTree(tokenExchangeResBody);
@@ -163,9 +171,16 @@ public class PlaygroundAuthenticationTokenResource extends PlaygroundAuthenticat
                .entity("Error calling Kernel to get user info  : " + ex.getMessage())
                      .type(MediaType.TEXT_PLAIN).build());
       }
+      String userInfoResBody = userInfoRes.readEntity(String.class); // ex. {"email":"m.d@openwide.fr","email_verified":true,"locale":"und","name":"Marc Dutoo","nickname":"Marc Dutoo","sub":"9...c","updated_at":1426608912,"zoneinfo":"Europe/Paris"}
+      if (Status.Family.SUCCESSFUL != userInfoRes.getStatusInfo().getFamily()) {
+         throw new WebApplicationException(Response.status(userInfoRes.getStatus())
+               .entity(userInfoRes.getStatus() + " error calling Kernel to get user info ("
+                     + userInfoResBody + ")")
+                     .type(MediaType.TEXT_PLAIN).build());
+      }
+      
       // parsing response to get token :
       // NB. no need to go beyond explicit bare JSON parsing (MessageBodyProvider etc.)
-      String userInfoResBody = userInfoRes.readEntity(String.class); // ex. {"email":"m.d@openwide.fr","email_verified":true,"locale":"und","name":"Marc Dutoo","nickname":"Marc Dutoo","sub":"9...c","updated_at":1426608912,"zoneinfo":"Europe/Paris"}
       Map<String,Object> userInfo;
       try {
          @SuppressWarnings("unchecked")
@@ -209,9 +224,15 @@ public class PlaygroundAuthenticationTokenResource extends PlaygroundAuthenticat
                .entity("Error calling Kernel to get token info  : " + ex.getMessage())
                      .type(MediaType.TEXT_PLAIN).build());
       }
+      String tokenInfoResBody = tokenInfoRes.readEntity(String.class); // ex. {"active":true,"exp":1433778460,"iat":1433774860,"scope":"datacore","client_id":"dc","sub":"9cf96195-dab0-41f8-9300-08881da13abc","token_type":"Bearer","sub_groups":["0...e","c...7","5...e"]}
+      if (Status.Family.SUCCESSFUL != tokenInfoRes.getStatusInfo().getFamily()) {
+         throw new WebApplicationException(Response.status(tokenInfoRes.getStatus())
+               .entity(tokenInfoRes.getStatus() + " error calling Kernel to get token info ("
+                     + tokenInfoResBody + ")")
+                     .type(MediaType.TEXT_PLAIN).build());
+      }
       // parsing response to get token :
       // NB. no need to go beyond explicit bare JSON parsing (MessageBodyProvider etc.)
-      String tokenInfoResBody = tokenInfoRes.readEntity(String.class); // ex. {"active":true,"exp":1433778460,"iat":1433774860,"scope":"datacore","client_id":"dc","sub":"9cf96195-dab0-41f8-9300-08881da13abc","token_type":"Bearer","sub_groups":["0...e","c...7","5...e"]}
       try {
          @SuppressWarnings("unchecked")
          Map<String,Object> tokenInfo = jsonNodeMapper.readValue(tokenInfoResBody, Map.class);
