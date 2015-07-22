@@ -188,6 +188,7 @@ function initDcApiWithSwaggerUi(success) {
             console.log("Loaded SwaggerUI")
          }
          $("input[name='Authorization']").val(getAuthHeader());//FOR use the token in swager
+         $("input[name='X-Datacore-Project']").val(getProject());
          window.dcApi = swaggerUi.api; // OASIS
          if (success) {
             success();
