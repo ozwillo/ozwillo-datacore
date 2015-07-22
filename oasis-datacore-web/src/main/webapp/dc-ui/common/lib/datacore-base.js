@@ -187,6 +187,7 @@ function initDcApiWithSwaggerUi(success) {
          if(console) {
             console.log("Loaded SwaggerUI")
          }
+         $("input[name='Authorization']").val(getAuthHeader());//FOR use the token in swager
          window.dcApi = swaggerUi.api; // OASIS
          if (success) {
             success();
