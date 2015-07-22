@@ -192,6 +192,39 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
     */
    private boolean filterMixinsAndCheckPermission(DCEntityBase dataEntity, DCEntityBase existingDataEntity,
          DCModelBase model, DCUserImpl user, String permission, boolean putRatherThanPatchMode) {
+      
+      // constraints in case of visible project :
+      // (is it allowed to read / write in another project ?)
+      DCProject currentProject = modelService.getProject();
+      DCProject project = modelService.getProject(model.getProjectName()); // model project
+      boolean shouldCheckVisibleProjectConstraints = true;
+      if (!model.getProjectName().equals(currentProject.getName())
+            // TODO TODO HACK avoid visible constraints in case of facade projects :
+            && !isFacadeProject(model.getProjectName())) {
+         DCModelBase storageModel = (dataEntity != null) ? // else none yet (been queried by LDP)
+               entityModelService.getStorageModel(dataEntity) : modelService.getStorageModel(model);
+         if (storageModel != null && storageModel.isMultiProjectStorage()) { // especially oasis.meta.dcmi:mixin_0 in case of model resources !
+            // (even oasis.sandbox models are stored in oasis.meta.dcmi:mixin_0 collection,
+            // only soft forks i.e. inheriting overrides couldn't be handled this way)
+            // no need to check, entity will anyway be written in its own project
+            if (dataEntity == null // none yet (been queried by LDP ???), should be checked later
+                  || dataEntity.getProjectName() == null) { // new (or not yet migrated), will be in the current project
+               shouldCheckVisibleProjectConstraints = false;
+            } else {
+               shouldCheckVisibleProjectConstraints = !dataEntity.getProjectName().equals(currentProject.getName());
+               project = modelService.getProject(dataEntity.getProjectName()); // entity project
+            }
+         }
+         
+         if (shouldCheckVisibleProjectConstraints) {
+            DCSecurity modelVisibleSecurityConstraints = project.getVisibleSecurityConstraints();
+            if (modelVisibleSecurityConstraints != null
+                  && !isThisSecurityAllowed(null, modelVisibleSecurityConstraints, user, permission)) {
+               return false; // ex. no (auth'd) "write" for geo outside itself i.e. from another project ex. org
+            }
+         }
+      }
+      
       int propNb = dataEntity.getProperties().size();
       LinkedHashSet<String> seenPropNameSet = new LinkedHashSet<String>(propNb);
       return filterMixinsAndCheckPermission(dataEntity, existingDataEntity,
@@ -283,38 +316,8 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
     */
    public boolean isThisModelAllowed(DCEntityBase dataEntity, DCModelBase model,
          DCUserImpl user, String permission, Boolean isInheritingMixinAllowed) {
-      DCProject currentProject = modelService.getProject();
       DCProject project = modelService.getProject(model.getProjectName()); // model project
       
-      // constraints in case of visible project :
-      // (is it allowed to read / write in another project ?)
-      boolean shouldCheckVisibleProjectConstraints = true;
-      if (!model.getProjectName().equals(currentProject.getName())
-            // TODO TODO HACK avoid visible constraints in case of facade projects :
-            && !isFacadeProject(model.getProjectName())) {
-         DCModelBase storageModel = (dataEntity != null) ? // else none yet (been queried by LDP)
-               entityModelService.getStorageModel(dataEntity) : modelService.getStorageModel(model);
-         if (storageModel != null && storageModel.isMultiProjectStorage()) { // especially oasis.meta.dcmi:mixin_0 in case of model resources !
-            // (even oasis.sandbox models are stored in oasis.meta.dcmi:mixin_0 collection,
-            // only soft forks i.e. inheriting overrides couldn't be handled this way)
-            // no need to check, entity will anyway be written in its own project
-            if (dataEntity == null // none yet (been queried by LDP ???), should be checked later
-                  || dataEntity.getProjectName() == null) { // new (or not yet migrated), will be in the current project
-               shouldCheckVisibleProjectConstraints = false;
-            } else {
-               shouldCheckVisibleProjectConstraints = !dataEntity.getProjectName().equals(currentProject.getName());
-               project = modelService.getProject(dataEntity.getProjectName()); // entity project
-            }
-         }
-         
-         if (shouldCheckVisibleProjectConstraints) {
-            DCSecurity modelVisibleSecurityConstraints = project.getVisibleSecurityConstraints();
-            if (modelVisibleSecurityConstraints != null
-                  && !isThisSecurityAllowed(null, modelVisibleSecurityConstraints, user, permission)) {
-               return false; // ex. no (auth'd) "write" for geo outside itself i.e. from another project ex. org
-            }
-         }
-      }
       // project-level constraints :
       DCSecurity projectSecurityConstraints = project.getSecurityConstraints();
       if (projectSecurityConstraints != null
