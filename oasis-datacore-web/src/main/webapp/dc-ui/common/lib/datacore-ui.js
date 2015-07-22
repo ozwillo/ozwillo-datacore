@@ -1169,7 +1169,7 @@ function findLinkedData(resourceUri, linkingModelType, queryFieldPath) {
                displayModelAndResourceLinks(linkedResource, parsedUri, queryFieldPath, linkingModelType,
                      topLevelLinkingModelResources, topLevelListLinkingModelResources);
             });
-         });
+         },null,null,100);
          // TODO LATER anyway, it doesn't handle all list + field combinations ex. list.field.field,
          // so thinkg of more queriable storage for models ex. to allow to query fields at every depth :
          // ex. (additional) per field collection entity with materialized path in mongo, or relational database, or (db'd, collaborative) EMF, or triplestore !!
