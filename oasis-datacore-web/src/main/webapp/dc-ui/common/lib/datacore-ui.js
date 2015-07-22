@@ -593,11 +593,15 @@ function buildProjectPortalTitleHtml(options) {
       options = { pureMixins:false, global:false }; // to ease up building alt options 
    }
    var html = '';
+   var projectName = getProject();
+   html += '<a href="/dc/type/dcmp:Project_0/' + projectName + '" class="dclink" onclick="'
+   + 'javascript:return getData($(this).attr(\'href\'));'
+   + '">' + projectName + '</a>\'s '
    if (!options.pureMixins || options.storageModels) {
-      html += 'Storage models and their stored models (or '
+      html += 'storage models &amp; their stored models (or '
          + buildProjectPortalQueryLink({ pureMixins:true, global:options.global }, 'pure mixins') + '), ';
    } else {
-      html += 'Pure mixins and their uses (or '
+      html += 'pure mixins &amp; their uses (or '
          + buildProjectPortalQueryLink({ global:options.global }, 'storage models') + '), ';
    }
    if (!options.global || options.local) {

@@ -289,6 +289,20 @@ name starts by any one of those prefixes ('*' wildcard also allowed, to ease swi
 can be changed in this project, in order to avoid to add models that belong to another project by
 mistake, such as POSTing an org model while importing geo elements using the master model file.
 <br/><br/>
+<b>Project &amp; Model troubleshooting &amp; FAQ :</b>
+<br/>
+&nbsp;&nbsp;- <span class="dcjsonline">model failed to load :</span>
+the Model is persisted as a Resource alright (its .../dcmo:model_0/modelName URI works)
+but getting its Resources fails with a ModelNotFoundException. This means that the Model
+can't be loaded from its Resource representation. To solve it, try to rePOST the Model's
+Resource representation (ex. using edit / POST or import playground features), which will
+trigger Model reload, and if it fails try to patch it according to the error message.
+<br/>
+&nbsp;&nbsp;- <span class="dcjsonline">can't write Resource :</span>
+check that you have the rights to, and (using ex. the edit / POST playground feaure)
+that its Model is not among its Project's dcmp:frozenModelNames or dcmp:allowedModelPrefixes
+(see above).
+<br/><br/>
 
 <a id="playgroundUserManual"></a>
 <h1>Playground User Manual</h1>
