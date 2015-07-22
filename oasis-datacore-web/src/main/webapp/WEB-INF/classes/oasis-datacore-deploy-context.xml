@@ -7,6 +7,8 @@
       xmlns:jaxrs="http://cxf.apache.org/jaxrs"
       xmlns:jaxrsc="http://cxf.apache.org/jaxrs-client"
       xmlns:cxf="http://cxf.apache.org/core"
+      xmlns:http-conf="http://cxf.apache.org/transports/http/configuration"
+      xmlns:http-sec="http://cxf.apache.org/configuration/security"
       xmlns:httpj="http://cxf.apache.org/transports/http-jetty/configuration"
 		xmlns:security="http://www.springframework.org/schema/security"
 		xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
@@ -20,11 +22,14 @@
       http://cxf.apache.org/core http://cxf.apache.org/schemas/core.xsd
       http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd
       http://cxf.apache.org/jaxrs-client http://cxf.apache.org/schemas/jaxrs-client.xsd
+      http://cxf.apache.org/transports/http/configuration http://cxf.apache.org/schemas/configuration/http-conf.xsd
+      http://cxf.apache.org/configuration/security http://cxf.apache.org/schemas/configuration/security.xsd
       http://cxf.apache.org/transports/http-jetty/configuration http://cxf.apache.org/schemas/configuration/http-jetty.xsd
       http://www.springframework.org/schema/security
       http://www.springframework.org/schema/security/spring-security.xsd
       http://www.springframework.org/schema/security/oauth2
       http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
+      
    <!-- default & overriding some properties (BEFORE import to take precedence over imported properties)
    (overriding ones are at end of comma-separated location)
    Lowest order takes precedence, here -1 to allow ex. to be overriden by test at -2, see
@@ -90,15 +95,6 @@
    <!-- mongo:mongo id="mongo" replica-set="${oasis.datacore.mongodb.replsetMembers}"/ -->
    
    <!-- CLIENT OVERRIDES -->
-   <!-- default : -->
-   <!-- http-conf:conduit name="*.http-conduit">
-      <http-conf:client ReceiveTimeout="${datacoreApiClient.responseTimeout}"
-         ConnectionTimeout="${datacoreApiClient.connectionTimeout}" />
-   </http-conf:conduit -->
-   <!-- proxy : -->
-   <!-- http-conf:conduit name="*.http-conduit">
-      <http-conf:client ProxyServer="localhost" ProxyServerPort="8082" ProxyServerType="HTTP" />
-   </http-conf:conduit -->
    
    <!-- SERVER OVERRIDES -->
    <!-- server CXF Bus
@@ -112,5 +108,22 @@
       <cxf:properties>
       </cxf:properties>
    </cxf:bus -->
+   
+   <!-- CLIENT & SERVER OVERRIDES -->
+   <http-conf:conduit name="*.http-conduit">
+      <!-- client-side : -->
+      <!-- timeout : -->
+      <http-conf:client ReceiveTimeout="${datacoreApiClient.responseTimeout}"
+         ConnectionTimeout="${datacoreApiClient.connectionTimeout}" />
+      <!-- proxy : -->
+      <!-- http-conf:client ProxyServer="localhost" ProxyServerPort="8082" ProxyServerType="HTTP" / -->
+      
+      <!-- server-side : -->
+      <!-- use SNI-capable default hostname verifier instead of CXF' :
+      see http://cxf.apache.org/docs/tls-configuration.html#TLSConfiguration-ClientTLSParameters
+      http://stackoverflow.com/questions/15008647/cxf-tlsclientparameters-setdisablecncheck-true-does-not-work -->
+	   <http-conf:tlsClientParameters useHttpsURLConnectionDefaultHostnameVerifier="true"
+	         useHttpsURLConnectionDefaultSslSocketFactory="true" />
+	</http-conf:conduit>
    
 </beans>

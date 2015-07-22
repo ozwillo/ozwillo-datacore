@@ -68,13 +68,13 @@
       </cxf:properties>
    </cxf:bus>
 
+   <!-- client-side default conduit conf :
+   NB. on server-side, must be merged with server's default conduit conf in *-deploy-context.xml -->
    <http-conf:conduit name="*.http-conduit">
       <http-conf:client ReceiveTimeout="${datacoreApiClient.responseTimeout}"
          ConnectionTimeout="${datacoreApiClient.connectionTimeout}" />
+      <!-- http-conf:client ProxyServer="localhost" ProxyServerPort="8082" ProxyServerType="HTTP" / -->
    </http-conf:conduit>
-   <!-- http-conf:conduit name="*.http-conduit">
-      <http-conf:client ProxyServer="localhost" ProxyServerPort="8082" ProxyServerType="HTTP" />
-   </http-conf:conduit -->
 
    <!-- Spring configuration for Datacore API CXF client -->
    <!-- Change the port to 8080 to use this test with real server-->
