@@ -637,10 +637,10 @@
    
    function mergeStringValueOrDefaultIfAny(existingResource, key, newStringValue, mixin, importState,
          defaultStringValue) { // optional
-       if (!mixin) {
-           console.log('err', existingResource, key, newStringValue, mixin, importState,
-                   defaultStringValue);
-       }
+      if (!mixin) {
+         console.log('err', existingResource, key, newStringValue, mixin, importState,
+               defaultStringValue);
+      }
       var mergeField = findField(key, mixin["dcmo:globalFields"]);
       var newValue = convertValue(newStringValue, mergeField, importState);
       if (newValue === null) {
@@ -1372,7 +1372,7 @@
          if (id !== null) {
             uri = buildUri(typeName, id);
             
-         } else if (!mixin['dcmoid:queryBeforeCreate']) {
+         }/* OPTIM */ else if (!mixin['dcmoid:queryBeforeCreate']) {
             var maybeAlreadyFoundResource = queryUri(resource, mixin, enrichedModelOrMixinFieldMap, mixinMustBeImported, importState);
             if (maybeAlreadyFoundResource != null) {
                if (!maybeAlreadyFoundResource['@id']) { 
@@ -1383,7 +1383,7 @@
             } else if (!mixinHasInternalFieldNameValue) { // already executed but no existing resource found, or no complete lookup query found
                return null; // avoid creating when used "abstract" field definition
             }
-         } // else already done before
+         }/**/ // else already done before
          
          if (uri === null) {
             if (!mixinMustBeImported) {
@@ -1768,7 +1768,7 @@
               importState.data.row.previousMissingIdFieldResourceOrMixinNb = importState.data.row.missingIdFieldResourceOrMixinNb;
               importState.data.row.missingIdFieldResourceOrMixinNb = Object.keys(importState.data.row.iteration.missingIdFieldMixinToResources).length;
               importState.data.row.loopIndex++;
-              if (importState.data.row.lookupQueriesToRun.length === 0) {
+              if (importState.data.disableLookupQuery || importState.data.row.lookupQueriesToRun.length === 0) {
                  csvToData(importState, getResourceRow, nextRow); // next iteration
               } else {
                  var lookupQuery = importState.data.row.lookupQueriesToRun.pop();
@@ -2787,6 +2787,7 @@
       } // else use default
       
       importState.data.detailedErrors = importStateConf.data.detailedErrors;
+      importState.data.disableLookupQuery = importStateConf.data.disableLookupQuery;
       
       if (importStateConf.data.fileName && importStateConf.data.fileName !== "") {
          importState.data.fileName = importStateConf.data.fileName;

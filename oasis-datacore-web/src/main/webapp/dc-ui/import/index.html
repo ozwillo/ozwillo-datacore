@@ -102,7 +102,8 @@
                file : $(".resourceFile"),
                rowLimit : parseInt($(".resourceRowLimit").val(), 10),
                rowStart : parseInt($(".resourceRowStart").val(), 10),
-               detailedErrors : $('.resourceDetailedErrors').is(':checked') 
+               detailedErrors : $('.resourceDetailedErrors').is(':checked'),
+               disableLookupQuery : $('.disableLookupQuery').is(':checked')
             }
       };
    }
@@ -171,6 +172,9 @@ Geo Mapping
 &nbsp;&nbsp;&nbsp;&nbsp;
 <span title="provides in error log : resources parsed in row">detailed errors</span> :
 <input type="checkbox" class="resourceDetailedErrors" checked="checked"/>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<span title="20x speedup, but no queryNames nor queryBeforeCreate">disable lookup query</span> :
+<input type="checkbox" class="disableLookupQuery"/>
 <br/><br/>
 <input type="file" class="resourceFile"/>
 &nbsp;&nbsp;&nbsp;&nbsp;
