@@ -29,15 +29,29 @@
    <context:property-placeholder location="classpath:oasis-datacore-rest-client.properties"
       order="-1" ignore-unresolvable="true"/><!-- to let it default to importing PropertyPlaceholder/*Resolver -->
 
-   <!-- client-side cache -->
-   <cache:annotation-driven />
-   <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager" 
-        p:cacheManager-ref="ehcache"/>
-   <bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean" 
-        p:configLocation="classpath:ehcache.xml" p:shared="true"/><!-- if not classpath:
-        fails with Could not open ServletContext resource [/ehcache.xml] -->
+   <!-- client-side cache
+   allowing to plug in your own caches
+   see http://stackoverflow.com/questions/8658789/using-spring-cache-annotation-in-multiple-modules -->
+   <cache:annotation-driven cache-manager="cacheManager"/><!-- (default) -->
+   <bean id="cacheManager" class="org.springframework.cache.support.CompositeCacheManager">
+      <property name="cacheManagers">
+         <array>
+            <ref bean="datacore.client.cacheManager" />
+            <!-- IF AS A USER OF THE DATACORE CLIENT LIBRARY YOU HAVE YOUR OWN CACHES,
+            just put them there in your own copy / override of this (composite) cacheManager bean -->
+         </array>
+      </property>
+      <property name="fallbackToNoOpCache" value="false" /><!-- else could hide problems -->
+   </bean>
+   <bean id="datacore.client.cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager" 
+        p:cacheManager-ref="datacore.client.ehcache"/>
+   <bean id="datacore.client.ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean" 
+        p:configLocation="classpath:datacore-client-ehcache.xml" /><!-- NOT p:shared="true"
+        else one ehcache conf overrides the others (plus must be named)
+        see http://stackoverflow.com/questions/10013288/another-unnamed-cachemanager-already-exists-in-the-same-vm-ehcache-2-5
+        and if not classpath: fails with Could not open ServletContext resource [/ehcache.xml] -->
    <!-- making the DCResource cache available for auto injection in cached client wrapper -->
-   <bean id="datacore.rest.client.cache.rest.api.DCResource" factory-bean="cacheManager" factory-method="getCache">
+   <bean id="datacore.rest.client.cache.rest.api.DCResource" factory-bean="datacore.client.cacheManager" factory-method="getCache">
       <constructor-arg><value>org.oasis.datacore.rest.api.DCResource</value></constructor-arg>
    </bean>
 

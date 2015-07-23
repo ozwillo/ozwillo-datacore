@@ -1,0 +1,29 @@
+<!--
+Ozwillo Datacore
+(c) Open Wide 2013-2015
+-->
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:noNamespaceSchemaLocation="ehcache.xsd"
+   name="datacore.server.ehcache"
+   updateCheck="false"><!-- updateCheck="false" else tries to contact terracotta.org,
+   name else must be shared and will override another one
+   see http://stackoverflow.com/questions/10013288/another-unnamed-cachemanager-already-exists-in-the-same-vm-ehcache-2-5
+   -->
+   
+   <diskStore path="java.io.tmpdir"/>
+    
+   <defaultCache 
+      maxElementsInMemory="10000" 
+      eternal="true" 
+      overflowToDisk="false"/><!-- else performance hit -->
+      
+   <!--  cache data resources (freshness checked using ETag) -->
+   <cache name="org.springframework.security.oauth2.provider.OAuth2Authentication"
+         maxElementsInMemory="20000" timeToLiveSeconds="3600" overflowToDisk="false" />
+         <!-- NB : access_tokens expire after 3600s ; memoryStoreEvictionPolicy="LRU" is default
+         TODO LATER evict on logout, even when done outside Datacore -->
+   
+   <!-- cache all models (they rarely change) -->
+   <cache name="TODO DCModel" maxElementsInMemory="5000" eternal="true" overflowToDisk="false" />
+    
+</ehcache>   

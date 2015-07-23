@@ -65,6 +65,10 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
 		</dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-context-support</artifactId><!-- for EHCache support classes http://stackoverflow.com/questions/13956224/spring-3-2-and-cache-abstraction-missing-ehcache-implementation -->
+      </dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-test</artifactId>
@@ -128,6 +132,16 @@
          <groupId>net.sf.opencsv</groupId>
          <artifactId>opencsv</artifactId>
          <!-- scope>test</scope -->
+      </dependency>
+      
+      <dependency>
+         <groupId>net.sf.ehcache.internal</groupId>
+         <artifactId>ehcache-core</artifactId>
+         <!-- groupId>net.sf.ehcache</groupId>
+         <artifactId>ehcache</artifactId>
+         <type>pom</type --><!-- NO worked in 2.6.0 but not in 2.7.4 anymore because
+         no more dependencies to ehcache-core etc. (but in 2.9 works again !) ;
+         would probably work without type=pom but brings in too much stuff (hibernate, terracotta...) -->
       </dependency>
       
 	</dependencies>

@@ -9,10 +9,11 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.oasis.datacore.core.security.service.impl.DatacoreSecurityServiceImpl;
 import org.oasis.datacore.playground.security.TokenEncrypter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -31,6 +32,7 @@ import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 import org.springframework.security.oauth2.provider.DefaultAuthorizationRequest;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;
+import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.DefaultResponseErrorHandler;
@@ -38,29 +40,29 @@ import org.springframework.web.client.RestOperations;
 import org.springframework.web.client.RestTemplate;
 
 /**
- * Queries the /check_token endpoint to obtain the contents of an access token.
- *
- * If the endpoint returns a 400 response, this indicates that the token is invalid.
- *
- * @author Dave Syer
- * @author Luke Taylor
- *
+ * Checks (cached) the token calling the Ozwillo Kernel /a/tokeninfo endpoint
+ * and retrieves its info.
  */
+@Component(value="tokenServices")
 public class RemoteTokenServices implements ResourceServerTokenServices {
 
 	protected final Log logger = LogFactory.getLog(getClass());
 
 	private RestOperations restTemplate;
 
+	@Value("${kernel.checkTokenEndpointUrl}")
 	private String checkTokenEndpointUrl;
 	
-	private String userInfoEndpointUrl;
+	///@Value("${kernel.userInfoEndpointUrl}")
+	///private String userInfoEndpointUrl;
 
+   @Value("${datacoreOAuthTokenService.client_id}")
 	private String clientId;
 
+   @Value("${datacoreOAuthTokenService.client_secret}")
 	private String clientSecret;
 
-	private ObjectMapper mapper = new ObjectMapper();
+	///private ObjectMapper mapper = new ObjectMapper();
 	
 	/** [OASIS] */
    @Autowired
@@ -87,29 +89,14 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 		this.restTemplate = restTemplate;
 	}
 
-	public void setCheckTokenEndpointUrl(String checkTokenEndpointUrl) {
-		this.checkTokenEndpointUrl = checkTokenEndpointUrl;
-	}
-
-	public void setClientId(String clientId) {
-		this.clientId = clientId;
-	}
-
-	public void setClientSecret(String clientSecret) {
-		this.clientSecret = clientSecret;
-	}
-	
-	public void setUserInfoEndpointUrl(String userInfoEndpointUrl) {
-		this.userInfoEndpointUrl = userInfoEndpointUrl;
-	}
-
+	@Cacheable(value={"org.springframework.security.oauth2.provider.OAuth2Authentication"}, key="#accessToken")
 	public OAuth2Authentication loadAuthentication(String accessToken) throws AuthenticationException {
 	   accessToken = tokenEncrypter.decrypt(accessToken); // [OASIS]
 
 		MultiValueMap<String, String> formData = new LinkedMultiValueMap<String, String>();
 		formData.add("token", accessToken);
 		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", getAuthorizationHeader(clientId, clientSecret));
+		headers.set(javax.ws.rs.core.HttpHeaders.AUTHORIZATION, getAuthorizationHeader(clientId, clientSecret));
 		Map<String, Object> map = postForMap(checkTokenEndpointUrl, formData, headers);
 
 		if (map.containsKey("active") && Boolean.FALSE.equals(map.get("active"))) {
@@ -200,7 +187,7 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 	}
 
 	/**
-	 * Calls OASIS Kernel checkTokenEndpointUrl i.e. /a/tokeninfo to check token
+	 * Calls Ozwilo Kernel checkTokenEndpointUrl i.e. /a/tokeninfo to check token
 	 * @param path
 	 * @param formData
 	 * @param headers

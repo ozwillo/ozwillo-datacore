@@ -1,10 +1,14 @@
 <!--
 Ozwillo Datacore
-(c) Open Wide 2013
+(c) Open Wide 2013-2015
 -->
 <ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
      xsi:noNamespaceSchemaLocation="ehcache.xsd"
-   updateCheck="false"><!-- else tries to contact terracotta.org -->
+   name="datacore.client.ehcache"
+   updateCheck="false"><!-- updateCheck="false" else tries to contact terracotta.org,
+   name else must be shared and will override another one
+   see http://stackoverflow.com/questions/10013288/another-unnamed-cachemanager-already-exists-in-the-same-vm-ehcache-2-5
+   -->
    
    <diskStore path="java.io.tmpdir"/>
     

@@ -10,6 +10,7 @@
       xmlns:httpj="http://cxf.apache.org/transports/http-jetty/configuration"
 		xmlns:security="http://www.springframework.org/schema/security"
 		xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
+      xmlns:cache="http://www.springframework.org/schema/cache"
       xsi:schemaLocation=
       "http://www.springframework.org/schema/beans
       http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
@@ -24,13 +25,36 @@
       http://www.springframework.org/schema/security
       http://www.springframework.org/schema/security/spring-security.xsd
       http://www.springframework.org/schema/security/oauth2
-      http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
+      http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd
+      http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache-3.2.xsd">
    
    <!-- Allows to resolve spring properties placeholders (for Swagger ?) -->
    <bean id="springPlaceholderResolver" class="org.oasis.datacore.rest.server.SpringPlaceholderResolver"/>
    
    
    <!-- Server : -->
+   
+   <!-- server-side cache
+   along with reusing client-side cache
+   see http://stackoverflow.com/questions/8658789/using-spring-cache-annotation-in-multiple-modules -->
+   <cache:annotation-driven cache-manager="cacheManager"/><!-- (default) -->
+   <bean id="cacheManager" class="org.springframework.cache.support.CompositeCacheManager">
+      <property name="cacheManagers">
+         <array>
+            <ref bean="datacore.server.cacheManager" />
+            <ref bean="datacore.client.cacheManager" />
+         </array>
+      </property>
+      <property name="fallbackToNoOpCache" value="false" /><!-- else could hide problems -->
+   </bean>
+   <bean id="datacore.server.cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager" 
+        p:cacheManager-ref="datacore.server.ehcache"/>
+   <bean id="datacore.server.ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean" 
+        p:configLocation="classpath:datacore-server-ehcache.xml"/><!-- NOT p:shared="true"
+        else one ehcache conf overrides the others (plus must be named)
+        see http://stackoverflow.com/questions/10013288/another-unnamed-cachemanager-already-exists-in-the-same-vm-ehcache-2-5
+        and if not classpath: fails with Could not open ServletContext resource [/ehcache.xml] -->
+        
    <bean name="uriService" class="org.oasis.datacore.server.uri.UriService"/><!-- override -core's -->
    
    <!-- scanning for caching & context -->
