@@ -58,6 +58,13 @@
       }
       return hash;
    };*/
+   // simple(istic) uuid gen http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
+   function generateUuid(s) {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+         var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+         return v.toString(16);
+      });
+   }
 
 
   // first four letters of model import file
@@ -1019,8 +1026,9 @@
          resource = {};
       }
       var mixinHasValue = false;
+      var mixinHasInternalFieldNameValue = false;
       var mixinHasAutolinkedValue = false;
-      var mixinHasDefaultValue = false;
+      var mixinDefaultValueFieldNameSet = {};
       
       //for (var fieldName in (Object.keys(fieldNameTree).length !== 0 ?
       //      fieldNameTree : enrichedModelOrMixinFieldMap)) {
@@ -1058,7 +1066,7 @@
                         mixin, fieldName, importState);
                   
                   if (listItemValue !== null) {
-                     mixinHasValue = true;
+                     mixinHasValue = true; // TODO mixinHasInternalFieldNameValue
                      var valueList = resource[fieldName];
                      if (typeof valueList === 'undefined') {
                         if (fieldType !== 'i18n' || listItemValue.v) {
@@ -1081,6 +1089,9 @@
             // import regular map or (embedded or not) resource field
             value = importMapOrResourceValue(fieldOrListField, resourceRow, subFieldNameTree,
                   mixin, fieldName, importState);
+            if (fieldType === 'i18n' && !value.v) {
+                value = null; // don't import { "l":"en" } (but let it go on to using default value)
+            }
          }
 
          // optimization, but doesn't skip much (only primitive value & mainly autolinking lookup) !
@@ -1107,6 +1118,8 @@
                   value = resourceRow[fieldInternalName];
                   if (typeof value === 'undefined') { // look in fieldName column as failback
                      value = resourceRow[fieldName];
+                  } else {
+                     mixinHasInternalFieldNameValue = true; 
                   }
                } else { // if (topLevelResource) { // look in fieldName column
                   value = resourceRow[fieldName];
@@ -1162,11 +1175,13 @@
          if (value === null) {
             // set default value when not among imported fields (no internalName) :
             if (typeof subFieldNameTree !== 'undefined') {
-               value = getDefaultValueIfAny(fieldOrListField, importState, subFieldNameTree['importconf:defaultStringValue']);
+               value = getDefaultValueIfAny(field, importState, subFieldNameTree['importconf:defaultStringValue']); // NOT fieldOrListField
             } else {
-               value = getDefaultValueIfAny(fieldOrListField, importState);
+               value = getDefaultValueIfAny(field, importState); // NOT fieldOrListField
             }
-            mixinHasDefaultValue = mixinHasDefaultValue || value !== null;
+            if (value !== null) {
+               mixinDefaultValueFieldNameSet[fieldName] = true;
+            }
          }
          
          if (value !== null) {
@@ -1205,14 +1220,40 @@
       if (typeof resource['@id'] === 'undefined' && typeName !== 'map') {
          // create or find & update resource :
          
-         var mixinMustBeImported = mixinHasValue
+         var mixinMustBeImported = mixinHasValue // TODO && mixinHasInternalFieldNameValue
                || mixinHasAutolinkedValue && mixin['dcmo:importAutolinkedOnly']
                // whose default is true in 1. free design phase. In 2. unify phase, default is false
                // and it may be true only for singletons ex. CountryFR/FR (otherwise an id field must be provided in data),
                // allowing to skip trying to import mixins whose internal field names are not among data columns titles)
-               || mixinHasDefaultValue && mixin['dcmo:importDefaultOnly'];
+               || Object.keys(mixinDefaultValueFieldNameSet).length !== 0 && mixin['dcmo:importDefaultOnly'];
                // whose default is true in 1. free design phase. In 2. unify phase, default is false,
                // allowing to skip trying to import mixins whose internal field names are not among data columns titles)
+         
+         if (mixin['dcmoid:queryBeforeCreate']) {
+            var maybeAlreadyFoundResource = queryUri(resource, mixin, enrichedModelOrMixinFieldMap, mixinMustBeImported, importState);
+            if (maybeAlreadyFoundResource != null) {
+               if (!maybeAlreadyFoundResource['@id']) { 
+                  return resource; // lookup query has been scheduled to be executed
+               } else {
+                  uri = maybeAlreadyFoundResource['@id']; // lookup query already done
+                  // override id fields :
+                  if (mixin['dcmoid:idFieldNames']) {
+                     for (var fInd in mixin['dcmoid:idFieldNames']) {
+                        var idFieldName = mixin['dcmoid:idFieldNames'][fInd];
+                        resource[idFieldName] = maybeAlreadyFoundResource[idFieldName];
+                     }
+                  }
+                  // override default valued fields (for persid ?) :
+                  for (var dfn in mixinDefaultValueFieldNameSet) {
+                     resource[dfn] = maybeAlreadyFoundResource[dfn];
+                  }
+                  // TODO Q override more ex. field.computedOnce ones ?
+               }
+            } else if (!mixinHasInternalFieldNameValue) { // already executed but no existing resource found, or no complete lookup query found
+               return null; // avoid creating when used "abstract" field definition
+            }
+            // (in which case an error has been added)
+         }
          
          // build id :
          var id = null; // NB. id is encoded as URIs should be, BUT must be decoded before used as GET URI
@@ -1331,118 +1372,30 @@
          if (id !== null) {
             uri = buildUri(typeName, id);
             
-         } else if (mixin['dcmoid:lookupQueries']) {
-            var lookupQueryFields;
-            var lookupUriQuery = null;
-            var qField;
-            for (var qInd in mixin['dcmoid:lookupQueries']) {
-               lookupQueryFields = mixin['dcmoid:lookupQueries'][qInd]['dcmoidlq:fieldNames'];
-              if (lookupQueryFields.length !== 0) {
-               lookupUriQuery = new UriQuery();
-               for (var fInd in lookupQueryFields) {
-                  var idFieldName = lookupQueryFields[fInd];
-               /*var indexInQuery = idField["dcmfid:indexInQuery"]; // NB. this import-specific conf has been enriched in refreshed involvedMixins' global fields
-               if (typeof indexInQuery === 'number') {*/
-                  var queryValue = resource[idFieldName];
-                  if (typeof queryValue === 'undefined' || queryValue === null || queryValue === "") {
-                     //console.log("Missing value for query field " + idFieldName
-                     //      + ", clearing others (" + lookupUriQuery.params.length
-                     //      + ") ; below " + importState.data.row.pathInFieldNameTree + " in :");
-                     //console.log(resource);
-                     if (!mixinMustBeImported) {
-                        ///return null; // ex. missing a yet unbuilt link ; nothing to import, skip resource
-                        // NB. this way only the root cause is shown
-                     } else {
-                        /*resourceError(importState, 'missingValueForQueryField', // TODO or warning since global error anyway ?
-                              { fieldName : idFieldName, resource : resource });*/
-                        ///return resource; // abort resource creation in this loop (don't add it to uri'd resources yet)
-                     }
-                     lookupUriQuery = null; // in case no more loops
-                     break; // next lookup query (if any)
-                     
-                  }
-                  qField = enrichedModelOrMixinFieldMap[idFieldName];
-                  if (qField["dcmf:type"] === 'resource') { // getting ref'd resource id
-                     if (typeof queryValue === 'string') { // resource
-                        lookupUriQuery.p(idFieldName, queryValue);
-                     } else { // subresource TODO also (list of) map & i18n
-                        var uriQueryValue = queryValue["@id"];
-                        if (typeof uriQueryValue === 'undefined') {
-                           //console.log("Missing uri for resource query field " + idFieldName
-                           //      + ", clearing others (" + lookupUriQuery.params.length
-                           //      + ") ; below " + importState.data.row.pathInFieldNameTree + " in :");
-                           ///console.log(resource);
-                           /*resourceError(importState, 'missingUriForResourceQueryField', // TODO or warning since global error anyway ?
-                                 { fieldName : idFieldName, value : queryValue, resource : resource });*/
-                           lookupUriQuery = null;
-                           break; // next lookup query/return resource; // without adding it to uri'd resources
-                        } else {
-                           lookupUriQuery.p(idFieldName + '.@id', uriQueryValue); // TODO test
-                        }
-                     }
-                  } else if (qField["dcmf:type"] === 'i18n') { // NB. beyond default language, is done like list of map
-                     var defaultLanguage = getDefaultLanguage(qField, importState, mixin);
-                     /*if (typeof defaultLanguage === 'undefined') {
-                        resourceError(importState, 'i18nIsInQueryButHasNoDefaultLanguage',
-                              { fieldName : idFieldName });
-                        return null;
-                     }*/
-                     var valueInLanguage = null;
-                     for (var listInd in queryValue) {
-                        if (queryValue[listInd].l === defaultLanguage) {
-                           valueInLanguage = queryValue[listInd].v;
-                           break;
-                        }
-                     }
-                     if (valueInLanguage === null) {
-                        resourceWarning(importState, 'i18nIsInQueryButHasNoValueForDefaultLanguage',
-                              { fieldName : idFieldName, resource : resource, defaultLanguage : defaultLanguage });
-                        lookupUriQuery = null;
-                        break; // next lookup query
-                     } else {
-                        // NB. could support querying without knowing the language, but must have a
-                        // value criteria that is provided in a given language anyway
-                        lookupUriQuery.p(idFieldName + '.v', valueInLanguage);
-                        lookupUriQuery.p(idFieldName + '.l', defaultLanguage);
-                     }
-                  } else {
-                     lookupUriQuery.p(idFieldName, queryValue);
-                  }
+         } else if (!mixin['dcmoid:queryBeforeCreate']) {
+            var maybeAlreadyFoundResource = queryUri(resource, mixin, enrichedModelOrMixinFieldMap, mixinMustBeImported, importState);
+            if (maybeAlreadyFoundResource != null) {
+               if (!maybeAlreadyFoundResource['@id']) { 
+                  return resource; // lookup query has been scheduled to be executed
+               } else {
+                  uri = maybeAlreadyFoundResource['@id']; // lookup query already done
                }
-              }
-               if (lookupUriQuery !== null) { // else one field was missing (or no fields in query)
-                  break; // found a complete query,
-                  // NB. multi criteria (ex. "between") not supported for lookup queries
-               }
+            } else if (!mixinHasInternalFieldNameValue) { // already executed but no existing resource found, or no complete lookup query found
+               return null; // avoid creating when used "abstract" field definition
             }
-            
-            if (lookupUriQuery !== null) {
-               lookupQuery = "/dc/type/" + encodeUriPathComponent(mixin['dcmo:name']) + '?' + lookupUriQuery.s();
-               var alreadyFoundResource = importState.data.lookupQueryToResource[lookupQuery];
-               if (typeof alreadyFoundResource === 'undefined') {
-                  importState.data.row.lookupQueriesToRun.push(lookupQuery);
-                  resourceWarning(importState, 'lookupQueryToRunInNextIteration',
-                     { lookupQuery : lookupQuery, resource : resource });
-                  return resource;
-               } else if (alreadyFoundResource !== null) {
-                  uri = alreadyFoundResource['@id'];
-                  // NB. not putting alreadyFoundResource in resources, only using it as id,
-                  // but will be reused at resource POST time to avoid reGETting it
-               } // else remembered lookupQueryHasNoResult error
-            }
-         }
+         } // else already done before
          
          if (uri === null) {
             if (!mixinMustBeImported) {
                return null; // ex. missing a yet unbuilt link ; nothing to import, skip resource
                // NB. this way only the root cause is shown
             }
-            if (mixin['dcmoid:idFieldNames'] && mixin['dcmoid:idFieldNames'].length !== 0) {
+            /*if (mixin['dcmoid:idFieldNames'] && mixin['dcmoid:idFieldNames'].length !== 0) {
                resourceError(importState, 'missingValueForIdField',
                   { idEncodedValues : idEncodedValues, idFieldNames : mixin['dcmoid:idFieldNames'],
                   resource : resource });
-            }
-            if (mixin['dcmoid:lookupQueries'] && mixin['dcmoid:lookupQueries'].length !== 0) {
+            } NOO duplicate error */
+            /*if (mixin['dcmoid:lookupQueries'] && mixin['dcmoid:lookupQueries'].length !== 0) {
                if (lookupUriQuery === null) {
                   resourceError(importState, 'missingValueForQueryField',
                      { lookupQueries : mixin['dcmoid:lookupQueries'],
@@ -1452,7 +1405,7 @@
                   resourceError(importState, 'scheduledLookupQueryToRun',
                      { lookupQuery : lookupQuery, resource : resource });
                }
-            }
+            } NOO duplicate errors */
             // TODO better :
             /*resourceWarning(importState, 'noConfForId', { row : resourceRow,
                   message : "No conf for id, using custom gen - in mixin "
@@ -1586,6 +1539,127 @@
       return resource;
    }
    
+   // returns null if no complete lookupUriQuery, the found resource if
+   // lookupUriQuery already done, or the given resource if the lookupUriQuery has
+   // been scheduled to be executed (in which case csvRowToDataResource should
+   // abort by returning this resource)
+   function queryUri(resource, mixin, enrichedModelOrMixinFieldMap, mixinMustBeImported, importState) {
+      if (!mixin['dcmoid:lookupQueries']) {
+         return null;
+      }
+      var lookupQueryFields;
+      var lookupUriQuery = null;
+      var qField;
+      for (var qInd in mixin['dcmoid:lookupQueries']) {
+         lookupQueryFields = mixin['dcmoid:lookupQueries'][qInd]['dcmoidlq:fieldNames'];
+         if (lookupQueryFields.length !== 0) {
+            lookupUriQuery = new UriQuery();
+            for (var fInd in lookupQueryFields) {
+               var idFieldName = lookupQueryFields[fInd];
+               /*var indexInQuery = idField["dcmfid:indexInQuery"]; // NB. this import-specific conf has been enriched in refreshed involvedMixins' global fields
+               if (typeof indexInQuery === 'number') {*/
+               var queryValue = resource[idFieldName];
+               if (typeof queryValue === 'undefined' || queryValue === null || queryValue === "") {
+                  //console.log("Missing value for query field " + idFieldName
+                  //      + ", clearing others (" + lookupUriQuery.params.length
+                  //      + ") ; below " + importState.data.row.pathInFieldNameTree + " in :");
+                  //console.log(resource);
+                  if (!mixinMustBeImported) {
+                     ///return null; // ex. missing a yet unbuilt link ; nothing to import, skip resource
+                     // NB. this way only the root cause is shown
+                  } else {
+                     /*resourceError(importState, 'missingValueForQueryField', // TODO or warning since global error anyway ?
+                           { fieldName : idFieldName, resource : resource });*/
+                     ///return resource; // abort resource creation in this loop (don't add it to uri'd resources yet)
+                  }
+                  lookupUriQuery = null; // in case no more loops
+                  break; // next lookup query (if any)
+                  
+               }
+               qField = enrichedModelOrMixinFieldMap[idFieldName];
+               if (qField["dcmf:type"] === 'resource') { // getting ref'd resource id
+                  if (typeof queryValue === 'string') { // resource
+                     lookupUriQuery.p(idFieldName, queryValue);
+                  } else { // subresource TODO also (list of) map & i18n
+                     var uriQueryValue = queryValue["@id"];
+                     if (typeof uriQueryValue === 'undefined') {
+                        //console.log("Missing uri for resource query field " + idFieldName
+                        //      + ", clearing others (" + lookupUriQuery.params.length
+                        //      + ") ; below " + importState.data.row.pathInFieldNameTree + " in :");
+                        ///console.log(resource);
+                        /*resourceError(importState, 'missingUriForResourceQueryField', // TODO or warning since global error anyway ?
+                              { fieldName : idFieldName, value : queryValue, resource : resource });*/
+                        lookupUriQuery = null;
+                        break; // next lookup query/return resource; // without adding it to uri'd resources
+                     } else {
+                        lookupUriQuery.p(idFieldName + '.@id', uriQueryValue); // TODO test
+                     }
+                  }
+               } else if (qField["dcmf:type"] === 'i18n') { // NB. beyond default language, is done like list of map
+                  var defaultLanguage = getDefaultLanguage(qField, importState, mixin);
+                  /*if (typeof defaultLanguage === 'undefined') {
+                     resourceError(importState, 'i18nIsInQueryButHasNoDefaultLanguage',
+                           { fieldName : idFieldName });
+                     return null;
+                  }*/
+                  var valueInLanguage = null;
+                  for (var listInd in queryValue) {
+                     if (queryValue[listInd].l === defaultLanguage) {
+                        valueInLanguage = queryValue[listInd].v;
+                        break;
+                     }
+                  }
+                  if (valueInLanguage === null) {
+                     resourceWarning(importState, 'i18nIsInQueryButHasNoValueForDefaultLanguage',
+                           { fieldName : idFieldName, resource : resource, defaultLanguage : defaultLanguage });
+                     lookupUriQuery = null;
+                     break; // next lookup query
+                  } else {
+                     // NB. could support querying without knowing the language, but must have a
+                     // value criteria that is provided in a given language anyway
+                     lookupUriQuery.p(idFieldName + '.v', valueInLanguage);
+                     lookupUriQuery.p(idFieldName + '.l', defaultLanguage);
+                  }
+               } else {
+                  lookupUriQuery.p(idFieldName, queryValue);
+               }
+            }
+         }
+         if (lookupUriQuery !== null) { // else one field was missing (or no fields in query)
+            break; // found a complete query,
+            // NB. multi criteria (ex. "between") not supported for lookup queries
+         }
+      }
+      
+      if (lookupUriQuery !== null) {
+         lookupQuery = "/dc/type/" + encodeUriPathComponent(mixin['dcmo:name']) + '?' + lookupUriQuery.s();
+         var alreadyFoundResource = importState.data.lookupQueryToResource[lookupQuery];
+         if (typeof alreadyFoundResource === 'undefined') {
+            importState.data.row.lookupQueriesToRun.push(lookupQuery);
+            resourceError(importState, 'lookupQueryToRunInNextIteration', // resourceWarning
+                  { lookupQuery : lookupQuery, resource : resource, loopIndex : importState.data.row.loopIndex });
+            return resource;
+         } else if (alreadyFoundResource !== null) {
+            ///uri = alreadyFoundResource['@id'];
+            return alreadyFoundResource;
+            // NB. not putting alreadyFoundResource in resources, only using it as id,
+            // but will be reused at resource POST time to avoid reGETting it
+         } // else remembered lookupQueryHasNoResult error
+      }
+      
+      if (mixin['dcmoid:queryBeforeCreate']) {
+         resourceError(importState, 'queryBeforeCreateRequiresCompleteLookupQuery',
+               { lookupQueries : mixin['dcmoid:lookupQueries'],
+               resource : resource });
+      } else {
+         resourceError(importState, 'missingValueForQueryField',
+               { lookupQueries : mixin['dcmoid:lookupQueries'],
+               resource : resource,
+               message : "ERROR missingValueForQueryField" });
+      }
+      return null; // 'noLookupQuery'; // not found any complete lookupUriQuery
+   }
+   
    function addResource(importedResource, mixin, importState, isTopLevel) {
       var irUri = importedResource["@id"];
       if (typeof irUri === 'undefined') {
@@ -1678,7 +1752,8 @@
               importState.data.row.done = true; // next row (last row being ONE ITERATION AFTER everything has been found,
               // so that ex. ancestors can be well computed)
               
-           } else if (importState.data.row.missingIdFieldResourceOrMixinNb // size equality enough if involvedMixins don't change
+           } else if (importState.data.row.lookupQueriesToRun.length === 0 // else run query first anyway below
+                 && importState.data.row.missingIdFieldResourceOrMixinNb // size equality enough if involvedMixins don't change
                       == importState.data.row.previousMissingIdFieldResourceOrMixinNb || importState.data.row.loopIndex > 20) {
               resourceError(importState, 'missingIdFields', {
                  missingIdFieldMixinToResources : importState.data.row.iteration.missingIdFieldMixinToResources,
@@ -2056,7 +2131,6 @@
             }
             
             if (fieldNameMixinsFound.length === dcMaxLimit) { // max limit
-               //return abortImport("Too many mixins (>= 100) found for field names to import");
                lastEnrichedModelOrMixinName = fieldNameMixinsFound[fieldNameMixinsFound.length - 1]['dcmo:name'];
                enrichImportedModelOrMixins(importState, success, lastEnrichedModelOrMixinName);
             } else if (success) {
@@ -2280,7 +2354,9 @@
                  importState.metamodel["dcmo:model_0"], importState, importState.model.defaultRow['importDefaultOnly']);
            mergeStringValueOrDefaultIfAny(mixin, "dcmo:importAutolinkedOnly", fieldRow["importAutolinkedOnly"],
                  importState.metamodel["dcmo:model_0"], importState, importState.model.defaultRow['importAutolinkedOnly']);
-           
+
+           mergeStringValueOrDefaultIfAny(mixin, "dcmoid:queryBeforeCreate", fieldRow["queryBeforeCreate"],
+                 importState.metamodel["dcmo:model_0"], importState, importState.model.defaultRow['queryBeforeCreate']);
            mergeStringValueOrDefaultIfAny(mixin, "dcmoid:idGenJs", fieldRow["idGenJs"], importState.metamodel["dcmo:model_0"], importState);
            mergeStringValueOrDefaultIfAny(mixin, "dcmoid:useIdForParent", fieldRow["useIdForParent"],
                  importState.metamodel["dcmo:model_0"], importState, importState.model.defaultRow['useIdForParent']);
@@ -2410,13 +2486,19 @@
               mergeImportConfStringValue(fieldNameTreeCur[fieldName], 'importconf:defaultStringValue',
                     fieldRow["defaultValue"], "string");
               var fieldInternalName = fieldNameTreeCur[fieldName]['importconf:internalName'];
-              if (fieldInternalName !== null) {
+              if (typeof fieldInternalName === 'string') {
                  importState.model.fieldNamesWithInternalNameMap[fieldName] = null; // used as a set, to build importedFieldNames
+                 if (!importState.model.fieldInternalNameToMixinNames[fieldInternalName]) {
+                    importState.model.fieldInternalNameToMixinNames[fieldInternalName] = {};
+                 }
+                 importState.model.fieldInternalNameToMixinNames[fieldInternalName][mixin['dcmo:name']] = null; // to filter importableMixins (NB. several ones occur because of a dotted path to ex. geoco:idIso which can have geocofr:idIso as fieldInternalName)
               }
-              if (!importState.model.fieldInternalNameToMixinNames[fieldInternalName]) {
-                  importState.model.fieldInternalNameToMixinNames[fieldInternalName] = {};
-              }
-              importState.model.fieldInternalNameToMixinNames[fieldInternalName][mixin['dcmo:name']] = null; // to filter importableMixins (NB. several ones occur because of a dotted path to ex. geoco:idIso which can have geocofr:idIso as fieldInternalName)
+              if (mixin['dcmoid:queryBeforeCreate']) {
+                 if (!importState.model.fieldInternalNameToMixinNames[fieldName]) {
+                    importState.model.fieldInternalNameToMixinNames[fieldName] = {};
+                 }
+                 importState.model.fieldInternalNameToMixinNames[fieldName][mixin['dcmo:name']] = null; // so that it is not required to fill Internal field name column by the value of the Field name column
+              } // else generic / abstract fields such as nace:code or geo:Area_0 would trigger import of ALL possible concrete types
            } // else may have already been seen within fieldPath
            
            } // end import field if any
