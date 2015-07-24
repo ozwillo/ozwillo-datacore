@@ -1250,7 +1250,8 @@
                   // TODO Q override more ex. field.computedOnce ones ?
                }
             } else if (!mixinHasInternalFieldNameValue) { // already executed but no existing resource found, or no complete lookup query found
-               return null; // avoid creating when used "abstract" field definition
+               return null; // avoid creating when used "abstract" field definition, require
+               // Internal field name specific to concrete type (but can still find, see below)
             }
             // (in which case an error has been added)
          }
@@ -1372,7 +1373,7 @@
          if (id !== null) {
             uri = buildUri(typeName, id);
             
-         }/* OPTIM */ else if (!mixin['dcmoid:queryBeforeCreate']) {
+         } else if (!mixin['dcmoid:queryBeforeCreate']) {
             var maybeAlreadyFoundResource = queryUri(resource, mixin, enrichedModelOrMixinFieldMap, mixinMustBeImported, importState);
             if (maybeAlreadyFoundResource != null) {
                if (!maybeAlreadyFoundResource['@id']) { 
@@ -1380,10 +1381,9 @@
                } else {
                   uri = maybeAlreadyFoundResource['@id']; // lookup query already done
                }
-            } else if (!mixinHasInternalFieldNameValue) { // already executed but no existing resource found, or no complete lookup query found
-               return null; // avoid creating when used "abstract" field definition
-            }
-         }/**/ // else already done before
+            } // NB. only find (create is done when queryBeforeCreate above)
+            // but even allowed using "abstract" field name ex. nace:code
+         }
          
          if (uri === null) {
             if (!mixinMustBeImported) {
@@ -2053,21 +2053,21 @@
    }
    
    function getImportedFieldsModels(importState, success) {// imported field names
-      // adding field names with internal field name :
-      importState.data.importedFieldNames = [];
-      var fieldNamesWithInternalNameMap = importState.model.fieldNamesWithInternalNameMap;
-      for (var fnInd in fieldNamesWithInternalNameMap) {
+      // adding 1. field Internal field name :
+       // (allows to add forecefully default only-valued Resources in Import phase 1)
+      for (var fnInd in importState.model.fieldNamesWithInternalNameMap) {
          importState.data.importedFieldNames.push(fnInd);
       }
-      // adding prefixed data column names :
+      // adding 2. (prefixed only i.e. not Import phase 1) data column names that are fields :
       for (var dcnInd in importState.data.columnNames) {
          var dataColumnName = importState.data.columnNames[dcnInd];
-         if (dataColumnName.indexOf(':') !== -1 && fieldNamesWithInternalNameMap[dataColumnName] === null) {
+         if (dataColumnName.indexOf(':') !== -1) {
             importState.data.importedFieldNames.push(dataColumnName);
          }
 
          // add its mixin to importableMixins :
-         var mixinNameSet = importState.model.fieldInternalNameToMixinNames[dataColumnName];
+         // (BUT NOT those that have Internal field names but are not among data columns)
+         var mixinNameSet = importState.model.fieldInternalNameAndNameToMixinNames[dataColumnName];
          if (mixinNameSet) {
             for (var mixinName in mixinNameSet) {
             // importable only if has an internalFieldName among data column names
@@ -2485,20 +2485,18 @@
                     "string");
               mergeImportConfStringValue(fieldNameTreeCur[fieldName], 'importconf:defaultStringValue',
                     fieldRow["defaultValue"], "string");
+              if (!importState.model.fieldInternalNameAndNameToMixinNames[fieldName]) {
+                 importState.model.fieldInternalNameAndNameToMixinNames[fieldName] = {};
+              }
+              importState.model.fieldInternalNameAndNameToMixinNames[fieldName][mixin['dcmo:name']] = null; // to filter importableMixins (NB. several ones occur because of a dotted path to ex. geoco:idIso which can have geocofr:idIso as fieldInternalName)
               var fieldInternalName = fieldNameTreeCur[fieldName]['importconf:internalName'];
               if (typeof fieldInternalName === 'string') {
+                 if (!importState.model.fieldInternalNameAndNameToMixinNames[fieldInternalName]) {
+                    importState.model.fieldInternalNameAndNameToMixinNames[fieldInternalName] = {};
+                 }
+                 importState.model.fieldInternalNameAndNameToMixinNames[fieldInternalName][mixin['dcmo:name']] = null; // to filter importableMixins (NB. several ones occur because of a dotted path to ex. geoco:idIso which can have geocofr:idIso as fieldInternalName)
                  importState.model.fieldNamesWithInternalNameMap[fieldName] = null; // used as a set, to build importedFieldNames
-                 if (!importState.model.fieldInternalNameToMixinNames[fieldInternalName]) {
-                    importState.model.fieldInternalNameToMixinNames[fieldInternalName] = {};
-                 }
-                 importState.model.fieldInternalNameToMixinNames[fieldInternalName][mixin['dcmo:name']] = null; // to filter importableMixins (NB. several ones occur because of a dotted path to ex. geoco:idIso which can have geocofr:idIso as fieldInternalName)
               }
-              if (mixin['dcmoid:queryBeforeCreate']) {
-                 if (!importState.model.fieldInternalNameToMixinNames[fieldName]) {
-                    importState.model.fieldInternalNameToMixinNames[fieldName] = {};
-                 }
-                 importState.model.fieldInternalNameToMixinNames[fieldName][mixin['dcmo:name']] = null; // so that it is not required to fill Internal field name column by the value of the Field name column
-              } // else generic / abstract fields such as nace:code or geo:Area_0 would trigger import of ALL possible concrete types
            } // else may have already been seen within fieldPath
            
            } // end import field if any
@@ -2899,7 +2897,7 @@
                modelOrMixins : {}, // NOOOO MUST NOT BE USED outside of csvToModel because have no global fields, rather use .data.involvedMixins
                mixinNameToFieldNameTree : {},
                fieldNamesWithInternalNameMap : {}, // used as set to get all models or mixins that are imported
-               fieldInternalNameToMixinNames : {}, // to filter importableMixins
+               fieldInternalNameAndNameToMixinNames : {}, // to filter importableMixins
                ///modelOrMixinArray : null, // MUST NOT BE USED outside of csvToModel because have no global fields, rather use .data.involvedMixins
                ///mixinArray : null, // MUST NOT BE USED outside of csvToModel because have no global fields, rather use .data.involvedMixins
                modelArray : null, // MUST NOT BE USED outside of csvToModel because have no global fields, rather use .data.involvedMixins
@@ -2938,6 +2936,7 @@
                file : null,
                fileName : 'samples/openelec/electeur_v26010_sample.csv',
                columnNames : null,
+               importedFieldNames : [],
                involvedMixins : {}, // name to mixin map
                importableMixins : {}, // name to mixin map
                rows : null,
