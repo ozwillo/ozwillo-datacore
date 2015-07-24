@@ -23,6 +23,8 @@ public class PlaygroundAuthenticationResourceBase extends PlaygroundResourceBase
    
    @Value("${accounts.authEndpointUrl}")
    protected String accountsLoginEndpointUrl; // = "https://accounts.ozwillo.com/a/login";
+   @Value("${accounts.logoutPageUrl}")
+   protected String accountsLogoutPageUrl; // = "https://accounts.ozwillo.com/a/logout";
    @Value("${datacorePlayground.scopes}")
    protected String playgroundScopes; // = "openid%20datacore%20profile%20email"; // also profile email to get any user infos
    @Value("${datacoreOAuthTokenService.client_id}")
@@ -35,6 +37,8 @@ public class PlaygroundAuthenticationResourceBase extends PlaygroundResourceBase
    protected String accountsTokenEndpointUrl; // = "https://accounts.ozwillo.com/a/token";
    @Value("${datacorePlayground.tokenExchangeRedirectUrl}")
    protected String playgroundTokenExchangeRedirectUrl; // = "https://data.ozwillo.com/dc/playground/token"; // = https://portal.ozwillo.com/callback // TODO rm
+   @Value("${datacorePlayground.LogoutRedirectUrl}")
+   protected String LogoutRedirectUrl; // = "https://data.ozwillo.com/dc/playground/token"; TODO ??
    @Value("${datacorePlayground.uiUrl}")
    protected String playgroundUiUrl; // = "http://localhost:8080/dc-ui/index.html";
    ///@Value("${datacore.devmode}")

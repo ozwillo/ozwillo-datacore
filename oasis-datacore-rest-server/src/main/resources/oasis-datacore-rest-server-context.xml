@@ -32,6 +32,8 @@
    <bean id="springPlaceholderResolver" class="org.oasis.datacore.rest.server.SpringPlaceholderResolver"/>
    
    
+   
+
    <!-- Server : -->
    
    <!-- server-side cache
