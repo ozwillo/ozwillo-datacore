@@ -171,7 +171,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       }
    }
 
-   private DCSecurity getSecurity(DCModelBase model) {
+   public DCSecurity getSecurity(DCModelBase model) {
       DCSecurity security = model.getSecurity();
       if (security == null) {
          DCProject project = modelService.getProject(model.getProjectName()); // model project
@@ -449,7 +449,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
     * @param entityAclGroups
     * @return
     */
-   private boolean hasAnyEntityAclGroup(DCUserImpl user, Set<String> entityAclGroups) {
+   public boolean hasAnyEntityAclGroup(DCUserImpl user, Set<String> entityAclGroups) {
       if (entityAclGroups == null || entityAclGroups.isEmpty()) { // TODO null should not happen ?!?
          return false;
       }

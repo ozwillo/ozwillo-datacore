@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.oasis.datacore.core.context.DatacoreRequestContextService;
 import org.oasis.datacore.core.entity.EntityModelService;
@@ -208,13 +209,6 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          // iri?, types?, owners? other fields...)
          sort = new Sort(Direction.DESC, DCEntity.KEY_CH_AT); // new Sort(Direction.ASC, "_uri")...
       }
-
-      if (serverRequestContext.isDebug()) {
-         Map<String, Object> debugCtx = serverRequestContext.getDebug(); // never null because isDebug()
-         debugCtx.put("queryParameters", params);
-         debugCtx.put(DatacoreApi.START_PARAM, start);
-         debugCtx.put(DatacoreApi.LIMIT_PARAM, limit);
-      }
       
       Query springMongoQuery = new Query(queryParsingContext.getCriteria())
          .with(sort).skip(start).limit(limit); // TODO rather range query, if possible on sort field
@@ -226,6 +220,18 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
                + springMongoQuery + "\n   in collection " + storageModel.getCollectionName()
                + " from Model " + model.getName() + " and parameters: " + params
                + "\n   with result nb " + foundEntities.size());
+      }
+      
+      if (serverRequestContext.isDebug()) {
+         Map<String, Object> debugCtx = serverRequestContext.getDebug(); // never null because isDebug()
+         debugCtx.put("queryParameters", params);
+         debugCtx.put(DatacoreApi.START_PARAM, start);
+         debugCtx.put(DatacoreApi.LIMIT_PARAM, limit);
+         DCUserImpl user = securityService.getCurrentUser();
+         debugCtx.put("ownedEntities", foundEntities.stream()
+               .filter(e -> permissionEvaluator.hasPermission(null, e, EntityPermissionEvaluator.GET_RIGHTS))
+               .map(e -> new DCEntity(e)) // otherwise once filled getCachedModel() triggers foundDatas being null on client side ?!?!
+               .collect(Collectors.toList()));
       }
       
       // setting cached model for future mapping to resource :
@@ -240,6 +246,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          // in sandbox / test / draft / not yet published phase).
          // TODO LATER better : put such cases in data health / governance inbox, through event
       }
+      
       return foundEntities;
    }
 
