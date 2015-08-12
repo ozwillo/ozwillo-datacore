@@ -145,6 +145,7 @@
               <artifactId>jetty-maven-plugin</artifactId>
               <version>${jetty.version}</version>
               <configuration>
+                <jvmArgs></jvmArgs>
                 <stopPort>9966</stopPort>
                 <stopKey>foo</stopKey>
                 <!-- avoiding scanning jars to speed up jetty startup :
