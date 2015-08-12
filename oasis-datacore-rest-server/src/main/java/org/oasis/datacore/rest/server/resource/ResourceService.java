@@ -402,8 +402,14 @@ public class ResourceService {
    }
    
 
-   /** security resource creation owners if any
-    * NOOOO also user group if would not be owner */
+   /**
+    * security resource creation owners if any
+    * according to model security if any, else project's
+    * NOOOO also user group if would not be owner
+    * @param dcModel
+    * @return model security (or if none project security) resourceCreationOwners
+    * if not empty, else current user personal group (u_userId)
+    */
    private Set<String> buildCreatorOwners(DCModelBase dcModel) {
       Set<String> creatorOwners;
       DCSecurity dcSecurity = modelService.getSecurity(dcModel);
