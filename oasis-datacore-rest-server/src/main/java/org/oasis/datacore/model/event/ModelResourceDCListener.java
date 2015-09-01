@@ -78,15 +78,15 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
          try {
             
             // first cleaning up resource ; required else default values have not been set by parsing yet
-            // which makes toModelOrMixin fail on ex. maxScan (null because unset) :
+            // which makes toModelOrMixin fail on ex. maxScan (null because unset) : (BEWARE therefore PATCH won't work on default values !)
             reMappingService.entityToResource(resourceService.resourceToEntity(r), r, false); // TODO write
             
             // map to model & check : 
             DCModelBase modelOrMixin = mrMappingService.toModelOrMixin(r); // checks project !
-            // clean resource / enrich with up-to-date computed fields
-            // (pointOfViewAbsoluteName, globalFields...) :
-            mrMappingService.modelToResource(modelOrMixin, r); 
-            // model consistency check : (NOT on startup else order of load can make it fail)
+            // update computed fields & clean resource
+            // (pointOfViewAbsoluteName, globalFields... required by resourceToEntity()) : (BEWARE this hampers PATCH !)
+            mrMappingService.modelToResource(modelOrMixin, r);
+            // model consistency check : (NOT on startup else order of load can make it fail) (BEWARE this forbids PATCH ?!!)
             mrMappingService.checkModelOrMixin(modelOrMixin, r);
             
          } catch (ResourceObsoleteException roex) { // specific handling for better logging
@@ -196,8 +196,6 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
     * @param modelOrMixin
     */
    private void updateDirectlyImpactedModels(DCModelBase modelOrMixin) {
-      DCProject project = dataModelService.getProject(modelOrMixin.getProjectName());
-      
       // let's remember seen models :
       // (else the same models may be seen several times from different projects
       // having their project as visible)
@@ -218,17 +216,8 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
             modelsWithOnlyImpactedSubresourceFields.add(existingModel);
          }
       }*/
-      for (DCProject p : dataModelAdminService.getProjectsSeing(project)) {
-         DCModelBase modelOrMixinSeenFromP = p.getModel(modelOrMixin.getName());
-         if (modelOrMixinSeenFromP != null) {
-            for (DCModelBase mm : modelOrMixinSeenFromP.getMixins()) { // NB. m.mixins do not contain m
-               if (!mm.getAbsoluteName().equals(modelOrMixin.getAbsoluteName())) {
-                  // p sees this version of modelOrMixin (possibly hidden / soft forked from another project)
-                  // and not another model with the same name in an orthogonal project, or a hard forked model
-                  continue;
-               }
-            }
-         }
+      List<DCProject> projectsSeeingModel = dataModelAdminService.getProjectsSeeingModel(modelOrMixin);
+      for (DCProject p : projectsSeeingModel) {
          for (DCModelBase existingModel : p.getModels()) { // including (non overriden) visible projects'
             if (!modelOrMixinAbsoluteNameSeenSet.add(existingModel.getAbsoluteName())) {
                continue; // already seen

@@ -98,31 +98,61 @@ public class DataModelServiceImpl implements DCModelService {
    /**
     * TODO cache
     * @param model must be storage
-    * @return models having given model as storage model
+    * @return models having given model as storage model, including itself (whether they are instanciable or not)
     */
    @Override
    public Collection<DCModelBase> getStoredModels(DCModelBase model) {
       ArrayList<DCModelBase> storedModels = new ArrayList<DCModelBase>();
       HashSet<String> alreadyDoneModelNames = new HashSet<String>();
-      for (DCProject p : this.getProjects()) {
+      for (DCProject p : this.getProjectsSeeingModel(model)) {
          /*if (p.getName().equals(project.getName())) {
             continue;
          }*/
          for (DCModelBase m : p.getModels()) { // including visible projects'
-            if (!m.getMixinNames().contains(model.getName())
-                  && !model.getName().equals(m.getName()) // NB. m.mixins do not contain m
-                  || alreadyDoneModelNames.contains(m.getName())) {
+            if (!alreadyDoneModelNames.add(m.getName())) {
                continue;
             }
-            alreadyDoneModelNames.add(m.getName());
+            if (!m.getGlobalMixinNames().contains(model.getName())
+                  && !model.getName().equals(m.getName())) { // NB. m.mixins do not contain m
+               continue; // TODO is this check still required ??
+            }
             DCModelBase storageModel = p.getStorageModel(m);
-            if (storageModel == null || !storageModel.getAbsoluteName().equals(model.getAbsoluteName())) {
-               continue;
+            if (storageModel != null && storageModel.getAbsoluteName().equals(model.getAbsoluteName())) {
+               storedModels.add(m);
             }
-            storedModels.add(m);
          }
       }
       return storedModels;
+   }
+
+
+   @Override
+   public List<DCProject> getProjectsSeeingModel(DCModelBase modelOrMixin) {
+      DCProject project = dataModelService.getProject(modelOrMixin.getProjectName());
+      return this.getProjectsSeeing(project).stream()
+            .filter(p -> doesProjectSeeModelOfSeenProject(p, modelOrMixin))
+            .collect(Collectors.toList());
+   }
+
+   private boolean doesProjectSeeModelOfSeenProject(DCProject p, DCModelBase modelOrMixin) {
+      DCModelBase modelOrMixinSeenFromP = p.getModel(modelOrMixin.getName());
+      if (modelOrMixinSeenFromP == null) {
+         // p sees project but not its modelOrMixin i.e. it has been
+         // hard forked (but not yet created), therefore no impact
+         return false;
+      }
+      if (modelOrMixinSeenFromP.getAbsoluteName().equals(modelOrMixin.getAbsoluteName())) {
+         return true; // p sees exactly modelOrMixin
+      }
+      // checking among mixins rather than itself in the case of hidden / soft fork :
+      for (DCModelBase mm : modelOrMixinSeenFromP.getMixins()) { // NB. m.mixins do not contain m
+         if (mm.getAbsoluteName().equals(modelOrMixin.getAbsoluteName())) {
+            // p sees a hidden / soft forked from another project version of modelOrMixin
+            // and not another model with the same name in an orthogonal project, or a hard forked model
+            return true;
+         }
+      }
+      return false;
    }
    
    
@@ -147,7 +177,7 @@ public class DataModelServiceImpl implements DCModelService {
       }
    }
    @Override
-   public List<DCProject> getProjectsSeing(DCProject project) {
+   public List<DCProject> getProjectsSeeing(DCProject project) {
       List<DCProject> projectsSeingIt = new ArrayList<DCProject>();
       p : for (DCProject p : dataModelService.getProjects()) {
          for (DCProject vp : dataModelService.getVisibleProjects(p)) {

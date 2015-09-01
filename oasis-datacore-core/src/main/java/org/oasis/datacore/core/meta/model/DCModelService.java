@@ -44,7 +44,14 @@ public interface DCModelService {
     * @param project
     * @return including given project !
     */
-   List<DCProject> getProjectsSeing(DCProject project);
+   List<DCProject> getProjectsSeeing(DCProject project);
+
+   /**
+    * Because project project seeing project can still hard fork one of its models
+    * @param modelOrMixin
+    * @return
+    */
+   List<DCProject> getProjectsSeeingModel(DCModelBase modelOrMixin);
 
    /** shortcut to build multiProjectStorage criteria, TODO request-level cache */
    LinkedHashSet<String> getVisibleProjectNames();

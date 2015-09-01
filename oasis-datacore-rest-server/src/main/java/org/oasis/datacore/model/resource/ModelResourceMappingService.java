@@ -806,10 +806,16 @@ public class ModelResourceMappingService {
          field = propsToListField(fieldResource, fieldName);
          break;
       case "i18n" :
-         // getting query limit (of its "v" list subfield) :
-         DCListField tmpField = propsToListField(fieldResource, fieldName);
-         fieldQueryLimit = ((DCMapField) tmpField.getListElementField()).getMapFields()
+         // getting query limit (biggest among its "v" list subfield and the field itself) :
+         fieldQueryLimit = ((DCMapField) propsToListField(fieldResource, fieldName)
+               .getListElementField()).getMapFields()
                .get(DCI18nField.KEY_VALUE).getQueryLimit();
+         Object topLevelFieldQueryLimitFound = fieldResource.get("dcmf:queryLimit");
+         int topLevelFieldQueryLimit = (topLevelFieldQueryLimitFound != null) ?
+               ((Integer) topLevelFieldQueryLimitFound).intValue() : 0;
+         if (fieldQueryLimit < topLevelFieldQueryLimit) {
+            fieldQueryLimit = topLevelFieldQueryLimit;
+         }
          // building :
          DCI18nField i18nField = new DCI18nField(fieldName, fieldQueryLimit);
          String defaultLanguage = (String) fieldResource.get("dcmf:defaultLanguage");

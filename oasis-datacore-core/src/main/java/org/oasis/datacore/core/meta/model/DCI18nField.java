@@ -7,6 +7,7 @@ import java.util.LinkedHashSet;
  * i18n field, as a list of l to v maps
  * NB. "required" field has no meaning here (would be within a given language and even then...)
  * TODO LATER default language in more context than global & model : request, user...
+ * query limit : taken as biggest among its "v" list subfield and the field itself
  * @author mdutoo
  *
  */
