@@ -2561,10 +2561,29 @@
                }
             }
             var parentsFieldNb = Object.keys(parentIndexToFieldNames).length;
+            var parentFieldNameSet = {};
             if (parentsFieldNb !== 0) {
                mixin['dcmoid:parentFieldNames'] = [];
                for (var fInd = 0; fInd < parentsFieldNb; fInd++) {
-                  mixin['dcmoid:parentFieldNames'].push(parentIndexToFieldNames[fInd]);
+                  var parentFieldName = parentIndexToFieldNames[fInd];
+                  mixin['dcmoid:parentFieldNames'].push(parentFieldName);
+                  parentFieldNameSet[parentFieldName] = true;
+               }
+            }
+            if (idFieldNb !== 0) {
+               var possibleParentFieldNames = mixin['dcmoid:parentFieldNames'] ? mixin['dcmoid:parentFieldNames'] : [];
+               // helper : also auto add id fields as parent fields when they are not yet such
+               // (however, to fully control parent field order ex. primary parent is an id field,
+               // all parent fields have to have an indexInParents)
+               for (var fInd = 0; fInd < idFieldNb; fInd++) {
+                  var idFieldName = idIndexToFieldNames[fInd];
+                  var idField = mixin["dcmo:fields"][idFieldName];
+                  if (idField["dcmf:type"] === "resource" && !parentFieldNameSet[idFieldName]) {
+                      possibleParentFieldNames.push(idFieldName);
+                  }
+               }
+               if (possibleParentFieldNames.length > 0) {
+                  mixin['dcmoid:parentFieldNames'] = possibleParentFieldNames;
                }
             }
             var lookupQueryNb = Object.keys(lookupQueryNameToFields).length;

@@ -148,15 +148,21 @@
 &nbsp;&nbsp;&nbsp;&nbsp;
 samples :
 <a href="samples/model_template.csv">empty template</a>
-(<a href="samples/model_template.ods">.ods</a>),
+(<a href="samples/model_template.ods">.ods</a>) for Phase 1,
+<a href="samples/master/2.10_Master_Model.csv">Model Master</a>
+(<a href="samples/master/2.10_Master_Model.ods">.ods</a>) for Phase 2,
 OpenElec
 <a href="samples/openelec/oasis-donnees-metiers-openelec.csv">v0.1</a>,
+<!--
 Geo Hierarchy
 <a href="samples/geohier/geo_model.csv">v0.1</a>,
 <a href="samples/geohier/v10/Territorial_jurisdiction_model2_mdutoo.csv">v0.10</a> (i18n, NUTS2/3),
 <a href="samples/geohier/v14/Territorial_jurisdiction_model2_mdutoo.csv">v0.14</a>,
+-->
 Geo Mapping
-<a href="samples/geomap/cityPlanning.csv">v0.2</a>
+<a href="samples/geomap/cityPlanning.csv">v0.2</a>,
+<a href="samples/">all</a>
+
 <br/><br/>
 <span class="json dcjsonarea modelRowCounter">Handled no model row yet</span>&nbsp;&nbsp;
 <span class="json dcjsonarea modelCounter">Posted no model yet</span>
@@ -181,6 +187,7 @@ Geo Mapping
 samples :
 OpenElec
 <a href="samples/openelec/electeur_v26010_sample.csv">v0.1</a>,
+<!--
 Geo Hierarchy
 <a href="samples/geohier/geo_data_samplefrit.csv">v0.1</a>,
 v0.10
@@ -191,6 +198,7 @@ v0.14
 <a href="samples/geohier/v14/Territorial_jurisdiction_model2_mdutoo_datait.csv">it</a>
 <a href="samples/geohier/v14/Territorial_jurisdiction_model2_mdutoo_dataes.csv">es</a>
 <a href="samples/geohier/v14/Territorial_jurisdiction_model2_mdutoo_datatk.csv">tk</a>,
+-->
 Geo Mapping
 v0.2
 <a href="samples/geomap/cityPlanning_data_cityareait.csv">cityareait</a>
@@ -205,8 +213,8 @@ v0.2
 <button class="dc-import-button" onclick="javascript:return importModelAndResources(getImportStateConf());"><b>import</b></button>
 &nbsp;(clicking button with no file selected uses OpenElec sample files)
 <br/><br/>
-<b>WARNING if Resources that depend on others are not imported, click button again</b>
-(because for now Resources are not imported all at once nor ordered according to their dependencies).
+<b>WARNING if Models or Resources that depend on others are not imported, click on button again</b>
+(because for now they are not imported all at once nor ordered according to their dependencies).
 <br/><br/>
 To get more info about import errors, for now open your browser's javascript console.
 <br/><br/>

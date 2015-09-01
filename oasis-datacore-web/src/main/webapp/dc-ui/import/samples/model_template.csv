@@ -1,33 +1,5 @@
 Mixin,Field name,ORIG Field name,Data type,Precision,Multiple,Description,Internal field name,ORIG Internal field name,defaultValue,defaultLanguage,indexInId,indexInParents,queryNames,isInstanciable,isStorage,isDefinition,Has Mixins,Inherits,fieldAndMixins,isHistorizable,isContributable,documentation,maxScan,storageModel,importDefaultOnly,importAutolinkedOnly,useIdForParent,evalAsJs,dontEncodeIdInUri,jsFunctionToEval,isInRefMixin,useIdForRefMixin,useParentForRefMixin,specificToCountryLanguage,queryLimit,aliasedStorageNames,readonly,queryBeforeCreate
-// doc & TODOs (next line is defaults),"DONE gdenis samples ids (& relative designator ? Lower case ? All levels ?) for each type of first data line (& first Italian line)
-DONE gdenis check data for each field of first data line (& first Italian line)
-TODO gdenis DONE inheriting NUTS2/3 and then country-specific types using polymorphism and separate fr/it/es/tkData.csv DONE for fr tk, then DONE delete all « level »
-DONE ancestors : only on geo:Area ? YES Make it work so. Does it solve the portal's need ? YES
-DONE server : once polymorphism, o:ancestors ref type check
-DONE import : once polymorphism, don't import mixins (or make it configurable)
-DONE import : extract model import prefix from file name (OPT & display it)
-TOTEST import : raise error if non-URL (http prefixed) value for Resource-typed field
-DONE import : is separate ancestors from indexInId required now ? YES because NUT3 has not its NUTS2 in its id but also requires NUTS2!=3. Then do it
-DONE import : i18n, for id default language is en (or LATER by model LATER default for a language ex. fr for fr_ca)
-TODO LATER import : don't redefine fields to import when unnecessary, check that model overrides are compatible (no type change...), update cache
- TODO i18n of o_displayable:name / geo_area:name, then delete all « name », and DONE keep only one of o_displayable:name / geo_area:name / geo_City:name
- TODO i18n of model names (must be gotten separately and cached), then delete all « label »
-TODO more i18n : query on default language by default, defaultLanguage of import!= of model / its use
-TODO country ref on NUTS and below, NUTS2 ref on NUTS3 and below : copied fields ? Referencing Mixin ? As embedded ressource ? At least only one of geo_Area:country, geo_City:country etc. KEEP THE SPECIFIC ONE
- TODO pretty prefixes DONE FOR Internal field name
-TODO link by query on key field and not only id (in order to unify models across business domains)
- TODO server : indexInId, ancestors & deduplication key fields redux
- Q :
- o_displayable:name = geo_area:name ? YES = Country:geoName ? YES =others typex:name ? YES NB. Displayable clearer about what it's about i.e. its « business »
- Parent spécifique ou générique ? Spécifique for now car facilite le linking and ancestors are generic anyway, see once refMixin / subresource
- Gdenis « info » = i18n, see above
-TODO Are all idIso fields the same or not ? Yes => generic field BUT CONTRADICTS ABOVE
-Designator still useful vs idIso (same value) ? NO Id any useful (no value) ? NO IdStat ? YES idNational ? YES means id actually used everyday
-idStat as id for Communidad Autonoma ?!! then different id policy ;_; required better find than by URI id (must recompute it => by ((key)) fields) OR merely say that idStat is valued to idIso for others and use idStat everywhere
-LATER Subtype resource fields ex. Departement to Region ???
-Subtype URIs not subtyped ex. http://.../Country/FR rather than http://.../CountryFR/FR ??
-For now i18n up to NUTS3, also below ex. CityGroup, Borough ?
- & see below",,,,,,,,avoid if several of the same (sub)type,,,,,"Is Mixin = !isInstanciable.
+// doc & TODOs (next line is defaults),,,,,,,,,avoid if several of the same (sub)type,,,"Note that for ease of use, id fields are auto added as parent fields when they are not yet such (however, to fully control parent field order ex. primary parent is an id field, all parent fields have to have an indexInParents)",,"Is Mixin = !isInstanciable.
 Defaults to true, set to false when :
 you don't want to import a Resource of this precise type,
 such as for reusable, not concrete type (mixin)
