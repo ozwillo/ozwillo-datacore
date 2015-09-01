@@ -1985,7 +1985,7 @@
    
    function fillData(importState) {
       if (importState.data.rowLimit == 0) {
-         return;
+         return concludeImport();
       } // else > 0, or -1 means all ; or 
       
       resetResourceCounters();
