@@ -317,7 +317,10 @@ to go to the corresponding model definition.
 &nbsp;&nbsp;- <b>click on a property name</b> to similarly go to the model that defines it.
 <br/><br/>
 &nbsp;&nbsp;- <b>click on <span class="dcjsonline">:</span></b> between a property's key and value to query
-all other resources with the same value for this property in the same model type.
+all other resources with the same value for this property in the same model type. Note that the Playground
+shows said key and value UNencoded in order to make it easier to enter text in the language of the user,
+but that developers should URI-encode them nonetheless, as Playground actually does (see its HTTP queries
+in a debugger such as Firebug). 
 <br/><br/>
 &nbsp;&nbsp;- <b>click on <span class="dcjsonline">/</span></b> between a URI's model type and id to look for
 resources that refer (link) to it : if it's a metamodel it queries its resources,
