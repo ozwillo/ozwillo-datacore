@@ -36,7 +36,8 @@ function initUserInfo() {
          // log test admin :
          userinfo = {
                nickname : 'Administrator',
-               sub_groups : 'admin,u_john,tutor_jim,rm_altTourism.place.SofiaMonastery_readers',
+               sub_groups : ['admin', 'u_john', 'tutor_jim',
+                             'rm_altTourism.place.SofiaMonastery_readers'],
                test : true,
                anonymous : true
          };
@@ -47,7 +48,9 @@ function initUserInfo() {
       $('#logout').hide();
    }
    var welcomeHtml = 'Welcome <span style="text-decoration:underline;" title="'
-      + ((userinfo.sub_groups) ? 'groups: ' + userinfo.sub_groups : 'no groups') + '">'
+      + ((userinfo.sub) ? 'sub: ' + userinfo.sub : 'none') + "\n"
+      + ((userinfo.sub_groups) ? 'groups: ' + userinfo.sub_groups.join(', ') : 'no groups')
+      + '">'
       + userinfo.nickname + '</span>'
       + ((userinfo.test) ? ' (test account)' : '')
       + ((userinfo.email) ? ' (' + userinfo.email + ')' : '')
