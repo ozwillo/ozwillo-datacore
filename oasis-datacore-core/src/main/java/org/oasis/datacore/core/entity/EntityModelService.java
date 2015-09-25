@@ -2,6 +2,7 @@ package org.oasis.datacore.core.entity;
 
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.model.DCEntityBase;
@@ -237,32 +238,40 @@ public class EntityModelService {
             ///|| namesOfProjectsForkingUri.contains(storageModel.getProjectName())) { // else stored in forking project (most common case)
          return null; // none
       }
-      LinkedHashSet<String> visibleProjectNames = modelService.getVisibleProjectNames();
+      
+      LinkedHashSet<String> visibleProjectNames = modelService.toNames(
+            modelService.getVisibleProjects(modelService.getProject()));
+      // only retain leaf-most visible project forking this uri
+      // (if any, else if none visible result is not impacted)
+      // therefore starting from last forkedUriProject :
       String[] forkedUriProjectNameArray = forkedUriProjectNames.toArray(new String[forkedUriProjectNames.size()]);
       for (int i = forkedUriProjectNameArray.length - 1; i >= 0; i--) { // starting from last
          String forkedUriProjectName = forkedUriProjectNameArray[i];
          if (visibleProjectNames.contains(forkedUriProjectName)) {
-            LinkedHashSet<String> forkedUriInvisibleProjectNames = new LinkedHashSet<String>(modelService
-                  .getVisibleProjectNames(forkedUriProjectName));
-            forkedUriInvisibleProjectNames.remove(forkedUriProjectName); // uri still OK in forking projects
+            LinkedHashSet<String> forkedUriInvisibleProjectNames = new LinkedHashSet<String>(visibleProjectNames);
+            forkedUriInvisibleProjectNames.remove(forkedUriProjectName); // removing the only visible one (current) FOR THIS URI
             // (unless uri is visible through another visible project than projects that fork it,
             // but then it would be an inconsistent configuration)
             return forkedUriInvisibleProjectNames;
          }
       }
+      // no visible project forking this uri, therefore making no project invisible
       return null;
    }
 
    public LinkedHashSet<String> getVisibleProjectNames(String uri) {
-      LinkedHashSet<String> visibleProjectNames = modelService.getVisibleProjectNames();
-      if (uri != null) {
-         LinkedHashSet<String> forkedUriInvisibleProjectNames = getForkedUriInvisibleProjectNames(uri);
-         if (forkedUriInvisibleProjectNames != null) {
-            LinkedHashSet<String> uriVisibleProjectNames = new LinkedHashSet<String>(visibleProjectNames);
-            uriVisibleProjectNames.removeAll(forkedUriInvisibleProjectNames);
-            return uriVisibleProjectNames;
-         }
-      } // else LDP
+      LinkedHashSet<String> visibleProjectNames = modelService.toNames(
+            modelService.getVisibleProjects(modelService.getProject()));
+      if (uri == null) { // LDP
+         return visibleProjectNames;
+      }
+      
+      LinkedHashSet<String> forkedUriInvisibleProjectNames = getForkedUriInvisibleProjectNames(uri);
+      if (forkedUriInvisibleProjectNames != null) {
+         return new LinkedHashSet<String>(visibleProjectNames.stream()
+               .filter(n -> !forkedUriInvisibleProjectNames.contains(n))
+               .collect(Collectors.toList()));
+      }
       return visibleProjectNames;
    }
    

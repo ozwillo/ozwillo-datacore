@@ -18,6 +18,7 @@ import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.model.DCSecurity;
+import org.oasis.datacore.core.meta.pov.DCPointOfView;
 import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.core.meta.pov.ProjectException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +53,9 @@ public class DataModelServiceImpl implements DCModelService {
    
    private Map<String,DCProject> projectMap = new HashMap<String, DCProject>();
 
-   /** not in project because more efficient without complex cache,
+   /**
+    * forkedUris are ordered with leaf projects being last.
+    * not in project because more efficient without complex cache,
     * LATER maybe make it a cache */
    private HashMap<String,LinkedHashSet<String>> forkedUriToProjectNames = null;
 
@@ -191,8 +194,8 @@ public class DataModelServiceImpl implements DCModelService {
    }
 
    @Override
-   public LinkedHashSet<String> getVisibleProjectNames() {
-      return new LinkedHashSet<String>(this.getVisibleProjects(this.getProject()).stream()
+   public LinkedHashSet<String> toNames(Collection<? extends DCPointOfView> projects) {
+      return new LinkedHashSet<String>(projects.stream()
             .map(p -> p.getName()).collect(Collectors.toList()));
    }
    @Override
@@ -213,7 +216,9 @@ public class DataModelServiceImpl implements DCModelService {
          if (alreadyHandledProjects.contains(project)) {
             continue;
          }
+         // adding upper projects forkedUri first, so that forkedUris are ordered with leaf projects being last :
          buildForkedUriToProjectNames(project.getLocalVisibleProjects(), res, alreadyHandledProjects);
+         // then adding this project's forkedUris :
          if (project.getForkedUris() != null) {
             for (String forkedUri : project.getForkedUris()) {
                LinkedHashSet<String> forkingProjects = res.get(forkedUri);
@@ -229,7 +234,7 @@ public class DataModelServiceImpl implements DCModelService {
       return res;
    }
 
-   @Override
+   /*@Override
    public LinkedHashSet<String> getVisibleProjectNames(Collection<String> projectNames) {
       LinkedHashSet<DCProject> allVisibleProjects = new LinkedHashSet<DCProject>();
       for (String projectName : projectNames) {
@@ -237,15 +242,7 @@ public class DataModelServiceImpl implements DCModelService {
       }
       return new LinkedHashSet<String>(allVisibleProjects.stream()
             .map(p -> p.getName()).collect(Collectors.toList()));
-   }
-
-   @Override
-   public LinkedHashSet<String> getVisibleProjectNames(String projectName) {
-      LinkedHashSet<DCProject> allVisibleProjects = new LinkedHashSet<DCProject>();
-      fillVisibleProjects(this.getProject(projectName), allVisibleProjects);
-      return new LinkedHashSet<String>(allVisibleProjects.stream()
-            .map(p -> p.getName()).collect(Collectors.toList()));
-   }
+   }*/
    
    @Override
    public DCProject getProject(String projectName) {
@@ -359,6 +356,7 @@ public class DataModelServiceImpl implements DCModelService {
    }
    
    public void updateProject(DCProject project) {
+      projectMap.put(project.getName(), project); // in case instance changed ; or copy fields
       this.forkedUriToProjectNames = null;
    }
 

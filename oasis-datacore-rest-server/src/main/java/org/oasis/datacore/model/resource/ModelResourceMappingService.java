@@ -126,7 +126,7 @@ public class ModelResourceMappingService {
       projectResource.set("dcmp:localVisibleProjects", project.getLocalVisibleProjects().stream()
             .map(p -> this.buildNameUri(ResourceModelIniter.MODEL_PROJECT_NAME, p.getName())).collect(Collectors.toList())); // NOT toSet else JSON'd as HashMap
       projectResource.set("dcmp:visibleProjectNames", new ArrayList<String>(
-            dataModelService.getVisibleProjectNames(project.getName()))); // only to display for now
+            dataModelService.toNames(dataModelService.getVisibleProjects(project)))); // only to display for now
       projectResource.set("dcmp:forkedUris", new ArrayList<String>(
             project.getForkedUris())); // only to display for now
       projectResource.set("dcmp:frozenModelNames", new ArrayList<String>(
@@ -392,14 +392,14 @@ public class ModelResourceMappingService {
     * @throws URISyntaxException 
     * @throws MalformedURLException 
     */
-   public DCProject toProject(DCResource r) throws ResourceException, MalformedURLException, URISyntaxException {
+   public DCProject toProject(DCResource r) throws ResourceException {
       // project is always be oasis.main for projects
       //String pointOfViewAbsoluteName = dataModelService.getProject().getAbsoluteName();
       String name = (String) r.get(ResourceModelIniter.POINTOFVIEW_NAME_PROP);
       DCProject project = new DCProject(name);
       return toProject(r, project);
    }
-   public DCProject toProject(DCResource r, DCProject project) throws ResourceException, MalformedURLException, URISyntaxException {
+   public DCProject toProject(DCResource r, DCProject project) throws ResourceException {
       // project is always be oasis.main for projects
       //String pointOfViewAbsoluteName = dataModelService.getProject().getAbsoluteName();
 
@@ -429,7 +429,13 @@ public class ModelResourceMappingService {
       if (visibleProjectUris != null) {
          //for (Map<String, Object> visibleProject : visibleProjects) {
          for (String visibleProjectUri : visibleProjectUris) {
-            String visibleProjectName = UriHelper.parseUri(visibleProjectUri).getId();
+            String visibleProjectName;
+            try {
+               visibleProjectName = UriHelper.parseUri(visibleProjectUri).getId();
+            } catch (MalformedURLException | URISyntaxException e) {
+               throw new ResourceException("Bad visible project URI",
+                     e, r, dataModelService.getProject()); // TODO LATER business exception
+            }
             DCProject visibleProject = dataModelService.getProject(visibleProjectName);
             if (visibleProject == null) {
                throw new ResourceException("Can't find visibleProject " + visibleProjectName,

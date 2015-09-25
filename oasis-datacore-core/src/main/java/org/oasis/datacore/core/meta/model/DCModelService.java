@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 
+import org.oasis.datacore.core.meta.pov.DCPointOfView;
 import org.oasis.datacore.core.meta.pov.DCProject;
 
 
@@ -35,12 +36,6 @@ public interface DCModelService {
    Collection<DCProject> getProjects();
    /**
     * 
-    * @param localVisibleProject
-    * @return including given project !
-    */
-   Collection<DCProject> getVisibleProjects(DCProject localVisibleProject);
-   /**
-    * 
     * @param project
     * @return including given project !
     */
@@ -53,14 +48,15 @@ public interface DCModelService {
     */
    List<DCProject> getProjectsSeeingModel(DCModelBase modelOrMixin);
 
-   /** shortcut to build multiProjectStorage criteria, TODO request-level cache */
-   LinkedHashSet<String> getVisibleProjectNames();
    /** (in memory for now) */
    LinkedHashSet<String> getForkedUriProjectNames(String uri);
-   /** TODO cache */
-   LinkedHashSet<String> getVisibleProjectNames(Collection<String> namesOfProjectsForkingUri);
-   /** TODO cache */
-   LinkedHashSet<String> getVisibleProjectNames(String projectName);
+   /**
+    * Works on a new project ; use it to build multiProjectStorage criteria ;TODO cache
+    * @param localVisibleProject
+    * @return including given project !
+    */
+   LinkedHashSet<DCProject> getVisibleProjects(DCProject localVisibleProject);
+   LinkedHashSet<String> toNames(Collection<? extends DCPointOfView> projects);
 
    /**
     * POLY NEW replaces getModel/Mixin TODO migrate.

@@ -125,10 +125,8 @@ public class ProjectResourceDCListener extends DCResourceEventListener implement
       }
       
       // let's actually register the DCProject
-      // TODO TODO in a cleaner way !!!!!!!!!!!!!!!!!!!
-      if (previousProject != null) {
-         dataModelAdminService.addProject(project); // in case not already there
-      } // else TODO load its models
+      dataModelAdminService.addProject(project); // resets& rebuilds forkedUriToProjectNames ; even if null previousProject, in case not already there
+      //mrMappingService.toProject(mrMappingService.projectToResource(project), previousProject);
 
       /*try {
          // let's update storage (index...) :
@@ -157,8 +155,24 @@ public class ProjectResourceDCListener extends DCResourceEventListener implement
 
       if (initService.isInited()
             && doneEventType == ModelDCEvent.UPDATED) {
-         ///updateDirectlyImpactedProjects(project);
+         updateDirectlyImpactedProjects(project, previousProject);
       } // else creation which has no impact
+   }
+
+   private void updateDirectlyImpactedProjects(DCProject project, DCProject previousProject) {
+      if (!previousProject.getLocalVisibleProjects().equals(project.getLocalVisibleProjects())) {
+         for (DCProject projectToRepersist : dataModelService.getProjectsSeeing(previousProject)) {
+            try {
+               resourceService.createOrUpdate(mrMappingService.projectToResource(projectToRepersist),
+                     "dcmp:Project_0", false, true, true);
+            } catch (Exception ex) {
+               logger.error("Unknown error while repersisting project with impacted visible projects "
+                     + projectToRepersist.getName() + " by change in project "
+                     + project.getName(), ex);
+            }
+            // NB. already in oasis.meta project since triggered by a project update
+         }
+      }
    }
 
    /**

@@ -162,9 +162,10 @@ public class LoadPersistedModelsAtInit extends InitableBase {
             if (entry.getValue() instanceof ResourceTypeNotFoundException) {
                ResourceTypeNotFoundException rtnfex = (ResourceTypeNotFoundException) entry.getValue();
                String causeNotFoundMixinAbsoluteName = rtnfex.getModelType();
-               String notFoundInProjectName = rtnfex.getProject().getName();
+               DCProject notFoundInProject = rtnfex.getProject();
                boolean foundCause = false;
-               for (String visibleProjectName : dataModelService.getVisibleProjectNames(notFoundInProjectName)) {
+               for (String visibleProjectName : dataModelService.toNames(
+                     dataModelService.getVisibleProjects(notFoundInProject))) {
                   String causeNotFoundMixinPossibleAbsoluteName = visibleProjectName + '.' + causeNotFoundMixinAbsoluteName;
                   if (modelsInError.containsKey(causeNotFoundMixinPossibleAbsoluteName)) {
                      foundCause = true;

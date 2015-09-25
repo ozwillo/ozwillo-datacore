@@ -5,6 +5,7 @@ import static org.oasis.datacore.sample.PublicPrivateOrganizationSample.*;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,6 +18,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.oasis.datacore.common.context.SimpleRequestContextProvider;
+import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.query.ldp.LdpEntityQueryServiceImpl;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCField;
@@ -31,6 +33,7 @@ import org.oasis.datacore.rest.client.QueryParameters;
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.sample.PublicPrivateOrganizationSample;
 import org.oasis.datacore.sample.ResourceModelIniter;
+import org.oasis.datacore.server.uri.UriService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -74,6 +77,9 @@ public class ProjectTest {
    private LdpEntityQueryServiceImpl ldpEntityQueryServiceImpl;
    @Autowired
    private ResourceService resourceService;
+   /** for testing purpose */
+   @Autowired
+   private EntityModelService entityModelService;
    
    @Autowired
    private PublicPrivateOrganizationSample orgSample;
@@ -91,6 +97,26 @@ public class ProjectTest {
    
    @Test
    public void testMultiStorageProjectAllowsAltModels() throws MalformedURLException, URISyntaxException {
+      String org2ModelUri = UriService.buildUri("dcmo:model_0", ORG2);
+      
+      LinkedHashSet<String> org2ModelUriProjectNames = modelServiceImpl.getForkedUriProjectNames(org2ModelUri);
+      Assert.assertTrue(org2ModelUriProjectNames.contains("samples_org2.pri") && org2ModelUriProjectNames.size() == 1);
+
+      LinkedHashSet<String> org2ModelUriInvisibleProjectNames = new SimpleRequestContextProvider<LinkedHashSet<String>>() {
+         protected LinkedHashSet<String> executeInternal() throws MalformedURLException, URISyntaxException {
+            return entityModelService.getForkedUriInvisibleProjectNames(org2ModelUri);
+         }
+      }.execInContext(new ImmutableMap.Builder<String, Object>()
+            .put(DatacoreApi.PROJECT_HEADER, ORG2_PROJECT).build());
+      Assert.assertEquals("no invisible project", org2ModelUriInvisibleProjectNames, null);
+      LinkedHashSet<String> org2ModelUriVisibleProjectNames = new SimpleRequestContextProvider<LinkedHashSet<String>>() {
+         protected LinkedHashSet<String> executeInternal() throws MalformedURLException, URISyntaxException {
+            return entityModelService.getVisibleProjectNames(org2ModelUri);
+         }
+      }.execInContext(new ImmutableMap.Builder<String, Object>()
+            .put(DatacoreApi.PROJECT_HEADER, ORG2_PROJECT).build());
+      Assert.assertEquals("regular visible projects", org2ModelUriVisibleProjectNames,
+            new LinkedHashSet<String>() {{ add("samples_org2"); add("oasis.meta"); }});
       DCResource org2Org2ModelResource = new SimpleRequestContextProvider<DCResource>() {
          protected DCResource executeInternal() throws MalformedURLException, URISyntaxException {
             return datacoreApiClient.getData(ResourceModelIniter.MODEL_MODEL_NAME, ORG2);
@@ -98,6 +124,23 @@ public class ProjectTest {
       }.execInContext(new ImmutableMap.Builder<String, Object>()
             .put(DatacoreApi.PROJECT_HEADER, ORG2_PROJECT).build());
       Assert.assertNotNull(org2Org2ModelResource);
+      
+      LinkedHashSet<String> org2ModelPri2UriInvisibleProjectNames = new SimpleRequestContextProvider<LinkedHashSet<String>>() {
+         protected LinkedHashSet<String> executeInternal() throws MalformedURLException, URISyntaxException {
+            return entityModelService.getForkedUriInvisibleProjectNames(org2ModelUri);
+         }
+      }.execInContext(new ImmutableMap.Builder<String, Object>()
+            .put(DatacoreApi.PROJECT_HEADER, ORGPRI2_PROJECT).build());
+      Assert.assertEquals("invisible projects", org2ModelPri2UriInvisibleProjectNames,
+            new LinkedHashSet<String>() {{ add("samples_org2"); add("oasis.meta"); }});
+      LinkedHashSet<String> org2ModelUriPri2VisibleProjectNames = new SimpleRequestContextProvider<LinkedHashSet<String>>() {
+         protected LinkedHashSet<String> executeInternal() throws MalformedURLException, URISyntaxException {
+            return entityModelService.getVisibleProjectNames(org2ModelUri);
+         }
+      }.execInContext(new ImmutableMap.Builder<String, Object>()
+            .put(DatacoreApi.PROJECT_HEADER, ORGPRI2_PROJECT).build());
+      Assert.assertEquals("fork visible projects", org2ModelUriPri2VisibleProjectNames,
+            new LinkedHashSet<String>() {{ add("samples_org2.pri"); }});
       DCResource orgpri2Org2ModelResource = new SimpleRequestContextProvider<DCResource>() {
          protected DCResource executeInternal() throws MalformedURLException, URISyntaxException {
             return datacoreApiClient.getData(ResourceModelIniter.MODEL_MODEL_NAME, ORG2);
