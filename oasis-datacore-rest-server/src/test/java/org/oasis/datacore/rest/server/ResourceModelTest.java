@@ -619,7 +619,7 @@ public class ResourceModelTest {
          m = mrMappingService.toModelOrMixin(mr); // to update version in case fails
          Assert.fail("Should not be able to change a frozen model");
       } catch (ForbiddenException fex) {
-         Assert.assertTrue(UnitTestHelper.readBodyAsString(fex).contains("Access denied error while converting")); // "Can't update frozen model"
+         Assert.assertTrue(UnitTestHelper.readBodyAsString(fex).contains("Access denied error (Can't update frozen model")); // Access denied error (Can't update frozen model sample.city.city in project oasis.sample) while converting or enriching to model or mixin sample.city.city with dcmo:pointOfViewAbsoluteName=oasis.sample in project oasis.sample, aborting POSTing resource (as admin).
          Assert.assertEquals("The frozen model shouldn't have been persisted", mr.getVersion(), datacoreApiClient
                .getData(ResourceModelIniter.MODEL_MODEL_NAME, CityCountrySample.CITY_MODEL_NAME).getVersion());
       }
@@ -643,7 +643,7 @@ public class ResourceModelTest {
          m = mrMappingService.toModelOrMixin(mr); // to update version in case fails
          Assert.fail("Should not be able to change a frozen model");
       } catch (ForbiddenException fex) {
-         Assert.assertTrue(UnitTestHelper.readBodyAsString(fex).contains("Access denied error while converting")); // "Can't update frozen model"
+         Assert.assertTrue(UnitTestHelper.readBodyAsString(fex).contains("Access denied error (Can't update frozen model")); // Access denied error (Can't update frozen model sample.city.city in project oasis.sample) while converting or enriching to model or mixin sample.city.city with dcmo:pointOfViewAbsoluteName=oasis.sample in project oasis.sample, aborting POSTing resource (as admin).
          Assert.assertEquals("The frozen model shouldn't have been persisted", mr.getVersion(), datacoreApiClient
                .getData(ResourceModelIniter.MODEL_MODEL_NAME, CityCountrySample.CITY_MODEL_NAME).getVersion());
       }
@@ -713,7 +713,7 @@ public class ResourceModelTest {
          m = mrMappingService.toModelOrMixin(mr); // to update version in case fails
          Assert.fail("Should not be able to change a model without any allowed prefix");
       } catch (ForbiddenException fex) {
-         Assert.assertTrue(UnitTestHelper.readBodyAsString(fex).contains("Access denied error while converting")); // "Can't update model without any allowed model prefix"
+         Assert.assertTrue(UnitTestHelper.readBodyAsString(fex).contains("Access denied error (Can't update model without any allowed model prefix")); // Access denied error (Can't update model without any allowed model prefix ([anyotherprefix]) sample.city.city in project oasis.sample) while converting or enriching to model or mixin sample.city.city with dcmo:pointOfViewAbsoluteName=oasis.sample in project oasis.sample, aborting POSTing resource (as admin).
          Assert.assertEquals("The model without any allowed prefix shouldn't have been persisted",
                mr.getVersion(), datacoreApiClient.getData(ResourceModelIniter.MODEL_MODEL_NAME,
                      CityCountrySample.CITY_MODEL_NAME).getVersion());

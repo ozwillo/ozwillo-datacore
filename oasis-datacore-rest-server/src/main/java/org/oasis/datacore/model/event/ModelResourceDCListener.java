@@ -91,7 +91,8 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
             
          } catch (ResourceObsoleteException roex) { // specific handling for better logging
             // abort else POSTer won't know that his model can't be used (to POST resources)
-            throw new AbortOperationEventException(new ResourceObsoleteException("Resource obsolete error while converting "
+            throw new AbortOperationEventException(new ResourceObsoleteException("Resource obsolete error ("
+                  + roex.getMessage() + ") while converting "
                   + "or enriching to model or mixin " + r.get(ResourceModelIniter.MODEL_NAME_PROP)
                   + " with dcmo:pointOfViewAbsoluteName=" + r.get("dcmo:pointOfViewAbsoluteName")
                   + " in project " + dataModelAdminService.getProject().getName()
@@ -101,7 +102,8 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
             throw new AbortOperationEventException(rex);
          } catch (AccessDeniedException adex) { // specific handling for better logging
             // abort else POSTer won't know that his model can't be used (to POST resources)
-            throw new AbortOperationEventException(new AccessDeniedException("Access denied error while converting "
+            throw new AbortOperationEventException(new AccessDeniedException("Access denied error ("
+                  + adex.getMessage() + ") while converting "
                   + "or enriching to model or mixin " + r.get(ResourceModelIniter.MODEL_NAME_PROP)
                   + " with dcmo:pointOfViewAbsoluteName=" + r.get("dcmo:pointOfViewAbsoluteName")
                   + " in project " + dataModelAdminService.getProject().getName()

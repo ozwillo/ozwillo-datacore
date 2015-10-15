@@ -416,6 +416,45 @@ public class DatacoreApiServerTest {
       }
    }
 
+   @Test
+   public void testPutRatherThanPatchMode() {
+      // create :
+      datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "UK"));
+      DCResource brightonCityData = buildCityData("Brighton", "UK", 10000000, false);
+      DateTime brightonFoundedDate = new DateTime(-43, 4, 1, 0, 0, DateTimeZone.UTC);
+      brightonCityData.setProperty("common:id", "BRI");
+      brightonCityData.setProperty("city:founded", brightonFoundedDate);
+      brightonCityData = datacoreApiClient.postDataInType(brightonCityData);
+      Assert.assertTrue(brightonCityData.getProperties().containsKey("common:id"));
+      Assert.assertTrue(brightonCityData.getProperties().containsKey("city:founded"));
+      
+      // update without date in patch / POST mode, should merge :
+      brightonCityData.getProperties().remove("city:founded");
+      Assert.assertFalse("should be removed", brightonCityData.getProperties().containsKey("city:founded"));
+      brightonCityData = datacoreApiClient.postDataInType(brightonCityData);
+      Assert.assertTrue("should merge", brightonCityData.getProperties().containsKey("city:founded"));
+      
+      // update without date in PUT mode, should remove it :
+      brightonCityData.getProperties().remove("city:founded");
+      Assert.assertFalse("should be removed", brightonCityData.getProperties().containsKey("city:founded"));
+      brightonCityData = datacoreApiClient.putDataInType(brightonCityData);
+      Assert.assertFalse("should replace", brightonCityData.getProperties().containsKey("city:founded"));
+      
+      // same in case of inherited (#) :
+
+      // update without date in patch / POST mode, should merge :
+      brightonCityData.getProperties().remove("common:id");
+      Assert.assertFalse("should be removed", brightonCityData.getProperties().containsKey("common:id"));
+      brightonCityData = datacoreApiClient.postDataInType(brightonCityData);
+      Assert.assertTrue("should merge", brightonCityData.getProperties().containsKey("common:id"));
+      
+      // update without date in PUT mode, should remove it :
+      brightonCityData.getProperties().remove("common:id");
+      Assert.assertFalse("should be removed", brightonCityData.getProperties().containsKey("common:id"));
+      brightonCityData = datacoreApiClient.putDataInType(brightonCityData);
+      Assert.assertFalse("should replace", brightonCityData.getProperties().containsKey("common:id"));
+   }
+
    /**
     * Tests the CXF client with the DatacoreApi service
     * @throws Exception If a problem occurs

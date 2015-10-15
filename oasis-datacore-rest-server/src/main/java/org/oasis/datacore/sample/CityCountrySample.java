@@ -30,7 +30,8 @@ import com.google.common.collect.ImmutableSet;
  */
 @Component
 public class CityCountrySample extends DatacoreSampleBase {
-   
+
+   public static String COMMON_MODEL_NAME = "sample.city.common";
    public static String COUNTRY_MODEL_NAME = "sample.city.country";
    public static String CITY_MODEL_NAME = "sample.city.city";
    public static String POI_MODEL_NAME = "sample.city.pointOfInterest";
@@ -41,9 +42,13 @@ public class CityCountrySample extends DatacoreSampleBase {
 
    @Override
    public void buildModels(List<DCModelBase> modelsToCreate) {
+      DCModel commonModel = new DCModel(COMMON_MODEL_NAME); // to test upper fields merge (because odisp:name is readonly in city)
+      commonModel.addField(new DCField("common:id", "string", false, 0));
+      
       DCModel countryModel = new DCModel(COUNTRY_MODEL_NAME);
       countryModel.setDocumentation("{ \"uri\": \"http://localhost:8180/dc/type/country/France\", "
             + "\"name\": \"France\" }");
+      //countryModel.addMixin(commonModel);
       countryModel.addField(new DCField("n:name", "string", true, 100));
       
       DCModel poiModel = new DCModel(POI_MODEL_NAME);
@@ -54,6 +59,7 @@ public class CityCountrySample extends DatacoreSampleBase {
       DCModel cityModel = new DCModel(CITY_MODEL_NAME);
       cityModel.setDocumentation("{ \"uri\": \"http://localhost:8080/dc/type/city/France/Lyon\", "
             + "\"inCountry\": \"http://localhost:8080/dc/type/country/France\", \"name\": \"Lyon\" }");
+      cityModel.addMixin(commonModel);
       cityModel.addMixin(projectInitService.getMetamodelProject().getModel(ResourceModelIniter.MODEL_DISPLAYABLE_NAME));
       cityModel.addField(new DCField("n:name", "string", true, 100));
       cityModel.addField(new DCResourceField("city:inCountry", COUNTRY_MODEL_NAME, true, 100));
@@ -89,7 +95,7 @@ public class CityCountrySample extends DatacoreSampleBase {
             .addField(new DCField("city:historicalEventDate", "date", true, 100))
             .addField(new DCI18nField("city:historicalEventName", 0))));
 
-      modelsToCreate.addAll(Arrays.asList((DCModelBase) poiModel, cityModel, countryModel, cityLegalInfoMixin));
+      modelsToCreate.addAll(Arrays.asList((DCModelBase) poiModel, commonModel, cityModel, countryModel, cityLegalInfoMixin));
    }
 
    public void fillData() {

@@ -357,7 +357,7 @@ public class ResourceService {
       // pre save hooks
       // TODO better as 2nd pass / within parsing ?? or rather on entity ????
       Types aboutToEventType = isCreation ? DCResourceEvent.Types.ABOUT_TO_CREATE : DCResourceEvent.Types.ABOUT_TO_UPDATE;
-      eventService.triggerResourceEvent(aboutToEventType, resource);
+      eventService.triggerResourceEvent(aboutToEventType, resource); // TODO , previousResource
       
       if (isCreation) {
          entityPermissionService.setOwners(dataEntity, buildCreatorOwners(dcModel));

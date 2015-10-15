@@ -281,8 +281,8 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       }
       
       boolean isAnyMixinAllowed = isThisModelAllowed;
-      if (propNb == seenPropNameSet.size()) {
-         return isAnyMixinAllowed; // everything has been filtered, filtering can be ended up right away
+      if (putRatherThanPatchMode && propNb == seenPropNameSet.size()) {
+         return isAnyMixinAllowed; // (if not patch) everything has been filtered, filtering can be ended up right away
       }
       
       for (DCModelBase mixin : model.getMixins()) {
@@ -290,7 +290,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
                putRatherThanPatchMode,
                seenPropNameSet, propNb, isThisModelAllowed) || isAnyMixinAllowed;
          // NB. ex. viewMixinNames=geo will show geo:name and not its override in geoci
-         if (propNb == seenPropNameSet.size()) {
+         if (putRatherThanPatchMode && propNb == seenPropNameSet.size()) {
             return isAnyMixinAllowed; // everything has been filtered, filtering can be ended up right away
          }
       }
