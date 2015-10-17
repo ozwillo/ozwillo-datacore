@@ -140,7 +140,9 @@ public class JaxrsExceptionHelper {
          ImmutableMap.Builder<String, String> causeBuilder = new ImmutableMap.Builder<String, String>();
          causeBuilder.put("code", t.getClass().getName());
          causeBuilder.put("message", t.getMessage() == null ? "" : t.getMessage());
-         causeBuilder.put("location", t.getStackTrace()[0].toString());
+         if (t.getStackTrace().length != 0) {
+            causeBuilder.put("location", t.getStackTrace()[0].toString());
+         } // else happens sometimes
          causeListBuilder.add(causeBuilder.build());
          if (t.getCause() != null) {
             t = t.getCause();
