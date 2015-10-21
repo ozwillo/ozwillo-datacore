@@ -148,7 +148,7 @@ public class ModelResourceMappingService {
                project.getSecurityDefaults(), uri, "dcmp:securityDefaults"));
       }
       projectResource.set("dcmp:modelLevelSecurityEnabled", project.isModelLevelSecurityEnabled());
-      if (project.getSecurityDefaults() != null) {
+      if (project.getVisibleSecurityConstraints() != null) {
          projectResource.set("dcmp:visibleSecurityConstraints", securityToResource(
                project.getVisibleSecurityConstraints(), uri, "dcmp:visibleSecurityConstraints"));
       }
@@ -467,10 +467,26 @@ public class ModelResourceMappingService {
       List<String> allowedModelPrefixes = (List<String>) r.get("dcmp:allowedModelPrefixes");
       project.setAllowedModelPrefixes((allowedModelPrefixes == null ? new LinkedHashSet<String>() // in case of old project without it
             : new LinkedHashSet<String>(allowedModelPrefixes)));
+      
+      @SuppressWarnings("unchecked")
+      Map<String, Object> sc = (Map<String, Object>) r.get("dcmp:securityConstraints");
+      if (sc != null) {
+         toSecurity(sc, getOrSetSecurityConstraints(project));
+      }
+      @SuppressWarnings("unchecked")
+      Map<String, Object> sd = (Map<String, Object>) r.get("dcmp:securityDefaults");
+      if (sd != null) {
+         toSecurity(sd, getOrSetSecurityDefaults(project));
+      }
       Object isModelLevelSecurityEnabledFound = r.get("dcmp:modelLevelSecurityEnabled");
       if (isModelLevelSecurityEnabledFound != null) {
          project.setModelLevelSecurityEnabled((boolean) isModelLevelSecurityEnabledFound);
       } // otherwise old project without it
+      @SuppressWarnings("unchecked")
+      Map<String, Object> vsc = (Map<String, Object>) r.get("dcmp:visibleSecurityConstraints");
+      if (vsc != null) {
+         toSecurity(vsc, getOrSetVisibleSecurityConstraints(project));
+      }
       
       return project;
    }
@@ -491,7 +507,6 @@ public class ModelResourceMappingService {
     * @throws ResourceException if wrapped ResourceParsingException, or
     * pointOfViewAbsoluteName not currentProjectName
     */
-   @SuppressWarnings("unchecked")
    public DCModelBase toModelOrMixin(DCResource r) throws ResourceException {
       // TODO check non required fields : required queryLimit openelec's maxScan resourceType
 
@@ -538,30 +553,7 @@ public class ModelResourceMappingService {
       modelOrMixin.setCountryLanguage((String) r.get("dcmls:code"));
 
       // security :
-      if (r.get("dcms:isAuthentifiedReadable") != null) {
-         getOrSetSecurity(modelOrMixin).setAuthentifiedReadable((boolean) r.get("dcms:isAuthentifiedReadable"));
-      }
-      if (r.get("dcms:isAuthentifiedCreatable") != null) {
-         getOrSetSecurity(modelOrMixin).setAuthentifiedCreatable((boolean) r.get("dcms:isAuthentifiedCreatable"));
-      }
-      if (r.get("dcms:isAuthentifiedWritable") != null) {
-         getOrSetSecurity(modelOrMixin).setAuthentifiedWritable((boolean) r.get("dcms:isAuthentifiedWritable"));
-      }
-      if (r.get("dcms:resourceCreators") != null) {
-         getOrSetSecurity(modelOrMixin).setResourceCreators(new LinkedHashSet<String>((List<String>) r.get("dcms:resourceCreators")));
-      }
-      if (r.get("dcms:resourceCreationOwners") != null) {
-         getOrSetSecurity(modelOrMixin).setResourceCreationOwners(new LinkedHashSet<String>((List<String>) r.get("dcms:resourceCreationOwners")));
-      }
-      if (r.get("dcms:resourceReaders") != null) {
-         getOrSetSecurity(modelOrMixin).setResourceReaders(new LinkedHashSet<String>((List<String>) r.get("dcms:resourceReaders")));
-      }
-      if (r.get("dcms:resourceWriters") != null) {
-         getOrSetSecurity(modelOrMixin).setResourceWriters(new LinkedHashSet<String>((List<String>) r.get("dcms:resourceWriters")));
-      }
-      if (r.get("dcms:resourceOwners") != null) {
-         getOrSetSecurity(modelOrMixin).setResourceOwners(new LinkedHashSet<String>((List<String>) r.get("dcms:resourceOwners")));
-      }
+      toSecurity(r.getProperties(), getOrSetSecurity(modelOrMixin));
       
       try {
          this.resourceToFieldsAndMixins(modelOrMixin, r);
@@ -573,12 +565,69 @@ public class ModelResourceMappingService {
       
       return modelOrMixin;
    }
+
+   /**
+    * 
+    * @param r
+    * @param security must be non null, i.e. this method called only after such check
+    */
+   @SuppressWarnings("unchecked")
+   private void toSecurity(Map<String, Object> r, DCSecurity security) {
+      if (r.get("dcms:isAuthentifiedReadable") != null) {
+         security.setAuthentifiedReadable((boolean) r.get("dcms:isAuthentifiedReadable"));
+      }
+      if (r.get("dcms:isAuthentifiedCreatable") != null) {
+         security.setAuthentifiedCreatable((boolean) r.get("dcms:isAuthentifiedCreatable"));
+      }
+      if (r.get("dcms:isAuthentifiedWritable") != null) {
+         security.setAuthentifiedWritable((boolean) r.get("dcms:isAuthentifiedWritable"));
+      }
+      if (r.get("dcms:resourceCreators") != null) {
+         security.setResourceCreators(new LinkedHashSet<String>((List<String>) r.get("dcms:resourceCreators")));
+      }
+      if (r.get("dcms:resourceCreationOwners") != null) {
+         security.setResourceCreationOwners(new LinkedHashSet<String>((List<String>) r.get("dcms:resourceCreationOwners")));
+      }
+      if (r.get("dcms:resourceReaders") != null) {
+         security.setResourceReaders(new LinkedHashSet<String>((List<String>) r.get("dcms:resourceReaders")));
+      }
+      if (r.get("dcms:resourceWriters") != null) {
+         security.setResourceWriters(new LinkedHashSet<String>((List<String>) r.get("dcms:resourceWriters")));
+      }
+      if (r.get("dcms:resourceOwners") != null) {
+         security.setResourceOwners(new LinkedHashSet<String>((List<String>) r.get("dcms:resourceOwners")));
+      }
+   }
    
    private DCSecurity getOrSetSecurity(DCModelBase modelOrMixin) {
       DCSecurity security = modelOrMixin.getSecurity();
       if (security == null) {
          security = new DCSecurity();
          modelOrMixin.setSecurity(security);
+      }
+      return security;
+   }
+   private DCSecurity getOrSetSecurityConstraints(DCProject project) {
+      DCSecurity security = project.getSecurityConstraints();
+      if (security == null) {
+         security = new DCSecurity();
+         project.setSecurityConstraints(security);
+      }
+      return security;
+   }
+   private DCSecurity getOrSetSecurityDefaults(DCProject project) {
+      DCSecurity security = project.getSecurityDefaults();
+      if (security == null) {
+         security = new DCSecurity();
+         project.setSecurityDefaults(security);
+      }
+      return security;
+   }
+   private DCSecurity getOrSetVisibleSecurityConstraints(DCProject project) {
+      DCSecurity security = project.getVisibleSecurityConstraints();
+      if (security == null) {
+         security = new DCSecurity();
+         project.setVisibleSecurityConstraints(security);
       }
       return security;
    }

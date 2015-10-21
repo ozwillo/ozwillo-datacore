@@ -778,4 +778,97 @@ public class ResourceModelTest {
       }
    }
    
+
+   @Test
+   public void testProjectSecurityReload() throws Exception {
+      @SuppressWarnings("serial")
+      LinkedHashSet<String> testRco = new LinkedHashSet<String>() {{ add("test"); }};
+      @SuppressWarnings("serial")
+      LinkedHashSet<String> adminRco = new LinkedHashSet<String>() {{ add("u_admin"); }}; // in local dev only !
+      
+      // put in initial state in case test was aborted AND check that model can then be changed :
+      DCResource pr = datacoreApiClient.getData(ResourceModelIniter.MODEL_PROJECT_NAME, DCProject.OASIS_SAMPLE);
+      DCProject p = mrMappingService.toProject(pr);
+      //pr.set("dcmp:securityConstraints", null); // NOT p.setSecurityConstraints(null); because merged in POST-like behaviour
+      ///p.getSecurityConstraints().getResourceCreationOwners().clear();
+      //pr.set("dcmp:securityDefaults", null); // NOT p.setSecurityDefaults(null); because merged in POST-like behaviour
+      p.getSecurityDefaults().setResourceCreationOwners(adminRco);
+      //pr.set("dcmp:visibleSecurityConstraints", null); // NOT p.setVisibleSecurityConstraints(null); because merged in POST-like behaviour
+      p.getVisibleSecurityConstraints().getResourceCreationOwners().clear();
+      pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
+            DCProject.OASIS_META); // can't write outside project
+      p = mrMappingService.toProject(pr);
+      // checking initial state :
+      ///Assert.assertTrue(modelAdminService.getProject(DCProject.OASIS_SAMPLE)
+      ///      .getSecurityConstraints().getResourceCreationOwners().isEmpty());
+      Assert.assertTrue(modelAdminService.getProject(DCProject.OASIS_SAMPLE)
+            .getSecurityDefaults().getResourceCreationOwners().equals(adminRco));
+      Assert.assertTrue(modelAdminService.getProject(DCProject.OASIS_SAMPLE)
+            .getVisibleSecurityConstraints().getResourceCreationOwners().isEmpty());
+      
+      // set project security data :
+      try {
+      ///p.setSecurityConstraints(security);
+      p.getSecurityDefaults().setResourceCreationOwners(testRco);
+      p.getVisibleSecurityConstraints().setResourceCreationOwners(testRco);
+      pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
+            DCProject.OASIS_META); // can't write outside project
+      p = mrMappingService.toProject(pr);
+      /*Assert.assertTrue("security constraints should have been set",
+            modelAdminService.getProject(DCProject.OASIS_SAMPLE).getSecurityConstraints() != null
+            && modelAdminService.getProject(DCProject.OASIS_SAMPLE).getSecurityConstraints()
+            .getResourceCreationOwners().equals(testRco));*/
+      Assert.assertTrue("security defaults should have been set",
+            modelAdminService.getProject(DCProject.OASIS_SAMPLE).getSecurityDefaults() != null
+            && modelAdminService.getProject(DCProject.OASIS_SAMPLE).getSecurityDefaults()
+            .getResourceCreationOwners().equals(testRco));
+      Assert.assertTrue("visible security constraints should have been set",
+            modelAdminService.getProject(DCProject.OASIS_SAMPLE).getVisibleSecurityConstraints() != null
+            && modelAdminService.getProject(DCProject.OASIS_SAMPLE).getVisibleSecurityConstraints()
+            .getResourceCreationOwners().equals(testRco));
+
+      // clearing and reloading :
+      ///modelAdminService.getProject(DCProject.OASIS_SAMPLE).setSecurityConstraints(null);
+      modelAdminService.getProject(DCProject.OASIS_SAMPLE).getSecurityDefaults().setResourceCreationOwners(adminRco);
+      modelAdminService.getProject(DCProject.OASIS_SAMPLE).getVisibleSecurityConstraints().getResourceCreationOwners().clear();
+      try {
+         authenticationService.loginAs("admin"); // else AuthenticationCredentialsNotFoundException in calling entityService
+         loadPersistedModelsAtInitService.loadProject(datacoreApiClient.getData(ResourceModelIniter
+               .MODEL_PROJECT_NAME, DCProject.OASIS_SAMPLE), DCProject.OASIS_SAMPLE);
+      } finally {
+         authenticationService.logout();
+      }
+      /*Assert.assertTrue("security constraints should have been reloaded",
+            modelAdminService.getProject(DCProject.OASIS_SAMPLE).getSecurityConstraints() != null
+            && modelAdminService.getProject(DCProject.OASIS_SAMPLE).getSecurityConstraints()
+            .getResourceCreationOwners().equals(testRco));*/
+      Assert.assertTrue("security defaults should have been reloaded",
+            modelAdminService.getProject(DCProject.OASIS_SAMPLE).getSecurityDefaults() != null
+            && modelAdminService.getProject(DCProject.OASIS_SAMPLE).getSecurityDefaults()
+            .getResourceCreationOwners().equals(testRco));
+      Assert.assertTrue("visible security constraints should have been reloaded",
+            modelAdminService.getProject(DCProject.OASIS_SAMPLE).getVisibleSecurityConstraints() != null
+            && modelAdminService.getProject(DCProject.OASIS_SAMPLE).getVisibleSecurityConstraints()
+            .getResourceCreationOwners().equals(testRco));
+      
+      // restore initial state :
+      } finally {
+         //pr.set("dcmp:securityConstraints", null); // NOT p.setSecurityConstraints(null); because merged in POST-like behaviour
+         ///p.getSecurityConstraints().getResourceCreationOwners().clear();
+         //pr.set("dcmp:securityDefaults", null); // NOT p.setSecurityDefaults(null); because merged in POST-like behaviour
+         p.getSecurityDefaults().setResourceCreationOwners(adminRco);
+         //pr.set("dcmp:visibleSecurityConstraints", null); // NOT p.setVisibleSecurityConstraints(null); because merged in POST-like behaviour
+         p.getVisibleSecurityConstraints().getResourceCreationOwners().clear();
+         pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
+               DCProject.OASIS_META); // can't write outside project
+         p = mrMappingService.toProject(pr);
+         ///Assert.assertTrue(modelAdminService.getProject(DCProject.OASIS_SAMPLE)
+         ///      .getSecurityConstraints().getResourceCreationOwners().isEmpty());
+         Assert.assertTrue(modelAdminService.getProject(DCProject.OASIS_SAMPLE)
+               .getSecurityDefaults().getResourceCreationOwners().equals(adminRco));
+         Assert.assertTrue(modelAdminService.getProject(DCProject.OASIS_SAMPLE)
+               .getVisibleSecurityConstraints().getResourceCreationOwners().isEmpty());
+      }
+   }
+   
 }
