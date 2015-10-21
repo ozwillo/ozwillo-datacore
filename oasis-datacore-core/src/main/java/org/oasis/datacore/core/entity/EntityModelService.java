@@ -62,6 +62,27 @@ public class EntityModelService {
       return modelService.getProject();
    }
    /**
+    * Handles case of multi project storage model
+    * TODO store entity project in it ?? 
+    * @param dataEntity
+    * @param model to be used if null dataEntity
+    * @return
+    */
+   public DCProject getProject(DCEntityBase dataEntity, DCModelBase model) {
+      if (dataEntity == null || dataEntity.getProjectName() == null) { // none yet (been queried by LDP)
+         return modelService.getProject(model.getProjectName());
+      }
+      DCModelBase storageModel = this.getStorageModel(dataEntity);
+      if (storageModel != null && storageModel.isMultiProjectStorage()) { // especially oasis.meta.dcmi:mixin_0 in case of model resources !
+         // (even oasis.sandbox models are stored in oasis.meta.dcmi:mixin_0 collection,
+         // only soft forks i.e. inheriting overrides couldn't be handled this way)
+         // no need to check, entity will anyway be written in its own project
+         return modelService.getProject(dataEntity.getProjectName()); // entity project
+      }
+      return modelService.getProject(model.getProjectName());
+   }
+   
+   /**
     * (instanciable model)
     * Helper using entity cached transient model (maintained over the course
     * of a request only) if available, else retrieving & setting it
@@ -289,4 +310,5 @@ public class EntityModelService {
    public void setDisableMultiProjectStorageCriteriaForTesting(boolean disableMultiProjectStorageCriteriaForTesting) {
       this.disableMultiProjectStorageCriteriaForTesting = disableMultiProjectStorageCriteriaForTesting;
    }
+   
 }

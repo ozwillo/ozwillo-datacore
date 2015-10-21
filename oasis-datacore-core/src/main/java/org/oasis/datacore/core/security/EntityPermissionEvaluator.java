@@ -196,7 +196,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       // constraints in case of visible project :
       // (is it allowed to read / write in another project ?)
       DCProject currentProject = modelService.getProject();
-      DCProject project = modelService.getProject(model.getProjectName()); // model project
+      DCProject project = entityModelService.getProject(dataEntity, model); // entity (in case of multi project) or model project
       boolean shouldCheckVisibleProjectConstraints = true;
       if (!model.getProjectName().equals(currentProject.getName())
             // TODO TODO HACK avoid visible constraints in case of facade projects :
@@ -212,7 +212,6 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
                shouldCheckVisibleProjectConstraints = false;
             } else {
                shouldCheckVisibleProjectConstraints = !dataEntity.getProjectName().equals(currentProject.getName());
-               project = modelService.getProject(dataEntity.getProjectName()); // entity project
             }
          }
          
@@ -316,7 +315,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
     */
    public boolean isThisModelAllowed(DCEntityBase dataEntity, DCModelBase model,
          DCUserImpl user, String permission, Boolean isInheritingMixinAllowed) {
-      DCProject project = modelService.getProject(model.getProjectName()); // model project
+      DCProject project = entityModelService.getProject(dataEntity, model); // entity (in case of multi project) or model project
       
       // project-level constraints :
       DCSecurity projectSecurityConstraints = project.getSecurityConstraints();
