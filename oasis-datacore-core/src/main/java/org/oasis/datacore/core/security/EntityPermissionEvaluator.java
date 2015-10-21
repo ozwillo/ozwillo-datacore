@@ -339,6 +339,20 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
                projectSecurityDefaults, user, permission);
       }
       
+      // HACK TODO BETTER case of multi-project storage :
+      // model-level security makes no sense, so rather check directly project security
+      // (without that, models of any project would only be editable by oasis.meta writers ;_;)
+      DCModelBase storageModel = (dataEntity != null) ? // else none yet (been queried by LDP)
+            entityModelService.getStorageModel(dataEntity) : modelService.getStorageModel(model);
+      if (storageModel != null && storageModel.isMultiProjectStorage()) { // especially oasis.meta.dcmi:mixin_0 in case of model resources !
+         DCSecurity projectSecurity = project.getSecurityDefaults();
+         if (projectSecurity == null) {
+            return isDefaultSecurityAllowed(user, permission);
+         }
+         return isThisSecurityAllowed(null, // WHATEVER THE RESOURCE
+               projectSecurity, user, permission);
+      }
+      
       DCSecurity security = model.getSecurity();
       if (security == null) {
          if (isInheritingMixinAllowed != null) {

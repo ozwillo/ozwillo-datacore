@@ -225,6 +225,8 @@ public abstract class DCEntityBase implements Comparable<DCEntityBase>, Serializ
    public void copyNonResourceFieldsFrom(DCEntityBase existingDataEntity) {
       this.setId(existingDataEntity.getId()); // else OptimisticLockingFailureException !
       
+      this.setProjectName(existingDataEntity.getProjectName());
+      
       this.setAllReaders(existingDataEntity.getAllReaders());
       this.setReaders(existingDataEntity.getReaders());
       this.setWriters(existingDataEntity.getWriters());
