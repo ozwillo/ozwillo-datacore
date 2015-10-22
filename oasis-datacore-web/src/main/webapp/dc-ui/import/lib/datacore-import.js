@@ -2737,7 +2737,10 @@
             var typeName = decodeURIComponent(resourceIri.substring(resourceIri.indexOf("/") + 1)); // else "elec%3ADepartment_0" ; AND NOT decodeURI
             var upToDateMixin = findMixin(typeName, modelOrMixinArray);
             // checking error first (rights...) :
-            if (data._raw.statusCode !== 404) { // TODO more specific 403 Forbidden ?
+            if (data._raw.statusCode === 403
+                    && skipForbidden(origResource, importState.model.posted, importState)) { // skip model
+                 postedCallback(null, origResource);
+            } else if (data._raw.statusCode !== 404) { // TODO more specific 403 Forbidden ?
                postedCallback(data, upToDateMixin); // pass error upwards
                return;
             }
