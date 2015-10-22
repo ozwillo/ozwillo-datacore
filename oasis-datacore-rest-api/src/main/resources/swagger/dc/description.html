@@ -9,8 +9,8 @@
 Allows to manage (CRUD) and find Data Resources and their Models using JSON/HTTP REST calls.
 <br/><br/>
 &nbsp;&nbsp;- <b>Data Resources</b> are handled in <a href="http://json-ld.org/">JSON-LD</a>-like 
-(implicit context) format (see also <a href="http://json-ld.org/playground/index.html">
-playground</a>) and with <b>W3C LDP</b> (Linked Data Platform, see 
+(with an implicit context) format (see also <a href="http://json-ld.org/playground/index.html">
+its playground</a>) and with <b>W3C LDP</b> (Linked Data Platform, see 
 <a href="https://dvcs.w3.org/hg/ldpwg/raw-file/tip/ldp-primer/ldp-primer.html">primer</a> and 
 <a href="http://www.w3.org/2012/ldp/wiki/Main_Page">wiki</a>)-like operations (URIs, 
 future collection filtering (<a href="http://www.w3.org/2012/ldp/wiki/LDPNext">1</a>, 
@@ -27,7 +27,7 @@ In addition to the simpler default native pure JSON format, "true" JSON-LD forma
 javascript:return findDataByTypeRdf($(this).attr('href'));
 ">example</a>) are available. 
 <br/><br/>
-&nbsp;&nbsp;- <b>Data Models</b> describe what kinds of Data Resources are allowed in a 
+&nbsp;&nbsp;- <b>Data Models</b> describe what kinds of Data Resources are allowed, in a 
 <a href="http://json-schema.org/">JSON Schema</a>-like structure (see 
 <a href="http://jsonschema.net/">jsonschema.net playground</a>) with 
 <span class="dcjsonline">
@@ -66,22 +66,35 @@ See <a href="#playgroundUserManual">this Playground's user manual below</a> and
 <p></p>
 <p></p>
 
-<b>To add your own data</b> using REST calls, you must first define or reuse the appropriate business-specific Models.
-You can do both using the <a href="./import/index.html">Import UI</a> (see samples there including OpenElec's, and
-<a href="https://github.com/pole-numerique/oasis-datacore/wiki/Playground-&-Import-UI-demo-scenario---Provto-&-OpenElec">documentation on wiki</a>),
-or using Java (see
+<b>To add your own data</b> using REST calls, you must first define or reuse the appropriate business-specific Models
+<a href="#" title="- 1. provide a denormalized extract of your data, define Models for it, group related fields together in Mixins,
+- 2. define their ID definition policy and link them using resource fields, define referencing mixin fields and default values,
+- 3. find out which Models already exist and reconcile with them (or do it beforehands)">(?)</a>
+.
+You can do both using the <a href="./import/index.html">Import UI</a> (see Master Model & samples there including OpenElec's, and
+<a href="https://github.com/pole-numerique/oasis-datacore/wiki/Playground-&-Import-UI-demo-scenario---Provto-&-OpenElec">its documentation on wiki</a>).
+<br/>
+However, if you prefer, you can do it using Java (see
 <a href="https://github.com/pole-numerique/oasis-datacore/tree/master/oasis-datacore-rest-server/src/main/java/org/oasis/datacore/sample">
-Provto sample</a>), or do it any other way that still follows the
+Provto sample</a>), REST calls, or any other way that still follows the
 <a href="https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-server/src/main/java/org/oasis/datacore/sample/DatacoreSampleMethodologyBase.java">
-methodology</a>. Basically, this means :
+methodology</a>.
+<!--
+In short, defining your models means :
 provide a denormalized extract of your data, define Models for it, group related fields together in Mixins,
 define their ID definition policy and link them using resource fields, define referencing mixin fields and default values,
 find out which Models already exist and reconcile with them (or do it beforehands).
+ -->
 <br/><br/>
-<b>To use it from your own business application,</b> use the JSON/HTTP client of your own business application's platform
+<b>To use data (existing or yours) from your own business application,</b> use the JSON/HTTP client of your own business application's platform
 and / or of your choice to call the Datacore API server using REST JSON/HTTP calls. See
 <a href="https://github.com/pole-numerique/oasis-datacore/blob/master/README.md">README</a> for details on alternatives
-(the Datacore CXF Java client, any other Java JAXRS-compatible client, swagger.js in javascript, swagger codegen in any other language).
+: the Datacore CXF Java client, any other Java JAXRS-compatible client,
+swagger.js in javascript, swagger codegen in any other language,
+any bare HTTP client,
+or supporting Ozwillo app frameworks if you've chosen to build your app on top of it
+(<a href="https://github.com/pole-numerique/oasis-spring-integration">oasis-spring-integration</a>,
+<a href="https://github.com/ozwillo/ozwillo-node-client">ozwillo-node-client</a>).
 <br/><br/>
 
 <h1>API Details</h1>
@@ -142,10 +155,11 @@ javascript:return findDataByType($(this).text());
 <br/><br/>
 
 <strong>Authentication:</strong>
-<br/>&nbsp;&nbsp;- In production (and integration), OASIS Kernel OAuth2 authentication must be used, i.e. 
+<br/>&nbsp;&nbsp;- In production (and integration), Ozwillo Kernel OAuth2 authentication must be used, i.e. 
 <a href="https://github.com/pole-numerique/oasis-datacore/wiki/How-to-use-OAuth2-with-Datacore">
 HTTP requests' Authorization header must be "Bearer &lt;valid OAuth2 Bearer 
 / Access Token&gt;"</a> (see <a href="https://github.com/pole-numerique/oasis-datacore/wiki/How-to-authenticate-to-kernel-oauth2">how to get one</a>).
+This implies that you must first register your application with the Kernel (see <a href="http://doc.ozwillo.com">documentation</a>).
 <br/>&nbsp;&nbsp;- In dev mode, there is a mock authentication system that supports Basic Auth 
 (i.e. HTTP requests' Authorization header must be "Basic &lt;base 64-encoding of username:password&gt;"), 
 for a few users without password, see available ones in 
@@ -265,7 +279,9 @@ if any, checked firsthand whatever the resource.
 <br/>
 &nbsp;&nbsp;- <span class="dcjsonline">dcmp:securityDefaults</span> :
 used when !modelLevelSecurityEnabled or no security found in model hierarchy ; null means global
-defaults (depends on devmode)
+defaults (depends on devmode) ; in case of multi-project storage models (such as dcmi:mixin_0
+i.e. the metamodel), is directly used instead of model-level security which makes no sense
+(because without that, models of any project would only be editable by oasis.meta writers).
 <br/>
 &nbsp;&nbsp;- <span class="dcjsonline">dcmp:modelLevelSecurityEnabled</span> : allows different
 security levels in models (even in same resource) ; if disabled, model security has not to be defined
@@ -279,6 +295,9 @@ from a project in one of its dependency project's models.
 <br/>
 &nbsp;&nbsp;- <span class="dcjsonline">dcmp:forkedUris</span> : add a model URI there to allow to
 fork it i.e. to import it in this project even if it is already in one of its visible projects.
+This also works with any data resource outside (meta) models, but it shouldn't be abused.
+In details, resources listed here are handled as if, only for them, their project did not
+inherit / have any other project visible.
 <br/>
 &nbsp;&nbsp;- <span class="dcjsonline">dcmp:frozenModelNames</span> : allows to freeze (forbid change on)
 some of this project's models or all of them using the '*' wildcard, once they are stable and in order
@@ -298,10 +317,13 @@ can't be loaded from its Resource representation. To solve it, try to rePOST the
 Resource representation (ex. using edit / POST or import playground features), which will
 trigger Model reload, and if it fails try to patch it according to the error message.
 <br/>
-&nbsp;&nbsp;- <span class="dcjsonline">can't write Resource :</span>
+&nbsp;&nbsp;- <span class="dcjsonline">can't write Resource ("access denied") :</span>
 check that you have the rights to, and (using ex. the edit / POST playground feaure)
 that its Model is not among its Project's dcmp:frozenModelNames or dcmp:allowedModelPrefixes
 (see above).
+<br/>
+&nbsp;&nbsp;- <span class="dcjsonline">"Bad URI syntax: Illegal character in path at index n" (last index of the model URI) :</span>
+check that the mixin name is not written in the "Mixin" column with an (illegal) invisible character such as a space at the end.
 <br/><br/>
 
 <a id="playgroundUserManual"></a>
