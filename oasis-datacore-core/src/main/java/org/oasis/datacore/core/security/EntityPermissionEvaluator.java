@@ -331,12 +331,8 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       
       // case of project-level only security :
       if (!project.isModelLevelSecurityEnabled()) {
-         DCSecurity projectSecurityDefaults = project.getSecurityDefaults();
-         if (projectSecurityDefaults == null) {
-            return isDefaultSecurityAllowed(user, permission);
-         }
-         return isThisSecurityAllowed(null, // WHATEVER THE RESOURCE
-               projectSecurityDefaults, user, permission);
+         return isDefaultSecurityAllowed(null, // WHATEVER THE RESOURCE
+               project, user, permission);
       }
       
       // HACK TODO BETTER case of multi-project storage :
@@ -345,14 +341,11 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       DCModelBase storageModel = (dataEntity != null) ? // else none yet (been queried by LDP)
             entityModelService.getStorageModel(dataEntity) : modelService.getStorageModel(model);
       if (storageModel != null && storageModel.isMultiProjectStorage()) { // especially oasis.meta.dcmi:mixin_0 in case of model resources !
-         DCSecurity projectSecurity = project.getSecurityDefaults();
-         if (projectSecurity == null) {
-            return isDefaultSecurityAllowed(user, permission);
-         }
-         return isThisSecurityAllowed(null, // WHATEVER THE RESOURCE
-               projectSecurity, user, permission);
+         return isDefaultSecurityAllowed(dataEntity,
+               project, user, permission);
       }
       
+      // model-level security :
       DCSecurity security = model.getSecurity();
       if (security == null) {
          if (isInheritingMixinAllowed != null) {
@@ -363,7 +356,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
          if (security == null) {
             security = project.getSecurityDefaults();
             if (security == null) {
-               return isDefaultSecurityAllowed(user, permission);
+               return isGlobalDefaultSecurityAllowed(user, permission);
             }
          }
       }
@@ -380,7 +373,17 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       return modelService.getProject(projectName).getUnversionedName().equals(modelService.getProject().getName());
    }
 
-   public boolean isDefaultSecurityAllowed(DCUserImpl user, String permission) {
+   private boolean isDefaultSecurityAllowed(DCEntityBase dataEntity, DCProject project, DCUserImpl user,
+         String permission) {
+      DCSecurity projectSecurity = project.getSecurityDefaults();
+      if (projectSecurity == null) {
+         return isGlobalDefaultSecurityAllowed(user, permission);
+      }
+      return isThisSecurityAllowed(dataEntity,
+            projectSecurity, user, permission);
+   }
+   
+   public boolean isGlobalDefaultSecurityAllowed(DCUserImpl user, String permission) {
       if (localauthdevmode/* || project.defaultSecurity == phase1*/) {
          return true; // default Phase 1 (model design step) security 
       }

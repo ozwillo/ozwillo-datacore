@@ -270,13 +270,22 @@ public class ResourceService {
       DCEntity dataEntity = new DCEntity();
       entityModelService.fillDataEntityCaches(dataEntity, dcModel, storageModel, null); // TODO or in DCEntityService ? TODO def
       dataEntity.setUri(stringUri);
-      if (!isCreation) {
+      if (!isCreation) { // == existingDataEntity != null
          dataEntity.setVersion(version);
-      } // else keep null version
-      if (existingDataEntity != null) {
          dataEntity.setPreviousEntity(existingDataEntity);
-         dataEntity.copyNonResourceFieldsFrom(existingDataEntity); // id (else OptimisticLockingFailureException), rights
+         dataEntity.copyNonResourceFieldsFrom(existingDataEntity); // id (else OptimisticLockingFailureException), (multi) project, rights
          // BUT not props (done by EntityPermissionEvaluator when filtering, and only if !putRatherThanPatchModel)
+      } else {
+         // keep null version
+         if (storageModel.isMultiProjectStorage()) {
+            if (dataEntity.getProjectName() == null) {
+               // recompute to make sure its up-to-date : (TODO LATER optimize / cache)
+               dataEntity.setProjectName(project.getName());
+            } // else don't change, else it would not be visible anymore from projects the current one depends on
+            // NOO EntityPermissionEvaluator prevents it from being written from another project
+         } else {
+            dataEntity.setProjectName(null);
+         }
       }
       // NB. cached model has been set at entity get
 
