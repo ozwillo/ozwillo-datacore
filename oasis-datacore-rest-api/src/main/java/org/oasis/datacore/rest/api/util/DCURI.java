@@ -1,7 +1,10 @@
 package org.oasis.datacore.rest.api.util;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 import org.oasis.datacore.rest.api.DatacoreApi;
 
@@ -35,6 +38,8 @@ public class DCURI {
    /** ID / IRI ex. Lyon, London, Torino. Can't change (save by data migration operations).
     * For Social Graph ex. email */
    private String id;
+   /** lazy */
+   private String encodedId = null;
    private boolean isRelativeUri;
    private boolean isExternalDatacoreUri;
    private boolean isExternalWebUri;
@@ -115,10 +120,85 @@ public class DCURI {
    }
 
    /**
+    * SAME AS SimpleUriService
+    * TODO don't normalize ?
+    * @param containerUrl if null, conf'd default
+    * @param modelType
+    * @param id
+    * @return escaped ex. http://data.ozwillo.com/dc/type/geo:CityGroup_0/FR/CC%20les%20Ch%C3%A2teaux
+    * SAVE IF "//" in id (ex. itself an URI) in which case id is fully URL encoded
+    * ex. http://data.ozwillo.com/dc/type/photo:Library_0/https%3A%2F%2Fwww.10thingstosee.com%2Fmedia%2Fphotos%2Ffrance-778943_HjRL4GM.jpg
+    * and to get an URI, new URI(returned)
+    */
+   private static URI buildUri(URI containerUrl, String modelType, String id) throws URISyntaxException {
+      String path = "/dc/type/" + modelType;
+      if (id.contains("//")) {
+         try {
+            URI escapedModelTypeUri = new URI(containerUrl.getScheme(), null,
+                  containerUrl.getHost(), containerUrl.getPort(), path, null, null).normalize();
+            // ex. escapedUri = http://data.ozwillo.com/dc/type/geo:CityGroup_0/FR/CC%20les%20Châteaux
+            String escapedModelTypeUriString = escapedModelTypeUri.toASCIIString();
+            // and to get an URI, new URI(escapedUri.toASCIIString()), else UTF-8 ex. â not encoded
+            // ex. http://data.ozwillo.com/dc/type/geo:CityGroup_0/FR/CC%20les%20Ch%C3%A2teaux
+            return new URI(escapedModelTypeUriString + '/' + URLEncoder.encode(id, StandardCharsets.UTF_8.name()));
+         } catch (URISyntaxException usex) {
+            // can't happen since containerUrl & this.containerUrl are nice URIs
+            throw usex;
+         } catch (UnsupportedEncodingException ueex) {
+            // can't happen
+            throw new URISyntaxException("bad uri", ueex.getMessage());
+         }
+      }
+      
+      path += '/' + id;
+      // ex. (decoded) path = "/dc/type/geo:CityGroup_0/FR/CC les Châteaux"
+      try {
+         URI escapedUri = new URI(containerUrl.getScheme(), null,
+               containerUrl.getHost(), containerUrl.getPort(), path, null, null).normalize();
+         // ex. escapedUri = http://data.ozwillo.com/dc/type/geo:CityGroup_0/FR/CC%20les%20Châteaux
+         return new URI(escapedUri.toASCIIString());
+         // and to get an URI, new URI(escapedUri.toASCIIString()), else UTF-8 ex. â not encoded
+         // ex. http://data.ozwillo.com/dc/type/geo:CityGroup_0/FR/CC%20les%20Ch%C3%A2teaux
+      } catch (URISyntaxException usex) {
+         // can't happen since containerUrl & this.containerUrl are nice URIs
+         throw usex;
+      }
+   }
+
+
+   private String getEncodedId() {
+      if (this.encodedId == null && this.id != null) {
+         this.encodedId = encodeId(id);
+      }
+      return this.encodedId;
+   }
+   
+   private static String encodeId(String id) {
+      if (id.contains("//")) {
+         try {
+            return URLEncoder.encode(id, StandardCharsets.UTF_8.name());
+         } catch (UnsupportedEncodingException ueex) {
+            return "bad uri";
+         }
+      }
+      if (id.length() == 0) {
+         return id;
+      }
+      StringBuilder encodedIdSb = new StringBuilder();
+      String[] pathComponents = id.split("/");
+      // at least one :
+      encodedIdSb.append(pathComponents[0]);
+      for (int i = 1; i < pathComponents.length; i++) {
+         encodedIdSb.append(pathComponents[i]);
+      }
+      return encodedIdSb.toString();
+   }
+
+   /**
     * 
     * @return unencoded
     */
-   public String getPath() {
+   private String getPath() {
       if (cachedPath != null) {
          return cachedPath;
       }
@@ -142,12 +222,15 @@ public class DCURI {
     */
    public URI toURI() throws URISyntaxException {
       if (cachedUri == null) {
+         /*
          // ex. (decoded) path = "/dc/type/geo:CityGroup_0/FR/CC les Châteaux"
          URI escapedUri = new URI(containerUrl.getScheme(), null,
             containerUrl.getHost(), containerUrl.getPort(), getPath(), null, null).normalize();
          // ex. escapedUri = http://data.ozwillo.com/dc/type/geo:CityGroup_0/FR/CC%20les%20Châteaux
          cachedUri = new URI(escapedUri.toASCIIString()); // else UTF-8 ex. â not encoded
          // ex. cachedUri = http://data.ozwillo.com/dc/type/geo:CityGroup_0/FR/CC%20les%20Ch%C3%A2teaux
+          */
+         return buildUri(containerUrl, type, id);
       }
       return cachedUri;
    }

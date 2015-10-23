@@ -3,9 +3,13 @@
 
 //////////////////////////////////////////////////:
 // URI
+   
 
-   function encodeUriPath(uriPath) {
-      if (uriPath.indexOf("/") === -1) {
+   // ALSO IN swagger.js SO IT IS SELF-CONTAINED :
+
+   // in swagger.js SwaggerOperation.prototype.encodePathParam(pathParam) rather than encodeUriPath(uriPath) :
+   function encodeUriPath(pathParam) { 
+      /*if (uriPath.indexOf("/") === -1) {
          return encodeUriPathComponent(uriPath);
       }
       var slashSplitPath = uriPath.split('/');
@@ -14,7 +18,23 @@
       }
       return slashSplitPath.join('/');
       //return encodeURI(idValue); // encoding !
-      // (rather than encodeURIComponent which would not accept unencoded slashes)
+      // (rather than encodeURIComponent which would not accept unencoded slashes)*/
+       var encParts, part, parts, _i, _len;
+       if (pathParam.indexOf("/") === -1) {
+         return encodeUriPathComponent(pathParam);
+       } else if (pathParam.indexOf("//") !== -1) { // else '//' (in path param that is ex. itself an URI)
+         // would be equivalent to '/' in URI semantics, so to avoid that encode also '/' instead
+         return encodeURIComponent(pathParam);
+       } else {
+         parts = pathParam.split("/");
+         encParts = [];
+         for (_i = 0, _len = parts.length; _i < _len; _i++) {
+           part = parts[_i];
+           ///encParts.push(encodeURIComponent(part));
+           encParts.push(encodeUriPathComponent(part));
+         }
+         return encParts.join("/");
+       }
    }
 
    var safeCharsRegexString = "0-9a-zA-Z" + "\\$\\-_\\.\\+!\\*'\\(\\)"; // "$-_.()" + "+!*'";
@@ -28,6 +48,9 @@
       }
       return res;
    }
+   
+   
+   // OTHER STUFF :
    
    function decodeIdSaveIfNot(idValue, idField) {
       if (typeof idField !== 'undefined' && idField !== null) {
@@ -51,7 +74,12 @@
             return idValue;
          }
       }
-      return encodeUriPath(idValue);
+      if (idValue.indexOf('//') === -1) {
+         return encodeUriPath(idValue);
+      }
+      // else '//' (in id value that is ex. itself an URI) would be equivalent
+      // to '/' in URI semantics, so to avoid that encode also '/' instead
+      return encodeURIComponent(idValue);
    }
    function buildUri(typeName, id,
          shouldEncodeId) { // optional, default is false
@@ -167,7 +195,8 @@
       }
       var id = null;
       if (encodedId) {
-         id = decodeURI(encodedId);
+         id = decodeURIComponent(encodedId); // and not decodeURI else an URI won't be decoded at all
+         // ex. "https%3A%2F%2Fwww.10thingstosee.com%2Fmedia%2Fphotos%2Ffrance-778943_HjRL4GM.jpg
       }
       if (!query) {
          query = null;
@@ -230,7 +259,8 @@
       }
       var id = null;
       if (encodedId) {
-         id = decodeURI(encodedId);
+          id = decodeURIComponent(encodedId); // and not decodeURI else an URI won't be decoded at all
+          // ex. "https%3A%2F%2Fwww.10thingstosee.com%2Fmedia%2Fphotos%2Ffrance-778943_HjRL4GM.jpg
       }
       if (!query) {
          query = null;

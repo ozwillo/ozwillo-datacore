@@ -826,8 +826,10 @@
     SwaggerOperation.prototype.encodePathParam = function(pathParam) {
       var encParts, part, parts, _i, _len;
       if (pathParam.indexOf("/") === -1) {
-        ///return encodeURIComponent(pathParam);
         return encodeUriPathComponent(pathParam);
+      } else if (pathParam.indexOf("//") !== -1) { // else '//' (in path param that is ex. itself an URI)
+        // would be equivalent to '/' in URI semantics, so to avoid that encode also '/' instead
+        return encodeURIComponent(pathParam);
       } else {
         parts = pathParam.split("/");
         encParts = [];

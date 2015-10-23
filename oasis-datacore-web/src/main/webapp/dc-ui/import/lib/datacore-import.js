@@ -1356,7 +1356,16 @@
             var idGenJs = mixin["dcmo:idGenJs"];
             if (typeof idGenJs === 'string' && idGenJs.length != 0) {
                var r = resource;
-               id = encodeURI(decodeURI(eval(idGenJs))); // in case idGenJs forgot do encode (per path element)
+               id = eval(idGenJs);
+               // in case idGenJs forgot do encode :
+               id = decodeURIComponent(id);
+               if (idValue.indexOf('//') === -1) {
+                   id = encodeUriPath(id); // encode per path element
+               } else {
+                   // '//' (in id value that is ex. itself an URI) would be equivalent
+                   // to '/' in URI semantics, so to avoid that encode also '/' instead
+                   id = encodeURIComponent(id);
+               }
                // TODO rather 
             }
          }
@@ -1895,23 +1904,31 @@
             // TODO LATER OPT check project again, in case returnedResource has a different modelType ???
             // updating version :
             upToDateResource["o:version"] = returnedResource["o:version"];
-            postAllDataInType({ modelType: upToDateResourceUri.modelType }, upToDateResource,
-                  importedDataPosted, importedDataPosted);
+            postAllDataInType({ modelType: upToDateResourceUri.modelType },
+                  upToDateResource, importedDataPosted, importedDataPosted,
+                  // post in project of resource else 403 Forbidden :
+                  { 'X-Datacore-Project': getProjectOfModelType(upToDateResourceUri.modelType, importState) });
          }, function (data, relativeUrl, importState) {
             var resourceUri = parseUri(data.request.path); // ex. "/dc/type/geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
             // and .modelType ex. "geo:CityGroup_0", .id ex. "FR/CC les Châteaux"
             var upToDateResource = importState.data.resources[resourceUri.uri];
             // checking error first (rights...) :
-            if (data._raw.statusCode !== 404) { // TODO more specific 403 Forbidden ?
+            if (data._raw.statusCode !== 404) { // no need for more specific 403 Forbidden
                importedDataPosted(data, upToDateResource);
                return;
             } // else does not exist
             // TODO better skipping error
             // so creating new resource :
-            postAllDataInType({ modelType: resourceUri.modelType }, upToDateResource,
-                  importedDataPosted, importedDataPosted);
+            postAllDataInType({ modelType: resourceUri.modelType },
+                  upToDateResource, importedDataPosted, importedDataPosted,
+                  // post in project of resource else 403 Forbidden :
+                  { 'X-Datacore-Project': getProjectOfModelType(resourceUri.modelType, importState) });
          }, null, importState);
       }
+   }
+
+   function getProjectOfModelType(modelType, importState) {
+      return importState.data.involvedMixins[modelType]['dcmo:pointOfViewAbsoluteName']; // ONLY FOR DATA
    }
   
    // must be applied on an already retrieved resource
@@ -2052,7 +2069,7 @@
       return importState.data.rows['0']; // string !!
    }
    
-   function getImportedFieldsModels(importState, success) {// imported field names
+   function getImportedFieldsModels(importState, success) { // imported field names
       // adding 1. field Internal field name :
        // (allows to add forecefully default only-valued Resources in Import phase 1)
       for (var fnInd in importState.model.fieldNamesWithInternalNameMap) {
@@ -2738,9 +2755,10 @@
             var upToDateMixin = findMixin(typeName, modelOrMixinArray);
             // checking error first (rights...) :
             if (data._raw.statusCode === 403
-                    && skipForbidden(origResource, importState.model.posted, importState)) { // skip model
-                 postedCallback(null, origResource);
-            } else if (data._raw.statusCode !== 404) { // TODO more specific 403 Forbidden ?
+                 && skipForbidden(origResource, importState.model.posted, importState)) { // skip model
+               postedCallback(null, origResource);
+               return;
+            } else if (data._raw.statusCode !== 404) {
                postedCallback(data, upToDateMixin); // pass error upwards
                return;
             }

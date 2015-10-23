@@ -1,6 +1,7 @@
 package org.oasis.datacore.rest.api;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.junit.Assert;
@@ -158,6 +159,16 @@ public class UriHelperTest {
          Assert.assertTrue(!uri.contains(unsafeChar + ""));
       }
       
+   }
+
+   
+   @Test
+   public void testIdThatIsAnUri() throws Exception {
+      String modelType = "photo:Library_0";
+      String uriThatIsAnId = "https://www.10thingstosee.com/media/photos/france-778943_HjRL4GM.jpg";
+      
+      String uri = UriHelper.buildUri(containerUrl, modelType, uriThatIsAnId); // "http://data.ozwillo.com/dc/type/photo:Library_0/https%3A%2F%2Fwww.10thingstosee.com%2Fmedia%2Fphotos%2Ffrance-778943_HjRL4GM.jpg"
+      Assert.assertEquals(containerUrl + DatacoreApi.DC_TYPE_PATH + modelType + "/https%3A%2F%2Fwww.10thingstosee.com%2Fmedia%2Fphotos%2Ffrance-778943_HjRL4GM.jpg", uri);
    }
    
 }
