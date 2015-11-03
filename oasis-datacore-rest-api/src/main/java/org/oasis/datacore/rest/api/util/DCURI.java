@@ -32,7 +32,8 @@ public class DCURI {
    private String container;
    /** Base Model type ex. "city.sample.city".
     * Corresponds to a type of use and a data governance configuration.
-    * For Social Graph ex. user (account), organization */
+    * For Social Graph ex. user (account), organization
+    * null for external URIs ex. */
    // TODO alternate extending type SCURI with ex. "account" instead
    private String type;
    /** ID / IRI ex. Lyon, London, Torino. Can't change (save by data migration operations).
@@ -131,6 +132,12 @@ public class DCURI {
     * and to get an URI, new URI(returned)
     */
    private static URI buildUri(URI containerUrl, String modelType, String id) throws URISyntaxException {
+      if (modelType == null) {
+         // external URI : type not known because not parsable
+         return new URI(containerUrl.toString() + '/' + id);
+         // (no need of encoding nor toASCIIString because id = unencoded path here)
+      }
+      
       String path = "/dc/type/" + modelType;
       if (id.contains("//")) {
          try {
@@ -173,6 +180,11 @@ public class DCURI {
       return this.encodedId;
    }
    
+   /**
+    * @obsolete for now
+    * @param id
+    * @return
+    */
    private static String encodeId(String id) {
       if (id.contains("//")) {
          try {
@@ -197,6 +209,7 @@ public class DCURI {
    /**
     * 
     * @return unencoded
+    * @obsolete for now
     */
    private String getPath() {
       if (cachedPath != null) {

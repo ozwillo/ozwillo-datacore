@@ -594,7 +594,7 @@ public class DatacoreApiServerTest {
       torinoCityData.setProperty("city:inCountry", countryUri);
       DCResource postedTorinoCityResource = datacoreApiClient.postDataInType(torinoCityData, CityCountrySample.CITY_MODEL_NAME);
       Assert.assertEquals("External resource references should not fail when non-existing (unlike local references)",
-            postedTorinoCityResource.get("city:inCountry"), countryUri);
+            countryUri, postedTorinoCityResource.get("city:inCountry"));
       
       // now making it fail, to see external resource check warning :
       postedTorinoCityResource.set("city:populationCount", "illegal population count");

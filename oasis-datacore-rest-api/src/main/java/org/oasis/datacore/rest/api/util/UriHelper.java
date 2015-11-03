@@ -173,7 +173,7 @@ public class UriHelper {
     * Parses any URI, even external
     * @param uri encoded
     * @param containerUrl used only for relative URIs, which require it ; encoded
-    * @return
+    * @return DCURI with (decoded using parseIri()) modelType & id, or if external with only undecoded path as id
     * @throws MalformedURLException
     * @throws URISyntaxException
     */
@@ -229,7 +229,7 @@ public class UriHelper {
     * to complete URI parsing. Does URL decode.
     * @param urlPathWithoutSlash (encoded) iri to parse (NB. characters outside
     * URL_SAFE_PATH_SEGMENT_CHARACTERS will be decoded)
-    * @return an array with modelType and (decoded) id
+    * @return an array with (decoded) modelType and (decoded) id
     * @throws IllegalArgumentException if bad practice modelType (contains characters
     * other than URL_ALWAYS_SAFE_CHARACTERS)
     */
@@ -272,7 +272,7 @@ public class UriHelper {
     * @param normalizeUrlMode
     * @param matchBaseUrlMode
     * @return the given Datacore URI's container URL (i.e. base URL, or null if URI is relative)
-    * and URL Path without slash
+    * and (undecoded) URL Path without slash
     * ex. [ "http://data.ozwillo.com/", "dc/type/sample.marka.field/1" ]
     * @throws ResourceParsingException
     */
