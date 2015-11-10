@@ -103,6 +103,8 @@ or supporting Ozwillo app frameworks if you've chosen to build your app on top o
 and for container URL <span class="dcConf_containerUrl_link">NOT INITED</span> 
 (URL that must be used to build Datacore Data resource URIs).
 <br/><br/>
+
+<br/>
 <b>URIs</b> that uniquely identify Datacore Data resource are in the form
 <span class="dcjsonline">$containerUrl/dc/type/$type/$id</span>, where 
 $containerUrl is unique for a container (ex. http://data.ozwillo.com), $type is 
@@ -123,6 +125,8 @@ must be URL-encoded, and it's bad practice for model names to contain some.<br/>
 are by default <span class="dcjsonline">$containerUrl/dc/type/$subResourceType/$resourceId/$subResourceJsonPath</span>,
 but can be something else if parsing is defined consistently within $subResourceType.
 <br/><br/>
+
+<br/>
 <b>Values</b> are formatted in JSON as follows :
 <br/><br/>
 &nbsp;&nbsp;- <span class="dcjsonline">date</span> as <a href="http://en.wikipedia.org/wiki/ISO_8601">ISO8601</a>
@@ -134,26 +138,40 @@ Put your (data or application) timezone in your dates so that they can be shared
 &nbsp;&nbsp;- <span class="dcjsonline">i18n</span> as a list of translation objects (like JSONLD), for instance :
 <span class="dcjsonline">[{"v": "Torino", "l": "it"}, {"v": "Turin","l": "fr"}]</span>.
 It allows language-agnostic lookups such as 
-<a href="/dc/type/pli:city_0?pli:name_i18n.v=Torino" class="dclink" onclick="
-javascript:return findDataByType($(this).attr('href'));
-">/dc/type/pli:city_0?pli:name_i18n.v=Torino</a>
-or the shorter version
 <a href="/dc/type/pli:city_0?pli:name_i18n=Torino" class="dclink" onclick="
 javascript:return findDataByType($(this).attr('href'));
 ">/dc/type/pli:city_0?pli:name_i18n=Torino</a>
-, but also language-scoped lookups such as
+(or using the exact field path  
+<a href="/dc/type/pli:city_0?pli:name_i18n.v=Torino" class="dclink" onclick="
+javascript:return findDataByType($(this).attr('href'));
+">/dc/type/pli:city_0?pli:name_i18n.v=Torino</a>
+), but also language-scoped lookups such as 
+<a href="/dc/type/pli:city_0?pli:name_i18n.it=Torino" class="dclink" onclick="
+javascript:return findDataByType($(this).attr('href'));
+">/dc/type/pli:city_0?pli:name_i18n.it=Torino</a>
+(or using the exact field path through $elemMatch  
 <a href="#" class="dclink" onclick="
 javascript:return findDataByType($(this).text());
 ">/dc/type/pli:city_0?pli:name_i18n=$elemMatch{"v":"Torino","l":"it"}</a>
+). Moreover, language can also be specified once for the whole query in a l or @language parameter such as in
+ <a href="/dc/type/pli:city_0?pli:name_i18n=Torino" class="dclink" onclick="
+javascript:return findDataByType($(this).attr('href'));
+">/dc/type/pli:city_0?pli:name_i18n=Torino&l=it</a>
 <br/><br/>
-<b>Operations</b> are specified in details below within the Swagger UI playground, and especially
-<a href="#!/dc/postAllDataInType_post_0" target="_blank">"postAllDataInType" for typed updates</a> (version) and
-<a href="#!/dc/findDataInType_get_2" target="_blank">"findDataInType" for typed queries</a> (criteria, sort, ranged query- or iterator-based pagination, debug mode, view).
+
+<br/>
+<b>Operations</b> are specified in details below within the Swagger UI playground, and especially :
 <br/><br/>
-<b>Typed operations</b> where type of data is provided in URL are usually more efficient : 
+&nbsp;&nbsp;- <a href="#!/dc/postAllDataInType_post_0" target="_blank">"postAllDataInType" for typed updates</a> (version) and
+<br/><br/>
+&nbsp;&nbsp;- <a href="#!/dc/findDataInType_get_2" target="_blank">"findDataInType" for typed queries</a> 
+(criteria including $fulltext, sort, ranged query- or iterator-based pagination, debug mode, view).
+<br/><br/>
+Note that typed operations where type of data is provided in URL are usually more efficient : 
 '*inType' methods are faster, finder queries with type even more.
 <br/><br/>
 
+<br/>
 <strong>Authentication:</strong>
 <br/>&nbsp;&nbsp;- In production (and integration), Ozwillo Kernel OAuth2 authentication must be used, i.e. 
 <a href="https://github.com/pole-numerique/oasis-datacore/wiki/How-to-use-OAuth2-with-Datacore">

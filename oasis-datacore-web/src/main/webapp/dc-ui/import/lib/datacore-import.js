@@ -2231,6 +2231,7 @@
       mergeStringValueOrDefaultIfAny(field, "dcmf:required", fieldRow["required"], importState.metamodel["dcmf:field_0"], importState);
       mergeStringValueOrDefaultIfAny(field, "dcmf:aliasedStorageNames", fieldRow["aliasedStorageNames"], importState.metamodel["dcmf:field_0"], importState);
       mergeStringValueOrDefaultIfAny(field, "dcmf:readonly", fieldRow["readonly"], importState.metamodel["dcmf:field_0"], importState);
+      mergeStringValueOrDefaultIfAny(field, "dcmf:fulltext", fieldRow["fulltext"], importState.metamodel["dcmf:field_0"], importState);
       mergeStringValueOrDefaultIfAny(field, "dcmf:queryLimit", fieldRow["queryLimit"],
             importState.metamodel["dcmf:field_0"], importState); // meaningless for list but required by ModelResourceMappingService for now
       mergeStringValueOrDefaultIfAny(field, "dcmf:isInMixinRef", fieldRow["isInMixinRef"],
@@ -2709,7 +2710,7 @@
             
          } else if (data._raw.statusCode === 403
                && skipForbidden(origResource, importState.model.posted, importState)) { // skip model
-            console.log("refreshAndSchedulePost skipping ", origResource['@id'] || origResource[0]['@id']);//
+            ///console.log("refreshAndSchedulePost skipping ", origResource['@id'] || origResource[0]['@id']);//
             postedCallback(null, origResource);
             
          } else {
