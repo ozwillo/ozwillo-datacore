@@ -47,11 +47,27 @@ public class DCResourceParsingContext {
    }
    
    public DCModelBase peekModel() {
-      return this.resourceValueStack.peek().getModel();
+      for (int i = this.resourceValueStack.size() - 1 ; i >= 0 ; i--) {
+         DCModelBase stackedModel = this.resourceValueStack.get(i).getModel();
+         if (stackedModel != null) {
+            return stackedModel;
+         }
+      }
+      // (and not using stack.peek() because is would be null for embedded subresource ex. i18n,
+      // nor by copying it because allows to know non embedded subresources)
+      return null;
    }
    
    public DCModelBase peekStorageModel() {
-      return this.resourceValueStack.peek().getStorageModel();
+      for (int i = this.resourceValueStack.size() - 1 ; i >= 0 ; i--) {
+         DCModelBase stackedStorageModel = this.resourceValueStack.get(i).getStorageModel();
+         if (stackedStorageModel != null) {
+            return stackedStorageModel;
+         }
+      }
+      // (and not using stack.peek() because is would be null for embedded subresource ex. i18n,
+      // nor by copying it because allows to know non embedded subresources)
+      return null;
    }
    
    public boolean hasEmbeddedUri(DCURI dcUri) {
@@ -67,6 +83,12 @@ public class DCResourceParsingContext {
    }
    
    
+   /**
+    * 
+    * @param model
+    * @param storageModel
+    * @param uri may be null if query
+    */
    public void enter(DCModelBase model, DCModelBase storageModel, DCURI uri) {
       ///this.resourceValueStack.add(new DCResourceValue(model.getName() + '[' + id + ']', null, id));
       this.resourceValueStack.add(new DCResourceValue(null, model, storageModel, null, uri));
@@ -195,8 +217,11 @@ public class DCResourceParsingContext {
       for (ResourceParsingLog error : resourceParsingContext.getErrors()) {
          //sb.append("\n   - in context "); // too long
          sb.append("\n - ");
-         sb.append(error.getFieldFullPath());
-         sb.append(" : ");
+         String fieldFullPath = error.getFieldFullPath();
+         if (fieldFullPath != null && !fieldFullPath.isEmpty()) {
+            sb.append(fieldFullPath);
+            sb.append(" : ");
+         } // else ex. root of a query
          sb.append(error.getMessage());
          if (error.getException() != null) {
             sb.append(". Exception message : ");

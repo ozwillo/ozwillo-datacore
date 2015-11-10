@@ -31,6 +31,7 @@ import org.oasis.datacore.rest.server.MonitoringLogServiceImpl;
 import org.oasis.datacore.rest.server.cxf.CxfJaxrsApiProvider;
 import org.oasis.datacore.rest.server.parsing.model.DCQueryParsingContext;
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
+import org.oasis.datacore.rest.server.parsing.model.QueryOperatorsEnum;
 import org.oasis.datacore.rest.server.parsing.service.QueryParsingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,6 +73,8 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       findConfParams.add(DatacoreApi.LIMIT_PARAM);
       findConfParams.add(DatacoreApi.DEBUG_PARAM);
       findConfParams.add("format");
+      findConfParams.add(DCResource.KEY_I18N_LANGUAGE_JSONLD);
+      findConfParams.add(DCI18nField.KEY_LANGUAGE);
    }
 
    @Value("${datacoreApiServer.query.detailedErrorsMode}")
@@ -167,26 +170,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       //Log to AuditLog Endpoint
       //monitoringLogServiceImpl.postLog(modelType, "findDataInType");
 
-      // parsing query parameters criteria according to model :
-      DCQueryParsingContext queryParsingContext = new DCQueryParsingContext(model, storageModel);
-      if (permissionEvaluator.isThisModelAllowed(model,
-            securityService.getCurrentUser(), EntityPermissionEvaluator.READ)) {
-         queryParsingContext.getTopLevelAllowedMixins().add(model.getName());
-         // this requires checking resource-level rights, to avoid it query in a model that
-         // you have model-level rights on
-      }
-      parseQueryParameters(params, queryParsingContext);
-      if (queryParsingContext.hasErrors()) {
-         String msg = DCResourceParsingContext.formatParsingErrorsMessage(queryParsingContext, detailedErrorsMode);
-         throw new QueryException(msg);
-      } // else TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
-
-      entityModelService.addMultiProjectStorageCriteria(queryParsingContext.getCriteria(), storageModel, null);
-      addResourceLevelSecurityIfRequired(queryParsingContext);
-      // NB. no guest specific case (groups ex. EVERYONE must be given to guest
-      // and allowed on models or resources)
-      
-      // adding paging & sorting :
+      // parsing paging :
       if (start == null) { // should not happen
          start = 0;
       } else if (start > maxStart) {
@@ -203,6 +187,37 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          limit = maxLimit; // max, else prefer ranged query, next will raise start > maxStart error
       }
       // NB. limit will be limited through $maxScan by models' queryLimit and storageModel' maxScan
+      
+      // parsing query parameters criteria according to model :
+      DCQueryParsingContext queryParsingContext = new DCQueryParsingContext(model, storageModel);
+      if (permissionEvaluator.isThisModelAllowed(model,
+            securityService.getCurrentUser(), EntityPermissionEvaluator.READ)) {
+         queryParsingContext.getTopLevelAllowedMixins().add(model.getName());
+         // this requires checking resource-level rights, to avoid it query in a model that
+         // you have model-level rights on
+      }
+      
+      // setting global language if any :
+      // (BEFORE parsing & building criteria)
+      List<String> globalLanguages = params.get(DCResource.KEY_I18N_LANGUAGE_JSONLD);
+      if (globalLanguages == null || globalLanguages.isEmpty()) {
+         globalLanguages = params.get(DCI18nField.KEY_LANGUAGE);
+      }
+      if (globalLanguages != null && !globalLanguages.isEmpty()) {
+         String globalLanguage = globalLanguages.get(0);
+         if (queryParsingContext.checkLanguage(globalLanguage)) {
+            queryParsingContext.setGlobalLanguage(globalLanguage);
+            if (globalLanguages.size() > 1) {
+               queryParsingContext.addWarning("Found more than one global language : "
+                     + globalLanguages + ", only the first is used");
+            }
+         }
+      }
+      
+      parseQueryParameters(params, queryParsingContext);
+      
+      buildQueryAndSort(queryParsingContext, null);
+      
       Sort sort = queryParsingContext.getSort();
       if (sort == null) {
          // TODO sort by default : configured in model (last modified date, uri,
@@ -210,10 +225,38 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          sort = new Sort(Direction.DESC, DCEntity.KEY_CH_AT); // new Sort(Direction.ASC, "_uri")...
       }
       
-      Query springMongoQuery = new Query(queryParsingContext.getCriteria())
-         .with(sort).skip(start).limit(limit); // TODO rather range query, if possible on sort field
+      Query springMongoQuery = queryParsingContext.getQuery()
+            // adding paging & sorting :
+            .with(sort).skip(start).limit(limit); // TODO rather range query, if possible on sort field
       
       List<DCEntity> foundEntities = executeMongoDbQuery(springMongoQuery, queryParsingContext);
+      
+      if (queryParsingContext.isFulltext()) {
+         // if fulltext, prepend a token exact match lookup :
+         buildQueryAndSort(queryParsingContext, "$");
+         springMongoQuery = queryParsingContext.getQuery()
+               // adding paging & sorting :
+               .with(sort).skip(start).limit(limit); // TODO rather range query, if possible on sort field
+         List<DCEntity> exactMatchFoundEntities = executeMongoDbQuery(springMongoQuery, queryParsingContext);
+         
+         if (!exactMatchFoundEntities.isEmpty() // (otherwise nothing to merge)
+               && !queryParsingContext.getFulltextSorts().isEmpty()) {
+               // (otherwise sort on _chAt so ex. Saint-Lô can't be hidden by ex. Saint-Lormel)
+            // merge :
+            foundEntities = foundEntities.stream()
+                  .filter(fe -> !exactMatchFoundEntities.contains(fe))
+                  .collect(Collectors.toList());
+            if (queryParsingContext.getFulltextSorts().get(0) == QueryOperatorsEnum.SORT_ASC) {
+               // moving exact matches at the start :
+               exactMatchFoundEntities.addAll(foundEntities);
+               foundEntities = exactMatchFoundEntities;
+            } else { // SORT_DESC
+               // moving exact matches at the end :
+               foundEntities.addAll(exactMatchFoundEntities);
+            }
+            // (both obligatorily distinct & within limit)
+         }
+      }
       
       if (logger.isDebugEnabled()) {
          logger.debug("Done Spring Mongo query as " + securityService.getCurrentUserId() + ": "
@@ -393,30 +436,42 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          }
 
          String entityFieldPath = entityFieldPathSb.toString();
-         queryParsingContext.enterCriteria(entityFieldPath , values.size());
-         try  {
-            // parsing multiple values (of a field that is mentioned several times) :
-            // (such as {limit=[10], founded=[>"-0143-04-01T00:00:00.000Z", <"-0043-04-02T00:00:00.000Z"]})
-            // NB. can't be done by merely chaining .and(...)'s because of mongo BasicDBObject limitations, see
-            // http://www.mkyong.com/java/due-to-limitations-of-the-basicdbobject-you-cant-add-a-second-and/
-            for (String operatorAndValue : values) {
-               try {
-                  // parsing query parameter criteria according to model field :
-                  queryParsingService.parseCriteriaFromQueryParameter(operatorAndValue,
-                        dcField, queryParsingContext);
-               } catch (Exception ex) {
-                  queryParsingContext.addError("Error while parsing query criteria " + fieldPath
-                        + operatorAndValue, ex);
-               }
+         // parsing multiple values (of a field that is mentioned several times) :
+         // (such as {limit=[10], founded=[>"-0143-04-01T00:00:00.000Z", <"-0043-04-02T00:00:00.000Z"]})
+         // NB. can't be done by merely chaining .and(...)'s because of mongo BasicDBObject limitations, see
+         // http://www.mkyong.com/java/due-to-limitations-of-the-basicdbobject-you-cant-add-a-second-and/
+         for (String operatorAndValue : values) {
+            try {
+               // parsing query parameter criteria according to model field :
+               queryParsingService.parseQueryParameter(entityFieldPath, dcField,
+                     operatorAndValue, queryParsingContext);
+            } catch (Exception ex) {
+               queryParsingContext.addError("Error while parsing query parameter " + fieldPath
+                     + " " + operatorAndValue, ex); // even RuntimeException so that more lenient than 503
             }
-            
-         } finally {
-            queryParsingContext.exitCriteria();
          }
 
       }
    }
 
+
+   private void buildQueryAndSort(DCQueryParsingContext queryParsingContext,
+         String fulltextRegexSuffix) throws QueryException {
+      queryParsingContext.initBuildCriteria(fulltextRegexSuffix);
+      queryParsingService.buildCriteria(queryParsingContext);
+      if (queryParsingContext.hasErrors()) {
+         String msg = DCResourceParsingContext.formatParsingErrorsMessage(queryParsingContext, detailedErrorsMode);
+         throw new QueryException(msg);
+      } // else TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
+
+      entityModelService.addMultiProjectStorageCriteria(
+            queryParsingContext.getCriteria(), queryParsingContext.peekStorageModel(), null); // storageModel
+      addResourceLevelSecurityIfRequired(queryParsingContext);
+      // NB. no guest specific case (groups ex. EVERYONE must be given to guest
+      // and allowed on models or resources)
+   }
+
+   
    private DCField getFieldAndCheckIfRightsHaveToBeDecidedAtResourceLevel(DCModelBase dcModel,
          String topFieldPathElement, DCUserImpl user, DCQueryParsingContext queryParsingContext,
          boolean addToTopLevelAllowedMixins) {
@@ -561,24 +616,41 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    private DCField handleI18nField(DCField dcField, String fieldPathElement,
          DCQueryParsingContext queryParsingContext,
          StringBuilder entityFieldPathSb, String[] fieldPathElements, int i) {
+      DCMapField dcMapField = (DCMapField) ((DCListField) dcField).getListElementField();
+      String language = null;
+      
       // translating to mongo if needed :
       String entityFieldPathElement;
       switch (fieldPathElement) {
       case DCResource.KEY_I18N_VALUE_JSONLD :
+      case DCI18nField.KEY_VALUE :
          entityFieldPathElement = DCI18nField.KEY_VALUE;
          break;
       case DCResource.KEY_I18N_LANGUAGE_JSONLD :
+      case DCI18nField.KEY_LANGUAGE :
          entityFieldPathElement = DCI18nField.KEY_LANGUAGE;
          break;
       default :
-         entityFieldPathElement = fieldPathElement;
+         if (queryParsingContext.checkLanguage(fieldPathElement)) {
+            language = fieldPathElement;
+            entityFieldPathElement = DCI18nField.KEY_VALUE;
+         } else {
+            queryParsingContext.addError("In type " + queryParsingContext.peekModel().getName()
+                  + ", can't find field with path elements"
+                  + Arrays.asList(fieldPathElements) + ": can't go below "
+                  + ((i == 0) ? fieldPathElements.length - 1 : i) + "th path element "
+                  + fieldPathElement + ", because field is unkown. Allowed fields are "
+                  + ((DCMapField) dcField).getMapFields().keySet()
+                  + " or a 2-letter language (followed by .value).");
+            return null;
+         }
       }
+      queryParsingContext.setEntityFieldPathAsI18nValue(entityFieldPathSb.toString()
+            + DCI18nField.KEY_VALUE, language);
       // "list of map"-like handling :
       // (leaf field : i18n is obligatorily a list of map of strings)
-      dcField = ((DCListField) dcField).getListElementField();
-      dcField = handleMapField(dcField, entityFieldPathElement,
+      return handleMapField(dcMapField, entityFieldPathElement,
             queryParsingContext, entityFieldPathSb, fieldPathElements, i);
-      return dcField;
    }
 
    /**
@@ -683,6 +755,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          // TODO constants
          Map<String, Object> debugCtx = serverRequestContext.getDebug(); // never null because isDebug()
          debugCtx.put("mongoQuery", cursorProvider.getCursorPrepared().getQuery());
+         debugCtx.put("springMongoQuery", springMongoQuery);
          debugCtx.put(DEBUG_QUERY_EXPLAIN, cursorProvider.getQueryExplain());
          debugCtx.put("sortExplain", cursorProvider.getCursorPrepared().explain());
          debugCtx.put("hasNoIndexedField", queryParsingContext.isHasNoIndexedField());

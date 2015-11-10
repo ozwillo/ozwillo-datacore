@@ -131,6 +131,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       DCModelBase displayableModel = new DCMixin(MODEL_DISPLAYABLE_NAME) // and not DCModel : fields exist within model & mixins
          .addField(new DCI18nField(DISPLAYABLE_NAME_PROP, 100)) // searchable, especially when is aliasedStorage of ex. geoco:name
       ;
+      displayableModel.getField(DISPLAYABLE_NAME_PROP).setFulltext(true); // to ease use ; NB. requires queryLimit > 0
 
       DCModelBase countryLanguageSpecificModel = new DCMixin(MODEL_COUNTRYLANGUAGESPECIFIC_NAME) // and not DCModel : fields exist within model & mixins
          .addField(new DCField(COUNTRYLANGUAGESPECIFIC_PROP_NAME, "string", false, 0)) // LATER false & mixin optional
@@ -153,6 +154,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addField(new DCField("dcmf:queryLimit", "int", 0, 0)) // defaults to 0, indexing would bring not much ??
          .addField(new DCListField("dcmf:aliasedStorageNames", new DCField("useless", "string"))) // defaults to 0, indexing would bring not much ??
          .addField(new DCField("dcmf:readonly", "boolean", false, 0))
+         .addField(new DCField("dcmf:fulltext", "boolean", false, 0)) // only on string-typed fields
          // list :
          .addField(new DCResourceField("dcmf:listElementField", MODEL_FIELD_NAME))
          // map :

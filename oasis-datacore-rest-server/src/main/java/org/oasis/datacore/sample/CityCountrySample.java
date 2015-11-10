@@ -50,6 +50,7 @@ public class CityCountrySample extends DatacoreSampleBase {
             + "\"name\": \"France\" }");
       //countryModel.addMixin(commonModel);
       countryModel.addField(new DCField("n:name", "string", true, 100));
+      countryModel.getField("n:name").setFulltext(true); // string fulltext example ; NB. requires queryLimit > 0
       
       DCModel poiModel = new DCModel(POI_MODEL_NAME);
       poiModel.addField(new DCField("n:name", "string", true, 50));
@@ -72,9 +73,11 @@ public class CityCountrySample extends DatacoreSampleBase {
       // i18n & aliasedStorageNames sample :
       cityModel.addField(new DCI18nField(ResourceModelIniter.DISPLAYABLE_NAME_PROP, 100, ResourceModelIniter.DISPLAYABLE_NAME_PROP, true));
       cityModel.addField(new DCI18nField("i18n:name", 100, ResourceModelIniter.DISPLAYABLE_NAME_PROP, true));
+      cityModel.getField("i18n:name").setFulltext(true); // i18n fulltext example ; NB. requires queryLimit > 0
       cityModel.addField(new DCI18nField("city:i18nname", 100, new LinkedHashSet<String>(new ImmutableSet.Builder<String>()
             .add(ResourceModelIniter.DISPLAYABLE_NAME_PROP).add("i18n:name").build())));
       // more complete Resource sample (may be used also as embedded referenced Resource) :
+      cityModel.getField("city:i18nname").setFulltext(true); // i18n fulltext example (REQUIRED because i18n readonly)
       cityModel.addField(new DCListField("city:pointsOfInterest",
             new DCResourceField("zzz", POI_MODEL_NAME))); // sample of
       // embedded referencing Resource (city:pointsOfInterest) using POI model :
@@ -149,11 +152,37 @@ public class CityCountrySample extends DatacoreSampleBase {
                   .add(DCResource.propertiesBuilder().put("@language", "ru").put("@value", "Moskva").build())
                   .add(DCResource.propertiesBuilder().put("@language", "us").put("@value", "Moscow").build())
                   .build());
+      // for fulltext ordering :
+      DCResource saintEtienneCity = resourceService.create(CITY_MODEL_NAME, "France/Saint-Etienne")
+            .set("n:name", "Saint-Etienne").set("city:inCountry", franceCountry.getUri())
+            .set("city:i18nname", DCResource.listBuilder().add(DCResource.propertiesBuilder()
+                  .put("l", "fr").put("v", "Saint-Etienne").build()).build());
+      DCResource saintLoubertCity = resourceService.create(CITY_MODEL_NAME, "France/Saint-Loubert")
+            .set("n:name", "Saint-Loubert").set("city:inCountry", franceCountry.getUri())
+            .set("city:i18nname", DCResource.listBuilder().add(DCResource.propertiesBuilder()
+                  .put("l", "fr").put("v", "Saint-Loubert").build()).build());
+      DCResource saintLoCity = resourceService.create(CITY_MODEL_NAME, "France/Saint-Lô")
+            .set("n:name", "Saint-Lô").set("city:inCountry", franceCountry.getUri())
+            .set("city:i18nname", DCResource.listBuilder().add(DCResource.propertiesBuilder()
+                  .put("@language", "fr").put("@value", "Saint-Lô").build()).build());
+      DCResource saintLormelCity = resourceService.create(CITY_MODEL_NAME, "France/Saint-Lormel")
+            .set("n:name", "Saint-Lormel").set("city:inCountry", franceCountry.getUri())
+            .set("city:i18nname", DCResource.listBuilder().add(DCResource.propertiesBuilder()
+                  .put("@language", "fr").put("@value", "Saint-Lormel").build()).build()); // entered after Saint-Lo so first in default order
+      DCResource saintVallierCity = resourceService.create(CITY_MODEL_NAME, "France/Saint-Vallier")
+            .set("n:name", "Saint-Vallier").set("city:inCountry", franceCountry.getUri())
+            .set("city:i18nname", DCResource.listBuilder().add(DCResource.propertiesBuilder()
+                  .put("@language", "fr").put("@value", "Saint-Vallier").build()).build());
       
       lyonCity = postDataInType(lyonCity);
       londonCity = postDataInType(londonCity);
       torinoCity = postDataInType(torinoCity);
       moscowCity = postDataInType(moscowCity);
+      saintEtienneCity = postDataInType(saintEtienneCity);
+      saintLoubertCity = postDataInType(saintLoubertCity);
+      saintLoCity = postDataInType(saintLoCity);
+      saintLormelCity = postDataInType(saintLormelCity);
+      saintVallierCity = postDataInType(saintVallierCity);
       
       // embedded referenced Resources sample :
       DCResource tourEiffelPoi = resourceService.create(POI_MODEL_NAME, "France/Paris/TourEiffel").set("n:name", "Tour Eiffel");

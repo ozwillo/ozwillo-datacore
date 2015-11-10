@@ -25,6 +25,11 @@ import org.springframework.stereotype.Component;
  * Provides a native (DCEntity) model that is mapped to DCResource
  * and in sync with DCEntity annotations (@Indexed...).
  * 
+ * NB. entity fulltext tokens field is not there because it only exists if fulltext is conf'd,
+ * so TODO LATER refactor native model to support dynamic mixins and move it there,
+ * then TODO LATER2 when transformation module is there, make entity just another
+ * resource that is transformed from and to the actual resource. 
+ * 
  * @author mdutoo
  *
  */

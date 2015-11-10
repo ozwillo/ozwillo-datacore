@@ -48,7 +48,7 @@ public class DCResourceValue {
       if (fullValuedPath == null) {
          if (previousResourceValue == null) {
             if (value == null) {
-               fullValuedPath = "Missing root model name";
+               fullValuedPath = "" ; // "Missing root model name";
             } else {
                //fullValuedPath = value.toString(); // too long start, said anyway on top
                fullValuedPath = ""; // model.getName() + "[" + id + "]"

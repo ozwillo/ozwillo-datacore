@@ -14,20 +14,26 @@ import org.oasis.datacore.rest.server.parsing.model.QueryOperatorsEnum;
 public interface QueryParsingService {
 
    /**
-    * Parses query parameter criteria according to model field.
+    * Parses query parameter criteria to OperatorValues according to model field.
     * TODO LATER using ANTLR ?!?
     * recognizes MongoDB criteria (operators & values), see http://docs.mongodb.org/manual/reference/operator/query/
-    * and fills Spring Criteria with them
-    * @param operatorAndValue
+    * @param entityFieldPath
     * @param dcField
+    * @param operatorAndValue
     * @param queryParsingContext
     * @throws ResourceParsingException
     */
-	void parseCriteriaFromQueryParameter(String operatorAndValue,
-	      DCField dcField, DCQueryParsingContext queryParsingContext)
-	      throws ResourceParsingException;
+   void parseQueryParameter(String entityFieldPath, DCField dcField, String operatorAndValue,
+         DCQueryParsingContext queryParsingContext) throws ResourceParsingException;
+
+   /**
+    * Visits its OperatorValues and builds Spring Criteria out of them
+    * @param queryParsingContext
+    */
+   void buildCriteria(DCQueryParsingContext queryParsingContext);
 
 	/**
+	 * NOT USED
 	 * Parses using the operatorEnum.parsingType if any, else the given dcField type
 	 * @param operatorEnum
 	 * @param dcField

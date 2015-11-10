@@ -33,4 +33,12 @@ public class TestHelper {
       return resources;
    }
 
+   public static int getDebugResourcesNb(List<DCResource> debugResult) {
+      List<Map<String, Object>> resources = getDebugResources(debugResult);
+      if (resources == null) {
+         return 0;
+      }
+      return resources.size();
+   }
+
 }

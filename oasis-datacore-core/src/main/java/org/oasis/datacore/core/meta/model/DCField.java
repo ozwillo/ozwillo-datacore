@@ -16,6 +16,16 @@ import com.google.common.collect.ImmutableSet;
  */
 public class DCField {
 
+   /** Name of the single (sub) entity i18n field containing tokens for the fulltext search.
+    * NB. even non-i18n string-typed fields are tokenized & fulltext searched in i18n'd tokens,
+    * otherwise it would require separate indexes and therefore less efficient criteria
+    * or recomputing all existing tokens when the first i18n fulltext field is added.
+    * No resource field can have this name.
+    * For now this field is hidden and must be accessed in queries using one of the fulltext
+    * enabled field, but TODO LATER add it as a "@fulltext" field of a dynamic mixin to the
+    * native model. */
+   public static final String FULLTEXT_FIELD_NAME = "_ft";
+
    private String name; // TODO also longName / displayName (i18n'd ??), description (/ help), sampleValues list ?
    /** string, boolean, int, float, long, double, date, map, list, resource, i18n ; geoloc ???
     * default is string */
@@ -38,6 +48,8 @@ public class DCField {
    /** means is filled by another field with aliasedStorageName, to avoid both being not in sync ;
     * meaning has a single aliasedStorageName (where it is read from), unless it is computed live */
    private boolean readonly = false;
+   /** only valid for "string" fields (possibly within i18n fields) */
+   private boolean fulltext = false;
    
    // TODO also :
    // * default rights for Model ?! (or even Mixin ? Field ???)
@@ -166,7 +178,10 @@ public class DCField {
    ///////////////////////////////////////
    // update methods
 
-   public void setName(String name) {
+   public void setName(String name) throws IllegalArgumentException {
+      if (name.equals(FULLTEXT_FIELD_NAME)) {
+         throw new IllegalArgumentException("Field names are forbidden to be " + FULLTEXT_FIELD_NAME);
+      }
       this.name = name;
       this.defaultAliasedStorageNames = new LinkedHashSet<String>(2);
       this.defaultAliasedStorageNames.add(name);
@@ -211,6 +226,14 @@ public class DCField {
 
    public void setReadonly(boolean readonly) {
       this.readonly = readonly;
+   }
+
+   public boolean isFulltext() {
+      return fulltext;
+   }
+
+   public void setFulltext(boolean fulltext) {
+      this.fulltext = fulltext;
    }
   
 }

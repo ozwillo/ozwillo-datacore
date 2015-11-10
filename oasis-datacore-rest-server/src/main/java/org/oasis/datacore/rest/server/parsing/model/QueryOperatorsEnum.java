@@ -34,40 +34,49 @@ public enum QueryOperatorsEnum {
 	SORT_ASC(DCFieldTypeEnum.comparableTypes, "+"),
 	IN(DCFieldTypeEnum.equalableTypes, DCFieldTypeEnum.LIST, "$in"),
 	NOT_IN(DCFieldTypeEnum.equalableTypes, DCFieldTypeEnum.LIST, "$nin"),
-	REGEX(DCFieldTypeEnum.onlyString, "$regex"),
+	REGEX(DCFieldTypeEnum.onlyString, "$regex"), // on string itself or within i18n list of maps structure
+	FULLTEXT(DCFieldTypeEnum.onlyString, "$fulltext"), // on string itself or within i18n list of maps structure
 	EXISTS(DCFieldTypeEnum.everyTypes, "$exists"),
 	ALL(true, DCFieldTypeEnum.LIST, "$all"), // list that contains all elements
 	ELEM_MATCH(true, DCFieldTypeEnum.MAP, "$elemMatch"), // list whose elements match all criteria ; NB. primitive types are easier done using equals !
 	SIZE(true, DCFieldTypeEnum.INTEGER, "$size"); // list of size
 
-   public static final Set<QueryOperatorsEnum> noValueOperators = Sets.immutableEnumSet(new ImmutableSet
-         .Builder<QueryOperatorsEnum>().add(QueryOperatorsEnum.SORT_ASC)
-         .add(QueryOperatorsEnum.SORT_DESC).add(QueryOperatorsEnum.EXISTS).build()); // uses EnumSet
+   public static final Set<QueryOperatorsEnum> listOperators = Sets.immutableEnumSet(new ImmutableSet
+         .Builder<QueryOperatorsEnum>().add(ALL).add(ELEM_MATCH)
+         .add(QueryOperatorsEnum.SIZE).build()); // uses EnumSet
 
-   private Set<DCFieldTypeEnum> listCompatibleTypes;
+   public static final Set<QueryOperatorsEnum> sortOperators = Sets.immutableEnumSet(new ImmutableSet
+         .Builder<QueryOperatorsEnum>().add(QueryOperatorsEnum.SORT_ASC)
+         .add(QueryOperatorsEnum.SORT_DESC).build()); // uses EnumSet
+
+   public static final Set<QueryOperatorsEnum> noValueOperators = Sets.immutableEnumSet(new ImmutableSet
+         .Builder<QueryOperatorsEnum>().addAll(sortOperators)
+         .add(QueryOperatorsEnum.EXISTS).build()); // uses EnumSet
+
+   private Set<DCFieldTypeEnum> compatibleTypes;
    private boolean isListSpecificOperator = false;
-	private Set<String> listOperators;
+	private Set<String> operators;
 	/** field type to parse criteria value as, if differs from criteria field's (for
 	 * $in, $nin, $all, $elemMatch, $size) ; else null */
    private DCFieldTypeEnum parsingType;
 	
 	private QueryOperatorsEnum(Set<DCFieldTypeEnum> compatibleTypes,
-	      DCFieldTypeEnum parsingType, String... listOperators) {
-      this.listCompatibleTypes = compatibleTypes;
+	      DCFieldTypeEnum parsingType, String... operators) {
+      this.compatibleTypes = compatibleTypes;
       this.parsingType = parsingType;
-		this.listOperators = (listOperators == null) ? new HashSet<String>(0)
-		      : new HashSet<String>(Arrays.asList(listOperators));
+		this.operators = (operators == null) ? new HashSet<String>(0)
+		      : new HashSet<String>(Arrays.asList(operators));
 	}
 	/**
 	 * Constructor for list-specific operators : $all, $elemMatch, $size
 	 * NB. compatibleTypes are onlyList
     * @param isListSpecificOperator must be true
 	 * @param parsingType
-	 * @param listOperators
+	 * @param operators
 	 */
    private QueryOperatorsEnum(boolean isListSpecificOperator,
-         DCFieldTypeEnum parsingType, String... listOperators) {
-      this(DCFieldTypeEnum.onlyList, parsingType, listOperators);
+         DCFieldTypeEnum parsingType, String... operators) {
+      this(DCFieldTypeEnum.onlyList, parsingType, operators);
       this.isListSpecificOperator = true;
    }
 	
@@ -75,8 +84,8 @@ public enum QueryOperatorsEnum {
       this(compatibleTypes, null, operators);
    }
 	
-	public Set<DCFieldTypeEnum> getListCompatibleTypes() {
-		return this.listCompatibleTypes;
+	public Set<DCFieldTypeEnum> getCompatibleTypes() {
+		return this.compatibleTypes;
 	}
 
    public boolean isListSpecificOperator() {
@@ -87,16 +96,16 @@ public enum QueryOperatorsEnum {
       return parsingType;
    }
    
-   public Set<String> getListOperators() {
-      return this.listOperators;
+   public Set<String> getOperators() {
+      return this.operators;
    }
 
 	public static SimpleEntry<QueryOperatorsEnum, Integer> getEnumFromOperator(String operator) {
 
 		if(operator != null && !"".equals(operator)) {
 			for (QueryOperatorsEnum queryOperatorsEnum : QueryOperatorsEnum.values()) {
-				if (queryOperatorsEnum != null && queryOperatorsEnum.getListOperators() != null) {
-					for (String tmpOperator : queryOperatorsEnum.getListOperators()) {
+				if (queryOperatorsEnum != null && queryOperatorsEnum.getOperators() != null) {
+					for (String tmpOperator : queryOperatorsEnum.getOperators()) {
 						if (tmpOperator != null && !"".equals(tmpOperator)) {
 							if(tmpOperator.length() <= operator.length()) {
 								if(tmpOperator.equals(operator.substring(0, tmpOperator.length()))) {

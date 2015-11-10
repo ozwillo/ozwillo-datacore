@@ -25,6 +25,7 @@ import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.NativeModelService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.model.DCEntityBase;
+import org.oasis.datacore.core.entity.query.fulltext.Tokenizer;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 import org.oasis.datacore.core.meta.model.DCI18nField;
@@ -47,9 +48,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 @Component
 public class ResourceEntityMapperService {
@@ -80,6 +78,10 @@ public class ResourceEntityMapperService {
    
    @Autowired
    private ValueParsingService valueParsingService;
+
+   /** for fulltext */
+   @Autowired
+   public Tokenizer tokenizer;
    
    @Autowired
    private LocalDatacoreLinkedResourceChecker localDatacoreLinkedResourceChecker;
@@ -94,19 +96,34 @@ public class ResourceEntityMapperService {
 
 
    /** LATER use request context */
-   public String getDefaultLanguage(DCI18nField dcI18nField) {
-      // assume it is translated in the model's default language :
-      String defaultLanguage = dcI18nField.getDefaultLanguage();
-      // TODO TODO let user change it ? request-scoped (from request context) ?
+   public String getDefaultLanguage(DCI18nField dcI18nField, DCModelBase dcFieldModel) {
+      String defaultLanguage = null;
+      // assume it is translated in the default language...
+      // ...according to i18n field :
+      if (dcI18nField != null) {
+         defaultLanguage = dcI18nField.getDefaultLanguage();
+      } // else ex. string field
+      // ... else according to its model :
+      if (defaultLanguage == null) {
+         defaultLanguage = dcFieldModel.getCountryLanguage(); // TODO better model default language ?
+      }
       if (defaultLanguage == null) {
          defaultLanguage = DCI18nField.DEFAULT_LANGUAGE; // global default
       }
+      // TODO TODO let user change it ? request-scoped (from request context) ?
       return defaultLanguage;
    }
-   private List<Map<String,String>> toSingleLanguageI18n(String value, DCI18nField dcI18nField) {
-      return new ImmutableList.Builder<Map<String,String>>()
-            .add(new ImmutableMap.Builder<String, String>()
-                  .put(getDefaultLanguage(dcI18nField), value).build()).build();
+   private List<Map<String,Object>> toSingleLanguageI18n(String value,
+         DCI18nField dcI18nField, DCModelBase dcFieldModel) {
+      List<Map<String, Object>> i18nMapList = new ArrayList<Map<String,Object>>(2);
+      i18nMapList.add(toLanguageI18nMap(getDefaultLanguage(dcI18nField, dcFieldModel), value));
+      return i18nMapList;
+   }
+   private Map<String,Object> toLanguageI18nMap(String language, String value) {
+      Map<String,Object> i18nLanguageMap = new HashMap<String,Object>(3, 1);
+      i18nLanguageMap.put(DCI18nField.KEY_LANGUAGE, language);
+      i18nLanguageMap.put(DCI18nField.KEY_VALUE, value);
+      return i18nLanguageMap;
    }
    /** same as ValueParsingService's, but using context (field, global defaults, LATER request) ;
     * especially allows to parse (i18n) according to context
@@ -118,7 +135,7 @@ public class ResourceEntityMapperService {
       try {
          res = valueParsingService.parseValueFromJSONOrString(fieldTypeEnum, resourceValue);
          if (fieldTypeEnum == DCFieldTypeEnum.I18N && res instanceof String) {
-            return toSingleLanguageI18n((String) res, (DCI18nField) dcField);
+            return toSingleLanguageI18n((String) res, (DCI18nField) dcField, resourceParsingContext.peekModel());
          }
          return res;
       } catch (ResourceParsingException rpex) {
@@ -127,7 +144,7 @@ public class ResourceEntityMapperService {
                logger.debug("Failed to parse string as i18n, assuming as "
                      + "single default language value" + rpex.getMessage());
             }
-            return toSingleLanguageI18n(resourceValue, (DCI18nField) dcField);
+            return toSingleLanguageI18n(resourceValue, (DCI18nField) dcField, resourceParsingContext.peekModel());
          }
          throw rpex;
       }
@@ -144,7 +161,7 @@ public class ResourceEntityMapperService {
     * @param resourceParsingContext
     * @param putRatherThanPatchMode if true, missing fields are allowed
     * (because assumed to be provided in existing data entity)
-    * @return
+    * @return entity value ; with fulltext if i18n, without if string
     * @throws ResourceParsingException
     */
    // TODO extract to ResourceBuilder static helper using in ResourceServiceImpl
@@ -275,51 +292,7 @@ public class ResourceEntityMapperService {
          
       } else if ("i18n".equals(dcField.getType())) {
          DCI18nField dcI18nField = (DCI18nField) dcField;
-         if (resourceValue instanceof String) {
-            entityValue = toSingleLanguageI18n((String) resourceValue, dcI18nField);
-            
-         } else {
-         
-         if (!(resourceValue instanceof List<?>)) {
-            throw new ResourceParsingException("list Field value is not a JSON Array : " + resourceValue);
-         }
-         List<?> dataList = (List<?>) resourceValue;
-         LinkedHashMap<String, Map<String, String>> entityMapMap = new LinkedHashMap<String, Map<String, String>>(dataList.size());
-
-         // parse each language value, keep last one for each language, accept JSON-LD syntax :
-         for (Object resourceItem : dataList) {
-            if(resourceItem instanceof Map<?, ?>) {
-               @SuppressWarnings("unchecked")
-               Map<String, Object> mapResourceItem = (Map<String,Object>) resourceItem;
-               Object i18nLanguage = mapResourceItem.get(DCResource.KEY_I18N_LANGUAGE); // native DC Resource support
-               if (i18nLanguage == null) {
-                  i18nLanguage = mapResourceItem.get(DCResource.KEY_I18N_LANGUAGE_JSONLD); // JSON-LD support (required when JSONLD-supported format ex. RDF)
-               }
-               Object i18nValue = mapResourceItem.get(DCResource.KEY_I18N_VALUE); // native DC Resource support
-               if (i18nValue == null) {
-                  i18nValue = mapResourceItem.get(DCResource.KEY_I18N_VALUE_JSONLD); // JSON-LD support (required when JSONLD-supported format ex. RDF)
-               }
-
-               if (!(i18nLanguage instanceof String)) {
-                  throw new ResourceParsingException("i18n Field language is not a JSON string : " + i18nLanguage);
-               }
-               String i18nEntityLanguage = (String) i18nLanguage;
-               if (!(i18nValue instanceof String)) {
-                  throw new ResourceParsingException("i18n Field value is not a JSON string : " + i18nValue);
-               }
-               String i18nEntityValue = (String) i18nValue;
-               HashMap<String, String> entityMap = new HashMap<String,String>();
-               entityMap.put(DCI18nField.KEY_LANGUAGE, i18nEntityLanguage);
-               entityMap.put(DCI18nField.KEY_VALUE, i18nEntityValue);
-               entityMapMap.put(i18nEntityLanguage, entityMap); // keeping last one of each language
-            } else {
-               resourceParsingContext.addError("Error while parsing i18n list element Field value as map " + resourceItem
-                     + " of JSON type " + ((resourceItem == null) ? "null" : resourceItem.getClass()));
-            }
-         }
-         entityValue = new ArrayList<Object>(entityMapMap.values());
-         
-         }
+         entityValue = buildI18nEntityValue(resourceValue, dcI18nField, resourceParsingContext);
          
       } else if ("resource".equals(dcField.getType())) { // or "reference" ?
          //if (!(dcField instanceof DCResourceField)) { // never happens, TODO rather check it at model creation / change
@@ -469,7 +442,60 @@ public class ResourceEntityMapperService {
       return entityValue;
    }
 
+   private Object buildI18nEntityValue(Object resourceValue, DCI18nField dcI18nField,
+         DCResourceParsingContext resourceParsingContext) throws ResourceParsingException {
+      List<Map<String, Object>> entityValue;
+      if (resourceValue instanceof String) {
+         entityValue = toSingleLanguageI18n((String) resourceValue, dcI18nField, resourceParsingContext.peekModel());
+         
+      } else {
+      
+      if (!(resourceValue instanceof List<?>)) {
+         throw new ResourceParsingException("list Field value is not a JSON Array : " + resourceValue);
+      }
+      List<?> dataList = (List<?>) resourceValue;
+      LinkedHashMap<String, Map<String, Object>> entityMapMap
+            = new LinkedHashMap<String, Map<String, Object>>(dataList.size()); // and not ,String> because also used for fulltext tokens NOO
 
+      // parse each language value, keep last one for each language, accept JSON-LD syntax :
+      for (Object resourceItem : dataList) {
+         if(resourceItem instanceof Map<?, ?>) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> mapResourceItem = (Map<String,Object>) resourceItem;
+            Object i18nLanguage = mapResourceItem.get(DCResource.KEY_I18N_LANGUAGE); // native DC Resource support
+            if (i18nLanguage == null) {
+               i18nLanguage = mapResourceItem.get(DCResource.KEY_I18N_LANGUAGE_JSONLD); // JSON-LD support (required when JSONLD-supported format ex. RDF)
+            }
+            Object i18nValue = mapResourceItem.get(DCResource.KEY_I18N_VALUE); // native DC Resource support
+            if (i18nValue == null) {
+               i18nValue = mapResourceItem.get(DCResource.KEY_I18N_VALUE_JSONLD); // JSON-LD support (required when JSONLD-supported format ex. RDF)
+            }
+
+            if (!(i18nLanguage instanceof String)) {
+               throw new ResourceParsingException("i18n Field language is not a JSON string : " + i18nLanguage);
+            }
+            String i18nEntityLanguage = (String) i18nLanguage;
+            if (!(i18nValue instanceof String)) {
+               throw new ResourceParsingException("i18n Field value is not a JSON string : " + i18nValue);
+            }
+            String i18nEntityValue = (String) i18nValue;
+            HashMap<String, Object> entityMap = new HashMap<String,Object>(); // and not ,String> because of fulltext
+            entityMap.put(DCI18nField.KEY_LANGUAGE, i18nEntityLanguage);
+            entityMap.put(DCI18nField.KEY_VALUE, i18nEntityValue);
+            ///computeFulltextEntityField(i18nEntityValue, entityMap, dcField); // NOO does not work for multiple field fulltext
+            entityMapMap.put(i18nEntityLanguage, entityMap); // keeping last one of each language
+         } else {
+            resourceParsingContext.addError("Error while parsing i18n list element Field value as map " + resourceItem
+                  + " of JSON type " + ((resourceItem == null) ? "null" : resourceItem.getClass()));
+         }
+      }
+      entityValue = new ArrayList<Map<String,Object>>(entityMapMap.values());
+      
+      }
+      return entityValue;
+   }
+   
+   
    // TODO rm entityValueValue OR impl rights etc. !
    private HashMap<String, Object>/*DCEntity*/ subResourceToEntityFields(String entityValueUri,
          Long entityValueVersion, List<String> entityValueTypes,
@@ -794,15 +820,71 @@ public class ResourceEntityMapperService {
             for (String storageName : dcField.getStorageNames()) { // NB. can't be null (but none means not stored i.e. soft computed)
                entityMap.put(storageName, entityValue); // field alias
             }
+            computeFulltextEntityField(entityValue, entityMap, dcField, resourceParsingContext);
          } // else not needed ex. reused existing value
       } catch (ResourceParsingException rpex) {
          resourceParsingContext.addError("Error while parsing Field value " + resourceValue
                + " of JSON type " + ((resourceValue == null) ? "null" : resourceValue.getClass()), rpex);
       } catch (Exception ex) {
+         // TODO should be HTTP 500 error rather than 400, but this allows to provide useful info
          resourceParsingContext.addError("Unknown error while parsing Field value " + resourceValue
                + " of JSON type " + ((resourceValue == null) ? "null" : resourceValue.getClass()), ex);
       } finally {
          resourceParsingContext.exit();
+      }
+   }
+   
+   private void computeFulltextEntityField(Object entityValue, Map<String, Object> entityMap,
+         DCField dcField, DCResourceParsingContext resourceParsingContext) throws ResourceParsingException {
+      if (dcField.isFulltext()) {
+         List<Map<String,Object>> entityI18nValue;
+         if ("string".equals(dcField.getType())) {
+            entityI18nValue = toSingleLanguageI18n((String) entityValue, null,
+                  resourceParsingContext.peekModel()); // (value type already checked)
+         } else if ("i18n".equals(dcField.getType())) {
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> tmp = (List<Map<String, Object>>) entityValue; // (value type already checked)
+            entityI18nValue = tmp;
+         } else {
+            throw new ResourceParsingException("Fulltext is only available on string "
+                  + "and i18n-typed fields"); // should not happen because checked at model level
+         }
+
+         // TODO support & test subresources
+         @SuppressWarnings("unchecked")
+         List<Map<String,Object>> entityI18nTokens = (List<Map<String,Object>>) entityMap.get(DCField.FULLTEXT_FIELD_NAME); // existing
+         // NB. , Object> because both for language and token list
+         if (entityI18nTokens == null) {
+            entityI18nTokens = new ArrayList<Map<String,Object>>(4);
+            entityMap.put(DCField.FULLTEXT_FIELD_NAME, entityI18nTokens);
+         }
+         for (Map<String,Object> entityI18nLanguageMap : entityI18nValue) {
+            String language = (String) entityI18nLanguageMap.get(DCI18nField.KEY_LANGUAGE);
+            String entityLanguageValue = (String) entityI18nLanguageMap.get(DCI18nField.KEY_VALUE);
+            
+            // looking for existing language map :
+            Map<String, Object> entityI18nTokensLanguage = null;
+            for (Map<String,Object> entityI18nTokensLanguageCur : entityI18nTokens) {
+               if (language.equals(entityI18nTokensLanguageCur.get(DCI18nField.KEY_LANGUAGE))) {
+                  entityI18nTokensLanguage = entityI18nTokensLanguageCur;
+                  break;
+               }
+            }
+            
+            List<String> languageTokens = tokenizer.tokenize(entityLanguageValue); // additional
+            if (entityI18nTokensLanguage == null) {
+               entityI18nTokensLanguage = new HashMap<String, Object>(2, 1);
+               entityI18nTokens.add(entityI18nTokensLanguage);
+            } else {
+               @SuppressWarnings("unchecked")
+               List<String> entityLanguageTokens = (List<String>) entityI18nTokensLanguage.get(DCI18nField.KEY_VALUE);
+               Set<String> entityLanguageTokensSet = new HashSet<String>(entityLanguageTokens);
+               entityLanguageTokensSet.addAll(languageTokens);
+               languageTokens = new ArrayList<String>(entityLanguageTokensSet);
+            }
+            entityI18nTokensLanguage.put(DCI18nField.KEY_LANGUAGE, language);
+            entityI18nTokensLanguage.put(DCI18nField.KEY_VALUE, languageTokens);
+         }
       }
    }
    /**

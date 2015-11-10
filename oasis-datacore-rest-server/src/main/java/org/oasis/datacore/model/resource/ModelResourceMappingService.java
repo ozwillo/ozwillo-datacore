@@ -353,6 +353,11 @@ public class ModelResourceMappingService {
          fieldPropBuilder.put("dcmf:defaultStringValue", defaultStringValue);
       } // else null means no value, but ImmutableMap.Builder doesn't accept null
       switch(field.getType()) {
+      case "string" :
+         if (field.isFulltext()) {
+            fieldPropBuilder.put("dcmf:fulltext", true);
+         } // else null means no value, but ImmutableMap.Builder doesn't accept null
+         break;
       case "map" :
          // NB. including DCI18nField's submap
          DCMapField mapField = (DCMapField) field;
@@ -364,6 +369,9 @@ public class ModelResourceMappingService {
          break;
       case "i18n" :
          fieldPropBuilder.put("dcmf:defaultLanguage", ((DCI18nField) field).getDefaultLanguage());
+         if (field.isFulltext()) {
+            fieldPropBuilder.put("dcmf:fulltext", true);
+         } // else null means no value, but ImmutableMap.Builder doesn't accept null
       case "list" : // and also i18n
          @SuppressWarnings("unchecked")
          Map<String,Object> existingListElementFieldProps = (existingProps != null)
@@ -750,7 +758,7 @@ public class ModelResourceMappingService {
       Map<String, DCField> fieldMap;
       try {
          fieldMap = this.propsToFields(fieldResources);
-      } catch (ResourceParsingException rpex) {
+      } catch (ResourceParsingException | IllegalArgumentException rpex) {
          throw new ResourceParsingException("Error when parsing fields of model resource "
                + r.getUri(), rpex);
       }
@@ -845,12 +853,16 @@ public class ModelResourceMappingService {
     * @param fieldResource
     * @return
     * @throws ResourceParsingException
+    * @throws IllegalArgumentException in case of forbidden name
     */
-   public DCField propsToField(Map<String, Object> fieldResource) throws ResourceParsingException {
+   public DCField propsToField(Map<String, Object> fieldResource)
+         throws ResourceParsingException, IllegalArgumentException {
       String fieldName = (String) fieldResource.get("dcmf:name");
       String fieldType = (String) fieldResource.get("dcmf:type");
       boolean fieldRequired = (boolean) fieldResource.get("dcmf:required"); // TODO or default value
       int fieldQueryLimit = (int) fieldResource.get("dcmf:queryLimit"); // TODO or default value
+      Boolean fulltextFound = (Boolean) fieldResource.get("dcmf:fulltext");
+      Boolean fulltext = false;
       
       DCField field;
       switch (fieldType ) {
@@ -878,6 +890,11 @@ public class ModelResourceMappingService {
             i18nField.setDefaultLanguage(defaultLanguage);
          }
          field = i18nField;
+         // preparing fulltext handling :
+         if (fulltextFound != null) {
+            fulltext = fulltextFound;
+            fulltextFound = null;
+         }
          break;
       case "resource" :
          String fieldResourceType = (String) fieldResource.get("dcmf:resourceType");
@@ -891,8 +908,23 @@ public class ModelResourceMappingService {
                   + " linked by field " + fieldName + " can't be found");
          }*/ // TODO rather check subresource mixins
          break;
+      case "string" :
+         // preparing fulltext handling :
+         if (fulltextFound != null) {
+            fulltext = fulltextFound;
+            fulltextFound = null;
+         }
+         // reuses default, so no break !
       default :
          field = new DCField(fieldName, fieldType, fieldRequired, fieldQueryLimit);
+      }
+      
+      if (fulltextFound != null) {
+         throw new ResourceParsingException("dcmf:fulltext should not be set on non string-typed field "
+               + fieldName);
+      }
+      if (fulltext != null) {
+         field.setFulltext(fulltext);
       }
 
       if (fieldResource.get("dcmf:aliasedStorageNames") != null) {
@@ -930,7 +962,8 @@ public class ModelResourceMappingService {
       return field;
    }
 
-   private DCMapField propsToMapField(Map<String, Object> fieldResource, String fieldName) throws ResourceParsingException {
+   private DCMapField propsToMapField(Map<String, Object> fieldResource, String fieldName)
+         throws ResourceParsingException, IllegalArgumentException {
       // NB. only used in building DCI18nField to get its (sublist field "v") queryLimit
       @SuppressWarnings("unchecked")
       List<Map<String, Object>> mapFieldsProps = (List<Map<String, Object>>) fieldResource.get("dcmf:mapFields");
@@ -938,7 +971,8 @@ public class ModelResourceMappingService {
       mapField.setMapFields(propsToFields(mapFieldsProps));
       return mapField;
    }
-   private DCListField propsToListField(Map<String, Object> fieldResource, String fieldName) throws ResourceParsingException {
+   private DCListField propsToListField(Map<String, Object> fieldResource, String fieldName)
+         throws ResourceParsingException, IllegalArgumentException {
       @SuppressWarnings("unchecked")
       Map<String, Object> listElementFieldProps = (Map<String, Object>) fieldResource.get("dcmf:listElementField");
       return new DCListField(fieldName, propsToField(listElementFieldProps));
@@ -947,7 +981,7 @@ public class ModelResourceMappingService {
    /** public for tests 
     * @throws ResourceParsingException */
    public Map<String, DCField> propsToFields(
-         List<Map<String, Object>> mapFieldsProps) throws ResourceParsingException {
+         List<Map<String, Object>> mapFieldsProps) throws ResourceParsingException, IllegalArgumentException {
       Builder<String, DCField> fieldMapBuilder = new ImmutableMap.Builder<String, DCField>();
       for (Map<String, Object> fieldProps : mapFieldsProps) {
          DCField field = propsToField(fieldProps);

@@ -78,5 +78,13 @@ public class DCI18nField extends DCListField {
       this.defaultLanguage = defaultLanguage;
       return this;
    }
+
+   public void setFulltext(boolean fulltext) {
+      // also setting on value field, because checked at ex. query parsing :
+      // (TODO LATER rather introspect model upwards)
+      DCField valueField = ((DCMapField) this.getListElementField()).getMapFields().get(KEY_VALUE);
+      valueField.setFulltext(fulltext);
+      super.setFulltext(fulltext);
+   }
    
 }
