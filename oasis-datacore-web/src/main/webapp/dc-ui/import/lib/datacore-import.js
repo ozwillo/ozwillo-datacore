@@ -1505,19 +1505,22 @@
                         var ancestor = importState.data.resources[parentUri];
                         // TODO check if ancestor not known (ex. string resource reference...)
                         if (typeof ancestor === 'undefined') {
-                           ancestors = null; // reset since incomplete
                            resourceError(importState, 'cantFindAncestorAmongParsedResources', {
-                                 resource : resource, ancestorUri : parentUri });
+                                 resource : resource, ancestorUri : parentUri }); // triggers another loop on this line
+                           ancestors = null; // reset (don't merge with existing ancestors) since incomplete
+                           break; // else "ancestors is null" bug
                         } else if (!hasMixin(ancestor["@type"][0], "oanc:Ancestor_0", importState)) {
-                           ancestors = null; // reset since incomplete ; TODO or accept as its own single ancestor ?
                            resourceError(importState, 'ancestorHasNotAncestorMixin', {
-                              resource : resource, ancestor : ancestor });
+                              resource : resource, ancestor : ancestor }); // triggers another loop on this line
+                           ancestors = null; // reset (don't merge with existing ancestors) since incomplete ; TODO or accept as its own single ancestor ?
+                           break; // else "ancestors is null" bug
                         } else {
                            var ancestorAncestors = ancestor["oanc:ancestors"];
                            if (typeof ancestorAncestors === 'undefined') {
-                              ancestors = null; // reset since incomplete
                               resourceError(importState, 'ancestorHasNotDefinedAncestors', {
-                                 resource : resource, ancestor : ancestor });
+                                 resource : resource, ancestor : ancestor }); // triggers another loop on this line
+                              ancestors = null; // reset (don't merge with existing ancestors) since incomplete
+                              break; // else "ancestors is null" bug
                            } else {
                               for (var aaInd in ancestorAncestors) {
                                  var parentExists = false;
@@ -2104,8 +2107,9 @@
    var dcMaxLimit = 100; // BEWARE limited to 10 by default !!!!!! and 100 max !!
    function enrichImportedModelOrMixins (importState, success, lastEnrichedModelOrMixinName) {
       // keep only one field per model name if possible :
-      // (else BAD REQUEST because truncated because too long)
-      ///var importState = { data:{ importedFieldNames:["geo:name","geo:kind", "geos:other", "noprefix", "org:name"]}};
+      // (else BAD REQUEST because truncated because too long ex. 6000 characters)
+      // (will most probably not happen again : would mean ex. 600 different models with 10-char names imported in same data file) 
+      ///var importState = { data:{ importedFieldNames:["geo:name","geo:kind", "geos:other", "noprefix", "org:name"]}}; // test
       var fieldPrefixElseNameToFirstImportedFieldNameMap = {};
       var fieldNamesOnePerModelIfPossible = [];
       var fieldName, colonIndex, modelPrefix;
