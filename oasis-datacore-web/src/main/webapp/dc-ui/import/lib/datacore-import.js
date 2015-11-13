@@ -2100,12 +2100,29 @@
       }
       enrichImportedModelOrMixins(importState, success);
    }
+
    var dcMaxLimit = 100; // BEWARE limited to 10 by default !!!!!! and 100 max !!
    function enrichImportedModelOrMixins (importState, success, lastEnrichedModelOrMixinName) {
+      // keep only one field per model name if possible :
+      // (else BAD REQUEST because truncated because too long)
+      ///var importState = { data:{ importedFieldNames:["geo:name","geo:kind", "geos:other", "noprefix", "org:name"]}};
+      var fieldPrefixElseNameToFirstImportedFieldNameMap = {};
+      var fieldNamesOnePerModelIfPossible = [];
+      var fieldName, colonIndex, modelPrefix;
+      for (var fInd in importState.data.importedFieldNames) {
+         fieldName = importState.data.importedFieldNames[fInd];
+         colonIndex = fieldName.indexOf(':');
+         modelPrefix = colonIndex === -1 ? fieldName : fieldName.substring(0, colonIndex);
+         if (!fieldPrefixElseNameToFirstImportedFieldNameMap[modelPrefix]) {
+            fieldPrefixElseNameToFirstImportedFieldNameMap[modelPrefix] = true;
+            fieldNamesOnePerModelIfPossible.push(fieldName);
+         }
+      }
+      
       findDataByType({ modelType : 'dcmo:model_0', query : new UriQuery(
          'dcmo:globalFields.dcmf:name', '$in'
          // globalFields else won't get ex. CountryFR inheriting from Country but with no additional field (??)
-         + JSON.stringify(importState.data.importedFieldNames, null, null)
+         + JSON.stringify(fieldNamesOnePerModelIfPossible, null, null)
       ).p('dcmo:name', (lastEnrichedModelOrMixinName ? '>' + lastEnrichedModelOrMixinName : '') +  '+').s() },
          function(fieldNameMixinsFound, relativeUrl, data, importState) {
             for (var fnmInd in fieldNameMixinsFound) {
