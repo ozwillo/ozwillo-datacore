@@ -181,7 +181,7 @@ public interface DatacoreApi {
          + " or in a given language on an i18n field or even ordered, ex. "
          + "GET <a href=\"/dc/type/sample.city.city?i18n:name.fr=$fulltextsaint lo+\" class=\"dclink\" onclick=\""
          + "javascript:return findDataByType($(this).attr('href'));"
-         + "\">/dc/type/sample.city.city?i18n:name.fr=$fulltextsaint lo</a>, only on fields whose "
+         + "\">/dc/type/sample.city.city?i18n:name.fr=$fulltextsaint lo+</a>, only on fields whose "
          + "\"fulltext\" have been set at true, such as odisp:name by default, and on resources "
          + "that have been saved since)"
          + "<br/>&nbsp;&nbsp; - <b>list</b> operators : -/-/$all/- (on JSON list whose elements must be all present in "
@@ -195,8 +195,6 @@ public interface DatacoreApi {
          + "\n<br/>\n"
          + "See <a href=\"http://docs.mongodb.org/manual/reference/operator/query/\">"
          + "detailed documentation about MongoDB operators</a>."
-         + "\n<br/>\n"
-         + "As "
          + "\n<br/>\n"
          + "Multiple criteria on same field allow to achieve a \"between\" constraint, ex. "
          + "GET <a href=\"/dc/type/dcmo:model_0?dc:modified=>=1943-04-02T00:00:00.000Z&dc:modified=<=2043-04-02T00:00:00.000Z\" class=\"dclink\" onclick=\""
@@ -349,7 +347,7 @@ public interface DatacoreApi {
     */
    @Path("/type/{type}")
    @POST
-   @ApiOperation(value = "Creates new data Resource(s) in the given type, or updates them if allowed.",
+   @ApiOperation(value = "Creates new data Resource(s) in the given type, or updates them (merge) if allowed.",
       notes = "A single data Resource or an array of several ones (in which case it is a mere wrapper "
             + "over the atomic case) are accepted. "
             + "\n<br/><br/>\n"
@@ -390,7 +388,7 @@ public interface DatacoreApi {
     */
    @Path("/")
    @POST
-   @ApiOperation(value = "Creates new data Resources, or updates them if allowed.",
+   @ApiOperation(value = "Creates new data Resources, or updates them (merge) if allowed.",
       notes = "Mere wrapper over atomic typed POST. "
             + "\n<br/><br/>\n"
             + "Resource URI must be provided, up-to-date versions are required to update "
@@ -428,7 +426,7 @@ public interface DatacoreApi {
    @Path("/type/{type}/{__unencoded__iri:.+}") // :.+ to accept even /
    @PUT
    @PATCH
-   @ApiOperation(value = "Updates an existing data Resource in the given type.",
+   @ApiOperation(value = "Updates (replaces) an existing data Resource in the given type.",
       notes = "(For now) mere wrapper over atomic typed non-strict mode POST. "
             + "\n<br/><br/>\n"
             + "Resource URI (Model type and IRI i.e. Internal Resource Identifier) are required "
@@ -468,7 +466,7 @@ public interface DatacoreApi {
    @Path("/type/{type}")
    @PUT
    @PATCH
-   @ApiOperation(value = "Updates existing data Resources in the given type.",
+   @ApiOperation(value = "Updates (replaces) existing data Resources in the given type.",
       notes = "Mere wrapper over atomic typed PUT. "
             + "\n<br/><br/>\n"
             + "Resource URI (Model type and IRI i.e. Internal Resource Identifier) are required "
@@ -506,7 +504,7 @@ public interface DatacoreApi {
    @Path("/")
    @PUT
    @PATCH
-   @ApiOperation(value = "Updates existing data Resources.",
+   @ApiOperation(value = "Updates (replaces) existing data Resources.",
       notes = "Mere wrapper over atomic typed PUT. "
             + "\n<br/><br/>\n"
             + "Resource URI (Model type and IRI i.e. Internal Resource Identifier) are required "
