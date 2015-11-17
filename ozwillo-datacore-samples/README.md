@@ -1,3 +1,6 @@
+# DEPRECATED 
+This project was the original prototype
+
 ## Ozwillo Datacore Samples
 
 This project contains various technical experimentations, tests and examples, as well as business-oriented examples.
