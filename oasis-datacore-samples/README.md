@@ -16,7 +16,7 @@ Overview (not exhaustive) :
 
 ### Business use case-oriented :
 * an example of multi-master data sharing and SPARQL-like querying in MongoDB in SharedDataTest (native model : city & organizations). Note that however data will be shared in a single-master configurations (i.e. with a single, all-powerful root owner, rather than in a p2p model).
-* an OpenElec-based example of introducing the use of a DatacoreClient in an existing business application, tested in OpenElecMongo(Oasis(Bureau)City)ImplTest : 1. listing datacore objects, 2. referencing them locally, 3. having local enriched versions of them
+* an OpenElec-based example of introducing the use of a DatacoreClient in an existing business application, tested in OpenElecMongo(Ozwillo(Bureau)City)ImplTest : 1. listing datacore objects, 2. referencing them locally, 3. having local enriched versions of them
 * an example of using a metamodel to maintain denormalized, embedded copies of attributes and resources for rich SPARQL-like querying (OpenElec-inspired model : country, city, bureauDeVote, inseeVille), tested in OpenelecDatacoreTest
 
 ### Others :
