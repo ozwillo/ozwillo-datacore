@@ -17,8 +17,8 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.oasis.datacore</groupId>
-	<artifactId>oasis-datacore</artifactId>
+	<groupId>org.ozwillo.datacore</groupId>
+	<artifactId>ozwillo-datacore</artifactId>
 	<name>Ozwillo Datacore</name>
 	<description>Ozwillo Datacore is a collaborative Open Linked Data Cloud platform.</description>
 	<version>1.0-SNAPSHOT</version>
@@ -35,15 +35,15 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 	</licenses>
 
 	<organization>
-		<name>OASIS Consortium</name>
+		<name>Ozwillo Consortium</name>
 		<url>http://www.ozwillo.com/</url>
 	</organization>
 
 	<url>http://www.ozwillo.com/</url>
 	<scm>
-		<connection>scm:git:git://github.com/pole-numerique/oasis-datacore.git</connection>
-		<developerConnection>scm:git:git@github.com:pole-numerique/oasis-datacore.git</developerConnection>
-		<url>https://github.com/pole-numerique/oasis-datacore</url>
+		<connection>scm:git:git://github.com/ozwillo/ozwillo-datacore.git</connection>
+		<developerConnection>scm:git:git@github.com:ozwillo/ozwillo-datacore.git</developerConnection>
+		<url>https://github.com/ozwillo/ozwillo-datacore</url>
 	</scm>
 
 	<mailingLists>
@@ -64,7 +64,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		</mailingList -->
 	</mailingLists>
 	<issueManagement>
-		<url>https://github.com/pole-numerique/oasis-datacoree/issues</url>
+		<url>https://github.com/ozwillo/ozwillo-datacoree/issues</url>
 		<system>GitHub Issues</system>
 	</issueManagement>
 	<ciManagement>
@@ -113,7 +113,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-		<oasis-datacore.version>1.0-SNAPSHOT</oasis-datacore.version>
+		<ozwillo-datacore.version>1.0-SNAPSHOT</ozwillo-datacore.version>
 
 		<java.version>1.8</java.version>
 
@@ -196,20 +196,20 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 	<!-- Modules -->
 	<!-- ======= -->
 	<modules>
-		<!-- module>oasis-datacore-test</module -->
-		<!-- module>oasis-datacore-samples</module -->
-		<module>oasis-datacore-common</module>
-		<module>oasis-datacore-core</module><!-- TODO -api (PermissionDataService 
+		<!-- module>ozwillo-datacore-test</module -->
+		<!-- module>ozwillo-datacore-samples</module -->
+		<module>ozwillo-datacore-common</module>
+		<module>ozwillo-datacore-core</module><!-- TODO -api (PermissionDataService
 			to be called by Social Graph, or in -rest ?), -impl ? -->
-		<module>oasis-datacore-rest-api</module>
-		<module>oasis-datacore-rest-cxf</module>
-		<module>oasis-datacore-rest-server</module>
-		<module>oasis-datacore-web</module>
+		<module>ozwillo-datacore-rest-api</module>
+		<module>ozwillo-datacore-rest-cxf</module>
+		<module>ozwillo-datacore-rest-server</module>
+		<module>ozwillo-datacore-web</module>
 		<!-- TODO mocks ex. Social Graph ? -->
 		<!-- TODO features ex. approval workflow, RDF/SPARQL, backend UI ?? -->
-      <module>oasis-datacore-kernel-client</module><!-- TODO re-enable tests with atol demo
+      <module>ozwillo-datacore-kernel-client</module><!-- TODO re-enable tests with atol demo
       WITHIN integration tests and once auth is OK again -->
-      <module>oasis-datacore-monitoring</module>
+      <module>ozwillo-datacore-monitoring</module>
   </modules>
 
 	<!-- ============ -->
@@ -349,49 +349,49 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 
 			<!-- Datacore -->
 			<dependency>
-				<groupId>org.oasis.datacore</groupId>
-				<artifactId>oasis-datacore-samples</artifactId>
-				<version>${oasis-datacore.version}</version>
+				<groupId>org.ozwillo.datacore</groupId>
+				<artifactId>ozwillo-datacore-samples</artifactId>
+				<version>${ozwillo-datacore.version}</version>
 			</dependency>
 	      <dependency>
-	        <groupId>org.oasis.datacore</groupId>
-	        <artifactId>oasis-datacore-common</artifactId><!-- brings DCRequestContext -->
-				<version>${oasis-datacore.version}</version>
+	        <groupId>org.ozwillo.datacore</groupId>
+	        <artifactId>ozwillo-datacore-common</artifactId><!-- brings DCRequestContext -->
+				<version>${ozwillo-datacore.version}</version>
 	      </dependency>
 			<dependency>
-				<groupId>org.oasis.datacore</groupId>
-				<artifactId>oasis-datacore-core</artifactId>
-				<version>${oasis-datacore.version}</version>
+				<groupId>org.ozwillo.datacore</groupId>
+				<artifactId>ozwillo-datacore-core</artifactId>
+				<version>${ozwillo-datacore.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.oasis.datacore</groupId>
-				<artifactId>oasis-datacore-rest-api</artifactId>
-				<version>${oasis-datacore.version}</version>
+				<groupId>org.ozwillo.datacore</groupId>
+				<artifactId>ozwillo-datacore-rest-api</artifactId>
+				<version>${ozwillo-datacore.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.oasis.datacore</groupId>
-				<artifactId>oasis-datacore-rest-server</artifactId>
-				<version>${oasis-datacore.version}</version>
+				<groupId>org.ozwillo.datacore</groupId>
+				<artifactId>ozwillo-datacore-rest-server</artifactId>
+				<version>${ozwillo-datacore.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.oasis.datacore</groupId>
-				<artifactId>oasis-datacore-rest-cxf</artifactId>
-				<version>${oasis-datacore.version}</version>
+				<groupId>org.ozwillo.datacore</groupId>
+				<artifactId>ozwillo-datacore-rest-cxf</artifactId>
+				<version>${ozwillo-datacore.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.oasis.datacore</groupId>
-				<artifactId>oasis-datacore-api-client</artifactId>
-				<version>${oasis-datacore.version}</version>
+				<groupId>org.ozwillo.datacore</groupId>
+				<artifactId>ozwillo-datacore-api-client</artifactId>
+				<version>${ozwillo-datacore.version}</version>
 			</dependency>
 	      <dependency>
-	        <groupId>org.oasis.datacore</groupId>
-	        <artifactId>oasis-datacore-kernel-client</artifactId>
-	        <version>${oasis-datacore.version}</version>
+	        <groupId>org.ozwillo.datacore</groupId>
+	        <artifactId>ozwillo-datacore-kernel-client</artifactId>
+	        <version>${ozwillo-datacore.version}</version>
 	      </dependency>
 	      <dependency>
-	        <groupId>org.oasis.datacore</groupId>
-	        <artifactId>oasis-datacore-monitoring</artifactId>
-	        <version>${oasis-datacore.version}</version>
+	        <groupId>org.ozwillo.datacore</groupId>
+	        <artifactId>ozwillo-datacore-monitoring</artifactId>
+	        <version>${ozwillo-datacore.version}</version>
 	      </dependency>
 
 			<!-- logging : using slf4j (MIT License) facade on log4j (Apache 2.0 License) backend
@@ -944,11 +944,11 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 	<!-- ============ -->
 	<repositories>
 		<!-- repository>
-			<id>oasis-datacore-local-libs</id>
-			<name>oasis-datacore local project libraries</name>
+			<id>ozwillo-datacore-local-libs</id>
+			<name>ozwillo-datacore local project libraries</name>
 			<url>file://${project.basedir}/lib</url>
 			<layout>default</layout> 
-		</repository --><!-- oasis-datacore-core/lib -->
+		</repository --><!-- ozwillo-datacore-core/lib -->
 
        <!-- Riemann Java client -->
 	    <repository>

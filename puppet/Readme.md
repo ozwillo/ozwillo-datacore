@@ -26,7 +26,7 @@ puppet module install elasticsearch-elasticsearch
 puppet module install pdxcat-collectd
 ```
 
-[Custom modules](https://github.com/pole-numerique/oasis-datacore/tree/master/puppet/modules) (Must be manually built):
+[Custom modules](https://github.com/ozwillo/ozwillo-datacore/tree/master/puppet/modules) (Must be manually built):
 * Datacore
 * JMeter
 * Riemann
@@ -98,7 +98,7 @@ puppet agent --verbose --no-daemonize
 
 #### Datacore
 
-Modify [/home/oasis/install/tomcat7-dc/webapps/ROOT/WEB-INF/classes/oasis-datacore-deploy.properties](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-deploy/vmdc/home/oasis/install/tomcat7-dc/webapps/ROOT/WEB-INF/classes/oasis-datacore-deploy.properties) to fit your needs, especially *datacoreApiServer.baseUrl* and maybe also *kernel.baseUrl*
+Modify [/home/oasis/install/tomcat7-dc/webapps/ROOT/WEB-INF/classes/oasis-datacore-deploy.properties](https://github.com/ozwillo/ozwillo-datacore/blob/master/oasis-datacore-deploy/vmdc/home/oasis/install/tomcat7-dc/webapps/ROOT/WEB-INF/classes/oasis-datacore-deploy.properties) to fit your needs, especially *datacoreApiServer.baseUrl* and maybe also *kernel.baseUrl*
 
 #### Graphite
 
@@ -140,7 +140,7 @@ https://jmeter.apache.org/usermanual/remote-test.html
 
 #### Catalog
 
-Configurations are available in the directory [conf](https://github.com/pole-numerique/oasis-datacore/tree/master/puppet/conf).
+Configurations are available in the directory [conf](https://github.com/ozwillo/ozwillo-datacore/tree/master/puppet/conf).
 
 #### General Example
 

@@ -1,0 +1,138 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+	http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+   
+  <parent>
+   <groupId>org.ozwillo.datacore</groupId>
+   <artifactId>ozwillo-datacore</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <relativePath>..</relativePath>
+  </parent>
+  
+	<artifactId>ozwillo-datacore-samples</artifactId>
+	<name>Ozwillo Datacore Samples</name>
+
+
+	<dependencies>
+      <!-- logging : using slf4j facade
+      slf4j/logback (log4j successor) more recent, but log4j backend easier with spring & for single conf file
+      why http://stackoverflow.com/questions/2533614/what-are-the-latest-options-in-java-logging-frameworks
+      how http://stackoverflow.com/questions/4311026/how-to-get-slf4j-hello-world-working-with-log4j
+      LATER slf4j also for spring (using jcl-over-slf4j) http://spring.io/blog/2009/12/04/logging-dependencies-in-spring/
+      LATER2 logback see gru http://www.lordofthejars.com/2012/04/hey-teachers-leave-them-kids-alone-all.html
+      LATER3 mongo-backed logging ?? https://github.com/deftlabs/mongo-java-logging
+      -->
+      <dependency>
+         <groupId>org.slf4j</groupId>
+         <artifactId>slf4j-api</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.slf4j</groupId>
+         <artifactId>slf4j-log4j12</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>log4j</groupId>
+         <artifactId>log4j</artifactId>
+      </dependency>
+      <!-- LATER for logback backend instead -->
+            <!-- dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>jcl-over-slf4j</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+            </dependency -->
+
+		<!-- Spring framework -->
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-core</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-context</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-test</artifactId>
+         <scope>test</scope>
+      </dependency>
+ 
+		<!-- mongodb java driver -->
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongo-java-driver</artifactId>
+		</dependency>
+ 
+		<!-- Spring data mongodb -->
+		<dependency>
+			<groupId>org.springframework.data</groupId>
+			<artifactId>spring-data-mongodb</artifactId>
+		</dependency>
+       
+      <!-- for date (including in spring data auditing) -->
+      <dependency>
+          <groupId>joda-time</groupId>
+          <artifactId>joda-time</artifactId>
+      </dependency>
+ 
+ 		<!-- to support @Configuration see
+      http://www.mkyong.com/spring3/cglib-is-required-to-process-configuration-classes/ -->
+		<dependency>
+			<groupId>cglib</groupId>
+			<artifactId>cglib</artifactId>
+		</dependency>
+      
+      <!-- spring on neo4j -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+         <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-neo4j</artifactId>
+         <version>${spring-data-neo4j.version}</version>
+        </dependency>
+        <!-- TODO ? -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-expression</artifactId>
+         <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <version>${validation-api.version}</version>
+        </dependency>
+        <!-- neo4j (depended on by spring) -->
+        <dependency>
+           <groupId>org.neo4j</groupId>
+           <artifactId>neo4j</artifactId>
+           <version>${neo4j.version}</version>
+        </dependency>
+      
+      <!-- else ValidationException: Unable to create a Configuration, because no Bean Validation provider could be found. Add a provider like Hibernate Validator (RI) to your classpath.
+      see http://goldenpackagebyanuj.blogspot.fr/2013/05/validationException-no-Bean-Validation-provider-could-be-found.html
+      Also required for JSR303 annotated validation
+      see http://www.mkyong.com/spring-mvc/spring-3-mvc-and-jsr303-valid-example/ -->
+      <dependency>
+         <groupId>org.hibernate</groupId>
+         <artifactId>hibernate-validator</artifactId>
+         <version>4.2.0.Final</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                    <!-- 1.6.1, might conflict with the project's newer one -->
+                </exclusion>
+            </exclusions>
+      </dependency>
+      
+	</dependencies>
+ 
+</project>

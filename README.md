@@ -1,8 +1,8 @@
 =====================================================
 
-OASIS - Datacore
+Ozwillo - Datacore
 http://www.ozwillo.com/
-https://github.com/pole-numerique/oasis-datacore
+https://github.com/ozwillo/ozwillo-datacore
 Copyright (c) 2013-2015 Open Wide - http://www.openwide.fr
 
 =====================================================
@@ -13,7 +13,7 @@ About Ozwillo Datacore
 
 Ozwillo Datacore is a Cloud of shared Open Linked Data.
 
-Its goal is cross-business data collaboration and integration. By linking data from different business together, it allows to create value by developing new OASIS services on top of it.
+Its goal is cross-business data collaboration and integration. By linking data from different business together, it allows to create value by developing new Ozwillo services on top of it.
 
 To interact and scale up, it uses Web technologies (HTTP REST API, OAuth2) and architecture (sharding and replication, client-side caching).
 To achieve data model flexibility, it follows Semantic Web principles ("almost" W3C JSON-LD compatible), but curbed to fit real world constraints.
@@ -30,7 +30,7 @@ Features
    * Client libraries : CXF3/Spring3/Java, Spring4/Java (Portal's), Javascript (swagger.js), and all languages that Swagger generates to (see corresponding projects)
    * Online API Playground, documentation and data browsing tool
    * Online model & data Import tool
-   * and more upcoming : see [Roadmap](https://github.com/pole-numerique/oasis-datacore/issues)
+   * and more upcoming : see [Roadmap](https://github.com/ozwillo/ozwillo-datacore/issues)
 
 Team
    * Design & Development of v1 : Marc Dutoo, Open Wide - http://www.openwide.fr
@@ -46,14 +46,14 @@ Requirements : [Java JDK 8](http://www.oracle.com/technetwork/java/javase/downlo
 
 Build ([Maven 3](http://maven.apache.org/download.cgi) required) : at root, do : mvn clean install
 
-Deployment : go in the oasis-datacore-web subproject and do : mvn jetty:run
+Deployment : go in the ozwillo-datacore-web subproject and do : mvn jetty:run
 
-Then go have a look at API documentation and playground at [http://localhost:8080/dc-ui/index.html](http://localhost:8080/dc-ui/index.html). To try it out, for instance do a GET ``/dc/type/geo:Area_0`` to see what geographical areas (cities...) are available. To learn more about available operations, follow the [wiki Playground tutorial](https://github.com/pole-numerique/oasis-datacore/wiki/Playground-&-Import-UI-demo-scenario---Provto-&-OpenElec) and do the [city & country Tutorial](https://github.com/pole-numerique/oasis-datacore/wiki/Tutorial---city-&-country). To learn about out to use them, have a look at the detailed API doc below.
+Then go have a look at API documentation and playground at [http://localhost:8080/dc-ui/index.html](http://localhost:8080/dc-ui/index.html). To try it out, for instance do a GET ``/dc/type/geo:Area_0`` to see what geographical areas (cities...) are available. To learn more about available operations, follow the [wiki Playground tutorial](https://github.com/ozwillo/ozwillo-datacore/wiki/Playground-&-Import-UI-demo-scenario---Provto-&-OpenElec) and do the [city & country Tutorial](https://github.com/ozwillo/ozwillo-datacore/wiki/Tutorial---city-&-country). To learn about out to use them, have a look at the detailed API doc below.
 
 Alternatively, to deploy it in production ([Tomcat 7](http://tomcat.apache.org/download-70.cgi) required) : put the war contents in a tomcat 7 root and start it :
 
     cd tomcat7/bin
-    cp -rf ../../workspace/oasis-datacore/oasis-datacore-web/target/datacore/* ../webapps/ROOT/
+    cp -rf ../../workspace/ozwillo-datacore/ozwillo-datacore-web/target/datacore/* ../webapps/ROOT/
     ./catalina.sh start
 
 
@@ -62,11 +62,11 @@ Adding Business Configuration
 
 To use Datacore for your own collaborative data use case, you must define the appropriate business-specific Models.
 
-The preferred way is to use the Datacore online Import tool at [http://localhost:8080/dc-ui/import/index.html](http://localhost:8080/dc-ui/import/index.html). Follow the steps described in the [wiki Import tutorial](https://github.com/pole-numerique/oasis-datacore/wiki/Playground-&-Import-UI-demo-scenario---Provto-&-OpenElec).
+The preferred way is to use the Datacore online Import tool at [http://localhost:8080/dc-ui/import/index.html](http://localhost:8080/dc-ui/import/index.html). Follow the steps described in the [wiki Import tutorial](https://github.com/ozwillo/ozwillo-datacore/wiki/Playground-&-Import-UI-demo-scenario---Provto-&-OpenElec).
 
-This can also be done in Java. Do it in a new class on the model of [MarkaInvestModel](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-core/src/main/java/org/oasis/datacore/core/sample/MarkaInvestModel.java) or [CityCountrySample](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-core/src/main/java/org/oasis/datacore/core/sample/CityCountrySample.java) (meaning a server-side class, auto initialized by annotating it by @Component, using Spring-injected DataModelServiceImpl and DatacoreApi or DCEntityService, or if they are not enough yet MongoOperations). Sample data for these models can be added using the Datacore REST API obviously, or again using Java in a new class on the model of [MarkaInvestData](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-core/src/main/java/org/oasis/datacore/core/sample/MarkaInvestData.java).
+This can also be done in Java. Do it in a new class on the model of [MarkaInvestModel](https://github.com/ozwillo/ozwillo-datacore/blob/master/ozwillo-datacore-core/src/main/java/org/ozwillo/datacore/core/sample/MarkaInvestModel.java) or [CityCountrySample](https://github.com/ozwillo/ozwillo-datacore/blob/master/ozwillo-datacore-core/src/main/java/org/ozwillo/datacore/core/sample/CityCountrySample.java) (meaning a server-side class, auto initialized by annotating it by @Component, using Spring-injected DataModelServiceImpl and DatacoreApi or DCEntityService, or if they are not enough yet MongoOperations). Sample data for these models can be added using the Datacore REST API obviously, or again using Java in a new class on the model of [MarkaInvestData](https://github.com/ozwillo/ozwillo-datacore/blob/master/ozwillo-datacore-core/src/main/java/org/ozwillo/datacore/core/sample/MarkaInvestData.java).
 
-For more samples and Model reference documentation, have a look at the [wiki](https://github.com/pole-numerique/oasis-datacore/wiki).
+For more samples and Model reference documentation, have a look at the [wiki](https://github.com/ozwillo/ozwillo-datacore/wiki).
 
 
 Using it from a client business application
@@ -76,9 +76,9 @@ Use the JSON/HTTP client of your own business application's platform and / or of
 
 Here are such clients that might help you :
 
-- A **Java proxy-like cached client built on the CXF service engine** is provided by the oasis-datacore-rest-cxf subproject. Use it by [loading its Spring](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-cxf/src/main/resources/oasis-datacore-rest-client-context.xml) and injecting DatacoreCachedClient using ```@Autowired private DatacoreCachedClient datacoreApi;``` like done in [this test](https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-cxf/src/test/java/org/oasis/datacore/rest/api/client/DatacoreApiCXFClientTest.java).
+- A **Java proxy-like cached client built on the CXF service engine** is provided by the ozwillo-datacore-rest-cxf subproject. Use it by [loading its Spring](https://github.com/ozwillo/ozwillo-datacore/blob/master/ozwillo-datacore-rest-cxf/src/main/resources/ozwillo-datacore-rest-client-context.xml) and injecting DatacoreCachedClient using ```@Autowired private DatacoreCachedClient datacoreApi;``` like done in [this test](https://github.com/ozwillo/ozwillo-datacore/blob/master/ozwillo-datacore-rest-cxf/src/test/java/org/ozwillo/datacore/rest/api/client/DatacoreApiCXFClientTest.java).
 
-- A **simpler Java client built on Spring 4 with REST Template** is provided, along with a similar Kernel client, by the [oasis-spring-integration](https://github.com/pole-numerique/oasis-spring-integration) top-level project. See how the portal [uses it to query geographical Resource](https://github.com/pole-numerique/oasis-portal/blob/master/portal-parent/oasis-portal-front/src/main/java/org/oasis_eu/portal/core/mongo/dao/geo/GeographicalAreaCache.java#L226) and [how he configures it](https://github.com/pole-numerique/oasis-portal/blob/master/portal-parent/oasis-portal-front/src/main/resources/application.yml#L88).
+- A **simpler Java client built on Spring 4 with REST Template** is provided, along with a similar Kernel client, by the [ozwillo-java-spring-integration](https://github.com/ozwillo/ozwillo-java-spring-integration) top-level project. See how the portal [uses it to query geographical Resource](https://github.com/ozwillo/ozwillo-portal/blob/master/portal-parent/ozwillo-portal-front/src/main/java/org/ozwillo_eu/portal/core/mongo/dao/geo/GeographicalAreaCache.java#L226) and [how he configures it](https://github.com/ozwillo/ozwillo-portal/blob/master/portal-parent/ozwillo-portal-front/src/main/resources/application.yml#L88).
 
 - If it doesn't suit you, **other Java service engines** (such as Jersey, RESTEasy) may be used in similar fashion, though some features (HTTP ETag-based caching, generic query request) require developing interceptors / handlers / filters. Otherwise, the **Java JAXRS web client** works well with the DatacoreApi and allows to do everything, though it is a bit more "barebone".
 
@@ -90,7 +90,7 @@ Here are such clients that might help you :
     ...
     datacoreSwaggerApi.apis.city.findDataInType({type:"sample.city.city", name:"London"},  successCallback);
 
-or jQuery [like Citizen Kin does](https://github.com/pole-numerique/oasis-gru/blob/master/oasis-gru-parent/oasis-gru-webapps/oasis-gru-webapps-back/src/main/webapp/WEB-INF/jsp/permissions.jsp) :
+or jQuery [like Citizen Kin does](https://github.com/pole-numerique/oasis-citizenkin/blob/master/oasis-citizenkin-parent/oasis-citizenkin-webapp-back/src/main/webapp/WEB-INF/jsp/permissions.jsp) :
 
     $.get(datacoreRestClientBaseurl + "dc/type/sample.citizenkin.user" + "?lastName=" + encodeURIComponent("Smith"), callback))
 
@@ -112,14 +112,14 @@ Tips for integrating it in a client business application, from a functional poin
 Documentation
 --------------
 
-See online API (ask URL to Pole Numerique or run your own local Datacore) and its packaged examples, [wiki](https://github.com/pole-numerique/oasis-datacore/wiki) and Java tests.
+See online API (ask URL to Pole Numerique or run your own local Datacore) and its packaged examples, [wiki](https://github.com/ozwillo/ozwillo-datacore/wiki) and Java tests.
 
 Documentation still can be improved. If something is missing, ask us about it. Especially missing is a more formal description of supported data resources : what field types are supported, how to model them, how they behave (especially Map, List and external vs embedded Resource fields types) ; and wider, documentation of the metamodel itself : field types, Mixin (light, reusable, multiple) types and inheritance, security and mediation configuration...
 
 
 More
 ----
-See [wiki](https://github.com/pole-numerique/oasis-datacore/wiki) for
+See [wiki](https://github.com/ozwillo/ozwillo-datacore/wiki) for
 * References
 * Tutorials
 * Samples

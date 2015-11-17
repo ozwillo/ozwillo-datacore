@@ -2,7 +2,7 @@
 
 #### Installation
 
-Once [datacore-puppet](https://github.com/pole-numerique/oasis-datacore/tree/master/puppet/modules/datacore) has been installed:
+Once [datacore-puppet](https://github.com/ozwillo/ozwillo-datacore/tree/master/puppet/modules/datacore) has been installed:
 ```
 puppet apply install.pp
 ```

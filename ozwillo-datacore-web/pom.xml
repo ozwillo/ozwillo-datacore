@@ -1,0 +1,279 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+   
+   <parent>
+      <groupId>org.ozwillo.datacore</groupId>
+      <artifactId>ozwillo-datacore</artifactId>
+      <version>1.0-SNAPSHOT</version>
+      <relativePath>..</relativePath>
+   </parent>
+   
+   <artifactId>ozwillo-datacore-web</artifactId>
+   <packaging>war</packaging>
+   <name>Ozwillo Datacore Web Application</name>
+
+   <properties>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+   </properties>
+
+   <dependencies>
+   
+      <!-- Datacore REST Server -->
+      <!-- brings core, rest-api & -client, spring, cxf, utils -->
+      <dependency>
+        <groupId>org.ozwillo.datacore</groupId>
+        <artifactId>ozwillo-datacore-rest-server</artifactId>
+      </dependency>
+      
+   </dependencies>
+
+   <build>
+      <finalName>datacore</finalName>
+  
+      <plugins>
+      
+			<!-- Swagger spec gen plugin (Apache 2.0 License) :
+			see https://github.com/kongchen/swagger-maven-plugin
+                        NOT USED FOR NOW (rather using swagger-jaxrs dynamic spec gen), for this would require :
+			- either templatizing generated spec with URL for each environment and serving them from a JAXRS Resource
+			that runs a template engine on them and fills description from -rest-api/.../description.html
+			   - and caching those rendered templates (done by swagger-jaxrs for now)
+                           - moving gen to /api-docs dir rather than /dc-ui/api-docs (or updating datacore-base.js to /dc-ui/api-docs instead)
+                        - or rendering spec at deployment time i.e. in puppet as a .erb template,
+                           - move description.html to -web and load it in ajax,
+                           - and redirect (/dc-ui)/api-docs to .../service.json using ex. web.xml's <welcome-file-list>
+			-->
+			<plugin>
+			  <groupId>com.github.kongchen</groupId>
+			  <artifactId>swagger-maven-plugin</artifactId>
+			  <version>2.3.4</version><!-- "2.x.x : For Swagger core version >= 1.3.0 swagger-spec 1.2"
+			  (Datacore APIs use swagger-annotations_2.10-1.3.12 which outpus swagger spec with "swaggerVersion":"1.2") -->
+			  <executions>
+			    <!-- generation of dev (http://localhost:8080) spec : -->
+			    <execution>
+			      <id>swaggergenspec-localhost</id>
+			      <phase>compile</phase>
+			      <goals>
+			        <goal>generate</goal>
+			      </goals>
+				   <configuration>
+				     <apiSources>
+				       <apiSource>
+				         <locations>org.oasis.datacore.rest.api;org.oasis.datacore.rights.rest.api;org.oasis.datacore.contribution.rest.api;org.oasis.datacore.model.rest.api</locations>
+				         <apiVersion>1.0.0</apiVersion>
+				         <basePath>http://localhost:8080</basePath><!-- TODO templatize ;
+				         used by swagger.js client to call server (so NO ending by /dc-ui/api-docs).
+				         Must be absolute URL else server path is not prepended. OLD ${datacoreApiServer.baseUrl} -->
+				         <supportSpringMvc>false</supportSpringMvc>
+				         <apiInfo>
+				           <title>Datacore Resource API</title>
+				           <description>Allows to manage (CRUD) and find Data Resources and their Models using JSON/HTTP REST calls.</description><!-- the full description.html
+				           is more of a js-specific playground (calls swagger.js, requires ajax init...),
+				           so it's not a problem if it's not in the spec -->
+				           <termsOfServiceUrl>https://www.ozwillo.com/en/terms</termsOfServiceUrl>
+				           <contact>http://www.ozwillo.com</contact>
+				           <license>Affero GPL v3 (except for client libraries, which are LGPL v3)</license>
+				           <licenseUrl>http://www.gnu.org/licenses/agpl-3.0.html</licenseUrl>
+				         </apiInfo>
+				         <!-- TODO LATER apiSortComparator>com.foo.bar.YourApiComarator</apiSortComparator -->
+				         <swaggerDirectory>${project.basedir}/src/main/webapp/dc-ui/api-docs</swaggerDirectory><!-- TODO -->
+				         <swaggerUIDocBasePath>http://localhost:8080/dc-ui/api-docs</swaggerUIDocBasePath><!-- TODO templatize ;
+				         overrides basePath in root service.json to provide access to other .json spec files,
+				         which must be therefore in this directory. Must be absolute URL else : Unable to read api 'dc'
+				         from path /dc-ui/api-docs/dc.json (server returned undefined). NB. service.json is accessed
+				         from /dc-ui/api-docs thanks to using web.xml's welcome-file-list (rather than targeting it directly) -->
+				       </apiSource>
+				     </apiSources>
+				   </configuration>
+			    </execution>
+			    
+			    <!-- generation of puppet .erb-templatized spec : -->
+			    <execution>
+			      <id>swaggergenspec-templatized</id>
+			      <phase>compile</phase>
+			      <goals>
+			        <goal>generate</goal>
+			      </goals>
+				   <configuration>
+				     <apiSources>
+				       <apiSource>
+				         <locations>org.oasis.datacore.rest.api;org.oasis.datacore.rights.rest.api;org.oasis.datacore.contribution.rest.api;org.oasis.datacore.model.rest.api</locations>
+				         <apiVersion>1.0.0</apiVersion>
+				         <basePath>&lt;%= datacore_baseUrl %&gt;</basePath><!-- TODO templatize ;
+				         used by swagger.js client to call server (so NO ending by /dc-ui/api-docs).
+				         Must be absolute URL else server path is not prepended. OLD ${datacoreApiServer.baseUrl} -->
+				         <supportSpringMvc>false</supportSpringMvc>
+				         <apiInfo>
+				           <title>Datacore Resource API</title>
+				           <description>Allows to manage (CRUD) and find Data Resources and their Models using JSON/HTTP REST calls.</description><!-- the full description.html
+				           is more of a js-specific playground (calls swagger.js, requires ajax init...),
+				           so it's not a problem if it's not in the spec -->
+				           <termsOfServiceUrl>https://www.ozwillo.com/en/terms</termsOfServiceUrl>
+				           <contact>http://www.ozwillo.com</contact>
+				           <license>Affero GPL v3 (except for client libraries, which are LGPL v3)</license>
+				           <licenseUrl>http://www.gnu.org/licenses/agpl-3.0.html</licenseUrl>
+				         </apiInfo>
+				         <!-- TODO LATER apiSortComparator>com.foo.bar.YourApiComarator</apiSortComparator -->
+				         <swaggerDirectory>${project.basedir}/src/main/webapp/dc-ui/api-docs-erb</swaggerDirectory><!-- TODO -->
+				         <swaggerUIDocBasePath>&lt;%= datacore_baseUrl %&gt;/dc-ui/api-docs</swaggerUIDocBasePath><!-- TODO templatize ;
+				         overrides basePath in root service.json to provide access to other .json spec files,
+				         which must be therefore in this directory. Must be absolute URL else : Unable to read api 'dc'
+				         from path /dc-ui/api-docs/dc.json (server returned undefined). NB. service.json is accessed
+				         from /dc-ui/api-docs thanks to using web.xml's welcome-file-list (rather than targeting it directly) -->
+				       </apiSource>
+				     </apiSources>
+				   </configuration>
+			    </execution>
+			  </executions>
+			</plugin>
+			
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-war-plugin</artifactId>
+            <version>2.4</version>
+            <configuration>
+               <warSourceDirectory>src/main/webapp</warSourceDirectory>
+            </configuration>
+         </plugin>
+
+         <!-- auto deploy on embedded jetty
+         see https://docs.codehaus.org/display/JETTY/Maven+Jetty+Plugin -->
+              <plugin>
+              <groupId>org.mortbay.jetty</groupId>
+              <artifactId>jetty-maven-plugin</artifactId>
+              <version>${jetty.version}</version>
+              <configuration>
+                <jvmArgs></jvmArgs>
+                <stopPort>9966</stopPort>
+                <stopKey>foo</stopKey>
+                <!-- avoiding scanning jars to speed up jetty startup :
+                http://haksoo.wordpress.com/2013/10/05/jetty-8-maven-plugin-too-slow/ -->
+                <contextXml>${basedir}/src/main/webapp/WEB-INF/jetty-context.xml</contextXml>
+                <scanIntervalSeconds>1</scanIntervalSeconds>
+                <webAppConfig>
+                  <contextPath>/</contextPath>
+                </webAppConfig>
+                <connectors>
+                  <connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
+                    <port>8080</port>
+                    <maxIdleTime>60000</maxIdleTime>
+                    <confidentialPort>8443</confidentialPort>
+                  </connector>
+                </connectors>
+              </configuration>
+              </plugin>
+
+      </plugins>
+
+      <pluginManagement>
+      </pluginManagement>
+   </build>
+  
+  
+   <profiles>
+   
+      <profile>
+         <id>integration-test</id>
+         <!-- activation>
+           <property>
+             <name>!skipJetty</name>
+           </property>
+         </activation -->
+         <build>
+            <plugins>
+            
+               <plugin>
+                  <artifactId>maven-dependency-plugin</artifactId>
+                  <executions>
+                     <execution>
+                        <phase>package</phase>
+                        <goals>
+                           <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                           <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                        </configuration>
+                     </execution>
+                  </executions>
+               </plugin>
+            
+              <plugin>
+              <groupId>org.mortbay.jetty</groupId>
+              <artifactId>jetty-maven-plugin</artifactId>
+              <version>${jetty.version}</version>
+              <configuration>
+                <stopPort>9966</stopPort>
+                <stopKey>foo</stopKey>
+                <webAppConfig>
+                  <contextPath>/</contextPath>
+                </webAppConfig>
+                <connectors>
+                  <connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
+                    <port>8080</port>
+                    <maxIdleTime>60000</maxIdleTime>
+                    <confidentialPort>8443</confidentialPort>
+                  </connector>
+                </connectors>
+              </configuration>
+              <executions>
+                <execution>
+                  <id>start-jetty</id>
+                  <phase>pre-integration-test</phase>
+                  <goals>
+                    <goal>run</goal>
+                  </goals>
+                  <configuration>
+                    <scanIntervalSeconds>0</scanIntervalSeconds>
+                    <daemon>true</daemon>
+                  </configuration>
+                </execution>
+                <execution>
+                  <id>stop-jetty</id>
+                  <phase>post-integration-test</phase>
+                  <goals>
+                    <goal>stop</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+            
+            </plugins>
+            <pluginManagement>
+               <plugins>
+                  <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+                  <plugin>
+                     <groupId>org.eclipse.m2e</groupId>
+                     <artifactId>lifecycle-mapping</artifactId>
+                     <version>1.0.0</version>
+                     <configuration>
+                        <lifecycleMappingMetadata>
+                           <pluginExecutions>
+                              <pluginExecution>
+                                 <pluginExecutionFilter>
+                                    <groupId>org.apache.maven.plugins</groupId>
+                                    <artifactId>maven-dependency-plugin</artifactId>
+                                    <versionRange>[2.1,)</versionRange>
+                                    <goals>
+                                       <goal>copy-dependencies</goal>
+                                    </goals>
+                                 </pluginExecutionFilter>
+                                 <action>
+                                    <ignore></ignore>
+                                 </action>
+                              </pluginExecution>
+                           </pluginExecutions>
+                        </lifecycleMappingMetadata>
+                     </configuration>
+                  </plugin>
+               </plugins>
+            </pluginManagement>
+         </build>
+      </profile>
+      
+   </profiles>
+  
+   <repositories>
+   </repositories>
+</project>
