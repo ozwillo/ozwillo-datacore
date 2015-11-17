@@ -1,0 +1,149 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+	http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.ozwillo</groupId>
+		<artifactId>ozwillo-datacore</artifactId>
+		<version>1.0-SNAPSHOT</version>
+		<relativePath>..</relativePath>
+	</parent>
+
+	<artifactId>ozwillo-datacore-rest-server</artifactId>
+	<name>Ozwillo Datacore REST Server</name>
+
+
+	<dependencies>
+
+		<!-- Datacore Core -->
+		<dependency>
+			<groupId>org.ozwillo</groupId>
+			<artifactId>ozwillo-datacore-core</artifactId><!-- brings JacksonJsonProvider,
+				to configure in clients -->
+		</dependency>
+  
+      <dependency>
+        <groupId>org.ozwillo</groupId>
+        <artifactId>ozwillo-datacore-kernel-client</artifactId>
+      </dependency>
+
+      <dependency>
+        <groupId>org.ozwillo</groupId>
+        <artifactId>ozwillo-datacore-monitoring</artifactId>
+      </dependency>
+
+      <!-- Spring security & OAuth 2 -->
+      <dependency>
+         <groupId>org.springframework.security</groupId>
+         <artifactId>spring-security-core</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework.security</groupId>
+         <artifactId>spring-security-config</artifactId>
+      </dependency>
+      <!-- Spring security OAuth 2.0 dependencies  -->
+      <dependency>
+         <groupId>org.springframework.security.oauth</groupId>
+         <artifactId>spring-security-oauth2</artifactId>
+      </dependency>
+
+		<!-- Datacore REST Client (brings API, Jackson and CXF) -->
+		<dependency>
+			<groupId>org.ozwillo</groupId>
+			<artifactId>ozwillo-datacore-rest-cxf</artifactId>
+		</dependency>
+
+		<!-- for ExceptionUtils -->
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+		</dependency>
+
+		<!-- for standalone starter -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+		</dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-context-support</artifactId><!-- for EHCache support classes http://stackoverflow.com/questions/13956224/spring-3-2-and-cache-abstraction-missing-ehcache-implementation -->
+      </dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+		</dependency>
+
+		<!-- for packaging as webapp TODO in another -webapp project ? -->
+		<dependency>
+			<groupId>org.apache.cxf</groupId>
+			<artifactId>cxf-rt-transports-http</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-web</artifactId>
+		</dependency>
+
+      <!-- for sending events to Riemann -->
+      <dependency>
+         <groupId>com.aphyr</groupId>
+         <artifactId>riemann-java-client</artifactId>
+      </dependency>
+      
+      <!-- JSON-LD facade -->
+      <dependency>
+         <groupId>com.github.jsonld-java</groupId>
+         <artifactId>jsonld-java</artifactId><!-- also brought by openid -->
+      </dependency>
+      <!-- dependency>
+         <groupId>com.fasterxml.jackson.core</groupId>
+         <artifactId>jackson-core</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.fasterxml.jackson.core</groupId>
+         <artifactId>jackson-databind</artifactId><!- brought by rest-client ->
+      </dependency>
+      <dependency>
+         <groupId>org.slf4j</groupId>
+         <artifactId>slf4j-api</artifactId>
+      </dependency -->
+      <dependency>
+         <groupId>org.apache.httpcomponents</groupId>
+         <artifactId>httpclient</artifactId><!-- also brought by openid -->
+      </dependency>
+      <dependency>
+         <groupId>org.apache.httpcomponents</groupId>
+         <artifactId>httpclient-cache</artifactId>
+      </dependency>
+      
+      <!-- swagger, for apidoc spec generation -->
+      <dependency>
+         <groupId>com.wordnik</groupId>
+         <artifactId>swagger-jaxrs_2.10</artifactId>
+      </dependency>
+         
+      <!-- import, for tests : -->
+      <dependency>
+        <groupId>org.apache.cxf</groupId>
+        <artifactId>cxf-rt-transports-http-jetty</artifactId><!-- test only,
+        not brought by -rest-cxf (because of that ?) -->
+      </dependency>
+      <dependency>
+         <groupId>net.sf.opencsv</groupId>
+         <artifactId>opencsv</artifactId>
+         <!-- scope>test</scope -->
+      </dependency>
+      
+      <dependency>
+         <groupId>net.sf.ehcache.internal</groupId>
+         <artifactId>ehcache-core</artifactId>
+         <!-- groupId>net.sf.ehcache</groupId>
+         <artifactId>ehcache</artifactId>
+         <type>pom</type --><!-- NO worked in 2.6.0 but not in 2.7.4 anymore because
+         no more dependencies to ehcache-core etc. (but in 2.9 works again !) ;
+         would probably work without type=pom but brings in too much stuff (hibernate, terracotta...) -->
+      </dependency>
+      
+	</dependencies>
+
+</project>
