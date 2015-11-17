@@ -181,8 +181,7 @@ public class EntityServiceImpl implements EntityService {
       // then handle it / if failed throw error status :
       //if (notfound) {
       //   throw new WebApplicationException(Response.Status.NOT_FOUND);
-      //   // rather than NO_CONTENT ; like Atol ex. deleteApplication in
-      //   // https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/apps/ApplicationDirectoryResource.java
+      //   // rather than NO_CONTENT ; like Atol
       //}
    }
    

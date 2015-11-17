@@ -78,13 +78,13 @@ public class DatacoreMappingMongoConverter extends MappingMongoConverter {
 
             Object propertyObj = wrapper.getProperty(prop, prop.getType(), fieldAccessOnly);
 
-            //if (null != propertyObj) { // [OASIS] HACK to allow unset / set to null at save
-               if (/*[OASIS] HACK*/null != propertyObj && /*[OASIS] END*/!conversions.isSimpleType(propertyObj.getClass())) {
+            //if (null != propertyObj) { // [Ozwillo] HACK to allow unset / set to null at save
+               if (/*[Ozwillo] HACK*/null != propertyObj && /*[Ozwillo] END*/!conversions.isSimpleType(propertyObj.getClass())) {
                   writePropertyInternal(propertyObj, dbo, prop);
                } else {
                   writeSimpleInternal(propertyObj, dbo, prop.getFieldName());
                }
-            //} // [OASIS] HACK
+            //} // [Ozwillo] HACK
          }
       });
 
@@ -93,13 +93,13 @@ public class DatacoreMappingMongoConverter extends MappingMongoConverter {
             MongoPersistentProperty inverseProp = association.getInverse();
             Class<?> type = inverseProp.getType();
             Object propertyObj = wrapper.getProperty(inverseProp, type, useFieldAccessOnly);
-            //if (null != propertyObj) { // [OASIS] HACK to allow unset / set to null at save
+            //if (null != propertyObj) { // [Ozwillo] HACK to allow unset / set to null at save
                writePropertyInternal(propertyObj, dbo, inverseProp);
-            //} // [OASIS] HACK
+            //} // [Ozwillo] HACK
          }
       });
       
-      // [OASIS] HACK to persist Datacore model fields at root level NOT FOR NOW
+      // [Ozwillo] HACK to persist Datacore model fields at root level NOT FOR NOW
       /*if ("DCEntity".equals(entity.getName())) {
          DCEntity dcEntity = (DCEntity) object;
          DCModel dcModel = dcModelService.getModel(dcEntity.getType());

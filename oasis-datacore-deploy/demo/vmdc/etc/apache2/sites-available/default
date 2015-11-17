@@ -8,7 +8,7 @@
 
 <VirtualHost *:443>
    ###########################################
-   # [OASIS] proxying to the tomcat7-dc
+   # [Ozwillo] proxying to the tomcat7-dc
    # turning on host preservation (auto in ajp but required in http proxy)
    ProxyPreserveHost on
 
@@ -23,7 +23,7 @@
    # else builds URLs like http://localhost:8080dc
    ProxyPass / http://localhost:8080/
    ProxyPassReverse / http://localhost:8080/
-   # [OASIS] end
+   # [Ozwillo] end
    ###########################################
 
    # Certificate - SSL Configuration

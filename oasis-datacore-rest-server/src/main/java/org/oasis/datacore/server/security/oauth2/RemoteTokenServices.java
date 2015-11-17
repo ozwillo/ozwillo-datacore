@@ -64,7 +64,7 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 
 	///private ObjectMapper mapper = new ObjectMapper();
 	
-	/** [OASIS] */
+	/** [Ozwillo] */
    @Autowired
    private TokenEncrypter tokenEncrypter;
    /** to init user */
@@ -91,7 +91,7 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 
 	@Cacheable(value={"org.springframework.security.oauth2.provider.OAuth2Authentication"}, key="#accessToken")
 	public OAuth2Authentication loadAuthentication(String accessToken) throws AuthenticationException {
-	   accessToken = tokenEncrypter.decrypt(accessToken); // [OASIS]
+	   accessToken = tokenEncrypter.decrypt(accessToken); // [Ozwillo]
 
 		MultiValueMap<String, String> formData = new LinkedMultiValueMap<String, String>();
 		formData.add("token", accessToken);

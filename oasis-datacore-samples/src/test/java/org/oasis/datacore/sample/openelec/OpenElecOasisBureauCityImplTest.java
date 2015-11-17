@@ -63,7 +63,7 @@ public class OpenElecOasisBureauCityImplTest {
       
       // reloading bureau and checking collectivite
       bureau = openElecService.getBureauById(bureau.getId()); // TODO ByUri
-      //Assert.assertEquals(bureau.getCollectivite(), selectedCollectivite); // doesn't work once collectivite in oasis datacore => setId(getDcObject().getUri()) ???
+      //Assert.assertEquals(bureau.getCollectivite(), selectedCollectivite); // doesn't work once collectivite in ozwillo datacore => setId(getDcObject().getUri()) ???
       Assert.assertEquals(bureau.getCollectivite().getDcObject().getUri(), selectedCollectivite.getDcObject().getUri());
       
    }

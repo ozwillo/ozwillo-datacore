@@ -1,17 +1,17 @@
 
 ##############################
-## [OASIS]
+## [Ozwillo]
 ## to be appended to your development computer's hosts file
 ## (to be found on Linux at /etc/hosts and on Windows at C:\Windows\System32\drivers\etc\hosts)
 ## for instance on Linux using commands : su ; cat hosts >> /etc/hosts
 
-## OASIS Test :
+## Ozwillo Test :
 127.0.0.1	vmdc
 #127.0.0.1   vmdc-1
 127.0.0.1	vmkernel
 127.0.0.1	vmportal
 
-## OASIS Integration :
+## Ozwillo Integration :
 # ip1		vmdc
 # ip2		vmdc-1
 # ip3		vmkernel

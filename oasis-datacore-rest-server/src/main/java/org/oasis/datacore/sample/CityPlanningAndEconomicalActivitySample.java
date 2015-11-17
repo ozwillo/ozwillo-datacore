@@ -49,7 +49,7 @@ import au.com.bytecode.opencsv.CSVReader;
  * * dataset - ATECO descriptions ("ecoact:atecoDescription" field) :
  * since none was provided, I've used http://www.vi.camcom.it/a_ITA_1834_1.html
  * (from http://www3.istat.it/strumenti/definizioni/ateco/ ) to build
- * oasis-datacore/oasis-datacore-rest-server/src/main/resources/samples/provto/economicalActivity/ateco_20081217.csv
+ * ozwillo-datacore/ozwillo-datacore-rest-server/src/main/resources/samples/provto/economicalActivity/ateco_20081217.csv
  * * as always, please check choices made for : Model/Mixin & field names, uri format,
  * overall modelling (perimeter of each Model and Mixin, links between them, types of fields)
  *  - TODO CSI especially for the ateco fields : look up "ateco rdf" in google and look in ex. http://www.w3c.it/papers/RDF.pdf
@@ -84,11 +84,11 @@ public class CityPlanningAndEconomicalActivitySample extends DatacoreSampleMetho
       /////////////////////////////////////////////////////////
       // 1.a provide a denormalized view of your data :
       // i.e. flat, including fields of related classifications
-      // ex. https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-server/src/main/resources/samples/provto/economicalActivity/economicalActivity.csv
+      // ex. https://github.com/ozwillo/ozwillo-datacore/blob/master/ozwillo-datacore-rest-server/src/main/resources/samples/provto/economicalActivity/economicalActivity.csv
       
       // and write a Model for it :
       // (the simplest one : no outside references, all fields queriable and string).
-      // See Model specification at https://github.com/pole-numerique/oasis-datacore/tree/master/oasis-datacore-samples/src/main/java/org/oasis/datacore/data/meta
+      // See Model specification at https://github.com/ozwillo/ozwillo-datacore/tree/master/ozwillo-datacore-samples/src/main/java/org/ozwillo/datacore/data/meta
       // tips :
       // - give version "0" to your Models (and Mixins) since they are new, and refer to them
       // (from Resource Model type and Resource fields) using modelType = model name + '/' + model version,

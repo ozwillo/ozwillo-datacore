@@ -39,7 +39,7 @@ public class GenericEntity<T>  implements Comparable<GenericEntity<T>>, Serializ
     
     /**
      * who did it : TODO required ?
-	 * If Oasis Users are in same db, could be an instance of User instead and let audited entities refer to it
+	 * If Ozwillo Users are in same db, could be an instance of User instead and let audited entities refer to it
 	 * see http://satishab.blogspot.fr/2013/03/part-2-persistence-layer-with-mongo-db.html
      */
     @CreatedBy
@@ -89,7 +89,7 @@ public class GenericEntity<T>  implements Comparable<GenericEntity<T>>, Serializ
 			return false;
 		}
 		GenericEntity<?> oge = (GenericEntity<?>) o;
-		if (this.isNew() || oge.isNew()) { // TODO TODO doesn't work once gone in oasis datacore => setId(getDcObject().getUri()) ???
+		if (this.isNew() || oge.isNew()) { // TODO TODO doesn't work once gone in ozwillo datacore => setId(getDcObject().getUri()) ???
 			return false;
 		}
 		return this.getId().equals(oge.getId());

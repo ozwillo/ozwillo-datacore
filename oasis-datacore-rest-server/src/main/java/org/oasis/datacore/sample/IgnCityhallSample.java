@@ -56,7 +56,7 @@ public class IgnCityhallSample extends DatacoreSampleBase {
    }
 
    public void buildModelsIgn(List<DCModelBase> modelsToCreate) {
-      // because IGN Model governance say so (but this could be forbidden by OASIS) :
+      // because IGN Model governance say so (but this could be forbidden by Ozwillo) :
       // field names are in French 
       // all fields are required
       

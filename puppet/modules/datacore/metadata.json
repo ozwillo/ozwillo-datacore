@@ -1,13 +1,13 @@
 {
-  "name": "oasis-datacore",
+  "name": "ozwillo-datacore",
   "version": "0.0.3",
   "author": "Open Wide",
-  "license": "Licensed under MIT",
-  "summary": "Oasis Datacore",
-  "source": "https://github.com/pole-numerique/oasis-datacore/",
-  "project_page": "(https://github.com/pole-numerique/oasis-datacore/wiki/module)",
+  "license": "Licensed under AGPL",
+  "summary": "Ozwillo Datacore",
+  "source": "https://github.com/ozwillo/ozwillo-datacore/",
+  "project_page": "(https://github.com/ozwillo/ozwillo-datacore/wiki/module)",
   "issues_url": "",
-  "tags": ["OASIS", "MongoDB"],
+  "tags": ["Ozwillo", "MongoDB"],
   "operatingsystem_support": [
     {
       "operatingsystem": "Debian",

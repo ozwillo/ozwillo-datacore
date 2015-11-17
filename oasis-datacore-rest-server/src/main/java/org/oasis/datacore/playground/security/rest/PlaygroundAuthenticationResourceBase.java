@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 
 /**
- * Holds conf for playground OASIS OAuth integration. 
+ * Holds conf for playground Ozwillo OAuth integration.
  * 
  * @author mdutoo
  *

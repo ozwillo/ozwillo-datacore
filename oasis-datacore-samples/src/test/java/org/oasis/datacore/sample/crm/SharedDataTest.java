@@ -78,7 +78,6 @@ public class SharedDataTest {
 		// NB. datacore governance info : data quality level, cross versioning / approval, OPT other qualification justif (approved by source / user / governance workflow X...)
 		// NB. datacore security info : owner (or can source or metamodel be used for that ?), policy, precomputed permissions...
 		int cityAppMaxQuality = 7;
-		//String lyonCityUri = "http://oasis.polenumerique.org/datacore/city/France/Lyon";
       String lyonCityUri = "http://data.ozwillo.com/city/France/Lyon"; // uri (from id query params !?)
 		DBObject cityApp_LyonCity = new BasicDBObject(
 				//"_id_source_city", lyonCity.getId()). // NOOOO source id, where "city" is the app id IN A DIFFERENT COLLECTION

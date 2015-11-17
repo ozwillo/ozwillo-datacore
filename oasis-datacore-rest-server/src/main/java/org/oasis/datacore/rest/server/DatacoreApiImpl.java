@@ -72,8 +72,8 @@ import com.google.common.collect.ImmutableMap;
  * @author mdutoo
  *
  */
-@Path("dc") // relative path among other OASIS services
-/*@Consumes(MediaType.APPLICATION_JSON) // TODO finer media type ex. +oasis-datacore ??
+@Path("dc") // relative path among other Ozwillo services
+/*@Consumes(MediaType.APPLICATION_JSON) // TODO finer media type ex. +ozwillo-datacore ??
 @Produces(MediaType.APPLICATION_JSON)*/
 @Component("datacoreApiImpl") // else can't autowire Qualified ; NOT @Service (permissions rather around EntityService)
 public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
@@ -276,8 +276,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
          
       } catch (ResourceNotFoundException rnfex) {
          throw new NotFoundException(toNotFoundJsonResponse(rnfex));
-         // rather than NO_CONTENT ; like Atol ex. deleteApplication in
-         // https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/apps/ApplicationDirectoryResource.java
+         // rather than NO_CONTENT ; like Atol
       } catch (ResourceException rex) { // asked to abort from within triggered event
          throw new BadRequestException(toBadRequestJsonResponse(rex));
       }

@@ -128,10 +128,10 @@ function initPlayground() {
 }
 
 function initDcApi() {
-   var apiDocsUrl = window.dcConf.apiDocsUrl; // OASIS ; OLD "/api-docs", STATIC /dc-ui/api-docs
+   var apiDocsUrl = window.dcConf.apiDocsUrl; // Ozwillo ; OLD "/api-docs", STATIC /dc-ui/api-docs
    var options = {
          url: apiDocsUrl,
-         supportedSubmitMethods: ['get', 'post', 'put', 'delete'] // OASIS TODO PATCH ?!?
+         supportedSubmitMethods: ['get', 'post', 'put', 'delete'] // Ozwillo TODO PATCH ?!?
        };
    if (options.url.indexOf("http") !== 0) {
       // else CORS request to ex. http://localhost/ and "uncaught exception: Please specify the protocol for /api-docs"
@@ -177,7 +177,7 @@ function initPlaygroundWithSwaggerUi() {
 }
 
 function initDcApiWithSwaggerUi(success) {
-   var apiDocsUrl = window.dcConf.apiDocsUrl; // OASIS ; OLD "/api-docs", STATIC /dc-ui/api-docs
+   var apiDocsUrl = window.dcConf.apiDocsUrl; // Ozwillo ; OLD "/api-docs", STATIC /dc-ui/api-docs
    /*if (url.indexOf("http") !== 0) {
       // else CORS request to ex. http://localhost/ and "uncaught exception: Please specify the protocol for /api-docs"
       url = buildUrl(window.location.href.toString(), url);
@@ -185,14 +185,14 @@ function initDcApiWithSwaggerUi(success) {
    window.swaggerUi = new SwaggerUi({
       url: apiDocsUrl,
       dom_id: "swagger-ui-container",
-      supportedSubmitMethods: ['get', 'post', 'put', 'delete'], // OASIS TODO PATCH ?!?
+      supportedSubmitMethods: ['get', 'post', 'put', 'delete'], // Ozwillo TODO PATCH ?!?
       onComplete: function(swaggerApi, swaggerUi){
          if(console) {
             console.log("Loaded SwaggerUI")
          }
          $("input[name='Authorization']").val(getAuthHeader());//FOR use the token in swager
          $("input[name='X-Datacore-Project']").val(getProject());
-         window.dcApi = swaggerUi.api; // OASIS
+         window.dcApi = swaggerUi.api; // Ozwillo
          if (success) {
             success();
          }
@@ -203,7 +203,7 @@ function initDcApiWithSwaggerUi(success) {
             console.log(data);
          }
       },
-      docExpansion: "list" // OASIS rather than none, full see https://github.com/wordnik/swagger-ui
+      docExpansion: "list" // Ozwillo rather than none, full see https://github.com/wordnik/swagger-ui
    });
    /*$('#input_apiKey').change(function() {
       var key = $('#input_apiKey')[0].value;
@@ -239,6 +239,6 @@ function initDcConfReplacements() {
 }
 
 function completePlaygroundInit() {
-   initDcConfReplacements(); // OASIS
+   initDcConfReplacements(); // Ozwillo
    $('pre code').each(function(i, e) {hljs.highlightBlock(e)});
 }

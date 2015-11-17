@@ -103,7 +103,7 @@ public abstract class DCEntityBase implements Comparable<DCEntityBase>, Serializ
    private DateTime lastModified;
 
    /**
-    * who did it : TODO required ? If Oasis Users are in same db, could be an
+    * who did it : TODO required ? If Ozwillo Users are in same db, could be an
     * instance of User instead and let audited entities refer to it see
     * http://satishab
     * .blogspot.fr/2013/03/part-2-persistence-layer-with-mongo-db.html
@@ -262,7 +262,7 @@ public abstract class DCEntityBase implements Comparable<DCEntityBase>, Serializ
       }
       DCEntityBase oge = (DCEntityBase) o;
       if (this.isNew() || oge.isNew()) { // TODO TODO doesn't work once gone in
-                                         // oasis datacore =>
+                                         // Ozwillo datacore =>
                                          // setId(getDcObject().getUri()) ???
          return false;
       }

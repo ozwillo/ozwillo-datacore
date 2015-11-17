@@ -776,7 +776,7 @@
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         param = _ref[_i];
         if (param.paramType === "header") {
-          if (typeof args[param.name] !== 'undefined') { // OASIS PATCH if 0 ; old : if (args[param.name]) {
+          if (typeof args[param.name] !== 'undefined') { // Ozwillo PATCH if 0 ; old : if (args[param.name]) {
             params.headers[param.name] = args[param.name];
           }
         }
@@ -821,7 +821,7 @@
       return this.path.replace("{format}", "xml");
     };
 
-    // OASIS HACK taken from https://github.com/wordnik/swagger-js/pull/87/files
+    // Ozwillo HACK taken from https://github.com/wordnik/swagger-js/pull/87/files
     // URL encodes the given path (rather than path element) i.e. doesn't encode slash
     SwaggerOperation.prototype.encodePathParam = function(pathParam) {
       var encParts, part, parts, _i, _len;
@@ -862,8 +862,8 @@
         if (param.paramType === 'path') {
           if (args[param.name]) {
             reg = new RegExp('\{' + param.name + '[^\}]*\}', 'gi');
-            // OASIS HACK start
-            if(param.name.substring(0,13) === "__unencoded__") { // OASIS HACK
+            // Ozwillo HACK start
+            if(param.name.substring(0,13) === "__unencoded__") { // Ozwillo HACK
                // assume arg is a path and not a path element, so don't encode slash (but encode other chars) :
                //url = url.replace(reg, this.encodePathParam(args[param.name]));
                url = url.replace(reg, this.encodePathParam(args[param.name]));
@@ -871,7 +871,7 @@
                //url = url.replace(reg, encodeURIComponent(args[param.name]));
                url = url.replace(reg, encodeUriPathComponent(args[param.name]));
             }
-            // OASIS HACK end
+            // Ozwillo HACK end
             delete args[param.name];
           } else {
             throw "" + param.name + " is a required path param.";
@@ -888,15 +888,15 @@
               queryParams += "&";
             }
             
-            // OASIS HACK start
-            if(param.name.substring(0,1) == "#") { // OASIS HACK
+            // Ozwillo HACK start
+            if(param.name.substring(0,1) == "#") { // Ozwillo HACK
                // assume arg is a query (and not a query param), which must have been already encoded
                // by caller (ex. by swagger-ui.js) :
                // (else no way to know which '&' and '=' not to encode) 
                queryParams += args[param.name]; // NOT encodeURI(Component) because '&' and '='
                continue;
             }
-            // OASIS HACK end
+            // Ozwillo HACK end
             
             queryParams += encodeURIComponent(param.name) + '=' + encodeURIComponent(args[param.name]);
           }

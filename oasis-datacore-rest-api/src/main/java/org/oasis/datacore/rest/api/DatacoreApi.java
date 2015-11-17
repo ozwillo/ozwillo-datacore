@@ -57,7 +57,7 @@ import com.wordnik.swagger.annotations.AuthorizationScope;
  * REST (JSON) Datacore Data resource API.
  * 
  * See Swagger API root doc in (used in spring conf) in
- * https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-api/src/main/resources/oasis-datacore-rest-api.properties
+ * https://github.com/ozwillo/ozwillo-datacore/blob/master/ozwillo-datacore-rest-api/src/main/resources/ozwillo-datacore-rest-api.properties
  * 
  * 
  * ========================
@@ -114,7 +114,7 @@ import com.wordnik.swagger.annotations.AuthorizationScope;
          }),
          @Authorization(value = "Basic")
    })
-///@Consumes(MediaType.MEDIA_TYPE_WILDCARD) // TODO finer media type ex. +oasis-datacore ??
+///@Consumes(MediaType.MEDIA_TYPE_WILDCARD) // TODO finer media type ex. +ozwillo-datacore ??
 ///@Produces(MediaType.MEDIA_TYPE_WILDCARD)
 @Consumes({MediaType.APPLICATION_JSON, DatacoreMediaType.APPLICATION_NQUADS,
    DatacoreMediaType.APPLICATION_TURTLE, DatacoreMediaType.APPLICATION_JSONLD_EXPAND,

@@ -6,9 +6,9 @@ public class OasisAuthAuditor implements AuditorAware<String> {
 
 	/**
 	 * Returns current user
-	 * TODO integrate with Oasis Kernel Auth
+	 * TODO integrate with Ozwillo Kernel Auth
 	 * 
-	 * If Oasis Users are in same db, could be an instance of User instead and let audited entities refer to it
+	 * If Ozwillo Users are in same db, could be an instance of User instead and let audited entities refer to it
 	 * see http://satishab.blogspot.fr/2013/03/part-2-persistence-layer-with-mongo-db.html
 	 */
 	@Override

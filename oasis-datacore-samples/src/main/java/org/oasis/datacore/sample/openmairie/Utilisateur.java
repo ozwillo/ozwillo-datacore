@@ -18,8 +18,8 @@ public class Utilisateur extends GenericEntity<Utilisateur> {
    private String nom; // (full name)
    private String email;
    private String login;
-   private String pwd; // LATER oasis auth
-   private String om_profil; // (access right level) LATER oasis rights
+   private String pwd; // LATER Ozwillo auth
+   private String om_profil; // (access right level) LATER Ozwillo rights
    private String om_collectivite; // (city) TODO ref in datacore
    
    public String getOm_utilisateur() {

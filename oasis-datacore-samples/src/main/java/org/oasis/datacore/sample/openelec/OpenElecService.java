@@ -6,7 +6,7 @@ import org.oasis.datacore.sample.openmairie.Collectivite;
 
 
 /**
- * Sample to study what means integrating oasis datacore in an existing app
+ * Sample to study what means integrating Ozwillo datacore in an existing app
  * 
 datacore integration levels & alts :
 * 1. fully replace (an entity) by datacore ; Alt1 simple (entity refers to DCObject), Alt2 opposite (requires client cache & management) ; which implies...

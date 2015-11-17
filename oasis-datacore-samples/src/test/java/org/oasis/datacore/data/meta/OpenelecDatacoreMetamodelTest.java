@@ -639,7 +639,7 @@ For query on inseeVille { "_p.name" : "Lyon" , "_p.inCountry._p.name" : "France"
       Assert.assertEquals(1, lyonCityRes.size());
       Assert.assertEquals(lyonCity.getId(), lyonCityRes.get(0).getId());
       // NB. this allows to query on (all fields including) available en fields even if some are not there
-      // which may be useful in a highly variously / sparsely localized environment like OASIS lay be
+      // which may be useful in a highly variously / sparsely localized environment like Ozwillo lay be
       // HOWEVER this doesn't allow to lookup in a given language and use default value if not available
       
       // so the only way to lookup in a given language and use default value if not available is

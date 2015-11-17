@@ -76,7 +76,7 @@ public class DCEntity implements Comparable<DCEntity>, Serializable {
    private DateTime lastModified;
 
    /**
-    * who did it : TODO required ? If Oasis Users are in same db, could be an
+    * who did it : TODO required ? If Ozwillo Users are in same db, could be an
     * instance of User instead and let audited entities refer to it see
     * http://satishab
     * .blogspot.fr/2013/03/part-2-persistence-layer-with-mongo-db.html

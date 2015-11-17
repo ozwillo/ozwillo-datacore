@@ -75,11 +75,11 @@ public abstract class DatacoreSampleMethodologyBase extends DatacoreSampleBase {
     * 
     * 1.a provide a denormalized view of your data :
     * i.e. flat, including fields of related classifications
-    * ex. https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-server/src/main/resources/samples/provto/economicalActivity/economicalActivity.csv
+    * ex. https://github.com/ozwillo/ozwillo-datacore/blob/master/ozwillo-datacore-rest-server/src/main/resources/samples/provto/economicalActivity/economicalActivity.csv
     * 
     * and write a Model for it :
     * (the simplest one : no outside references, all fields queriable and string).
-    * See Model specification at https://github.com/pole-numerique/oasis-datacore/tree/master/oasis-datacore-samples/src/main/java/org/oasis/datacore/data/meta
+    * See Model specification at https://github.com/ozwillo/ozwillo-datacore/tree/master/ozwillo-datacore-samples/src/main/java/org/ozwillo/datacore/data/meta
     * tips :
     * - give version "0" to your Models (and Mixins) since they are new, and refer to them
     * (from Resource Model type and Resource fields) using modelType = model name + '/' + model version,

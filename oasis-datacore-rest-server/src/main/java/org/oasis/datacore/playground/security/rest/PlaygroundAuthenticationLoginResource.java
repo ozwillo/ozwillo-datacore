@@ -13,9 +13,9 @@ import org.springframework.stereotype.Component;
 
 
 /**
- * Resource that handles playground's OASIS OAuth2 login redirection.
+ * Resource that handles playground's Ozwillo OAuth2 login redirection.
  * 
- * OASIS OAuth2 is done as in https://github.com/pole-numerique/oasis/blob/master/HOWTO/login.md
+ * Ozwillo OAuth2 is done as in https://github.com/ozwillo/ozwillo-kernel/blob/master/HOWTO/login.md
  * * redirect browser to https://oasis-demo.atolcd.com/a/auth?response_type=code&client_id=29ef97c0-bb33-4f96-be22-3fd480e05d5f&scope=openid%20datacore&redirect_uri=https://portal.ozwillo.com/callback
  * + TODO LATER state and nonce randoms : provide and check at the end
  * * (see *Token*java) then handle browser redirect to https://portal.ozwillo.com/callback?code=eyJpZCI6IjA2MzBhNGRjLThhMWYtNDdkNi05NDY3LWU1N2NmNzM0ZDE3Yy9mUTNoY05nWmpvLWdhejFuUU9RME9nIiwiaWF0IjoxNDE1MjcyNDM3NzQ0LCJleHAiOjE0MTUyNzI0OTc3NDR9

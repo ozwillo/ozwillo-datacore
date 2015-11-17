@@ -12,11 +12,11 @@ import org.springframework.stereotype.Service;
 
 
 /**
- * mongodb-backed impl, save for bureau & collectivites which are in oasis (as bureau & city)
+ * mongodb-backed impl, save for bureau & collectivites which are in Ozwillo (as bureau & city)
  * (the simplest way to integrate datacore in the use case of a new app / feature being developed)
  * 
  * TODO or rather reuse local collectivites as cache for remote datacore cities ?!
- * Collectivite would have an additional Oasis URI field (instead of Bureau) and a transient DCObject ref
+ * Collectivite would have an additional Ozwillo URI field (instead of Bureau) and a transient DCObject ref
  * probably harder to manage / sync ??
  * 
  * TODO LATER tx in save()...
@@ -114,7 +114,7 @@ public class OpenElecServiceOasisBureauCityImpl implements OpenElecService {
       bureau.setDcObject(dcObject);
       bureau.setUri(dcObject.getUri());
       // TODO (???) else if auto code / behaviour on server (ex. address reformatting, computed properties, metadata extraction & enrichment) rather do :
-      // (OPT TODO this possibly using Oasis Web Services ?????)
+      // (OPT TODO this possibly using Ozwillo Web Services ?????)
       //bureau.fromDCObject(dcObject);
    }
    

@@ -562,8 +562,7 @@ public class ResourceService {
          //return Response.noContent().build();
          throw new ResourceNotFoundException("No resource with uri", uri, null,
                modelService.getProject()); // explodes if none
-         // rather than NO_CONTENT ; like Atol ex. deleteApplication in
-         // https://github.com/pole-numerique/oasis/blob/master/oasis-webapp/src/main/java/oasis/web/apps/ApplicationDirectoryResource.java
+         // rather than NO_CONTENT ; like Atol
       }
       DCResource resource = resourceEntityMapperService.entityToResource(entity, null,
             false); // view already applied by Entity PermissionEvaluator

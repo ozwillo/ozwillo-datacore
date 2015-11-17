@@ -8,7 +8,7 @@ import org.springframework.data.domain.AuditorAware;
 /**
  * Returns current user id according to Spring Security.
  * 
- * NB. is integrated with Oasis Kernel OAuth2 as long as Spring Security is.
+ * NB. is integrated with Ozwillo Kernel OAuth2 as long as Spring Security is.
  * 
  * @author mdutoo
  * 

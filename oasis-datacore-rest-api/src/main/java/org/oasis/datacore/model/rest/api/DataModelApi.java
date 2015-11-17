@@ -23,7 +23,7 @@ import com.wordnik.swagger.annotations.AuthorizationScope;
  * FOR NOW TEMPORARY ONLY
  * 
  * See Swagger API root doc in (used in spring conf) in
- * https://github.com/pole-numerique/oasis-datacore/blob/master/oasis-datacore-rest-api/src/main/resources/oasis-datacore-rest-api.properties
+ * https://github.com/ozwillo/ozwillo-datacore/blob/master/ozwillo-datacore-rest-api/src/main/resources/ozwillo-datacore-rest-api.properties
  * 
  * 
  * ========================
@@ -38,7 +38,7 @@ import com.wordnik.swagger.annotations.AuthorizationScope;
  * @author mdutoo
  *
  */
-@Path("dc/model") // relative path among other OASIS services
+@Path("dc/model") // relative path among other Ozwillo services
 @Api(value = "/dc/model", description = "DRAFT Operations about Datacore Models ",
    authorizations = {
       @Authorization(value = "OAuth2", scopes = {
@@ -47,7 +47,7 @@ import com.wordnik.swagger.annotations.AuthorizationScope;
       }),
       @Authorization(value = "Basic")
 })
-@Consumes(MediaType.APPLICATION_JSON) // TODO finer media type ex. +oasis-datacore ??
+@Consumes(MediaType.APPLICATION_JSON) // TODO finer media type ex. +ozwillo-datacore ??
 @Produces(MediaType.APPLICATION_JSON)
 public interface DataModelApi /*extends DataModelService*/ {
 

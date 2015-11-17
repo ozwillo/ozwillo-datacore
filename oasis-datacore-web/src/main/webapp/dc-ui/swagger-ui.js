@@ -1604,7 +1604,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
         opts.requestContentType = $("div select[name=parameterContentType]", $(this.el)).val();
         $(".response_throbber", $(this.el)).show();
 
-        // OASIS HACK start
+        // Ozwillo HACK start
         for (var mapKey in map) {
            if (mapKey.substring(0,1) == "#") {
               // assume arg is a query (and not a query param), meaning it can't be encoded by swagger.js
@@ -1612,7 +1612,7 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
               map[mapKey] = _buildUriQuery(_parseUriQuery(map[mapKey], true))
            }
         }
-        // OASIS HACK end
+        // Ozwillo HACK end
         
         return this.model["do"](map, opts, this.showCompleteStatus, this.showErrorStatus, this);
       }
