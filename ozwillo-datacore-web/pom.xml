@@ -4,7 +4,7 @@
 
    
    <parent>
-      <groupId>org.ozwillo</groupId>
+      <groupId>org.ozwillo.datacore</groupId>
       <artifactId>ozwillo-datacore</artifactId>
       <version>1.0-SNAPSHOT</version>
       <relativePath>..</relativePath>
@@ -23,7 +23,7 @@
       <!-- Datacore REST Server -->
       <!-- brings core, rest-api & -client, spring, cxf, utils -->
       <dependency>
-        <groupId>org.ozwillo</groupId>
+        <groupId>org.ozwillo.datacore</groupId>
         <artifactId>ozwillo-datacore-rest-server</artifactId>
       </dependency>
       
