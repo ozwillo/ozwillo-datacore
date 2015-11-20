@@ -164,63 +164,30 @@
       }
       return query;
    }
+   // only kept for backward compatibility
    // only supports relative uri (iri) ex. /dc/type/model/id and query, but modelType at least is required
-   //var dcResourceIriRegex = /^\/+dc\/+type\/+([^\/\?]+)\/*([^\?]+)?\??(.*)$/g; // NOO seems stateful, else sometimes matches gets null
-   function parseIri(resourceIri) { // TODO regex
-      /*var encModelType = resourceIri.substring(0, resourceIri.indexOf("/"));
-      var encId = decodeURI(resourceIri.substring(resourceIri.indexOf("/") + 1));
-      return {
-         containerUrl : dcConf.containerUrl,
-         modelType : decodeURIComponent(encModelType),
-         id : decodeURI(encId),
-         uri : dcConf.containerUrl + resourceIri
-         };*/
-      var matches = /^\/+dc\/+(type|h)\/+([^\/\?]+)\/*([^\?]+)?\??(.*)$/g.exec(resourceIri);
-      var isHistory = matches[1] // else is a find
-         && matches[1] === 'h';
-      var modelType = decodeURIComponent(matches[2]); // required
-      // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
-      // because swagger.js re-encodes
-      var encodedId = matches[3];
-      var query = matches[4]; // no decoding, else would need to be first split along & and =
-      var version = null;
-      if (isHistory) {
-          try {
-            var versionSlashIndex = encodedId.lastIndexOf('/');
-            version = parseInt(encodedId.substring(versionSlashIndex + 1));
-            if (encodedId) {
-               encodedId = encodedId.substring(0, versionSlashIndex);
-            }
-         } catch (e) {}
-      }
-      var id = null;
-      if (encodedId) {
-         id = decodeURIComponent(encodedId); // and not decodeURI else an URI won't be decoded at all
-         // ex. "https%3A%2F%2Fwww.10thingstosee.com%2Fmedia%2Fphotos%2Ffrance-778943_HjRL4GM.jpg
-      }
-      if (!query) {
-         query = null;
-      }
-      return {
-         containerUrl : dcConf.containerUrl,
-         modelType : modelType,
-         id : id,
-         encodedId : encodedId,
-         version : version,
-         query : query,
-         uri : dcConf.containerUrl + resourceIri, // NOT encoded !!
-         iri : resourceIri // NOT encoded !!
-      };
+   function parseIri(resourceIri) {
+      return parseIri(resourceIri);
    }
+   // resourceUri must be well encoded URI
+   // (otherwise, such as in UTF-8-written URIs in playground & samples, encode ex. encodeUri("http://..."))
+   // also supports relative uri (iri) and query, but modelType is required
    //var dcResourceUriRegex = /^http:\/\/data\.ozwillo\.com\/dc\/type\/([^\/]+)\/(.+)$/g;
    //var dcResourceUriRegex = /^(http[s]?):\/\/+([^\/]+)\/+dc\/+type\/+([^\/\?]+)\/*([^\?]+)?\??(.*)$/g; // NOO seems stateful, else sometimes matches gets null
-   // also supports relative uri (iri) and query, but modelType is required
-   function parseUri(resourceUri) { // TODO regex
+   //var dcResourceIriRegex = /^\/+dc\/+type\/+([^\/\?]+)\/*([^\?]+)?\??(.*)$/g; // NOO seems stateful, else sometimes matches gets null
+   function parseUri(resourceUri) {
+      var matchInd, matches, containerUrl;
       if (resourceUri.indexOf('http') !== 0) { // relative uri case
          if (resourceUri.indexOf('/dc/') !== 0) { // assuming modelType and optional query case
-            return parseIri('/dc/type/' + resourceUri);
+            resourceUri = '/dc/type/' + resourceUri;
          }
-         return parseIri(resourceUri);
+         matches = /^\/+dc\/+(type|h)\/+([^\/\?]+)\/*([^\?]+)?\??(.*)$/g.exec(resourceUri);
+         containerUrl = dcConf.containerUrl;
+         matchInd = 0;
+      } else {
+          matches = /^(http[s]?):\/\/+([^\/]+)\/+dc\/+(type|h)\/+([^\/\?]+)\/*([^\?]+)?\??(.*)$/g.exec(resourceUri);
+          containerUrl = matches[1] + '://' + matches[2];
+          matchInd = 2;
       }
       /*var pInd = resourceUri.indexOf('/dc/type/');
       var containerUrl = resourceUri.substring(0, pInd);
@@ -238,15 +205,15 @@
          id : decodeURI(encId),
          uri : resourceUri
          };*/
-      var matches = /^(http[s]?):\/\/+([^\/]+)\/+dc\/+(type|h)\/+([^\/\?]+)\/*([^\?]+)?\??(.*)$/g.exec(resourceUri);
-      var containerUrl = matches[1] + '://' + matches[2];
-      var isHistory = matches[3] // else is a find
-         && matches[3] === 'h';
-      var modelType = decodeURIComponent(matches[4]); // required
+      
+      var isHistory = matches[matchInd + 1] // else is a find
+         && matches[matchInd + 1] === 'h';
+      var encodedModelType = matches[matchInd + 2];
+      var modelType = decodeURIComponent(encodedModelType); // required ; assuming that never contains %
       // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
       // because swagger.js re-encodes
-      var encodedId = matches[5];
-      var query = matches[6]; // no decoding, else would need to be first split along & and =
+      var encodedId = matches[matchInd + 3];
+      var query = matches[matchInd + 4]; // no decoding, else would need to be first split along & and =
       var version = null;
       if (isHistory) {
           try {
@@ -257,23 +224,29 @@
             }
          } catch (e) {}
       }
+
+      var uri = containerUrl + '/dc/type/' + encodedModelType;
+      
       var id = null;
       if (encodedId) {
           id = decodeURIComponent(encodedId); // and not decodeURI else an URI won't be decoded at all
           // ex. "https%3A%2F%2Fwww.10thingstosee.com%2Fmedia%2Fphotos%2Ffrance-778943_HjRL4GM.jpg
+          uri += '/' + encodedId;
       }
       if (!query) {
          query = null;
       }
+      if (query !== null) {
+         uri += '?' + query;
+      }
       return {
-         //containerUrl : dcConf.containerUrl,
          containerUrl : containerUrl,
-         modelType : modelType,
+         modelType : modelType, // decoded
          id : id,
          encodedId : encodedId,
          version : version, // only if isHistory
-         query : query,
-         uri : resourceUri // NOT encoded !!
+         query : query, // encoded
+         uri : uri // resourceUri
          };
    }
    function getRelativeUrl(uri) {
@@ -332,18 +305,28 @@ function lineBreak(depth) {
 // modelType is where queries are made in, therefore it's the upper resource's
 // keyPathInResource is used to make queries in it
 var skippedNativeFieldNames = {
-      "@id" : null, "@type" : null, "o:version" : null, "dc:creator" : null, "dc:contributor" : null
+      "@type" : null, "o:version" : null, "dc:creator" : null, "dc:contributor" : null
       // skip them because :
-      // - query on @id is the same as GET @id, and on a @type same as GET @type/...
+      // - query on a @type is the same as GET @type/...
       // - others are not indexed, and query on version is meaningless anyway 
-      // BUT DONT SKIP dc:created, dc:modified
+      // BUT DONT SKIP @id (useful for iteration in range-based pagination),
+      // dc:created (built in mongo _id), dc:modified (indexed)
 }
 function toolifyDcResourceFieldAndColon(value, key, modelType, upperResource, keyPathInResource) {
    if (typeof skippedNativeFieldNames[key] !== 'undefined' // skip native fields
       || typeof upperResource === 'undefined') { // skip when hashmap of resources
       return JSON.stringify(key, null, '\t') + " : ";
    }
-   return '"<a href="' + buildRelativeUrl('dcmo:model_0', modelType) + '" class="dclink" onclick="'
+   if (key === '@id') { 
+      // iteration (for range-based pagination) example :
+      return '"key"'
+         + '<a href="' + buildRelativeUrl(modelType) + '?' + new UriQuery(keyPathInResource.join('.'), '>' + value + '+').s() + '" class="dclink dclinkGreater" onclick="'
+         + 'javascript:return findDataByType($(this).attr(\'href\'));'
+         + '"> : </a>';
+   }
+   // field model (TODO LATER find where it is first defined even if list or subfield) then equality query :
+   ///return '"<a href="' + buildRelativeUrl('dcmo:model_0', modelType) + '" class="dclink dclinkType" onclick="'
+   return '"<a href="' + '/dc/type/dcmo:model_0?' + new UriQuery('dcmo:fields.dcmo:name', key).s() + '" class="dclink dclinkType" onclick="'
       + 'javascript:return getData($(this).attr(\'href\'));'
       + '">' + key + '</a>"'
       + '<a href="' + buildRelativeUrl(modelType) + '?' + new UriQuery(keyPathInResource.join('.'), value).s() + '" class="dclink" onclick="'
@@ -428,7 +411,7 @@ function toolifyDcResourceUri(value) {
    // TODO LATER rather encodeUriPathComponent('dcmo:model_0') etc. (however, $1 and $2 are already encoded)
    return '"' + value.replace(/^http:\/\/data\.ozwillo\.com\/dc\/type\/([^\/]+)\/(.+)$/g,
          dcConf.containerUrl + '/dc/'
-         + '<a href="/dc/type/dcmo:model_0/$1" class="dclink" onclick="'
+         + '<a href="/dc/type/dcmo:model_0/$1" class="dclink dclinkType" onclick="'
          + 'javascript:return getData($(this).attr(\'href\'));'
          + '">type</a>'
          + '/'
@@ -451,7 +434,7 @@ function toolifyDcResourceValue(value, key, depth, modelType, upperResource, key
 	if (valueType== 'string') {
 		if ("@type" == key // in list
 				|| "dcmf:resourceType" == key) { // for Models
-			return '"<a href="' + buildRelativeUrl(value) + '" class="dclink" onclick="'
+			return '"<a href="' + buildRelativeUrl(value) + '" class="dclink dclinkType" onclick="'
 				      + 'javascript:return findDataByType($(this).attr(\'href\'));'
 	         + '">' + value + '</a>"';
 		}
@@ -1286,7 +1269,7 @@ function displayModelMixinLinks(linkedResource, parsedUri, linkingModelType) {
          html += lineBreak(1) + '- ';
          html +=  '<a href="' + buildRelativeUrl('dcmo:model_0') + '?' + new UriQuery(
                'dcmo:globalFields.dcmf:resourceType', mixinName).s() + '" class="dclink" onclick="'
-            + 'javascript:return findLinkedData(\'/dc/type/' +  parsedUri.modelType + '/' +  parsedUri.id + '\', \'' + mixinName + '\');'
+            + 'javascript:return findLinkedData(\'' +  buildUri(parsedUri.modelType, parsedUri.id) + '\', \'' + mixinName + '\');'
             + '">' + mixinName + '</a>'
             + "...";
       }

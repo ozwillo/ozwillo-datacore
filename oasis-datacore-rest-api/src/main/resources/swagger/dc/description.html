@@ -48,7 +48,7 @@ in their own metamodel <a href="#exploreMetamodel">where they may be introspecte
 but also drafted and published (<b>upcoming</b>).
 <br/><br/>
 <a href="https://github.com/pole-numerique/oasis-datacore/wiki">See wiki</a> for further 
-examples, FAQ, how to & common use cases, cookbook (writing clients...) and full documentation.
+examples, FAQ, how to &amp; common use cases, cookbook (writing clients...) and full documentation.
 <p>
 <div class="dc-import-subtitle">Datacore (<span class="dcConf_baseUrl json dcjsonline">NOT INITED</span>) :</div>
 <span class="json dcjsonline"><input type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 583px" value="/dc/type/dcmo:model_0"></span>
@@ -72,6 +72,139 @@ See <a href="#playgroundUserManual">this Playground's user manual below</a> and
 <p></p>
 <p></p>
 
+<br/>
+<b>Most common use cases' queries:</b>
+<br/><br/>
+&nbsp;&nbsp;- 
+<a href="/dc/type/dcmp:Project_0/geo_1" class="dclink" onclick="
+javascript:return findDataByType($(this).attr('href'));
+">geo_1</a>
+ - list all countries : 
+<a href="/dc/type/geoco:Country_0" class="dclink" onclick="
+javascript:return findDataByType($(this).attr('href'));
+">countries</a> (actually first 10 countries ; or 
+<a href="/dc/type/geoco:Country_0?limit=100" class="dclink" onclick="
+javascript:return findDataByType($(this).attr('href'));
+">first 100 countries</a> but beware that limit can't go beyond 100,
+in which case iteration on ex. id or name should be preferred, <a href="#iterate_on_organizations">see below for organizations</a>), or 
+<a href="/dc/type/geoco:Country_0?geoco:name=+" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">also sorted by name</a>.
+<br/><br/>
+NB. from now on, all queries are sorted by the most appropriate field. 
+<!-- 
+<br/><br/>
+or more efficiently (getting only their display name with X-Datacore-View=odisp:Displayable_0 header, since no other field is useful to list them) 
+<a href="/dc/type/geoco:Country_0" class="dclink" onclick="
+javascript:return findData($(this).attr('href'), null, null, null, 25, {'X-Datacore-View':'odisp:Displayable_0'});
+">countries</a>,
+ -->
+<br/><br/>
+&nbsp;&nbsp;- 
+<a href="/dc/type/dcmp:Project_0/geo_1" class="dclink" onclick="
+javascript:return findDataByType($(this).attr('href'));
+">geo_1</a>
+ - choose city by upper hierarchy ex. Paris or Sofia (София) : having chosen country, 
+<a href="/dc/type/geon2:Nuts2_0?geo:country=http://data.ozwillo.com/dc/type/geocofr:Pays_0/FR&geo:name=+" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">NUTS2s by country</a> (or 
+<a href="/dc/type/geon2fr:R%C3%A9gion_0?geo:name=+" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">country NUTS2s</a>) then
+<a href="/dc/type/geon3fr:D%C3%A9partement_0?geon:parent=http://data.ozwillo.com/dc/type/geon2fr:R%C3%A9gion_0/FR/FR-J&geo:name=+" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">NUTS3s by NUTS2</a>, or depending on your country 
+<a href="/dc/type/geon3:Nuts3_0?geo:country=http://data.ozwillo.com/dc/type/geocobg:C%D1%82%D1%80%D0%B0%D0%BD%D0%B0_0/BG&geo:name=+" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">NUTS3s by country</a> (or 
+<a href="/dc/type/geon3bg:%D0%9E%D0%B1%D0%BB%D0%B0%D1%81%D1%82_0?geo:name=+" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">country NUTS3s</a>), and finally 
+<a href="/dc/type/addrpostci:PostalCity_0?addrpostci:nuts3=http://data.ozwillo.com/dc/type/geon3fr:D%C3%A9partement_0/FR/FR-75" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">address cities by NUTS3</a> (
+<a href="/dc/type/addrpostci:PostalCity_0?addrpostci:nuts3=http://data.ozwillo.com/dc/type/geon3bg:%D0%9E%D0%B1%D0%BB%D0%B0%D1%81%D1%82_0/BG/BG-22" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">another example</a>
+), or for some use cases
+<a href="/dc/type/geoci:City_0?geoci:nuts3=http://data.ozwillo.com/dc/type/geon3fr:D%C3%A9partement_0/FR/FR-75&geo:name=+" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">geographical cities by NUTS3</a> 
+(or 
+<a href="/dc/type/dc/type/geocibg:%D0%9D%D0%B0%D1%81%D0%B5%D0%BB%D0%B5%D0%BD%D0%BEM%D0%B5%D1%81%D1%82%D0%BE_0?geoci:nuts3:http://data.ozwillo.com/dc/type/geon3bg:%D0%9E%D0%B1%D0%BB%D0%B0%D1%81%D1%82_0/BG/BG-22&geo:name=+" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">country geographical cities by NUTS3</a>).
+<br/><br/>
+&nbsp;&nbsp;- 
+<a href="/dc/type/dcmp:Project_0/geo_1" class="dclink" onclick="
+javascript:return findDataByType($(this).attr('href'));
+">geo_1</a>
+ - choose city using autocompletion field: 
+<a href="/dc/type/addrpostci:PostalCity_0?geo:name=$fulltextparis+&geo:country=http://data.ozwillo.com/dc/type/geocofr:Pays_0/FR" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">address city by fulltext name and country</a> (
+<a href="/dc/type/addrpostci:PostalCity_0?geo:name=$fulltextСофия+&geo:country=http://data.ozwillo.com/dc/type/geocobg:C%D1%82%D1%80%D0%B0%D0%BD%D0%B0_0/BG" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">another example</a>
+), or for some use cases
+<a href="/dc/type/geoci:City_0?geoci:name=$fulltextparis+&geo:country=http://data.ozwillo.com/dc/type/geocofr:Pays_0/FR" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">geographical city by fulltext name and country</a>.
+<br/><br/>
+&nbsp;&nbsp;- 
+<a href="/dc/type/dcmp:Project_0/org_1" class="dclink" onclick="
+javascript:return findDataByType($(this).attr('href'));
+">org_1</a>
+ - choose org using autocompletion input : 
+<a href="/dc/type/org:Organization_0?org:legalName=$fulltextbonnard+&org:country=http://data.ozwillo.com/dc/type/geocofr:Pays_0/FR" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">orgs by fulltext name in country</a> then 
+<a href="/dc/type/org:Organization_0?org:altName=$fulltextbonnard+&org:country=http://data.ozwillo.com/dc/type/geocofr:Pays_0/FR" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">also by altName in country</a> (must be done in separate requests), or 
+<a href="/dc/type/orgfr:Organisation_0?org:legalName=$fulltextbonnard+" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">country org by fulltext name</a> then 
+<a href="/dc/type/orgfr:Organisation_0?org:altName=$fulltextbonnard+" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">also by altName</a>
+<br/><br/>
+&nbsp;&nbsp;- 
+<a href="/dc/type/dcmp:Project_0/org_1" class="dclink" onclick="
+javascript:return findDataByType($(this).attr('href'));
+">org_1</a>
+ - choose business activity using autocompletion input : 
+<a href="/dc/type/orgact:Activity_0?orgact:label=$fulltextculture+&orgact:country=http://data.ozwillo.com/dc/type/geocofr:Pays_0/FR" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">activity by fulltext name and country</a>
+ or 
+<a href="/dc/type/orgactfr:Activit%C3%A9NAF2008_0?orgact:label=$fulltextculture+" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">country activity by fulltext name</a>
+<br/><br/>
+<a id="#iterate_on_organizations"></a>
+&nbsp;&nbsp;- 
+<a href="/dc/type/dcmp:Project_0/org_1" class="dclink" onclick="
+javascript:return findDataByType($(this).attr('href'));
+">org_1</a>
+ - downloading all business activities to cache them by iterating on @id 
+(easier than on orgact:code which would need to do &gt;= and merge same-code activities 
+of different countries, rather than merely &gt;) : 
+<a href="/dc/type/orgact:Activity_0?limit=100&@id=+" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">first query</a>, 
+then iterate on activities coming after last name returned : 
+<a href="/dc/type/orgact:Activity_0?limit=100&@id=>http://data.ozwillo.com/dc/type/orgactbg:%D0%94%D0%B5%D0%B9%D0%BD%D0%BE%D1%81%D1%82%D0%9A%D0%98%D0%94_0/BG/14.13+" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">second query</a>, 
+<a href="/dc/type/orgact:Activity_0?limit=100&@id=>http://data.ozwillo.com/dc/type/orgactbg:%D0%94%D0%B5%D0%B9%D0%BD%D0%BE%D1%81%D1%82%D0%9A%D0%98%D0%94_0/BG/25.61+" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">third query</a>...
+<br/><br/>
+
+<br/>
+<b>Adopting the Datacore:</b>
+<br/><br/>
 <b>To add your own data</b> using REST calls, you must first define or reuse the appropriate business-specific Models
 <a href="#" title="- 1. provide a denormalized extract of your data, define Models for it, group related fields together in Mixins,
 - 2. define their ID definition policy and link them using resource fields, define referencing mixin fields and default values,
