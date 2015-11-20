@@ -78,19 +78,22 @@ See <a href="#playgroundUserManual">this Playground's user manual below</a> and
 <a href="/dc/type/dcmp:Project_0/geo_1" class="dclink" onclick="
 javascript:return findDataByType($(this).attr('href'));
 ">geo_1</a>
- - list all countries : 
+ - list countries : 
+<a href="/dc/type/geohier:Hierarchical_0" class="dclink" onclick="
+javascript:return findDataByType($(this).attr('href'));
+">countries supported by Ozwillo</a> (Portal etc.), or 
+<a href="/dc/type/geoco:Country_0?geoco:name=+" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">also sorted by name</a>. Or for some use cases 
 <a href="/dc/type/geoco:Country_0" class="dclink" onclick="
 javascript:return findDataByType($(this).attr('href'));
-">countries</a> (actually first 10 countries ; or 
+">any country</a> (actually first 10 countries ; or  
 <a href="/dc/type/geoco:Country_0?limit=100" class="dclink" onclick="
 javascript:return findDataByType($(this).attr('href'));
 ">first 100 countries</a> but beware that limit can't go beyond 100,
-in which case iteration on ex. id or name should be preferred, <a href="#iterateOnOrganizations">see below for organizations</a>), or 
-<a href="/dc/type/geoco:Country_0?geoco:name=+" class="dclink" onclick="
-javascript:return findDataByType(encodeUri($(this).attr('href')));
-">also sorted by name</a>.
+in which case iteration on ex. id or name should be preferred, <a href="#iterateOnOrganizations">see below for organizations</a>).
 <br/><br/>
-NB. from now on, all queries are sorted by the most appropriate field. 
+NB. from now on, all queries are <b>sorted</b> by the most appropriate field. 
 <!-- 
 <br/><br/>
 or more efficiently (getting only their display name with X-Datacore-View=odisp:Displayable_0 header, since no other field is useful to list them) 
