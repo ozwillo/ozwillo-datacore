@@ -19,9 +19,17 @@ Ozwillo Datacore
       
    <!--  cache data resources (freshness checked using ETag) -->
    <cache name="org.springframework.security.oauth2.provider.OAuth2Authentication"
-         maxElementsInMemory="20000" timeToLiveSeconds="3600" overflowToDisk="false" />
-         <!-- NB : access_tokens expire after 3600s ; memoryStoreEvictionPolicy="LRU" is default
-         TODO LATER evict on logout, even when done outside Datacore -->
+         maxElementsInMemory="20000" timeToLiveSeconds="300" overflowToDisk="false" />
+         <!-- NB :
+         - access_tokens expire after 300s. This is an order of magnitude similar to that of
+         a manual IT operation such as revoking a token. It is still enough not to hamper
+         the cache's performance boost in case of ex. mass upload. The 3600s default however
+         would be too much.
+         - memoryStoreEvictionPolicy="LRU" is default
+         TODO LATER also evict on logout, even when done outside Datacore,
+         up to obsolescence on Kernel notification OR re-check cached tokens in a background
+         thread pool (courtesy of @tbroyer : #124 Token cache expiration is way too long & see
+         https://github.com/pole-numerique/oasis-sample-dataprovider-servlets/blob/db7bc2afb0213a0381a8cc16fb39ddc624a725af/src/main/java/oasis/samples/dataprovider/auth/OasisAuth.java#L65-L104 )... -->
    
    <!-- cache all models (they rarely change) -->
    <cache name="TODO DCModel" maxElementsInMemory="5000" eternal="true" overflowToDisk="false" />
