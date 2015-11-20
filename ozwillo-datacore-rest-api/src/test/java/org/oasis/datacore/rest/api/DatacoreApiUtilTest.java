@@ -1,5 +1,6 @@
 package org.oasis.datacore.rest.api;
 
+import java.net.URL;
 import java.net.URLEncoder;
 
 import org.joda.time.DateTime;
@@ -15,6 +16,15 @@ public class DatacoreApiUtilTest {
       String value = "\"Bordeaux&= +.;#~_\"";
       String jdkEncodedValue = "name=" + URLEncoder.encode(value, "UTF-8");
       Assert.assertEquals("JDK and CXF should do same URL encoding", "name=%22Bordeaux%26%3D+%2B.%3B%23%7E_%22", jdkEncodedValue);
+   }
+   
+   @Test
+   public void testUrlEncoding() throws Exception {
+      String unencodedUrlString = "https://data.ozwillo.com/dc/type/geocibg:НаселеноMесто_0?odisp:name=$fulltextСофия&geocibg:есто=есто:есто";
+      URL url = new URL(unencodedUrlString);
+      String urlString = url.toURI().toASCIIString(); // encoded
+      Assert.assertEquals("https://data.ozwillo.com/dc/type/geocibg:%D0%9D%D0%B0%D1%81%D0%B5%D0%BB%D0%B5%D0%BD%D0%BEM%D0%B5%D1%81%D1%82%D0%BE_0"
+            + "?odisp:name=$fulltext%D0%A1%D0%BE%D1%84%D0%B8%D1%8F&geocibg:%D0%B5%D1%81%D1%82%D0%BE=%D0%B5%D1%81%D1%82%D0%BE:%D0%B5%D1%81%D1%82%D0%BE", urlString);
    }
    
    @Test

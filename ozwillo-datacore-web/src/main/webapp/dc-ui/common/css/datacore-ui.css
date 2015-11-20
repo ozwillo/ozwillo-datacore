@@ -9,6 +9,12 @@ a.dclink {
    border:1px solid #777777;
    padding:0px 4px;
 }
+a.dclinkType {
+   background-color:#f8f8f8;
+}
+a.dclinkGreater {
+   background-color:#fcfd98;
+}
 a.dclink:hover {
    background-color:#FFFE55;
 }
