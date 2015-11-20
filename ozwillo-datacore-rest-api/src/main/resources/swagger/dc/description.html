@@ -72,6 +72,8 @@ See <a href="#playgroundUserManual">this Playground's user manual below</a> and
 <br/>
 <b>Most common use cases' queries:</b>
 <br/><br/>
+<u>NB. if some queries fail, please check <a href="#faq">Frequently AskedQuestions</a> first.</u>
+<br/><br/>
 &nbsp;&nbsp;- 
 <a href="/dc/type/dcmp:Project_0/geo_1" class="dclink" onclick="
 javascript:return findDataByType($(this).attr('href'));
@@ -83,7 +85,7 @@ javascript:return findDataByType($(this).attr('href'));
 <a href="/dc/type/geoco:Country_0?limit=100" class="dclink" onclick="
 javascript:return findDataByType($(this).attr('href'));
 ">first 100 countries</a> but beware that limit can't go beyond 100,
-in which case iteration on ex. id or name should be preferred, <a href="#iterate_on_organizations">see below for organizations</a>), or 
+in which case iteration on ex. id or name should be preferred, <a href="#iterateOnOrganizations">see below for organizations</a>), or 
 <a href="/dc/type/geoco:Country_0?geoco:name=+" class="dclink" onclick="
 javascript:return findDataByType(encodeUri($(this).attr('href')));
 ">also sorted by name</a>.
@@ -142,7 +144,10 @@ javascript:return findDataByType(encodeUri($(this).attr('href')));
 ">address city by fulltext name and country</a> (
 <a href="/dc/type/addrpostci:PostalCity_0?geo:name=$fulltextСофия+&geo:country=http://data.ozwillo.com/dc/type/geocobg:C%D1%82%D1%80%D0%B0%D0%BD%D0%B0_0/BG" class="dclink" onclick="
 javascript:return findDataByType(encodeUri($(this).attr('href')));
-">another example</a>
+">another example</a> ; or at worse
+<a href="/dc/type/addrpostci:PostalCity_0?odisp:name=$fulltextparis+&geo:country=http://data.ozwillo.com/dc/type/geocofr:Pays_0/FR" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">by generic display name</a>
 ), or for some use cases
 <a href="/dc/type/geoci:City_0?geoci:name=$fulltextparis+&geo:country=http://data.ozwillo.com/dc/type/geocofr:Pays_0/FR" class="dclink" onclick="
 javascript:return findDataByType(encodeUri($(this).attr('href')));
@@ -165,6 +170,10 @@ javascript:return findDataByType(encodeUri($(this).attr('href')));
 <a href="/dc/type/orgfr:Organisation_0?org:altName=$fulltextbonnard+" class="dclink" onclick="
 javascript:return findDataByType(encodeUri($(this).attr('href')));
 ">also by altName</a>
+(or at worse 
+<a href="/dc/type/org:Organization_0?odisp:name=$fulltextbonnard+&org:country=http://data.ozwillo.com/dc/type/geocofr:Pays_0/FR" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">by generic display name</a>)
 <br/><br/>
 &nbsp;&nbsp;- 
 <a href="/dc/type/dcmp:Project_0/org_1" class="dclink" onclick="
@@ -179,7 +188,7 @@ javascript:return findDataByType(encodeUri($(this).attr('href')));
 javascript:return findDataByType(encodeUri($(this).attr('href')));
 ">country activity by fulltext name</a>
 <br/><br/>
-<a id="#iterate_on_organizations"></a>
+<a id="iterateOnOrganizations"></a>
 &nbsp;&nbsp;- 
 <a href="/dc/type/dcmp:Project_0/org_1" class="dclink" onclick="
 javascript:return findDataByType($(this).attr('href'));
@@ -197,6 +206,22 @@ javascript:return findDataByType(encodeUri($(this).attr('href')));
 <a href="/dc/type/orgact:Activity_0?limit=100&@id=>http://data.ozwillo.com/dc/type/orgactbg:%D0%94%D0%B5%D0%B9%D0%BD%D0%BE%D1%81%D1%82%D0%9A%D0%98%D0%94_0/BG/25.61+" class="dclink" onclick="
 javascript:return findDataByType(encodeUri($(this).attr('href')));
 ">third query</a>...
+<br/><br/>
+
+<br/>
+<a id="faq"></a>
+<b>FAQ:</b>
+<br/><br/>
+&nbsp;&nbsp;- <u>"reached maxScan (300) before document limit"</u> errors (or no return) 
+on "by geo area" queries : ask model designer to add the right indexes (and first to check that 
+said field is there). <u>Workaround</u> : query in country-specific types.
+<br/><br/>
+&nbsp;&nbsp;- <u>"Attempting a fulltext search on a field that is not configured so"</u> errors : 
+ask model designer to enable the right fulltext indexes. <u>Workaround</u> : query on odisp:name.
+<br/><br/>
+&nbsp;&nbsp;- <u>No return from a fulltext search</u> : 
+data can't be returned if it hasn't been saved since enabled for fulltext, so try saving some,
+else ask data provider to do so, possibly in bulk.
 <br/><br/>
 
 <br/>
