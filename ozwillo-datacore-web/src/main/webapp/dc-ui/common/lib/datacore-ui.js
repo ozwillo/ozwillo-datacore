@@ -319,7 +319,7 @@ function toolifyDcResourceFieldAndColon(value, key, modelType, upperResource, ke
    }
    if (key === '@id') { 
       // iteration (for range-based pagination) example :
-      return '"key"'
+      return '"' + key + '"'
          + '<a href="' + buildRelativeUrl(modelType) + '?' + new UriQuery(keyPathInResource.join('.'), '>' + value + '+').s() + '" class="dclink dclinkGreater" onclick="'
          + 'javascript:return findDataByType($(this).attr(\'href\'));'
          + '"> : </a>';
