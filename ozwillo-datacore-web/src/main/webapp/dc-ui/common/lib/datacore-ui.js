@@ -210,7 +210,7 @@
          && matches[matchInd + 1] === 'h';
       var encodedModelType = matches[matchInd + 2];
       var modelType = decodeURIComponent(encodedModelType); // required ; assuming that never contains %
-      // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
+      // NB. modelType should be encoded as URIs, BUT must be decoded before used as GET URI
       // because swagger.js re-encodes
       var encodedId = matches[matchInd + 3];
       var query = matches[matchInd + 4]; // no decoding, else would need to be first split along & and =
@@ -673,7 +673,7 @@ function buildListOfStorageModelLinks(models) {
 // which will be in data._request anyway)
 function findDataByType(relativeUrl, success, error, start, limit, optionalHeaders, handlerOptions) {
    if (typeof relativeUrl === 'string') {
-      // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
+      // NB. modelType should be encoded as URIs, BUT must be decoded before used as GET URI
       // because swagger.js re-encodes
       relativeUrl = parseUri(relativeUrl);
    }
@@ -741,7 +741,7 @@ function findDataByType(relativeUrl, success, error, start, limit, optionalHeade
 // optional : success, error
 function getData(relativeUrl, success, error, optionalHeaders, handlerOptions) {
    if (typeof relativeUrl === 'string') {
-      // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
+      // NB. modelType should be encoded as URIs, BUT must be decoded before used as GET URI
       // because swagger.js re-encodes (for resourceId, per path element because __unencoded__-prefixed per hack)
       relativeUrl = parseUri(relativeUrl);
    }
@@ -811,7 +811,7 @@ function findData(relativeUrl, success, error, start, limit, optionalHeaders, ha
 function getPreviousData(relativeUrl, success, error, optionalHeaders, handlerOptions) {
    var historyUrl;
    if (typeof relativeUrl === 'string') {
-      // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
+      // NB. modelType should be encoded as URIs, BUT must be decoded before used as GET URI
       // because swagger.js re-encodes
        relativeUrl = parseUri(relativeUrl);
    }
@@ -841,7 +841,7 @@ function getPreviousData(relativeUrl, success, error, optionalHeaders, handlerOp
 // optional : success, error
 function postAllDataInType(relativeUrl, resources, success, error, optionalHeaders, handlerOptions) {
    if (typeof relativeUrl === 'string') {
-      // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
+      // NB. modelType should be encoded as URIs, BUT must be decoded before used as GET URI
       // because swagger.js re-encodes
       relativeUrl = parseUri(relativeUrl);
    }
@@ -886,7 +886,7 @@ function postAllDataInType(relativeUrl, resources, success, error, optionalHeade
 // resource's o:version must be up to date
 // optional : success, error
 function deleteDataInType(resource, success, error, optionalHeaders, handlerOptions) {
-   // NB. modelType encoded as URIs should be, BUT must be decoded before used as GET URI
+   // NB. modelType should be encoded as URIs, BUT must be decoded before used as GET URI
    // because swagger.js re-encodes (for resourceId, per path element because __unencoded__-prefixed per hack)
    var parsedUri = parseUri(resource["@id"]);
    setUrl(parsedUri, success);
@@ -1156,6 +1156,15 @@ function addPaginationLinks(request, prettyJson, resList, successFunctionName) {
 
 ///////////////////////////////////////////////////
 // PLAYGROUND ADVANCED BROWSING
+
+function findModel(relativeUrl) {
+   if (typeof relativeUrl === 'string') {
+      // NB. modelType should be encoded as URIs, BUT must be decoded before used as GET URI
+      // because swagger.js re-encodes (for resourceId, per path element because __unencoded__-prefixed per hack)
+      relativeUrl = parseUri(relativeUrl);
+   }
+   return findData(buildUri("dcmo:model_0", relativeUrl.modelType));
+}
 
 function findLinkedData(resourceUri, linkingModelType, queryFieldPath) {
    var parsedUri = parseUri(resourceUri);

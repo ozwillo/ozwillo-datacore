@@ -116,7 +116,8 @@
 <div id=dc-header>
 <div class="dc-ui-wrap">
    <a class="dc-logo" href="http://www.ozwillo.com"></a>
-   <a class="dc-logo-name" href="http://www.ozwillo.com">Datacore API</a>
+   <a class="dc-logo-name" href="http://www.ozwillo.com">Datacore</a>
+   <a class="dc-menu" href="/dc-ui/index.html">Play</a><span class="dc-menu">|</span><a class="dc-menu" href="/dc-ui/import/index.html">Import</a>
    <select id="project" class="dc-ui-project"></select>
    <div class="dc-ui-userinfo" style="margin-top:8px">
       <div class='input' id="userinfo"></div>
@@ -249,15 +250,16 @@ softwares (such as Google Doc's) often breaks files (ex. "true" becomes VRAI, "f
 
 <a id="datacoreResources"></a>
 <div class="dc-import-subtitle">Datacore (<span class="dcConf_baseUrl json dcjsonline">NOT INITED</span>) :</div>
-<span class="json dcjsonline"><input type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 583px" value="/dc/type/dcmo:model_0"></span>
+<span class="json dcjsonline"><input type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 552px" value="/dc/type/dcmo:model_0"></span>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()));">GET</button>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, 50, {'X-Datacore-View':' '});" title="List view (view : empty i.e. minimal : @id, o:version)">l</button>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, 25, {'X-Datacore-View':'dc:DubclinCore_0'});" title="List view (view : dc:DubclinCore_0)">dc</button>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, null, {'X-Datacore-Debug':'true'});" title="Debug / explain query">?</button>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, null, {'Accept':'text/x-nquads'});" title="RDF N-Quads output">RDF</button>
 <button onclick="javascript:return editOrPostData(encodeUri($('.myurl').val()));" id="editOrPost" title="edit data, then post changes">edit</button>
-<button onclick="javascript:return deleteResources(encodeUri($('.myurl').val()));">X</button>
-<button onclick="javascript:return getPreviousData(encodeUri($('.myurl').val()));">H</button>
+<button onclick="javascript:return deleteResources(encodeUri($('.myurl').val()));" title="delete">X</button>
+<button onclick="javascript:return findModel(encodeUri($('.myurl').val()));" title="go to its model">M</button>
+<button onclick="javascript:return getPreviousData(encodeUri($('.myurl').val()));" title="previous version in history if enabled">H</button>
 <!-- button onclick="javascript:return setUrl('');" title="Reset URL">X</button><br/ -->
 <div class="block response_body">
 <a id="mydata"></a><!-- displays a short error message in red -->
