@@ -21,6 +21,7 @@ import org.oasis.datacore.rest.server.event.DCResourceEvent;
 import org.oasis.datacore.rest.server.event.DCResourceEventListener;
 import org.oasis.datacore.rest.server.resource.ResourceEntityMapperService;
 import org.oasis.datacore.rest.server.resource.ResourceException;
+import org.oasis.datacore.rest.server.resource.ResourceNotFoundException;
 import org.oasis.datacore.rest.server.resource.ResourceObsoleteException;
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.sample.ResourceModelIniter;
@@ -251,19 +252,61 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
       for (DCModelBase modelWithImpactedGlobalFields : modelsWithImpactedGlobalFields) {
          new SimpleRequestContextProvider<DCResource>() { // set context project beforehands :
             protected DCResource executeInternal() throws ResourceException {
+               // retry loop if resolvable exception (ex. obsolete) :
+               DCResource existingImpactedModelResource =  null;
+               Exception nonResolvableObsoleteEx = null;
+               int i = 0;
+               for (; i < 100; i++) {
+                  
                try {
                   // getting existing to get its version (required to update it) :
-                  DCResource existingImpactedModelResource = resourceService.getIfVersionDiffers(
+                  existingImpactedModelResource = resourceService.getIfVersionDiffers(
                         mrMappingService.buildModelUri(modelWithImpactedGlobalFields), "dcmo:model_0", -1l);
-                  mrMappingService.modelToResource(modelWithImpactedGlobalFields, existingImpactedModelResource);
+                  long currentVersion = existingImpactedModelResource.getVersion();
+                  mrMappingService.modelToResource(modelWithImpactedGlobalFields,
+                        existingImpactedModelResource); // beware, copies version !
+                  existingImpactedModelResource.setVersion(currentVersion); // otherwise obsolete ex. 89!=91 IN ALL ITERATIONS
                   // TODO LATER check if consistency still valid
                   return resourceService.createOrUpdate(existingImpactedModelResource, "dcmo:model_0", false, true, true);
-               } catch (Exception ex) {
-                  logger.error("Unknown error while repersisting model with impacted global fields "
+                  
+               } catch (ResourceNotFoundException ex) {
+                  logger.error("ResourceNotFoundException (ex. bad project though that should not happen here anymore) "
+                        + "while repersisting model with impacted global fields "
                         + modelWithImpactedGlobalFields.getAbsoluteName() + " by change in model "
                         + modelOrMixin.getAbsoluteName(), ex);
                   return null;
+               } catch (ResourceObsoleteException ex) {
+                  nonResolvableObsoleteEx = ex;
+                  String msg = "ResourceObsoleteException (" + existingImpactedModelResource.getVersion()
+                        + "!=" + resourceService.getIfVersionDiffers(mrMappingService
+                              .buildModelUri(modelWithImpactedGlobalFields), "dcmo:model_0", -1l).getVersion()
+                        + ") while repersisting model with impacted global fields "
+                        + modelWithImpactedGlobalFields.getAbsoluteName() + " by change in model "
+                        + modelOrMixin.getAbsoluteName() + " (try " + i + ")";
+                  logger.error(msg);
+                  // let's try again in another loop iteration
+               } catch (AccessDeniedException ex) {
+                  String msg = "AccessDeniedException ex. frozen model (or duplicate gotten "
+                        + "from wrong project i.e. implict fork though that should not happen here anymore) "
+                        + "while repersisting model with impacted global fields "
+                        + modelWithImpactedGlobalFields.getAbsoluteName() + " by change in model "
+                        + modelOrMixin.getAbsoluteName();
+                  logger.error(msg, ex);
+                  throw new RuntimeException(msg, ex);
+               } catch (Exception ex) {
+                  String msg = "Unknown error while repersisting model with impacted global fields "
+                        + modelWithImpactedGlobalFields.getAbsoluteName() + " by change in model "
+                        + modelOrMixin.getAbsoluteName();
+                  logger.error(msg, ex);
+                  throw new RuntimeException(msg, ex);
                }
+               
+               }
+               String msg = "ResourceObsoleteException while repersisting model with impacted global fields "
+                     + modelWithImpactedGlobalFields.getAbsoluteName() + " by change in model "
+                     + modelOrMixin.getAbsoluteName() + " after " + i + " tries";
+               logger.error(msg, nonResolvableObsoleteEx);
+               throw new RuntimeException(msg, nonResolvableObsoleteEx);
             }
          }.execInContext(new ImmutableMap.Builder<String, Object>()
                .put(DCRequestContextProvider.PROJECT, modelWithImpactedGlobalFields.getProjectName()).build());
