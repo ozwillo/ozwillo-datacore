@@ -465,7 +465,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       } // else TODO if warnings return them as response header ?? or only if failIfWarningsMode ??
 
       entityModelService.addMultiProjectStorageCriteria(
-            queryParsingContext.getCriteria(), queryParsingContext.peekStorageModel(), null); // storageModel
+            queryParsingContext.getCriteria(), queryParsingContext.peekStorageModel()); // storageModel
       addResourceLevelSecurityIfRequired(queryParsingContext);
       // NB. no guest specific case (groups ex. EVERYONE must be given to guest
       // and allowed on models or resources)

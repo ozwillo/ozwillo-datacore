@@ -49,9 +49,11 @@ public interface EntityService {
     * @param dcModel
     * @return
     * @throws NonTransientDataAccessException other, unexpected storage error
+    * @throws EntityException when implicit only fork (several entities with the same uri).
+    * To convert to ResourceException / HTTP 400.
     */
    @PostAuthorize("hasPermission(returnObject, 'read')")
-   DCEntity getByUri(String uri, DCModelBase dcModel) throws NonTransientDataAccessException;
+   DCEntity getByUri(String uri, DCModelBase dcModel) throws NonTransientDataAccessException, EntityException;
 
    /**
     * Unprotected read to be used only for update purpose (to get ex. right ACL lists) ;
@@ -61,8 +63,10 @@ public interface EntityService {
     * @param dcModel
     * @return
     * @throws NonTransientDataAccessException
+    * @throws EntityException from getUri() when implicit only fork (several entities with the same uri).
+    * To convert to ResourceException / HTTP 400.
     */
-   DCEntity getByUriUnsecured(String uri, DCModelBase dcModel) throws NonTransientDataAccessException;
+   DCEntity getByUriUnsecured(String uri, DCModelBase dcModel) throws NonTransientDataAccessException, EntityException;
    
    /**
     * Used for more efficient If-None-Match=versionETag conditional GET :
@@ -74,8 +78,11 @@ public interface EntityService {
     * @param version
     * @return null if given version matches
     * @throws NonTransientDataAccessException other, unexpected storage error
+    * @throws EntityException from getUri() (not called if no entity with this uri and version
+    * across visible projects) when implicit only fork (several entities with the same uri).
+    * To convert to ResourceException / HTTP 400.
     */
-   boolean isUpToDate(String uri, DCModelBase dcModel, Long version) throws NonTransientDataAccessException;
+   boolean isUpToDate(String uri, DCModelBase dcModel, Long version) throws NonTransientDataAccessException, EntityException;
 
    /**
     * Updates given entity.
@@ -95,12 +102,10 @@ public interface EntityService {
          NonTransientDataAccessException;
 
    /**
-    * Deletes given entity having given version.
+    * Deletes given entity (with same uri, version & project).
     * NB. deleting a non-existing resource does silently nothing.
-    * TODO rights
-    * @param uri
-    * @param version
-    * @param dcModel
+    * TODO LATER dedicated rights permission ?
+    * @param dataEntity MUST have been retrieved from same current project
     * @throws NonTransientDataAccessException other, unexpected storage error
     */
    @PreAuthorize("hasPermission(#dataEntity, 'write')")

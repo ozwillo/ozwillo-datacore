@@ -21,7 +21,7 @@ public class DCEntity extends DCEntityBase {
       super(dcEntity);
    }
 
-   /** enable @Version-based optimistic locking */
+   /** enable @Version-based optimistic locking NO DOES NOT WORK AT LEAST FOR remove() */
    @Version
    public Long getVersion() {
       return super.getVersion();

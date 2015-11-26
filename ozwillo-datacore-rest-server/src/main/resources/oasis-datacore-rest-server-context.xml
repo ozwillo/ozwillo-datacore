@@ -180,8 +180,13 @@
             <property name="addMessageToResponse" value="true"/>
          </bean -->
          <bean class="org.oasis.datacore.rest.server.security.AccessDeniedExceptionMapper"/><!-- to HTTP 403 -->
-         <bean class="com.fasterxml.jackson.jaxrs.base.JsonParseExceptionMapper"/><!-- to get HTTPP 400 rather than 500 error
-         when malformed JSON http://stackoverflow.com/questions/17109405/jax-rs-exception-handling http://markmail.org/message/3bgzqq7ewgtxauh2 -->
+         <bean class="org.oasis.datacore.server.rest.core.EntityExceptionMapper"/><!-- EntityException to HTTP 400 
+         (rather than 500 error) when entity pb that should be thrown all the way up
+         & solved at resource level, ex. when implicit only fork.
+         TODO LATER OPT also for other core (DuplicateKey ?) & server (all in DatacoreApiImpl) exceptions -->
+         <bean class="com.fasterxml.jackson.jaxrs.base.JsonParseExceptionMapper"/><!-- to get HTTPP 400
+         (rather than 500 error) when malformed JSON, see
+         http://stackoverflow.com/questions/17109405/jax-rs-exception-handling http://markmail.org/message/3bgzqq7ewgtxauh2 -->
          
          <!-- swagger dynamic spec server, for apidoc : -->
          <ref bean="swagger.resourceWriter" />

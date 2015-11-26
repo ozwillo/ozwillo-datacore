@@ -296,11 +296,23 @@ public class EntityModelService {
       return visibleProjectNames;
    }
    
-   /** shared between entity and LDP query services */
+   /** In visible project names ACCORDING TO THIS URI (if forked, will hide some)
+    * Shared between entity and LDP query services */
    public void addMultiProjectStorageCriteria(Criteria criteria, DCModelBase storageModel, String uri) {
       // TODO handle uri null i.e. LDP query case, using $first aggregation on _uri sorted by _b
       if (storageModel.isMultiProjectStorage() && !disableMultiProjectStorageCriteriaForTesting) {
          criteria.and(DCEntity.KEY_B).in(this.getVisibleProjectNames(uri));
+      } // (else forkedUris would have been handled in project.get(Storage)Model())
+   }
+   /** in all visible project names (same as no uri) */
+   public void addMultiProjectStorageCriteria(Criteria criteria, DCModelBase storageModel) {
+      addMultiProjectStorageCriteria(criteria, storageModel, (String) null);
+   }
+   /** in EXACT same project
+    * (i.e. dataEntity MUST have been retrieved from same current project) */
+   public void addMultiProjectStorageCriteria(Criteria criteria, DCModelBase storageModel, DCEntity dataEntity) {
+      if (storageModel.isMultiProjectStorage() && !disableMultiProjectStorageCriteriaForTesting) {
+         criteria.and(DCEntity.KEY_B).is(dataEntity.getProjectName());
       } // (else forkedUris would have been handled in project.get(Storage)Model())
    }
 

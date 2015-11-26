@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.joda.time.DateTime;
 import org.oasis.datacore.core.entity.model.DCEntity;
@@ -88,7 +89,8 @@ public class EntityServiceImpl implements EntityService {
     * @see org.oasis.datacore.core.entity.DCEntityService#getByUri(java.lang.String, org.oasis.datacore.core.meta.model.DCModel)
     */
    @Override
-   public DCEntity getByUri(String uri, DCModelBase dcModel) throws NonTransientDataAccessException {
+   public DCEntity getByUri(String uri, DCModelBase dcModel)
+         throws NonTransientDataAccessException, EntityException {
       DCModelBase storageModel = entityModelService.getStorageModel(dcModel);
       // (explodes if none or it URI has been forked below)
       String collectionName = storageModel.getCollectionName(); // TODO for view Models or weird type names ?!?
@@ -97,16 +99,27 @@ public class EntityServiceImpl implements EntityService {
       //entityService.findById(uri, type/collectionName); // TODO
       //dataEntity = dataRepo.findOne(uri); // NO can't be used because can't specify collection
       //dataEntity = mgo.findById(uri, DCEntity.class, collectionName);
-      DCEntity dataEntity = mgo.findOne(new Query(criteria) , DCEntity.class, collectionName);
-
-      if (dataEntity != null) {
-         entityModelService.fillDataEntityCaches(dataEntity, dcModel, storageModel, null); // TODO def
+      List<DCEntity> entitiesFound = mgo.find(new Query(criteria) , DCEntity.class, collectionName);
+      switch (entitiesFound.size()) {
+      case 0:
+         return null;
+      case 1:
+         break;
+      default:
+         throw new EntityException("Can't get Resource, more than one with same URI "
+               + uri + " (in projects " + entitiesFound.stream()
+               .map(e -> e.getProjectName()).collect(Collectors.toList())
+               + "): has been forked implicitly, should also be forked explicitly "
+               + "(add it in its project's dcmp:forkedUris)");
       }
+      DCEntity dataEntity = entitiesFound.get(0);
+      entityModelService.fillDataEntityCaches(dataEntity, dcModel, storageModel, null); // TODO def
       return dataEntity;
    }
 
    @Override
-   public DCEntity getByUriUnsecured(String uri, DCModelBase dcModel) throws NonTransientDataAccessException {
+   public DCEntity getByUriUnsecured(String uri, DCModelBase dcModel)
+         throws NonTransientDataAccessException, EntityException {
       return getByUri(uri, dcModel);
    }
    
@@ -115,9 +128,12 @@ public class EntityServiceImpl implements EntityService {
     */
    @Override
    public boolean isUpToDate(String uri, DCModelBase dcModel, Long version)
-         throws NonTransientDataAccessException {
+         throws NonTransientDataAccessException, EntityException {
+      return getIfUpToDate(uri, dcModel, version) != null;
+   }
+   private DCEntity getIfUpToDate(String uri, DCModelBase dcModel, Long version) {
       if (version == null || version < 0) {
-         return false;
+         return null;
       }
 
       DCModelBase storageModel = entityModelService.getStorageModel(dcModel);
@@ -129,7 +145,14 @@ public class EntityServiceImpl implements EntityService {
       //dataEntity = mgo.findById(uri, DCEntity.class, collectionName);
       long count = mgo.count(new Query(criteria), collectionName);
       // NB. efficient because should not be more than 1 ; or TODO LATER or better execute ?
-      return count != 0;
+      if (count == 0) {
+         return null;
+      }
+      
+      // must first check for possible implicit only fork :
+      return this.getByUri(uri, dcModel); // will explode in this case
+      // (actually unsecured since called from the same place)
+      // (not using mgo.count() otherwise no info about which projects it has been forked in)
    }
 
    /* (non-Javadoc)
@@ -158,19 +181,19 @@ public class EntityServiceImpl implements EntityService {
     * @see org.oasis.datacore.core.entity.DCEntityService#deleteByUriId(java.lang.String, long, org.oasis.datacore.core.meta.model.DCModel)
     */
    @Override
-   public void deleteByUriId(DCEntity dataEntity) throws NonTransientDataAccessException {
+   public void deleteByUriId(DCEntity dataEntity) throws NonTransientDataAccessException, EntityException {
 
       DCModelBase storageModel = entityModelService.getStorageModel(dataEntity);
       String collectionName = storageModel.getCollectionName(); // TODO for view Models or weird type names ?!?
       
-      // NB. could first check 1. that uri exists & has version and 2. user has write rights
+      // NB. could first check that uri exists & has version
       // and fail if not, but in Mongo & REST spirit it's enough to merely ensure that
       // it doesn't exist at the end
       
-      Criteria criteria = Criteria.where(DCEntity.KEY_URI).is(dataEntity.getUri()).and(DCEntity.KEY_V).is(dataEntity.getVersion())
-            /*.and("_w").in(currentUserRoles)*/;
-      entityModelService.addMultiProjectStorageCriteria(criteria, storageModel, dataEntity.getUri());
-      mgo.remove(new Query(criteria), collectionName); // TODO wouldn't spring data ensures atomically same version ??
+      Criteria criteria = Criteria.where(DCEntity.KEY_URI).is(dataEntity.getUri()).and(DCEntity.KEY_V).is(dataEntity.getVersion());
+      entityModelService.addMultiProjectStorageCriteria(criteria, storageModel, dataEntity); // in EXACT same project
+      mgo.remove(new Query(criteria), collectionName);
+      // NB. NOT remove(dataEntity) which DOESN'T check version through Spring Data @Version !!!! (tested)
       // NB. obviously won't conflict / throw MongoDataIntegrityViolationException
       
       // NB. for proper error handling, we use WriteConcerns that ensures that errors are raised,
