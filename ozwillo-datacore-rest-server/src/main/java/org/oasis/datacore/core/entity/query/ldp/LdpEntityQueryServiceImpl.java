@@ -754,20 +754,21 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          // or even Model (type(s), fields)...
          // TODO constants
          Map<String, Object> debugCtx = serverRequestContext.getDebug(); // never null because isDebug()
+         debugCtx.put("collectionName", cursorProvider.getCursorPrepared().getCollection().getName());
          debugCtx.put("mongoQuery", cursorProvider.getCursorPrepared().getQuery());
          debugCtx.put("springMongoQuery", springMongoQuery);
          debugCtx.put(DEBUG_QUERY_EXPLAIN, cursorProvider.getQueryExplain());
          debugCtx.put("sortExplain", cursorProvider.getCursorPrepared().explain());
+         // NB. sort explain is end cursor explain if sort (but we always sort, at worst on _chAt)
+         debugCtx.put("mongoIndexes", cursorProvider.getCursorPrepared().getCollection().getIndexInfo());
          debugCtx.put("hasNoIndexedField", queryParsingContext.isHasNoIndexedField());
          debugCtx.put("maxScan", maxScan);
          // NB. can't get special so adding maxScan
          debugCtx.put("options", cursorProvider.getCursorPrepared().getOptions());
-         debugCtx.put("collectionName", cursorProvider.getCursorPrepared().getCollection().getName());
+         // NB. queryOptions = cursorTailable, slaveOk, oplogReplay, noCursorTimeout, awaitData, exhaust http://api.mongodb.org/cplusplus/1.5.4/namespacemongo.html
          debugCtx.put("readPreference", cursorProvider.getCursorPrepared().getReadPreference());
          debugCtx.put("serverAddress", cursorProvider.getCursorPrepared().getServerAddress());
          debugCtx.put(DEBUG_WARNINGS, queryParsingContext.getWarnings());
-         // NB. sort explain is end cursor explain if sort (but we always sort, at worst on _chAt)
-         //explainCtx.put("httpQuery", exchange.get("dc.query.httpQuery"))
          //explainCtx.put("parsedQuery", exchange.get("dc.query.parsedQuery")
       }
 
