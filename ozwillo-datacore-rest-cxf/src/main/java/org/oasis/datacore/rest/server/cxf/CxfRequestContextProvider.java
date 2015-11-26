@@ -26,26 +26,37 @@ public class CxfRequestContextProvider extends CxfJaxrsApiProvider implements DC
    @Override
    public Map<String, Object> getRequestContext() {
       Map<String, Object> existingLocalRequestContext = SimpleRequestContextProvider.getSimpleRequestContext();
+      
       Exchange exchange = this.getExchange();
       if (exchange != null) { // REST !
          ArrayList<Map<String,Object>> fallbacks = new ArrayList<Map<String,Object>>(2);
-         if (exchange.getInMessage() != null) {
-            fallbacks.add(exchange.getInMessage()); // case of server in request
-         } else if (exchange.getOutMessage() != null) {
-            fallbacks.add(exchange.getOutMessage()); // case of client out request
+         
+         if (exchange.getOutMessage() != null) {
+            // stack order from top : (exchange then) outMessage, existingLocalRequestContext if exists
+            fallbacks.add(exchange.getOutMessage()); // case of client out request being built ((or server out response being built))
+            // such as in ContextClientOutInterceptor setting view, project, debug... in REST client
+            // so that REST server can use them as was set by REST client app user
+            if (existingLocalRequestContext != null // ex. in REST server
+                  && !existingLocalRequestContext.isEmpty()) {
+               fallbacks.add(existingLocalRequestContext); // case of server in request ((or client in response being built))
+            }
+            return new MapWithReadonlyFallbacks<String,Object>(exchange, fallbacks);
+            
+         } else if (exchange.getInMessage() != null) {
+            // stack order from top : existingLocalRequestContext if exists, (exchange then) inMessage
+            if (existingLocalRequestContext != null // ex. in REST server
+                  && !existingLocalRequestContext.isEmpty()) {
+               fallbacks.add(exchange);
+               fallbacks.add(exchange.getInMessage()); // case of server in request ((or client in response being built))
+               return new MapWithReadonlyFallbacks<String,Object>(existingLocalRequestContext, fallbacks);
+            } else {
+               fallbacks.add(exchange.getInMessage());
+               return new MapWithReadonlyFallbacks<String,Object>(exchange, fallbacks);
+            }
          }
          
-         // stack on top of existing context if any :
-         if (existingLocalRequestContext != null // ex. in REST server
-               && !existingLocalRequestContext.isEmpty()) {
-            fallbacks.add(existingLocalRequestContext); // ex. in REST client, so that
-            // ContextClientOutInterceptor can set view (& project, debug) to use
-            // by REST server as was set by REST client app user
-         }
-         
-         // NB. at least one of those will be not null, the way CXF works
-         // and only one (unless done in (ClientIn or ServerOut) Response interceptor, which it is not for)
-         return new MapWithReadonlyFallbacks<String,Object>(exchange, fallbacks);
+         // at least one of those will be not null, the way CXF works
+         throw new RuntimeException("CXF exchange but both in & out messages are null" + exchange.toString());
       } // else not REST
       
       if (existingLocalRequestContext == null && SimpleRequestContextProvider.shouldEnforce()) {
