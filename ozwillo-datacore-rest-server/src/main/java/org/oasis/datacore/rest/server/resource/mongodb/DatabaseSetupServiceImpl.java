@@ -355,11 +355,11 @@ public class DatabaseSetupServiceImpl implements DatabaseSetupService {
          break;
       default:
          if (globalField.getQueryLimit() > 0) {
-            if (globalField.isFulltext()) {
-               requiredIndexes.add("_p." + DCField.FULLTEXT_FIELD_NAME + ".v"); // in case not yet ; NB. name guarded against in DCField & mappingService
-               // TODO support subresources, OPT compound index on l
-            }
             requiredIndexes.add(prefixWithoutDot);
+         }
+         if (globalField.isFulltext()) {
+            requiredIndexes.add("_p." + DCField.FULLTEXT_FIELD_NAME + ".v"); // in case not yet ; NB. name guarded against in DCField & mappingService
+            // TODO support subresources, OPT compound index on l
          }
          break;
       }
