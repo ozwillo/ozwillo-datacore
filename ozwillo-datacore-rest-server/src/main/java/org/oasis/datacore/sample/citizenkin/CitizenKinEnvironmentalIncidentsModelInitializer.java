@@ -32,7 +32,7 @@ public class CitizenKinEnvironmentalIncidentsModelInitializer extends DatacoreSa
     /** overriden to stay as before in oasis.main */
     @Override
     protected DCProject getProject() {
-       return projectInitService.getMainProject();
+       return projectInitService.getCitizenKinProject();
     }
 
 
