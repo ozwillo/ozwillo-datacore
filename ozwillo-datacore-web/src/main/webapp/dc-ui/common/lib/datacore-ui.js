@@ -1177,7 +1177,7 @@ function findLinkedData(resourceUri, linkingModelType, queryFieldPath) {
    ///var depth = queryFieldPath.split('.').length - 2; // 0 for dcmo:globalFields.dcmf:resourceType
    var isModel = parsedUri.modelType.indexOf('dcmo:model_') === 0;
    if (isModel) { // lookup instances in this model :
-      findDataByType({ modelType : parsedUri.id }); // NB. works even if not storage thanks to polymorphism
+      findDataByType({ modelType : parsedUri.id }, null, null, null, 100); // NB. works even if not storage thanks to polymorphism
    } else { // lookup models linking to this one and display them and their resources :
       var linkedModelUrl = { modelType : 'dcmo:model_0', query : new UriQuery(
          'dcmo:globalFields.' + queryFieldPath + 'dcmf:resourceType', linkingModelType).s() };
@@ -1190,8 +1190,8 @@ function findLinkedData(resourceUri, linkingModelType, queryFieldPath) {
             getData(parsedUri, function(linkedResource) {
                displayModelAndResourceLinks(linkedResource, parsedUri, queryFieldPath, linkingModelType,
                      topLevelLinkingModelResources, topLevelListLinkingModelResources);
-            });
-         },null,null,100);
+            }, null, null, 100);
+         }, null, null, 100);
          // TODO LATER anyway, it doesn't handle all list + field combinations ex. list.field.field,
          // so thinkg of more queriable storage for models ex. to allow to query fields at every depth :
          // ex. (additional) per field collection entity with materialized path in mongo, or relational database, or (db'd, collaborative) EMF, or triplestore !!
@@ -1201,7 +1201,7 @@ function findLinkedData(resourceUri, linkingModelType, queryFieldPath) {
             displayModelAndResourceLinks(linkedResource, parsedUri, linkingModelType,
                   topLevelLinkingModelResources, [], depth);
          });*/
-      });
+      }, null, null, 100);
       // NB. for subresources : models having this one as mixin can be found by ":" on @type
       // TODO LATER also on dcmo:globalFields.dcmf:mapFields.dcmf:resourceType for top level maps' fields...
    }
