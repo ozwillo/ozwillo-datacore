@@ -13,28 +13,35 @@ About Ozwillo Datacore
 
 Ozwillo Datacore is a Cloud of shared Open Linked Data.
 
-Its goal is cross-business data collaboration and integration. By linking data from different business together, it allows to create value by developing new Ozwillo services on top of it.
+Its goal is cross-business data collaboration and integration. By linking data from different business together, it allows creating value by developing new Ozwillo services on top of it.
 
 To interact and scale up, it uses Web technologies (HTTP REST API, OAuth2) and architecture (sharding and replication, client-side caching).
 To achieve data model flexibility, it follows Semantic Web principles ("almost" W3C JSON-LD compatible), but curbed to fit real world constraints.
 
 Features
-   * HTTP REST API for sharing data, with OAuth2 authentication and client-side caching
-   * W3C JSON-LD-like data Resource representation, as well as RDF (nquads, turtle)
-   * W3C LDP-inspired query filters
-   * JSON Schema-like data models with Model (primary) and Mixin (reusable) types. Models are the place where collaboration on data happens. Supported field types are string, boolean, int, float, long, double, date (ISO8601), map, list, i18n (optimized for search on value only), resource (i.e. link).
-   * scalable MongoDB storage (sharded cluster ready), Java server (Apache CXF / Spring)
-   * Rights (readers, writers, owners) at Resource, Model and business (Scope) levels, with query optimization
+   * HTTP REST API for sharing data, with OAuth2 authentication, client-side caching and Entity Tag-based optimistic locking
+   * W3C JSON-LD-like data Resource representation, as well as RDF (nquads, turtle). Views allow outputting less fields.
+   * W3C LDP-inspired query filters (logical operators including "between", regex, fulltext, pagination, MongoDB-inspired operators, capped)
+   * scalable MongoDB storage (replicated, sharded cluster-ready), Java server (Apache CXF 3 / Spring 3)
+   * JSON Schema-like data models with Model (primary) and Mixin (reusable) types. Models are the place where collaboration on data happens.
+   * Supported field types are string, boolean, int, float, long, double, date (ISO8601), map, list, i18n (optimized for search on value only), resource (i.e. link).
+   * Similar models inheriting from the same storage model are stored in it and can be queried together. Fields may be indexed, fulltext, aliased, readonly, required, have a default value. Along with Mixins and Views, it allows multiple point of views.
+   * Models and Projects (business sets of Models and their Resources) are themselves stored as Resources and can be updated live using Datacore API. Models (and therefore also individual Resources) can be forked in order to try out new versions of them, without hampering query performance thanks to a single multi-project storage of Models.
+   * Rights (readers, writers, owners) at Resource, Mixin (View), Model and Project levels, with query optimization
    * Historization, allowing a posteriori moderation
-   * Approvable changes, up to Contributions (merging Resources from other similar Models)
-   * Client libraries : CXF3/Spring3/Java, Spring4/Java (Portal's), Javascript (swagger.js), and all languages that Swagger generates to (see corresponding projects)
-   * Online API Playground, documentation and data browsing tool
-   * Online model & data Import tool
-   * and more upcoming : see [Roadmap](https://github.com/ozwillo/ozwillo-datacore/issues)
+   * Approvable changes (a priori moderation), up to Contributions (merging Resources from other similar Models)
+   * Client libraries (see details below) : CXF3/Spring3/Java, Spring4/Java (Portal's), Javascript (swagger.js), and all languages that Swagger generates to (see corresponding Swagger projects).
+   
+Tools
+   * Online API Playground. Features documentation, live business as well as technical examples, sandbox, drill down and (back) links browsing, thanks to a data Resource management tool that also allows managing Projects, Models and their governance (rights, Model freeze). Also allows explaining queries execution, including showing owned Resources as stored even if obsolete. Besides, features a developer-only technical REST Playground (Swagger UI).
+   * Online model & data Import tool. Input is CSV files, which allows easy refactoring. Supports bulk import up to thousands of fields and Resources, detailed error output, rePOST on conflict, skip when forbidden, all field types (including multiple language import), all model features save for rights definition, URI generation out of ID fields including links, computation of ancestors out of those, auto & ID-based & query-based linking, Javascript field generation including random.
+   
+See [Roadmap](https://github.com/ozwillo/ozwillo-datacore/issues) for upcoming features.
 
 Team
    * Design & Development of v1 : Marc Dutoo, Open Wide - http://www.openwide.fr
    * Authentication, Historization, Rights API, Contributions : Aurélien Giraudon, Open Wide - http://www.openwide.fr
+   * first versions of : Riemann-based monitoring / client, debug param, i18n & jsonld, puppet v0 : Victor Voisin, Open Wide - http://www.openwide.fr
 
 License : Affero GPL3, except for client libraries which are LGPL3
 
@@ -76,9 +83,9 @@ Use the JSON/HTTP client of your own business application's platform and / or of
 
 Here are such clients that might help you :
 
-- A **Java proxy-like cached client built on the CXF service engine** is provided by the ozwillo-datacore-rest-cxf subproject. Use it by [loading its Spring](https://github.com/ozwillo/ozwillo-datacore/blob/master/ozwillo-datacore-rest-cxf/src/main/resources/ozwillo-datacore-rest-client-context.xml) and injecting DatacoreCachedClient using ```@Autowired private DatacoreCachedClient datacoreApi;``` like done in [this test](https://github.com/ozwillo/ozwillo-datacore/blob/master/ozwillo-datacore-rest-cxf/src/test/java/org/ozwillo/datacore/rest/api/client/DatacoreApiCXFClientTest.java).
+- A **Java JAXRS 2 proxy-like cached client built on the CXF service engine** is provided by the [ozwillo-datacore-rest-cxf](https://github.com/ozwillo/ozwillo-datacore/blob/master/ozwillo-datacore-rest-cxf) subproject. Use it by [loading its Spring](https://github.com/ozwillo/ozwillo-datacore/blob/master/ozwillo-datacore-rest-cxf/src/main/resources/oasis-datacore-rest-client-context.xml) and injecting DatacoreCachedClient using ```@Autowired private DatacoreCachedClient datacoreApi;``` like done in [this test](https://github.com/ozwillo/ozwillo-datacore/blob/master/ozwillo-datacore-rest-cxf/src/test/java/org/oasis/datacore/rest/api/client/DatacoreApiCXFClientTest.java).
 
-- A **simpler Java client built on Spring 4 with REST Template** is provided, along with a similar Kernel client, by the [ozwillo-java-spring-integration](https://github.com/ozwillo/ozwillo-java-spring-integration) top-level project. See how the portal [uses it to query geographical Resource](https://github.com/ozwillo/ozwillo-portal/blob/master/portal-parent/ozwillo-portal-front/src/main/java/org/ozwillo_eu/portal/core/mongo/dao/geo/GeographicalAreaCache.java#L226) and [how he configures it](https://github.com/ozwillo/ozwillo-portal/blob/master/portal-parent/ozwillo-portal-front/src/main/resources/application.yml#L88).
+- A **simpler Java client built on Spring 4 with REST Template** is provided, along with a similar Kernel client, by the [ozwillo-java-spring-integration](https://github.com/ozwillo/ozwillo-java-spring-integration) top-level project. See how the portal [uses it to query geographical Resource](https://github.com/ozwillo/ozwillo-portal/blob/master/portal-parent/ozwillo-portal-front/src/main/java/org/oasis_eu/portal/core/mongo/dao/geo/GeographicalAreaCache.java#L226) and [how it configures it](https://github.com/ozwillo/ozwillo-portal/blob/master/portal-parent/ozwillo-portal-front/src/main/resources/application.yml#L88).
 
 - If it doesn't suit you, **other Java service engines** (such as Jersey, RESTEasy) may be used in similar fashion, though some features (HTTP ETag-based caching, generic query request) require developing interceptors / handlers / filters. Otherwise, the **Java JAXRS web client** works well with the DatacoreApi and allows to do everything, though it is a bit more "barebone".
 
@@ -90,7 +97,7 @@ Here are such clients that might help you :
     ...
     datacoreSwaggerApi.apis.city.findDataInType({type:"sample.city.city", name:"London"},  successCallback);
 
-or jQuery [like Citizen Kin does](https://github.com/pole-numerique/oasis-citizenkin/blob/master/oasis-citizenkin-parent/oasis-citizenkin-webapp-back/src/main/webapp/WEB-INF/jsp/permissions.jsp) :
+or jQuery [like Citizen Kin did at some time](https://github.com/pole-numerique/oasis-citizenkin/blob/master/oasis-citizenkin-parent/oasis-citizenkin-webapp-back/src/main/webapp/WEB-INF/jsp/permissions.jsp) :
 
     $.get(datacoreRestClientBaseurl + "dc/type/sample.citizenkin.user" + "?lastName=" + encodeURIComponent("Smith"), callback))
 
