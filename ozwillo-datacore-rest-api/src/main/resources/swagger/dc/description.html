@@ -5,7 +5,7 @@
 
 <span style="font-weight:bold; font-size:120%; color:red;">
 THIS PLAYGROUND DOESN'T WORK WELL ON CHROME, USE FIREFOX INSTEAD
-(<a href="https://github.com/pole-numerique/oasis-datacore/issues/107">#107</a>)</span>
+(<a href="https://github.com/ozwillo/ozwillo/issues/107">#107</a>)</span>
 <br/>
 <br/>
 
@@ -148,11 +148,11 @@ javascript:return findDataByType(encodeUri($(this).attr('href')));
 ">address city by fulltext name and country</a> (
 <a href="/dc/type/addrpostci:PostalCity_0?geo:name=$fulltextСофия+&geo:country=http://data.ozwillo.com/dc/type/geocobg:C%D1%82%D1%80%D0%B0%D0%BD%D0%B0_0/BG" class="dclink" onclick="
 javascript:return findDataByType(encodeUri($(this).attr('href')));
-">another example</a> ; or at worse
+">another example</a> ; however it has been disabled on 
 <a href="/dc/type/addrpostci:PostalCity_0?odisp:name=$fulltextparis+&geo:country=http://data.ozwillo.com/dc/type/geocofr:Pays_0/FR" class="dclink" onclick="
 javascript:return findDataByType(encodeUri($(this).attr('href')));
-">by generic display name</a>
-), or for some use cases
+">generic display name</a>
+to avoid finding its cities when looking for a province), or for some use cases
 <a href="/dc/type/geoci:City_0?geoci:name=$fulltextparis+&geo:country=http://data.ozwillo.com/dc/type/geocofr:Pays_0/FR" class="dclink" onclick="
 javascript:return findDataByType(encodeUri($(this).attr('href')));
 ">geographical city by fulltext name and country</a>.
@@ -174,10 +174,10 @@ javascript:return findDataByType(encodeUri($(this).attr('href')));
 <a href="/dc/type/orgfr:Organisation_0?org:altName=$fulltextbonnard+" class="dclink" onclick="
 javascript:return findDataByType(encodeUri($(this).attr('href')));
 ">also by altName</a>
-(or at worse 
+(however it has been disabled on 
 <a href="/dc/type/org:Organization_0?odisp:name=$fulltextbonnard+&org:country=http://data.ozwillo.com/dc/type/geocofr:Pays_0/FR" class="dclink" onclick="
 javascript:return findDataByType(encodeUri($(this).attr('href')));
-">by generic display name</a>)
+">generic display name</a>)
 <br/><br/>
 &nbsp;&nbsp;- 
 <a href="/dc/type/dcmp:Project_0/org_1" class="dclink" onclick="
@@ -226,6 +226,16 @@ ask model designer to enable the right fulltext indexes. <u>Workaround</u> : que
 &nbsp;&nbsp;- <u>No return from a fulltext search</u> : 
 data can't be returned if it hasn't been saved since enabled for fulltext, so try saving some,
 else ask data provider to do so, possibly in bulk.
+<br/><br/>
+&nbsp;&nbsp;- <u>Access Denied</u> : 
+maybe you're trying to write from another project than this Resource's, or to write a frozen model 
+(see its project's dcmp:frozenModelNames).
+<br/><br/>
+&nbsp;&nbsp;- <u>"Can't get Resource, more than one with same URI</u> 
+[uri] (in projects [a, b seeing a]): has been forked implicitly, should also be forked explicitly" :
+if this Resource shouldn't exist in project a, remove it from there. Otherwise, 
+add its URI in b's dcmp:forkedUris. Then you will also be able to this Resource it from b 
+if it should not be there, in which case don't forget to remove said URI from b's dcmp:forkedUris.
 <br/><br/>
 
 <br/>
