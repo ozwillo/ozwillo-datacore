@@ -61,7 +61,7 @@
    <!-- context:component-scan base-package="org.oasis.datacore.rest.api" />
    <context:component-scan base-package="org.oasis.datacore.rest.client" / -->
    <context:component-scan base-package="org.oasis.datacore.rest.server" /><!-- old -->
-   <context:component-scan base-package="org.oasis.datacore.server" /><!-- new, for now only OAuth2 -->
+   <context:component-scan base-package="org.oasis.datacore.server" /><!-- new, for now only OAuth2 and metrics -->
    <context:component-scan base-package="org.oasis.datacore.server.parsing.service.impl" />
    <context:component-scan base-package="org.oasis.datacore.model.resource" />
    <context:component-scan base-package="org.oasis.datacore.model.rest.server" />
@@ -120,6 +120,11 @@
    by importing it after the client's -->
    <cxf:bus>
       <cxf:features>
+         <!-- enabling CXF codahale-based metrics, for KPIs :
+         (OR add all / some of its dedicated interceptors explicitly in dc endpoint) -->
+      	<bean class="org.apache.cxf.metrics.MetricsFeature">
+      		<constructor-arg ref="datacoreApiServer.metrics.provider"/><!-- annotation-defined -->
+      	</bean>
       </cxf:features>
       <cxf:properties>
       </cxf:properties>
