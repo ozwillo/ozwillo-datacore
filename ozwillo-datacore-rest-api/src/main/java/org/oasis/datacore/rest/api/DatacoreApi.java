@@ -310,9 +310,10 @@ public interface DatacoreApi {
    /*@Path("/post/type/{type}")
    @POST
    @ApiOperation(value = "Creates a new data Resource in the given type, or updates it if allowed.",
-      notes = "resource URI must be provided but can be relative to type, "
-            + "up-to-date version is required to update an existing resource "
-            + "(which first requires that strict POST mode is not enabled)",
+      notes = "resource URI must be provided but can be relative to type ; "
+            + "in order to update an existing resource, " 
+            + "(which first requires that strict POST mode is not enabled) "
+            + "up-to-date version is required (GET it first if not saved locally)",
             response = DCResource.class)
    @ApiImplicitParams({
       @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
@@ -351,9 +352,11 @@ public interface DatacoreApi {
       notes = "A single data Resource or an array of several ones (in which case it is a mere wrapper "
             + "over the atomic case) are accepted. "
             + "\n<br/><br/>\n"
-            + "Resource URI(s) must be provided but can be relative to type, up-to-date version(s) are "
-            + "required to update existing resources (which first requires that strict POST mode is not "
-            + "enabled). POST of a single data resource (instead of an array with a single item) is "
+            + "Resource URI(s) must be provided but can be relative to type ; "
+            + "in order to update an existing resource, " 
+            + "(which first requires that strict POST mode is not enabled) "
+            + "up-to-date version is required (GET it first if not saved locally) "
+            + "POST of a single data resource (instead of an array with a single item) is "
             + "supported.",
             response = DCResource.class, responseContainer="List", position = 0) // fix jdk7 random order in UI
    @ApiImplicitParams({
@@ -391,8 +394,10 @@ public interface DatacoreApi {
    @ApiOperation(value = "Creates new data Resources, or updates them (merge) if allowed.",
       notes = "Mere wrapper over atomic typed POST. "
             + "\n<br/><br/>\n"
-            + "Resource URI must be provided, up-to-date versions are required to update "
-            + "existing resources (which first requires that strict POST mode is not enabled)",
+            + "Resource URI must be provided; "
+            + "in order to update an existing resource, " 
+            + "(which first requires that strict POST mode is not enabled) "
+            + "up-to-date version is required (GET it first if not saved locally) ",
             response = DCResource.class, responseContainer="List", position = 1)
    @ApiImplicitParams({
       @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
@@ -430,7 +435,8 @@ public interface DatacoreApi {
       notes = "(For now) mere wrapper over atomic typed non-strict mode POST. "
             + "\n<br/><br/>\n"
             + "Resource URI (Model type and IRI i.e. Internal Resource Identifier) are required "
-            + "but also up-to-date version sent as an ETag in an If-Match=version precondition, "
+            + "but also up-to-date version (GET it first if not saved locally) "
+            + "sent as an ETag in an If-Match=version precondition, "
             + "TODO all fields must be provided OR PATCH behaviour differ from PUT's",
             response = DCResource.class, position = 2)
    @ApiImplicitParams({
@@ -470,7 +476,9 @@ public interface DatacoreApi {
       notes = "Mere wrapper over atomic typed PUT. "
             + "\n<br/><br/>\n"
             + "Resource URI (Model type and IRI i.e. Internal Resource Identifier) are required "
-            + "TODO but also up-to-date version sent as an ETag in an If-Match=version precondition, "
+            + "but also up-to-date version (GET it first if not saved locally) "
+            + "sent within each Resource as the o:version field "
+            + "(TODO LATER also as an ETag in an If-Match=version precondition), "
             + "TODO all fields must be provided OR PATCH behaviour differ from PUT's",
             response = DCResource.class, responseContainer="List", position = 3)
    @ApiImplicitParams({
@@ -508,7 +516,9 @@ public interface DatacoreApi {
       notes = "Mere wrapper over atomic typed PUT. "
             + "\n<br/><br/>\n"
             + "Resource URI (Model type and IRI i.e. Internal Resource Identifier) are required "
-            + "TODO but also up-to-date version sent as an ETag in an If-Match=version precondition, "
+            + "but also up-to-date version (GET it first if not saved locally) "
+            + "sent within each Resource as the o:version field "
+            + "(TODO LATER also as an ETag in an If-Match=version precondition), "
             + "TODO all fields must be provided OR PATCH behaviour differ from PUT's",
             response = DCResource.class, responseContainer="List", position = 4)
    @ApiImplicitParams({
@@ -547,7 +557,8 @@ public interface DatacoreApi {
       notes = "Resource Model type and IRI (Internal Resource Identifier) are required. "
             + "\n<br/><br/>\n"
             + "Allows web-style client-side caching : if client sends its current cached "
-            + "resource's version as an ETag in an If-None-Match=version precondition, "
+            + "resource's version (GET it first if not saved locally) "
+            + "as an ETag in an If-None-Match=version precondition, "
             + "the Resource is returned only if this precondition is matched on the server, "
             + "otherwise (if the client's version is not up-to-date with the server's), "
             + "it returns 304 Not Modified, allowing the client to get the Resource from its cache.",
@@ -587,7 +598,8 @@ public interface DatacoreApi {
    @DELETE
    @ApiOperation(value = "Deletes an existing data Resource.",
       notes = "Resource Model type and IRI (Internal Resource Identifier) are required, "
-            + "but also up-to-date version sent as an ETag in an If-Match=version precondition. "
+            + "but also up-to-date version (GET it first if not saved locally) "
+            + "sent within each Resource as the o:version field. "
             + "Doesn't check whether said data Resource exists beforehands.",
             response = DCResource.class, position = 6)
    @ApiImplicitParams({
@@ -671,9 +683,10 @@ public interface DatacoreApi {
       notes = "This is a tunneled version of the POST operation over GET "
             + "to ease up testing (e.g. on web browsers), prefer POST if possible. "
             + "\n<br/><br/>\n"
-            + "Resource URI must be provided but can be relative to type, "
-            + "up-to-date version is required to update an existing resource "
-            + "(which first requires that strict POST mode is not enabled)",
+            + "Resource URI must be provided but can be relative to type; "
+            + "in order to update an existing resource " 
+            + "(which first requires that strict POST mode is not enabled), "
+            + "up-to-date version is required (GET it first if not saved locally).",
             response = DCResource.class, position = 7)
    @ApiImplicitParams({
       @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
@@ -722,7 +735,8 @@ public interface DatacoreApi {
                + "to ease up testing (e.g. on web browsers), prefer PUT / PATCH or DELETE if possible. "
                + "\n<br/><br/>\n"
                + "Resource URI (Model type and IRI i.e. Internal Resource Identifier) are required "
-               + "but also up-to-date version sent as an ETag in an If-Match=version precondition, "
+               + "but also up-to-date version (GET it first if not saved locally) "
+               + "sent within each Resource as the o:version field, "
                + "TODO all fields must be provided OR PATCH behaviour differ from PUT's. "
                + "Delete doesn't check whether said data Resource exists beforehands.",
                response = DCResource.class, position = 8)

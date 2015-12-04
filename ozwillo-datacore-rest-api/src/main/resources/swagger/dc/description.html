@@ -237,6 +237,35 @@ if this Resource shouldn't exist in project a, remove it from there. Otherwise,
 add its URI in b's dcmp:forkedUris. Then you will also be able to this Resource it from b 
 if it should not be there, in which case don't forget to remove said URI from b's dcmp:forkedUris.
 <br/><br/>
+&nbsp;&nbsp;- <u>Requests made in your own code don't work</u>, though in the Playground they do : 
+your code does not do everything it should.
+Enable Firebug in Firefox and have a look in the "Console" tab at the actual request
+that the Playground makes: URL, headers, body... and find out where your code's request differs.
+<br/><br/>
+&nbsp;&nbsp;- <u>Query on Resource links don't work</u>, though on primitive values they do : 
+maybe you haven't encoded the Resource link's URI request parameter, as it should be per HTTP specs
+(so since URIs already have some encoded part, they're actually double encoded).
+It's actually a subset of the previous FAQ entry.
+(Reported in <a href="https://github.com/ozwillo/ozwillo-datacore/issues/142">#142</a>)
+<br/><br/>
+&nbsp;&nbsp;- <u>"Version of data resource to update is required in PUT"</u> error : 
+to update an existing data, you must PUT (rather than POST) it with the current version number 
+(HTTP Entity Tag, used for optimistic locking to ensure data integrity).
+And if you don't store said current version locally, you must first GET it from server.
+You must also handle the case of the version being changed while your request is still reaching
+the server, by a retrying it a few times.
+<br/><br/>
+&nbsp;&nbsp;- <a href="#metamodelFaq">Project & Model troubleshooting &amp; FAQ</a>
+<br/><br/>
+&nbsp;&nbsp;- <u>Wrong or inconsistent data</u> : 
+see known cases in <a href="https://github.com/ozwillo/ozwillo-datacore/labels/data%20inconsistency">issues tagged "data inconsistency"</a> on github.
+If not yet there, report it in <a href="https://github.com/ozwillo/ozwillo-datacore/issues/62">#62</a> for geo & org data
+or as such a new issue tagged by "data inconsistency".
+<br/><br/>
+&nbsp;&nbsp;- <u>All reported FAQ cases</u> : 
+see <a href="https://github.com/ozwillo/ozwillo-datacore/issues?utf8=%E2%9C%93&q=+label%3A%22FAQ%22">issues tagged "FAQ"</a> on github.
+<br/><br/>
+
 
 <br/>
 <b>Adopting the Datacore:</b>
@@ -501,6 +530,7 @@ name starts by any one of those prefixes ('*' wildcard also allowed, to ease swi
 can be changed in this project, in order to avoid to add models that belong to another project by
 mistake, such as POSTing an org model while importing geo elements using the master model file.
 <br/><br/>
+<a id="metamodelFaq"></a>
 <b>Project &amp; Model troubleshooting &amp; FAQ :</b>
 <br/>
 &nbsp;&nbsp;- <span class="dcjsonline">model failed to load :</span>
