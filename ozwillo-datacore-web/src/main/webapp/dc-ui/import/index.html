@@ -252,7 +252,7 @@ softwares (such as Google Doc's) often breaks files (ex. "true" becomes VRAI, "f
 <div class="dc-import-subtitle">Datacore (<span class="dcConf_baseUrl json dcjsonline">NOT INITED</span>) :</div>
 <span class="json dcjsonline"><input type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 552px" value="/dc/type/dcmo:model_0"></span>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()));">GET</button>
-<button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, 50, {'X-Datacore-View':' '});" title="List view (view : empty i.e. minimal : @id, o:version)">l</button>
+<button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, 50, {'X-Datacore-View':'-'});" title="List view (view : empty i.e. minimal : @id, o:version)">l</button>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, 25, {'X-Datacore-View':'dc:DubclinCore_0'});" title="List view (view : dc:DubclinCore_0)">dc</button>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, null, {'X-Datacore-Debug':'true'});" title="Debug / explain query">?</button>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, null, {'Accept':'text/x-nquads'});" title="RDF N-Quads output">RDF</button>

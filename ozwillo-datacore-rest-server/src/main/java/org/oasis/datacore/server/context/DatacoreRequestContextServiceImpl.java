@@ -78,7 +78,7 @@ public class DatacoreRequestContextServiceImpl implements DatacoreRequestContext
    
    /**
     * TODO cache
-    * @return null means all, empty means minimal (@id, o:version), only dc:DublinCore_0
+    * @return null means all, '-' means minimal (@id, o:version), only dc:DublinCore_0
     * means minimal + @type + dc: fields, others come in addition to it
     */
    @Override
@@ -91,8 +91,9 @@ public class DatacoreRequestContextServiceImpl implements DatacoreRequestContext
       if (csvMixinNames == null) {
          return null;
       }
+      csvMixinNames = csvMixinNames.trim();
       LinkedHashSet<String> mixinNameSet = new LinkedHashSet<String>();
-      if ((csvMixinNames = csvMixinNames.trim()).isEmpty()) {
+      if (DatacoreApi.VIEW_HEADER_MINIMAL.equals(csvMixinNames)) {
          return mixinNameSet; // minimal : @id, o:version
       }
       String[] mixinNames = StringUtils.commaDelimitedListToStringArray(csvMixinNames);

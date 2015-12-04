@@ -84,6 +84,17 @@
 			<artifactId>spring-web</artifactId>
 		</dependency>
 
+      <!-- cxf metrics using codahale / dropwizard metrics -->
+      <dependency>
+         <groupId>org.apache.cxf</groupId>
+         <artifactId>cxf-rt-features-metrics</artifactId>
+      </dependency>
+      <!-- dep of cxf but only optional -->
+      <dependency>
+         <groupId>io.dropwizard.metrics</groupId>
+         <artifactId>metrics-core</artifactId>
+      </dependency>
+		
       <!-- for sending events to Riemann -->
       <dependency>
          <groupId>com.aphyr</groupId>

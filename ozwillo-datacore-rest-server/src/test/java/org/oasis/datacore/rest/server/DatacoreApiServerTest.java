@@ -971,7 +971,7 @@ public class DatacoreApiServerTest {
                   new QueryParameters().add("n:name", "Bordeaux"), null, 10);
          }
       }.execInContext(new ImmutableMap.Builder<String, Object>()
-            .put(DatacoreApi.VIEW_HEADER, "").build());
+            .put(DatacoreApi.VIEW_HEADER, DatacoreApi.VIEW_HEADER_MINIMAL).build());
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(postedBordeauxCityData.getUri(), resources.get(0).getUri());
       Assert.assertEquals(postedBordeauxCityData.getVersion(), resources.get(0).getVersion());

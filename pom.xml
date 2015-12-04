@@ -120,7 +120,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		<!-- testing : -->
 		<junit.version>4.12</junit.version><!-- cxf3' ; 4.11 solves method execution order 
 			bug -->
-		<jetty.version>8.1.12.v20130726</jetty.version><!-- cxf's -->
+		<jetty.version>9.2.11.v20150529</jetty.version><!-- cxf 3.1.4's (3.0.4's 8.1.12.v20130726) -->
 
 
 		<!-- logging -->
@@ -151,8 +151,8 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		<!-- REST -->
 		<jackson.version>2.2.3</jackson.version><!-- latest, also jsonld-java's 
 			as of 201309 -->
-		<cxf.version>3.0.4</cxf.version>
-
+		<cxf.version>3.1.4</cxf.version><!-- before 3.0.4 for JAXRS 2.0, 3.1.4 for metrics -->
+		<metrics.version>3.1.2</metrics.version><!-- cxf 3.1.4's' (optional dep) version AND latest on 20151201 -->
 		<ehcache.version>2.7.4</ehcache.version><!-- for client-side cache ; spring's version -->
       
       <guava.version>14.0.1</guava.version><!-- for ImmutableMap/List(.Builder),
@@ -694,6 +694,20 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 			Caused by: java.lang.NoClassDefFoundError: javax/wsdl/extensions/ExtensibilityElement
 			... at org.apache.cxf.transport.http.spring.HttpConduitBeanDefinitionParser.doParse(HttpConduitBeanDefinitionParser.java:58)
 			 -->
+         <!-- for metrics -->
+         <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-features-metrics</artifactId>
+            <version>${cxf.version}</version>
+         </dependency>
+         <!-- dep of cxf but only optional
+         brings io.dropwizard.metrics (Apache 2.0 License) which brings slf4j-api (MIT License) -->
+         <dependency>
+            <groupId>io.dropwizard.metrics</groupId>
+            <artifactId>metrics-core</artifactId>
+            <version>${metrics.version}</version>
+         </dependency>
+   		
 			<!-- for packaging on tomcat -->
 			<dependency>
 				<groupId>org.apache.cxf</groupId>
@@ -814,6 +828,15 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 				<groupId>com.aphyr</groupId>
 				<artifactId>riemann-java-client</artifactId>
 				<version>${riemann-client.version}</version>
+            <exclusions>
+               <exclusion>
+                  <groupId>com.codahale.metrics</groupId>
+                  <artifactId>metrics-core</artifactId>
+                  <!-- would be 3.0.1 in conflict with io.dropwizard.metrics:metric-core:3.1.2
+                  brought by cxf which still has codahale packages
+                  but leaving com.yammer.metrics:metrics-core:2.1.2 which riemann strangely also brings -->
+               </exclusion>
+            </exclusions>
 			</dependency>
 
          <!-- JSON-LD facade ((new) BSD License) and deps (all Apache 2.0 License) : -->
