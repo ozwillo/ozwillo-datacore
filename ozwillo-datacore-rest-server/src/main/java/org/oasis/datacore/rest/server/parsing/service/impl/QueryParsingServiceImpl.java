@@ -235,7 +235,12 @@ public class QueryParsingServiceImpl implements QueryParsingService {
          // TODO AND / OR field value == null
          // TODO sparse index ?????????
          // TODO TODO can't return false because already failed to find field
-         queryParsingContext.addCriteria().exists(true);
+         if (parsedData == null) {
+            parsedData = true; // default
+         } else if (!(parsedData instanceof Boolean)) {
+            throw new ResourceParsingException(operatorEnum + "'s only parameter should be a boolean");
+         }
+         queryParsingContext.addCriteria().exists((Boolean) parsedData);
          break;
 
       case GREATER_OR_EQUAL:

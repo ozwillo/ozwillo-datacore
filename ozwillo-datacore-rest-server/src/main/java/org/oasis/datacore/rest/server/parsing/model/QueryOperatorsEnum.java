@@ -36,7 +36,7 @@ public enum QueryOperatorsEnum {
 	NOT_IN(DCFieldTypeEnum.equalableTypes, DCFieldTypeEnum.LIST, "$nin"),
 	REGEX(DCFieldTypeEnum.onlyString, "$regex"), // on string itself or within i18n list of maps structure
 	FULLTEXT(DCFieldTypeEnum.onlyString, "$fulltext"), // on string itself or within i18n list of maps structure
-	EXISTS(DCFieldTypeEnum.everyTypes, "$exists"),
+	EXISTS(DCFieldTypeEnum.everyTypes, DCFieldTypeEnum.BOOLEAN, "$exists"),
 	ALL(true, DCFieldTypeEnum.LIST, "$all"), // list that contains all elements
 	ELEM_MATCH(true, DCFieldTypeEnum.MAP, "$elemMatch"), // list whose elements match all criteria ; NB. primitive types are easier done using equals !
 	SIZE(true, DCFieldTypeEnum.INTEGER, "$size"); // list of size

@@ -192,7 +192,8 @@ public interface DatacoreApi {
          + "of key/values to be ALL matched ex. on i18n field "
          + "$elemMatch{\"v\":\"Torino\",\"l\":\"it\"} ), -/-/$size/- (list field size ; no value). "
          + "<br/>&nbsp;&nbsp; - <b>meta</b> operators : "
-         + "-/-/$exists/- (field exists ; no value ; beware, rather use Model introspection)"
+         + "-/-/$exists/- (field exists ; boolean value, none means true ; can be used for data quality, "
+         + "but besides that rather use Model introspection)"
          + "\n<br/><br/>\n"
          + "<b>More :</b>"
          + "\n<br/>\n"
@@ -574,8 +575,8 @@ public interface DatacoreApi {
       @ApiImplicitParam(name=PROJECT_HEADER, paramType="header", dataType="string",
             value="Examples : oasis.test, oasis.main", defaultValue=PROJECT_DEFAULT),
       @ApiImplicitParam(name=VIEW_HEADER, paramType="header", dataType="string",
-            value="Examples : nothing (all), " + VIEW_HEADER_MINIMAL
-                  + " (@id, o:version), 'dc:DublinCore_0' (also "
+            value="Examples : nothing (all), '" + VIEW_HEADER_MINIMAL
+                  + "' (@id, o:version), 'dc:DublinCore_0' (also "
                   + "@type, dc: fields), 'geo:Area_0,o:Ancestors_0' (with implied dc:DublinCore_0)")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
@@ -818,8 +819,8 @@ public interface DatacoreApi {
       @ApiImplicitParam(name=PROJECT_HEADER, paramType="header", dataType="string",
             value="Examples : oasis.test, oasis.main", defaultValue=PROJECT_DEFAULT),
       @ApiImplicitParam(name=VIEW_HEADER, paramType="header", dataType="string",
-            value="Examples : nothing (all), " + VIEW_HEADER_MINIMAL
-                  + " (@id, o:version), 'dc:DublinCore_0' (also "
+            value="Examples : nothing (all), '" + VIEW_HEADER_MINIMAL
+                  + "' (@id, o:version), 'dc:DublinCore_0' (also "
                   + "@type, dc: fields), 'geo:Area_0,o:Ancestors_0' (with implied dc:DublinCore_0)")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
@@ -869,8 +870,8 @@ public interface DatacoreApi {
       @ApiImplicitParam(name=PROJECT_HEADER, paramType="header", dataType="string",
             value="Examples : oasis.test, oasis.main", defaultValue=PROJECT_DEFAULT),
       @ApiImplicitParam(name=VIEW_HEADER, paramType="header", dataType="string",
-            value="Examples : nothing (all), " + VIEW_HEADER_MINIMAL
-                  + " (@id, o:version), 'dc:DublinCore_0' (also "
+            value="Examples : nothing (all), '" + VIEW_HEADER_MINIMAL
+                  + "' (@id, o:version), 'dc:DublinCore_0' (also "
                   + "@type, dc: fields), 'geo:Area_0,o:Ancestors_0' (with implied dc:DublinCore_0)")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
@@ -963,8 +964,8 @@ public interface DatacoreApi {
       @ApiImplicitParam(name=PROJECT_HEADER, paramType="header", dataType="string",
             value="Examples : oasis.test, oasis.main", defaultValue=PROJECT_DEFAULT),
       @ApiImplicitParam(name=VIEW_HEADER, paramType="header", dataType="string",
-            value="Examples : nothing (all), " + VIEW_HEADER_MINIMAL
-                  + " (@id, o:version), 'dc:DublinCore_0' (also "
+            value="Examples : nothing (all), '" + VIEW_HEADER_MINIMAL
+                  + "' (@id, o:version), 'dc:DublinCore_0' (also "
                   + "@type, dc: fields), 'geo:Area_0,o:Ancestors_0' (with implied dc:DublinCore_0)")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
@@ -1041,8 +1042,8 @@ public interface DatacoreApi {
       @ApiImplicitParam(name=PROJECT_HEADER, paramType="header", dataType="string",
             value="Examples : oasis.test, oasis.main", defaultValue=PROJECT_DEFAULT),
       @ApiImplicitParam(name=VIEW_HEADER, paramType="header", dataType="string",
-            value="Examples : nothing (all), " + VIEW_HEADER_MINIMAL
-                  + " (@id, o:version), 'dc:DublinCore_0' (also "
+            value="Examples : nothing (all), '" + VIEW_HEADER_MINIMAL
+                  + "' (@id, o:version), 'dc:DublinCore_0' (also "
                   + "@type, dc: fields), 'geo:Area_0,o:Ancestors_0' (with implied dc:DublinCore_0)")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })
@@ -1075,8 +1076,8 @@ public interface DatacoreApi {
       @ApiImplicitParam(name=PROJECT_HEADER, paramType="header", dataType="string",
             value="Examples : oasis.test, oasis.main", defaultValue=PROJECT_DEFAULT),
       @ApiImplicitParam(name=VIEW_HEADER, paramType="header", dataType="string",
-            value="Examples : nothing (all), " + VIEW_HEADER_MINIMAL
-                  + " (@id, o:version), 'dc:DublinCore_0' (also "
+            value="Examples : nothing (all), '" + VIEW_HEADER_MINIMAL
+                  + "' (@id, o:version), 'dc:DublinCore_0' (also "
                   + "@type, dc: fields), 'geo:Area_0,o:Ancestors_0' (with implied dc:DublinCore_0)")
       // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
    })

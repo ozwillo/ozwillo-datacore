@@ -582,7 +582,7 @@ function setProject(newProject) {
 }
 function initProjectPortal(options) {
    findData(buildProjectPortalQuery(options), projectPortalSuccess,
-         null, null, 25, {'X-Datacore-View':' '}, options);
+         null, null, 25, {'X-Datacore-View':'-'}, options);
 }
 function buildProjectPortalQuery(options) {
    var query = 'dcmo:model_0?';
@@ -598,7 +598,7 @@ function buildProjectPortalQuery(options) {
 }
 function buildProjectPortalQueryLink(options, linkText) {
    return '<a href="/dc/type/' + buildProjectPortalQuery(options) + '" class="dclink" onclick="'
-      + 'javascript:return findData($(this).attr(\'href\'), projectPortalSuccess, null, null, 25, {\'X-Datacore-View\':\' \'}, '
+      + 'javascript:return findData($(this).attr(\'href\'), projectPortalSuccess, null, null, 25, {\'X-Datacore-View\':\'-\'}, '
       + (options ? stringifyForAttribute(options) : 'null') + ');">' + linkText + '</a>';
 }
 function buildProjectPortalTitleHtml(options) {
@@ -646,10 +646,10 @@ function buildListOfStorageModelLinks(models) {
          + 'javascript:return getData($(this).attr(\'href\'));'
          + '">' + modelName + '</a> : its stored '
          + '<a href="/dc/type/dcmo:model_0?dcmo:storageModel=' + modelName + '" class="dclink" onclick="'
-         + 'javascript:return findData($(this).attr(\'href\'), null, null, null, 25, {\'X-Datacore-View\':\' \'});'
+         + 'javascript:return findData($(this).attr(\'href\'), null, null, null, 25, {\'X-Datacore-View\':\'-\'});'
          + '">models</a> and '
          + '<a href="/dc/type/' + modelName + '" class="dclink" onclick="'
-         + 'javascript:return findData($(this).attr(\'href\'), null, null, null, 25, {\'X-Datacore-View\':\' \'});'
+         + 'javascript:return findData($(this).attr(\'href\'), null, null, null, 25, {\'X-Datacore-View\':\'-\'});'
          + '">all their resources</a>...'
          + '<br/>';
    }
@@ -828,7 +828,7 @@ function getPreviousData(relativeUrl, success, error, optionalHeaders, handlerOp
       var version = parseInt(resResourceOrText['o:version']);
       var historyUrl = relativeUrl.uri.replace('/type', '/h') + '/' + (version - 1);
       getData(historyUrl, success, error, optionalHeaders, handlerOptions);
-   }, null, {'X-Datacore-View':' ',
+   }, null, {'X-Datacore-View':'-',
       'X-Datacore-Project':(optionalHeaders ? optionalHeaders['X-Datacore-Project'] : null)});
 }
 
