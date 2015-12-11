@@ -71,6 +71,7 @@ See <a href="#playgroundUserManual">this Playground's user manual below</a> and
 <p></p>
 
 <br/>
+<a id="#commonQueries"></a>
 <b>Most common use cases' queries:</b>
 <br/><br/>
 <u>NB. if some queries fail, please check <a href="#faq">Frequently AskedQuestions</a> first.</u>
@@ -157,7 +158,23 @@ to avoid finding its cities when looking for a province), or for some use cases
 javascript:return findDataByType(encodeUri($(this).attr('href')));
 ">geographical city by fulltext name and country</a>.
 <br/><br/>
+<!--
 &nbsp;&nbsp;- 
+<a href="/dc/type/dcmp:Project_0/geo_1" class="dclink" onclick="
+javascript:return findDataByType($(this).attr('href'));
+">geo_1</a>
+ - get a city group's cities: 
+<a href="/dc/type/geoci:City_0?geoci:cityGroup=http://data.ozwillo.com/dc/type/geocigrfr:Agglom%C3%A9ration_0/FR/CC%20des%20Trois%20Pays" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">geographical cities by city group</a> (
+<a href="/dc/type/geoci:City_0?geoci:cityGroup=http://data.ozwillo.com/dc/type/geocigrbg:%D0%9E%D0%B1%D1%89%D0%B8%D0%BD%D0%B0_0/BG/%D0%A1%D1%82%D0%BE%D0%BB%D0%B8%D1%87%D0%BD%D0%B0" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">another example</a>. BEWARE though, it's not indexed yet (so it may not return all results 
+and performances are bad), and this does not work for all postal cities but logically only 
+geographical cities (so Turkish districts are out). 
+<br/><br/>
+--> 
+&nbsp;&nbsp;-
 <a href="/dc/type/dcmp:Project_0/org_1" class="dclink" onclick="
 javascript:return findDataByType($(this).attr('href'));
 ">org_1</a>
@@ -217,8 +234,13 @@ javascript:return findDataByType(encodeUri($(this).attr('href')));
 <b>FAQ:</b>
 <br/><br/>
 &nbsp;&nbsp;- <u>"reached maxScan (300) before document limit"</u> errors (or no return) 
-on "by geo area" queries : ask model designer to add the right indexes (and first to check that 
-said field is there). <u>Workaround</u> : query in country-specific types.
+on ex. "by geo area" queries : ask model designer to 
+<a href="https://github.com/pole-numerique/oasis-datacore/wiki/Playground-&-Import-UI-demo-scenario---Provto-&-OpenElec">add the right indexes</a>  
+(and first to check that said field has values). <u>Workaround</u> : query in country-specific types.
+<br/><br/>
+&nbsp;&nbsp;- <u>"operation exceeded time limit"</u> errors 
+on ex. geoname "by geoname:id" queries : same as above, ask model designer to add the right indexes 
+(and first to check that said field has values). <u>Workaround</u> : use the URI (@id field) as ID.
 <br/><br/>
 &nbsp;&nbsp;- <u>"Attempting a fulltext search on a field that is not configured so"</u> errors : 
 ask model designer to enable the right fulltext indexes. <u>Workaround</u> : query on odisp:name.
@@ -254,6 +276,22 @@ to update an existing data, you must PUT (rather than POST) it with the current 
 And if you don't store said current version locally, you must first GET it from server.
 You must also handle the case of the version being changed while your request is still reaching
 the server, by a retrying it a few times.
+<br/><br/>
+&nbsp;&nbsp;- <u>How to debug Resource-level permissions</u> : 
+Resource-level permissions are returned when querying as owner (or admin) in debug mode.
+Therefore to check them in the Playground, go to the said Resource by entering ex.
+<a href="/dc/type/poitour:Geoloc_0/32949" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">/dc/type/poitour:Geoloc_0/32949</a>
+in the Playground URI address bar, then click on the colon (":") of the URI field (@id) 
+to build a single result query such as
+<a href="/dc/type/geoname:GeoDB_0?@id=http://data.ozwillo.com/dc/type/geoname:GeoDB_0/FR/2989417" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">this one</a>
+, then go in debug mode by clicking on the "?" button, 
+and finally look in the results for the "ownedEntities" part (that only contains
+data Resources that you have owner / admin rights on, for data security reasons) 
+and within in the  "owners", "writers" and "readers" entity fields.
 <br/><br/>
 &nbsp;&nbsp;- <a href="#metamodelFaq">Project & Model troubleshooting &amp; FAQ</a>
 <br/><br/>
@@ -615,3 +653,5 @@ datacoreApiServer.query.defaultLimit=<span class="dcConf_queryDefaultLimit">NOT 
 kernel.baseUrl=<span class="dcConf_kernelBaseUrl">NOT INITED</span>
 </code></pre>
 <br/><br/>
+
+<a id="swagger"></a>
