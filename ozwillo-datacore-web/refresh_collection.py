@@ -6,15 +6,16 @@
 __author__ = "OpenWide"
 __copyright__ = "Copyright 2015"
 __license__ = "GPL"
-__version__ = "0.1"
+__version__ = "0.2"
 
 import os
 import requests
 import sys
 import json
+import urllib
 
 DC_URL = "https://data.ozwillo-dev.eu/dc/"
-ENTITY_BY_PAGE = 1  # Must not be greeter than 100
+ENTITY_BY_PAGE = 10  # Must not be greeter than 100
 
 if len(sys.argv) < 3:
     TYPE = sys.argv[1]
@@ -25,8 +26,7 @@ else:
     print "Loading default (bearer will be surely wrong)"
     TYPE = "org:Organization_0"
     DC_PROJECT = "org_1"
-    BEARER = "eyJpZCI6IjUzZjQzNjMwLTk5M2YtNDBmYS05ODIzLTI3NWZiZTlmMDg4Mi9wdjhXTzkyTGdxejJyT0dqUUU5N3BnIiwiaWF0IjoxNDUwMTkwNjM2NTk1LCJleHAiOjE0NTAxOTQyMzY1OTV9"
-    #sys.exit(1)
+    BEARER = "eyJpZCI6IjIzMzgxYmIxLTMwMWItNGU2YS04NzA1LTlkNjBjZmI1ZjM0Yy91bHdYLXNWS0VYN2hwbU0yX3dXdHZRIiwiaWF0IjoxNDUwMjYwMzU5NjAxLCJleHAiOjE0NTAyNjM5NTk2MDF9"
 
 LOG = "./logs"
 
@@ -40,15 +40,17 @@ def refresh_collection():
                      'X-Datacore-Project': x_datacore_project,
                      'Authorization': authorization}
 
-    page = 0
+    page = 1
     retry_counter = 0
-    id_cursor = "%2b"  # for the first request arg @id is %2b = "+"
+    retry_limit = 3
+    id_cursor = "%2B"  # for the first request arg @id is %2B = "+"
     data = {}
+
     while id_cursor != "":
 
-        url_get = DC_URL + "type/org:Organization_0?limit=" + str(ENTITY_BY_PAGE) + "&%40id=" + id_cursor
+        url_get = DC_URL + "type/" + TYPE + "?limit=" + str(ENTITY_BY_PAGE) + "&%40id=" + id_cursor
         print
-        print "###############################Page : %s############################################" % page
+        print "############################### Page : %s (retry %d) ############################################" % (page, retry_counter)
         print "Sending request (GET) on url " + url_get
         print "HEADERS :"
         print headers_perso
@@ -64,7 +66,7 @@ def refresh_collection():
 
         print "Loading Json …"
         data = json.loads(response.text)
-        print str(len(data)) + " entities of model " + DC_PROJECT + " fetch on page " + str((page + 1))
+        print str(len(data)) + " entities of model " + DC_PROJECT + " fetch on page " + str(page)
         print
 
         if len(data) < 1:
@@ -72,12 +74,12 @@ def refresh_collection():
             break
 
         print "Sending request (POST) for update on " + DC_URL
-        #response = requests.post(URL, response.text.encode("utf-8"), verify=False, headers=headers_perso)
-        response.status_code = 201
+        response = requests.post(DC_URL, response.text.encode("utf-8"), verify=False, headers=headers_perso)
+        #response.status_code = 201 # Pour le debug
 
         if response.status_code == 409:
-            if retry_counter > 3:
-                print>> sys.stderr, "3 retry on same page fails … something wrong … exit …"
+            if retry_counter >= retry_limit:
+                print>> sys.stderr, "%d retry on same page fails … something wrong … exit …" % retry_limit
                 exit(4)
             print>> sys.stderr, "Conflict error (409)!!! Retry the same page !!!"
             retry_counter += 1
@@ -85,20 +87,21 @@ def refresh_collection():
         elif response.status_code == 201:
             print "Success !!!"
             if len(data) == ENTITY_BY_PAGE:
-                id_cursor = ">" + data[ENTITY_BY_PAGE - 1]["@id"]
+                id_cursor = urllib.quote_plus(">" + data[ENTITY_BY_PAGE - 1]["@id"] + "+")
                 print "next id_cursor = %s" % id_cursor
                 retry_counter = 0
+                page += 1
 
             else:
                 print "End of list"
                 print "Last @id = " + data[len(data)-1]["@id"]
-                id_cursor = ""
 
         else:
             print>> sys.stderr, "Response code not supported (%s) … exit" % response.status_code
+            print>> sys.stderr, "Response body : %s" % response.text
             exit(5)
 
-        page += 1
+
 
     print "Total updated : " + str((ENTITY_BY_PAGE * (page - 1)) + len(data))
 
