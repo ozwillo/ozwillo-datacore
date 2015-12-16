@@ -16,6 +16,9 @@ import urllib
 
 DC_URL = "https://data.ozwillo-dev.eu/dc/"
 ENTITY_BY_PAGE = 1  # Must not be greeter than 100
+SKIP_ON_ERROR = True  # If unsupported error occur skip the page
+SIMULATION = False
+SIMULATION_CODE = 408  # If simulation is true is the response code of the false response
 
 if len(sys.argv) < 3:
     TYPE = sys.argv[1]
@@ -26,7 +29,7 @@ else:
     print "Loading default (bearer will be surely wrong)"
     TYPE = "org:Organization_0"
     DC_PROJECT = "org_1"
-    BEARER = "eyJpZCI6IjIzMzgxYmIxLTMwMWItNGU2YS04NzA1LTlkNjBjZmI1ZjM0Yy91bHdYLXNWS0VYN2hwbU0yX3dXdHZRIiwiaWF0IjoxNDUwMjYwMzU5NjAxLCJleHAiOjE0NTAyNjM5NTk2MDF9"
+    BEARER = "eyJpZCI6IjY5YjlhOTEyLWI5YTAtNDliZi1hZjc3LTIyNjhhNGUyYjZkMC92RGxJdE4yNG0yNHo5M1RWUFJrNjlBIiwiaWF0IjoxNDUwMjY0NzQ1NzQxLCJleHAiOjE0NTAyNjgzNDU3NDF9"
 
 LOG = "./logs"
 
@@ -41,11 +44,11 @@ def refresh_collection():
                      'Authorization': authorization}
 
     page = 1
+    go_to_next_page = False
     retry_counter = 0
     retry_limit = 3
     id_cursor = "%2B"  # for the first request arg @id is %2B = "+"
     data = {}
-
     while id_cursor != "":
 
         url_get = DC_URL + "type/" + TYPE + "?limit=" + str(ENTITY_BY_PAGE) + "&%40id=" + id_cursor
@@ -61,7 +64,7 @@ def refresh_collection():
         print response.text
 
         if response.status_code != 200:
-            print>> sys.stderr, "Error !!! " + response.text
+            print>> sys.stderr, "ERROR : " + response.text
             exit(2)
 
         print "Loading Json …"
@@ -78,18 +81,36 @@ def refresh_collection():
         print headers_perso
         print "Body :"
         print response.text.encode("utf-8")
-        response = requests.post(DC_URL, response.text.encode("utf-8"), verify=False, headers=headers_perso)
-        #response.status_code = 201 # Pour le debug
+
+        if SIMULATION:
+            print "Simulation !!!"
+            response.status_code = SIMULATION_CODE  # Pour le debug
+        else:
+            response = requests.post(DC_URL, response.text.encode("utf-8"), verify=False, headers=headers_perso)
 
         if response.status_code == 409:
             if retry_counter >= retry_limit:
-                print>> sys.stderr, "%d retry on same page fails … something wrong … exit …" % retry_limit
-                exit(4)
-            print>> sys.stderr, "Conflict error (409)!!! Retry the same page !!!"
+                print>> sys.stderr, "ERROR : %d retry on same page fails … something wrong … skip …" % retry_limit
+                go_to_next_page = True
+
+            print>> sys.stderr, "ERROR : Conflict error (409)!!! Retry the same page !!!"
             retry_counter += 1
 
         elif response.status_code == 201:
             print "Success !!!"
+            go_to_next_page = True
+
+        else:
+            print>> sys.stderr, "ERROR : Response code not supported (%s) … exit" % response.status_code
+            print>> sys.stderr, "ERROR : Response body : %s" % response.text
+            if SKIP_ON_ERROR:
+                print "Skip this error and go to the next page (%d)" % page
+                go_to_next_page = True
+            else:
+                exit(5)
+
+        if go_to_next_page:
+            go_to_next_page = False
             if len(data) == ENTITY_BY_PAGE:
                 id_cursor = urllib.quote_plus(">" + data[ENTITY_BY_PAGE - 1]["@id"] + "+")
                 print "next id_cursor = %s" % id_cursor
@@ -98,16 +119,11 @@ def refresh_collection():
 
             else:
                 print "End of list"
-                print "Last @id = " + data[len(data)-1]["@id"]
+                print "Last @id = " + data[len(data) - 1]["@id"]
+                id_cursor = ""
 
-        else:
-            print>> sys.stderr, "Response code not supported (%s) … exit" % response.status_code
-            print>> sys.stderr, "Response body : %s" % response.text
-            exit(5)
+    print "Total treat : " + str((ENTITY_BY_PAGE * (page - 1)) + len(data))
 
-
-
-    print "Total updated : " + str((ENTITY_BY_PAGE * (page - 1)) + len(data))
 
 if __name__ == "__main__":
     try:
