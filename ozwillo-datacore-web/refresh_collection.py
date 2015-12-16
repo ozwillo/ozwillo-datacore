@@ -15,7 +15,7 @@ import json
 import urllib
 
 DC_URL = "https://data.ozwillo-dev.eu/dc/"
-ENTITY_BY_PAGE = 10  # Must not be greeter than 100
+ENTITY_BY_PAGE = 1  # Must not be greeter than 100
 
 if len(sys.argv) < 3:
     TYPE = sys.argv[1]
@@ -74,6 +74,10 @@ def refresh_collection():
             break
 
         print "Sending request (POST) for update on " + DC_URL
+        print "Headers :"
+        print headers_perso
+        print "Body :"
+        print response.text.encode("utf-8")
         response = requests.post(DC_URL, response.text.encode("utf-8"), verify=False, headers=headers_perso)
         #response.status_code = 201 # Pour le debug
 
