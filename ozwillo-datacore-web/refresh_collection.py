@@ -18,7 +18,7 @@ DC_URL = "https://data.ozwillo-dev.eu/dc/"
 ENTITY_BY_PAGE = 1  # Must not be greeter than 100
 SKIP_ON_ERROR = True  # If unsupported error occur skip the page
 SIMULATION = False
-SIMULATION_CODE = 408  # If simulation is true is the response code of the false response
+SIMULATION_CODE = 201  # If simulation is true is the response code of the false response (201 nominal, 409 retry)
 
 if len(sys.argv) < 3:
     TYPE = sys.argv[1]
@@ -29,7 +29,7 @@ else:
     print "Loading default (bearer will be surely wrong)"
     TYPE = "org:Organization_0"
     DC_PROJECT = "org_1"
-    BEARER = "eyJpZCI6IjY5YjlhOTEyLWI5YTAtNDliZi1hZjc3LTIyNjhhNGUyYjZkMC92RGxJdE4yNG0yNHo5M1RWUFJrNjlBIiwiaWF0IjoxNDUwMjY0NzQ1NzQxLCJleHAiOjE0NTAyNjgzNDU3NDF9"
+    BEARER = "eyJpZCI6ImE1M2ViNTg4LTc3NTQtNDI0My05MmNmLTI4OTdlNDZhMjFmYy9CVGJPRTY1UlhCa2RvZExaTXVSVC13IiwiaWF0IjoxNDUwMjc0NjM2ODkzLCJleHAiOjE0NTAyNzgyMzY4OTN9"
 
 LOG = "./logs"
 
@@ -47,11 +47,11 @@ def refresh_collection():
     go_to_next_page = False
     retry_counter = 0
     retry_limit = 3
-    id_cursor = "%2B"  # for the first request arg @id is %2B = "+"
+    id_cursor = "+"  # for the first request arg @id is "+"
     data = {}
     while id_cursor != "":
 
-        url_get = DC_URL + "type/" + TYPE + "?limit=" + str(ENTITY_BY_PAGE) + "&%40id=" + id_cursor
+        url_get = DC_URL + "type/" + TYPE + "?limit=" + str(ENTITY_BY_PAGE) + "&%40id=" + urllib.quote_plus(id_cursor)
         print
         print "############################### Page : %s (retry %d) ############################################" % (page, retry_counter)
         print "Sending request (GET) on url " + url_get
@@ -64,6 +64,7 @@ def refresh_collection():
         print response.text
 
         if response.status_code != 200:
+            print>> sys.stderr, "ERROR : Response code not supported (%d)" % response.status_code
             print>> sys.stderr, "ERROR : " + response.text
             exit(2)
 
@@ -101,18 +102,18 @@ def refresh_collection():
             go_to_next_page = True
 
         else:
-            print>> sys.stderr, "ERROR : Response code not supported (%s) … exit" % response.status_code
+            print>> sys.stderr, "ERROR : Response code not supported (%s)" % response.status_code
             print>> sys.stderr, "ERROR : Response body : %s" % response.text
             if SKIP_ON_ERROR:
-                print "Skip this error and go to the next page (%d)" % page
+                print "Skip this error and go to the next page (%d)" % (page + 1)
                 go_to_next_page = True
             else:
-                exit(5)
+                exit(3)
 
         if go_to_next_page:
             go_to_next_page = False
             if len(data) == ENTITY_BY_PAGE:
-                id_cursor = urllib.quote_plus(">" + data[ENTITY_BY_PAGE - 1]["@id"] + "+")
+                id_cursor = ">" + data[ENTITY_BY_PAGE - 1]["@id"] + "+"
                 print "next id_cursor = %s" % id_cursor
                 retry_counter = 0
                 page += 1
