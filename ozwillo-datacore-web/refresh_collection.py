@@ -29,7 +29,7 @@ else:
     print "Loading default (bearer will be surely wrong)"
     TYPE = "org:Organization_0"
     DC_PROJECT = "org_1"
-    BEARER = "eyJpZCI6ImE1M2ViNTg4LTc3NTQtNDI0My05MmNmLTI4OTdlNDZhMjFmYy9CVGJPRTY1UlhCa2RvZExaTXVSVC13IiwiaWF0IjoxNDUwMjc0NjM2ODkzLCJleHAiOjE0NTAyNzgyMzY4OTN9"
+    BEARER = "eyJpZCI6IjU2OTYzMzkxLWMyODEtNDQ3NS05NGI1LWU0Nzc3NDY3ZGI5Yi9iYXE2NWUxb04wam9Jc0JPLXVFRVdRIiwiaWF0IjoxNDUwMzU2MzI3MjQzLCJleHAiOjE0NTAzNTk5MjcyNDN9"
 
 LOG = "./logs"
 
@@ -78,6 +78,7 @@ def refresh_collection():
             print "No data to work … exit"
             break
 
+        # Sending the update request
         print "Sending request (POST) for update on " + DC_URL
         print "Headers :"
         print headers_perso
@@ -90,29 +91,33 @@ def refresh_collection():
         else:
             response = requests.post(DC_URL, response.text.encode("utf-8"), verify=False, headers=headers_perso)
 
-        if response.status_code in errors_for_retry:
-            if retry_counter >= retry_limit:
-                print>> sys.stderr, "ERROR : %d retry on same page fails … something wrong … skip …" % retry_limit
-                go_to_next_page = True
-
-            print>> sys.stderr, "ERROR : Response code %s, retry the same page !!!" % response.status_code
-            print>> sys.stderr, "ERROR : Response body %s" % response.text
-            retry_counter += 1
-
-        elif response.status_code == 201:
+        # Process on the response
+        if response.status_code == 201:
             print "Success !!!"
             go_to_next_page = True
 
         else:
-            print>> sys.stderr, "ERROR : Response code not supported (%s)" % response.status_code
+            print>> sys.stderr, "ERROR : Response code not correct (%s)" % response.status_code
             print>> sys.stderr, "ERROR : Response body : %s" % response.text
 
-            if SKIP_ON_ERROR:
-                print>> sys.stderr, "Skip this error and go to the next page (%d)" % (page + 1)
+            if response.status_code in errors_for_retry:
+                if retry_counter >= retry_limit:
+                    print>> sys.stderr, "ERROR : %d retry on same page fails … something wrong …" % retry_limit
+                    retry_counter = 0
+                else:
+                    retry_counter += 1
+
+            # Decide if we retry the page, skip the error or abort
+            if retry_counter > 0:
+                print>> sys.stderr, "ERROR : Retry the same page !!!" % response.status_code
+            elif SKIP_ON_ERROR:
+                print>> sys.stderr, "ERROR : Skip this error and go to the next page (%d)" % (page + 1)
                 go_to_next_page = True
             else:
+                print>> sys.stderr, "ERROR : Fatal, process stop and exit (last @id = %s)" % id_cursor
                 exit(3)
 
+        # Prepare vars for the next page
         if go_to_next_page:
             go_to_next_page = False
             if len(data) == ENTITY_BY_PAGE:
@@ -120,12 +125,12 @@ def refresh_collection():
                 print "next id_cursor = %s" % id_cursor
                 retry_counter = 0
                 page += 1
-
             else:
                 print "End of list"
                 print "Last @id = " + data[len(data) - 1]["@id"]
                 id_cursor = ""
 
+    # Final line
     print "Total treat : " + str((ENTITY_BY_PAGE * (page - 1)) + len(data))
 
 
