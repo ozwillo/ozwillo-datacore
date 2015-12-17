@@ -49,6 +49,7 @@ def refresh_collection():
     retry_limit = 3
     id_cursor = "+"  # for the first request arg @id is "+"
     data = {}
+    errors_for_retry = {409, 504}
     while id_cursor != "":
 
         url_get = DC_URL + "type/" + TYPE + "?limit=" + str(ENTITY_BY_PAGE) + "&%40id=" + urllib.quote_plus(id_cursor)
@@ -89,12 +90,13 @@ def refresh_collection():
         else:
             response = requests.post(DC_URL, response.text.encode("utf-8"), verify=False, headers=headers_perso)
 
-        if response.status_code == 409:
+        if response.status_code in errors_for_retry:
             if retry_counter >= retry_limit:
                 print>> sys.stderr, "ERROR : %d retry on same page fails … something wrong … skip …" % retry_limit
                 go_to_next_page = True
 
-            print>> sys.stderr, "ERROR : Conflict error (409)!!! Retry the same page !!!"
+            print>> sys.stderr, "ERROR : Response code %s, retry the same page !!!" % response.status_code
+            print>> sys.stderr, "ERROR : Response body %s" % response.text
             retry_counter += 1
 
         elif response.status_code == 201:
@@ -104,8 +106,9 @@ def refresh_collection():
         else:
             print>> sys.stderr, "ERROR : Response code not supported (%s)" % response.status_code
             print>> sys.stderr, "ERROR : Response body : %s" % response.text
+
             if SKIP_ON_ERROR:
-                print "Skip this error and go to the next page (%d)" % (page + 1)
+                print>> sys.stderr, "Skip this error and go to the next page (%d)" % (page + 1)
                 go_to_next_page = True
             else:
                 exit(3)
