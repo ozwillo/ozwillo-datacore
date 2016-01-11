@@ -543,9 +543,17 @@ defaults (depends on devmode) ; in case of multi-project storage models (such as
 i.e. the metamodel), is directly used instead of model-level security which makes no sense
 (because without that, models of any project would only be editable by oasis.meta writers).
 <br/>
-&nbsp;&nbsp;- <span class="dcjsonline">dcmp:modelLevelSecurityEnabled</span> : allows different
-security levels in models (even in same resource) ; if disabled, model security has not to be defined
-and is replaced by securityDefaults, and is the same across all models of this project. Defaults to false.
+&nbsp;&nbsp;- <span class="dcjsonline">dcmp:modelLevelSecurityEnabled</span> :
+allows different security levels in models/mixins (even in same resource),
+with permissions that are defined at Resource-level allowing the most rights
+(ex. owner on orgpr:PrivateOrganization_0 fields), and other permissions being allowed
+by model-level security (ex. reader on org:Organization_0 fields).
+Defaults to false.
+<br/>
+&nbsp;&nbsp;- <span class="dcjsonline">dcmp:useModelSecurity</span> :
+use model security instead of project security as default security ;
+if disabled, model security has not to be defined and is replaced by project securityDefaults
+(even and especially if modelLevelSecurityEnabled !) and is the same across all models of this project.
 <br/>
 &nbsp;&nbsp;- <span class="dcjsonline">dcmp:visibleSecurityConstraints</span> : allows generic conf
 &amp; constraints on the project to visible project relation without having to manage &amp; store a

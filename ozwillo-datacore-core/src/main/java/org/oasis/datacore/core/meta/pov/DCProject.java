@@ -72,10 +72,16 @@ public class DCProject extends DCPointOfViewBase {
    /** used when !modelLevelSecurityEnabled or no security found in model hierarchy ;
     * null means global defaults (depends on devmode) */
    private DCSecurity securityDefaults = null;
-   /** allows different security levels in models (even in same resource) ;
-    * if disabled, model security has not to be defined and is replaced by securityDefaults,
-    * and is the same across all models of this project. Defaults to false. */
+   /** TODO LATER should rather be isRESOURCEModelLevelSecurityEnabled
+    * allows different security levels in models/mixins (even in same resource),
+    * with permissions that are defined at Resource-level allowing the most rights
+    * (ex. owner on orgpr:PrivateOrganization_0 fields), and other permissions being all.
+    * Defaults to false. */
    private boolean modelLevelSecurityEnabled = false;
+   /** Use model security instead of project security as default security ;
+    * if disabled, model security has not to be defined and is replaced by project securityDefaults
+    * (even if modelLevelSecurityEnabled !) and is the same across all models of this project.
+    * Defaults to false. */
    private boolean useModelSecurity = false;
    /** allows generic conf & constraints on the project to visible project relation
     * without having to manage & store a visibleProjectRelation object ; 
