@@ -88,6 +88,7 @@ public class ProjectInitService {
          setDefaultGlobalPublicSecurity(project, buildDefaultProjectOwners(project.getName()));
          
          project.setModelLevelSecurityEnabled(true); // let unit tests tweak model-level security as necessary
+         project.setUseModelSecurity(true); // same
          project.getSecurityDefaults().setResourceCreators(null); // else DatacoreApiServerMixinTest.testAddress fails
          
          modelAdminService.addProject(project);
@@ -112,7 +113,8 @@ public class ProjectInitService {
       String projectName = "citizenkin_0";
       DCProject project = modelAdminService.getProject(projectName);
       if (project == null) {
-         throw new RuntimeException("Create in playground project " + projectName);
+         throw new RuntimeException("Create in playground project " + projectName
+               + " with default dcms:modelLevelSecurityEnabled and dmcs:useModelSecurity set to true");
       }
       return project;
    }
@@ -126,6 +128,7 @@ public class ProjectInitService {
       if (project == null) {
          project = new DCProject(DCProject.OASIS_SANBOX);
          project.setModelLevelSecurityEnabled(true); // to each sandbox user its own models
+         project.setUseModelSecurity(true); // same
          modelAdminService.addProject(project);
          // NB. no need to fork metamodel, sandbox custom models will be stored
          // in multiProjectStorage oasis.meta.dcmi:mixin_0 collection

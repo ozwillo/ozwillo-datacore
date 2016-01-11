@@ -94,7 +94,7 @@ public abstract class DCModelBase {
    private boolean isHistorizable;
    private boolean isContributable;
    private DCSecurity security = null; //  = new DCSecurity(); // TODO TODO TODO LATER or also storage i.e. inherited from polymorphism root ?
-
+   
    // storage :
    /** Limits the specified number of documents to scan specified in DCField.queryLimit
     * when fulfilling a query on this Model's collection

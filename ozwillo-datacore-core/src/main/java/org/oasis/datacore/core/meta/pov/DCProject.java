@@ -76,6 +76,7 @@ public class DCProject extends DCPointOfViewBase {
     * if disabled, model security has not to be defined and is replaced by securityDefaults,
     * and is the same across all models of this project. Defaults to false. */
    private boolean modelLevelSecurityEnabled = false;
+   private boolean useModelSecurity = false;
    /** allows generic conf & constraints on the project to visible project relation
     * without having to manage & store a visibleProjectRelation object ; 
     * to be checked firsthand if any WHATEVER THE RESOURCE (null dataEntity)
@@ -521,6 +522,14 @@ public class DCProject extends DCPointOfViewBase {
 
    public void setModelLevelSecurityEnabled(boolean modelLevelSecurityEnabled) {
       this.modelLevelSecurityEnabled = modelLevelSecurityEnabled;
+   }
+
+   public boolean isUseModelSecurity() {
+      return useModelSecurity;
+   }
+
+   public void setUseModelSecurity(boolean useModelSecurity) {
+      this.useModelSecurity = useModelSecurity;
    }
 
    public DCSecurity getVisibleSecurityConstraints() {

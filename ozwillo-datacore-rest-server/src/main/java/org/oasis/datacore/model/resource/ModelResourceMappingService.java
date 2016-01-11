@@ -148,6 +148,7 @@ public class ModelResourceMappingService {
                project.getSecurityDefaults(), uri, "dcmp:securityDefaults"));
       }
       projectResource.set("dcmp:modelLevelSecurityEnabled", project.isModelLevelSecurityEnabled());
+      projectResource.set("dcmp:useModelSecurity", project.isUseModelSecurity());
       if (project.getVisibleSecurityConstraints() != null) {
          projectResource.set("dcmp:visibleSecurityConstraints", securityToResource(
                project.getVisibleSecurityConstraints(), uri, "dcmp:visibleSecurityConstraints"));
@@ -489,6 +490,10 @@ public class ModelResourceMappingService {
       Object isModelLevelSecurityEnabledFound = r.get("dcmp:modelLevelSecurityEnabled");
       if (isModelLevelSecurityEnabledFound != null) {
          project.setModelLevelSecurityEnabled((boolean) isModelLevelSecurityEnabledFound);
+      } // otherwise old project without it
+      Object isUseModelSecurityFound = r.get("dcmp:useModelSecurity");
+      if (isUseModelSecurityFound != null) {
+         project.setUseModelSecurity((boolean) isUseModelSecurityFound);
       } // otherwise old project without it
       @SuppressWarnings("unchecked")
       Map<String, Object> vsc = (Map<String, Object>) r.get("dcmp:visibleSecurityConstraints");

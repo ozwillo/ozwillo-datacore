@@ -330,7 +330,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       }
       
       // case of project-level only security :
-      if (!project.isModelLevelSecurityEnabled()) {
+      if (!project.isModelLevelSecurityEnabled()) { // TODO should rather be isRESOURCELevelSecurityEnabled
          return isDefaultSecurityAllowed(null, // WHATEVER THE RESOURCE
                project, user, permission);
       }
@@ -346,6 +346,15 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       }
       
       // model-level security :
+      if (!project.isUseModelSecurity()) {
+         return isDefaultSecurityAllowed(dataEntity,
+               project, user, permission);
+         // use resource-stored permissions with project security
+         // (else #149 dcmp:modelLevelSecurityEnabled is not fine enough)
+         // this is the default because allows for easier security policy management at project level
+      }
+      // else use model's security (if any, but by (Java) design there usually is one) :
+      // (only for ex. oasis.sample/sandbox, citizenkin_0...)
       DCSecurity security = model.getSecurity();
       if (security == null) {
          if (isInheritingMixinAllowed != null) {
@@ -354,14 +363,12 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
          // else first security from top, get primary-inherited one :
          security = modelService.getSecurity(model); // TODO cache !!!
          if (security == null) {
-            security = project.getSecurityDefaults();
-            if (security == null) {
-               return isGlobalDefaultSecurityAllowed(user, permission);
-            }
+            return isDefaultSecurityAllowed(dataEntity,
+                  project, user, permission);
          }
       }
       
-      return isThisSecurityAllowed(dataEntity, security, user, permission);
+      return isThisSecurityAllowed(dataEntity, model.getSecurity(), user, permission);
    }
 
    /**

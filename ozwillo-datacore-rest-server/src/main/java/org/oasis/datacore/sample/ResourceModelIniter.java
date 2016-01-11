@@ -290,6 +290,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addField(new DCResourceField("dcmp:securityConstraints", MODEL_SECURITY_NAME, false, 0)) // embedded subresource
          .addField(new DCResourceField("dcmp:securityDefaults", MODEL_SECURITY_NAME, false, 0)) // embedded subresource
          .addField(new DCField("dcmp:modelLevelSecurityEnabled", "boolean", (Object) false, 0))
+         .addField(new DCField("dcmp:useModelSecurity", "boolean", (Object) false, 0))
          .addField(new DCResourceField("dcmp:visibleSecurityConstraints", MODEL_SECURITY_NAME, false, 0)) // embedded subresource
          ;
       projectModel.setStorage(false); // store in dcmpv
@@ -336,7 +337,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       updateMetamodelResourcesInProject(modelOrMixins);
       
       // update (default) project resources, always for now :
-      createDefaultProjects();
+      //createDefaultProjects(); // NOO rather commented out to allow managing them from Playground
       allProjectsToResource(false);
       return res;
    }
