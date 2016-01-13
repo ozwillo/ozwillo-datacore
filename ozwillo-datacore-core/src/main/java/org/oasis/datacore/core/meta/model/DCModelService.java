@@ -40,6 +40,7 @@ public interface DCModelService {
     * @return including given project !
     */
    List<DCProject> getProjectsSeeing(DCProject project);
+   List<DCProject> getProjectsSeeing(DCProject project, boolean outsideItself);
 
    /**
     * Because project project seeing project can still hard fork one of its models

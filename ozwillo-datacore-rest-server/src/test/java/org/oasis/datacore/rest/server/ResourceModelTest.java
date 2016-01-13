@@ -2,9 +2,11 @@ package org.oasis.datacore.rest.server;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ForbiddenException;
@@ -44,6 +46,7 @@ import org.oasis.datacore.rest.server.event.EventService;
 import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.sample.CityCountrySample;
+import org.oasis.datacore.sample.PublicPrivateOrganizationSample;
 import org.oasis.datacore.sample.ResourceModelIniter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -605,6 +608,8 @@ public class ResourceModelTest {
       //pr.set("dcmp:frozenModelNames", DCResource.listBuilder().add(CityCountrySample.CITY_MODEL_NAME).build());
       p.getFrozenModelNames().add(CityCountrySample.CITY_MODEL_NAME);
       try {
+      p.setVersion(datacoreApiClient.getData(ResourceModelIniter.MODEL_PROJECT_NAME,
+            DCProject.OASIS_SAMPLE).getVersion()); // else 409 conflict
       pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
             DCProject.OASIS_META); // can't write outside project
       p = mrMappingService.toProject(pr);
@@ -626,6 +631,8 @@ public class ResourceModelTest {
       
       // rather use wildcard
       //pr.set("dcmp:frozenModelNames", DCResource.listBuilder().add(DCProject.MODEL_NAMES_WILDCARD).build());
+      p.setVersion(datacoreApiClient.getData(ResourceModelIniter.MODEL_PROJECT_NAME,
+            DCProject.OASIS_SAMPLE).getVersion()); // else 409 conflict
       p.getFrozenModelNames().clear();
       p.getFrozenModelNames().add(DCProject.MODEL_NAMES_WILDCARD);
       p.getFrozenModelNames().add("anyother:Modelname");
@@ -664,6 +671,8 @@ public class ResourceModelTest {
       
       // restore initial state :
       } finally {
+         p.setVersion(datacoreApiClient.getData(ResourceModelIniter.MODEL_PROJECT_NAME,
+               DCProject.OASIS_SAMPLE).getVersion()); // else 409 conflict
          p.getFrozenModelNames().clear();
          pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
                DCProject.OASIS_META); // can't write outside project
@@ -699,6 +708,8 @@ public class ResourceModelTest {
       //pr.set("dcmp:allowedModelPrefixes", DCResource.listBuilder().add("anyotherprefix").build());
       p.getAllowedModelPrefixes().add("anyotherprefix");
       try {
+      p.setVersion(datacoreApiClient.getData(ResourceModelIniter.MODEL_PROJECT_NAME,
+            DCProject.OASIS_SAMPLE).getVersion()); // else 409 conflict
       pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
             DCProject.OASIS_META); // can't write outside project
       p = mrMappingService.toProject(pr);
@@ -721,6 +732,8 @@ public class ResourceModelTest {
       
       // add the right allowed prefix :
       //pr.set("dcmp:allowedModelPrefixes", DCResource.listBuilder().add("sample.city.").build());
+      p.setVersion(datacoreApiClient.getData(ResourceModelIniter.MODEL_PROJECT_NAME,
+            DCProject.OASIS_SAMPLE).getVersion()); // else 409 conflict
       p.getAllowedModelPrefixes().add("sample.city.");
       pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
             DCProject.OASIS_META); // can't write outside project
@@ -736,6 +749,8 @@ public class ResourceModelTest {
       
       // rather use wildcard
       //pr.set("dcmp:allowedModelPrefixes", DCResource.listBuilder().add(DCProject.MODEL_NAMES_WILDCARD).build());
+      p.setVersion(datacoreApiClient.getData(ResourceModelIniter.MODEL_PROJECT_NAME,
+            DCProject.OASIS_SAMPLE).getVersion()); // else 409 conflict
       p.getAllowedModelPrefixes().clear();
       p.getAllowedModelPrefixes().add("anyotherprefix");
       p.getAllowedModelPrefixes().add(DCProject.MODEL_NAMES_WILDCARD);
@@ -767,6 +782,8 @@ public class ResourceModelTest {
       
       // restore initial state :
       } finally {
+         p.setVersion(datacoreApiClient.getData(ResourceModelIniter.MODEL_PROJECT_NAME,
+               DCProject.OASIS_SAMPLE).getVersion()); // else 409 conflict
          p.getAllowedModelPrefixes().clear();
          pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
                DCProject.OASIS_META); // can't write outside project
@@ -780,57 +797,86 @@ public class ResourceModelTest {
    
 
    @Test
-   public void testProjectSecurityReload() throws Exception {
+   public void testProjectReloadSecurityAndSetList() throws Exception {
+      // preparing
       @SuppressWarnings("serial")
       LinkedHashSet<String> testRco = new LinkedHashSet<String>() {{ add("test"); }};
       @SuppressWarnings("serial")
       LinkedHashSet<String> adminRco = new LinkedHashSet<String>() {{ add("u_admin"); }}; // in local dev only !
+      DCResource pr = datacoreApiClient.getData(ResourceModelIniter.MODEL_PROJECT_NAME, DCProject.OASIS_SAMPLE);
+      String sampleProjectUri = pr.getUri();
+      DCProject p = mrMappingService.toProject(pr);
+      @SuppressWarnings("serial")
+      ArrayList<String> sampleProjectLocalVisibleProjectNames = new ArrayList<String>() {{
+         add(DCProject.OASIS_META); add(PublicPrivateOrganizationSample.ORG1_PROJECT);
+         add(PublicPrivateOrganizationSample.ORG2_PROJECT); add(PublicPrivateOrganizationSample.ORG3_PROJECT); }};
+      DCResource metaPr = datacoreApiClient.getData(ResourceModelIniter.MODEL_PROJECT_NAME, DCProject.OASIS_META);
+      String metaProjectUri = metaPr.getUri();
+      DCResource mainPr = datacoreApiClient.getData(ResourceModelIniter.MODEL_PROJECT_NAME, DCProject.OASIS_MAIN);
+      String mainProjectUri = mainPr.getUri();
       
       // put in initial state in case test was aborted AND check that model can then be changed :
-      DCResource pr = datacoreApiClient.getData(ResourceModelIniter.MODEL_PROJECT_NAME, DCProject.OASIS_SAMPLE);
-      DCProject p = mrMappingService.toProject(pr);
+      pr = datacoreApiClient.getData(ResourceModelIniter.MODEL_PROJECT_NAME, DCProject.OASIS_SAMPLE);
+      p = mrMappingService.toProject(pr);
       //pr.set("dcmp:securityConstraints", null); // NOT p.setSecurityConstraints(null); because merged in POST-like behaviour
       ///p.getSecurityConstraints().getResourceCreationOwners().clear();
       //pr.set("dcmp:securityDefaults", null); // NOT p.setSecurityDefaults(null); because merged in POST-like behaviour
       p.getSecurityDefaults().setResourceCreationOwners(adminRco);
       //pr.set("dcmp:visibleSecurityConstraints", null); // NOT p.setVisibleSecurityConstraints(null); because merged in POST-like behaviour
       p.getVisibleSecurityConstraints().getResourceCreationOwners().clear();
-      pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
-            DCProject.OASIS_META); // can't write outside project
+      // and set list :
+      p.getLocalVisibleProjects().clear();
+      for (String pn : sampleProjectLocalVisibleProjectNames) {
+         p.addLocalVisibleProject(modelAdminService.getProject(pn));
+      }
+      pr = datacoreApiClient.putDataInTypeInProject(mrMappingService.projectToResource(p, pr),
+            DCProject.OASIS_META); // can't write outside project ; using PUT to replace set list
       p = mrMappingService.toProject(pr);
       // checking initial state :
-      ///Assert.assertTrue(modelAdminService.getProject(DCProject.OASIS_SAMPLE)
-      ///      .getSecurityConstraints().getResourceCreationOwners().isEmpty());
-      Assert.assertTrue(modelAdminService.getProject(DCProject.OASIS_SAMPLE)
-            .getSecurityDefaults().getResourceCreationOwners().equals(adminRco));
-      Assert.assertTrue(modelAdminService.getProject(DCProject.OASIS_SAMPLE)
-            .getVisibleSecurityConstraints().getResourceCreationOwners().isEmpty());
+      DCProject actualProject = modelAdminService.getProject(DCProject.OASIS_SAMPLE);
+      ///Assert.assertTrue(actualProject.getSecurityConstraints().getResourceCreationOwners().isEmpty());
+      Assert.assertTrue(actualProject.getSecurityDefaults().getResourceCreationOwners().equals(adminRco));
+      Assert.assertTrue(actualProject.getVisibleSecurityConstraints().getResourceCreationOwners().isEmpty());
+      // and set list :
+      Assert.assertEquals(sampleProjectLocalVisibleProjectNames, actualProject
+            .getLocalVisibleProjects().stream().map(p1 -> p1.getName()).collect(Collectors.toList()));
       
       // set project security data :
       try {
       ///p.setSecurityConstraints(security);
       p.getSecurityDefaults().setResourceCreationOwners(testRco);
       p.getVisibleSecurityConstraints().setResourceCreationOwners(testRco);
+      // and set list :
+      p.getLocalVisibleProjects().clear();
+      p.addLocalVisibleProject(modelAdminService.getProject(DCProject.OASIS_META)); // BUT never remove meta else model 404 not found !
+      p.addLocalVisibleProject(mrMappingService.toProject(datacoreApiClient
+            .getData(ResourceModelIniter.MODEL_PROJECT_NAME, DCProject.OASIS_MAIN)));
       pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
-            DCProject.OASIS_META); // can't write outside project
+            DCProject.OASIS_META); // can't write outside project ; using POST to replace merge list
       p = mrMappingService.toProject(pr);
+      // checking changes :
+      actualProject = modelAdminService.getProject(DCProject.OASIS_SAMPLE);
       /*Assert.assertTrue("security constraints should have been set",
             modelAdminService.getProject(DCProject.OASIS_SAMPLE).getSecurityConstraints() != null
             && modelAdminService.getProject(DCProject.OASIS_SAMPLE).getSecurityConstraints()
             .getResourceCreationOwners().equals(testRco));*/
-      Assert.assertTrue("security defaults should have been set",
-            modelAdminService.getProject(DCProject.OASIS_SAMPLE).getSecurityDefaults() != null
-            && modelAdminService.getProject(DCProject.OASIS_SAMPLE).getSecurityDefaults()
-            .getResourceCreationOwners().equals(testRco));
-      Assert.assertTrue("visible security constraints should have been set",
-            modelAdminService.getProject(DCProject.OASIS_SAMPLE).getVisibleSecurityConstraints() != null
-            && modelAdminService.getProject(DCProject.OASIS_SAMPLE).getVisibleSecurityConstraints()
-            .getResourceCreationOwners().equals(testRco));
+      Assert.assertTrue("security defaults should have been set", testRco.equals(
+            actualProject.getSecurityDefaults().getResourceCreationOwners()));
+      Assert.assertTrue("visible security constraints should have been set", testRco.equals(
+            actualProject.getVisibleSecurityConstraints().getResourceCreationOwners()));
+      // and set list :
+      Assert.assertEquals("local visible projects should have been added", new HashSet<String>() {{
+         // (not ArrayList because merge produces different order)
+         addAll(sampleProjectLocalVisibleProjectNames); add(DCProject.OASIS_MAIN); }},
+            actualProject.getLocalVisibleProjects().stream().map(p1 -> p1.getName()).collect(Collectors.toSet()));
 
       // clearing and reloading :
       ///modelAdminService.getProject(DCProject.OASIS_SAMPLE).setSecurityConstraints(null);
-      modelAdminService.getProject(DCProject.OASIS_SAMPLE).getSecurityDefaults().setResourceCreationOwners(adminRco);
-      modelAdminService.getProject(DCProject.OASIS_SAMPLE).getVisibleSecurityConstraints().getResourceCreationOwners().clear();
+      actualProject.getSecurityDefaults().setResourceCreationOwners(adminRco);
+      actualProject.getVisibleSecurityConstraints().getResourceCreationOwners().clear();
+      // and set list :
+      actualProject.getLocalVisibleProjects().clear();
+      actualProject.addLocalVisibleProject(modelAdminService.getProject(DCProject.OASIS_META)); // BUT never remove meta else model 404 not found !
       try {
          authenticationService.loginAs("admin"); // else AuthenticationCredentialsNotFoundException in calling entityService
          loadPersistedModelsAtInitService.loadProject(datacoreApiClient.getData(ResourceModelIniter
@@ -838,18 +884,21 @@ public class ResourceModelTest {
       } finally {
          authenticationService.logout();
       }
+      // checking reload :
+      actualProject = modelAdminService.getProject(DCProject.OASIS_SAMPLE);
       /*Assert.assertTrue("security constraints should have been reloaded",
             modelAdminService.getProject(DCProject.OASIS_SAMPLE).getSecurityConstraints() != null
             && modelAdminService.getProject(DCProject.OASIS_SAMPLE).getSecurityConstraints()
             .getResourceCreationOwners().equals(testRco));*/
-      Assert.assertTrue("security defaults should have been reloaded",
-            modelAdminService.getProject(DCProject.OASIS_SAMPLE).getSecurityDefaults() != null
-            && modelAdminService.getProject(DCProject.OASIS_SAMPLE).getSecurityDefaults()
-            .getResourceCreationOwners().equals(testRco));
-      Assert.assertTrue("visible security constraints should have been reloaded",
-            modelAdminService.getProject(DCProject.OASIS_SAMPLE).getVisibleSecurityConstraints() != null
-            && modelAdminService.getProject(DCProject.OASIS_SAMPLE).getVisibleSecurityConstraints()
-            .getResourceCreationOwners().equals(testRco));
+      Assert.assertTrue("security defaults should have been reloaded", testRco.equals(
+            actualProject.getSecurityDefaults().getResourceCreationOwners()));
+      Assert.assertTrue("visible security constraints should have been reloaded", testRco.equals(
+            actualProject.getVisibleSecurityConstraints().getResourceCreationOwners()));
+      // and set list :
+      Assert.assertEquals("local visible project should have been reloaded", new HashSet<String>() {{
+         // (not ArrayList because merge produces different order)
+         addAll(sampleProjectLocalVisibleProjectNames); add(DCProject.OASIS_MAIN); }},
+               actualProject.getLocalVisibleProjects().stream().map(p1 -> p1.getName()).collect(Collectors.toSet()));
       
       // restore initial state :
       } finally {
@@ -859,15 +908,22 @@ public class ResourceModelTest {
          p.getSecurityDefaults().setResourceCreationOwners(adminRco);
          //pr.set("dcmp:visibleSecurityConstraints", null); // NOT p.setVisibleSecurityConstraints(null); because merged in POST-like behaviour
          p.getVisibleSecurityConstraints().getResourceCreationOwners().clear();
-         pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
-               DCProject.OASIS_META); // can't write outside project
+         // and set list :
+         p.getLocalVisibleProjects().clear();
+         for (String pn : sampleProjectLocalVisibleProjectNames) {
+            p.addLocalVisibleProject(modelAdminService.getProject(pn));
+         }
+         pr = datacoreApiClient.putDataInTypeInProject(mrMappingService.projectToResource(p, pr),
+               DCProject.OASIS_META); // can't write outside project ; using PUT to replace set list
          p = mrMappingService.toProject(pr);
-         ///Assert.assertTrue(modelAdminService.getProject(DCProject.OASIS_SAMPLE)
-         ///      .getSecurityConstraints().getResourceCreationOwners().isEmpty());
-         Assert.assertTrue(modelAdminService.getProject(DCProject.OASIS_SAMPLE)
-               .getSecurityDefaults().getResourceCreationOwners().equals(adminRco));
-         Assert.assertTrue(modelAdminService.getProject(DCProject.OASIS_SAMPLE)
-               .getVisibleSecurityConstraints().getResourceCreationOwners().isEmpty());
+         // checking initial state :
+         actualProject = modelAdminService.getProject(DCProject.OASIS_SAMPLE);
+         ///Assert.assertTrue(actualProject.getSecurityConstraints().getResourceCreationOwners().isEmpty());
+         Assert.assertTrue(actualProject.getSecurityDefaults().getResourceCreationOwners().equals(adminRco));
+         Assert.assertTrue(actualProject.getVisibleSecurityConstraints().getResourceCreationOwners().isEmpty());
+         // and set list (including checking PUT replace instead of POST merge) :
+         Assert.assertEquals(sampleProjectLocalVisibleProjectNames, actualProject
+               .getLocalVisibleProjects().stream().map(p1 -> p1.getName()).collect(Collectors.toList()));
       }
    }
    

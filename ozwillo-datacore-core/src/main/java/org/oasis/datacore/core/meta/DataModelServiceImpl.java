@@ -181,8 +181,15 @@ public class DataModelServiceImpl implements DCModelService {
    }
    @Override
    public List<DCProject> getProjectsSeeing(DCProject project) {
+      return getProjectsSeeing(project, false);
+   }
+   @Override
+   public List<DCProject> getProjectsSeeing(DCProject project, boolean outsideItself) {
       List<DCProject> projectsSeingIt = new ArrayList<DCProject>();
       p : for (DCProject p : dataModelService.getProjects()) {
+         if (outsideItself && p.getName().equals(project.getName())) {
+            continue;
+         }
          for (DCProject vp : dataModelService.getVisibleProjects(p)) {
             if (vp.getName().equals(project.getName())) {
                projectsSeingIt.add(p);

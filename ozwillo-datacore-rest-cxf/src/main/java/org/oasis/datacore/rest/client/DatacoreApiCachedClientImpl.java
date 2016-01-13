@@ -518,10 +518,20 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
    ///////////////////////////////////////////////////////////////////////
    // HELPERS WITH PROJECT
 
+   @Override
    public DCResource postDataInTypeInProject(DCResource r, String projectName) {
       return new SimpleRequestContextProvider<DCResource>() {
          protected DCResource executeInternal() {
             return postDataInType(r);
+         }
+      }.execInContext(new ImmutableMap.Builder<String, Object>()
+            .put(DCRequestContextProvider.PROJECT, projectName).build());
+   }
+   @Override
+   public DCResource putDataInTypeInProject(DCResource r, String projectName) {
+      return new SimpleRequestContextProvider<DCResource>() {
+         protected DCResource executeInternal() {
+            return putDataInType(r);
          }
       }.execInContext(new ImmutableMap.Builder<String, Object>()
             .put(DCRequestContextProvider.PROJECT, projectName).build());

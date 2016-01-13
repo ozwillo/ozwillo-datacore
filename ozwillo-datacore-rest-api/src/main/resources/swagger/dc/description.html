@@ -292,6 +292,9 @@ javascript:return findDataByType(encodeUri($(this).attr('href')));
 and finally look in the results for the "ownedEntities" part (that only contains
 data Resources that you have owner / admin rights on, for data security reasons) 
 and within in the  "owners", "writers" and "readers" entity fields.
+Note that Resource-level permissions can be updated from the Playground
+using its bottom, Swagger part (operation
+<a href="https://data.ozwillo-preprod.eu/dc-ui/index.html#!/r/replaceRightsOnResource_put_2">PUT /dc/r/...</a>).
 <br/><br/>
 &nbsp;&nbsp;- <a href="#metamodelFaq">Project & Model troubleshooting &amp; FAQ</a>
 <br/><br/>
@@ -313,7 +316,8 @@ see <a href="https://github.com/ozwillo/ozwillo-datacore/issues?utf8=%E2%9C%93&q
 - 2. define their ID definition policy and link them using resource fields, define referencing mixin fields and default values,
 - 3. find out which Models already exist and reconcile with them (or do it beforehands)">(?)</a>
 .
-You can do both using the <a href="./import/index.html">Import UI</a> (see Master Model & samples there including OpenElec's, and
+You can do both using the <a href="./import/index.html">Import UI</a>
+(see Master Model, empty template & samples there including OpenElec's, and
 <a href="https://github.com/ozwillo/ozwillo-datacore/wiki/Playground-&-Import-UI-demo-scenario---Provto-&-OpenElec">its documentation on wiki</a>).
 <br/>
 However, if you prefer, you can do it using Java (see
@@ -387,7 +391,8 @@ javascript:return findDataByType($(this).attr('href'));
 <a href="/dc/type/pli:city_0?pli:name_i18n.v=Torino" class="dclink" onclick="
 javascript:return findDataByType($(this).attr('href'));
 ">/dc/type/pli:city_0?pli:name_i18n.v=Torino</a>
-), but also language-scoped lookups such as 
+) so that values are useful even if not untranslated and therefore are
+not siloed in their language, but also language-scoped lookups such as 
 <a href="/dc/type/pli:city_0?pli:name_i18n.it=Torino" class="dclink" onclick="
 javascript:return findDataByType($(this).attr('href'));
 ">/dc/type/pli:city_0?pli:name_i18n.it=Torino</a>
@@ -399,6 +404,14 @@ javascript:return findDataByType($(this).text());
  <a href="/dc/type/pli:city_0?pli:name_i18n=Torino" class="dclink" onclick="
 javascript:return findDataByType($(this).attr('href'));
 ">/dc/type/pli:city_0?pli:name_i18n=Torino&l=it</a>
+. Beyond such exact lookups, all string operators can be used, and most usefully $fulltext
+(must be explicitly enabled on the field) and $regex.
+<br/><br/>
+<b>Advanced field features</b> are documented in the Models' import wiki and templates,
+all linked from their <a href="./import/index.html">Import UI</a>. Here's a quick list :
+required, defaultValue, queryLimit, aliasedStorageNames, readonly ;
+string & i18n : fulltext ; i18n : defaultLanguage ; resource : resourceType ;
+list : listElementField, isSet, keyFieldName ; map : mapFields.
 <br/><br/>
 
 <br/>
@@ -576,6 +589,7 @@ name starts by any one of those prefixes ('*' wildcard also allowed, to ease swi
 can be changed in this project, in order to avoid to add models that belong to another project by
 mistake, such as POSTing an org model while importing geo elements using the master model file.
 <br/><br/>
+
 <a id="metamodelFaq"></a>
 <b>Project &amp; Model troubleshooting &amp; FAQ :</b>
 <br/>

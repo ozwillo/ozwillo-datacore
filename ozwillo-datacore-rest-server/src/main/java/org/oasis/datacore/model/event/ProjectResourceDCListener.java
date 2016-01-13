@@ -1,5 +1,6 @@
 package org.oasis.datacore.model.event;
 
+import org.oasis.datacore.core.context.DatacoreRequestContextService;
 import org.oasis.datacore.core.init.InitService;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.pov.DCProject;
@@ -40,6 +41,9 @@ public class ProjectResourceDCListener extends DCResourceEventListener implement
     * (because some are probably not even persisted yet) */
    @Autowired
    private InitService initService;
+   /** to know putRatherThanPatchMode */
+   @Autowired(required=false)
+   private DatacoreRequestContextService serverRequestContext = null;
 
    public ProjectResourceDCListener() {
       super();
@@ -161,7 +165,7 @@ public class ProjectResourceDCListener extends DCResourceEventListener implement
 
    private void updateDirectlyImpactedProjects(DCProject project, DCProject previousProject) {
       if (!previousProject.getLocalVisibleProjects().equals(project.getLocalVisibleProjects())) {
-         for (DCProject projectToRepersist : dataModelService.getProjectsSeeing(previousProject)) {
+         for (DCProject projectToRepersist : dataModelService.getProjectsSeeing(previousProject, true)) {
             try {
                resourceService.createOrUpdate(mrMappingService.projectToResource(projectToRepersist),
                      "dcmp:Project_0", false, true, true);
@@ -185,10 +189,11 @@ public class ProjectResourceDCListener extends DCResourceEventListener implement
          DCProject previousProject = dataModelAdminService.getProject(
                (String) r.get(ResourceModelIniter.POINTOFVIEW_NAME_PROP));
          DCProject project = (previousProject == null) ? mrMappingService.toProject(r) // also checks project !
-               :  mrMappingService.toProject(r, previousProject);
+               :  mrMappingService.toProject(r, previousProject); // which always replaces fields,
+         // because merge (in case of POST rather than PUT) has already been done in r in Resource mapping
+         // (else replace / PUT wouldn't be possible)
          // NB. r has been cleaned up / enriched with up-to-date computed fields
-         // (ex. ??) before in ABOUT_TO_CREATE/UPDATE
-         // step
+         // (ex. ??) before in ABOUT_TO_CREATE/UPDATE step
          createOrUpdate(project, previousProject);
       } catch (ResourceException rex) {
          // abort else POSTer won't know that his project can't be used

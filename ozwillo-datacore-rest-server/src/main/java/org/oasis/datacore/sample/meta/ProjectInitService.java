@@ -103,8 +103,8 @@ public class ProjectInitService {
       if (project == null) {
          project = buildProjectDefaultConf(DCProject.OASIS_MAIN,
                "(facade) Makes visible all published projects", null);
-         // TODO ADD SECURITY TO CITIZEN KIN MODELS
-         // TODO TODO add ALL other projects ; & should not have any local models
+         // TODO TODO add ALL other projects, or only "published" (?) ones ?
+         // NB. should not have any local models
       }
       return project;
    }

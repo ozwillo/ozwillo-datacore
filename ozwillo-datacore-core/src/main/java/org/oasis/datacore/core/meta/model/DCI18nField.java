@@ -4,7 +4,7 @@ import java.util.LinkedHashSet;
 
 
 /**
- * i18n field, as a list of l to v maps
+ * i18n field, as a list of l (set key) to v maps
  * NB. "required" field has no meaning here (would be within a given language and even then...)
  * TODO LATER default language in more context than global & model : request, user...
  * query limit : taken as biggest among its "v" list subfield and the field itself
@@ -45,10 +45,16 @@ public class DCI18nField extends DCListField {
    public DCI18nField(String name, int queryLimit, LinkedHashSet<String> aliasedStorageNames) {
       super(name, "i18n", createI18nMap(queryLimit));
       this.setAliasedStorageNames(aliasedStorageNames);
+      // set list conf :
+      this.setIsSet(true);
+      this.setKeyFieldName(KEY_LANGUAGE);
    }
    public DCI18nField(String name, int queryLimit, String singleAliasedStorageName) {
       super(name, "i18n", createI18nMap(queryLimit));
       this.setSingleAliasedStorageName(singleAliasedStorageName);
+      // set list conf :
+      this.setIsSet(true);
+      this.setKeyFieldName(KEY_LANGUAGE);
    }
    public DCI18nField(String name, int queryLimit, String singleAliasedStorageName, boolean readonly) {
       this(name, queryLimit, singleAliasedStorageName);

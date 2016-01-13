@@ -11,6 +11,8 @@ import java.util.LinkedHashSet;
 public class DCListField extends DCField {
    
    private DCField listElementField;
+   private boolean isSet = false;
+   private String keyFieldName = null;
 
    public DCListField() {
       
@@ -68,6 +70,22 @@ public class DCListField extends DCField {
    @Override
    public boolean isIndexed() {
       return listElementField.isIndexed();
+   }
+
+   public boolean isSet() {
+      return isSet;
+   }
+
+   public void setIsSet(boolean isSet) {
+      this.isSet = isSet;
+   }
+
+   public String getKeyFieldName() {
+      return keyFieldName;
+   }
+
+   public void setKeyFieldName(String keyFieldName) {
+      this.keyFieldName = keyFieldName;
    }
    
    ///////////////////////////////////////

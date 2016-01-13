@@ -38,7 +38,7 @@ public class DCProject extends DCPointOfViewBase {
    
    private LinkedHashMap<String,DCUseCasePointOfView> useCasePointOfViewMap = new LinkedHashMap<String, DCUseCasePointOfView>();
    
-   /** LATER also reuse visible ones ? */
+   /** local visible projects ; LATER also reuse visible ones ? */
    private LinkedHashMap<String,DCProject> visibleProjectMap = new LinkedHashMap<String, DCProject>(); // TODO merge in visibleStorageProjectMap
    private LinkedHashSet<String> forkedUris = new LinkedHashSet<String>();
    private LinkedHashSet<String> frozenModelNames = new LinkedHashSet<String>();
@@ -288,6 +288,11 @@ public class DCProject extends DCPointOfViewBase {
    public void addLocalVisibleProject(DCProject visibleProject) {
       this.visibleProjectMap.put(visibleProject.getName(), visibleProject);
    }
+   
+   /** to allow single-operation changes (especially remove ex. on PUT / replace) */
+   public void setLocalVisibleProjectMap(LinkedHashMap<String, DCProject> visibleProjectMap) {
+      this.visibleProjectMap = visibleProjectMap;
+   }
 
 
    /**
@@ -383,7 +388,7 @@ public class DCProject extends DCPointOfViewBase {
    }
    
    /** TODO ?? ONLY TO CREATE DERIVED MODELS ex. Contribution, TODO LATER rather change their name ?!? */
-  /* public void addUseCasePointOfView(DCModelBase dcModel, String name) {
+   /*public void addUseCasePointOfView(DCModelBase dcModel, String name) {
       altModelMap.put(name, dcModel);
    }*/
 

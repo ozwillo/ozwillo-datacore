@@ -27,6 +27,7 @@ public abstract class DCPointOfViewBase implements DCPointOfView {
    /** cache */
    private String absoluteName = null;
    ///protected LinkedHashMap<String,DCPointOfView> pointOfViewMap = new LinkedHashMap<String,DCPointOfView>();
+   /** especially used in inheriting DCProject */
    protected LinkedHashMap<String,DCModelBase> modelMap = new LinkedHashMap<String,DCModelBase>();
 
    /** for unmarshalling only */

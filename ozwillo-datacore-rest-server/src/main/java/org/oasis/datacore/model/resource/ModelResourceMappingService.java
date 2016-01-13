@@ -3,6 +3,7 @@ package org.oasis.datacore.model.resource;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -119,6 +120,9 @@ public class ModelResourceMappingService {
             
             // POLY cache : TODO
             ;
+      if (project.getVersion() >= 0) {
+         projectResource.setVersion(project.getVersion()); // (required in PUT / replace mode)
+      } // not at creation, rather update DCProject.version from its resource after each put
       
       String uri = this.buildPointOfViewUri(projectResource);
 
@@ -373,12 +377,16 @@ public class ModelResourceMappingService {
          if (field.isFulltext()) {
             fieldPropBuilder.put("dcmf:fulltext", true);
          } // else null means no value, but ImmutableMap.Builder doesn't accept null
+         // chain to list case :
       case "list" : // and also i18n
          @SuppressWarnings("unchecked")
-         Map<String,Object> existingListElementFieldProps = (existingProps != null)
-            ? (Map<String,Object>) existingProps.get("dcmf:listElementField") : null;
+         Map<String,Object> existingListElementFieldProps = (existingProps != null) ?
+               (Map<String,Object>) existingProps.get("dcmf:listElementField") : null;
+         DCListField lf = (DCListField) field;
          fieldPropBuilder.put("dcmf:listElementField", fieldToProps(
-               ((DCListField) field).getListElementField(), fieldUri, existingListElementFieldProps));
+               lf.getListElementField(), fieldUri, existingListElementFieldProps));
+         if (lf.isSet()) { fieldPropBuilder.put("dcmf:isSet", true); }
+         if (lf.getKeyFieldName() != null) { fieldPropBuilder.put("dcmf:keyFieldName", lf.getKeyFieldName()); }
          break;
       case "resource" :
          fieldPropBuilder.put("dcmf:resourceType", ((DCResourceField) field).getResourceType());
@@ -408,8 +416,19 @@ public class ModelResourceMappingService {
       DCProject project = new DCProject(name);
       return toProject(r, project);
    }
+   /**
+    * Always replaces fields, because merge (in case of POST rather than PUT)
+    * has already been done in r in Resource mapping (else replace / PUT wouldn't be possible)
+    * @param r
+    * @param project existing ; only there to keep state (modelMap), not to merge.
+    * Changes should be single-operation ex. set(map).
+    * TODO LATER better : don't change existing until the end of it using copy constructor,
+    * up to transactional metamodel updates
+    * @return
+    * @throws ResourceException
+    */
    public DCProject toProject(DCResource r, DCProject project) throws ResourceException {
-      // project is always be oasis.main for projects
+      // project is always be oasis.meta for projects
       //String pointOfViewAbsoluteName = dataModelService.getProject().getAbsoluteName();
 
       Long version = r.getVersion();
@@ -435,8 +454,8 @@ public class ModelResourceMappingService {
       @SuppressWarnings("unchecked")
       //List<Map<String, Object>> visibleProjects = (List<Map<String, Object>>) r.get("dcmp:visibleProjects");
       List<String> visibleProjectUris = (List<String>) r.get("dcmp:localVisibleProjects");
+      LinkedHashMap<String, DCProject> lvpMap = new LinkedHashMap<String, DCProject>(visibleProjectUris.size());
       if (visibleProjectUris != null) {
-         //for (Map<String, Object> visibleProject : visibleProjects) {
          for (String visibleProjectUri : visibleProjectUris) {
             String visibleProjectName;
             try {
@@ -450,13 +469,16 @@ public class ModelResourceMappingService {
                throw new ResourceException("Can't find visibleProject " + visibleProjectName,
                      null, r, project);
             }
-            project.addLocalVisibleProject(visibleProject);
+            lvpMap.put(visibleProject.getName(), visibleProject);
             // TODO isDef/Storage...
             /*boolean vprName = vpr.get("dcmvp:name");
             DCVisibleProject dcVisibleProject = new DCVisibleProject();
             boolean isStorage = vpr.get("dcmvp:isStorage");*/
          }
       } // else allowing model without visible projects ex. Phase 1 sandbox
+      project.setLocalVisibleProjectMap(lvpMap);
+      // (rather than project.addLocalVisibleProject(visibleProject) which wouldn't allow PUT / replace ;
+      // NB. merge has already been done in Resource mapping)
 
       // TODO POV ?!
       
@@ -980,7 +1002,11 @@ public class ModelResourceMappingService {
          throws ResourceParsingException, IllegalArgumentException {
       @SuppressWarnings("unchecked")
       Map<String, Object> listElementFieldProps = (Map<String, Object>) fieldResource.get("dcmf:listElementField");
-      return new DCListField(fieldName, propsToField(listElementFieldProps));
+      DCListField listField = new DCListField(fieldName, propsToField(listElementFieldProps));
+      Boolean isSet = (Boolean) fieldResource.get("dcmf:isSet");
+      if (isSet != null) { listField.setIsSet(isSet); }
+      listField.setKeyFieldName((String) fieldResource.get("dcmf:keyFieldName"));
+      return listField;
    }
    
    /** public for tests 

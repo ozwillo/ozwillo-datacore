@@ -269,13 +269,27 @@ public class ResourceEntityMapperService {
          }
          List<?> dataList = (List<?>) resourceValue;
          ArrayList<Object> entityList = new ArrayList<Object>(dataList.size());
-         DCField listElementField = ((DCListField) dcField).getListElementField(); // all items are of the same type
+         
+         DCListField listField = (DCListField) dcField;
+         
+         // preparing set list merge (if any) :
+         LinkedHashMap<String, Object> reusedExistingEntitySetListMap = null;
+         if (listField.isSet() && reusedExistingValue instanceof List<?>) { // NB. i18n fields are a set list
+            @SuppressWarnings("unchecked")
+            List<Object> reusedExistingEntitySetListFound = (List<Object>) reusedExistingValue;
+            reusedExistingEntitySetListMap = resourceSetListToMap(reusedExistingEntitySetListFound, listField);
+         } // else existing is overriden
+         
+         DCField listElementField = listField.getListElementField(); // all items are of the same type
          int i = 0;
          for (Object resourceItem : dataList) {
             Object entityItem;
+            // set list merge : (if any)
+            Object reusedItem = (reusedExistingEntitySetListMap != null) ?
+                  reusedExistingEntitySetListMap.remove(getResourceSetListKey(resourceItem, i, listField)) : null;
             try {
                resourceParsingContext.enter(null, null, listElementField, resourceItem, i);
-               entityItem = resourceToEntityValue(resourceItem, null, // list is replaced if provided
+               entityItem = resourceToEntityValue(resourceItem, reusedItem, // list is replaced if provided
                      listElementField, resourceParsingContext);
             } catch (ResourceParsingException rpex) {
                resourceParsingContext.addError("Error while parsing list element Field value " + resourceItem
@@ -287,6 +301,9 @@ public class ResourceEntityMapperService {
                i++;
             }
             entityList.add(entityItem);
+         }
+         if (reusedExistingEntitySetListMap != null) {
+            entityList.addAll(reusedExistingEntitySetListMap.values()); // add remaining ones if any (and if set list)
          }
          entityValue = entityList;
          
@@ -442,6 +459,46 @@ public class ResourceEntityMapperService {
       return entityValue;
    }
 
+   private LinkedHashMap<String, Object> resourceSetListToMap(List<Object> resourceSetList,
+         DCListField setListField) throws ResourceParsingException {
+      LinkedHashMap<String, Object> res = new LinkedHashMap<String, Object>(resourceSetList.size());
+      int i = 0;
+      for (Object resourceSetListItem : resourceSetList) {
+         String key = getResourceSetListKey(resourceSetListItem, i, setListField);
+         res.put(key, resourceSetListItem);
+         i++;
+      }
+      return res;
+   }
+   
+   private String getResourceSetListKey(Object resourceSetListItem,
+         int indexInList, DCListField setListField) throws ResourceParsingException {
+      String key;
+      if (resourceSetListItem instanceof Map<?,?>) {
+         String keyFieldName = setListField.getKeyFieldName();
+         if (keyFieldName == null) {
+            keyFieldName = DCResource.KEY_URI;
+         }
+         @SuppressWarnings("unchecked")
+         Map<String, Object> resourceOrMapItem = (Map<String,Object>) resourceSetListItem;
+         key = (String) resourceOrMapItem.get(keyFieldName);
+         if (key == null) { // case of mere DCMapField, or missing (non-URI) key field value
+            //throw new ResourceParsingException("Can't find " + DCResource.KEY_URI
+            //      + " among properties of Object value of set list resource Field but only "
+            //      + resourceOrMapItem + " (set list TODO)");
+            key = String.valueOf(indexInList); // reverting to index
+         }
+      } else if (resourceSetListItem instanceof DCResource) {
+         key = ((DCResource) resourceSetListItem).getUri();
+      } else if (resourceSetListItem instanceof List<?>) {
+         throw new ResourceParsingException("set of list "
+               + resourceSetListItem + " is not supported");
+      } else {
+         // TODO check that primitive ?
+         key = String.valueOf(resourceSetListItem);
+      }
+      return key;
+   }
    private Object buildI18nEntityValue(Object resourceValue, DCI18nField dcI18nField,
          DCResourceParsingContext resourceParsingContext) throws ResourceParsingException {
       List<Map<String, Object>> entityValue;

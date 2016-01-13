@@ -19,6 +19,12 @@ public interface DatacoreRequestContextService {
 
    LinkedHashSet<String> getViewMixinNames();
    
+   /**
+    * i.e. replace rather than merge
+    * (for now) set in ResourceService.resourceToEntity() according to putRatherThanPatchMode
+    * (rather than in DatacoreApiImpl, so that it can be used everywhere including outside REST)
+    * @return
+    */
    boolean getPutRatherThanPatchMode();
 
 }

@@ -61,5 +61,7 @@ public interface DatacoreCachedClient extends DatacoreClientApi {
    // HELPERS WITH PROJECT
    
    DCResource postDataInTypeInProject(DCResource r, String projectName);
+   /** to avoid POST merge */
+   DCResource putDataInTypeInProject(DCResource r, String projectName);
    
 }

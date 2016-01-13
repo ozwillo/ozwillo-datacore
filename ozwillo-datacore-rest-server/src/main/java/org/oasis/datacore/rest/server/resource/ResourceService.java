@@ -296,7 +296,8 @@ public class ResourceService {
       // parsing resource according to model :
       DCResourceParsingContext resourceParsingContext =
             new DCResourceParsingContext(dcModel, storageModel, uri);
-      requestContextProviderFactory.set(PUT_MODE, putRatherThanPatchMode);
+      requestContextProviderFactory.set(PUT_MODE, putRatherThanPatchMode); // required in :
+      // permission eval, event listeners ex. ProjectResourceDCListener, some more Resource mapping
       //List<DCEntity> embeddedEntitiesToAlsoUpdate = new ArrayList<DCEntity>(); // TODO embeddedEntitiesToAlsoUpdate ??
       //resourceParsingContext.setEmbeddedEntitiesToAlsoUpdate(embeddedEntitiesToAlsoUpdate);
       resourceEntityMapperService.resourceToEntityFields(dataProps, dataEntity.getProperties(),

@@ -154,9 +154,11 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addField(new DCField("dcmf:queryLimit", "int", 0, 0)) // defaults to 0, indexing would bring not much ??
          .addField(new DCListField("dcmf:aliasedStorageNames", new DCField("useless", "string"))) // defaults to 0, indexing would bring not much ??
          .addField(new DCField("dcmf:readonly", "boolean", false, 0))
-         .addField(new DCField("dcmf:fulltext", "boolean", false, 0)) // only on string-typed fields
+         .addField(new DCField("dcmf:fulltext", "boolean", false, 0)) // only on string(& i18n)-typed fields
          // list :
          .addField(new DCResourceField("dcmf:listElementField", MODEL_FIELD_NAME))
+         .addField(new DCField("dcmf:isSet", "boolean", false, 0))
+         .addField(new DCField("dcmf:keyFieldName", "string", false, 0))
          // map :
          .addField(new DCListField("dcmf:mapFields", new DCResourceField("useless", MODEL_FIELD_NAME)))
          // resource :
@@ -293,6 +295,8 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addField(new DCField("dcmp:useModelSecurity", "boolean", (Object) false, 0))
          .addField(new DCResourceField("dcmp:visibleSecurityConstraints", MODEL_SECURITY_NAME, false, 0)) // embedded subresource
          ;
+      ((DCListField) projectModel.getField("dcmp:localVisibleProjects")).setIsSet(true);
+      // TODO LATER also make other DCProject (& DCModel) list fields sets
       projectModel.setStorage(false); // store in dcmpv
       projectModel.setInstanciable(true);
 
@@ -551,10 +555,14 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       
       // this project & its models :
       // (convert and persist project & its models, after deps)
+      List<DCResource> resourcesToPost = new ArrayList<DCResource>();
       
       // 1. this project & povs (in oasis.main collections) :
-      List<DCResource> resourcesToPost = new ArrayList<DCResource>();
       projectToResource(project, resourcesToPost);
+      postDataInType(resourcesToPost.get(0));
+      
+      // 1. its povs (in oasis.main collections) :
+      resourcesToPost.clear();
       project.getUseCasePointOfViews().forEach(ucPov -> {
          ucPov.getPointOfViews()
             .forEach(povElt -> {
