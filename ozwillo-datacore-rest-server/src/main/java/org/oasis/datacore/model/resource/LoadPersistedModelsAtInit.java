@@ -20,6 +20,7 @@ import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.pov.DCProject;
+import org.oasis.datacore.model.event.ProjectResourceDCListener;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.server.event.EventService;
 import org.oasis.datacore.rest.server.resource.ResourceEntityMapperService;
@@ -78,6 +79,12 @@ public class LoadPersistedModelsAtInit extends InitableBase {
 
    @Override
    protected void doInit() {
+      // enabling project reloading :
+      // (rather than in ResourceModelIniter, else when persisting hardcoded projects
+      // they may be reloaded with additional visibleProjects that will not yet have
+      // been loaded from persistence)
+      eventService.init(new ProjectResourceDCListener(ResourceModelIniter.MODEL_PROJECT_NAME));
+      
       try {
          loadProjects();
       } catch (QueryException qex) {

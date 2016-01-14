@@ -26,7 +26,6 @@ import org.oasis.datacore.core.meta.pov.ProjectException;
 import org.oasis.datacore.model.event.ModelDCEvent;
 import org.oasis.datacore.model.event.ModelDCListener;
 import org.oasis.datacore.model.event.ModelResourceDCListener;
-import org.oasis.datacore.model.event.ProjectResourceDCListener;
 import org.oasis.datacore.model.resource.ModelResourceMappingService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
@@ -97,8 +96,10 @@ public class ResourceModelIniter extends DatacoreSampleBase {
    protected void doInit() {
       super.doInit();
       eventService.init(new ModelResourceDCListener(MODEL_MODEL_NAME)); // TODO or from listeners set in DCModel ??
-      eventService.init(new ProjectResourceDCListener(MODEL_PROJECT_NAME));
       eventService.init(new ModelDCListener(ModelDCEvent.MODEL_DEFAULT_BUSINESS_DOMAIN));
+      // NB. DON'T enable project reloading yet, rather in LoadPersistedModelsAtInit :
+      // (else when persisting hardcoded projects they may be reloaded with additional
+      // visibleProjects that will not yet have been loaded from persistence)
    }
    
    /** do neverCleanData */
@@ -341,7 +342,9 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       updateMetamodelResourcesInProject(modelOrMixins);
       
       // update (default) project resources, always for now :
-      //createDefaultProjects(); // NOO rather commented out to allow managing them from Playground
+      createDefaultProjects(); // NB. this will update their persisted Resources
+      // in POST / PATCH-like merge mode, therefore keeping additional rights, visibleProjects etc.
+      // (though not ostensible changes in security policy)
       allProjectsToResource(false);
       return res;
    }
@@ -371,6 +374,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       DCProject citizenkin0Project = projectInitService.buildContainerVersionedProjectDefaultConf("citizenkin", 0,
             "Citizen Kin procedures", null, geoProject);
       citizenkin0Project.setModelLevelSecurityEnabled(true);
+      citizenkin0Project.setUseModelSecurity(true); // the only one this way for now
       citizenkin0Project.getSecurityDefaults().setAuthentifiedCreatable(true); // anybody can create a procedure (?)
       citizenkin0Project.getSecurityDefaults().setResourceCreationOwners(new LinkedHashSet<String>()); // owner is u_user as before BUT THIS SHOULD NOT WORK ??
       // (for both to be used, security on CK models should be voided)
@@ -557,12 +561,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       // (convert and persist project & its models, after deps)
       List<DCResource> resourcesToPost = new ArrayList<DCResource>();
       
-      // 1. this project & povs (in oasis.main collections) :
-      projectToResource(project, resourcesToPost);
-      postDataInType(resourcesToPost.get(0));
-      
       // 1. its povs (in oasis.main collections) :
-      resourcesToPost.clear();
       project.getUseCasePointOfViews().forEach(ucPov -> {
          ucPov.getPointOfViews()
             .forEach(povElt -> {
@@ -591,6 +590,12 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          }.execInContext(new ImmutableMap.Builder<String, Object>()
                .put(DCRequestContextProvider.PROJECT, project.getName()).build());
       }
+      
+      // 2. this project itself :
+      // (after, else can't find its visibleProjects in toProject() ; in oasis.main collections)
+      resourcesToPost.clear();
+      projectToResource(project, resourcesToPost);
+      postDataInType(resourcesToPost.get(0));
       
       projectNameDoneSet.add(project.getName());
    }
