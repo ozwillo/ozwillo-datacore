@@ -314,10 +314,11 @@ public interface DatacoreApi {
    /*@Path("/post/type/{type}")
    @POST
    @ApiOperation(value = "Creates a new data Resource in the given type, or updates it if allowed.",
-      notes = "resource URI must be provided but can be relative to type ; "
-            + "in order to update an existing resource, " 
-            + "(which first requires that strict POST mode is not enabled) "
-            + "up-to-date version is required (GET it first if not saved locally)",
+      notes = "Resource URI(s) must be provided but can be relative to type. "
+            + "In order to update an existing resource, " 
+            + "up-to-date version is required (GET it first if not saved locally). "
+            + "Update is done in merge mode (otherwise rather use PUT) i.e. existing fields are kept, "
+            + "with set lists being merged, and other fields replaced by provided ones if any.",
             response = DCResource.class)
    @ApiImplicitParams({
       @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
@@ -344,7 +345,49 @@ public interface DatacoreApi {
          throws BadRequestException, NotFoundException, ClientErrorException;*/
    
    /**
-    * "mass" update in type
+    * merge existing single data
+    * @param dcData
+    * @param type
+    * @param iri
+    * @return
+    */
+   @Path("/type/{type}/{__unencoded__iri:.+}") // :.+ to accept even /
+   @POST
+   @PATCH
+   @ApiOperation(value = "Merges an existing data Resource in the given type.",
+      notes = "Mere wrapper over atomic typed POST that merges Resources. "
+            + "\n<br/><br/>\n"
+            + "Resource URI (Model type and IRI i.e. Internal Resource Identifier) are required "
+            + "but also up-to-date version (GET it first if not saved locally) "
+            + "sent as an ETag in an If-Match=version precondition, "
+            + "Existing fields are kept, with set lists being merged, and other fields replaced by provided ones if any.",
+            response = DCResource.class, position = 2)
+   @ApiImplicitParams({
+      @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
+            value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue=AUTHORIZATION_DEFAULT),
+      @ApiImplicitParam(name=PROJECT_HEADER, paramType="header", dataType="string",
+            value="Examples : oasis.test, oasis.main", defaultValue=PROJECT_DEFAULT)
+      // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
+   })
+   @ApiResponses(value = {
+      @ApiResponse(code = 500, message = "Internal server error"),
+      @ApiResponse(code = 409, message = "Conflict : while trying to update existing resource, "
+            + "optimistic locking error "
+            + "(provided resource version is not up-to-date with the server's latest)"),
+      @ApiResponse(code = 404, message = "Resource does not exist, or type model not found"),
+      @ApiResponse(code = 400, message = "Bad request : missing content or version, "
+            + "missing or invalid URI, non existing resource, "
+            + "field parsing errors (format, consistency with Model & Mixin types...)"),
+      @ApiResponse(code = 200, message = "OK : the resource has been updated")
+   })
+   DCResource patchDataInType(
+         @ApiParam(value = "Data Resource to merge", required = true) DCResource dcData,
+         @ApiParam(value = "Model type to merge it in", required = true) @PathParam("type") String modelType,
+         @ApiParam(value = "Type-relative resource id", required = true) @PathParam("__unencoded__iri") String iri)
+         throws BadRequestException, NotFoundException, ClientErrorException;
+   
+   /**
+    * "mass" create or merge in type
     * TODO won't work
     * TODO return : see above
     * @param dcDatas with iri
@@ -352,16 +395,16 @@ public interface DatacoreApi {
     */
    @Path("/type/{type}")
    @POST
+   @PATCH
    @ApiOperation(value = "Creates new data Resource(s) in the given type, or updates them (merge) if allowed.",
       notes = "A single data Resource or an array of several ones (in which case it is a mere wrapper "
             + "over the atomic case) are accepted. "
             + "\n<br/><br/>\n"
-            + "Resource URI(s) must be provided but can be relative to type ; "
-            + "in order to update an existing resource, " 
-            + "(which first requires that strict POST mode is not enabled) "
-            + "up-to-date version is required (GET it first if not saved locally) "
-            + "POST of a single data resource (instead of an array with a single item) is "
-            + "supported.",
+            + "Resource URI(s) must be provided but can be relative to type. "
+            + "In order to update an existing resource, " 
+            + "up-to-date version is required (GET it first if not saved locally). "
+            + "Update is done in merge mode (otherwise rather use PUT) i.e. existing fields are kept, "
+            + "with set lists being merged, and other fields replaced by provided ones if any.",
             response = DCResource.class, responseContainer="List", position = 0) // fix jdk7 random order in UI
    @ApiImplicitParams({
       @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
@@ -382,12 +425,12 @@ public interface DatacoreApi {
       @ApiResponse(code = 201, message = "Created : resources have been created")
    })
    List<DCResource> postAllDataInType(
-         @ApiParam(value = "Data Resources to create", required = true) List<DCResource> dcDatas,
+         @ApiParam(value = "Data Resources to create or merge", required = true) List<DCResource> dcDatas,
          @ApiParam(value = "Model type to create them in", required = true) @PathParam("type") String modelType)
          throws BadRequestException, NotFoundException, ClientErrorException;
    
    /**
-    * "mass" update, types must be provided
+    * "mass" create or merge, types must be provided
     * TODO won't work
     * TODO return : see above
     * @param dcDatas with type & iri
@@ -395,13 +438,15 @@ public interface DatacoreApi {
     */
    @Path("/")
    @POST
+   @PATCH
    @ApiOperation(value = "Creates new data Resources, or updates them (merge) if allowed.",
       notes = "Mere wrapper over atomic typed POST. "
             + "\n<br/><br/>\n"
-            + "Resource URI must be provided; "
-            + "in order to update an existing resource, " 
-            + "(which first requires that strict POST mode is not enabled) "
-            + "up-to-date version is required (GET it first if not saved locally) ",
+            + "Resource URI(s) must be provided. "
+            + "In order to update an existing resource, " 
+            + "up-to-date version is required (GET it first if not saved locally). "
+            + "Update is done in merge mode (otherwise rather use PUT) i.e. existing fields are kept, "
+            + "with set lists being merged, and other fields replaced by provided ones if any.",
             response = DCResource.class, responseContainer="List", position = 1)
    @ApiImplicitParams({
       @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
@@ -422,11 +467,11 @@ public interface DatacoreApi {
       @ApiResponse(code = 201, message = "Created : resources have been created")
    })
    List<DCResource> postAllData(
-         @ApiParam(value = "Data Resources to create", required = true) List<DCResource> dcDatas)
+         @ApiParam(value = "Data Resources to create or merge", required = true) List<DCResource> dcDatas)
          throws BadRequestException, NotFoundException, ClientErrorException;
    
    /**
-    * Not required, only for REST compliance ; PATCH version allows to only provide diff
+    * replace existing data
     * @param dcData
     * @param type
     * @param iri
@@ -434,14 +479,13 @@ public interface DatacoreApi {
     */
    @Path("/type/{type}/{__unencoded__iri:.+}") // :.+ to accept even /
    @PUT
-   @PATCH
-   @ApiOperation(value = "Updates (replaces) an existing data Resource in the given type.",
-      notes = "(For now) mere wrapper over atomic typed non-strict mode POST. "
+   @ApiOperation(value = "Replaces an existing data Resource in the given type.",
+      notes = "Mere wrapper over atomic typed POST that replaces (PUT) or merges (POST, PATCH) Resources. "
             + "\n<br/><br/>\n"
             + "Resource URI (Model type and IRI i.e. Internal Resource Identifier) are required "
             + "but also up-to-date version (GET it first if not saved locally) "
             + "sent as an ETag in an If-Match=version precondition, "
-            + "TODO all fields must be provided OR PATCH behaviour differ from PUT's",
+            + "ALL fields must be provided.",
             response = DCResource.class, position = 2)
    @ApiImplicitParams({
       @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
@@ -462,28 +506,27 @@ public interface DatacoreApi {
       @ApiResponse(code = 200, message = "OK : the resource has been updated")
    })
    DCResource putDataInType(
-         @ApiParam(value = "Data Resource to update", required = true) DCResource dcData,
-         @ApiParam(value = "Model type to update it in", required = true) @PathParam("type") String modelType,
+         @ApiParam(value = "Data Resource to replace", required = true) DCResource dcData,
+         @ApiParam(value = "Model type to replace it in", required = true) @PathParam("type") String modelType,
          @ApiParam(value = "Type-relative resource id", required = true) @PathParam("__unencoded__iri") String iri)
          throws BadRequestException, NotFoundException, ClientErrorException;
    
    /**
-    * Not required, only for REST compliance ; PATCH version allows to only provide diff
+    * "mass" replace existing data in type
     * @param dcData with iri
     * @param type
     * @return
     */
    @Path("/type/{type}")
    @PUT
-   @PATCH
-   @ApiOperation(value = "Updates (replaces) existing data Resources in the given type.",
+   @ApiOperation(value = "Replaces existing data Resources in the given type.",
       notes = "Mere wrapper over atomic typed PUT. "
             + "\n<br/><br/>\n"
             + "Resource URI (Model type and IRI i.e. Internal Resource Identifier) are required "
             + "but also up-to-date version (GET it first if not saved locally) "
             + "sent within each Resource as the o:version field "
             + "(TODO LATER also as an ETag in an If-Match=version precondition), "
-            + "TODO all fields must be provided OR PATCH behaviour differ from PUT's",
+            + "ALL fields must be provided.",
             response = DCResource.class, responseContainer="List", position = 3)
    @ApiImplicitParams({
       @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
@@ -504,26 +547,25 @@ public interface DatacoreApi {
       @ApiResponse(code = 200, message = "OK : resources have been updated")
    })
    List<DCResource> putAllDataInType(
-         @ApiParam(value = "Data Resources to update", required = true) List<DCResource> dcDatas,
+         @ApiParam(value = "Data Resources to replace", required = true) List<DCResource> dcDatas,
          @ApiParam(value = "Model type to update them in", required = true) @PathParam("type") String modelType)
          throws BadRequestException, NotFoundException, ClientErrorException;
    
    /**
-    * Not required, only for REST compliance ; PATCH version allows to only provide diff
+    * "mass" replace existing data
     * @param dcData with type & iri
     * @return
     */
    @Path("/")
    @PUT
-   @PATCH
-   @ApiOperation(value = "Updates (replaces) existing data Resources.",
+   @ApiOperation(value = "Replaces existing data Resources.",
       notes = "Mere wrapper over atomic typed PUT. "
             + "\n<br/><br/>\n"
             + "Resource URI (Model type and IRI i.e. Internal Resource Identifier) are required "
             + "but also up-to-date version (GET it first if not saved locally) "
             + "sent within each Resource as the o:version field "
             + "(TODO LATER also as an ETag in an If-Match=version precondition), "
-            + "TODO all fields must be provided OR PATCH behaviour differ from PUT's",
+            + "ALL fields must be provided.",
             response = DCResource.class, responseContainer="List", position = 4)
    @ApiImplicitParams({
       @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
@@ -544,7 +586,7 @@ public interface DatacoreApi {
       @ApiResponse(code = 200, message = "OK : resources have been updated")
    })
    List<DCResource> putAllData(
-         @ApiParam(value = "Data Resources to update", required = true) List<DCResource> dcDatas)
+         @ApiParam(value = "Data Resources to replace", required = true) List<DCResource> dcDatas)
          throws BadRequestException, NotFoundException, ClientErrorException;
    
    /**

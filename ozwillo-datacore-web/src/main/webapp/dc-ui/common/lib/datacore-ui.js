@@ -947,18 +947,53 @@ function postAllData(resources, success, error, optionalHeaders, handlerOptions)
             error(data, resources, handlerOptions); // , resources // NB. always undefined ! NOO ?!
          }
       });
-    return false;
+   return false;
+}
+
+//resources can be a single resource or an array ; same code as postAllData same for putAllData()
+//optional : success, error
+function putAllData(resources, success, error, optionalHeaders, handlerOptions) {
+   if (!(resources instanceof Array)) { // single resource
+      resources = [ resources ];
+   }
+   var swaggerParams = {body:JSON.stringify(resources, null, null),
+         Authorization:getAuthHeader()};
+   if (optionalHeaders) {
+      for (var headerName in optionalHeaders) {
+         swaggerParams[headerName] = optionalHeaders[headerName];
+      }
+   }
+   if (!swaggerParams['X-Datacore-Project']) {
+      swaggerParams['X-Datacore-Project'] = getProject();
+   }
+   dcApi.dc.putAllData(swaggerParams,
+      function(data) {
+         var resResources = displayJsonListResult(data, success);
+         if (success) {
+            success(resResources, resources, data, handlerOptions);
+         }
+      }, function(data) {
+         setError(data._body._body);
+         /*if (data._body._body.indexOf("already existing") != -1) { // TODO better
+            findDataByType(relativeUrl, callback);
+         }*/
+         if (error) {
+            error(data, resources, handlerOptions); // , resources // NB. always undefined ! NOO ?!
+         }
+      });
+   return false;
 }
 
 // displays as editable data or post current editable data, depending on whether myeditabledata displayed or not
-function editOrPostData(relativeUrl) {
+function editOrPostData(relativeUrl, putRatherThanPost) {
    if ($('#myeditabledata').css('display') !== 'block') {
       findData(relativeUrl, displayResourcesAsEditable);
    } else { // 'none'
       var editedResources = eval('[' + $('#myeditabledata').val() + ']')[0];
       var typeOfEditedResources = typeof editedResources;
       if (typeOfEditedResources === 'object') { // (also includes Array)
-         postAllData(editedResources, function() {
+         var updateFct = putRatherThanPost ? putAllData : postAllData;
+         updateFct(editedResources, function() {
             switchToEditable(false);
             findData(relativeUrl);
          });
@@ -1047,10 +1082,12 @@ function displayResourcesAsEditable(resources) {
    switchToEditable(true);
    $('#myeditabledata').val(JSON.stringify(resources, null, 3));
 }
-function switchToEditable(doSwitch) {
-   $('#mynoteditabledata').css('display', doSwitch ? 'none' : 'block');
-   $('#myeditabledata').css('display', !doSwitch ? 'none' : 'block');
-   $('#editOrPost').html(doSwitch ? 'POST' : 'edit');
+function switchToEditable(doSwitchToEditable) {
+   $('#mynoteditabledata').css('display', doSwitchToEditable ? 'none' : 'block');
+   $('#myeditabledata').css('display', !doSwitchToEditable ? 'none' : 'block');
+   $('#editButton').css('display', doSwitchToEditable ? 'none' : 'inline');
+   $('#postButton').css('display', !doSwitchToEditable ? 'none' : 'inline');
+   $('#putButton').css('display', !doSwitchToEditable ? 'none' : 'inline');
 }
 
 function displayTextResult(data, dontUpdateDisplay, displayAsEditable) {

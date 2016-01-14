@@ -74,6 +74,11 @@ public class DatacoreApiMockServerImpl extends JaxrsServerBase implements Dataco
    }
 
    @Override
+   public DCResource patchDataInType(DCResource resource, String modelType, String iri) {
+      return this.postDataInType(resource, modelType);
+   }
+
+   @Override
    public DCResource putDataInType(DCResource resource, String modelType, String iri) {
       return this.postDataInType(resource, modelType);
    }

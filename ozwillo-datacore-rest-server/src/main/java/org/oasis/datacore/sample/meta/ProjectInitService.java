@@ -257,10 +257,10 @@ public class ProjectInitService {
       orgProject.getSecurityDefaults().setResourceOwners(
             new LinkedHashSet<String>(owners)); // owner (& write, create) shortcut
       // OR / AND (so that if we were to change rights policy it would still be OK) :
-      orgProject.getSecurityDefaults().setResourceCreators(new LinkedHashSet<String>(
-            orgProject.getSecurityDefaults().getResourceOwners())); // TODO Q or none, create rather only in org_1
-      orgProject.getSecurityDefaults().setResourceCreationOwners(new LinkedHashSet<String>(
-            orgProject.getSecurityDefaults().getResourceCreators())); // not required at first, only if resourceOwners change, to keep current owners owning their created resources
+      ///orgProject.getSecurityDefaults().setResourceCreators(new LinkedHashSet<String>(
+      ///      orgProject.getSecurityDefaults().getResourceOwners())); // TODO Q or none, create rather only in org_1
+      ///orgProject.getSecurityDefaults().setResourceCreationOwners(new LinkedHashSet<String>(
+      ///      orgProject.getSecurityDefaults().getResourceCreators())); // not required at first, only if resourceOwners change, to keep current owners owning their created resources
    }
    
 }

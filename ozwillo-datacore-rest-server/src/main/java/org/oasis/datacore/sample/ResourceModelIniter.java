@@ -43,6 +43,7 @@ import com.google.common.collect.ImmutableMap;
  * Creates metamodel (BUT disabled unless overriden in ResourceMetamodelIniter) and fills it,
  * therefore called last after all other (Datacore)Sample(Base)s.
  * 
+ * TODO make sets out of DCModel lists, which requires import to use PUT (already done in DCProject)
  * TODO move most to ModelResourceMappingService (& Model(Admin)Service)
  * TODO LATER disable it once mongo becomes reference rather than code-defined DCModel, at least for metamodel
  * @author mdutoo
@@ -203,6 +204,11 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addField(new DCListField("dcms:resourceWriters", new DCField("useless", "string", false, 0), false))
          .addField(new DCListField("dcms:resourceOwners", new DCField("useless", "string", false, 0), false))
          ;
+      ((DCListField) modelSecurityModel.getField("dcms:resourceCreators")).setIsSet(true); // merge at restart, rather than override
+      ((DCListField) modelSecurityModel.getField("dcms:resourceCreationOwners")).setIsSet(true); // merge at restart, rather than override
+      ((DCListField) modelSecurityModel.getField("dcms:resourceReaders")).setIsSet(true); // merge at restart, rather than override
+      ((DCListField) modelSecurityModel.getField("dcms:resourceWriters")).setIsSet(true); // merge at restart, rather than override
+      ((DCListField) modelSecurityModel.getField("dcms:resourceOwners")).setIsSet(true); // merge at restart, rather than override
       
       // Mixins (or only as names ??) model and at the same time modelBase (or in same collection ?) :
       DCModelBase modelOrMixinModel = new DCMixin(MODEL_MODEL_NAME) // POLY MODEL_MIXIN_NAME // and not DCMixin, they must be introspectable
@@ -296,7 +302,12 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addField(new DCField("dcmp:useModelSecurity", "boolean", (Object) false, 0))
          .addField(new DCResourceField("dcmp:visibleSecurityConstraints", MODEL_SECURITY_NAME, false, 0)) // embedded subresource
          ;
-      ((DCListField) projectModel.getField("dcmp:localVisibleProjects")).setIsSet(true);
+      ((DCListField) projectModel.getField("dcmp:localVisibleProjects")).setIsSet(true); // merge at restart, rather than override
+      ((DCListField) projectModel.getField("dcmp:visibleProjectNames")).setIsSet(true); // (not required because computed) merge at restart, rather than override
+      ((DCListField) projectModel.getField("dcmp:forkedUris")).setIsSet(true); // merge at restart, rather than override
+      ((DCListField) projectModel.getField("dcmp:frozenModelNames")).setIsSet(true); // merge at restart, rather than override
+      ((DCListField) projectModel.getField("dcmp:allowedModelPrefixes")).setIsSet(true); // merge at restart, rather than override
+      ((DCListField) projectModel.getField("dcmp:useCasePointOfViews")).setIsSet(true); // (not used yet) merge at restart, rather than override
       // TODO LATER also make other DCProject (& DCModel) list fields sets
       projectModel.setStorage(false); // store in dcmpv
       projectModel.setInstanciable(true);
@@ -307,6 +318,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          ///.addField(new DCField("dcmp:documentation", "string", false, 100))
          .addField(new DCListField("dcmp:useCasePointOfViewElements", new DCResourceField("useless", MODEL_USECASEPOINTOFVIEWELEMENT_NAME)))
          ;
+      ((DCListField) useCasePointOfViewModel.getField("dcmp:useCasePointOfViewElements")).setIsSet(true); // (not used yet) merge at restart, rather than override
       useCasePointOfViewModel.setStorage(false); // store in dcmpv
       projectModel.setInstanciable(true);
 
@@ -317,6 +329,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          ///.addField(new DCField("dcmpvuce:name", "string", true, 100)) // TODO or rather name is Java class ?!
          ///.addField(new DCListField("dcmpvuce:model", new DCResourceField("useless", MODEL_MODEL_NAME))) // TODO or rather only dcmo:projectAbsoluteName ?
          ;
+      ///((DCListField) useCasePointOfViewElementModel.getField("dcmpvuce:model")).setIsSet(true); // (not used yet) merge at restart, rather than override
       useCasePointOfViewElementModel.setStorage(false); // store in dcmpv
       useCasePointOfViewElementModel.setInstanciable(true);
       
@@ -326,6 +339,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addField(new DCListField(ANCESTORS_NAME_PROP, new DCResourceField("useless",
                MODEL_ANCESTORS_NAME, false, 100))) // searchable !
       ;
+      ///((DCListField) ancestorsModel.getField(ANCESTORS_NAME_PROP)).setIsSet(true); // TODO LATER requires import using PUT
       
       modelsToCreate.addAll(Arrays.asList(displayableModel, countryLanguageSpecificModel,
             fieldIdentificationModel, fieldModel,
@@ -362,6 +376,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
             "Geographical jurisdictions", null); // "Geographical jurisdictions (" + toPlaygroundLink("geo:Area_0") + ")"
       DCProject geoProject = projectInitService.buildFacadeProjectDefaultConf(geo1Project);
 
+      /*
       DCProject org0Project = projectInitService.buildContainerVersionedProjectDefaultConf("org", 0,
             "Organizations, public and private, as well as Persons", null, geo0Project);
       org0Project.setModelLevelSecurityEnabled(true);
@@ -371,6 +386,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       org1Project.setModelLevelSecurityEnabled(true);
       org1Project.getSecurityDefaults().setAuthentifiedCreatable(true); // anybody can create an org
       DCProject orgProject = projectInitService.buildFacadeProjectDefaultConf(org1Project);
+      */
 
       DCProject citizenkin0Project = projectInitService.buildContainerVersionedProjectDefaultConf("citizenkin", 0,
             "Citizen Kin procedures", null, geoProject);
@@ -382,8 +398,9 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       DCProject citizenkinProject = projectInitService.buildFacadeProjectDefaultConf(citizenkin0Project);
       
       // create if not exist :
-      DCProject[] defaultProjects = new DCProject[] { geo0Project, geo1Project, geoProject,
-            org0Project, org1Project, orgProject,
+      DCProject[] defaultProjects = new DCProject[] { geo0Project, geo1Project, geoProject, // not commented for citizenkin
+            // ORG COMMENTED OUT TO AVOID OVERRIDING EX. SECURITY CONF CHANGES
+            /*org0Project, org1Project, orgProject,*/
             citizenkin0Project, citizenkinProject };
       for (DCProject defaultProject : defaultProjects) {
          try {

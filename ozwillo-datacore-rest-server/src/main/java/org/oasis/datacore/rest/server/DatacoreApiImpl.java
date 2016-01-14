@@ -80,6 +80,7 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
 
    private static final Logger logger = LoggerFactory.getLogger(DatacoreApiImpl.class);
 
+   /** OBSOLETE should always be false i.e. POST to existing Resources means merging them */
    private boolean strictPostMode = false;
 
    
@@ -110,13 +111,28 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
 
    
    public DCResource postDataInType(DCResource resource, String modelType) {
+      return postSingleDataInType(resource, modelType, true, !this.strictPostMode, false);
+   }
+   
+   /**
+    * Wrapper over internalPostDataInType in single data operations.
+    * @param resource
+    * @param modelType
+    * @param canCreate
+    * @param canUpdate
+    * @param putRatherThanPatchMode
+    * @return
+    */
+   public DCResource postSingleDataInType(DCResource resource, String modelType,
+         boolean canCreate, boolean canUpdate, boolean putRatherThanPatchMode) {
       DCResource postedResource = this.internalPostDataInType(resource, modelType,
-            true, !this.strictPostMode, false);
+            canCreate, canUpdate, putRatherThanPatchMode);
       
       //return dcData; // rather 201 Created with ETag header :
       String httpEntity = postedResource.getVersion().toString(); // no need of additional uri because only for THIS resource
       EntityTag eTag = new EntityTag(httpEntity);
       Status status = (postedResource.getVersion() == 0) ? Response.Status.CREATED : Response.Status.OK;
+      // TODO LATER still test creation in PUT mode
       throw new WebApplicationException(Response.status(status)
             .tag(eTag) // .lastModified(dataEntity.getLastModified().toDate())
             .entity(postedResource)
@@ -240,10 +256,14 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
       }
       return res;
    }
+
+   public DCResource patchDataInType(DCResource resource, String modelType, String iri) {
+      return this.postSingleDataInType(resource, modelType, false, true, false); // same as POST
+   }
    
    public DCResource putDataInType(DCResource resource, String modelType, String iri) {
       // NB. no ETag validation support (same as POST), see discussion in internalPostAllDataInType()
-      return internalPostDataInType(resource, modelType, false, true, true);
+      return this.postSingleDataInType(resource, modelType, false, true, true);
    }
    public List<DCResource> putAllDataInType(List<DCResource> resources, String modelType) {
       // NB. no ETag validation support (same as POST), see discussion in internalPostAllDataInType()

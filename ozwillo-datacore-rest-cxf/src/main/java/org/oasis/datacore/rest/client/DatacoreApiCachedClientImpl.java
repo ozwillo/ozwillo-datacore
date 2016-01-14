@@ -152,6 +152,16 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
     */
    @CachePut(value={"org.oasis.datacore.rest.api.DCResource"}, key="#root.target.getProject() + '.' + #resource.uri") // after invocation
    @Override
+   public DCResource patchDataInType(DCResource resource, String modelType, String iri) {
+      return delegate.patchDataInType(resource, modelType, iri);
+   }
+
+   /**
+    * Always evict (after invocation) and replace by updated data, using Spring CachePut annotation
+    * TODO LATER save if no diff
+    */
+   @CachePut(value={"org.oasis.datacore.rest.api.DCResource"}, key="#root.target.getProject() + '.' + #resource.uri") // after invocation
+   @Override
    public DCResource putDataInType(DCResource resource, String modelType, String iri) {
       return delegate.putDataInType(resource, modelType, iri);
    }

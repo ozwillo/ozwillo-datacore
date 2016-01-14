@@ -591,8 +591,8 @@ public class ResourceModelTest {
       DCResource pr = datacoreApiClient.getData(ResourceModelIniter.MODEL_PROJECT_NAME, DCProject.OASIS_SAMPLE);
       DCProject p = mrMappingService.toProject(pr);
       p.setFrozenModelNames(new LinkedHashSet<String>());
-      pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
-            DCProject.OASIS_META); // can't write outside project
+      pr = datacoreApiClient.putDataInTypeInProject(mrMappingService.projectToResource(p, pr),
+            DCProject.OASIS_META); // can't write outside project ; using PUT to replace set list
       DCResource mr = datacoreApiClient.getData(ResourceModelIniter.MODEL_MODEL_NAME, CityCountrySample.CITY_MODEL_NAME);
       DCModelBase m = mrMappingService.toModelOrMixin(mr);
       m.getField("city:founded").setRequired(false);
@@ -636,8 +636,8 @@ public class ResourceModelTest {
       p.getFrozenModelNames().clear();
       p.getFrozenModelNames().add(DCProject.MODEL_NAMES_WILDCARD);
       p.getFrozenModelNames().add("anyother:Modelname");
-      pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
-            DCProject.OASIS_META); // can't write outside project
+      pr = datacoreApiClient.putDataInTypeInProject(mrMappingService.projectToResource(p, pr),
+            DCProject.OASIS_META); // can't write outside project ; using PUT to replace set list
       p = mrMappingService.toProject(pr);
       Assert.assertEquals("frozen models should have been added",
             2, modelAdminService.getProject(DCProject.OASIS_SAMPLE).getFrozenModelNames().size());
@@ -674,8 +674,8 @@ public class ResourceModelTest {
          p.setVersion(datacoreApiClient.getData(ResourceModelIniter.MODEL_PROJECT_NAME,
                DCProject.OASIS_SAMPLE).getVersion()); // else 409 conflict
          p.getFrozenModelNames().clear();
-         pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
-               DCProject.OASIS_META); // can't write outside project
+         pr = datacoreApiClient.putDataInTypeInProject(mrMappingService.projectToResource(p, pr),
+               DCProject.OASIS_META); // can't write outside project ; using PUT to replace set list
          p = mrMappingService.toProject(pr);
          Assert.assertTrue(modelAdminService.getProject(
                DCProject.OASIS_SAMPLE).getFrozenModelNames().isEmpty());
@@ -691,8 +691,8 @@ public class ResourceModelTest {
       DCResource pr = datacoreApiClient.getData(ResourceModelIniter.MODEL_PROJECT_NAME, DCProject.OASIS_SAMPLE);
       DCProject p = mrMappingService.toProject(pr);
       p.setAllowedModelPrefixes(new LinkedHashSet<String>());
-      pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
-            DCProject.OASIS_META); // can't write outside project
+      pr = datacoreApiClient.putDataInTypeInProject(mrMappingService.projectToResource(p, pr),
+            DCProject.OASIS_META); // can't write outside project ; using PUT to replace set list
       DCResource mr = datacoreApiClient.getData(ResourceModelIniter.MODEL_MODEL_NAME, CityCountrySample.CITY_MODEL_NAME);
       DCModelBase m = mrMappingService.toModelOrMixin(mr);
       m.getField("city:founded").setRequired(false);
@@ -754,8 +754,8 @@ public class ResourceModelTest {
       p.getAllowedModelPrefixes().clear();
       p.getAllowedModelPrefixes().add("anyotherprefix");
       p.getAllowedModelPrefixes().add(DCProject.MODEL_NAMES_WILDCARD);
-      pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
-            DCProject.OASIS_META); // can't write outside project
+      pr = datacoreApiClient.putDataInTypeInProject(mrMappingService.projectToResource(p, pr),
+            DCProject.OASIS_META); // can't write outside project ; using PUT to replace set list
       p = mrMappingService.toProject(pr);
       Assert.assertEquals("allowed prefixes should have been added",
             2, modelAdminService.getProject(DCProject.OASIS_SAMPLE).getAllowedModelPrefixes().size());
@@ -785,8 +785,8 @@ public class ResourceModelTest {
          p.setVersion(datacoreApiClient.getData(ResourceModelIniter.MODEL_PROJECT_NAME,
                DCProject.OASIS_SAMPLE).getVersion()); // else 409 conflict
          p.getAllowedModelPrefixes().clear();
-         pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
-               DCProject.OASIS_META); // can't write outside project
+         pr = datacoreApiClient.putDataInTypeInProject(mrMappingService.projectToResource(p, pr),
+               DCProject.OASIS_META); // can't write outside project ; using PUT to replace set list
          p = mrMappingService.toProject(pr);
          Assert.assertTrue(modelAdminService.getProject(
                DCProject.OASIS_SAMPLE).getAllowedModelPrefixes().isEmpty());
@@ -800,9 +800,9 @@ public class ResourceModelTest {
    public void testProjectReloadSecurityAndSetList() throws Exception {
       // preparing
       @SuppressWarnings("serial")
-      LinkedHashSet<String> testRco = new LinkedHashSet<String>() {{ add("test"); }};
-      @SuppressWarnings("serial")
       LinkedHashSet<String> adminRco = new LinkedHashSet<String>() {{ add("u_admin"); }}; // in local dev only !
+      @SuppressWarnings("serial")
+      LinkedHashSet<String> testRco = new LinkedHashSet<String>() {{ add("test"); addAll(adminRco); }}; // merged
       DCResource pr = datacoreApiClient.getData(ResourceModelIniter.MODEL_PROJECT_NAME, DCProject.OASIS_SAMPLE);
       String sampleProjectUri = pr.getUri();
       DCProject p = mrMappingService.toProject(pr);
@@ -830,7 +830,7 @@ public class ResourceModelTest {
          p.addLocalVisibleProject(modelAdminService.getProject(pn));
       }
       pr = datacoreApiClient.putDataInTypeInProject(mrMappingService.projectToResource(p, pr),
-            DCProject.OASIS_META); // can't write outside project ; using PUT to replace set list
+            DCProject.OASIS_META); // can't write outside project ; using PUT to replace set lists
       p = mrMappingService.toProject(pr);
       // checking initial state :
       DCProject actualProject = modelAdminService.getProject(DCProject.OASIS_SAMPLE);
@@ -852,7 +852,7 @@ public class ResourceModelTest {
       p.addLocalVisibleProject(mrMappingService.toProject(datacoreApiClient
             .getData(ResourceModelIniter.MODEL_PROJECT_NAME, DCProject.OASIS_MAIN)));
       pr = datacoreApiClient.postDataInTypeInProject(mrMappingService.projectToResource(p, pr),
-            DCProject.OASIS_META); // can't write outside project ; using POST to replace merge list
+            DCProject.OASIS_META); // can't write outside project ; using POST to merge set lists
       p = mrMappingService.toProject(pr);
       // checking changes :
       actualProject = modelAdminService.getProject(DCProject.OASIS_SAMPLE);
@@ -860,10 +860,10 @@ public class ResourceModelTest {
             modelAdminService.getProject(DCProject.OASIS_SAMPLE).getSecurityConstraints() != null
             && modelAdminService.getProject(DCProject.OASIS_SAMPLE).getSecurityConstraints()
             .getResourceCreationOwners().equals(testRco));*/
-      Assert.assertTrue("security defaults should have been set", testRco.equals(
-            actualProject.getSecurityDefaults().getResourceCreationOwners()));
-      Assert.assertTrue("visible security constraints should have been set", testRco.equals(
-            actualProject.getVisibleSecurityConstraints().getResourceCreationOwners()));
+      Assert.assertEquals("security defaults should have been set", testRco,
+            actualProject.getSecurityDefaults().getResourceCreationOwners());
+      Assert.assertEquals("visible security constraints should have been set", testRco,
+            actualProject.getVisibleSecurityConstraints().getResourceCreationOwners());
       // and set list :
       Assert.assertEquals("local visible projects should have been added", new HashSet<String>() {{
          // (not ArrayList because merge produces different order)
