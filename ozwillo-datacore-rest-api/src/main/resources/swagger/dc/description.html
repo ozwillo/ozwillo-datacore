@@ -55,8 +55,8 @@ examples, FAQ, how to &amp; common use cases, cookbook (writing clients...) and 
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, null, {'X-Datacore-Debug':'true'});" title="Debug / explain query">?</button>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, null, {'Accept':'text/x-nquads'});" title="RDF N-Quads output">RDF</button>
 <button onclick="javascript:return editOrPostData(encodeUri($('.myurl').val()));" id="editButton" title="edit data, then POST (merge or create) or PUT (replace existing) changes">edit</button>
-<button onclick="javascript:return editOrPostData(encodeUri($('.myurl').val()));" id="postButton" title="POST (merge or create) edited changes">POST</button>
-<button onclick="javascript:return editOrPostData(encodeUri($('.myurl').val()), true);" id="putButton" title="PUT (replace existing) changes">PUT</button>
+<button onclick="javascript:return editOrPostData(encodeUri($('.myurl').val()));" id="postButton" title="POST (merge or create) edited changes" style="display:none;">POST</button>
+<button onclick="javascript:return editOrPostData(encodeUri($('.myurl').val()), true);" id="putButton" title="PUT (replace existing) changes" style="display:none;">PUT</button>
 <button onclick="javascript:return deleteResources(encodeUri($('.myurl').val()));" title="delete">X</button>
 <button onclick="javascript:return findModel(encodeUri($('.myurl').val()));" title="go to its model">M</button>
 <button onclick="javascript:return getPreviousData(encodeUri($('.myurl').val()));" title="previous version in history if enabled">H</button>
