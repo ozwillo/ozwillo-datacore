@@ -349,6 +349,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       return res;
    }
    
+   /** OBSOLETE for now */
    private List<DCProject> projectsNotToPersist = new ArrayList<DCProject>();
 
    /**
@@ -388,7 +389,8 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          try {
             resourceService.get(SimpleUriService.buildUri(ResourceModelIniter.MODEL_PROJECT_NAME,
                   defaultProject.getName()), ResourceModelIniter.MODEL_PROJECT_NAME);
-            projectsNotToPersist.add(defaultProject);
+            ///projectsNotToPersist.add(defaultProject); // NOO persisting even if already exists
+            // (though in POST / PATCH-like merge mode, rather than PUT replace mode)
          } catch (ResourceNotFoundException e) {
             // not found, persist
          } catch (ResourceException e) {
