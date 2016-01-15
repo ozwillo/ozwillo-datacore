@@ -251,9 +251,9 @@ ask model designer to enable the right fulltext indexes. <u>Workaround</u> : que
 data can't be returned if it hasn't been saved since enabled for fulltext, so try saving some,
 else ask data provider to do so, possibly in bulk.
 <br/><br/>
-&nbsp;&nbsp;- <u>Access Denied</u> : 
-maybe you're trying to write from another project than this Resource's, or to write a frozen model 
-(see its project's dcmp:frozenModelNames).
+<a id="faq.accessDenied"></a>
+&nbsp;&nbsp;- <u>"Access Denied" or "Forbidden"</u> :
+see <a href="rightsFaq">Rights FAQ</a>.
 <br/><br/>
 &nbsp;&nbsp;- <u>"Can't get Resource, more than one with same URI</u> 
 [uri] (in projects [a, b seeing a]): has been forked implicitly, should also be forked explicitly" :
@@ -278,25 +278,6 @@ to update an existing data, you must PUT (rather than POST) it with the current 
 And if you don't store said current version locally, you must first GET it from server.
 You must also handle the case of the version being changed while your request is still reaching
 the server, by a retrying it a few times.
-<br/><br/>
-&nbsp;&nbsp;- <u>How to debug Resource-level permissions</u> : 
-Resource-level permissions are returned when querying as owner (or admin) in debug mode.
-Therefore to check them in the Playground, go to the said Resource by entering ex.
-<a href="/dc/type/poitour:Geoloc_0/32949" class="dclink" onclick="
-javascript:return findDataByType(encodeUri($(this).attr('href')));
-">/dc/type/poitour:Geoloc_0/32949</a>
-in the Playground URI address bar, then click on the colon (":") of the URI field (@id) 
-to build a single result query such as
-<a href="/dc/type/geoname:GeoDB_0?@id=http://data.ozwillo.com/dc/type/geoname:GeoDB_0/FR/2989417" class="dclink" onclick="
-javascript:return findDataByType(encodeUri($(this).attr('href')));
-">this one</a>
-, then go in debug mode by clicking on the "?" button, 
-and finally look in the results for the "ownedEntities" part (that only contains
-data Resources that you have owner / admin rights on, for data security reasons) 
-and within in the  "owners", "writers" and "readers" entity fields.
-Note that Resource-level permissions can be updated from the Playground
-using its bottom, Swagger part (operation
-<a href="https://data.ozwillo-preprod.eu/dc-ui/index.html#!/r/replaceRightsOnResource_put_2">PUT /dc/r/...</a>).
 <br/><br/>
 &nbsp;&nbsp;- <a href="#metamodelFaq">Project & Model troubleshooting &amp; FAQ</a>
 <br/><br/>
@@ -547,7 +528,7 @@ makes its current stable version visible whatever its number,
 contains all public and private organizations as well as persons and also sees <span class="dcjsonline">geo_1</span>,
 while <span class="dcjsonline">org</span> makes its current stable version visible whatever its number.
 <br/><br/>
-<b>Here are more project-level features :</b>
+<b>Here are project-level Rights features :</b>
 <br/>
 &nbsp;&nbsp;- <span class="dcjsonline">dcmp:securityConstraints</span> :
 if any, checked firsthand whatever the resource.   
@@ -562,8 +543,8 @@ i.e. the metamodel), is directly used instead of model-level security which make
 allows different security levels in models/mixins (even in same resource),
 with permissions that are defined at Resource-level allowing the most rights
 (ex. owner on orgpr:PrivateOrganization_0 fields), and other permissions being allowed
-by model-level security (ex. reader on org:Organization_0 fields).
-Defaults to false.
+by model- or project-level security (ex. reader on org:Organization_0 fields).
+Defaults to false. 
 <br/>
 &nbsp;&nbsp;- <span class="dcjsonline">dcmp:useModelSecurity</span> :
 use model security instead of project security as default security ;
@@ -575,6 +556,9 @@ if disabled, model security has not to be defined and is replaced by project sec
 visibleProjectRelation object ; is checked firsthand if any WHATEVER THE RESOURCE (null dataEntity)
 when checking rights in a model from another current project. Typically used to prevent from writing
 from a project in one of its dependency project's models.
+<br/>
+<br/><br/>
+<b>Here are more project-level features :</b>
 <br/>
 &nbsp;&nbsp;- <span class="dcjsonline">dcmp:forkedUris</span> : add a model URI there to allow to
 fork it i.e. to import it in this project even if it is already in one of its visible projects.
@@ -595,20 +579,76 @@ mistake, such as POSTing an org model while importing geo elements using the mas
 <a id="metamodelFaq"></a>
 <b>Project &amp; Model troubleshooting &amp; FAQ :</b>
 <br/>
-&nbsp;&nbsp;- <span class="dcjsonline">model failed to load :</span>
+&nbsp;&nbsp;- <u>model failed to load :</u>
 the Model is persisted as a Resource alright (its .../dcmo:model_0/modelName URI works)
 but getting its Resources fails with a ModelNotFoundException. This means that the Model
 can't be loaded from its Resource representation. To solve it, try to rePOST the Model's
 Resource representation (ex. using edit / POST or import playground features), which will
 trigger Model reload, and if it fails try to patch it according to the error message.
 <br/>
-&nbsp;&nbsp;- <span class="dcjsonline">can't write Resource ("access denied") :</span>
+&nbsp;&nbsp;- <u>can't write Resource ("access denied") :</u>
 check that you have the rights to, and (using ex. the edit / POST playground feaure)
 that its Model is not among its Project's dcmp:frozenModelNames or dcmp:allowedModelPrefixes
 (see above).
 <br/>
-&nbsp;&nbsp;- <span class="dcjsonline">"Bad URI syntax: Illegal character in path at index n" (last index of the model URI) :</span>
+&nbsp;&nbsp;- <u>"Bad URI syntax: Illegal character in path at index n" (last index of the model URI) :</u>
 check that the mixin name is not written in the "Mixin" column with an (illegal) invisible character such as a space at the end.
+<br/><br/>
+
+<a id="rightsFaq"></a>
+<h1>Rights FAQ</h1>
+&nbsp;&nbsp;- <u>"Access Denied" or "Forbidden"</u> :
+maybe you're trying to write from another project than this Resource's, or to write a frozen model
+or with a non-allowed prefix (see its project's dcmp:frozenModelNames and dcmp:allowedModelPrefixes
+respectively or patch them using the edit / POST playground feature). Otherwise, check that you have
+the rights to do that or patch them, see below.
+<br/><br/>
+&nbsp;&nbsp;- <u>How to see Resource-level permissions</u> using the Playground :
+Resource-level permissions are returned when querying as owner (or admin) in debug mode.
+Therefore to check them in the Playground, go to the said Resource by entering ex.
+<a href="/dc/type/poitour:Geoloc_0/32949" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">/dc/type/poitour:Geoloc_0/32949</a>
+in the Playground URI address bar, then click on the colon (":") of the URI field (@id) 
+to build a single result query such as
+<a href="/dc/type/geoname:GeoDB_0?@id=http://data.ozwillo.com/dc/type/geoname:GeoDB_0/FR/2989417" class="dclink" onclick="
+javascript:return findDataByType(encodeUri($(this).attr('href')));
+">this one</a>
+, then go in debug mode by clicking on the "?" button, 
+and finally look in the results for the "ownedEntities" part (that only contains
+data Resources that you have owner / admin rights on, for data security reasons) 
+and within in the  "owners", "writers" and "readers" entity fields.
+See below how to change them.
+<br/><br/>
+&nbsp;&nbsp;- <u>How to change Resource-level permissions</u> using the Swagger UI :
+To change Resource-level rights on a Resource, use the Swagger part at the bottom of the
+Playground, and more precisely operations in the "r : Rights management (add/remove/flush)"
+group (after selecting the Resource's Project in the top-level dropdown box if not done yet):
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;1. do a
+<a href="http://localhost:8080/dc-ui/index.html#!/r/getRightsOnResource_get_2">GET /dc/r/...</a>
+(click on it to open it up) by providing type, id and current version of the Resource
+(if you don't know it, look the Resource up in the Playground) and clicking on the
+"Try it out" button. This returns the Resource's current rights, ex.:
+<pre><code>GET /dc/r/orgtr:Organizasyon_0/TR/27408293994/0
+{
+  "owners": [ /* have all rights, including reading and changing rights */
+    "u_2239bc06-5f33-49dd-af99-b5c87da055ab", /* 2239bc06-5f33-49dd-af99-b5c87da055ab is the id of a user */
+    "9056cde5-8135-4fd9-a913-4c3103f19fac" /* id of a Kernel organization */
+  ],
+  "writers": [], /* have write (and delete) rights, in addition to read rights*/
+  "readers": [] /* have read rights */
+}</code></pre>
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;2. copy and paste the result in the body of a
+<a href="https://data.ozwillo-preprod.eu/dc-ui/index.html#!/r/replaceRightsOnResource_put_2">PUT /dc/r/...</a>
+(click on it to open it up), change it as you wish, then again providing
+type, id and same current version, and do it (click on the "Try it out" button).
+Now rights should have changed.
+<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;3. to check that rights have changed, either use debug mode (see above) or do a
+<a href="http://localhost:8080/dc-ui/index.html#!/r/getRightsOnResource_get_2">GET /dc/r/...</a>
+again BUT with the new current version (should have been incremented by 1).
 <br/><br/>
 
 <a id="playgroundUserManual"></a>
