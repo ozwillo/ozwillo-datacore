@@ -399,14 +399,13 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       
       // create if not exist :
       DCProject[] defaultProjects = new DCProject[] { geo0Project, geo1Project, geoProject, // not commented for citizenkin
-            // ORG COMMENTED OUT TO AVOID OVERRIDING EX. SECURITY CONF CHANGES
-            /*org0Project, org1Project, orgProject,*/
+            ///org0Project, org1Project, orgProject, // could be put back if needed
             citizenkin0Project, citizenkinProject };
       for (DCProject defaultProject : defaultProjects) {
          try {
             resourceService.get(SimpleUriService.buildUri(ResourceModelIniter.MODEL_PROJECT_NAME,
                   defaultProject.getName()), ResourceModelIniter.MODEL_PROJECT_NAME);
-            ///projectsNotToPersist.add(defaultProject); // NOO persisting even if already exists
+            projectsNotToPersist.add(defaultProject); // (set lists would be merged, but this avoids overriding ex. booleans)
             // (though in POST / PATCH-like merge mode, rather than PUT replace mode)
          } catch (ResourceNotFoundException e) {
             // not found, persist
