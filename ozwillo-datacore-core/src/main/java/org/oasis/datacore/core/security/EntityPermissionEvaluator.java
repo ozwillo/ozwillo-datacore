@@ -181,7 +181,7 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
    }
 
    /**
-    * Also applies mixins view filtering
+    * Top level ; also applies mixins view filtering.
     * @param dataEntity
     * @param existingDataEntity if non null, is filled and if putRatherThanPatchMode cleaned
     * @param model
@@ -224,16 +224,61 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
          }
       }
       
+      // rights check that can be done at top level :
+      boolean allModelsAllowed = false;
+      if (user.isAdmin()) {
+         allModelsAllowed = true; // (after checking constraints else admin won't have them)
+      }
+      
+      if (!allModelsAllowed && !project.isModelLevelSecurityEnabled()) {
+         // check once and for all, on concrete model :
+         allModelsAllowed = isThisModelAllowed(dataEntity, model, project,
+               user, permission, null);
+         if (!allModelsAllowed) {
+            return false;
+         } // else go on but filter only views (not models)
+      }
+      
+      if (!allModelsAllowed) {
+         // HACK TODO BETTER case of multi-project storage :
+         // model-level security makes no sense, so rather check directly project security
+         // (without that, models of any project would only be editable by oasis.meta writers ;_;)
+         DCModelBase storageModel = (dataEntity != null) ? // else none yet (been queried by LDP)
+               entityModelService.getStorageModel(dataEntity) : modelService.getStorageModel(model);
+         if (storageModel != null && storageModel.isMultiProjectStorage()) { // especially oasis.meta.dcmi:mixin_0 in case of model resources !
+            allModelsAllowed = isDefaultSecurityAllowed(dataEntity,
+                  project, user, permission);
+         }
+      }
+      
+      // filtering fields according to model-level rights (IF still has to be done) and views :
       int propNb = dataEntity.getProperties().size();
       LinkedHashSet<String> seenPropNameSet = new LinkedHashSet<String>(propNb);
       return filterMixinsAndCheckPermission(dataEntity, existingDataEntity,
-            model, user, permission, putRatherThanPatchMode,
-            seenPropNameSet, propNb, null);
+            project, model, user, permission, putRatherThanPatchMode,
+            seenPropNameSet, propNb, null, !allModelsAllowed);
    }
+   /**
+    * Recursive ; also applies mixins view filtering
+    * @param dataEntity
+    * @param existingDataEntity
+    * @param entityProject
+    * @param model
+    * @param user
+    * @param permission
+    * @param putRatherThanPatchMode
+    * @param seenPropNameSet
+    * @param propNb
+    * @param isInheritingMixinAllowed
+    * @param checkWhetherModelAllowed else only filter view fields
+    * @return
+    */
    private boolean filterMixinsAndCheckPermission(DCEntityBase dataEntity, DCEntityBase existingDataEntity,
-         DCModelBase model, DCUserImpl user, String permission, boolean putRatherThanPatchMode,
-         LinkedHashSet<String> seenPropNameSet, int propNb, Boolean isInheritingMixinAllowed) {
-      boolean isThisModelAllowed = isThisModelAllowed(dataEntity, model,
+         DCProject entityProject, DCModelBase model, DCUserImpl user, String permission,
+         boolean putRatherThanPatchMode, LinkedHashSet<String> seenPropNameSet, int propNb,
+         Boolean isInheritingMixinAllowed, boolean checkWhetherModelAllowed) {
+      boolean isThisModelAllowed = !checkWhetherModelAllowed
+            || isThisModelAllowed(dataEntity, model, entityProject,
             user, permission, isInheritingMixinAllowed);
       Map<String, Object> props = dataEntity.getProperties();
       Map<String, Object> existingProps = (existingDataEntity == null) ? null
@@ -285,9 +330,9 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       }
       
       for (DCModelBase mixin : model.getMixins()) {
-         isAnyMixinAllowed = filterMixinsAndCheckPermission(dataEntity, existingDataEntity, mixin, user, permission,
-               putRatherThanPatchMode,
-               seenPropNameSet, propNb, isThisModelAllowed) || isAnyMixinAllowed;
+         isAnyMixinAllowed = filterMixinsAndCheckPermission(dataEntity, existingDataEntity,
+               entityProject, mixin, user, permission, putRatherThanPatchMode,
+               seenPropNameSet, propNb, isThisModelAllowed, checkWhetherModelAllowed) || isAnyMixinAllowed;
          // NB. ex. viewMixinNames=geo will show geo:name and not its override in geoci
          if (putRatherThanPatchMode && propNb == seenPropNameSet.size()) {
             return isAnyMixinAllowed; // everything has been filtered, filtering can be ended up right away
@@ -296,9 +341,9 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       return isAnyMixinAllowed;
    }
 
-   /** shortcut to check only at model level */
+   /** shortcut to check only at model level, used for queries */
    public boolean isThisModelAllowed(DCModelBase model, DCUserImpl user, String permission) {
-      return isThisModelAllowed(null, model, user, permission, null);
+      return isThisModelAllowed(null, model, null, user, permission, null);
    }
 
    /**
@@ -307,43 +352,19 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
     * PLUS (if needed) user ACL check
     * @param dataEntity if null, checks only at model-level
     * @param model
+    * @param entityProject forwarded current project whose security conf have to be used,
+    * typically the entity's i.e. its concrete model's (because constraints from the current
+    * project have already been checked at top level)
     * @param user
     * @param permission
     * @param isInheritingMixinIn if null, not yet found any security in inheritance tree
     * meaning get the next (primary inherited) one
     * @return
     */
-   public boolean isThisModelAllowed(DCEntityBase dataEntity, DCModelBase model,
+   public boolean isThisModelAllowed(DCEntityBase dataEntity, DCModelBase model, DCProject entityProject,
          DCUserImpl user, String permission, Boolean isInheritingMixinAllowed) {
-      DCProject project = entityModelService.getProject(dataEntity, model); // entity (in case of multi project) or model project
-      
-      // project-level constraints :
-      DCSecurity projectSecurityConstraints = project.getSecurityConstraints();
-      if (projectSecurityConstraints != null
-            && !isThisSecurityAllowed(null, // WHATEVER THE RESOURCE
-                  projectSecurityConstraints, user, permission)) {
-         return false; // ex. no "read" outside 
-      }
-      
-      if (user.isAdmin()) {
-         return true; // (after constraints else admin won't have them)
-      }
-      
-      // case of project-level only security :
-      if (!project.isModelLevelSecurityEnabled()) { // don't use Resource-level (per model / mixin) security TODO LATER should rather be isRESOURCEModelLevelSecurityEnabled
-         return isDefaultSecurityAllowed(null, // WHATEVER THE RESOURCE
-               project, user, permission);
-      }
-      
-      // HACK TODO BETTER case of multi-project storage :
-      // model-level security makes no sense, so rather check directly project security
-      // (without that, models of any project would only be editable by oasis.meta writers ;_;)
-      DCModelBase storageModel = (dataEntity != null) ? // else none yet (been queried by LDP)
-            entityModelService.getStorageModel(dataEntity) : modelService.getStorageModel(model);
-      if (storageModel != null && storageModel.isMultiProjectStorage()) { // especially oasis.meta.dcmi:mixin_0 in case of model resources !
-         return isDefaultSecurityAllowed(dataEntity,
-               project, user, permission);
-      }
+      DCProject project = entityProject != null ? entityProject // forwarded current project
+            : entityModelService.getProject(dataEntity, model); // entity (in case of multi project) or model project
       
       // model-level security :
       if (!project.isUseModelSecurity()) {
