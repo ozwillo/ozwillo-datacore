@@ -271,8 +271,6 @@ public class ResourceService {
       entityModelService.fillDataEntityCaches(dataEntity, dcModel, storageModel, null); // TODO or in DCEntityService ? TODO def
       dataEntity.setUri(stringUri);
       if (!isCreation) { // == existingDataEntity != null
-         dataEntity.setVersion(version);
-         dataEntity.setPreviousEntity(existingDataEntity);
          dataEntity.copyNonResourceFieldsFrom(existingDataEntity); // id (else OptimisticLockingFailureException), (multi) project, rights
          // BUT not props (done by EntityPermissionEvaluator when filtering, and only if !putRatherThanPatchModel)
       } else {

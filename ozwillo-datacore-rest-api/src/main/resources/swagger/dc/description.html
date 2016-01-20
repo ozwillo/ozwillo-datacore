@@ -253,7 +253,7 @@ else ask data provider to do so, possibly in bulk.
 <br/><br/>
 <a id="faq.accessDenied"></a>
 &nbsp;&nbsp;- <u>"Access Denied" or "Forbidden"</u> :
-see <a href="rightsFaq">Rights FAQ</a>.
+see <a href="#rightsFaq">Rights FAQ</a>.
 <br/><br/>
 &nbsp;&nbsp;- <u>"Can't get Resource, more than one with same URI</u> 
 [uri] (in projects [a, b seeing a]): has been forked implicitly, should also be forked explicitly" :
@@ -600,8 +600,11 @@ check that the mixin name is not written in the "Mixin" column with an (illegal)
 &nbsp;&nbsp;- <u>"Access Denied" or "Forbidden"</u> :
 maybe you're trying to write from another project than this Resource's, or to write a frozen model
 or with a non-allowed prefix (see its project's dcmp:frozenModelNames and dcmp:allowedModelPrefixes
-respectively or patch them using the edit / POST playground feature). Otherwise, check that you have
-the rights to do that or patch them, see below.
+respectively or patch them using the edit / POST playground feature).
+Or maybe the Datacore can't yet see that a new Kernel organization has been add to those you belong
+to, in which case log out and in again or wait for 5 minutes (see
+<a href="https://github.com/ozwillo/ozwillo-datacore/issues/124">#124</a>).
+Otherwise, check that you have the rights to do that or patch them, see below.
 <br/><br/>
 &nbsp;&nbsp;- <u>How to see Resource-level permissions</u> using the Playground :
 Resource-level permissions are returned when querying as owner (or admin) in debug mode.

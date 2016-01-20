@@ -460,12 +460,16 @@ public class DatacoreApiServerTest {
     * @throws Exception If a problem occurs
     */
    @Test
-   public void testGetUpdateVersion() throws Exception {
+   public void testGetUpdateVersionAndDublinCore() throws Exception {
+      DateTime testStartTime = new DateTime();
+      
       // first fill some data
       testCreate();
       
       DCResource data = datacoreApiClient.getData(CityCountrySample.CITY_MODEL_NAME, "UK/London");
       Assert.assertNotNull(data);
+      
+      // check version :
       Assert.assertNotNull(data.getVersion());
       long version = data.getVersion();
       Assert.assertEquals(this.containerUrl + DatacoreApi.DC_TYPE_PATH
@@ -473,15 +477,45 @@ public class DatacoreApiServerTest {
       ///Assert.assertEquals(CityCountrySample.CITY_MODEL_NAME, data.getProperties().get("type"));
       ///Assert.assertEquals("UK/London", data.getProperties().get("iri"));
       
+      // check generated fields :
+      Assert.assertEquals(0l, (long) data.getVersion());
+      Assert.assertNotNull(data.getCreated());
+      Assert.assertTrue(data.getCreated().isAfter(testStartTime)); // because created is rouned down
+      Assert.assertEquals("admin", data.getCreatedBy());
+      Assert.assertNotNull(data.getLastModified());
+      Assert.assertTrue(data.getLastModified().isAfter(data.getCreated())); // because created is rouned down
+      Assert.assertTrue(data.getLastModified().isBefore(new DateTime()));
+      Assert.assertEquals("admin", data.getLastModifiedBy());
+      
       // test using POST update
       DCResource postedData = datacoreApiClient.postDataInType(data, CityCountrySample.CITY_MODEL_NAME);
       Assert.assertNotNull(postedData);
       Assert.assertEquals(version + 1, (long) postedData.getVersion());
       
+      // check generated fields :
+      Assert.assertEquals(1l, (long) postedData.getVersion());
+      Assert.assertNotNull(postedData.getCreated());
+      Assert.assertTrue(postedData.getCreated().equals(data.getCreated()) || postedData.getCreated().isAfter(data.getCreated())); // because rounded down
+      Assert.assertEquals("admin", postedData.getCreatedBy());
+      Assert.assertNotNull(postedData.getLastModified());
+      Assert.assertTrue(postedData.getLastModified().isAfter(data.getLastModified()));
+      Assert.assertTrue(postedData.getLastModified().isBefore(new DateTime()));
+      Assert.assertEquals("admin", postedData.getLastModifiedBy());
+      
       // test using PUT update
       DCResource putData = datacoreApiClient.putDataInType(postedData, CityCountrySample.CITY_MODEL_NAME, "UK/London");
       Assert.assertNotNull(putData);
       Assert.assertEquals(version + 2, (long) putData.getVersion());
+      
+      // check generated fields :
+      Assert.assertEquals(2l, (long) putData.getVersion());
+      Assert.assertNotNull(putData.getCreated());
+      Assert.assertTrue(putData.getCreated().equals(postedData.getCreated()) || putData.getCreated().isAfter(postedData.getCreated()));
+      Assert.assertEquals("admin", putData.getCreatedBy());
+      Assert.assertNotNull(putData.getLastModified());
+      Assert.assertTrue(putData.getLastModified().isAfter(postedData.getLastModified()));
+      Assert.assertTrue(putData.getLastModified().isBefore(new DateTime()));
+      Assert.assertEquals("admin", putData.getLastModifiedBy());
    }
 
    @Test
