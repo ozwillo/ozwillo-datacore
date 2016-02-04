@@ -223,10 +223,10 @@ public abstract class DCEntityBase implements Comparable<DCEntityBase>, Serializ
    }
 
    public void copyNonResourceFieldsFrom(DCEntityBase existingDataEntity) {
-      this.setPreviousEntity(existingDataEntity);
+//      this.setPreviousEntity(existingDataEntity);
       
       this.setId(existingDataEntity.getId()); // else OptimisticLockingFailureException !
-      this.setVersion(existingDataEntity.getVersion());
+//      this.setVersion(existingDataEntity.getVersion());
       this.setCreatedBy(existingDataEntity.getCreatedBy()); // else lost ! #157
       // NB. no setCreated() since stored (rounded down) in mongo-generated id
       this.setLastModified(existingDataEntity.getLastModified()); // (will be overriden anyway)
