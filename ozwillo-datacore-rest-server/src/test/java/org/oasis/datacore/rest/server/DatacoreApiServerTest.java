@@ -462,7 +462,9 @@ public class DatacoreApiServerTest {
    @Test
    public void testGetUpdateVersionAndDublinCore() throws Exception {
       DateTime testStartTime = new DateTime();
-      
+      // wait for one second to prevent rounding errors from annoying us
+      Thread.sleep(1000);
+
       // first fill some data
       testCreate();
       
@@ -486,7 +488,10 @@ public class DatacoreApiServerTest {
       Assert.assertTrue(data.getLastModified().isAfter(data.getCreated())); // because created is rouned down
       Assert.assertTrue(data.getLastModified().isBefore(new DateTime()));
       Assert.assertEquals("admin", data.getLastModifiedBy());
-      
+
+      // wait for one second to prevent rounding errors from annoying us
+      Thread.sleep(1000);
+
       // test using POST update
       DCResource postedData = datacoreApiClient.postDataInType(data, CityCountrySample.CITY_MODEL_NAME);
       Assert.assertNotNull(postedData);
@@ -501,7 +506,10 @@ public class DatacoreApiServerTest {
       Assert.assertTrue(postedData.getLastModified().isAfter(data.getLastModified()));
       Assert.assertTrue(postedData.getLastModified().isBefore(new DateTime()));
       Assert.assertEquals("admin", postedData.getLastModifiedBy());
-      
+
+      // wait for one second to prevent rounding errors from annoying us
+      Thread.sleep(1000);
+
       // test using PUT update
       DCResource putData = datacoreApiClient.putDataInType(postedData, CityCountrySample.CITY_MODEL_NAME, "UK/London");
       Assert.assertNotNull(putData);
