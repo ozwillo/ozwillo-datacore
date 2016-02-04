@@ -18,7 +18,7 @@ public abstract class DCPointOfViewBase implements DCPointOfView {
    
    private String name;
    /** optimistic locking (implicitly minor) version */
-   private long version = 0;
+   private long version = -1;
    /** end of name ex. geo_1, none of < 0 */
    private long majorVersion = -1;
    private String unversionedName;
