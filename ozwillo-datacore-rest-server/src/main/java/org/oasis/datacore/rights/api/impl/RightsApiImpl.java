@@ -22,12 +22,19 @@ import org.oasis.datacore.core.security.service.DatacoreSecurityService;
 import org.oasis.datacore.rights.enumeration.RightsActionType;
 import org.oasis.datacore.rights.rest.api.DCRights;
 import org.oasis.datacore.rights.rest.api.RightsApi;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
 @Path("dc/r")
 @Component("datacore.rights.apiImpl") // else can't autowire Qualified ; NOT @Service (permissions rather around EntityService)
 public class RightsApiImpl implements RightsApi {
+
+	private static final Logger logger = LoggerFactory.getLogger(RightsApiImpl.class);
+
+	private static final String TOKEN_CACHE_NAME = "org.springframework.security.oauth2.provider.OAuth2Authentication";
 
 	@Autowired
 	private EntityPermissionService entityPermissionService;
@@ -40,6 +47,9 @@ public class RightsApiImpl implements RightsApi {
    
 	@Autowired
 	private DatacoreSecurityService datacoreSecurityService;
+
+	@Autowired
+	private CacheManager cacheManager;
 
 	public void addRightsOnResource(String modelType, String iri, long version, DCRights dcRights) {
 
@@ -61,6 +71,11 @@ public class RightsApiImpl implements RightsApi {
 		mergeRights(RightsActionType.ADD, entity, dcRights.getOwners(), dcRights.getReaders(), dcRights.getWriters());
 		
 		entityService.changeRights(entity);
+
+		logger.debug("Rights have been changed on resource {}, clearing token cache", iri);
+		// slightly hacky/heavy-handed: if rights have been changed, we need to flush the token cache
+		cacheManager.getCache(TOKEN_CACHE_NAME).clear();
+
 		
 		throw new WebApplicationException(Response.status(Response.Status.OK).entity("Rights have been added on the resource " + uri).type(MediaType.TEXT_PLAIN).build());
 
@@ -90,7 +105,12 @@ public class RightsApiImpl implements RightsApi {
 		}
 		
 		entityService.changeRights(entity);
-		
+
+		logger.debug("Rights have been changed on resource {}, clearing token cache", iri);
+		// slightly hacky/heavy-handed: if rights have been changed, we need to flush the token cache
+		cacheManager.getCache(TOKEN_CACHE_NAME).clear();
+
+
 		throw new WebApplicationException(Response.status(Response.Status.OK).entity("Rights have been removed on the resource " + uri).type(MediaType.TEXT_PLAIN).build());
 
 	}
@@ -115,7 +135,12 @@ public class RightsApiImpl implements RightsApi {
 		mergeRights(RightsActionType.FLUSH, entity, null, null, null);
 		
 		entityService.changeRights(entity);
-		
+
+		logger.debug("Rights have been changed on resource {}, clearing token cache", iri);
+		// slightly hacky/heavy-handed: if rights have been changed, we need to flush the token cache
+		cacheManager.getCache(TOKEN_CACHE_NAME).clear();
+
+
 		throw new WebApplicationException(Response.status(Response.Status.OK).entity("Rights have been flushed (readers,writers) on the resource " + uri).type(MediaType.TEXT_PLAIN).build());
 		
 	}
@@ -164,7 +189,12 @@ public class RightsApiImpl implements RightsApi {
 		entityPermissionService.recomputeAllReaders(entity);
 		
 		entityService.changeRights(entity);
-		
+
+		logger.debug("Rights have been changed on resource {}, clearing token cache", iri);
+		// slightly hacky/heavy-handed: if rights have been changed, we need to flush the token cache
+		cacheManager.getCache(TOKEN_CACHE_NAME).clear();
+
+
 		throw new WebApplicationException(Response.status(Response.Status.OK).entity("Rights have been replaced on the resource " + uri).type(MediaType.TEXT_PLAIN).build());
 		
 	}

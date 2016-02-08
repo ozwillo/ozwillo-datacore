@@ -190,6 +190,9 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
       
       <!-- import, for tests : -->
       <opencsv.version>2.3</opencsv.version>
+
+		<!-- mockito, for better unit tests -->
+		<mockito.version>1.9.5</mockito.version>
 	</properties>
 
 	<!-- ======= -->
@@ -345,6 +348,18 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 				<artifactId>jetty-server</artifactId><!-- also brought by cxf-rt-transports-http-jetty -->
 				<version>${jetty.version}</version>
 				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.mockito</groupId>
+				<artifactId>mockito-core</artifactId>
+				<version>${mockito.version}</version>
+				<scope>test</scope>
+				<exclusions>
+					<exclusion>
+						<groupId>org.hamcrest</groupId>
+						<artifactId>hamcrest-core</artifactId>
+					</exclusion>
+				</exclusions>
 			</dependency>
 
 			<!-- Datacore -->

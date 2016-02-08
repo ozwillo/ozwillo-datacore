@@ -32,12 +32,21 @@ import org.oasis.datacore.sample.MarkaInvestModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.google.common.collect.ImmutableMap;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:oasis-datacore-rest-server-test-context.xml" })
@@ -306,7 +315,36 @@ public class RightsTest {
 		
 		mockAuthenticationService.logout();
 	}
-	
+
+
+	@Test
+	@DirtiesContext
+	public void testTokenCacheEvictOnRightsUpdate() {
+
+		Cache cache = mock(Cache.class);
+		CacheManager cacheManager = mock(CacheManager.class);
+		when(cacheManager.getCache(anyString())).thenReturn(cache);
+
+		ReflectionTestUtils.setField(rightsApi, "cacheManager", cacheManager);
+
+		mockAuthenticationService.loginAs("admin");
+
+		datacoreApi.postAllDataInType(markaInvestData.getData().get(MarkaInvestModel.FIELD_MODEL_NAME), MarkaInvestModel.FIELD_MODEL_NAME);
+		datacoreApi.postAllDataInType(markaInvestData.getData().get(MarkaInvestModel.COUNTRY_MODEL_NAME), MarkaInvestModel.COUNTRY_MODEL_NAME);
+
+		DCRights rights = new DCRights();
+		List<String> readers = new ArrayList<>();
+		readers.add("sample.marka.country.readers");
+		rights.setReaders(readers);
+		try {
+			rightsApi.addRightsOnResource(MarkaInvestModel.COUNTRY_MODEL_NAME, "1", 0, rights);
+		} catch (WebApplicationException e) {
+			Assert.assertTrue(e.getResponse() != null && e.getResponse().getStatus() == HttpStatus.SC_OK);
+		}
+
+		verify(cache).clear();
+		mockAuthenticationService.logout();
+	}
 
 	private void truncateModel(String type) {
 		if (type != null && !StringUtils.isEmpty(type)) {
