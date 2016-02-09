@@ -36,3 +36,7 @@ local.properties
 # Locally stored "Eclipse launch configurations"
 *.launch
 
+
+
+/ozwillo-datacore-web/src/main/webapp/dc-ui/api-docs-erb/*.json
+/ozwillo-datacore-web/src/main/webapp/dc-ui/api-docs/*.json
