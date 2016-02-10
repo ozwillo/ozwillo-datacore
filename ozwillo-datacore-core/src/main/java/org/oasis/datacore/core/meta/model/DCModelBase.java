@@ -27,6 +27,7 @@ public abstract class DCModelBase {
    private List<String> pointOfViewNames;
    private String absoluteName; // i.e. collectionName
    private String pointOfViewAbsoluteName;
+   private List<String> idFieldNames;
 
 
    /** to be incremented each time there is a backward incompatible
@@ -320,6 +321,15 @@ public abstract class DCModelBase {
       this.pointOfViewNames = pointOfViewNames;
       buildAbsoluteNames();
    }
+
+   public List<String> getIdFieldNames() {
+      return idFieldNames;
+   }
+
+   public void setIdFieldNames(List<String> idFieldNames) {
+      this.idFieldNames = idFieldNames;
+   }
+
    public String getProjectName() {
       return projectName;
    }

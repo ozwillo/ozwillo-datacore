@@ -389,6 +389,12 @@ public class ResourceService {
          // NB. no PREVIOUS version to historize (*relief*, handling consistently its failures would be hard)
          
       } else {
+
+         /*
+         Is the resource URI consistent with the ID fields?
+          */
+//         dcModel.
+
          try {
             historizeResource(resource, dataEntity, dcModel);
             entityService.update(dataEntity);

@@ -589,6 +589,9 @@ public class ModelResourceMappingService {
 
       // security :
       toSecurity(r.getProperties(), getOrSetSecurity(modelOrMixin));
+
+      // idFieldNames:
+      modelOrMixin.setIdFieldNames((List<String>) r.get("dcmoid:idFieldNames"));
       
       try {
          this.resourceToFieldsAndMixins(modelOrMixin, r);
