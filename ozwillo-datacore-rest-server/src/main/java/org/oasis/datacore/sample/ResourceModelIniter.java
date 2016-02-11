@@ -184,6 +184,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
 
       DCModelBase modelIdentificationModel = new DCMixin("dcmoid:Identification_0")
          .addField(new DCListField("dcmoid:idFieldNames", new DCField("useless", "string", false, 0), false))
+         .addField(new DCField("dcmoid:enforceIdFieldNames", "boolean", false, 0))
          .addField(new DCField("dcmoid:queryBeforeCreate", "boolean", false, 0))
          .addField(new DCListField("dcmoid:idGenJs", new DCField("useless", "string", false, 0), false))
          .addField(new DCField("dcmoid:useIdForParent", "boolean", false, 0))

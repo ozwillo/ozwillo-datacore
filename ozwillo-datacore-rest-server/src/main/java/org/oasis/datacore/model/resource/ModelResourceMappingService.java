@@ -591,8 +591,13 @@ public class ModelResourceMappingService {
       toSecurity(r.getProperties(), getOrSetSecurity(modelOrMixin));
 
       // idFieldNames:
-      modelOrMixin.setIdFieldNames((List<String>) r.get("dcmoid:idFieldNames"));
-      
+      Object idFieldNames = r.get("dcmoid:idFieldNames");
+      if (idFieldNames != null) {
+         modelOrMixin.setIdFieldNames((List<String>) idFieldNames);
+         Object enforceIdFieldNames = r.get("dcmoid:enforceIdFieldNames");
+         modelOrMixin.setEnforceIdFieldNames(enforceIdFieldNames != null ? (boolean) enforceIdFieldNames : false);
+      }
+
       try {
          this.resourceToFieldsAndMixins(modelOrMixin, r);
       } catch (ResourceParsingException rpex) {

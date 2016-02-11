@@ -11,6 +11,7 @@ import org.oasis.datacore.common.context.DCRequestContextProviderFactory;
 import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
+import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.model.DCSecurity;
@@ -30,6 +31,8 @@ import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
 import org.oasis.datacore.rest.server.parsing.service.QueryParsingService;
 import org.oasis.datacore.server.uri.BadUriException;
 import org.oasis.datacore.server.uri.UriService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DuplicateKeyException;
@@ -46,6 +49,8 @@ import org.springframework.stereotype.Component;
  */
 @Component // TODO @Service ??
 public class ResourceService {
+
+   private static Logger logger = LoggerFactory.getLogger(ResourceService.class);
    
    /** context */
    public static final String PUT_MODE = "putRatherThanPatchMode";
@@ -390,17 +395,33 @@ public class ResourceService {
          
       } else {
 
-         /*
-         Is the resource URI consistent with the ID fields?
-          */
-//         dcModel.
+         if (dcModel.isEnforceIdFieldNames()) {
+            /*
+             * ID field names are enforced: we should have URI = ID fields
+             * So let's check that!
+             */
+            if (dcModel.getIdFieldNames() != null) {
+               String computedId = dcModel.getIdFieldNames().stream()
+                       .map(fn -> fieldNameToString(fn, resource, dcModel))
+                       .reduce("", (a, b) -> a + "/" + b);
+
+               String foundId = uriService.parseUri(resource.getUri()).getId();
+
+               if (!computedId.equals(foundId)) {
+                  logger.warn("Saved document's ID: {} does NOT match what its fieldnames say: {}", foundId, computedId);
+
+                  // TODO: change the URI and duplicate the alias
+               }
+            }
+
+         }
 
          try {
             historizeResource(resource, dataEntity, dcModel);
             entityService.update(dataEntity);
          } catch (OptimisticLockingFailureException olfex) {
             throw new ResourceObsoleteException("Trying to update data resource "
-                  + "without up-to-date version but " + resource.getVersion(), resource, project);
+                    + "without up-to-date version but " + resource.getVersion(), resource, project);
             // and not dataEntity.getVersion() which had already to be incremented by Spring
          } catch (NonTransientDataAccessException ntdaex) {
             // unexpected, so rethrowing runtime ex (will be wrapped in 500 server error)
@@ -637,5 +658,32 @@ public class ResourceService {
       } catch (Exception ex) {
         throw new ResourceException("Unknown error while historizing", ex, resource, project);
       }
+   }
+
+
+   private String fieldNameToString(String fieldName, DCResource resource, DCModelBase model) {
+
+      DCField field = model.getField(fieldName);
+      switch (field.getType()) {
+         case "resource":
+            String uri = (String) resource.get(fieldName);
+
+            try {
+               DCURI dcuri = uriService.parseUri(uri);
+               return dcuri.getId();
+
+            } catch (BadUriException  e) {
+               logger.error("Cannot parse uri", e);
+
+               // return uri as-is; not excellent but probably the least bad that can be done
+               return uri;
+            }
+
+         case "string":
+            return (String) resource.get(fieldName);
+
+      }
+
+      return "";
    }
 }

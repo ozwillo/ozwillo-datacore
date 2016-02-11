@@ -27,7 +27,12 @@ public abstract class DCModelBase {
    private List<String> pointOfViewNames;
    private String absoluteName; // i.e. collectionName
    private String pointOfViewAbsoluteName;
+
+   // ID Field names: what they should be
    private List<String> idFieldNames;
+   // ID Field names: is the naming scheme enforced by the data core? (default: no)
+   private boolean enforceIdFieldNames = false;
+
 
 
    /** to be incremented each time there is a backward incompatible
@@ -105,8 +110,8 @@ public abstract class DCModelBase {
    // features :
    /** Country / language specific : TODO LATER rather optional / candidate mixin (FR/IT...)CountryLanguageSpecific */
    private String countryLanguage = null;
-   
-   
+
+
    /** for unmarshalling only */
    public DCModelBase() {
       
@@ -329,6 +334,13 @@ public abstract class DCModelBase {
    public void setIdFieldNames(List<String> idFieldNames) {
       this.idFieldNames = idFieldNames;
    }
+   public void setEnforceIdFieldNames(boolean enforceIdFieldNames) {
+      this.enforceIdFieldNames = enforceIdFieldNames;
+   }
+
+   public boolean isEnforceIdFieldNames() {
+      return enforceIdFieldNames;
+   }
 
    public String getProjectName() {
       return projectName;
@@ -492,5 +504,6 @@ public abstract class DCModelBase {
 	         + ";m:" + this.getGlobalMixinMap().keySet()
 	         + "](f:" + this.getGlobalFieldMap().keySet() + ")";
 	}
-   
+
+
 }
