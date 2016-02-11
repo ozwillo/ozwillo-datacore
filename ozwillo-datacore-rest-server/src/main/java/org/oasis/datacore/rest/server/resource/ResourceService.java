@@ -395,40 +395,21 @@ public class ResourceService {
          
       } else {
 
-         if (dcModel.isEnforceIdFieldNames()) {
-            /*
-             * ID field names are enforced: we should have URI = ID fields
-             * So let's check that!
-             */
-            if (dcModel.getIdFieldNames() != null) {
-               String computedId = dcModel.getIdFieldNames().stream()
-                       .map(fn -> fieldNameToString(fn, resource, dcModel))
-                       .reduce("", (a, b) -> a + "/" + b);
+         if (!checkAndCreateAlias(resource, project, dataEntity, dcModel)) {
 
-               String foundId = uriService.parseUri(resource.getUri()).getId();
-
-               if (!computedId.equals(foundId)) {
-                  logger.warn("Saved document's ID: {} does NOT match what its fieldnames say: {}", foundId, computedId);
-
-                  // TODO: change the URI and duplicate the alias
-               }
+            try {
+               historizeResource(resource, dataEntity, dcModel);
+               entityService.update(dataEntity);
+            } catch (OptimisticLockingFailureException olfex) {
+               throw new ResourceObsoleteException("Trying to update data resource "
+                       + "without up-to-date version but " + resource.getVersion(), resource, project);
+               // and not dataEntity.getVersion() which had already to be incremented by Spring
+            } catch (NonTransientDataAccessException ntdaex) {
+               // unexpected, so rethrowing runtime ex (will be wrapped in 500 server error)
+               throw ntdaex;
             }
-
-         }
-
-         try {
-            historizeResource(resource, dataEntity, dcModel);
-            entityService.update(dataEntity);
-         } catch (OptimisticLockingFailureException olfex) {
-            throw new ResourceObsoleteException("Trying to update data resource "
-                    + "without up-to-date version but " + resource.getVersion(), resource, project);
-            // and not dataEntity.getVersion() which had already to be incremented by Spring
-         } catch (NonTransientDataAccessException ntdaex) {
-            // unexpected, so rethrowing runtime ex (will be wrapped in 500 server error)
-            throw ntdaex;
          }
       }
-      
       //resourceEntityMapperService.entityToResourcePersistenceComputedFields(dataEntity, resource); // NOOO would miss filtered stuff gotten back from existing
       resourceEntityMapperService.entityToResource(dataEntity, resource, true); // apply view (??)
 
@@ -439,7 +420,50 @@ public class ResourceService {
       
       return resource;
    }
-   
+
+   /**
+    * Checks if an alias should be created (based on enforceIdFieldNames) and creates it if so
+    * @param resource
+    * @param project
+    * @param dataEntity
+    * @param dcModel
+    * @return true if and only if the update has been turned into an aliasing procedure
+    * @throws ResourceException
+    * @throws BadUriException
+    */
+   private boolean checkAndCreateAlias(DCResource resource, DCProject project, DCEntity dataEntity, DCModelBase dcModel) throws ResourceException, BadUriException {
+      if (dcModel.isEnforceIdFieldNames()) {
+         /*
+          * ID field names are enforced: we should have URI = ID fields
+          * So let's check that!
+          */
+         String computedUri = computeURIFromFields(resource, dcModel, project);
+         if (!computedUri.equals(resource.getUri())) {
+
+            logger.warn("Saved document's ID: {} does NOT match what its fieldnames say: {}", resource.getUri(), computedUri);
+            /*
+             * Copy the resource to the new uri
+             */
+            resource.setUri(computedUri);
+            dataEntity.setUri(computedUri);
+            dataEntity.setId(null); // means we lose original created date… too bad but can't be helped
+            entityPermissionService.setOwners(dataEntity, buildCreatorOwners(dcModel));
+            try {
+               historizeResource(resource, dataEntity, dcModel);
+               entityService.create(dataEntity, false);
+            } catch (DuplicateKeyException dkex) {
+               throw new ResourceAlreadyExistsException("Trying to create already existing data resource", resource, project);
+            } catch (NonTransientDataAccessException ntdaex) {
+               throw ntdaex;
+            }
+
+            // TODO create alias olduri -> newuri
+            return true;
+         }
+      }
+      return false;
+   }
+
 
    /**
     * security resource creation owners if any
@@ -661,29 +685,57 @@ public class ResourceService {
    }
 
 
+   private String computeURIFromFields(DCResource resource, DCModelBase dcModel, DCProject project) throws ResourceException, BadUriException {
+      if (dcModel.getIdFieldNames() != null) {
+         String computedId;
+         try {
+            computedId = dcModel.getIdFieldNames().stream()
+                    .map(fn -> fieldNameToString(fn, resource, dcModel))
+                    .reduce("", (a, b) -> a + "/" + b);
+            DCURI dcuri = uriService.parseUri(resource.getUri());
+            return dcuri.getContainer() + "/dc/type/" + dcuri.getType() + computedId;
+         } catch (FieldMappingException e) {
+            throw new ResourceException(e.getMessage(), resource, project);
+         }
+      } else {
+         throw new ResourceException("Invalid model for resource, does not specify idFieldNames", resource, project);
+      }
+   }
+
    private String fieldNameToString(String fieldName, DCResource resource, DCModelBase model) {
 
       DCField field = model.getField(fieldName);
       switch (field.getType()) {
          case "resource":
             String uri = (String) resource.get(fieldName);
-
+            if (uri == null) {
+               // need to throw a RuntimeException here so we can use this function in a lambda
+               throw new FieldMappingException("URI-structural field " + fieldName + " is missing on resource");
+            }
             try {
                DCURI dcuri = uriService.parseUri(uri);
                return dcuri.getId();
 
             } catch (BadUriException  e) {
                logger.error("Cannot parse uri", e);
-
-               // return uri as-is; not excellent but probably the least bad that can be done
-               return uri;
+               throw new FieldMappingException("URI-structural field " + fieldName + " is invalid");
             }
 
          case "string":
             return (String) resource.get(fieldName);
 
+         default:
+            throw new FieldMappingException("Field type " + fieldName + " not supported in a structural field");
       }
+   }
 
-      return "";
+   /**
+    * Private runtime exception used only in this class - translated into a checked exception when it needs to
+    * percolate up the stack
+    */
+   private static class FieldMappingException extends RuntimeException {
+      public FieldMappingException(String message) {
+         super(message);
+      }
    }
 }

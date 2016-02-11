@@ -60,14 +60,19 @@ public class EntityServiceImpl implements EntityService {
          dataEntity.setProjectName(null);
       }
    }
-   
+
+   @Override
+   public void create(DCEntity dataEntity) throws NonTransientDataAccessException {
+      create(dataEntity, true);
+   }
+
    /* (non-Javadoc)
     * @see org.oasis.datacore.core.entity.DCEntityService#create(org.oasis.datacore.core.entity.model.DCEntity)
     */
    @Override
-   public void create(DCEntity dataEntity) throws DuplicateKeyException, NonTransientDataAccessException {
+   public void create(DCEntity dataEntity, boolean enforceVersionPolicy) throws NonTransientDataAccessException {
       Long version = dataEntity.getVersion();
-      if (version != null && version >= 0) { // version < 0 not allowed (though it is in Resources)
+      if (enforceVersionPolicy && version != null && version >= 0) { // version < 0 not allowed (though it is in Resources)
          throw new OptimisticLockingFailureException("Trying to create entity with version");
       }
       DCModelBase storageModel = entityModelService.getStorageModel(dataEntity); // TODO for view Models or weird type names ?!?

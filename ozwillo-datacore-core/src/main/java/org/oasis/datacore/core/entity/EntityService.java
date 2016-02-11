@@ -34,12 +34,18 @@ public interface EntityService {
     * Uses transient cached model if any.
     * TODO rights
     * @param dataEntity without version (< 0 not allowed, though it is in DCResource)
-    * @param dcModel
     * @throws DuplicateKeyException if already exists
     * @throws NonTransientDataAccessException other, unexpected storage error
     */
    @PreAuthorize("hasPermission(#dataEntity, 'create')")
-   void create(DCEntity dataEntity) throws DuplicateKeyException, NonTransientDataAccessException;
+   void create(DCEntity dataEntity) throws NonTransientDataAccessException;
+
+   /**
+    * Create a new entity
+    * @param dataEntity the entity to create
+    * @param enforceVersionPolicy if true, then enforce that version MUST be null or strictly less than zero
+    */
+   void create(DCEntity dataEntity, boolean enforceVersionPolicy) throws NonTransientDataAccessException;
 
    /**
     * TODO or cache model : in custom context implementing "get" reused in both hasPermission & here ??
