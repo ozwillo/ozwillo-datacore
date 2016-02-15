@@ -13,7 +13,6 @@ import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.SimpleUriService;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -61,18 +60,13 @@ public class EntityServiceImpl implements EntityService {
       }
    }
 
-   @Override
-   public void create(DCEntity dataEntity) throws NonTransientDataAccessException {
-      create(dataEntity, true);
-   }
-
    /* (non-Javadoc)
     * @see org.oasis.datacore.core.entity.DCEntityService#create(org.oasis.datacore.core.entity.model.DCEntity)
     */
    @Override
-   public void create(DCEntity dataEntity, boolean enforceVersionPolicy) throws NonTransientDataAccessException {
+   public void create(DCEntity dataEntity) throws NonTransientDataAccessException {
       Long version = dataEntity.getVersion();
-      if (enforceVersionPolicy && version != null && version >= 0) { // version < 0 not allowed (though it is in Resources)
+      if (version != null && version >= 0) { // version < 0 not allowed (though it is in Resources)
          throw new OptimisticLockingFailureException("Trying to create entity with version");
       }
       DCModelBase storageModel = entityModelService.getStorageModel(dataEntity); // TODO for view Models or weird type names ?!?
@@ -143,7 +137,8 @@ public class EntityServiceImpl implements EntityService {
 
       DCModelBase storageModel = entityModelService.getStorageModel(dcModel);
       String collectionName = storageModel.getCollectionName();
-      Criteria criteria = new Criteria(DCEntity.KEY_URI).is(uri).and(DCEntity.KEY_V).is(version);
+      Criteria criteria = new Criteria(DCEntity.KEY_URI).is(uri).and(DCEntity.KEY_V).is(version)
+              .and(DCEntity.KEY_ALIAS_OF).exists(false);
       entityModelService.addMultiProjectStorageCriteria(criteria, storageModel, uri);
       //entityService.findById(uri, type/collectionName); // TODO
       //dataEntity = dataRepo.findOne(uri); // NO can't be used because can't specify collection
@@ -290,4 +285,35 @@ public class EntityServiceImpl implements EntityService {
       return getSampleData();
    }
 
+
+   @Override
+   public void aliasOf(DCEntity target, String uri) throws NonTransientDataAccessException {
+      DCEntity alias = new DCEntity();
+      alias.setAliasOf(target.getUri());
+      alias.setUri(uri);
+      alias.setVersion(null);
+
+      DCModelBase storageModel = entityModelService.getStorageModel(target); // TODO for view Models or weird type names ?!?
+      String collectionName = storageModel.getCollectionName(); // TODO for view Models or weird type names ?!?
+      addMultiProjectStorageValue(alias, storageModel);
+
+      mgo.insert(alias, collectionName);
+
+   }
+
+   @Override
+   public String getAliased(String uri, DCEntity rawEntity) {
+      DCModelBase storageModel = entityModelService.getStorageModel(rawEntity);
+      String collectionName = storageModel.getCollectionName();
+
+      return mgo.findOne(new Query(new Criteria(DCEntity.KEY_URI).is(uri)), DCEntity.class, collectionName).getAliasOf();
+   }
+
+   @Override
+   public boolean isAlias(String uri, DCEntity rawEntity) {
+      DCModelBase storageModel = entityModelService.getStorageModel(rawEntity);
+      String collectionName = storageModel.getCollectionName();
+
+      return mgo.count(new Query(new Criteria(DCEntity.KEY_URI).is(uri).and(DCEntity.KEY_ALIAS_OF).exists(true)), collectionName) > 0;
+   }
 }

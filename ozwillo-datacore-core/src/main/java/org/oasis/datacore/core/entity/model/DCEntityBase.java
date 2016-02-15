@@ -52,6 +52,8 @@ public abstract class DCEntityBase implements Comparable<DCEntityBase>, Serializ
    public static final String KEY_CH_AT = "_chAt";
    public static final String KEY_CH_BY = "_chBy";
 
+   public static final String KEY_ALIAS_OF = "_aliasOf";
+
    protected final static Logger LOG = LoggerFactory.getLogger(DCEntityBase.class.getCanonicalName());
 
    protected static final int COMPARE_LESS = -1;
@@ -105,8 +107,7 @@ public abstract class DCEntityBase implements Comparable<DCEntityBase>, Serializ
    /**
     * who did it : TODO required ? If Ozwillo Users are in same db, could be an
     * instance of User instead and let audited entities refer to it see
-    * http://satishab
-    * .blogspot.fr/2013/03/part-2-persistence-layer-with-mongo-db.html
+    * http://satishab.blogspot.fr/2013/03/part-2-persistence-layer-with-mongo-db.html
     */
    @CreatedBy
    @Field(KEY_CR_BY)
@@ -159,7 +160,11 @@ public abstract class DCEntityBase implements Comparable<DCEntityBase>, Serializ
    @Field(KEY_O)
    // For now NOT indexed, "my documents" has to be found using business / modeled DCFields
    private Set<String> owners;
-   
+
+
+   @Field(KEY_ALIAS_OF)
+   private String aliasOf;
+
    /** request-scoped cache used in resourceToEntity,
     * getEntity & LDP service findDataInType()'s executeMongoDbQuery.
     * USE IT THROUGH EntityModelService.getModel() to allow LATER
@@ -199,7 +204,9 @@ public abstract class DCEntityBase implements Comparable<DCEntityBase>, Serializ
       this.setLastModified(dcEntity.getLastModified());
       this.setCreatedBy(dcEntity.getCreatedBy());
       this.setLastModifiedBy(dcEntity.getLastModifiedBy());
-      
+
+      this.setAliasOf(dcEntity.getAliasOf());
+
       // NB. not copying model caches in case of derived model ex. historization
       
       this.properties = new HashMap<String, Object>(dcEntity.properties.size());
@@ -238,11 +245,17 @@ public abstract class DCEntityBase implements Comparable<DCEntityBase>, Serializ
       this.setReaders(existingDataEntity.getReaders());
       this.setWriters(existingDataEntity.getWriters());
       this.setOwners(existingDataEntity.getOwners());
+
+      this.setAliasOf(existingDataEntity.getAliasOf());
    }
 
    public boolean isNew() {
       //return this.getId() == null;
       return this.getVersion() == null; // Spring's
+   }
+
+   public boolean isAlias() {
+      return this.aliasOf != null;
    }
 
    public int compareTo(DCEntityBase o) {
@@ -292,6 +305,11 @@ public abstract class DCEntityBase implements Comparable<DCEntityBase>, Serializ
          sb.append('.');
       }
       sb.append(this.uri); // includes modelName (& iri)
+      if (this.aliasOf != null) {
+         sb.append(" [alias of ");
+         sb.append(this.aliasOf);
+         sb.append("]");
+      }
       sb.append(" (");
       sb.append(this.version);
       sb.append(") +types: ");
@@ -428,6 +446,14 @@ public abstract class DCEntityBase implements Comparable<DCEntityBase>, Serializ
 
    public void setOwners(Set<String> owners) {
       this.owners = owners;
+   }
+
+   public String getAliasOf() {
+      return aliasOf;
+   }
+
+   public void setAliasOf(String aliasOf) {
+      this.aliasOf = aliasOf;
    }
 
    public DCModelBase getCachedModel() {

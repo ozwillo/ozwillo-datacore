@@ -41,13 +41,6 @@ public interface EntityService {
    void create(DCEntity dataEntity) throws NonTransientDataAccessException;
 
    /**
-    * Create a new entity
-    * @param dataEntity the entity to create
-    * @param enforceVersionPolicy if true, then enforce that version MUST be null or strictly less than zero
-    */
-   void create(DCEntity dataEntity, boolean enforceVersionPolicy) throws NonTransientDataAccessException;
-
-   /**
     * TODO or cache model : in custom context implementing "get" reused in both hasPermission & here ??
     * as transient param of resource ?? in EHCache (but beware of Resource obsolescence) ??
     * This method does not change state (else @PostAuthorize would not work)
@@ -133,4 +126,31 @@ public interface EntityService {
     * @throws URISyntaxException */
    DCEntity getSampleData() throws URISyntaxException;
 
+   /**
+    * Create an alias of 'target' with the provided URI
+    * @param target the entity to alias to
+    * @param uri the uri that should be an alias of 'target'
+    * @throws NonTransientDataAccessException
+    */
+   @PreAuthorize("hasPermission(#target, 'write')")
+   void aliasOf(DCEntity target, String uri) throws NonTransientDataAccessException;
+
+
+   /**
+    * Does the provided URL point to an alias?
+    * @param dcModel
+    * @param uri
+    * @param rawEntity
+    * @return
+    */
+   boolean isAlias(String uri, DCEntity rawEntity);
+
+   /**
+    * Return the "real" aliased URI
+    * @param dcModel
+    * @param uri
+    * @param rawEntity
+    * @return
+    */
+   String getAliased(String uri, DCEntity rawEntity);
 }

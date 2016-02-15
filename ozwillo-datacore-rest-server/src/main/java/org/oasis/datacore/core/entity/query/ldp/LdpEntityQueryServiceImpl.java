@@ -707,6 +707,9 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       if (!model.getName().equals(storageModel.getName())) {
          // adding criteria on model type when storage larger than model :
          springMongoQuery.addCriteria(new Criteria(DCEntity.KEY_T).is(model.getName()));
+      } else {
+         // if we query the whole storage model, then we should filter out aliases
+         springMongoQuery.addCriteria(new Criteria(DCEntity.KEY_ALIAS_OF).exists(false));
       }
       
       // compute overall maxScan :

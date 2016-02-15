@@ -277,8 +277,6 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
    public DCResource getData(String modelType, String iri, Long version) {
       String uri = uriService.buildUri(modelType, iri);
 
-      ///Long version = getVersionFromHeader(HttpHeaders.IF_NONE_MATCH, uri);
-
       DCResource resource;
       boolean versionIsUpToDate;
       String httpEntityTag;

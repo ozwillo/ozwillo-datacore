@@ -363,11 +363,20 @@ public class ResourceService {
       if (resource == null) {
          throw new ResourceException("No data (modelType = " + modelType + ")", null, project);
       }
-      
+
+
       DCEntity dataEntity = this.resourceToEntity(resource, modelType,
             canCreate, canUpdate, putRatherThanPatchMode, true);
       DCModelBase dcModel = entityModelService.getModel(dataEntity);
-      
+
+      while (entityService.isAlias(resource.getUri(), dataEntity)) {
+         String aliased = entityService.getAliased(resource.getUri(), dataEntity);
+         resource.setUri(aliased);
+         dataEntity = this.resourceToEntity(resource, modelType, canCreate, canUpdate, putRatherThanPatchMode, true);
+         dcModel = entityModelService.getModel(dataEntity);
+      }
+
+
       boolean isCreation = !(resource.getVersion() != null
             && resource.getVersion() >= 0); // NB. already checked by resourceToEntity()
 
@@ -438,26 +447,31 @@ public class ResourceService {
           * So let's check that!
           */
          String computedUri = computeURIFromFields(resource, dcModel, project);
-         if (!computedUri.equals(resource.getUri())) {
+         String previousUri = resource.getUri();
+         if (!computedUri.equals(previousUri)) {
 
-            logger.warn("Saved document's ID: {} does NOT match what its fieldnames say: {}", resource.getUri(), computedUri);
+            logger.warn("Saved document's URI: {} does NOT match what its fieldnames say: {}", previousUri, computedUri);
             /*
              * Copy the resource to the new uri
              */
             resource.setUri(computedUri);
-            dataEntity.setUri(computedUri);
-            dataEntity.setId(null); // means we lose original created date… too bad but can't be helped
-            entityPermissionService.setOwners(dataEntity, buildCreatorOwners(dcModel));
+            DCEntity newEntity = new DCEntity(dataEntity);
+            newEntity.setUri(computedUri);
+            newEntity.setId(dataEntity.getId());
+            newEntity.setPreviousEntity(dataEntity);
+            entityPermissionService.setOwners(newEntity, buildCreatorOwners(dcModel));
             try {
-               historizeResource(resource, dataEntity, dcModel);
-               entityService.create(dataEntity, false);
+               historizeResource(resource, newEntity, dcModel);
+               entityService.update(newEntity);
+               // this creates the alias
+               entityService.aliasOf(newEntity, previousUri);
+
             } catch (DuplicateKeyException dkex) {
                throw new ResourceAlreadyExistsException("Trying to create already existing data resource", resource, project);
             } catch (NonTransientDataAccessException ntdaex) {
                throw ntdaex;
             }
 
-            // TODO create alias olduri -> newuri
             return true;
          }
       }
@@ -612,12 +626,17 @@ public class ResourceService {
    private DCResource get(String uri, DCModelBase dcModel)
          throws ResourceNotFoundException, ResourceException {  
       DCEntity entity = entityService.getByUri(uri, dcModel);
+      while (entity != null && entity.isAlias()) {
+         entity = entityService.getByUri(entity.getAliasOf(), dcModel);
+      }
       if (entity == null) {
          //return Response.noContent().build();
          throw new ResourceNotFoundException("No resource with uri", uri, null,
                modelService.getProject()); // explodes if none
          // rather than NO_CONTENT ; like Atol
       }
+
+
       DCResource resource = resourceEntityMapperService.entityToResource(entity, null,
             false); // view already applied by Entity PermissionEvaluator
 
