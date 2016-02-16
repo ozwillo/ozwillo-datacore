@@ -385,10 +385,18 @@ public class ResourceModelTest {
          Assert.assertEquals(100, frCityModel.getGlobalField("city:founded").getQueryLimit());
          // and has indexes :
          //entityModelService.setDisableMultiProjectStorageCriteriaForTesting(true); // NOO only find in models
-         debugRes = datacoreApiClient.findDataInType(frCityModelName,
-               cityFoundedDebugParams, null, 10);
-         Assert.assertTrue("cityFR should have index on city:founded",
-               TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p.city:founded"));
+
+         /*
+          * SCH : commenting this out. It doesn't make sense to test on a plan for a query that returns no
+          * data. The query actually hits against two properties (city:founded and _aliasOf: {$exists: false})
+          * both have indices. Even with index intersection, Mongo will first scan the _aliasOf index, find
+          * there's no data, then return an empty result set without even opening the city:founded index
+          */
+
+//         debugRes = datacoreApiClient.findDataInType(frCityModelName,
+//               cityFoundedDebugParams, null, 10);
+//         Assert.assertTrue("cityFR should have index on city:founded",
+//               TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p.city:founded"));
          //entityModelService.setDisableMultiProjectStorageCriteriaForTesting(false); // NOO only find in models
          
          // removing index from referrer (by overriding it) :

@@ -670,9 +670,12 @@ public class ResourceService {
                + "before patching the entity.", null, null, project);
       }
       modelType = dcModel.getName(); // normalize ; TODO useful ?
-      
       DCEntity dataEntity = null;
-      
+
+      while (entityService.isAlias(uri, dcModel)) {
+         uri = entityService.getAliased(uri, dcModel);
+      }
+
       if (uri != null && version != null) {
     	  dataEntity = entityService.getByUriUnsecured(uri, dcModel);
       } else {
@@ -688,7 +691,8 @@ public class ResourceService {
       DCResource resource = resourceEntityMapperService.entityToResource(dataEntity, null,
             false); // view already applied by Entity PermissionEvaluator
       eventService.triggerResourceEvent(DCResourceEvent.Types.ABOUT_TO_DELETE, resource);
- 	   entityService.deleteByUriId(dataEntity);
+ 	  entityService.deleteByUriId(dataEntity);
+      entityService.deleteAliases(uri, dcModel);
       eventService.triggerResourceEvent(DCResourceEvent.Types.DELETED, resource);
    }
 

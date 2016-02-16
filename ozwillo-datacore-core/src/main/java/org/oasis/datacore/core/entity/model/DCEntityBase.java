@@ -161,7 +161,7 @@ public abstract class DCEntityBase implements Comparable<DCEntityBase>, Serializ
    // For now NOT indexed, "my documents" has to be found using business / modeled DCFields
    private Set<String> owners;
 
-
+   @Indexed
    @Field(KEY_ALIAS_OF)
    private String aliasOf;
 

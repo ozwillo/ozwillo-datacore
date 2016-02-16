@@ -114,7 +114,9 @@ public class NativeResourceModelServiceImpl implements NativeModelService {
             .addField(new DCListField(DCEntity.KEY_AR, new DCField("useless", "string", true, 100000))) // index
             .addField(new DCListField(DCEntity.KEY_R, new DCField("useless", "string", true, 0)))
             .addField(new DCListField(DCEntity.KEY_W, new DCField("useless", "string", true, 0)))
-            .addField(new DCListField(DCEntity.KEY_O, new DCField("useless", "string", true, 0)));
+            .addField(new DCListField(DCEntity.KEY_O, new DCField("useless", "string", true, 0)))
+            .addField(new DCField(DCEntity.KEY_ALIAS_OF, "string", null, 10000));
+
    }
 
    private void checkIndexedFields() throws NativeModelException {

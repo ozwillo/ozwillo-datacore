@@ -304,16 +304,63 @@ public class EntityServiceImpl implements EntityService {
    @Override
    public String getAliased(String uri, DCEntity rawEntity) {
       DCModelBase storageModel = entityModelService.getStorageModel(rawEntity);
+      return getAliasedByStorageModel(uri, storageModel);
+   }
+
+   @Override
+   public String getAliased(String uri, DCModelBase model) {
+      DCModelBase storageModel = entityModelService.getStorageModel(model);
+      return getAliasedByStorageModel(uri, storageModel);
+   }
+
+   private String getAliasedByStorageModel(String uri, DCModelBase storageModel) {
       String collectionName = storageModel.getCollectionName();
 
       return mgo.findOne(new Query(new Criteria(DCEntity.KEY_URI).is(uri)), DCEntity.class, collectionName).getAliasOf();
    }
 
+
+
    @Override
    public boolean isAlias(String uri, DCEntity rawEntity) {
+      if (uri == null) {
+         return false;
+      }
       DCModelBase storageModel = entityModelService.getStorageModel(rawEntity);
+      return isAliasByStorageModel(uri, storageModel);
+   }
+
+   @Override
+   public boolean isAlias(String uri, DCModelBase model) {
+      if (uri == null) {
+         return false;
+      }
+
+      DCModelBase storageModel = entityModelService.getStorageModel(model);
+      return isAliasByStorageModel(uri, storageModel);
+   }
+
+   private boolean isAliasByStorageModel(String uri, DCModelBase storageModel) {
       String collectionName = storageModel.getCollectionName();
 
       return mgo.count(new Query(new Criteria(DCEntity.KEY_URI).is(uri).and(DCEntity.KEY_ALIAS_OF).exists(true)), collectionName) > 0;
+   }
+
+
+   @Override
+   public void deleteAliases(String uri, DCModelBase model) {
+      DCModelBase storageModel = entityModelService.getStorageModel(model);
+      String collectionName = storageModel.getCollectionName();
+
+      recurseDeleteAliases(uri, collectionName);
+   }
+
+   private void recurseDeleteAliases(String uri, String collectionName) {
+      List<DCEntity> entities = mgo.find(new Query(new Criteria(DCEntity.KEY_ALIAS_OF).is(uri)), DCEntity.class, collectionName);
+      for (DCEntity entity : entities) {
+         recurseDeleteAliases(entity.getUri(), collectionName);
+         mgo.remove(entity, collectionName); // NB here it's okay that we don't check version numbers: aliases aren't versioned.
+      }
+
    }
 }

@@ -137,20 +137,45 @@ public interface EntityService {
 
 
    /**
-    * Does the provided URL point to an alias?
+    * Does the provided URI point to an alias?
     * @param dcModel
-    * @param uri
-    * @param rawEntity
+    * @param uri          provided URI
+    * @param rawEntity    entity the URI refers to
     * @return
     */
    boolean isAlias(String uri, DCEntity rawEntity);
 
    /**
+    * Does the provided URI point to an alias?
+    * @param uri      provided URI
+    * @param model    model for that resource
+    * @return
+    */
+   boolean isAlias(String uri, DCModelBase model);
+
+
+   /**
     * Return the "real" aliased URI
-    * @param dcModel
-    * @param uri
-    * @param rawEntity
+    * @param uri          provided URI
+    * @param rawEntity    "raw" entity the URI refers to
     * @return
     */
    String getAliased(String uri, DCEntity rawEntity);
+
+   /**
+    * Return the "real" aliased URI
+    * @param dcModel
+    * @param uri     provided URI
+    * @param model   the model for that resource
+    * @return
+    */
+   String getAliased(String uri, DCModelBase model);
+
+
+   /**
+    * Recursively delete all aliases that point to the provided URI
+    * @param uri
+    * @param model
+    */
+   void deleteAliases(String uri, DCModelBase model);
 }
