@@ -2,12 +2,10 @@ package org.oasis.datacore.core.entity;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import com.mongodb.DuplicateKeyException;
 import org.joda.time.DateTime;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.SimpleUriService;
@@ -173,7 +171,7 @@ public class EntityServiceImpl implements EntityService {
       }*/
       // TODO better using annotated hasPermission ?
       // TODO or only as operation criteria ?? ($and _w $in currentUserRoles)
-      
+
       mgo.save(dataEntity, collectionName); // (spring data ensures atomically same version)
    }
    
@@ -363,4 +361,37 @@ public class EntityServiceImpl implements EntityService {
       }
 
    }
+
+   @Override
+   public void unwindAliases(DCEntity dataEntity, String previousUri) {
+      String collectionName = entityModelService.getStorageModel(dataEntity).getCollectionName();
+
+      DCEntity existing = mgo.findOne(new Query(new Criteria(DCEntity.KEY_URI).is(dataEntity.getUri()).and(DCEntity.KEY_ALIAS_OF).exists(true)), DCEntity.class, collectionName);
+      if (existing != null) {
+         // OK, we have an alias where we want to put our entity.
+         // check that it points to our entity before deleting it.
+         String uri = walkDownAliasChain(existing, collectionName);
+         if (uri != null && uri.equals(previousUri)) {
+            // remove the alias
+            mgo.remove(existing, collectionName);
+         }
+      }
+
+   }
+
+   /**
+    * Find the final uri that the alias points to
+    */
+   private String walkDownAliasChain(DCEntity alias, String collectionName) {
+      if (alias.isAlias()) {
+         DCEntity target = mgo.findOne(new Query(new Criteria(DCEntity.KEY_URI).is(alias.getAliasOf())), DCEntity.class, collectionName);
+         if (target == null) {
+            return null;
+         }
+         return walkDownAliasChain(target, collectionName);
+      }
+
+      return alias.getUri();
+   }
+
 }

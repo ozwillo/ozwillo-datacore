@@ -178,4 +178,14 @@ public interface EntityService {
     * @param model
     */
    void deleteAliases(String uri, DCModelBase model);
+
+   /**
+    * If dataEntity.uri is used for an alias, and that alias points (possibly
+    * by way of other aliases) to our entity's previous uri, then delete that
+    * alias (and only that alias: we want all previous uris for the resource
+    * to remain valid)
+    * @param dataEntity
+    * @param previousUri
+    */
+   void unwindAliases(DCEntity dataEntity, String previousUri);
 }

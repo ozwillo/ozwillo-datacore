@@ -1,12 +1,5 @@
 package org.oasis.datacore.rest.server.resource;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.oasis.datacore.common.context.DCRequestContextProviderFactory;
 import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.EntityService;
@@ -39,6 +32,8 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
+
+import java.util.*;
 
 /**
  * TODO LATER2 once ModelService & Models are exposed as REST and available on client side,
@@ -462,11 +457,14 @@ public class ResourceService {
             entityPermissionService.setOwners(newEntity, buildCreatorOwners(dcModel));
             try {
                historizeResource(resource, newEntity, dcModel);
+
+               // "unwind" the alias - in case the update is a doubling back
+               // on the current uri
+               entityService.unwindAliases(newEntity, previousUri);
                entityService.update(newEntity);
-               // this creates the alias
                entityService.aliasOf(newEntity, previousUri);
 
-            } catch (DuplicateKeyException dkex) {
+            } catch (DuplicateKeyException ex) {
                throw new ResourceAlreadyExistsException("Trying to create already existing data resource", resource, project);
             } catch (NonTransientDataAccessException ntdaex) {
                throw ntdaex;
