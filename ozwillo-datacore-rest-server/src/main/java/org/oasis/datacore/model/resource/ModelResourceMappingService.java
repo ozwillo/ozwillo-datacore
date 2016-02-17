@@ -218,7 +218,12 @@ public class ModelResourceMappingService {
       // once id source props are complete, build URI out of them :
       String uri = this.buildModelUri(modelResource);
       modelResource.setUri(uri);
-      
+
+      if (model.getIdFieldNames() != null) {
+         modelResource.set("dcmoid:idFieldNames", model.getIdFieldNames());
+         modelResource.set("dcmoid:enforceIdFieldNames", true);
+      }
+
       this.modelFieldsAndMixinsToResource(model, modelResource);
       
       return modelResource;

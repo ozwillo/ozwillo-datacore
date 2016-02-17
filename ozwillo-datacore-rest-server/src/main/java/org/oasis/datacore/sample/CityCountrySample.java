@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 
+import com.google.common.collect.ImmutableList;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.oasis.datacore.core.meta.model.DCField;
@@ -44,19 +45,19 @@ public class CityCountrySample extends DatacoreSampleBase {
    public void buildModels(List<DCModelBase> modelsToCreate) {
       DCModel commonModel = new DCModel(COMMON_MODEL_NAME); // to test upper fields merge (because odisp:name is readonly in city)
       commonModel.addField(new DCField("common:id", "string", false, 0));
-      
+
       DCModel countryModel = new DCModel(COUNTRY_MODEL_NAME);
       countryModel.setDocumentation("{ \"uri\": \"http://localhost:8180/dc/type/country/France\", "
             + "\"name\": \"France\" }");
       //countryModel.addMixin(commonModel);
       countryModel.addField(new DCField("n:name", "string", true, 100));
       countryModel.getField("n:name").setFulltext(true); // string fulltext example ; NB. requires queryLimit > 0
-      
+
       DCModel poiModel = new DCModel(POI_MODEL_NAME);
       poiModel.addField(new DCField("n:name", "string", true, 50));
       poiModel.addField(new DCField("poi:description", "string"));
       poiModel.addField(new DCField("poi:location", "string")); // wkt
-      
+
       DCModel cityModel = new DCModel(CITY_MODEL_NAME);
       cityModel.setDocumentation("{ \"uri\": \"http://localhost:8080/dc/type/city/France/Lyon\", "
             + "\"inCountry\": \"http://localhost:8080/dc/type/country/France\", \"name\": \"Lyon\" }");
@@ -69,7 +70,7 @@ public class CityCountrySample extends DatacoreSampleBase {
       cityModel.addField(new DCField("city:latitudeDMS", "double", false, 0));
       cityModel.addField(new DCField("city:founded", "date", false, 0));
       cityModel.addField(new DCField("city:isComCom", "boolean", (Object) false, 0));
-         
+
       // i18n & aliasedStorageNames sample :
       cityModel.addField(new DCI18nField(ResourceModelIniter.DISPLAYABLE_NAME_PROP, 100, ResourceModelIniter.DISPLAYABLE_NAME_PROP, true));
       cityModel.addField(new DCI18nField("i18n:name", 100, ResourceModelIniter.DISPLAYABLE_NAME_PROP, true));
@@ -97,6 +98,10 @@ public class CityCountrySample extends DatacoreSampleBase {
       cityModel.addField(new DCListField("city:historicalEvents", new DCMapField("zzz")
             .addField(new DCField("city:historicalEventDate", "date", true, 100))
             .addField(new DCI18nField("city:historicalEventName", 0))));
+
+       // set id fields = [country, name], e.g. /France/Lyon and enforce that on update
+      cityModel.setIdFieldNames(ImmutableList.of("city:inCountry", "n:name"));
+      cityModel.setEnforceIdFieldNames(true);
 
       modelsToCreate.addAll(Arrays.asList((DCModelBase) poiModel, commonModel, cityModel, countryModel, cityLegalInfoMixin));
    }

@@ -71,7 +71,7 @@ public class ResourceModelTest {
    
    @Autowired
    @Qualifier("datacoreApiCachedJsonClient")
-   private /*DatacoreApi*/DatacoreCachedClient datacoreApiClient;
+   private DatacoreCachedClient datacoreApiClient;
    
    @Autowired
    private ResourceService resourceService;
