@@ -117,11 +117,6 @@
          would probably work without type=pom but brings in too much stuff (hibernate, terracotta...) -->
       </dependency>
 
-      <!-- for EnumerationUtils, ListUtils... -->
-      <dependency>
-         <groupId>commons-collections</groupId>
-         <artifactId>commons-collections</artifactId>
-      </dependency>
       <!-- for IOUtils TODO used ?? -->
       <dependency>
          <groupId>commons-io</groupId>
