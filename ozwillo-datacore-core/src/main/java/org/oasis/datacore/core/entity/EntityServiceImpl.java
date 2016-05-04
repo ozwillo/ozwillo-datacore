@@ -394,4 +394,24 @@ public class EntityServiceImpl implements EntityService {
       return alias.getUri();
    }
 
+   @Override
+   public List<String> getAliases(String uri, DCModelBase model) {
+      String collectionName = entityModelService.getStorageModel(model).getCollectionName();
+
+      if (getByUri(uri, model) == null) {
+         return null;
+      }
+
+      List<String> aliases = new ArrayList<>();
+      recurseGetAliases(uri, collectionName, aliases);
+      return aliases;
+   }
+
+   private void recurseGetAliases(String uri, String collectionName, List<String> aliases) {
+      aliases.add(uri);
+      List<DCEntity> entities = mgo.find(new Query(new Criteria(DCEntity.KEY_ALIAS_OF).is(uri)), DCEntity.class, collectionName);
+      for (DCEntity entity : entities) {
+         recurseGetAliases(entity.getUri(), collectionName, aliases);
+      }
+   }
 }

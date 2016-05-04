@@ -456,6 +456,15 @@ public class DatacoreApiCachedClientImpl implements DatacoreCachedClient/*Dataco
 		return resource;
 	}
 
+    /* (non-Javadoc)
+     * @see org.oasis.datacore.rest.api.DatacoreApi#getAliases(java.lang.String, java.lang.String)
+     */
+    @Override
+    public List<String> getAliases(String modelType, String iri) throws NotFoundException {
+        return this.delegate.getAliases(modelType, iri);
+    }
+
+
    /* (non-Javadoc)
     * @see org.oasis.datacore.rest.api.DatacoreApi#findDataInType(java.lang.String, javax.ws.rs.core.UriInfo, java.lang.Integer, java.lang.Integer)
     */

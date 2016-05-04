@@ -1131,5 +1131,25 @@ public interface DatacoreApi {
    DCResource findHistorizedResource(@ApiParam(value = "Resource's model type", required = true) @PathParam("type") String modelType,
 		   							 @ApiParam(value = "Type-relative resource id", required = true) @PathParam("__unencoded__iri") String iri,
 		   							 @ApiParam(value = "Resource version", required = true) @PathParam("version") Integer version) throws BadRequestException, NotFoundException;
-      
+
+   @Path("/aliases/{type}/{__unencoded__iri:.+}")
+   @GET
+   @ApiOperation(value = "Return the aliases an existing data Resource",
+                 response = String.class, responseContainer = "List", position = 13)
+   @ApiImplicitParams({
+      @ApiImplicitParam(name=HttpHeaders.AUTHORIZATION, paramType="header", dataType="string",
+            value="OAuth2 Bearer or (DEV MODE ONLY) Basic Auth", defaultValue=AUTHORIZATION_DEFAULT),
+      @ApiImplicitParam(name=PROJECT_HEADER, paramType="header", dataType="string",
+            value="Examples : oasis.test, oasis.main", defaultValue=PROJECT_DEFAULT),
+      // NB. @ApiImplicitParam.dataType MUST be provided, see https://github.com/wordnik/swagger-core/issues/312
+   })
+   @ApiResponses(value = {
+      @ApiResponse(code = 404, message = "Resource does not exist, or type model not found"),
+      @ApiResponse(code = 304, message = "Resource not modified (client can reuse its cache's)"),
+      @ApiResponse(code = 200, message = "OK : resource found and returned")
+   })
+   List<String> getAliases(
+        @ApiParam(value = "Model type to look up in", required = true) @PathParam("type") String modelType,
+        @ApiParam(value = "Type-relative resource id", required = true) @PathParam("__unencoded__iri") String iri)
+        throws NotFoundException;
 }
