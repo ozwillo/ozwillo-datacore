@@ -219,4 +219,8 @@ public class DatacoreApiMockServerImpl extends JaxrsServerBase implements Dataco
 
 	}
 
+    @Override
+    public List<String> getAliases(String modelType, String iri) throws NotFoundException {
+        return null;
+    }
 }

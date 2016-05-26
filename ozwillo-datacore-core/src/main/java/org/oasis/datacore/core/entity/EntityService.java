@@ -1,6 +1,7 @@
 package org.oasis.datacore.core.entity;
 
 import java.net.URISyntaxException;
+import java.util.List;
 
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.model.DCModelBase;
@@ -188,4 +189,9 @@ public interface EntityService {
     * @param previousUri
     */
    void unwindAliases(DCEntity dataEntity, String previousUri);
+
+   /**
+    * Return the list of aliases for the provided URI
+     */
+   List<String> getAliases(String uri, DCModelBase model);
 }

@@ -549,7 +549,35 @@ public class DatacoreApiImpl extends JaxrsServerBase implements DatacoreApi {
 		throw new WebApplicationException(responseBuilder.build());
 
 	}
-   
+
+   @Override
+   public List<String> getAliases(String modelType, String iri) throws NotFoundException {
+      String uri = uriService.buildUri(modelType, iri);
+
+      DCModelBase dcModel = modelService.getModelBase(modelType);
+      if (dcModel == null) {
+         // TODO LATER OPT client side might deem it a data health / governance problem,
+         // and put it in the corresponding inbox
+         throw new BadRequestException(toBadRequestJsonResponse(
+                 new ResourceTypeNotFoundException(modelType, "Can't find model type for " + uri
+                         + ". Maybe it is badly spelled, or it has been deleted or renamed since (only in test). "
+                         + "In this case, the missing model must first be created again, "
+                         + "before patching the entity.", null, null, modelService.getProject())));
+      }
+      try {
+         return resourceService.getAliases(uri, dcModel);
+      } catch (ResourceTypeNotFoundException rtnfex) {
+         throw new NotFoundException(toNotFoundJsonResponse(rtnfex));
+
+         // NB. no ExternalResourceException because URI is HTTP URL which can't be external !
+
+      } catch (ResourceNotFoundException rnfex) {
+         throw new NotFoundException(toNotFoundJsonResponse(rnfex));
+      } catch (ResourceException rex) { // asked to abort from within triggered event
+         throw new BadRequestException(toBadRequestJsonResponse(rex));
+      }
+   }
+
    /**
     * To be used inside ClientErrorException, like this :
     * throw new ClientErrorException(toConflictJsonResponse(e)).

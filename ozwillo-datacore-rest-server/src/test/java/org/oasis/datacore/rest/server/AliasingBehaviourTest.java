@@ -29,6 +29,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.ws.rs.NotFoundException;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.Collections;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.fail;
@@ -77,6 +79,9 @@ public class AliasingBehaviourTest {
         assertNotNull(resource);
         String prefix = containerUrl + "/dc/type/" + CityCountrySample.CITY_MODEL_NAME;
 
+        assertEquals(Collections.singletonList(prefix + "/France/Lyon"),
+                datacoreApiClient.getAliases(CityCountrySample.CITY_MODEL_NAME, "France/Lyon"));
+
         // let's try updating the resource
         resource.set("n:name", "Lugdunum");
         datacoreApiClient.putDataInType(resource, CityCountrySample.CITY_MODEL_NAME, "France/Lyon");
@@ -90,6 +95,11 @@ public class AliasingBehaviourTest {
         assertEquals(prefix + "/France/Lugdunum", updatedResource.getUri());
         assertEquals(version, updatedResource.getVersion());
 
+        assertEquals(Arrays.asList(prefix + "/France/Lugdunum", prefix + "/France/Lyon"),
+                datacoreApiClient.getAliases(CityCountrySample.CITY_MODEL_NAME, "France/Lyon"));
+        assertEquals(Arrays.asList(prefix + "/France/Lugdunum", prefix + "/France/Lyon"),
+                datacoreApiClient.getAliases(CityCountrySample.CITY_MODEL_NAME, "France/Lugdunum"));
+
         // update again!
         updatedResource.set("n:name", "Leo");
         datacoreApiClient.putDataInType(updatedResource, CityCountrySample.CITY_MODEL_NAME, "France/Lyon");// notice that we use /Lyon: it's all the same really'
@@ -98,6 +108,13 @@ public class AliasingBehaviourTest {
         // make sure the version has been incemented
         assertEquals(new Long(version.longValue() + 1), updatedResource.getVersion());
         assertEquals(prefix + "/France/Leo", updatedResource.getUri());
+
+        assertEquals(Arrays.asList(prefix + "/France/Leo", prefix + "/France/Lugdunum", prefix + "/France/Lyon"),
+                datacoreApiClient.getAliases(CityCountrySample.CITY_MODEL_NAME, "France/Lyon"));
+        assertEquals(Arrays.asList(prefix + "/France/Leo", prefix + "/France/Lugdunum", prefix + "/France/Lyon"),
+                datacoreApiClient.getAliases(CityCountrySample.CITY_MODEL_NAME, "France/Lugdunum"));
+        assertEquals(Arrays.asList(prefix + "/France/Leo", prefix + "/France/Lugdunum", prefix + "/France/Lyon"),
+                datacoreApiClient.getAliases(CityCountrySample.CITY_MODEL_NAME, "France/Leo"));
 
         // try looping back to Lyon, make sure that all aliases are still there
         updatedResource.set("n:name", "Lyon");
@@ -112,6 +129,13 @@ public class AliasingBehaviourTest {
         assertEquals(prefix + "/France/Lyon", datacoreApiClient.getData(CityCountrySample.CITY_MODEL_NAME, "France/Lugdunum").getUri());
         assertEquals(prefix + "/France/Lyon", datacoreApiClient.getData(CityCountrySample.CITY_MODEL_NAME, "France/Leo").getUri());
 
+        assertEquals(Arrays.asList(prefix + "/France/Lyon", prefix + "/France/Leo", prefix + "/France/Lugdunum"),
+                datacoreApiClient.getAliases(CityCountrySample.CITY_MODEL_NAME, "France/Lyon"));
+        assertEquals(Arrays.asList(prefix + "/France/Lyon", prefix + "/France/Leo", prefix + "/France/Lugdunum"),
+                datacoreApiClient.getAliases(CityCountrySample.CITY_MODEL_NAME, "France/Lugdunum"));
+        assertEquals(Arrays.asList(prefix + "/France/Lyon", prefix + "/France/Leo", prefix + "/France/Lugdunum"),
+                datacoreApiClient.getAliases(CityCountrySample.CITY_MODEL_NAME, "France/Leo"));
+
         // delete the resource
         datacoreApiClient.deleteData(updatedResource);
 
@@ -120,6 +144,12 @@ public class AliasingBehaviourTest {
                 .forEach(iri -> {
                     try {
                         datacoreApiClient.getData(CityCountrySample.CITY_MODEL_NAME, iri);
+                        fail("Should be null!");
+                    } catch(NotFoundException e) {
+                        // ok
+                    }
+                    try {
+                        datacoreApiClient.getAliases(CityCountrySample.CITY_MODEL_NAME, iri);
                         fail("Should be null!");
                     } catch(NotFoundException e) {
                         // ok

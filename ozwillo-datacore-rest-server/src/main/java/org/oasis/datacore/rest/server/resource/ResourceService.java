@@ -705,6 +705,24 @@ public class ResourceService {
       }
    }
 
+   public List<String> getAliases(String uri, DCModelBase dcModel) throws ResourceException {
+      DCProject project = modelService.getProject(); // TODO explode if none
+
+      while (entityService.isAlias(uri, dcModel)) {
+         uri = entityService.getAliased(uri, dcModel);
+      }
+      if (uri == null) {
+         // NB. uri & version can't be null if used from JAXRS
+         throw new ResourceNotFoundException("Cannot get uri or version, cannot evaluate permissions",
+                 uri, null, project);
+      }
+      List<String> aliases = entityService.getAliases(uri, dcModel);
+      if (aliases == null || aliases.isEmpty()) {
+         // NB. aliases should contain the input uri, so shouldn't be empty
+         throw new ResourceNotFoundException(null, uri, null, project);
+      }
+      return aliases;
+   }
 
    private String computeURIFromFields(DCResource resource, DCModelBase dcModel, DCProject project) throws ResourceException, BadUriException {
       if (dcModel.getIdFieldNames() != null) {
