@@ -1,0 +1,59 @@
+.darkred{
+  background-color: rgba(204,18,18, 1) !important;
+}
+
+.largefont{
+  font-size: 1.4em;
+}
+
+.normalfont{
+  font-size: 1.0em;
+}
+
+.groupementmenu{
+}
+
+.center{
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+.menubutton{
+  margin-top: 0 !important;
+}
+
+.mymenu{
+  margin-top: 10px !important;
+}
+
+.adresseget{
+  width: 100% !important;
+}
+
+.segmentpadding{
+  padding: 20px !important;
+}
+
+.listespace{
+  padding: 0 0 10px 0   !important;
+}
+
+.playground{
+  color: rgba(204,18,18, 1) !important;
+}
+
+.project{
+
+}
+
+#transitionEditButton{
+  width:69px;
+  -webkit-transition: width 0.2s !important; /* Safari */
+  transition: width 0.2s !important;
+}
+
+.main{
+  -webkit-transition: width 0.2s !important; /* Safari */
+  transition: width 0.2s !important;
+}

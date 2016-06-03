@@ -1,0 +1,5 @@
+/*******************************
+     User Global Variables
+*******************************/
+@darkred            : #D42A2A;
+@pageFont          : "Open Sans", sans-serif;
