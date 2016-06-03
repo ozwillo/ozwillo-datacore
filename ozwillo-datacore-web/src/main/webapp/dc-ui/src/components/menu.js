@@ -1,6 +1,8 @@
 import React from 'react';
 import { connect } from 'react-redux'
 import {Link} from 'react-router';
+import {PATH} from '../index.js'
+
 
 export default class Menu  extends React.Component{
   constructor(props){
@@ -13,6 +15,7 @@ export default class Menu  extends React.Component{
 
   componentDidMount(){
     $('.ui.mymenu').hide();
+    console.log("PATH"+PATH);
   }
 
   //this syntax makes an autobind of this function
@@ -66,7 +69,7 @@ const ConnectedMenuDepliant = connect(mapStateToPropsMenuDepliant)(MenuDepliant)
 class MenuElement extends React.Component{
   render(){
     return(
-      <Link className="item" to={this.props.ElementMenu.path}>{this.props.ElementMenu.title}</Link>
+      <Link className="item" to={PATH+this.props.ElementMenu.path}>{this.props.ElementMenu.title}</Link>
     );
   }
 }

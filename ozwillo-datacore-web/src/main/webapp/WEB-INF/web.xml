@@ -49,8 +49,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	
 	<welcome-file-list>
 		<welcome-file>service.json</welcome-file><!-- to redirect from /api-docs (for static swagger spec only) -->
-		<!-- welcome-file>index.html</welcome-file> To redirect from dc-ui/ to dc-ui/index.html, BUT doesn't 
-		work (?!) -->
+		<welcome-file>index.html</welcome-file><!-- To redirect from dc-ui/ to dc-ui/index.html -->
 	</welcome-file-list>
 	
 	<filter>

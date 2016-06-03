@@ -14,6 +14,8 @@ import commonQueries from "./components/reading/commonQueries.js";
 import apiDetails from "./components/reading/apiDetails.js";
 import serverConfiguration from "./components/reading/serverConfiguration.js";
 
+export const PATH = "/dc-ui/"
+
 const initialState = {
   readings: [
     {"title":"Playground User Manual", "path": "user-manual", "component": UserManual},
@@ -28,13 +30,13 @@ const initialState = {
 
 let store = createStore(playground, initialState);
 
-
 ReactDOM.render(
   <Provider store={store}>
     <Router history={browserHistory}>
-      <Route path="/dc-ui/index.html" component={App}>
+      <Route component={App}>
+        <Route path={PATH} component={UserManual}/>
         {initialState.readings.map(function(reading, i){
-          return <Route path={reading.path} component={reading.component} key={i}/>;
+          return <Route path={PATH+reading.path} component={reading.component} key={i}/>;
         }, this)}
       </Route>
     </Router>

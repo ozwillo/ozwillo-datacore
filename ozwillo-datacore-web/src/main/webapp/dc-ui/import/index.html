@@ -6,7 +6,7 @@
   <link href='../css/highlight.default.css' media='screen' rel='stylesheet' type='text/css'/>
   <link href='../css/screen.css' media='screen' rel='stylesheet' type='text/css'/>
   <link href='../common/css/datacore-ui.css' rel='stylesheet' type='text/css'/>
-  <script type="text/javascript" src="../lib/shred.bundle.js" /></script>  
+  <script type="text/javascript" src="../lib/shred.bundle.js" /></script>
   <script src='../lib/jquery-1.8.0.min.js' type='text/javascript'></script>
   <script src='../lib/jquery.slideto.min.js' type='text/javascript'></script>
   <script src='../lib/jquery.wiggle.min.js' type='text/javascript'></script>
@@ -24,19 +24,19 @@
   <script src="lib/hashids.min.js" type="text/javascript"></script>
   <script src='lib/datacore-import.js' type='text/javascript'></script>
   <script type="text/javascript">
-     
+
    var inited = false; // Ozwillo
     $(function () {
       if (inited) { // Ozwillo
          return; // Ozwillo else called at EACH reload including each CSV parsing !!
       } // Ozwillo
-      
+
       initPlayground(); // also window.dcApi
-      
+
       $('.modelFile').change(function(e){
          $in=$(this);
          ///$in.next().html($in.val());
-         
+
          // update model domain prefix on file change :
          $('.domainPrefix').val(buildModelDomainPrefix($in.val()));
 
@@ -66,7 +66,7 @@
                }
                mixinNames.push('(last)');
                window.mixinNames = mixinNames; // TODO better pass it to importState to compute skippedMixinNameSet
-               
+
                // building optiions :
                var mixinOptionsHtml = '';
                for (var i in mixinNames) {
@@ -82,7 +82,7 @@
          }});
       });
   });
-   
+
    function getImportStateConf() {
       return {
             domainPrefix : $(".domainPrefix").val(), // changed by UI on model file select to its first three letters, else elec
@@ -94,7 +94,7 @@
                untilMixin : $('.untilMixin').val(),
                mixinNames : window.mixinNames,
                posted : {
-                  skipForbidden : $(".skipForbidden").is(':checked')   
+                  skipForbidden : $(".skipForbidden").is(':checked')
                }
             },
             data : {
