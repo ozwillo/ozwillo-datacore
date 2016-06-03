@@ -57,3 +57,7 @@
   -webkit-transition: width 0.2s !important; /* Safari */
   transition: width 0.2s !important;
 }
+
+pre{
+  background-color: rgb(255,255,255);
+}

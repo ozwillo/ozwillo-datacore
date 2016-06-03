@@ -89,9 +89,9 @@ export default class Content extends React.Component{
 
           </div>
           <div className="row ui segment">
-            <p className="segmentpadding mydata">
-              Lorem ipsum <br/>Cette fenêtre est la vue qui donne les resultats des requêtes du playground
-            </p>
+          <pre className="segmentpadding mydata">
+
+            </pre>
           </div>
           <Reading reading={this.props.reading} />
         </div>
