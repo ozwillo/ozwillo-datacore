@@ -12,6 +12,8 @@ export default class Content extends React.Component{
     $("#delButton").popup();
     $("#MButton").popup();
     $("#HButton").popup();
+    $("#postButton").popup();
+    $("#putButton").popup();
 
     $("#postButton").hide();
     $("#putButton").hide();
@@ -87,7 +89,7 @@ export default class Content extends React.Component{
 
           </div>
           <div className="row ui segment">
-            <p className="segmentpadding">
+            <p className="segmentpadding mydata">
               Lorem ipsum <br/>Cette fenêtre est la vue qui donne les resultats des requêtes du playground
             </p>
           </div>
@@ -104,7 +106,7 @@ export class InputCurrentPath extends React.Component{
   }
   render() {
     return (
-      <input defaultValue={this.props.currentPath} type="text" onChange={this.updateCurrentPath}/>
+      <input className="myurl" id defaultValue={this.props.currentPath} type="text" onChange={this.updateCurrentPath}/>
     );
   }
 }

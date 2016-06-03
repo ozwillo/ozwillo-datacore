@@ -1,6 +1,18 @@
 import React from 'react';
 
 export default class ExploreModelsProjects extends React.Component{
+  componentDidMount = () => {
+    $('.playground').click((e) => {
+      e.preventDefault();
+    });
+  }
+
+  callAPI = (e) => {
+    //e.preventDefault();
+    console.log("on a prevent");
+    findDataByType("/dc/type/pli:city_0?pli:name_i18n.it=Torino");
+  }
+
   render() {
     return (
       <div>
@@ -16,7 +28,8 @@ export default class ExploreModelsProjects extends React.Component{
           To <strong>start exploring available models</strong>, select your chosen project (i.e. the point of view that you wish to explore from,
             ex. <a className="project">geo_1</a> for geographical jurisdictions such as countries and cities) or merely the default <a className="project">oasis.main</a>
           project in the dropdown above the Playground UI. This will display in the Playground the <strong>list of storage models</strong>
-        (ex. in <a className="project">geo_1</a> <a className="playground">geo:Area_0</a> ) and for each of them a link to models they store (ex. models stored in geo:Area_0 ).
+        (ex. in <a className="project">geo_1</a> <a className="playground" onClick={this.callAPI} href="/dc/type/pli:city_0?pli:name_i18n.it=Torino" >geo:Area_0</a> )
+         and for each of them a link to models they store (ex. models stored in geo:Area_0 ).
         <br/>It also displays the <strong>list of pure mixins</strong> and for each of them a link to models that
           use them as mixins, that are local to the selected project. Note that this is why there are none in the geo project,
           which makes resources and models of <a className="project">geo_1</a> visible but doesn't have any of its own.
