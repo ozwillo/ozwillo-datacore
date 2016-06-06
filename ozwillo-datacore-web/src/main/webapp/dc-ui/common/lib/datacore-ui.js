@@ -1154,6 +1154,12 @@ function displayJsonListResult(data, path, headers, query) {
     switchToEditable(false);
 }
 
+function onClickPerso(path){
+  callAPIUpdatePlayground(path);
+
+  //in order to preventDefault when clicking
+  return false;
+}
 // params : request with path, _query and _headers ;
 // prettyJson which is enriched with links ;
 // resList whose size is used as paginating condition.
@@ -1191,9 +1197,8 @@ function addPaginationLinks(request, prettyJson, resList, successFunctionName) {
             headers[hInd] = request._headers[hInd]; // Accept for RDF, else 'X-Datacore-View'...
          }
       }
-      prettyJson = '<a href="' + relativeUrl + '" class="dclink" onclick="'
-            + 'javascript:return findDataByType($(this).attr(\'href\'), ' + successFunctionName + ', null, null, null, '
-            + stringifyForAttribute(headers) + ');'
+      prettyJson = '<a href="' + relativeUrl + '" onclick="'
+            + 'return onClickPerso($(this).attr(\'href\'));'
             + '">...</a>' + lineBreak(0) + prettyJson;
    }
    if (!resList || typeof resList === 'string' // RDF case : always display
@@ -1207,8 +1212,7 @@ function addPaginationLinks(request, prettyJson, resList, successFunctionName) {
           }
        }
       prettyJson += lineBreak(0) + '<a href="' + relativeUrl + '" class="dclink" onclick="'
-            + 'javascript:return findDataByType($(this).attr(\'href\'), ' + successFunctionName + ', null, null, null, '
-            + stringifyForAttribute(headers) + ');'
+            + 'return onClickPerso($(this).attr(\'href\'));'
             + '">...</a>';
    }
    return prettyJson;
