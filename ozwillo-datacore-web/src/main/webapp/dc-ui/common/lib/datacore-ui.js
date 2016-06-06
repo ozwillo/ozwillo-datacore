@@ -544,7 +544,7 @@ function setUrl(relativeUrl, dontUpdateDisplay) {
       if (relativeUrl.query) {
          unencodedRelativeUrl += '?' + buildUriQuery(parseUriQuery(relativeUrl.query), true);
       }
-      
+
       $('.myurl').val(unencodedRelativeUrl);
       $('#mydata').html('...');
    }
@@ -664,6 +664,28 @@ function buildListOfStorageModelLinks(models) {
 ///////////////////////////////////////////////////
 // API
 
+/*
+  this function is not as generic than the next one yet. There is no call to swagger, it directly uses the API
+*/
+function callAPIUpdatePlayground(relativeUrl) {
+  $.ajax({
+    url: relativeUrl,
+    type: 'GET',
+    headers: {
+      "Authorization" : "Basic YWRtaW46YWRtaW4=",
+      'Accept' : 'application/json',
+      'X-Datacore-Project': getProject()
+    },
+    success: function(data) {
+      setUrl(relativeUrl, null);
+
+      //TODO: teste le cas du RDF
+      resResourcesOrText = displayJsonListResult(data, relativeUrl, this.headers, this.url);
+
+      //success(resResourcesOrText, requestToRelativeUrl(data.request), data, handlerOptions);
+    },
+  });
+}
 ///////////////////////////////////////////////////
 // READ
 
@@ -676,7 +698,6 @@ function buildListOfStorageModelLinks(models) {
 // handlerOptions : business options to pass to (outside call conf i.e. path / query / headers
 // which will be in data._request anyway)
 function findDataByType(relativeUrl, success, error, start, limit, optionalHeaders, handlerOptions) {
-
    if (typeof relativeUrl === 'string') {
       // NB. modelType should be encoded as URIs, BUT must be decoded before used as GET URI
       // because swagger.js re-encodes
@@ -1122,17 +1143,15 @@ function displayJsonObjectResult(data, dontUpdateDisplay) {
    return resource;
 }
 
-function displayJsonListResult(data, dontUpdateDisplay) {
-   var resResources = eval(data.content.data);
-   if (!dontUpdateDisplay && doUpdateDisplay) {
-      var prettyJson = toolifyDcList(resResources, 0, null, parseUri(data.request.path).modelType);
-      prettyJson = addPaginationLinks(data.request, prettyJson, resResources);
-      ///var prettyJson = JSON.stringify(resResources, null, '\t').replace(/\n/g, '<br>');
-      ///prettyJson = toolifyDcResourceJson(prettyJson);
-      $('.mydata').html(prettyJson);
-      switchToEditable(false);
-   }
-   return resResources;
+function displayJsonListResult(data, path, headers, query) {
+
+    var prettyJson = toolifyDcList(data, 0, null, parseUri(path).modelType);
+
+    path = path.substring(0, query.indexOf("?"));
+    prettyJson = addPaginationLinks({_query: query, _headers: headers, path: path}, prettyJson, data);
+
+    $('.mydata').html(prettyJson);
+    switchToEditable(false);
 }
 
 // params : request with path, _query and _headers ;
