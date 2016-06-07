@@ -48,7 +48,7 @@ export class Content extends React.Component{
   }
 
   clickPost = () => {
-    setTimeout(() => {$("#transitionEditButton").width(69)},200);
+    setTimeout(() => {$("#transitionEditButton").width(69)},300);
     $('#postButton').transition({animation: 'scale', duration: 150});
     $('#putButton').transition({animation: 'scale', duration: 150});
     setTimeout(() => {$('#editButton').transition({animation: 'scale', duration: 150})}, 200);
