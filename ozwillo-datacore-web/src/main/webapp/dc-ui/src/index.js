@@ -26,6 +26,7 @@ const initialState = {
     {"title":"Server configuration", "path": "server-configuration", "component": serverConfiguration},
   ],
   currentPath: "/dc/type/dcmo:model_0",
+  currentJson: ""
 };
 
 let store = createStore(playground, initialState);

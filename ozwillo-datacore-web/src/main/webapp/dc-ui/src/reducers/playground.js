@@ -2,10 +2,14 @@
 const playground = (state, action) => {
     switch (action.type) {
         case 'SET_CURRENT_QUERY_PATH':
-            console.log(action.currentPath);
             return Object.assign({}, state, {
                 currentPath: action.currentPath
               })
+        case 'SET_CURRENT_DISPLAY':
+            console.log(action);
+            return Object.assign({}, state, {
+                currentJson: action.currentJson
+            })
         default:
             return state
     }

@@ -11,3 +11,10 @@ export function setCurrentQueryPath(currentPath) {
     currentPath: currentPath
   }
 }
+
+export function setCurrentDisplay(currentJson) {
+  return {
+    type: 'SET_CURRENT_DISPLAY',
+    currentJson: currentJson
+  }
+}

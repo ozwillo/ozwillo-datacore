@@ -2,7 +2,15 @@ import React from 'react';
 import { connect } from 'react-redux';
 import * as actions from '../actions/actionIndex.js';
 
-export default class Content extends React.Component{
+export class Content extends React.Component{
+  preventClickEffect = () => {
+    $('.dclink').click((e) => {
+      e.preventDefault();
+    });
+    $('.playground').click((e) => {
+      e.preventDefault();
+    });
+  }
   componentDidMount = () => {
     $("#listButton").popup();
     $("#dcButton").popup();
@@ -19,9 +27,15 @@ export default class Content extends React.Component{
     $("#putButton").hide();
 
     $('.message .close')
-      .on('click', function() {
-        $(this).closest('.message').transition('fade');
-      });
+    .on('click', function() {
+      $(this).closest('.message').transition('fade');
+    });
+
+    this.preventClickEffect();
+  }
+
+  componentDidUpdate = () => {
+    this.preventClickEffect();
   }
 
   replaceEdit = () => {
@@ -45,6 +59,35 @@ export default class Content extends React.Component{
     setTimeout(() => {$('#editButton').transition({animation: 'scale', duration: 150})}, 200);
   }
 
+  callAPIUpdatePlayground = (event) => {
+    //TODO: encode URI
+    var relativeUrl = event.currentTarget.href;
+    var reactParent = this;
+
+    $.ajax({
+      url: relativeUrl,
+      type: 'GET',
+      headers: {
+        "Authorization" : "Basic YWRtaW46YWRtaW4=",
+        'Accept' : 'application/json',
+        'X-Datacore-Project': getProject() //TODO: put in the store the current Project
+      },
+      success: function(data) {
+        setUrl(relativeUrl, null);
+
+        //TODO: teste le cas du RDF
+
+        var resResourcesOrText = displayJsonListResult(data, relativeUrl, this.headers, this.url);
+        reactParent.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
+
+        //success(resResourcesOrText, requestToRelativeUrl(data.request), data, handlerOptions);
+      },
+    });
+    return false;
+  }
+  createMarkup= () => {
+    return {__html: this.props.currentJson}
+  }
   render() {
     return (
       <div className="twelve wide column ui grid">
@@ -89,16 +132,23 @@ export default class Content extends React.Component{
 
           </div>
           <div className="row ui segment">
-          <pre className="segmentpadding mydata">
+          <pre className="segmentpadding mydata" dangerouslySetInnerHTML={this.createMarkup()}>
 
-            </pre>
+          </pre>
           </div>
-          <Reading reading={this.props.reading} />
+          <Reading reading={this.props.reading} callAPIUpdatePlayground={this.callAPIUpdatePlayground}/>
         </div>
       </div>
     );
   }
 }
+//the first argument is an obligation, so there is an offset of -1 with the call
+const mapStateToProps = (state) => ({
+  currentJson: state.currentJson
+})
+export default Content = connect(mapStateToProps)(Content);
+
+
 
 export class InputCurrentPath extends React.Component{
   updateCurrentPath = (e) => {
@@ -110,26 +160,23 @@ export class InputCurrentPath extends React.Component{
     );
   }
 }
-
-const mapStateToPropsInputCurrentPath = (state/*, props*/) => {
-  return {
+const mapStateToPropsInputCurrentPath = (state/*, props*/) => ({
     currentPath: state.currentPath
-  }
-}
-
+})
 const InputCurrentPathConnected = connect(mapStateToPropsInputCurrentPath)(InputCurrentPath);
+
+
 
 class Reading extends React.Component{
   componentWillUpdate = () => {
     $('.reading').transition('hide');
     $('.reading').transition('fade right');
   }
-
   render() {
     return (
       <div className="row ui segment reading segmentpadding">
-
-        {this.props.reading}
+        {/*we pass the function to children in this particular way because of this.props.reading*/}
+        {React.cloneElement(this.props.reading, { callAPIUpdatePlayground: this.props.callAPIUpdatePlayground })}
       </div>
     );
   }

@@ -40,18 +40,19 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		<url-pattern>/</url-pattern><!-- mapped as the root servlet ; TODO root 
 			page with links -->
 	</servlet-mapping>
+
 	<servlet-mapping>
 		<servlet-name>CXFServlet</servlet-name>
 		<url-pattern>/*</url-pattern><!-- else Swagger JAXRS api-docs resource 
 			"not found" NB. can be done in a single servlet-mapping since servlet 2.5 -->
 	</servlet-mapping>
-
 	
 	<welcome-file-list>
 		<welcome-file>service.json</welcome-file><!-- to redirect from /api-docs (for static swagger spec only) -->
 		<welcome-file>index.html</welcome-file><!-- To redirect from dc-ui/ to dc-ui/index.html -->
 	</welcome-file-list>
 	
+
 	<filter>
 		<filter-name>springSecurityFilterChain</filter-name>
 		<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>

@@ -666,26 +666,30 @@ function buildListOfStorageModelLinks(models) {
 
 /*
   this function is not as generic than the next one yet. There is no call to swagger, it directly uses the API
+  //
 */
-function callAPIUpdatePlayground(relativeUrl) {
-  $.ajax({
-    url: relativeUrl,
-    type: 'GET',
-    headers: {
-      "Authorization" : "Basic YWRtaW46YWRtaW4=",
-      'Accept' : 'application/json',
-      'X-Datacore-Project': getProject()
-    },
-    success: function(data) {
-      setUrl(relativeUrl, null);
-
-      //TODO: teste le cas du RDF
-      resResourcesOrText = displayJsonListResult(data, relativeUrl, this.headers, this.url);
-
-      //success(resResourcesOrText, requestToRelativeUrl(data.request), data, handlerOptions);
-    },
-  });
-}
+// function callAPIUpdatePlayground(event) {
+//   //TODO: encode URI
+//   var relativeUrl = event.currentTarget.href;
+//   console.log(relativeUrl);
+//   $.ajax({
+//     url: relativeUrl,
+//     type: 'GET',
+//     headers: {
+//       "Authorization" : "Basic YWRtaW46YWRtaW4=",
+//       'Accept' : 'application/json',
+//       'X-Datacore-Project': getProject()
+//     },
+//     success: function(data) {
+//       setUrl(relativeUrl, null);
+//
+//       //TODO: teste le cas du RDF
+//       resResourcesOrText = displayJsonListResult(data, relativeUrl, this.headers, this.url);
+//
+//       //success(resResourcesOrText, requestToRelativeUrl(data.request), data, handlerOptions);
+//     },
+//   });
+// }
 ///////////////////////////////////////////////////
 // READ
 
@@ -1150,8 +1154,10 @@ function displayJsonListResult(data, path, headers, query) {
     path = path.substring(0, query.indexOf("?"));
     prettyJson = addPaginationLinks({_query: query, _headers: headers, path: path}, prettyJson, data);
 
-    $('.mydata').html(prettyJson);
+    //$('.mydata').html(prettyJson);
     switchToEditable(false);
+
+    return prettyJson;
 }
 
 function onClickPerso(path){
@@ -1197,7 +1203,7 @@ function addPaginationLinks(request, prettyJson, resList, successFunctionName) {
             headers[hInd] = request._headers[hInd]; // Accept for RDF, else 'X-Datacore-View'...
          }
       }
-      prettyJson = '<a href="' + relativeUrl + '" onclick="'
+      prettyJson = '<a href="' + relativeUrl + '" class="dclink" onclick="'
             + 'return onClickPerso($(this).attr(\'href\'));'
             + '">...</a>' + lineBreak(0) + prettyJson;
    }

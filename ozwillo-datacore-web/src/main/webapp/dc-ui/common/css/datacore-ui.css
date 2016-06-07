@@ -4,7 +4,7 @@ dc ui
 ********/
 
 a.dclink {
-   background-color:#fdf5cc;
+   background-color:#e6e6e6;
    border-radius:6px;
    border:1px solid #777777;
    padding:0px 4px;
@@ -13,10 +13,10 @@ a.dclinkType {
    background-color:#f8f8f8;
 }
 a.dclinkGreater {
-   background-color:#fcfd98;
+   background-color:#cccccc;
 }
 a.dclink:hover {
-   background-color:#FFFE55;
+   background-color:#ffb3b3;
 }
 /* needs to override .dc-ui-wrap on pre code */
 .swagger-ui-wrap .dcjsonarea, .dc-ui-wrap .dcjsonarea, .myeditabledata {
