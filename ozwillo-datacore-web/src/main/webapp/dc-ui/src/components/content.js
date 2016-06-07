@@ -31,6 +31,8 @@ export class Content extends React.Component{
       $(this).closest('.message').transition('fade');
     });
 
+    //we expose this function in order to acces it into datacore-ui
+    window.functionExposition = this;
     this.preventClickEffect();
   }
 
@@ -58,10 +60,11 @@ export class Content extends React.Component{
     $('#putButton').transition({animation: 'scale', duration: 150});
     setTimeout(() => {$('#editButton').transition({animation: 'scale', duration: 150})}, 200);
   }
-
-  callAPIUpdatePlayground = (event) => {
+  callAPIUpdatePlaygroundOnClick = (event) => {
+    this.callAPIUpdatePlayground(event.target.href);
+  }
+  callAPIUpdatePlayground = (relativeUrl) => {
     //TODO: encode URI
-    var relativeUrl = event.currentTarget.href;
     var reactParent = this;
 
     $.ajax({
@@ -76,7 +79,6 @@ export class Content extends React.Component{
         setUrl(relativeUrl, null);
 
         //TODO: teste le cas du RDF
-
         var resResourcesOrText = displayJsonListResult(data, relativeUrl, this.headers, this.url);
         reactParent.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
 
@@ -136,7 +138,7 @@ export class Content extends React.Component{
 
           </pre>
           </div>
-          <Reading reading={this.props.reading} callAPIUpdatePlayground={this.callAPIUpdatePlayground}/>
+          <Reading reading={this.props.reading} callAPIUpdatePlaygroundOnClick={this.callAPIUpdatePlaygroundOnClick}/>
         </div>
       </div>
     );
@@ -176,7 +178,7 @@ class Reading extends React.Component{
     return (
       <div className="row ui segment reading segmentpadding">
         {/*we pass the function to children in this particular way because of this.props.reading*/}
-        {React.cloneElement(this.props.reading, { callAPIUpdatePlayground: this.props.callAPIUpdatePlayground })}
+        {React.cloneElement(this.props.reading, { callAPIUpdatePlaygroundOnClick: this.props.callAPIUpdatePlaygroundOnClick })}
       </div>
     );
   }

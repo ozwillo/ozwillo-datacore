@@ -17,7 +17,7 @@ export default class ExploreModelsProjects extends React.Component{
           To <strong>start exploring available models</strong>, select your chosen project (i.e. the point of view that you wish to explore from,
           ex. <a className="project">geo_1</a> for geographical jurisdictions such as countries and cities) or merely the default <a className="project">oasis.main</a>
           project in the dropdown above the Playground UI. This will display in the Playground the <strong>list of storage models</strong>
-          (ex. in <a className="project">geo_1</a> <a className="playground" onClick={this.props.callAPIUpdatePlayground} href="/dc/type/pli:city_0?limit=1" >geo:Area_0</a> )
+          (ex. in <a className="project">geo_1</a> <a className="playground" onClick={this.props.callAPIUpdatePlaygroundOnClick} href="/dc/type/pli:city_0?limit=1" >geo:Area_0</a> )
           and for each of them a link to models they store (ex. models stored in geo:Area_0 ).
         <br/>It also displays the <strong>list of pure mixins</strong> and for each of them a link to models that
           use them as mixins, that are local to the selected project. Note that this is why there are none in the geo project,
@@ -39,7 +39,7 @@ export default class ExploreModelsProjects extends React.Component{
                   <li><a className="playground">pli:city_0</a></li>
                   <li><a className="playground">co:company_0</a></li>
                   <li><a className="playground">cityareauseit:urbanAreaDestinationOfUse_0</a></li>
-                  <li><a className="playground"> cityarea:cityArea_0</a></li>
+                  <li><a className="playground">cityarea:cityArea_0</a></li>
                 </ul>
                 They can then be queried by country, for instance by:
                 <ul>
