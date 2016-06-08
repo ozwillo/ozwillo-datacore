@@ -3,6 +3,13 @@ import { connect } from 'react-redux';
 import * as actions from '../actions/actionIndex.js';
 
 export class Content extends React.Component{
+  constructor(props) {
+    super(props);
+    this.state = {
+      errorMessage: false
+    };
+  }
+
   preventClickEffect = () => {
     $('.dclink').click((e) => {
       e.preventDefault();
@@ -25,11 +32,6 @@ export class Content extends React.Component{
 
     $("#postButton").hide();
     $("#putButton").hide();
-
-    $('.message .close')
-    .on('click', function() {
-      $(this).closest('.message').transition('fade');
-    });
 
     //we expose this function in order to acces it into datacoreu
     window.functionExposition = this;
@@ -60,13 +62,17 @@ export class Content extends React.Component{
     $('#putButton').transition({animation: 'scale', duration: 150});
     setTimeout(() => {$('#editButton').transition({animation: 'scale', duration: 150})}, 200);
   }
+
+  getButton = () => {
+    this.callAPIUpdatePlayground(this.props.currentPath)
+  }
+
   callAPIUpdatePlaygroundOnClick = (event) => {
     this.callAPIUpdatePlayground(event.target.href);
   }
   callAPIUpdatePlayground = (relativeUrl) => {
     //TODO: encode URI
     var reactParent = this;
-
     $.ajax({
       url: relativeUrl,
       type: 'GET',
@@ -79,7 +85,6 @@ export class Content extends React.Component{
       success: function(data) {
         setUrl(relativeUrl, null);
         //TODO: teste le cas du RDF
-
         //if the current object is an array, we call displayJsonListResult, else we call displayJsonObjectResult
         if (Object.prototype.toString.call( data ) === '[object Array]' ){
           var resResourcesOrText = displayJsonListResult(data, relativeUrl, this.headers, this.url);
@@ -88,11 +93,12 @@ export class Content extends React.Component{
           var resResourcesOrText = displayJsonObjectResult(data);
         }
         reactParent.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
-
         //success(resResourcesOrText, requestToRelativeUrl(data.request), data, handlerOptions);
       },
+      error: function(xhr, ajaxOptions, thrownError){
+        reactParent.setState({errorMessage: true});
+      }
     });
-    return false;
   }
   createMarkup= () => {
     return {__html: this.props.currentJson}
@@ -107,13 +113,7 @@ export class Content extends React.Component{
               Datacore API
             </div>
           </h2>
-          <div className="ui icon info message">
-            <i className="close icon"></i>
-            <i className="warning circle icon"></i>
-            <p>
-              This playground does not work well on Chrome, use Firefox instead
-            </p>
-          </div>
+
         </div>
         <div className="ui grid main">
           <div className="row ui form">
@@ -125,7 +125,7 @@ export class Content extends React.Component{
             </div>
           </div>
           <div className="row ui centered">
-            <button className="small ui button">GET</button>
+            <button className="small ui button" onClick={this.getButton}>GET</button>
             <button className="small ui button" id="listButton" data-content="List view (minimal)">l</button>
             <button className="small ui button" id="dcButton" data-content="List view (Dublin Core Notation)">dc</button>
             <button className="small ui button" id="interogationButton" data-content="Debug/explain query">?</button>
@@ -140,6 +140,11 @@ export class Content extends React.Component{
             <button className="small ui button" id="HButton" data-content="Previous version if history is enabled">H</button>
 
           </div>
+
+          {this.state.errorMessage ?
+            <MessageErrorPath/>
+           : null}
+
           <div className="row ui segment mydatacontainer">
             <pre className="segmentpadding mydata" dangerouslySetInnerHTML={this.createMarkup()}></pre>
           </div>
@@ -149,12 +154,28 @@ export class Content extends React.Component{
     );
   }
 }
-//the first argument is an obligation, so there is an offset of -1 with the call
 const mapStateToProps = (state) => ({
-  currentJson: state.currentJson
+  currentJson: state.currentJson,
+  currentPath: state.currentPath
 })
 export default Content = connect(mapStateToProps)(Content);
 
+export class MessageErrorPath extends React.Component{
+  closeMessage = (e) => {
+    $('.errorPath').transition('fade');
+  }
+  render() {
+    return(
+      <div className="ui icon error message errorPath">
+      <i className="close icon"></i>
+      <i className="warning circle icon" onClick={this.closeMessage}></i>
+      <p>
+      Error accessing the current path
+      </p>
+      </div>
+    );
+  }
+}
 
 
 export class InputCurrentPath extends React.Component{
