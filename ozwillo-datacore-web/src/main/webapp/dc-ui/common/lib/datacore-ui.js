@@ -411,19 +411,18 @@ function toolifyDcResourceUri(value) {
    // TODO LATER rather encodeUriPathComponent('dcmo:model_0') etc. (however, $1 and $2 are already encoded)
    return '"' + value.replace(/^http:\/\/data\.ozwillo\.com\/dc\/type\/([^\/]+)\/(.+)$/g,
          dcConf.containerUrl + '/dc/'
-         + '<a href="/dc/type/dcmo:model_0/$1" class="dclink dclinkType" onclick="'
-         + 'javascript:return getData($(this).attr(\'href\'));'
-         + '">type</a>'
+         + '<a href="/dc/type/dcmo:model_0/$1" class="dclink dclinkType"'
+         + 'onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))">type</a>'
          + '/'
-         + '<a href="/dc/type/$1" class="dclink" onclick="'
-         + 'javascript:return findDataByType($(this).attr(\'href\'));'
-         + '">$1</a>'
-         + '<a href="/dc/type/dcmo:model_0?dcmo:globalFields.dcmf:resourceType=$1" class="dclink" onclick="'
-         + 'javascript:return findLinkedData(\'/dc/type/$1/$2\');'
-         + '">/</a>'
-         + '<a href="/dc/type/$1/$2" class="dclink" onclick="'
-         + 'javascript:return getData($(this).attr(\'href\'));'
-         + '">$2</a>') + '"';
+         + '<a href="/dc/type/$1" class="dclink"'
+         + 'onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))"'
+         + '>$1</a>'
+         + '<a href="/dc/type/dcmo:model_0?dcmo:globalFields.dcmf:resourceType=$1" class="dclink" '
+         + 'onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))"'
+         + '>/</a>'
+         + '<a href="/dc/type/$1/$2" class="dclink" '
+         + 'onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))"'
+         + '>$2</a>') + '"';
 }
 function toolifyDcResourceValue(value, key, depth, modelType, upperResource, keyPathInResource) {
    if (value == null) {
@@ -1135,16 +1134,12 @@ function displayTextResult(data, dontUpdateDisplay, displayAsEditable) {
    return data.content.data;
 }
 
-function displayJsonObjectResult(data, dontUpdateDisplay) {
-   var resource = eval('[' + data.content.data + ']')[0];
-   if (!dontUpdateDisplay && doUpdateDisplay) {
-      var prettyJson = toolifyDcResource(resource, 0); // ,  parseUri(data.request.path).modelType // , upperResource, keyPathInResource
-      //var prettyJson = JSON.stringify(resource, null, '\t').replace(/\n/g, '<br/>');
-      //prettyJson = toolifyDcResourceJson(prettyJson);
-      $('.mydata').html(prettyJson);
-      switchToEditable(false);
-   }
-   return resource;
+function displayJsonObjectResult(resource) {
+
+    var prettyJson = toolifyDcResource(resource, 0);
+    switchToEditable(false);
+
+    return prettyJson;
 }
 
 function displayJsonListResult(data, path, headers, query) {

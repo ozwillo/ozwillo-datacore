@@ -31,7 +31,7 @@ export class Content extends React.Component{
       $(this).closest('.message').transition('fade');
     });
 
-    //we expose this function in order to acces it into datacore-ui
+    //we expose this function in order to acces it into datacoreu
     window.functionExposition = this;
     this.preventClickEffect();
   }
@@ -48,14 +48,14 @@ export class Content extends React.Component{
   }
 
   clickPost = () => {
-    setTimeout(() => {$("#transitionEditButton").width(69)},300);
+    setTimeout(() => {$("#transitionEditButton").width(69)},200);
     $('#postButton').transition({animation: 'scale', duration: 150});
     $('#putButton').transition({animation: 'scale', duration: 150});
     setTimeout(() => {$('#editButton').transition({animation: 'scale', duration: 150})}, 200);
   }
 
   clickPut = () => {
-    $("#transitionEditButton").width(69);
+    setTimeout(() => {$("#transitionEditButton").width(69)},200);
     $('#postButton').transition({animation: 'scale', duration: 150});
     $('#putButton').transition({animation: 'scale', duration: 150});
     setTimeout(() => {$('#editButton').transition({animation: 'scale', duration: 150})}, 200);
@@ -71,15 +71,22 @@ export class Content extends React.Component{
       url: relativeUrl,
       type: 'GET',
       headers: {
-        "Authorization" : "Basic YWRtaW46YWRtaW4=",
+        'Authorization' : "Basic YWRtaW46YWRtaW4=",
+        'If-None-Match': -1,
         'Accept' : 'application/json',
         'X-Datacore-Project': getProject() //TODO: put in the store the current Project
       },
       success: function(data) {
         setUrl(relativeUrl, null);
-
         //TODO: teste le cas du RDF
-        var resResourcesOrText = displayJsonListResult(data, relativeUrl, this.headers, this.url);
+
+        //if the current object is an array, we call displayJsonListResult, else we call displayJsonObjectResult
+        if (Object.prototype.toString.call( data ) === '[object Array]' ){
+          var resResourcesOrText = displayJsonListResult(data, relativeUrl, this.headers, this.url);
+        }
+        else{
+          var resResourcesOrText = displayJsonObjectResult(data);
+        }
         reactParent.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
 
         //success(resResourcesOrText, requestToRelativeUrl(data.request), data, handlerOptions);
@@ -133,10 +140,8 @@ export class Content extends React.Component{
             <button className="small ui button" id="HButton" data-content="Previous version if history is enabled">H</button>
 
           </div>
-          <div className="row ui segment">
-          <pre className="segmentpadding mydata" dangerouslySetInnerHTML={this.createMarkup()}>
-
-          </pre>
+          <div className="row ui segment mydatacontainer">
+            <pre className="segmentpadding mydata" dangerouslySetInnerHTML={this.createMarkup()}></pre>
           </div>
           <Reading reading={this.props.reading} callAPIUpdatePlaygroundOnClick={this.callAPIUpdatePlaygroundOnClick}/>
         </div>
