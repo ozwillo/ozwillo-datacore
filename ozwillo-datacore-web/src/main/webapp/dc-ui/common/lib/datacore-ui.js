@@ -517,38 +517,40 @@ function getPartialHashmap(hashmap, rowNb) {
 }
 
 
-function setUrl(relativeUrl, dontUpdateDisplay) {
-   if (dontUpdateDisplay || !doUpdateDisplay) {
-      return false;
-   }
-   if (!relativeUrl || relativeUrl === "") {
-
-      $('.myurl').val('');
-      document.getElementById('mydata').innerHTML = '';
-   } else {
-
-
-      if (typeof relativeUrl !== 'object') {
-         relativeUrl = parseUri(relativeUrl);
-      }
-      // build unencoded URI, for better readability :
-      var unencodedRelativeUrl = '/dc/' + (relativeUrl.version != null && typeof relativeUrl.version !== 'undefined' // NOT (version) which is false
-         ? 'h' : 'type') + '/' + relativeUrl.modelType;
-      if (relativeUrl.id) {
-         unencodedRelativeUrl += '/' + relativeUrl.id;
-      }
-      if (relativeUrl.version != null && typeof relativeUrl.version !== 'undefined') { // NOT (version) which is false
-          unencodedRelativeUrl += '/' + relativeUrl.version;
-       }
-      if (relativeUrl.query) {
-         unencodedRelativeUrl += '?' + buildUriQuery(parseUriQuery(relativeUrl.query), true);
-      }
-
-      $('.myurl').val(unencodedRelativeUrl);
-      $('#mydata').html('...');
-   }
-   return false;
-}
+// function setUrl(relativeUrl, dontUpdateDisplay) {
+//    if (dontUpdateDisplay || !doUpdateDisplay) {
+//       return false;
+//    }
+//    if (!relativeUrl || relativeUrl === "") {
+//
+//       $('.myurl').val('');
+//       document.getElementById('mydata').innerHTML = '';
+//    } else {
+//
+//       if (typeof relativeUrl !== 'object') {
+//          relativeUrl = parseUri(relativeUrl);
+//       }
+//       // build unencoded URI, for better readability :
+//       var unencodedRelativeUrl = '/dc/' + (relativeUrl.version != null && typeof relativeUrl.version !== 'undefined' // NOT (version) which is false
+//          ? 'h' : 'type') + '/' + relativeUrl.modelType;
+//
+//       if (relativeUrl.id) {
+//          unencodedRelativeUrl += '/' + relativeUrl.id;
+//       }
+//
+//       if (relativeUrl.version != null && typeof relativeUrl.version !== 'undefined') { // NOT (version) which is false
+//           unencodedRelativeUrl += '/' + relativeUrl.version;
+//        }
+//
+//       if (relativeUrl.query) {
+//          unencodedRelativeUrl += '?' + buildUriQuery(parseUriQuery(relativeUrl.query), true);
+//       }
+//
+//       $('.myurl').val(unencodedRelativeUrl);
+//       $('#mydata').html('...');
+//    }
+//    return false;
+// }
 // the opposite of setUrl()
 function encodeUri(unencodedUri) {
    var uri = parseUri(unencodedUri);
@@ -1142,12 +1144,14 @@ function displayJsonObjectResult(resource) {
     return prettyJson;
 }
 
-function displayJsonListResult(data, path, headers, query) {
+function displayJsonListResult(data, path) {
 
     var prettyJson = toolifyDcList(data, 0, null, parseUri(path).modelType);
 
-    path = path.substring(0, query.indexOf("?"));
-    prettyJson = addPaginationLinks({_query: query, _headers: headers, path: path}, prettyJson, data);
+    var currentPath = path.substring(0, path.indexOf("?"));
+    var currentQuery = path.substring(path.indexOf("?")+1,path.length);
+
+    prettyJson = addPaginationLinks({_query: currentQuery, path: currentPath}, prettyJson, data);
 
     //$('.mydata').html(prettyJson);
     switchToEditable(false);
@@ -1194,27 +1198,21 @@ function addPaginationLinks(request, prettyJson, resList, successFunctionName) {
    if (start !== 0) {
       var previousStart = Math.max(0, start - limit);
       var relativeUrl = request.path + '?start=' + previousStart + '&limit=' + limit + query;
-      var headers = {};
-      for (var hInd in request._headers) {
-         if (hInd === 'Accept' || hInd.indexOf('X-Datacore-') === 0) {
-            headers[hInd] = request._headers[hInd]; // Accept for RDF, else 'X-Datacore-View'...
-         }
-      }
       prettyJson = '<a href="' + relativeUrl + '" class="dclink" onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))"'
             + '">...</a>' + lineBreak(0) + prettyJson;
    }
-   if (!resList || typeof resList === 'string' // RDF case : always display
-         || resList.length === limit) {
-      var nextStart = start + limit;
-      var relativeUrl = request.path + '?start=' + nextStart + '&limit=' + limit + query;
-      var headers = {};
-      for (var hInd in request._headers) {
-          if (hInd === 'Accept' || hInd.indexOf('X-Datacore-') === 0) {
-             headers[hInd] = request._headers[hInd]; // Accept for RDF, else 'X-Datacore-View'...
-          }
-      }
-      prettyJson += lineBreak(0) + '<a href="' + relativeUrl + '" class="dclink" onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))">...</a>';
-   }
+  //  if (!resList || typeof resList === 'string' // RDF case : always display
+  //        || resList.length === limit) {
+  //     var nextStart = start + limit;
+  //     var relativeUrl = request.path + '?start=' + nextStart + '&limit=' + limit + query;
+  //     var headers = {};
+  //     for (var hInd in request._headers) {
+  //         if (hInd === 'Accept' || hInd.indexOf('X-Datacore-') === 0) {
+  //            headers[hInd] = request._headers[hInd]; // Accept for RDF, else 'X-Datacore-View'...
+  //         }
+  //     }
+  //     prettyJson += lineBreak(0) + '<a href="' + relativeUrl + '" class="dclink" onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))">...</a>';
+  //  }
    return prettyJson;
 }
 

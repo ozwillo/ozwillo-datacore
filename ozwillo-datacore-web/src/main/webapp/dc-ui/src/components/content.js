@@ -67,12 +67,37 @@ export class Content extends React.Component{
     this.callAPIUpdatePlayground(this.props.currentPath)
   }
 
-  callAPIUpdatePlaygroundOnClick = (event) => {
-    this.callAPIUpdatePlayground(event.target.href);
+  listButton = () => {
+    var relativeUrl = this.props.currentPath;
+    this.ajaxCall(
+      relativeUrl,
+      (data) => {
+        this.setUrl(relativeUrl, null);
+
+        if (Object.prototype.toString.call( data ) === '[object Array]' ){
+          var list_data = [];
+          for (var resource of data){
+            list_data.push({"@id" : resource["@id"]});
+          }
+          var resResourcesOrText = displayJsonListResult(list_data, relativeUrl);
+        }
+        else{
+          data = {"@id" : data["@id"]};
+          var resResourcesOrText = displayJsonObjectResult(data);
+        }
+        this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
+      },
+      () => {
+        this.setState({errorMessage: true});
+      }
+    );
   }
-  callAPIUpdatePlayground = (relativeUrl) => {
-    //TODO: encode URI
-    var reactParent = this;
+
+  setUrl = (relativeUrl) => {
+    this.props.dispatch(actions.setCurrentQueryPath(relativeUrl));
+  }
+
+  ajaxCall = (relativeUrl, currentSuccess, currentError) => {
     $.ajax({
       url: relativeUrl,
       type: 'GET',
@@ -82,12 +107,27 @@ export class Content extends React.Component{
         'Accept' : 'application/json',
         'X-Datacore-Project': getProject() //TODO: put in the store the current Project
       },
-      success: function(data) {
-        setUrl(relativeUrl, null);
+      success: currentSuccess,
+      error: currentError
+    });
+  }
+
+  callAPIUpdatePlaygroundOnClick = (event) => {
+    this.callAPIUpdatePlayground(event.target.href);
+  }
+
+  callAPIUpdatePlayground = (relativeUrl) => {
+    //TODO: encode URI
+    var reactParent = this;
+
+    this.ajaxCall(
+      relativeUrl,
+      (data) => {
+        this.setUrl(relativeUrl, null);
         //TODO: teste le cas du RDF
-        //if the current object is an array, we call displayJsonListResult, else we call displayJsonObjectResult
+        //if the current object is an array, we call displayJsonListResult
         if (Object.prototype.toString.call( data ) === '[object Array]' ){
-          var resResourcesOrText = displayJsonListResult(data, relativeUrl, this.headers, this.url);
+          var resResourcesOrText = displayJsonListResult(data, relativeUrl);
         }
         else{
           var resResourcesOrText = displayJsonObjectResult(data);
@@ -95,10 +135,10 @@ export class Content extends React.Component{
         reactParent.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
         //success(resResourcesOrText, requestToRelativeUrl(data.request), data, handlerOptions);
       },
-      error: function(xhr, ajaxOptions, thrownError){
+      (xhr, ajaxOptions, thrownError) => {
         reactParent.setState({errorMessage: true});
       }
-    });
+    );
   }
   createMarkup= () => {
     return {__html: this.props.currentJson}
@@ -126,7 +166,7 @@ export class Content extends React.Component{
           </div>
           <div className="row ui centered">
             <button className="small ui button" onClick={this.getButton}>GET</button>
-            <button className="small ui button" id="listButton" data-content="List view (minimal)">l</button>
+            <button className="small ui button" onClick={this.listButton} id="listButton" data-content="List view (minimal)">l</button>
             <button className="small ui button" id="dcButton" data-content="List view (Dublin Core Notation)">dc</button>
             <button className="small ui button" id="interogationButton" data-content="Debug/explain query">?</button>
             <button className="small ui button" id="RDFButton" data-content="RDF N-QUADS representation">RDF</button>
@@ -138,7 +178,6 @@ export class Content extends React.Component{
             <button className="small ui button" id="delButton" data-content="Delete data">del</button>
             <button className="small ui button" id="MButton" data-content="Go to model">M</button>
             <button className="small ui button" id="HButton" data-content="Previous version if history is enabled">H</button>
-
           </div>
 
           {this.state.errorMessage ?
@@ -184,7 +223,7 @@ export class InputCurrentPath extends React.Component{
   }
   render() {
     return (
-      <input className="myurl" id defaultValue={this.props.currentPath} type="text" onChange={this.updateCurrentPath}/>
+      <input className="myurl" value={this.props.currentPath} type="text" onChange={this.updateCurrentPath}/>
     );
   }
 }
@@ -192,7 +231,6 @@ const mapStateToPropsInputCurrentPath = (state/*, props*/) => ({
     currentPath: state.currentPath
 })
 const InputCurrentPathConnected = connect(mapStateToPropsInputCurrentPath)(InputCurrentPath);
-
 
 
 class Reading extends React.Component{
