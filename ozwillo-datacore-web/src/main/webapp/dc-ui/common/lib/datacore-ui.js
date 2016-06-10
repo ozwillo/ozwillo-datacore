@@ -320,18 +320,18 @@ function toolifyDcResourceFieldAndColon(value, key, modelType, upperResource, ke
    if (key === '@id') {
       // iteration (for range-based pagination) example :
       return '"' + key + '"'
-         + '<a href="' + buildRelativeUrl(modelType) + '?' + new UriQuery(keyPathInResource.join('.'), '>' + value + '+').s() + '" class="dclink dclinkGreater" onclick="'
-         + 'javascript:return findDataByType($(this).attr(\'href\'));'
+         + '<a href="' + buildRelativeUrl(modelType) + '?' + new UriQuery(keyPathInResource.join('.'), '>' + value + '+').s() + '" class="dclink dclinkGreater"'
+         + 'onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))'
          + '"> : </a>';
    }
-   // field model (TODO LATER find where it is first defined even if list or subfield) then equality query :
-   ///return '"<a href="' + buildRelativeUrl('dcmo:model_0', modelType) + '" class="dclink dclinkType" onclick="'
-   return '"<a href="' + '/dc/type/dcmo:model_0?' + new UriQuery('dcmo:fields.dcmo:name', key).s() + '" class="dclink dclinkType" onclick="'
-      + 'javascript:return getData($(this).attr(\'href\'));'
-      + '">' + key + '</a>"'
-      + '<a href="' + buildRelativeUrl(modelType) + '?' + new UriQuery(keyPathInResource.join('.'), value).s() + '" class="dclink" onclick="'
-      + 'javascript:return findDataByType($(this).attr(\'href\'));'
-      + '"> : </a>';
+   //TODO: faire marcher ces liens
+   // '"<a href="' + '/dc/type/dcmo:model_0?' + new UriQuery('dcmo:fields.dcmo:name', key).s() + '" class="dclink dclinkType"'
+   // + 'onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))"'
+   // + '>' + key + '</a>"'
+   return '"'+ key + '"'
+      + '<a href="' + buildRelativeUrl(modelType) + '?' + new UriQuery(keyPathInResource.join('.'), value).s() + '" class="dclink" '
+      + 'onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))"'
+      + '> : </a>';
 }
 // modelType, upperResource, keyPathInResource are not required for top level resource
 function toolifyDcResource(resource, depth, modelType, upperResource, keyPathInResource) { // or map
@@ -425,17 +425,17 @@ function toolifyDcResourceUri(value) {
          + '>$2</a>') + '"';
 }
 function toolifyDcResourceValue(value, key, depth, modelType, upperResource, keyPathInResource) {
-   if (value == null) {
-      return 'null';
-   }
+  if (value == null) {
+    return 'null';
+  }
 	///if ("o:version" == key || "dc:created" == key || "dc:modified" == key) { // skip
 	var valueType = (typeof value);
 	if (valueType== 'string') {
 		if ("@type" == key // in list
 				|| "dcmf:resourceType" == key) { // for Models
-			return '"<a href="' + buildRelativeUrl(value) + '" class="dclink dclinkType" onclick="'
-				      + 'javascript:return findDataByType($(this).attr(\'href\'));'
-	         + '">' + value + '</a>"';
+			return '"<a href="' + buildRelativeUrl(value) + '" class="dclink dclinkType" '
+				      + 'onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))"'
+	         + '>' + value + '</a>"';
 		}
 		///if ("@id" == key) {
 		if (value.indexOf('http') !== 0) { // shortcut

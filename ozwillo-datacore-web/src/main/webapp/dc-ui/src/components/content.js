@@ -21,7 +21,7 @@ export class Content extends React.Component{
   componentDidMount = () => {
     $("#listButton").popup();
     $("#dcButton").popup();
-    $("#interogationButton").popup();
+    $("#debugButton").popup();
     $("#RDFButton").popup();
     $("#editButton").popup();
     $("#delButton").popup();
@@ -133,20 +133,41 @@ export class Content extends React.Component{
     );
   }
 
+  debugButton = () => {
+    var relativeUrl = this.props.currentPath;
+    this.ajaxCall(
+      relativeUrl,
+      (data) => {
+        this.setUrl(relativeUrl, null);
+        var resResourcesOrText = displayJsonObjectResult(data.debug);
+        this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
+      },
+      () => {
+        this.setState({errorMessage: true});
+      },
+      {
+        "X-Datacore-Debug": true
+      }
+    );
+  }
+
   setUrl = (relativeUrl) => {
     this.props.dispatch(actions.setCurrentQueryPath(relativeUrl));
   }
 
-  ajaxCall = (relativeUrl, currentSuccess, currentError) => {
+  ajaxCall = (relativeUrl, currentSuccess, currentError, additionalHeaders) => {
+    var headers = {
+      'Authorization' : "Basic YWRtaW46YWRtaW4=",
+      'If-None-Match': -1,
+      'Accept' : 'application/json',
+      'X-Datacore-Project': getProject() //TODO: put in the store the current Project
+    };
+    headers = $.extend(headers, additionalHeaders);
+
     $.ajax({
       url: relativeUrl,
       type: 'GET',
-      headers: {
-        'Authorization' : "Basic YWRtaW46YWRtaW4=",
-        'If-None-Match': -1,
-        'Accept' : 'application/json',
-        'X-Datacore-Project': getProject() //TODO: put in the store the current Project
-      },
+      headers: headers,
       success: currentSuccess,
       error: currentError
     });
@@ -208,7 +229,7 @@ export class Content extends React.Component{
             <button className="small ui button" onClick={this.getButton}>GET</button>
             <button className="small ui button" onClick={this.listButton} id="listButton" data-content="List view (minimal)">l</button>
             <button className="small ui button" onClick={this.dcButton} id="dcButton" data-content="List view (Dublin Core Notation)">dc</button>
-            <button className="small ui button" id="interogationButton" data-content="Debug/explain query">?</button>
+            <button className="small ui button" onClick={this.debugButton} id="debugButton" data-content="Debug/explain query">?</button>
             <button className="small ui button" id="RDFButton" data-content="RDF N-QUADS representation">RDF</button>
             <div id="transitionEditButton">
               <button className="small ui button" id="editButton" onClick={this.replaceEdit} data-content="Edit data">edit</button>
@@ -243,13 +264,22 @@ export class MessageErrorPath extends React.Component{
   closeMessage = (e) => {
     $('.errorPath').transition('fade');
   }
+  componentDidMount = () => {
+    $('.message .close')
+    .on('click', function() {
+      $(this)
+        .closest('.errorPath')
+        .transition('fade')
+      ;
+    });
+  }
   render() {
     return(
       <div className="ui icon error message errorPath">
       <i className="close icon"></i>
       <i className="warning circle icon" onClick={this.closeMessage}></i>
       <p>
-      Error accessing the current path
+        Error accessing the current path
       </p>
       </div>
     );
