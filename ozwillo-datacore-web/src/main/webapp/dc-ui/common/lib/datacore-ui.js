@@ -586,7 +586,7 @@ function setProject(newProject) {
    initProjectPortal();
 }
 function initProjectPortal(options) {
-   findData(buildProjectPortalQuery(options), projectPortalSuccess,
+   ta(buildProjectPortalQuery(options), projectPortalSuccess,
          null, null, 25, {'X-Datacore-View':'-'}, options);
 }
 function buildProjectPortalQuery(options) {
@@ -603,7 +603,7 @@ function buildProjectPortalQuery(options) {
 }
 function buildProjectPortalQueryLink(options, linkText) {
    return '<a href="/dc/type/' + buildProjectPortalQuery(options) + '" class="dclink" onclick="'
-      + 'javascript:return findData($(this).attr(\'href\'), projectPortalSuccess, null, null, 25, {\'X-Datacore-View\':\'-\'}, '
+      + 'javascript:return ta($(this).attr(\'href\'), projectPortalSuccess, null, null, 25, {\'X-Datacore-View\':\'-\'}, '
       + (options ? stringifyForAttribute(options) : 'null') + ');">' + linkText + '</a>';
 }
 function buildProjectPortalTitleHtml(options) {
@@ -633,7 +633,7 @@ function buildProjectPortalTitleHtml(options) {
    return html;
 }
 function projectPortalSuccess(storageModels, relativeUrl, data, options) {
-   setUrl(relativeUrl); // because not set in findData because it uses this custom handler
+   setUrl(relativeUrl); // because not set in ta because it uses this custom handler
    setError('');
    var html = buildListOfStorageModelLinks(storageModels);
    html = addPaginationLinks(data.request, html, storageModels,
@@ -651,10 +651,10 @@ function buildListOfStorageModelLinks(models) {
          + 'javascript:return getData($(this).attr(\'href\'));'
          + '">' + modelName + '</a> : its stored '
          + '<a href="/dc/type/dcmo:model_0?dcmo:storageModel=' + modelName + '" class="dclink" onclick="'
-         + 'javascript:return findData($(this).attr(\'href\'), null, null, null, 25, {\'X-Datacore-View\':\'-\'});'
+         + 'javascript:return ta($(this).attr(\'href\'), null, null, null, 25, {\'X-Datacore-View\':\'-\'});'
          + '">models</a> and '
          + '<a href="/dc/type/' + modelName + '" class="dclink" onclick="'
-         + 'javascript:return findData($(this).attr(\'href\'), null, null, null, 25, {\'X-Datacore-View\':\'-\'});'
+         + 'javascript:return ta($(this).attr(\'href\'), null, null, null, 25, {\'X-Datacore-View\':\'-\'});'
          + '">all their resources</a>...'
          + '<br/>';
    }
@@ -702,7 +702,7 @@ function buildListOfStorageModelLinks(models) {
 // optionalHeaders : 'Accept':'text/x-nquads' for RDF, 'X-Datacore-View', 'X-Datacore-Project'...
 // handlerOptions : business options to pass to (outside call conf i.e. path / query / headers
 // which will be in data._request anyway)
-function findDataByType(relativeUrl, success, error, start, limit, optionalHeaders, handlerOptions) {
+function taByType(relativeUrl, success, error, start, limit, optionalHeaders, handlerOptions) {
    if (typeof relativeUrl === 'string') {
       // NB. modelType should be encoded as URIs, BUT must be decoded before used as GET URI
       // because swagger.js re-encodes

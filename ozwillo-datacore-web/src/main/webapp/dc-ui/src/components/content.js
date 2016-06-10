@@ -10,6 +10,10 @@ export class Content extends React.Component{
     };
   }
 
+  setCurrentState = (state) => {
+    this.setState(state);
+  }
+
   preventClickEffect = () => {
     $('.dclink').click((e) => {
       e.preventDefault();
@@ -18,6 +22,7 @@ export class Content extends React.Component{
       e.preventDefault();
     });
   }
+
   componentDidMount = () => {
     $("#listButton").popup();
     $("#dcButton").popup();
@@ -151,6 +156,33 @@ export class Content extends React.Component{
     );
   }
 
+  modelButton = () => {
+    var url = this.props.currentPath;
+    var beginSearch = url.indexOf("type/")+5;
+
+    var modelName = "";
+    for(var i=beginSearch; i<=url.length; i++){
+      modelName = url.substring(beginSearch,i);
+      if(url[i] === "/" || url[i] === "?"){
+        break;
+      }
+    }
+
+    var relativeUrl = buildRelativeUrl("dcmo:model_0/"+modelName);
+
+    this.ajaxCall(
+      relativeUrl,
+      (data) => {
+        this.setUrl(relativeUrl, null);
+        var resResourcesOrText = displayJsonObjectResult(data);
+        this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
+      },
+      () => {
+        this.setState({errorMessage: true});
+      }
+    );
+  }
+
   setUrl = (relativeUrl) => {
     this.props.dispatch(actions.setCurrentQueryPath(relativeUrl));
   }
@@ -204,6 +236,7 @@ export class Content extends React.Component{
   createMarkup= () => {
     return {__html: this.props.currentJson}
   }
+
   render() {
     return (
       <div className="twelve wide column ui grid">
@@ -237,12 +270,12 @@ export class Content extends React.Component{
               <button className="small ui button" id="putButton" onClick={this.clickPut} data-content="Put data (replace existing)">PUT</button>
             </div>
             <button className="small ui button" id="delButton" data-content="Delete data">del</button>
-            <button className="small ui button" id="MButton" data-content="Go to model">M</button>
+            <button className="small ui button" onClick={this.modelButton} id="MButton" data-content="Go to model">M</button>
             <button className="small ui button" id="HButton" data-content="Previous version if history is enabled">H</button>
           </div>
 
           {this.state.errorMessage ?
-            <MessageErrorPath/>
+            <MessageErrorPath setParentState={this.setCurrentState}/>
            : null}
 
           <div className="row ui segment mydatacontainer">
@@ -265,12 +298,14 @@ export class MessageErrorPath extends React.Component{
     $('.errorPath').transition('fade');
   }
   componentDidMount = () => {
+    var component = this;
     $('.message .close')
     .on('click', function() {
       $(this)
         .closest('.errorPath')
         .transition('fade')
       ;
+      component.props.setParentState({errorMessage: false});
     });
   }
   render() {
@@ -285,7 +320,6 @@ export class MessageErrorPath extends React.Component{
     );
   }
 }
-
 
 export class InputCurrentPath extends React.Component{
   updateCurrentPath = (e) => {
