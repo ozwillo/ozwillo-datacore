@@ -33,7 +33,7 @@ export class Content extends React.Component{
     $("#postButton").hide();
     $("#putButton").hide();
 
-    //we expose this function in order to acces it into datacoreu
+    //we expose this function in order to access it into datacore-ui.js
     window.functionExposition = this;
     this.preventClickEffect();
   }
@@ -83,6 +83,46 @@ export class Content extends React.Component{
         }
         else{
           data = {"@id" : data["@id"]};
+          var resResourcesOrText = displayJsonObjectResult(data);
+        }
+        this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
+      },
+      () => {
+        this.setState({errorMessage: true});
+      }
+    );
+  }
+
+  extractDc = (resource) => {
+    return {
+      "@id": resource["@id"],
+      "o:version": resource["o:version"],
+      "@type": resource["@type"],
+      "dc:created": resource["dc:created"],
+      "dc:modified": resource["dc:modified"],
+      "dc:creator": resource["dc:creator"],
+      "dc:contributor": resource["dc:contributor"],
+      "o:partial": resource["o:partial"],
+    };
+
+  }
+
+  dcButton = () => {
+    var relativeUrl = this.props.currentPath;
+    this.ajaxCall(
+      relativeUrl,
+      (data) => {
+        this.setUrl(relativeUrl, null);
+
+        if (Object.prototype.toString.call( data ) === '[object Array]' ){
+          var list_data = [];
+          for (var resource of data){
+            list_data.push(this.extractDc(resource));
+          }
+          var resResourcesOrText = displayJsonListResult(list_data, relativeUrl);
+        }
+        else{
+          data = this.extractDc(data);
           var resResourcesOrText = displayJsonObjectResult(data);
         }
         this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
@@ -167,7 +207,7 @@ export class Content extends React.Component{
           <div className="row ui centered">
             <button className="small ui button" onClick={this.getButton}>GET</button>
             <button className="small ui button" onClick={this.listButton} id="listButton" data-content="List view (minimal)">l</button>
-            <button className="small ui button" id="dcButton" data-content="List view (Dublin Core Notation)">dc</button>
+            <button className="small ui button" onClick={this.dcButton} id="dcButton" data-content="List view (Dublin Core Notation)">dc</button>
             <button className="small ui button" id="interogationButton" data-content="Debug/explain query">?</button>
             <button className="small ui button" id="RDFButton" data-content="RDF N-QUADS representation">RDF</button>
             <div id="transitionEditButton">
