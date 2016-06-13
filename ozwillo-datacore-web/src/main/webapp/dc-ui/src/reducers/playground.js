@@ -5,10 +5,13 @@ const playground = (state, action) => {
             return Object.assign({}, state, {
                 currentPath: action.currentPath
               })
+        case 'SET_CURRENT_DISPLAY_RDF':
         case 'SET_CURRENT_DISPLAY':
             return Object.assign({}, state, {
-                currentJson: action.currentJson
+                currentJson: action.currentJson,
+                RDF: action.RDF
             })
+
         default:
             return state
     }

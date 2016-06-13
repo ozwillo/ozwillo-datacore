@@ -15,6 +15,15 @@ export function setCurrentQueryPath(currentPath) {
 export function setCurrentDisplay(currentJson) {
   return {
     type: 'SET_CURRENT_DISPLAY',
-    currentJson: currentJson
+    currentJson: currentJson,
+    RDF: false
+  }
+}
+
+export function setCurrentDisplayRDF(currentJson) {
+  return {
+    type: 'SET_CURRENT_DISPLAY_RDF',
+    currentJson: currentJson,
+    RDF: true
   }
 }

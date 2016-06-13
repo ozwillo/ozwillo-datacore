@@ -183,6 +183,22 @@ export class Content extends React.Component{
     );
   }
 
+  RDFButton = () => {
+    var relativeUrl = this.props.currentPath;
+    this.ajaxCall(
+      relativeUrl,
+      (data) => {
+        this.setUrl(relativeUrl, null);
+        console.log(data);
+        //add pagination link
+        this.props.dispatch(actions.setCurrentDisplayRDF(data));
+      },
+      () => {
+        this.setState({errorMessage: true});
+      },
+      {'Accept':'text/x-nquads'}
+    );
+  }
   setUrl = (relativeUrl) => {
     this.props.dispatch(actions.setCurrentQueryPath(relativeUrl));
   }
@@ -263,7 +279,7 @@ export class Content extends React.Component{
             <button className="small ui button" onClick={this.listButton} id="listButton" data-content="List view (minimal)">l</button>
             <button className="small ui button" onClick={this.dcButton} id="dcButton" data-content="List view (Dublin Core Notation)">dc</button>
             <button className="small ui button" onClick={this.debugButton} id="debugButton" data-content="Debug/explain query">?</button>
-            <button className="small ui button" id="RDFButton" data-content="RDF N-QUADS representation">RDF</button>
+            <button className="small ui button" onClick={this.RDFButton} id="RDFButton" data-content="RDF N-QUADS representation">RDF</button>
             <div id="transitionEditButton">
               <button className="small ui button" id="editButton" onClick={this.replaceEdit} data-content="Edit data">edit</button>
               <button className="small ui button" id="postButton" onClick={this.clickPost} data-content="Post data (merge or create)">POST</button>
@@ -278,9 +294,12 @@ export class Content extends React.Component{
             <MessageErrorPath setParentState={this.setCurrentState}/>
            : null}
 
+           {/*We need to do this trick in order to escape the RDF HTML*/}
           <div className="row ui segment mydatacontainer">
-            <pre className="segmentpadding mydata" dangerouslySetInnerHTML={this.createMarkup()}></pre>
+            {this.props.RDF ? <pre className="segmentpadding mydata">{this.props.currentJson}</pre>
+          : <pre className="segmentpadding mydata" dangerouslySetInnerHTML={this.createMarkup()}></pre>}
           </div>
+
           <Reading reading={this.props.reading} callAPIUpdatePlaygroundOnClick={this.callAPIUpdatePlaygroundOnClick}/>
         </div>
       </div>
@@ -289,7 +308,8 @@ export class Content extends React.Component{
 }
 const mapStateToProps = (state) => ({
   currentJson: state.currentJson,
-  currentPath: state.currentPath
+  currentPath: state.currentPath,
+  RDF: state.RDF
 })
 export default Content = connect(mapStateToProps)(Content);
 
