@@ -27,7 +27,7 @@ const initialState = {
   ],
   currentPath: "/dc/type/dcmo:model_0",
   currentJson: "",
-  RDF: false
+  codeView: "classic", //classic, plainText, editable
 };
 
 let store = createStore(playground, initialState);

@@ -1,6 +1,8 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import * as actions from '../actions/actionIndex.js';
+import CodeView from './codeView.js';
+
 
 export class Content extends React.Component{
   constructor(props) {
@@ -48,11 +50,29 @@ export class Content extends React.Component{
     this.preventClickEffect();
   }
 
-  replaceEdit = () => {
+  editButton = () => {
+    //we make a call in order to get the datas without the html formating
+    var relativeUrl = this.props.currentPath;
+    this.ajaxCall(
+      relativeUrl,
+      (data) => {
+        this.setUrl(relativeUrl, null);
+        this.props.dispatch(actions.setEditable(data));
+        console.log(data);
+      },
+      () => {
+        this.setState({errorMessage: true, messageError:""});
+      },
+      null,
+      'GET'
+    );
+
+
     $("#transitionEditButton").width(148);
     $('#editButton').transition({animation: 'scale', duration: 150});
     setTimeout(() => {$('#postButton').transition({animation: 'scale', duration: 150})}, 200);
     setTimeout(() => {$('#putButton').transition({animation: 'scale', duration: 150})}, 200);
+
   }
 
   clickPost = () => {
@@ -296,9 +316,7 @@ export class Content extends React.Component{
       }
     );
   }
-  createMarkup= () => {
-    return {__html: this.props.currentJson}
-  }
+
 
   render() {
     return (
@@ -328,7 +346,7 @@ export class Content extends React.Component{
             <button className="small ui button" onClick={this.debugButton} id="debugButton" data-content="Debug/explain query">?</button>
             <button className="small ui button" onClick={this.RDFButton} id="RDFButton" data-content="RDF N-QUADS representation">RDF</button>
             <div id="transitionEditButton">
-              <button className="small ui button" id="editButton" onClick={this.replaceEdit} data-content="Edit data">edit</button>
+              <button className="small ui button" id="editButton" onClick={this.editButton} data-content="Edit data">edit</button>
               <button className="small ui button" id="postButton" onClick={this.clickPost} data-content="Post data (merge or create)">POST</button>
               <button className="small ui button" id="putButton" onClick={this.clickPut} data-content="Put data (replace existing)">PUT</button>
             </div>
@@ -341,11 +359,8 @@ export class Content extends React.Component{
             <MessageErrorPath setParentState={this.setCurrentState} message={this.state.messageError}/>
            : null}
 
-           {/*We need to do this trick in order to escape the RDF HTML*/}
-          <div className="row ui segment mydatacontainer">
-            {this.props.plainText ? <pre className="segmentpadding mydata">{this.props.currentJson}</pre>
-          : <pre className="segmentpadding mydata" dangerouslySetInnerHTML={this.createMarkup()}></pre>}
-          </div>
+          <CodeView currentJson={this.props.currentJson} codeView={this.props.codeView}/>
+
 
           <Reading reading={this.props.reading} callAPIUpdatePlaygroundOnClick={this.callAPIUpdatePlaygroundOnClick}/>
         </div>
@@ -353,10 +368,11 @@ export class Content extends React.Component{
     );
   }
 }
+
 const mapStateToProps = (state) => ({
   currentJson: state.currentJson,
   currentPath: state.currentPath,
-  plainText: state.plainText
+  codeView: state.codeView
 })
 export default Content = connect(mapStateToProps)(Content);
 
@@ -388,6 +404,7 @@ export class MessageErrorPath extends React.Component{
     );
   }
 }
+
 
 export class InputCurrentPath extends React.Component{
   updateCurrentPath = (e) => {

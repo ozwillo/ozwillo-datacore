@@ -16,7 +16,7 @@ export function setCurrentDisplay(currentJson) {
   return {
     type: 'SET_CURRENT_DISPLAY',
     currentJson: currentJson,
-    plainText: false
+    codeView: "classic"
   }
 }
 
@@ -24,6 +24,14 @@ export function setCurrentDisplayRDF(currentJson) {
   return {
     type: 'SET_CURRENT_DISPLAY_RDF',
     currentJson: currentJson,
-    plainText: true
+    codeView: "plainText"
+  }
+}
+
+export function setEditable(currentJson) {
+  return {
+    type: 'SET_EDITABLE',
+    currentJson: currentJson,
+    codeView: "editable"
   }
 }
