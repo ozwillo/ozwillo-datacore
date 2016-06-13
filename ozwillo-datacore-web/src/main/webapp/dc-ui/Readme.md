@@ -1,0 +1,2 @@
+-Add pagination to RDF
+-better formating for urls in current path

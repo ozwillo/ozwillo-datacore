@@ -16,7 +16,7 @@ export function setCurrentDisplay(currentJson) {
   return {
     type: 'SET_CURRENT_DISPLAY',
     currentJson: currentJson,
-    RDF: false
+    plainText: false
   }
 }
 
@@ -24,6 +24,6 @@ export function setCurrentDisplayRDF(currentJson) {
   return {
     type: 'SET_CURRENT_DISPLAY_RDF',
     currentJson: currentJson,
-    RDF: true
+    plainText: true
   }
 }

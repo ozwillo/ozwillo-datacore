@@ -6,7 +6,8 @@ export class Content extends React.Component{
   constructor(props) {
     super(props);
     this.state = {
-      errorMessage: false
+      errorMessage: false,
+      messageError: "",
     };
   }
 
@@ -93,7 +94,7 @@ export class Content extends React.Component{
         this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
       },
       () => {
-        this.setState({errorMessage: true});
+        this.setState({errorMessage: true, messageError:""});
       }
     );
   }
@@ -133,7 +134,7 @@ export class Content extends React.Component{
         this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
       },
       () => {
-        this.setState({errorMessage: true});
+        this.setState({errorMessage: true, messageError: ""});
       }
     );
   }
@@ -148,7 +149,7 @@ export class Content extends React.Component{
         this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
       },
       () => {
-        this.setState({errorMessage: true});
+        this.setState({errorMessage: true, messageError:""});
       },
       {
         "X-Datacore-Debug": true
@@ -178,7 +179,7 @@ export class Content extends React.Component{
         this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
       },
       () => {
-        this.setState({errorMessage: true});
+        this.setState({errorMessage: true, messageError: ""});
       }
     );
   }
@@ -189,21 +190,66 @@ export class Content extends React.Component{
       relativeUrl,
       (data) => {
         this.setUrl(relativeUrl, null);
-        console.log(data);
-        //add pagination link
         this.props.dispatch(actions.setCurrentDisplayRDF(data));
       },
       () => {
-        this.setState({errorMessage: true});
+        this.setState({errorMessage: true, messageError: ""});
       },
       {'Accept':'text/x-nquads'}
     );
   }
+
+  deleteButton = () => {
+    var relativeUrl = this.props.currentPath;
+
+    //we first make a get request to get the current version of the object
+    this.ajaxCall(
+      relativeUrl,
+      (data) => {
+        this.setUrl(relativeUrl, null);
+
+        //we call the delete function
+        if (Object.prototype.toString.call( data ) === '[object Array]' ){
+          for (var resource of data){
+            var currentVersion = resource["o:version"];
+            this.deleteRessource(relativeUrl, currentVersion);
+          }
+        }
+        else{
+          var currentVersion = data["o:version"];
+          this.deleteRessource(relativeUrl, currentVersion);
+        }
+      },
+      () => {
+        this.setState({errorMessage: true, messageError: "Can't delete this data"});
+      },
+      null,
+      'GET'
+    );
+  }
+
+  deleteRessource = (relativeUrl, version) => {
+    this.ajaxCall(
+      relativeUrl,
+      (data) => {
+        this.setUrl(relativeUrl, null);
+        this.props.dispatch(actions.setCurrentDisplay(data));
+      },
+      () => {
+        this.setState({errorMessage: true});
+      },
+      {"If-match": version},
+      'DELETE'
+    );
+  }
+
   setUrl = (relativeUrl) => {
     this.props.dispatch(actions.setCurrentQueryPath(relativeUrl));
   }
 
-  ajaxCall = (relativeUrl, currentSuccess, currentError, additionalHeaders) => {
+  ajaxCall = (relativeUrl, currentSuccess, currentError, additionalHeaders, operation) => {
+    var currentOperation = operation !== null ? operation: 'GET';
+
     var headers = {
       'Authorization' : "Basic YWRtaW46YWRtaW4=",
       'If-None-Match': -1,
@@ -214,12 +260,13 @@ export class Content extends React.Component{
 
     $.ajax({
       url: relativeUrl,
-      type: 'GET',
+      type: currentOperation,
       headers: headers,
       success: currentSuccess,
       error: currentError
     });
   }
+
 
   callAPIUpdatePlaygroundOnClick = (event) => {
     this.callAPIUpdatePlayground(event.target.href);
@@ -285,18 +332,18 @@ export class Content extends React.Component{
               <button className="small ui button" id="postButton" onClick={this.clickPost} data-content="Post data (merge or create)">POST</button>
               <button className="small ui button" id="putButton" onClick={this.clickPut} data-content="Put data (replace existing)">PUT</button>
             </div>
-            <button className="small ui button" id="delButton" data-content="Delete data">del</button>
+            <button className="small ui button" onClick={this.deleteButton} id="delButton" data-content="Delete data">del</button>
             <button className="small ui button" onClick={this.modelButton} id="MButton" data-content="Go to model">M</button>
             <button className="small ui button" id="HButton" data-content="Previous version if history is enabled">H</button>
           </div>
 
           {this.state.errorMessage ?
-            <MessageErrorPath setParentState={this.setCurrentState}/>
+            <MessageErrorPath setParentState={this.setCurrentState} message={this.state.messageError}/>
            : null}
 
            {/*We need to do this trick in order to escape the RDF HTML*/}
           <div className="row ui segment mydatacontainer">
-            {this.props.RDF ? <pre className="segmentpadding mydata">{this.props.currentJson}</pre>
+            {this.props.plainText ? <pre className="segmentpadding mydata">{this.props.currentJson}</pre>
           : <pre className="segmentpadding mydata" dangerouslySetInnerHTML={this.createMarkup()}></pre>}
           </div>
 
@@ -309,7 +356,7 @@ export class Content extends React.Component{
 const mapStateToProps = (state) => ({
   currentJson: state.currentJson,
   currentPath: state.currentPath,
-  RDF: state.RDF
+  plainText: state.plainText
 })
 export default Content = connect(mapStateToProps)(Content);
 
@@ -335,6 +382,7 @@ export class MessageErrorPath extends React.Component{
       <i className="warning circle icon" onClick={this.closeMessage}></i>
       <p>
         Error accessing the current path
+        {this.props.message}
       </p>
       </div>
     );

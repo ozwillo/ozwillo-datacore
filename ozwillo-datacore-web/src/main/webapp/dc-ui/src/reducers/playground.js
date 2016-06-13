@@ -9,7 +9,7 @@ const playground = (state, action) => {
         case 'SET_CURRENT_DISPLAY':
             return Object.assign({}, state, {
                 currentJson: action.currentJson,
-                RDF: action.RDF
+                plainText: action.plainText
             })
 
         default:
