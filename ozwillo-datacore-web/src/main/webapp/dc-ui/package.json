@@ -8,15 +8,16 @@
     "del": "~2.2.0",
     "extend": "~3.0.0",
     "map-stream": "~0.0.6",
+    "react": "~15.1.0",
+    "react-addons-css-transition-group": "^15.1.0",
+    "react-dom": "~15.1.0",
+    "react-redux": "~4.4.5",
+    "react-router": "~2.4.1",
+    "redux": "~3.5.2",
     "require-dot-file": "~0.4.0",
     "run-sequence": "~1.2.0",
     "semantic-ui": "~2.1.8",
-    "yamljs": "~0.2.7",
-    "react-dom": "~15.1.0",
-    "react": "~15.1.0",
-    "redux": "~3.5.2",
-    "react-redux": "~4.4.5",
-    "react-router": "~2.4.1"
+    "yamljs": "~0.2.7"
   },
   "devDependencies": {
     "babel-core": "^6.9.1",

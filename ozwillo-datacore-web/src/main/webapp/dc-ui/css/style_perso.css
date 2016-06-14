@@ -11,13 +11,13 @@
 }
 
 .groupementmenu{
+
 }
 
 .center{
   margin-left: auto;
   margin-right: auto;
 }
-
 
 .menubutton{
   margin-top: 0 !important;
@@ -47,12 +47,6 @@
 
 }
 
-#transitionEditButton{
-  width:69px;
-  -webkit-transition: width 0.2s !important; /* Safari */
-  transition: width 0.2s !important;
-}
-
 .main{
   -webkit-transition: width 0.2s !important; /* Safari */
   transition: width 0.2s !important;
@@ -63,7 +57,7 @@ pre{
 }
 
 .generalContainer{
-    margin-bottom: 70px;
+  margin-bottom: 70px;
 }
 
 .mydata{
@@ -79,4 +73,25 @@ pre{
   -webkit-box-shadow: none;
   -moz-box-shadow: none;
   box-shadow: none;
+}
+
+.editButtonTransition-enter.editButtonTransition-enter-active {
+  opacity: 1;
+  transition: opacity 0.2s !important;
+}
+
+.editButtonTransition-leave.editButtonTransition-leave-active {
+  opacity: 0.01;
+  transition: opacity 0.2s !important;
+}
+
+
+.postPutButtonsTransition-enter-active {
+  opacity: 1;
+  transition: opacity 0.2s ease-in;
+}
+
+.postPutButtonsTransition-leave-active {
+  opacity: 0.01;
+  transition: opacity 0.2s ease-in;
 }

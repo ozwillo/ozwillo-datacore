@@ -1,8 +1,9 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import * as actions from '../actions/actionIndex.js';
-import CodeView from './codeView.js';
 
+import CodeView from './codeView.js';
+import EditButtons from './editButtons.js';
 
 export class Content extends React.Component{
   constructor(props) {
@@ -52,6 +53,10 @@ export class Content extends React.Component{
 
   getButton = () => {
     this.callAPIUpdatePlayground(this.props.currentPath)
+  }
+
+  setErrorMessage = (message) => {
+    this.setState({errorMessage: true, messageError: message});
   }
 
   listButton = () => {
@@ -224,68 +229,6 @@ export class Content extends React.Component{
     );
   }
 
-  editButton = () => {
-    //we check if the currentJson is corresponding to a single resource
-    if (this.props.currentJson.charAt(0) === "{"){
-      var relativeUrl = this.props.currentPath;
-
-      //we make a call in order to get the datas without the html formating
-      this.ajaxCall(
-        relativeUrl,
-        (data) => {
-          this.setUrl(relativeUrl, null);
-          this.props.dispatch(actions.setEditable(data));
-        },
-        () => {
-          this.setState({errorMessage: true, messageError:""});
-        },
-        null,
-        'GET'
-      );
-
-      $("#transitionEditButton").width(148);
-      $('#editButton').transition({animation: 'scale', duration: 150});
-      setTimeout(() => {$('#postButton').transition({animation: 'scale', duration: 150})}, 200);
-      setTimeout(() => {$('#putButton').transition({animation: 'scale', duration: 150})}, 200);
-    }
-    else{
-      this.setState({errorMessage: true, messageError:"You can't edit an array in this playground, please select a single Resource"});
-    }
-  }
-
-  putButton = () => {
-    this.putOrPostButton("PUT");
-  }
-
-  postButton = () => {
-    this.putOrPostButton("POST");
-  }
-
-  putOrPostButton = (requestType) => {
-    var relativeUrl = this.props.currentPath;
-    var reactParent = this;
-    this.ajaxCall(
-      "/dc",
-      (data) => {
-        this.setUrl(relativeUrl, null);
-        var resResourcesOrText = displayJsonObjectResult(data);
-
-        reactParent.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
-
-        setTimeout(() => {$("#transitionEditButton").width(69)},200);
-        $('#postButton').transition({animation: 'scale', duration: 150});
-        $('#putButton').transition({animation: 'scale', duration: 150});
-        setTimeout(() => {$('#editButton').transition({animation: 'scale', duration: 150})}, 200);
-      },
-      () => {
-        this.setState({errorMessage: true, messageError:"Impossible to Post or Put datas"});
-      },
-      {"Content-Type": "application/json"},
-      requestType,
-      this.props.currentJson
-    );
-  }
-
   setUrl = (relativeUrl) => {
     this.props.dispatch(actions.setCurrentQueryPath(relativeUrl));
   }
@@ -369,11 +312,9 @@ export class Content extends React.Component{
             <button className="small ui button" onClick={this.dcButton} id="dcButton" data-content="List view (Dublin Core Notation)">dc</button>
             <button className="small ui button" onClick={this.debugButton} id="debugButton" data-content="Debug/explain query">?</button>
             <button className="small ui button" onClick={this.RDFButton} id="RDFButton" data-content="RDF N-QUADS representation">RDF</button>
-            <div id="transitionEditButton">
-              <button className="small ui button" id="editButton" onClick={this.editButton} data-content="Edit data">edit</button>
-              <button className="small ui button" id="postButton" onClick={this.postButton} data-content="Post data (merge or create)">POST</button>
-              <button className="small ui button" id="putButton" onClick={this.putButton} data-content="Put data (replace existing)">PUT</button>
-            </div>
+
+            <EditButtons setErrorMessage={this.setErrorMessage}/>
+
             <button className="small ui button" onClick={this.deleteButton} id="delButton" data-content="Delete data">del</button>
             <button className="small ui button" onClick={this.modelButton} id="MButton" data-content="Go to model">M</button>
             <button className="small ui button" id="HButton" data-content="Previous version if history is enabled">H</button>
@@ -384,7 +325,6 @@ export class Content extends React.Component{
            : null}
 
           <CodeView currentJson={this.props.currentJson} codeView={this.props.codeView}/>
-
 
           <Reading reading={this.props.reading} callAPIUpdatePlaygroundOnClick={this.callAPIUpdatePlaygroundOnClick}/>
         </div>
