@@ -70,7 +70,13 @@ pre{
   height: 450px ;
   width: 100%;
 }
-.mydatacontainer{
 
+.textareamydata{
+  border: none;
+  overflow: auto;
+  outline: none;
 
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
 }
