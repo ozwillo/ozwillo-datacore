@@ -70,12 +70,8 @@ class EditButtons extends React.Component{
     }
     return (
       <div>
-        <ReactCSSTransitionGroup transitionAppear={true} transitionName="editButtonTransition" transitionEnterTimeout={500} transitionLeaveTimeout={300}>
           {itemEdit}
-        </ReactCSSTransitionGroup>
-        <ReactCSSTransitionGroup transitionAppear={true} transitionName="postPutButtonsTransition" transitionEnterTimeout={500} transitionLeaveTimeout={300}>
           {itemsPostPut}
-        </ReactCSSTransitionGroup>
       </div>
     );
   }

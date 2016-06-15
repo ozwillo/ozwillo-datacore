@@ -75,23 +75,33 @@ pre{
   box-shadow: none;
 }
 
+.editButtonTransition-enter{
+  opacity: 0.01;
+}
 .editButtonTransition-enter.editButtonTransition-enter-active {
   opacity: 1;
-  transition: opacity 0.2s !important;
+  transition: opacity 0.3s !important;
 }
-
+.editButtonTransition-leave{
+  opacity: 1;
+}
 .editButtonTransition-leave.editButtonTransition-leave-active {
   opacity: 0.01;
-  transition: opacity 0.2s !important;
+  transition: opacity 0.1s !important;
 }
 
 
+.postPutButtonsTransition-enter{
+  opacity: 0.01;
+}
 .postPutButtonsTransition-enter-active {
   opacity: 1;
-  transition: opacity 0.2s ease-in;
+  transition: opacity 0.3s !important;
 }
-
+.postPutButtonsTransition-leave{
+  opacity: 1;
+}
 .postPutButtonsTransition-leave-active {
   opacity: 0.01;
-  transition: opacity 0.2s ease-in;
+  transition: opacity 0.100s !important;
 }
