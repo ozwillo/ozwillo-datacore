@@ -1148,8 +1148,14 @@ function displayJsonListResult(data, path) {
 
     var prettyJson = toolifyDcList(data, 0, null, parseUri(path).modelType);
 
-    var currentPath = path.substring(0, path.indexOf("?"));
-    var currentQuery = path.substring(path.indexOf("?")+1,path.length);
+    if(path.indexOf("?") !== -1){
+      var currentPath = path.substring(0, path.indexOf("?"));
+      var currentQuery = path.substring(path.indexOf("?")+1,path.length);
+    }
+    else{
+      var currentPath = path;
+      var currentQuery = "";
+    }
 
     prettyJson = addPaginationLinks({_query: currentQuery, path: currentPath}, prettyJson, data);
 
@@ -1205,14 +1211,10 @@ function addPaginationLinks(request, prettyJson, resList, successFunctionName) {
          || resList.length === limit) {
       var nextStart = start + limit;
       var relativeUrl = request.path + '?start=' + nextStart + '&limit=' + limit + query;
-      var headers = {};
-      for (var hInd in request._headers) {
-          if (hInd === 'Accept' || hInd.indexOf('X-Datacore-') === 0) {
-             headers[hInd] = request._headers[hInd]; // Accept for RDF, else 'X-Datacore-View'...
-          }
-      }
+      console.log(request.path);
       prettyJson += lineBreak(0) + '<a href="' + relativeUrl + '" class="dclink" onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))">...</a>';
    }
+
    return prettyJson;
 }
 

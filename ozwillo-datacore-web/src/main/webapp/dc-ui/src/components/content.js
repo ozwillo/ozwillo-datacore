@@ -66,21 +66,21 @@ export class Content extends React.Component{
       (data) => {
         this.setUrl(relativeUrl, null);
 
-        if (Object.prototype.toString.call( data ) === '[object Array]' ){
+        if (Object.prototype.toString.call( data ) === '[object Array]'){
           var list_data = [];
           for (var resource of data){
-            list_data.push({"@id" : resource["@id"]});
+            list_data.push({"@id" : resource["@id"], "o:version": resource["o:version"]});
           }
           var resResourcesOrText = displayJsonListResult(list_data, relativeUrl);
         }
         else{
-          data = {"@id" : data["@id"]};
+          data = {"@id" : data["@id"], "o:version": resource["o:version"]};
           var resResourcesOrText = displayJsonObjectResult(data);
         }
         this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
       },
       () => {
-        this.setState({errorMessage: true, messageError:"Error accessing the current path"});
+        this.setErrorMessage("Error accessing the current path");
       }
     );
   }
@@ -120,7 +120,7 @@ export class Content extends React.Component{
         this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
       },
       () => {
-        this.setState({errorMessage: true, messageError: "Error accessing the current path"});
+        this.setErrorMessage("Error accessing the current path");
       }
     );
   }
@@ -135,7 +135,7 @@ export class Content extends React.Component{
         this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
       },
       () => {
-        this.setState({errorMessage: true, messageError:"Error accessing the current path"});
+        this.setErrorMessage("Error accessing the current path");
       },
       {
         "X-Datacore-Debug": true
@@ -165,7 +165,7 @@ export class Content extends React.Component{
         this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
       },
       () => {
-        this.setState({errorMessage: true, messageError: "Error accessing the current path"});
+      this.setErrorMessage("Error accessing the current path");
       }
     );
   }
@@ -179,7 +179,7 @@ export class Content extends React.Component{
         this.props.dispatch(actions.setCurrentDisplayRDF(data));
       },
       () => {
-        this.setState({errorMessage: true, messageError: "Error accessing the current path"});
+        this.setErrorMessage("Error accessing the current path");
       },
       {'Accept':'text/x-nquads'}
     );
@@ -207,7 +207,7 @@ export class Content extends React.Component{
         }
       },
       () => {
-        this.setState({errorMessage: true, messageError: "Can't delete this data"});
+        this.setErrorMessage("Can't delete this data");
       },
       null,
       'GET'
@@ -222,7 +222,7 @@ export class Content extends React.Component{
         this.props.dispatch(actions.setCurrentDisplay(data));
       },
       () => {
-        this.setState({errorMessage: true});
+        this.setErrorMessage("Can't delete this data");
       },
       {"If-match": version},
       'DELETE'
@@ -279,7 +279,7 @@ export class Content extends React.Component{
         //success(resResourcesOrText, requestToRelativeUrl(data.request), data, handlerOptions);
       },
       (xhr, ajaxOptions, thrownError) => {
-        reactParent.setState({errorMessage: true});
+
       }
     );
   }

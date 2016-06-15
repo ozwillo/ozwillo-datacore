@@ -27,7 +27,7 @@ class EditButtons extends React.Component{
       );
     }
     else{
-      this.props.setErrorMessage("You can't edit an array in this playground, please select a single Resource");
+      this.props.setErrorMessage("You can't edit anything else than a single resource (in classic format, not RDF");
     }
   }
 
@@ -61,12 +61,12 @@ class EditButtons extends React.Component{
   render() {
     if(this.props.codeView === "editable"){
       var itemsPostPut = <div>
-            <button className="small ui button" id="postButton" onClick={this.postButton} data-content="Post data (merge or create)">POST</button>
-            <button className="small ui button" id="putButton" onClick={this.putButton} data-content="Put data (replace existing)">PUT</button>
+            <button className="small ui button" id="postButton" onClick={this.postButton}>POST</button>
+            <button className="small ui button" id="putButton" onClick={this.putButton}>PUT</button>
           </div>;
     }
     else{
-      var itemEdit = <button className="small ui button" id="editButton" onClick={this.editButton} data-content="Edit data">edit</button>;
+      var itemEdit = <button className="small ui button" id="editButton" onClick={this.editButton}>edit</button>;
     }
     return (
       <div>
