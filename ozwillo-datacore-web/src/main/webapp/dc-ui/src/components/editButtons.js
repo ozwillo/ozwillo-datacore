@@ -19,8 +19,8 @@ class EditButtons extends React.Component{
           this.props.dispatch(actions.setCurrentQueryPath(relativeUrl));
           this.props.dispatch(actions.setEditable(data));
         },
-        () => {
-          this.props.setErrorMessage("");
+        (xhr) => {
+          this.props.setErrorMessage("", xhr.responseText);
         },
         null,
         'GET'
@@ -49,8 +49,8 @@ class EditButtons extends React.Component{
 
         this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
       },
-      () => {
-        this.props.setErrorMessage("Impossible to Post or Put datas");
+      (xhr) => {
+        this.props.setErrorMessage("Impossible to Post or Put datas", xhr.responseText);
       },
       {"Content-Type": "application/json"},
       requestType,

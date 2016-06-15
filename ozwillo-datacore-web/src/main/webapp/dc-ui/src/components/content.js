@@ -11,6 +11,7 @@ export class Content extends React.Component{
     this.state = {
       errorMessage: false,
       messageError: "",
+      messageErrorDetails: ""
     };
   }
 
@@ -55,8 +56,8 @@ export class Content extends React.Component{
     this.callAPIUpdatePlayground(this.props.currentPath)
   }
 
-  setErrorMessage = (message) => {
-    this.setState({errorMessage: true, messageError: message});
+  setErrorMessage = (message, messageErrorDetails) => {
+    this.setState({errorMessage: true, messageError: message, messageErrorDetails: messageErrorDetails});
   }
 
   listButton = () => {
@@ -79,8 +80,8 @@ export class Content extends React.Component{
         }
         this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
       },
-      () => {
-        this.setErrorMessage("Error accessing the current path");
+      (xhr) => {
+        this.setErrorMessage("Error accessing the current path", xhr.responseText);
       }
     );
   }
@@ -119,8 +120,8 @@ export class Content extends React.Component{
         }
         this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
       },
-      () => {
-        this.setErrorMessage("Error accessing the current path");
+      (xhr) => {
+        this.setErrorMessage("Error accessing the current path", xhr.responseText);
       }
     );
   }
@@ -134,8 +135,8 @@ export class Content extends React.Component{
         var resResourcesOrText = displayJsonObjectResult(data.debug);
         this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
       },
-      () => {
-        this.setErrorMessage("Error accessing the current path");
+      (xhr) => {
+        this.setErrorMessage("Error accessing the current path", xhr.responseText);
       },
       {
         "X-Datacore-Debug": true
@@ -164,8 +165,8 @@ export class Content extends React.Component{
         var resResourcesOrText = displayJsonObjectResult(data);
         this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
       },
-      () => {
-      this.setErrorMessage("Error accessing the current path");
+      (xhr) => {
+      this.setErrorMessage("Error accessing the current path", xhr.responseText);
       }
     );
   }
@@ -178,8 +179,8 @@ export class Content extends React.Component{
         this.setUrl(relativeUrl, null);
         this.props.dispatch(actions.setCurrentDisplayRDF(data));
       },
-      () => {
-        this.setErrorMessage("Error accessing the current path");
+      (xhr) => {
+        this.setErrorMessage("Error accessing the current path", xhr.responseText);
       },
       {'Accept':'text/x-nquads'}
     );
@@ -206,12 +207,13 @@ export class Content extends React.Component{
           this.deleteRessource(relativeUrl, currentVersion);
         }
       },
-      () => {
-        this.setErrorMessage("Can't delete this data");
+      (xhr) => {
+        this.setErrorMessage("Can't delete this data", xhr.responseText);
       },
       null,
       'GET'
     );
+
   }
 
   deleteRessource = (relativeUrl, version) => {
@@ -221,8 +223,8 @@ export class Content extends React.Component{
         this.setUrl(relativeUrl, null);
         this.props.dispatch(actions.setCurrentDisplay(data));
       },
-      () => {
-        this.setErrorMessage("Can't delete this data");
+      (xhr) => {
+        this.setErrorMessage("Can't delete this data", xhr.responseText);
       },
       {"If-match": version},
       'DELETE'
@@ -321,7 +323,7 @@ export class Content extends React.Component{
           </div>
 
           {this.state.errorMessage ?
-            <MessageErrorPath setParentState={this.setCurrentState} message={this.state.messageError}/>
+            <MessageErrorPath setParentState={this.setCurrentState} message={this.state.messageError} messageErrorDetails={this.state.messageErrorDetails}/>
            : null}
 
           <CodeView currentJson={this.props.currentJson} codeView={this.props.codeView}/>
@@ -341,9 +343,18 @@ const mapStateToProps = (state) => ({
 export default Content = connect(mapStateToProps)(Content);
 
 export class MessageErrorPath extends React.Component{
+  constructor(props) {
+    super(props);
+    this.state = {
+      seeDetails: false
+    };
+  }
+
   closeMessage = (e) => {
+    this.setState({seeDetails: false});
     $('.errorPath').transition('fade');
   }
+
   componentDidMount = () => {
     var component = this;
     $('.message .close')
@@ -355,13 +366,25 @@ export class MessageErrorPath extends React.Component{
       component.props.setParentState({errorMessage: false});
     });
   }
+
   render() {
+    if(this.state.seeDetails === false){
+      var message = <span>
+          {this.props.message}
+          <br/>
+          <a onClick={() => {this.setState({seeDetails: true})}}>More details</a>
+        </span>;
+    }
+    else{
+      var message = this.props.messageErrorDetails;
+    }
+
     return(
       <div className="ui icon error message errorPath">
       <i className="close icon"></i>
       <i className="warning circle icon" onClick={this.closeMessage}></i>
       <p>
-        {this.props.message}
+        {message}
       </p>
       </div>
     );
