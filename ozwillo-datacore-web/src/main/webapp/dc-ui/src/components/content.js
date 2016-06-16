@@ -368,11 +368,15 @@ export class MessageErrorPath extends React.Component{
   }
 
   render() {
+    console.log(this.props.messageErrorDetails);
+    if(this.props.messageErrorDetails != undefined){
+      var moreDetails = <a onClick={() => {this.setState({seeDetails: true})}}>More details</a>;
+    }
     if(this.state.seeDetails === false){
       var message = <span>
           {this.props.message}
           <br/>
-          <a onClick={() => {this.setState({seeDetails: true})}}>More details</a>
+          {moreDetails}
         </span>;
     }
     else{

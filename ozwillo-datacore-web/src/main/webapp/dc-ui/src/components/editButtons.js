@@ -27,7 +27,7 @@ class EditButtons extends React.Component{
       );
     }
     else{
-      this.props.setErrorMessage("You can't edit anything else than a single resource (in classic format, not RDF");
+      this.props.setErrorMessage("You can't edit anything else than a single resource (in classic format, not RDF)");
     }
   }
 
