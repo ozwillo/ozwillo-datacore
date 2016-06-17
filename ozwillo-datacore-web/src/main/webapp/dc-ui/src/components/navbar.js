@@ -4,9 +4,9 @@ export default class NavBar extends React.Component{
   render() {
     return (
       <div className="ui inverted menu navbar centered grid darkred">
-        <a href="" className="brand item largefont">Ozwillo Datacore</a>
-        <a href="" className="item largefont">Play</a>
-        <a href="" className="item largefont">Import</a>
+        <a className="brand item largefont">Ozwillo Datacore</a>
+        <a href="/dc-ui/src/index.html" className="item largefont">Play</a>
+        <a href="/dc-ui" className="item largefont">Import</a>
         <a className="ui simple dropdown item">Jeu de données
           <i className="dropdown icon"></i>
           <div className="menu">
