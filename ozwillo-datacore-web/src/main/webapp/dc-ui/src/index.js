@@ -28,6 +28,7 @@ const initialState = {
   currentPath: "/dc/type/dcmo:model_0",
   currentJson: "",
   codeView: "classic", //classic, plainText, editable
+  currentProject: "oasis.sandbox"
 };
 
 let store = createStore(playground, initialState);

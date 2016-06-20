@@ -1,11 +1,22 @@
 import React from 'react';
+import { connect } from 'react-redux';
 
 import Menu from "./menu.js";
 import NavBar from "./navbar.js";
 import Content from "./content.js";
 
 
-export default class App extends React.Component{
+class App extends React.Component{
+  constructor(props) {
+     super(props);
+     //we expose this in order to access it from datacore-ui.js
+     window.getCurrentProject = this.getCurrentProject;
+  }
+
+  getCurrentProject = () => {
+    return this.props.currentProject;
+  }
+
   render() {
     return (
       <div>
@@ -18,3 +29,8 @@ export default class App extends React.Component{
     );
   }
 }
+
+const mapStateToProps = (state/*, props*/) => ({
+    currentProject: state.currentProject
+})
+export default App = connect(mapStateToProps)(App);

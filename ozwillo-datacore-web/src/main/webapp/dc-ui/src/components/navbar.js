@@ -1,19 +1,25 @@
 import React from 'react';
+import { connect } from 'react-redux';
+import * as actions from '../actions/actionIndex.js';
 
-export default class NavBar extends React.Component{
+class NavBar extends React.Component{
   componentDidMount = () => {
     $('.ui.dropdown').dropdown();
   }
+  dispatchCurrentProject = (project) => {
+    this.props.dispatch(actions.setCurrentProject(project));
+  }
 
   render() {
+    var parent = this;
     var projects = this.props.projects.map(function(project){
       return (
-        <div className="item" key={project} onClick={() => setProject(project)}>
+        <div className="item" key={project} onClick={() => parent.dispatchCurrentProject(project)}>
           {project}
         </div>);
     });
 
-    var currentProject = getProject();
+    var currentProject = this.props.currentProject;
     if(currentProject === null){
       currentProject = "Jeu de données";
     }
@@ -32,3 +38,8 @@ export default class NavBar extends React.Component{
     );
   }
 }
+
+const mapStateToProps = (state/*, props*/) => ({
+    currentProject: state.currentProject
+})
+export default NavBar = connect(mapStateToProps)(NavBar);

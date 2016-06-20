@@ -35,3 +35,10 @@ export function setEditable(currentJson) {
     codeView: "editable"
   }
 }
+
+export function setCurrentProject(currentProject) {
+  return {
+    type: 'SET_CURRENT_PROJECT',
+    currentProject: currentProject
+  }
+}

@@ -17,6 +17,10 @@ const playground = (state, action) => {
                 codeView: action.codeView,
                 currentJson: action.currentJson
             })
+        case 'SET_CURRENT_PROJECT':
+          return Object.assign({}, state, {
+              currentProject: action.currentProject,
+          })
         default:
             return state
     }

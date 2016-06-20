@@ -573,17 +573,15 @@ function requestToRelativeUrl(request) {
    return relativeUrl;
 }
 
-
 function getProject() {
-   if (!window.currentProject || window.currentProject.length === 0) {
-      return 'oasis.sandbox'; // by default don't pollute anything // oasis.sandbox oasis.main (oasis.sample)
-   }
-   return window.currentProject;
+
+  return window.getCurrentProject();
 }
+
 function setProject(newProject) {
    window.currentProject = newProject;
-   console.log(getProject());
 }
+
 function initProjectPortal(options) {
    getData(buildProjectPortalQuery(options), projectPortalSuccess,
          null, null, 25, {'X-Datacore-View':'-'}, options);
