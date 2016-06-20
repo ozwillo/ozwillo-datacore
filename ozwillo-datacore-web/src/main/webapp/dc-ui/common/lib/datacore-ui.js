@@ -582,11 +582,10 @@ function getProject() {
 }
 function setProject(newProject) {
    window.currentProject = newProject;
-
-   initProjectPortal();
+   console.log(getProject());
 }
 function initProjectPortal(options) {
-   ta(buildProjectPortalQuery(options), projectPortalSuccess,
+   getData(buildProjectPortalQuery(options), projectPortalSuccess,
          null, null, 25, {'X-Datacore-View':'-'}, options);
 }
 function buildProjectPortalQuery(options) {

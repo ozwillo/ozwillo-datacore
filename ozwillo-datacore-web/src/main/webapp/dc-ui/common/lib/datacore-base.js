@@ -110,6 +110,21 @@ function initUserInfoUi() {
    });
 }
 
+function getAllProjects(){
+  var myReturn = [];
+  $.ajax({
+     url:"/dc/type/dcmp:Project_0?dcmpv:name=%2B&limit=100", // sorted on dcmpv:name (%2B = + ; would allow range pagination)
+     headers: { Authorization:getAuthHeader() }, // , 'X-Datacore-View':'dcmpv:PointOfView_0' (any project should do)
+     async: false, //we need to make a synchronous call here to return corrects datas
+     success: function(userProjects) {
+        for (var i in userProjects) {
+           var projectName = userProjects[i]['dcmpv:name'];
+           myReturn.push(projectName);
+        }
+     }
+  });
+  return myReturn;
+}
 
 ////////////////////////////////////////////////
 // PLAYGROUND UI (without Swagger UI)
@@ -228,6 +243,7 @@ function initDcConf(success) {
       }
    });
 }
+
 function initDcConfReplacements() {
    for (var key in dcConf) {
       $(".dcConf_" + key).html("" + dcConf[key]); // converting to string first

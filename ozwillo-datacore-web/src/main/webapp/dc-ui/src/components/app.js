@@ -9,7 +9,7 @@ export default class App extends React.Component{
   render() {
     return (
       <div>
-        <NavBar/>
+        <NavBar projects={getAllProjects()}/>
         <div className="ui container stackable grid">
           <Menu/>
           <Content reading={this.props.children}/>
