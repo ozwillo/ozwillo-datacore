@@ -6,6 +6,10 @@ import CodeView from './codeView.js';
 import EditButtons from './buttons/editButtons.js';
 import GetButton from './buttons/getButton.js';
 import ListButton from './buttons/listButton.js';
+import DCButton from './buttons/dcButton.js';
+import DebugButton from './buttons/debugButton.js';
+import RDFButton from './buttons/RDFButton.js';
+import DeleteButton from './buttons/deleteButton.js';
 
 export class Content extends React.Component{
   constructor(props) {
@@ -58,65 +62,6 @@ export class Content extends React.Component{
     this.setState({errorMessage: true, messageError: message, messageErrorDetails: messageErrorDetails});
   }
 
-
-  extractDc = (resource) => {
-    return {
-      "@id": resource["@id"],
-      "o:version": resource["o:version"],
-      "@type": resource["@type"],
-      "dc:created": resource["dc:created"],
-      "dc:modified": resource["dc:modified"],
-      "dc:creator": resource["dc:creator"],
-      "dc:contributor": resource["dc:contributor"],
-      "o:partial": resource["o:partial"],
-    };
-
-  }
-
-  dcButton = () => {
-    var relativeUrl = this.props.currentPath;
-    this.ajaxCall(
-      relativeUrl,
-      (data) => {
-        this.setUrl(relativeUrl, null);
-
-        if (Object.prototype.toString.call( data ) === '[object Array]' ){
-          var list_data = [];
-          for (var resource of data){
-            list_data.push(this.extractDc(resource));
-          }
-          var resResourcesOrText = displayJsonListResult(list_data, relativeUrl);
-        }
-        else{
-          data = this.extractDc(data);
-          var resResourcesOrText = displayJsonObjectResult(data);
-        }
-        this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
-      },
-      (xhr) => {
-        this.setErrorMessage("Error accessing the current path", xhr.responseText);
-      }
-    );
-  }
-
-  debugButton = () => {
-    var relativeUrl = this.props.currentPath;
-    this.ajaxCall(
-      relativeUrl,
-      (data) => {
-        this.setUrl(relativeUrl, null);
-        var resResourcesOrText = displayJsonObjectResult(data.debug);
-        this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
-      },
-      (xhr) => {
-        this.setErrorMessage("Error accessing the current path", xhr.responseText);
-      },
-      {
-        "X-Datacore-Debug": true
-      }
-    );
-  }
-
   modelButton = () => {
     var url = this.props.currentPath;
     var beginSearch = url.indexOf("type/")+5;
@@ -144,65 +89,6 @@ export class Content extends React.Component{
     );
   }
 
-  RDFButton = () => {
-    var relativeUrl = this.props.currentPath;
-    this.ajaxCall(
-      relativeUrl,
-      (data) => {
-        this.setUrl(relativeUrl, null);
-        this.props.dispatch(actions.setCurrentDisplayRDF(data));
-      },
-      (xhr) => {
-        this.setErrorMessage("Error accessing the current path", xhr.responseText);
-      },
-      {'Accept':'text/x-nquads'}
-    );
-  }
-
-  deleteButton = () => {
-    var relativeUrl = this.props.currentPath;
-
-    //we first make a get request to get the current version of the object
-    this.ajaxCall(
-      relativeUrl,
-      (data) => {
-        this.setUrl(relativeUrl, null);
-
-        //we call the delete function
-        if (Object.prototype.toString.call( data ) === '[object Array]'){
-          for (var resource of data){
-            var currentVersion = resource["o:version"];
-            this.deleteRessource(relativeUrl, currentVersion);
-          }
-        }
-        else{
-          var currentVersion = data["o:version"];
-          this.deleteRessource(relativeUrl, currentVersion);
-        }
-      },
-      (xhr) => {
-        this.setErrorMessage("Can't delete this data", xhr.responseText);
-      },
-      null,
-      'GET'
-    );
-
-  }
-
-  deleteRessource = (relativeUrl, version) => {
-    this.ajaxCall(
-      relativeUrl,
-      (data) => {
-        this.setUrl(relativeUrl, null);
-        this.props.dispatch(actions.setCurrentDisplay(data));
-      },
-      (xhr) => {
-        this.setErrorMessage("Can't delete this data", xhr.responseText);
-      },
-      {"If-match": version},
-      'DELETE'
-    );
-  }
 
   setUrl = (relativeUrl) => {
     this.props.dispatch(actions.setCurrentQueryPath(relativeUrl));
@@ -283,14 +169,12 @@ export class Content extends React.Component{
           <div className="row ui centered">
             <GetButton callAPIUpdatePlayground={this.callAPIUpdatePlayground} setErrorMessage={this.setErrorMessage}/>
             <ListButton setErrorMessage={this.setErrorMessage}/>
-
-            <button className="small ui button" onClick={this.dcButton} id="dcButton" data-content="List view (Dublin Core Notation)">dc</button>
-            <button className="small ui button" onClick={this.debugButton} id="debugButton" data-content="Debug/explain query">?</button>
-            <button className="small ui button" onClick={this.RDFButton} id="RDFButton" data-content="RDF N-QUADS representation">RDF</button>
-
+            <DCButton setErrorMessage={this.setErrorMessage}/>
+            <DebugButton setErrorMessage={this.setErrorMessage}/>
+            <RDFButton setErrorMessage={this.setErrorMessage}/>
             <EditButtons setErrorMessage={this.setErrorMessage}/>
+            <DeleteButton setErrorMessage={this.setErrorMessage}/>
 
-            <button className="small ui button" onClick={this.deleteButton} id="delButton" data-content="Delete data">del</button>
             <button className="small ui button" onClick={this.modelButton} id="MButton" data-content="Go to model">M</button>
             <button className="small ui button" id="HButton" data-content="Previous version if history is enabled">H</button>
           </div>
