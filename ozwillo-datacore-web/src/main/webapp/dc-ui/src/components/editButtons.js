@@ -8,27 +8,23 @@ import {ajaxCall} from '../utils.js';
 class EditButtons extends React.Component{
   editButton = () => {
 
-    //we check if the currentJson is corresponding to a single resource
-    if (this.props.currentJson.charAt(0) === "{"){
-      var relativeUrl = this.props.currentPath;
 
-      //we make a call in order to get the datas without the html formating
-      ajaxCall(
-        relativeUrl,
-        (data) => {
-          this.props.dispatch(actions.setCurrentQueryPath(relativeUrl));
-          this.props.dispatch(actions.setEditable(data));
-        },
-        (xhr) => {
-          this.props.setErrorMessage("", xhr.responseText);
-        },
-        null,
-        'GET'
-      );
-    }
-    else{
-      this.props.setErrorMessage("You can't edit anything else than a single resource (in classic format, not RDF)");
-    }
+    var relativeUrl = this.props.currentPath;
+    //we make a call in order to get the datas without the html formating
+    ajaxCall(
+      relativeUrl,
+      (data) => {
+        this.props.dispatch(actions.setCurrentQueryPath(relativeUrl));
+        this.props.dispatch(actions.setEditable(data));
+      },
+      (xhr) => {
+        this.props.setErrorMessage("", xhr.responseText);
+      },
+      null,
+      'GET'
+    );
+
+
   }
 
   putButton = () => {
@@ -44,10 +40,14 @@ class EditButtons extends React.Component{
     ajaxCall(
       "/dc",
       (data) => {
+        if (Object.prototype.toString.call(data) === '[object Array]' ){
+          var resource = displayJsonListResult(data, relativeUrl);
+        }
+        else{
+          var resource = displayJsonObjectResult(data);
+        }
         this.props.dispatch(actions.setCurrentQueryPath(relativeUrl));
-        var resResourcesOrText = displayJsonObjectResult(data);
-
-        this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
+        this.props.dispatch(actions.setCurrentDisplay(resource));
       },
       (xhr) => {
         this.props.setErrorMessage("Impossible to Post or Put datas", xhr.responseText);

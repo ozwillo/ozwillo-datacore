@@ -1,3 +1,4 @@
 - Add pagination to RDF
+- clicking on pagination in listing displays resources in normal format, instead of keeping listing
 - better formating for urls in current path
 - error on button edit : if we put a data-content attribute, it stay displayed (bug semantic ui+react I think)
