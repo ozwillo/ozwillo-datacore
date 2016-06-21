@@ -1,7 +1,7 @@
 import React from "react"
 import ReactDOM from "react-dom";
 import { Provider } from 'react-redux';
-import { createStore } from 'redux';
+import { createStore,compose } from 'redux';
 import { Router, Route, Link, browserHistory} from 'react-router';
 
 import App from "./components/app.js";
@@ -30,6 +30,7 @@ const initialState = {
   codeView: "classic", //classic, plainText, editable
   currentProject: "oasis.sandbox"
 };
+
 
 let store = createStore(playground, initialState);
 

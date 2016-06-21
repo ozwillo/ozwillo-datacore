@@ -20,6 +20,7 @@ class NavBar extends React.Component{
     });
 
     var currentProject = this.props.currentProject;
+    
     if(currentProject === null){
       currentProject = "Jeu de données";
     }

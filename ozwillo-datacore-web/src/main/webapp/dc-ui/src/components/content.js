@@ -75,7 +75,7 @@ export class Content extends React.Component{
           var resResourcesOrText = displayJsonListResult(list_data, relativeUrl);
         }
         else{
-          data = {"@id" : data["@id"], "o:version": resource["o:version"]};
+          data = {"@id" : data["@id"], "o:version": data["o:version"]};
           var resResourcesOrText = displayJsonObjectResult(data);
         }
         this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
@@ -166,7 +166,7 @@ export class Content extends React.Component{
         this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
       },
       (xhr) => {
-      this.setErrorMessage("Error accessing the current path", xhr.responseText);
+        this.setErrorMessage("Error accessing the current path", xhr.responseText);
       }
     );
   }
