@@ -10,6 +10,8 @@ import DCButton from './buttons/dcButton.js';
 import DebugButton from './buttons/debugButton.js';
 import RDFButton from './buttons/RDFButton.js';
 import DeleteButton from './buttons/deleteButton.js';
+import ModelButton from './buttons/modelButton.js';
+import HistoricButton from './buttons/historicButton.js';
 
 export class Content extends React.Component{
   constructor(props) {
@@ -61,34 +63,6 @@ export class Content extends React.Component{
   setErrorMessage = (message, messageErrorDetails) => {
     this.setState({errorMessage: true, messageError: message, messageErrorDetails: messageErrorDetails});
   }
-
-  modelButton = () => {
-    var url = this.props.currentPath;
-    var beginSearch = url.indexOf("type/")+5;
-
-    var modelName = "";
-    for(var i=beginSearch; i<=url.length; i++){
-      modelName = url.substring(beginSearch,i);
-      if(url[i] === "/" || url[i] === "?"){
-        break;
-      }
-    }
-
-    var relativeUrl = buildRelativeUrl("dcmo:model_0/"+modelName);
-
-    this.ajaxCall(
-      relativeUrl,
-      (data) => {
-        this.setUrl(relativeUrl, null);
-        var resResourcesOrText = displayJsonObjectResult(data);
-        this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
-      },
-      (xhr) => {
-        this.setErrorMessage("Error accessing the current path", xhr.responseText);
-      }
-    );
-  }
-
 
   setUrl = (relativeUrl) => {
     this.props.dispatch(actions.setCurrentQueryPath(relativeUrl));
@@ -174,9 +148,8 @@ export class Content extends React.Component{
             <RDFButton setErrorMessage={this.setErrorMessage}/>
             <EditButtons setErrorMessage={this.setErrorMessage}/>
             <DeleteButton setErrorMessage={this.setErrorMessage}/>
-
-            <button className="small ui button" onClick={this.modelButton} id="MButton" data-content="Go to model">M</button>
-            <button className="small ui button" id="HButton" data-content="Previous version if history is enabled">H</button>
+            <ModelButton setErrorMessage={this.setErrorMessage} setUrl={this.setUrl}/>
+            <HistoricButton setErrorMessage={this.setErrorMessage}/>
           </div>
 
           {this.state.errorMessage ?
