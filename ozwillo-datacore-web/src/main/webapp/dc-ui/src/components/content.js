@@ -3,6 +3,11 @@ import { connect } from 'react-redux';
 import * as actions from '../actions/actionIndex.js';
 
 import CodeView from './codeView.js';
+import MessageErrorPath from './messageErrorPath.js';
+import InputCurrentPath from './inputCurrentPath.js';
+import Reading from './reading.js';
+
+
 import EditButtons from './buttons/editButtons.js';
 import GetButton from './buttons/getButton.js';
 import ListButton from './buttons/listButton.js';
@@ -12,6 +17,8 @@ import RDFButton from './buttons/RDFButton.js';
 import DeleteButton from './buttons/deleteButton.js';
 import ModelButton from './buttons/modelButton.js';
 import HistoricButton from './buttons/historicButton.js';
+
+import {ajaxCall} from '../utils.js';
 
 export class Content extends React.Component{
   constructor(props) {
@@ -68,28 +75,6 @@ export class Content extends React.Component{
     this.props.dispatch(actions.setCurrentQueryPath(relativeUrl));
   }
 
-  ajaxCall = (relativeUrl, currentSuccess, currentError, additionalHeaders, operation, data) => {
-    var currentOperation = operation !== null ? operation: 'GET';
-
-    var headers = {
-      'Authorization' : "Basic YWRtaW46YWRtaW4=",
-      'If-None-Match': -1,
-      'Accept' : 'application/json',
-      'X-Datacore-Project': getProject() //TODO: put in the store the current Project
-    };
-    headers = $.extend(headers, additionalHeaders);
-
-    $.ajax({
-      url: relativeUrl,
-      type: currentOperation,
-      headers: headers,
-      data: data,
-      success: currentSuccess,
-      error: currentError
-    });
-  }
-
-
   callAPIUpdatePlaygroundOnClick = (event) => {
     this.callAPIUpdatePlayground(event.target.href);
   }
@@ -98,7 +83,7 @@ export class Content extends React.Component{
     //TODO: encode URI
     var reactParent = this;
 
-    this.ajaxCall(
+    ajaxCall(
       relativeUrl,
       (data) => {
         this.setUrl(relativeUrl, null);
@@ -129,7 +114,6 @@ export class Content extends React.Component{
               Datacore API
             </div>
           </h2>
-
         </div>
         <div className="ui grid main">
           <div className="row ui form">
@@ -137,7 +121,7 @@ export class Content extends React.Component{
               <div className="ui label pointing below">
                 <p>Datacore (https://data.ozwillo-preprod.eu)</p>
               </div>
-              <InputCurrentPathConnected />
+              <InputCurrentPath />
             </div>
           </div>
           <div className="row ui centered">
@@ -171,88 +155,3 @@ const mapStateToProps = (state) => ({
   codeView: state.codeView
 })
 export default Content = connect(mapStateToProps)(Content);
-
-export class MessageErrorPath extends React.Component{
-  constructor(props) {
-    super(props);
-    this.state = {
-      seeDetails: false
-    };
-  }
-
-  closeMessage = (e) => {
-    this.setState({seeDetails: false});
-    $('.errorPath').transition('fade');
-  }
-
-  componentDidMount = () => {
-    var component = this;
-    $('.message .close')
-    .on('click', function() {
-      $(this)
-        .closest('.errorPath')
-        .transition('fade')
-      ;
-      component.props.setParentState({errorMessage: false});
-    });
-  }
-
-  render() {
-    console.log(this.props.messageErrorDetails);
-    if(this.props.messageErrorDetails != undefined){
-      var moreDetails = <a onClick={() => {this.setState({seeDetails: true})}}>More details</a>;
-    }
-    if(this.state.seeDetails === false){
-      var message = <span>
-          {this.props.message}
-          <br/>
-          {moreDetails}
-        </span>;
-    }
-    else{
-      var message = this.props.messageErrorDetails;
-    }
-
-    return(
-      <div className="ui icon error message errorPath">
-      <i className="close icon"></i>
-      <i className="warning circle icon" onClick={this.closeMessage}></i>
-      <p>
-        {message}
-      </p>
-      </div>
-    );
-  }
-}
-
-
-export class InputCurrentPath extends React.Component{
-  updateCurrentPath = (e) => {
-    this.props.dispatch(actions.setCurrentQueryPath(e.target.value));
-  }
-  render() {
-    return (
-      <input className="myurl" value={this.props.currentPath} type="text" onChange={this.updateCurrentPath}/>
-    );
-  }
-}
-const mapStateToPropsInputCurrentPath = (state/*, props*/) => ({
-    currentPath: state.currentPath
-})
-const InputCurrentPathConnected = connect(mapStateToPropsInputCurrentPath)(InputCurrentPath);
-
-
-class Reading extends React.Component{
-  componentWillUpdate = () => {
-    $('.reading').transition('hide');
-    $('.reading').transition('fade right');
-  }
-  render() {
-    return (
-      <div className="row ui segment reading segmentpadding">
-        {/*we pass the function to children in this particular way because of this.props.reading*/}
-        {React.cloneElement(this.props.reading, { callAPIUpdatePlaygroundOnClick: this.props.callAPIUpdatePlaygroundOnClick })}
-      </div>
-    );
-  }
-}
