@@ -4,7 +4,8 @@ import * as actions from '../actions/actionIndex.js';
 
 import CodeView from './codeView.js';
 import EditButtons from './buttons/editButtons.js';
-import GetButton from './buttons/getButton.js'
+import GetButton from './buttons/getButton.js';
+import ListButton from './buttons/listButton.js';
 
 export class Content extends React.Component{
   constructor(props) {
@@ -57,31 +58,6 @@ export class Content extends React.Component{
     this.setState({errorMessage: true, messageError: message, messageErrorDetails: messageErrorDetails});
   }
 
-  listButton = () => {
-    var relativeUrl = this.props.currentPath;
-    this.ajaxCall(
-      relativeUrl,
-      (data) => {
-        this.setUrl(relativeUrl, null);
-
-        if (Object.prototype.toString.call( data ) === '[object Array]'){
-          var list_data = [];
-          for (var resource of data){
-            list_data.push({"@id" : resource["@id"], "o:version": resource["o:version"]});
-          }
-          var resResourcesOrText = displayJsonListResult(list_data, relativeUrl);
-        }
-        else{
-          data = {"@id" : data["@id"], "o:version": data["o:version"]};
-          var resResourcesOrText = displayJsonObjectResult(data);
-        }
-        this.props.dispatch(actions.setCurrentDisplay(resResourcesOrText));
-      },
-      (xhr) => {
-        this.setErrorMessage("Error accessing the current path", xhr.responseText);
-      }
-    );
-  }
 
   extractDc = (resource) => {
     return {
@@ -306,7 +282,8 @@ export class Content extends React.Component{
           </div>
           <div className="row ui centered">
             <GetButton callAPIUpdatePlayground={this.callAPIUpdatePlayground} setErrorMessage={this.setErrorMessage}/>
-            <button className="small ui button" onClick={this.listButton} id="listButton" data-content="List view (minimal)">l</button>
+            <ListButton setErrorMessage={this.setErrorMessage}/>
+
             <button className="small ui button" onClick={this.dcButton} id="dcButton" data-content="List view (Dublin Core Notation)">dc</button>
             <button className="small ui button" onClick={this.debugButton} id="debugButton" data-content="Debug/explain query">?</button>
             <button className="small ui button" onClick={this.RDFButton} id="RDFButton" data-content="RDF N-QUADS representation">RDF</button>
