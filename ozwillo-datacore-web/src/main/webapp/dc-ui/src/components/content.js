@@ -3,7 +3,8 @@ import { connect } from 'react-redux';
 import * as actions from '../actions/actionIndex.js';
 
 import CodeView from './codeView.js';
-import EditButtons from './editButtons.js';
+import EditButtons from './buttons/editButtons.js';
+import GetButton from './buttons/getButton.js'
 
 export class Content extends React.Component{
   constructor(props) {
@@ -50,10 +51,6 @@ export class Content extends React.Component{
 
   componentDidUpdate = () => {
     this.preventClickEffect();
-  }
-
-  getButton = () => {
-    this.callAPIUpdatePlayground(this.props.currentPath)
   }
 
   setErrorMessage = (message, messageErrorDetails) => {
@@ -308,7 +305,7 @@ export class Content extends React.Component{
             </div>
           </div>
           <div className="row ui centered">
-            <button className="small ui button" onClick={this.getButton}>GET</button>
+            <GetButton callAPIUpdatePlayground={this.callAPIUpdatePlayground} setErrorMessage={this.setErrorMessage}/>
             <button className="small ui button" onClick={this.listButton} id="listButton" data-content="List view (minimal)">l</button>
             <button className="small ui button" onClick={this.dcButton} id="dcButton" data-content="List view (Dublin Core Notation)">dc</button>
             <button className="small ui button" onClick={this.debugButton} id="debugButton" data-content="Debug/explain query">?</button>
