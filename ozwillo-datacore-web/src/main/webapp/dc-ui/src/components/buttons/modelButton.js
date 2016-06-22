@@ -2,21 +2,13 @@ import React from 'react';
 import { connect } from 'react-redux';
 
 import * as actions from '../../actions/actionIndex.js';
-import {ajaxCall} from '../../utils.js';
+import {ajaxCall, getModel} from '../../utils.js';
 
 class ModelButton extends React.Component{
   modelButton = () => {
     var url = this.props.currentPath;
-    var beginSearch = url.indexOf("type/")+5;
 
-    var modelName = "";
-    for(var i=beginSearch; i<=url.length; i++){
-      modelName = url.substring(beginSearch,i);
-      if(url[i] === "/" || url[i] === "?"){
-        break;
-      }
-    }
-
+    var modelName = getModel(url);
     var relativeUrl = buildRelativeUrl("dcmo:model_0/"+modelName);
 
     ajaxCall(

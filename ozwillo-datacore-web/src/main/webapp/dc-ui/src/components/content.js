@@ -132,7 +132,7 @@ export class Content extends React.Component{
             <EditButtons setErrorMessage={this.setErrorMessage}/>
             <DeleteButton setErrorMessage={this.setErrorMessage}/>
             <ModelButton setErrorMessage={this.setErrorMessage} setUrl={this.setUrl}/>
-            <HistoricButton setErrorMessage={this.setErrorMessage}/>
+            <HistoricButton setUrl={this.setUrl} setErrorMessage={this.setErrorMessage}/>
           </div>
 
           {this.state.errorMessage ?
