@@ -86,8 +86,7 @@ export class Content extends React.Component{
       relativeUrl,
       (data) => {
         this.setUrl(relativeUrl, null);
-        //TODO: teste le cas du RDF
-        //if the current object is an array, we call displayJsonListResult
+
         if (Object.prototype.toString.call( data ) === '[object Array]' ){
           var resResourcesOrText = displayJsonListResult(data, relativeUrl);
         }
@@ -98,7 +97,7 @@ export class Content extends React.Component{
         //success(resResourcesOrText, requestToRelativeUrl(data.request), data, handlerOptions);
       },
       (xhr, ajaxOptions, thrownError) => {
-
+        this.setErrorMessage("Error accessing the current path", xhr.responseText);
       }
     );
   }
