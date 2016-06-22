@@ -1208,7 +1208,6 @@ function addPaginationLinks(request, prettyJson, resList, successFunctionName) {
          || resList.length === limit) {
       var nextStart = start + limit;
       var relativeUrl = request.path + '?start=' + nextStart + '&limit=' + limit + query;
-      console.log(request.path);
       prettyJson += lineBreak(0) + '<a href="' + relativeUrl + '" class="dclink" onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))">...</a>';
    }
 

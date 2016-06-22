@@ -15,7 +15,6 @@ export default class Menu  extends React.Component{
 
   componentDidMount(){
     $('.ui.mymenu').hide();
-    console.log("PATH"+PATH);
   }
 
   //this syntax makes an autobind of this function
