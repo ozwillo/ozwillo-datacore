@@ -5,7 +5,7 @@ export default class serverConfiguration extends React.Component{
   render() {
     return (
       <div className="center">
-        <h3>Server Configuration</h3>
+        <h2>Server Configuration</h2>
         <div className="ui segment">
           <p>
             ## Development mode (also allows to set system property datacore.dropdb=true ex. in maven)<br/>

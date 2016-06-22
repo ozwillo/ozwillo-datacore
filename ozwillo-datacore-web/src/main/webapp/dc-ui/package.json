@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "babel-plugin-transform-object-rest-spread": "^6.8.0",
     "better-console": "~0.2.4",
     "del": "~2.2.0",
     "extend": "~3.0.0",

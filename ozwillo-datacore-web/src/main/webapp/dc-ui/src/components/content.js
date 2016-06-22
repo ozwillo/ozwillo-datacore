@@ -87,7 +87,7 @@ export class Content extends React.Component{
       (data) => {
         this.setUrl(relativeUrl, null);
 
-        if (Object.prototype.toString.call( data ) === '[object Array]' ){
+        if (Object.prototype.toString.call( data ) === '[object Array]'){
           var resResourcesOrText = displayJsonListResult(data, relativeUrl);
         }
         else{
