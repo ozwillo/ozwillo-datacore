@@ -254,7 +254,7 @@ public class DatacoreApiServerTest {
     */
    @Test
    public void testCreate() {
-      testCreate("UK", "London", 10000000);
+      testCreate("UK", "London");
    }
 
    // TODO LATER
@@ -272,7 +272,7 @@ public class DatacoreApiServerTest {
     * @param city
     * @return client resource BUT NOT POSTed one (no version)
     */
-   public DCResource testCreate(String country, String city, int populationCount) {
+   public DCResource testCreate(String country, String city) {
       checkNoResource(CityCountrySample.COUNTRY_MODEL_NAME, country);
       
       DCResource ukCountryData = buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, country);
@@ -354,28 +354,21 @@ public class DatacoreApiServerTest {
    }
 
    private DCResource buildNamedData(String type, String name) {
-      DCResource resource = DCResource.create(containerUrl, type, name).set("n:name", name);
-      /*String iri = name;
-      resource.setUri(UriHelper.buildUri(containerUrl, type, iri));*/
-      //resource.setVersion(-1l);
-      /*resource.setProperty("type", type);
-      resource.setProperty("iri", iri);*/
-      return resource;
+      return DCResource.create(containerUrl, type, name)
+          .set("n:name", name);
    }
    
    private DCResource buildCityData(String name, String countryName,
          int populationCount, boolean embeddedCountry) {
       String type = CityCountrySample.CITY_MODEL_NAME;
       String iri = countryName + '/' + name;
-      DCResource cityResource = DCResource.create(containerUrl, type, iri).set("n:name", name);
-      /*DCResource cityResource = new DCResource();
-      cityResource.setUri(UriHelper.buildUri(containerUrl, type, iri));
-      cityResource.setProperty("name", name);*/
-      //cityResource.setVersion(-1l);
-      /*cityResource.setProperty("type", type);
-      cityResource.setProperty("iri", iri);*/
+      DCResource cityResource = DCResource.create(containerUrl, type, iri)
+          .set("n:name", name)
+          .set("city:i18nname", DCResource.listBuilder()
+              .add(DCResource.propertiesBuilder().put("@language", "fr").put("@value", name).build())
+              .build());
       cityResource.set("city:populationCount", populationCount);
-      cityResource.set("city:longitudeDMS", new Float(500000.234).floatValue()).set("city:latitudeDMS", "-500000"); // float & string as double
+      cityResource.set("city:longitudeDMS", 500000.234f).set("city:latitudeDMS", "-500000"); // float & string as double
       
       String countryUri = UriHelper.buildUri(containerUrl, CityCountrySample.COUNTRY_MODEL_NAME, countryName);
       if (embeddedCountry) {
@@ -394,7 +387,7 @@ public class DatacoreApiServerTest {
 
    @Test
    public void testCreateFailWithWrongLocalReferenceModel() {
-      DCResource doverCityData = testCreate("UK", "Dover", 80000);
+      DCResource doverCityData = testCreate("UK", "Dover");
       /*checkNoResource(CityCountrySample.CITY_MODEL_NAME, "UK/Dover");
       DCResource doverCityData = buildCityData("Dover", "UK", 10000000, false);
       doverCityData = datacoreApiClient.postDataInType(doverCityData, CityCountrySample.CITY_MODEL_NAME);*/
@@ -528,7 +521,7 @@ public class DatacoreApiServerTest {
 
    @Test
    public void testClientCache() throws Exception {
-      String bordeauxUriToEvict = testCreate("France", "Bordeaux", 300000).getUri();
+      String bordeauxUriToEvict = testCreate("France", "Bordeaux").getUri();
       resourceCache.evict(getCacheId(bordeauxUriToEvict)); // create with country but clean cache
 
       try {

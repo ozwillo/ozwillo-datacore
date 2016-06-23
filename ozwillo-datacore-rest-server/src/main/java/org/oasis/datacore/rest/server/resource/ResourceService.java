@@ -4,10 +4,7 @@ import org.oasis.datacore.common.context.DCRequestContextProviderFactory;
 import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
-import org.oasis.datacore.core.meta.model.DCField;
-import org.oasis.datacore.core.meta.model.DCModelBase;
-import org.oasis.datacore.core.meta.model.DCModelService;
-import org.oasis.datacore.core.meta.model.DCSecurity;
+import org.oasis.datacore.core.meta.model.*;
 import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.core.security.EntityPermissionService;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
@@ -96,7 +93,7 @@ public class ResourceService {
    
    /** helper method to create (fluently) new Resources FOR TESTING */
    public DCResource create(String modelType, String id) {
-      DCResource r = DCResource.create(uriService.getContainerUrl(), modelType, id);
+      DCResource r = DCResource.create(UriService.getContainerUrl(), modelType, id);
       // init iri field :
       // TODO NO rather using creation (or builder) event hooked behaviours
       /*DCModel model = modelService.getModel(modelType);
@@ -762,6 +759,24 @@ public class ResourceService {
 
          case "string":
             return (String) resource.get(fieldName);
+
+         case "i18n":
+            DCI18nField dci18nField = (DCI18nField) field;
+            String defaultLanguage = dci18nField.getDefaultLanguage() != null ?
+                dci18nField.getDefaultLanguage() : DCI18nField.DEFAULT_LANGUAGE;
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> fieldValues = (List<Map<String, Object>>) resource.get(fieldName);
+            Optional<Map<String, Object>> optI18nField = fieldValues.stream()
+                .filter(entry -> {
+                   String language = (String) entry.get(DCI18nField.KEY_LANGUAGE);
+                   return language != null && language.toLowerCase().equals(defaultLanguage.toLowerCase());
+                })
+                .findFirst();
+            if (!optI18nField.isPresent())
+               throw new FieldMappingException("Did not find " + defaultLanguage + " version of "
+                  + " URI-structural field " + fieldName);
+
+            return (String) optI18nField.get().get(DCI18nField.KEY_VALUE);
 
          default:
             throw new FieldMappingException("Field type " + fieldName + " not supported in a structural field");
