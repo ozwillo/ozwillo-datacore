@@ -151,7 +151,7 @@ public class DCResource {
     * @throws URISyntaxException */
    public static DCResource create(String containerUrl, String modelType, String id,
          boolean dontEncodePathElements) throws URISyntaxException {
-      return DCResource.create(new URI(containerUrl), modelType, id, false);
+      return DCResource.create(new URI(containerUrl), modelType, id, dontEncodePathElements);
    }
    public static DCResource create(URI containerUrl, String modelType, String id, boolean dontEncodePathElements) {
       DCResource resource = new DCResource();
