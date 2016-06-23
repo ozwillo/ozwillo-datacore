@@ -15,7 +15,7 @@ export default class Reading extends React.Component{
     return (
       <div className="row ui segment reading segmentpadding">
         {/*we pass the function to children in this particular way because of this.props.reading, wich is waiting for a function as props*/}
-        {React.cloneElement(this.props.reading, { callAPIUpdatePlaygroundOnClick: this.props.callAPIUpdatePlaygroundOnClick })}
+        {React.cloneElement(this.props.reading, { callAPIUpdatePlaygroundOnClick: this.props.callAPIUpdatePlaygroundOnClick, tools: this.props.tools })}
       </div>
     );
   }

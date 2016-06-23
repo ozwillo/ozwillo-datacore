@@ -87,7 +87,7 @@ export class Content extends React.Component{
       (data) => {
         this.setUrl(relativeUrl, null);
 
-        if (Object.prototype.toString.call( data ) === '[object Array]'){
+        if (Object.prototype.toString.call(data) === '[object Array]'){
           var resResourcesOrText = displayJsonListResult(data, relativeUrl);
         }
         else{
@@ -100,6 +100,15 @@ export class Content extends React.Component{
         this.setErrorMessage("Error accessing the current path", xhr.responseText);
       }
     );
+  }
+
+  /*Return some services wrapped in a dict, to pass to linkPlayground esaily*/
+  tools = () => {
+    return {
+      callAPIUpdatePlaygroundOnClick: this.callAPIUpdatePlaygroundOnClick,
+      setUrl: this.setUrl,
+      setErrorMessage: this.setErrorMessage
+    }
   }
 
   render() {
@@ -140,7 +149,7 @@ export class Content extends React.Component{
 
           <CodeView currentJson={this.props.currentJson} codeView={this.props.codeView}/>
 
-          <Reading reading={this.props.reading} callAPIUpdatePlaygroundOnClick={this.callAPIUpdatePlaygroundOnClick}/>
+          <Reading reading={this.props.reading} tools={this.tools} callAPIUpdatePlaygroundOnClick={this.callAPIUpdatePlaygroundOnClick}/>
         </div>
       </div>
     );
