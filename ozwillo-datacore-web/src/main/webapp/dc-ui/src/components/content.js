@@ -81,7 +81,6 @@ export class Content extends React.Component{
   callAPIUpdatePlayground = (relativeUrl) => {
     //TODO: encode URI
     var reactParent = this;
-
     ajaxCall(
       relativeUrl,
       (data) => {

@@ -31,6 +31,10 @@ class EditButtons extends React.Component{
     this.putOrPostButton("POST");
   }
 
+  extractURIFromId = (id) => {
+    return id.substring(id.indexOf("/dc/"), id.lenght);
+  }
+
   putOrPostButton = (requestType) => {
     var relativeUrl = this.props.currentPath;
     ajaxCall(
@@ -42,7 +46,8 @@ class EditButtons extends React.Component{
         else{
           var resource = displayJsonObjectResult(data);
         }
-        this.props.dispatch(actions.setCurrentQueryPath(relativeUrl));
+        
+        this.props.dispatch(actions.setCurrentQueryPath(this.extractURIFromId(data[0]["@id"])));
         this.props.dispatch(actions.setCurrentDisplay(resource));
       },
       (xhr) => {
