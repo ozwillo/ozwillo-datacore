@@ -208,7 +208,11 @@ public class ResourceModelTest {
       // (while testing java to resource methods and back)
       // checking that putting a Resource without city:founded is for now OK
       DCResource villeurbanneCity = resourceService.create(CityCountrySample.CITY_MODEL_NAME, "France/Villeurbanne")
-            .set("n:name", "Villeurbanne").set("city:inCountry", getFranceCountry().getUri());
+            .set("n:name", "Villeurbanne")
+            .set("city:inCountry", getFranceCountry().getUri())
+            .set("city:i18nname", DCResource.listBuilder()
+              .add(DCResource.propertiesBuilder().put("@language", "fr").put("@value", "Villeurbanne").build())
+              .build());
       deleteExisting(villeurbanneCity);
       
       villeurbanneCity = datacoreApiClient.postDataInType(villeurbanneCity);

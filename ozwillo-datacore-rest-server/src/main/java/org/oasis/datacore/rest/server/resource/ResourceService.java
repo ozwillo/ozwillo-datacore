@@ -98,7 +98,7 @@ public class ResourceService {
    
    /** helper method to create (fluently) new Resources FOR TESTING */
    public DCResource create(String modelType, String id) {
-      DCResource r = DCResource.create(uriService.getContainerUrl(), modelType, id);
+      DCResource r = DCResource.create(UriService.getContainerUrl(), modelType, id);
       // init iri field :
       // TODO NO rather using creation (or builder) event hooked behaviours
       /*DCModel model = modelService.getModel(modelType);
@@ -769,12 +769,12 @@ public class ResourceService {
          case "long":
          case "double":
          case "date":
-         try {
-            return valueParsingService.valueToString(resource.get(fieldName));
-         } catch (ResourceParsingException e) {
-            throw new RuntimeException("While checking for aliases of " + fieldName
-                  + " structural field, error writing its value " + resource.get(fieldName));
-         }
+            try {
+               return valueParsingService.valueToString(resource.get(fieldName));
+            } catch (ResourceParsingException e) {
+               throw new RuntimeException("While checking for aliases of " + fieldName
+                   + " structural field, error writing its value " + resource.get(fieldName));
+            }
 
          case "i18n":
             String defaultLanguageValue = resourceEntityMapperService.getDefaultLanguageValue(resource, (DCI18nField) field, model);

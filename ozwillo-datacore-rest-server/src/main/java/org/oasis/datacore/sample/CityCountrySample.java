@@ -75,10 +75,13 @@ public class CityCountrySample extends DatacoreSampleBase {
       cityModel.addField(new DCI18nField(ResourceModelIniter.DISPLAYABLE_NAME_PROP, 100, ResourceModelIniter.DISPLAYABLE_NAME_PROP, true));
       cityModel.addField(new DCI18nField("i18n:name", 100, ResourceModelIniter.DISPLAYABLE_NAME_PROP, true));
       cityModel.getField("i18n:name").setFulltext(true); // i18n fulltext example ; NB. requires queryLimit > 0
-      cityModel.addField(new DCI18nField("city:i18nname", 100, new LinkedHashSet<String>(new ImmutableSet.Builder<String>()
-            .add(ResourceModelIniter.DISPLAYABLE_NAME_PROP).add("i18n:name").build())));
+      cityModel.addField(
+          new DCI18nField("city:i18nname", 100,
+              new LinkedHashSet<>(new ImmutableSet.Builder<String>().add(ResourceModelIniter.DISPLAYABLE_NAME_PROP).add("i18n:name").build()))
+              .setDefaultLanguage("fr"));
       // more complete Resource sample (may be used also as embedded referenced Resource) :
       cityModel.getField("city:i18nname").setFulltext(true); // i18n fulltext example (REQUIRED because i18n readonly)
+      cityModel.getField("city:i18nname").setRequired(true);
       cityModel.addField(new DCListField("city:pointsOfInterest",
             new DCResourceField("zzz", POI_MODEL_NAME))); // sample of
       // embedded referencing Resource (city:pointsOfInterest) using POI model :
@@ -100,10 +103,10 @@ public class CityCountrySample extends DatacoreSampleBase {
             .addField(new DCI18nField("city:historicalEventName", 0))));
 
        // set id fields = [country, name], e.g. /France/Lyon and enforce that on update
-      cityModel.setIdFieldNames(ImmutableList.of("city:inCountry", "n:name"));
+      cityModel.setIdFieldNames(ImmutableList.of("city:inCountry", "city:i18nname"));
       cityModel.setEnforceIdFieldNames(true);
 
-      modelsToCreate.addAll(Arrays.asList((DCModelBase) poiModel, commonModel, cityModel, countryModel, cityLegalInfoMixin));
+      modelsToCreate.addAll(Arrays.asList(poiModel, commonModel, cityModel, countryModel, cityLegalInfoMixin));
    }
 
    public void fillData() {
@@ -129,9 +132,15 @@ public class CityCountrySample extends DatacoreSampleBase {
       postDataInType(monument);
 
       DCResource lyonCity = resourceService.create(CITY_MODEL_NAME, "France/Lyon")
-            .set("n:name", "Lyon").set("city:inCountry", franceCountry.getUri())
+            .set("n:name", "Lyon")
+            .set("city:inCountry", franceCountry.getUri())
             .set("city:populationCount", 500000)
-            .set("city:longitudeDMS", new Float(500000.234).doubleValue()).set("city:latitudeDMS", "-500000"); // float & string as double
+            .set("city:longitudeDMS", new Float(500000.234).doubleValue())
+            .set("city:latitudeDMS", "-500000") // float & string as double
+            .set("city:i18nname", DCResource.listBuilder()
+                 .add(DCResource.propertiesBuilder().put("@language", "fr").put("@value", "Lyon").build())
+                 .add(DCResource.propertiesBuilder().put("@language", "en").put("@value", "Lyon").build())
+                 .build());
       DCResource londonCity = resourceService.create(CITY_MODEL_NAME, "UK/London")
             .set("n:name", "London").set("city:inCountry", ukCountry.getUri())
             .set("city:populationCount", 10000000)
@@ -148,6 +157,7 @@ public class CityCountrySample extends DatacoreSampleBase {
                   .add(DCResource.propertiesBuilder().put("@language", "it").put("@value", "Torino").build())
                   .build())
             .set("city:pointsOfInterest", DCResource.listBuilder().add(view.getUri()).add(monument.getUri()).build());
+
       DCResource moscowCity = resourceService.create(CITY_MODEL_NAME, "Russia/Moscow")
             .set("n:name", "Moscow").set("city:inCountry", russiaCountry.getUri())
             .set("city:populationCount", 10000000).set("city:founded", new DateTime(1147, 4, 4, 0, 0, DateTimeZone.UTC).toString())
@@ -198,7 +208,9 @@ public class CityCountrySample extends DatacoreSampleBase {
                   resourceService.create(CITYLEGALINFO_MIXIN_NAME, "France/Paris/city:legalInfo")
                   .set("cityli:legalInfo1", "Some Paris legal info"))
             .set("city:pointsOfInterest", DCResource.listBuilder()
-                  .add(tourEiffelPoi).add(louvresPoi).build()); // .toMap()
+                  .add(tourEiffelPoi).add(louvresPoi).build()) // .toMap()
+            .set("city:i18nname", DCResource.listBuilder().add(DCResource.propertiesBuilder()
+                  .put("@language", "fr").put("@value", "Paris").build()).build());
       tourEiffelPoi = postDataInType(tourEiffelPoi);
       louvresPoi = postDataInType(louvresPoi);
       parisCity = postDataInType(parisCity);
