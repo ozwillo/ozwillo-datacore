@@ -26,12 +26,14 @@ class NavBar extends React.Component{
       project
     );
 
-    var display = "";
+    var display = '<a onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))"\
+      href="/dc/type/dcmp:Project_0/'+project+'" class="dclink">'+project+'</a>\'s storage models & their stored models :<br/>';
+
     //we print the models
     for(var model of models){
       var modelName = getModelFromModel(model["@id"]);
       display += '- <a onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))"\
-       href="/dc/type/dcmo:model_0/'+modelName+'" class="dclink">'+modelName+'</a> and <a\
+        href="/dc/type/dcmo:model_0/'+modelName+'" class="dclink">'+modelName+'</a> and <a\
         onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))" \
         href="/dc/type/'+modelName+'" class="dclink">all their resources</a> <br/>';
     }
