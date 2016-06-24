@@ -1,4 +1,3 @@
-//var containerUrl = "http://data.ozwillo.com/"; // rather in dcConf filled at init by /dc/playground/configuration
 
 
 //////////////////////////////////////////////////:
@@ -460,7 +459,7 @@ function toolifyDcListOrResource(valuesOrResource) {
 }
 
 function toolifyDcResourcePartial(resources, rowNb) {
-   var partialRes = getPartial(resources, rowNb);
+   var partialRes = artial(resources, rowNb);
    return toolifyDcResource(partialRes.res, 0) + ((partialRes.isPartial) ? '<br/>...' : '');
 }
 function stringifyPartial(arrayOrHashmap, rowNb) {
@@ -574,7 +573,6 @@ function requestToRelativeUrl(request) {
 }
 
 function getProject() {
-
   return window.getCurrentProject();
 }
 
@@ -598,7 +596,7 @@ function buildProjectPortalQuery(options) {
    }
    return query;
 }
-function buildProjectPortalQueryLink(options, linkText) {
+function Link(options, linkText) {
    return '<a href="/dc/type/' + buildProjectPortalQuery(options) + '" class="dclink" onclick="'
       + 'javascript:return ta($(this).attr(\'href\'), projectPortalSuccess, null, null, 25, {\'X-Datacore-View\':\'-\'}, '
       + (options ? stringifyForAttribute(options) : 'null') + ');">' + linkText + '</a>';
@@ -629,16 +627,27 @@ function buildProjectPortalTitleHtml(options) {
    html += ' :<br/>';
    return html;
 }
+
+function setCurrentDisplay(currentJson) {
+  return {
+    type: 'SET_CURRENT_DISPLAY',
+    currentJson: currentJson,
+    codeView: "classic"
+  }
+}
+
 function projectPortalSuccess(storageModels, relativeUrl, data, options) {
-   setUrl(relativeUrl); // because not set in ta because it uses this custom handler
    setError('');
    var html = buildListOfStorageModelLinks(storageModels);
    html = addPaginationLinks(data.request, html, storageModels,
            'function (storageModels, relativeUrl, data) { projectPortalSuccess(storageModels, relativeUrl, data, '
            + stringifyForAttribute(options) + '); }');
+
    html = buildProjectPortalTitleHtml(options) + html;
-   $('.mydata').html(html);
+
+   //window.store.dispatch(setCurrentDisplayRDF(html));
 }
+
 function buildListOfStorageModelLinks(models) {
    var html = '';
    for (var mInd in models) {
@@ -699,7 +708,7 @@ function buildListOfStorageModelLinks(models) {
 // optionalHeaders : 'Accept':'text/x-nquads' for RDF, 'X-Datacore-View', 'X-Datacore-Project'...
 // handlerOptions : business options to pass to (outside call conf i.e. path / query / headers
 // which will be in data._request anyway)
-function taByType(relativeUrl, success, error, start, limit, optionalHeaders, handlerOptions) {
+function findDataByType(relativeUrl, success, error, start, limit, optionalHeaders, handlerOptions) {
    if (typeof relativeUrl === 'string') {
       // NB. modelType should be encoded as URIs, BUT must be decoded before used as GET URI
       // because swagger.js re-encodes
@@ -771,9 +780,12 @@ function getData(relativeUrl, success, error, optionalHeaders, handlerOptions) {
    if (typeof relativeUrl === 'string') {
       // NB. modelType should be encoded as URIs, BUT must be decoded before used as GET URI
       // because swagger.js re-encodes (for resourceId, per path element because __unencoded__-prefixed per hack)
+
       relativeUrl = parseUri(relativeUrl);
+      relativeUrl.id = relativeUrl.query;
+      console.log(relativeUrl);
    }
-   setUrl(relativeUrl, success);
+
    var swaggerParams = {type:relativeUrl.modelType, __unencoded__iri:relativeUrl.id,
            'If-None-Match':-1, Authorization:getAuthHeader()};
    var supplParams = null; // handlerOptions == null ? null : {parent:handlerOptions}; // NO else no error callback
@@ -803,12 +815,14 @@ function getData(relativeUrl, success, error, optionalHeaders, handlerOptions) {
          setError('');
       }
    };
+
    var myError = function(data) {
       setError(data._body._body);
       if (error) {
          error(data, relativeUrl, handlerOptions);
       }
    };
+
    var dcApiFunction = dcApi.dc.getData;
    if (relativeUrl.version != null && typeof relativeUrl.version !== 'undefined') { // NOT (version) which is false
       dcApiFunction = dcApi.dc.findHistorizedResource;
@@ -821,6 +835,7 @@ function getData(relativeUrl, success, error, optionalHeaders, handlerOptions) {
    } else {
       dcApiFunction(swaggerParams, mySuccess, myError);
    }
+
    return false;
 }
 // relativeUrl must be an encoded URI (encode it using builUri and buildUriQuery)

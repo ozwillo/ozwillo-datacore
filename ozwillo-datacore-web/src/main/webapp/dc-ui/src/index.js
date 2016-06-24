@@ -33,6 +33,7 @@ const initialState = {
 
 
 let store = createStore(playground, initialState);
+window.store = store;
 
 ReactDOM.render(
   <Provider store={store}>

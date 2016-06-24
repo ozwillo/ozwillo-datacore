@@ -35,7 +35,7 @@ export default class Menu  extends React.Component{
   render(){
     return (
       <div className="four wide column center aligned groupementmenu" onMouseLeave={this.outMenu}>
-        <div className="ui white big launch button menubutton" onMouseEnter={this.enterButton}>
+        <div className="ui white big launch blue basic button menubutton" onMouseEnter={this.enterButton}>
           <i className="content icon"></i>
           <span className="text">Menu</span>
         </div>

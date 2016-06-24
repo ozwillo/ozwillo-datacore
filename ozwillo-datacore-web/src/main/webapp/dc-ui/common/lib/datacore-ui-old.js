@@ -233,6 +233,7 @@
           // ex. "https%3A%2F%2Fwww.10thingstosee.com%2Fmedia%2Fphotos%2Ffrance-778943_HjRL4GM.jpg
           uri += '/' + encodedId;
       }
+      
       if (!query) {
          query = null;
       }
@@ -575,15 +576,17 @@ function getProject() {
    }
    return window.currentProject;
 }
+
 function setProject(newProject) {
    window.currentProject = newProject;
-
    initProjectPortal();
 }
+
 function initProjectPortal(options) {
    findData(buildProjectPortalQuery(options), projectPortalSuccess,
          null, null, 25, {'X-Datacore-View':'-'}, options);
 }
+
 function buildProjectPortalQuery(options) {
    var query = 'dcmo:model_0?';
    if (!options || !options.pureMixins || options.storageModels) {
@@ -808,6 +811,9 @@ function findData(relativeUrl, success, error, start, limit, optionalHeaders, ha
    }
    return getData(relativeUrl, success, error, optionalHeaders, handlerOptions);
 }
+
+
+
 function getPreviousData(relativeUrl, success, error, optionalHeaders, handlerOptions) {
    var historyUrl;
    if (typeof relativeUrl === 'string') {
