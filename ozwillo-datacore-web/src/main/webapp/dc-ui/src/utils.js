@@ -2,7 +2,6 @@
 export function ajaxCall(relativeUrl, currentSuccess, currentError, additionalHeaders, operation, data, currentProject){
   var currentOperation = operation !== null ? operation: 'GET';
   var currentProject = currentProject ? currentProject : getProject();
-
   var headers = {
     'Authorization' : "Basic YWRtaW46YWRtaW4=",
     'If-None-Match': -1,
@@ -21,9 +20,12 @@ export function ajaxCall(relativeUrl, currentSuccess, currentError, additionalHe
   });
 }
 
-export function synchronousCall(relativeUrl, currentSuccess, currentError, additionalHeaders, operation, data){
+export function synchronousCall(relativeUrl, currentSuccess, currentError, additionalHeaders, operation, data, currentProject){
   var currentOperation = operation !== null ? operation: 'GET';
+
+  console.log("avant"+currentProject);
   var currentProject = currentProject ? currentProject : getProject();
+  console.log("apres"+currentProject);
 
   var headers = {
     'Authorization' : "Basic YWRtaW46YWRtaW4=",
