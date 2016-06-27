@@ -23,6 +23,21 @@ class App extends React.Component{
         context: '#mainContainer'
       })
     ;
+
+    $(window).scroll(function () {
+      if ($(this).scrollTop() > 150) {
+              $('.goTop').addClass('show');
+          } else {
+              $('.goTop').removeClass('show');
+          }
+    });
+  }
+
+
+  goToTop = () => {
+    $("html, body").animate({
+        scrollTop: 0
+    }, 600);
   }
 
   render() {
@@ -32,9 +47,9 @@ class App extends React.Component{
         <div className="ui container stackable grid" id="mainContainer">
           <Menu/>
           <Content reading={this.props.children}/>
-          <div className="button ui sticky">
-            <a href="#">Remonter</a>
-            <i className="Arrow Up"></i>
+
+          <div className="ui icon button goTop" onClick={this.goToTop}>
+            <i className="arrow up icon centered"></i>
           </div>
         </div>
       </div>

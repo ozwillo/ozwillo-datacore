@@ -108,3 +108,15 @@ pre{
   opacity: 0.01;
   transition: opacity 0.100s !important;
 }
+
+.goTop{
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 60px !important;
+  transition: opacity 0.2s ease-out;
+  opacity: 0;
+}
+
+.goTop.show {
+    opacity: 1;
+}
