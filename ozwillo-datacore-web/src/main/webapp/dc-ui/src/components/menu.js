@@ -15,14 +15,21 @@ export default class Menu  extends React.Component{
 
   componentDidMount(){
     $('.ui.mymenu').hide();
-  }
 
+    $('.menubutton').dropdown({
+     onChange: function(val) {
+       $('.menubutton')
+         .dropdown('set text', "Menu")
+       ;
+      }
+    });
+  }
 
   render(){
     return (
-      <div className="ui four wide column">
-        <div className="ui sticky groupementmenu">
-          <div className="ui white dropdown big launch blue basic button menubutton center aligned container">
+      <div className="ui four wide column centered grid">
+        <div className="ui center sticky groupementmenu">
+          <div className="ui center column white dropdown big launch blue basic button menubutton center aligned container">
             <i className="content icon"></i>
             <span className="text">Menu</span>
             <ConnectedMenuDepliant/>
@@ -36,7 +43,7 @@ export default class Menu  extends React.Component{
 class MenuDepliant extends React.Component{
   render(){
     return(
-      <div className="ui hidden vertical compact menu mymenu">
+      <div className="ui myCentering hidden vertical compact menu mymenu">
         {this.props.menuItems.map((menuItem, i) => {
           return <ConnectedMenuElement ElementMenu={menuItem} key={i}/>;
         }, this)}
