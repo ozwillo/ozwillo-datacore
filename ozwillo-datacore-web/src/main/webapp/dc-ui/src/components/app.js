@@ -17,11 +17,20 @@ class App extends React.Component{
     return this.props.currentProject;
   }
 
+  componentDidMount = () => {
+    $('.ui.sticky')
+      .sticky({
+        context: '#mainContainer'
+      })
+    ;
+    
+  }
+
   render() {
     return (
       <div>
         <NavBar projects={getAllProjects()}/>
-        <div className="ui container stackable grid">
+        <div className="ui container stackable grid" id="mainContainer">
           <Menu/>
           <Content reading={this.props.children}/>
         </div>

@@ -17,29 +17,17 @@ export default class Menu  extends React.Component{
     $('.ui.mymenu').hide();
   }
 
-  //this syntax makes an autobind of this function
-  enterButton = () => {
-    if(this.state.hidden == true){
-      $('.ui.mymenu').transition('fade right');
-      this.setState({hidden: false, onButton: true});
-    }
-  }
-
-  outMenu = () => {
-    if(this.state.hidden == false){
-      $('.ui.mymenu ').transition('fade right');
-      this.setState({hidden: true});
-    }
-  }
 
   render(){
     return (
-      <div className="four wide column center aligned groupementmenu" onMouseLeave={this.outMenu}>
-        <div className="ui white big launch blue basic button menubutton" onMouseEnter={this.enterButton}>
-          <i className="content icon"></i>
-          <span className="text">Menu</span>
+      <div className="ui four wide column">
+        <div className="ui sticky groupementmenu">
+          <div className="ui white dropdown big launch blue basic button menubutton center aligned container">
+            <i className="content icon"></i>
+            <span className="text">Menu</span>
+            <ConnectedMenuDepliant/>
+          </div>
         </div>
-        <ConnectedMenuDepliant/>
       </div>
     );
   }
