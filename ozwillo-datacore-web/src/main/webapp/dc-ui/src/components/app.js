@@ -23,7 +23,6 @@ class App extends React.Component{
         context: '#mainContainer'
       })
     ;
-    
   }
 
   render() {
@@ -33,6 +32,10 @@ class App extends React.Component{
         <div className="ui container stackable grid" id="mainContainer">
           <Menu/>
           <Content reading={this.props.children}/>
+          <div className="button ui sticky">
+            <a href="#">Remonter</a>
+            <i className="Arrow Up"></i>
+          </div>
         </div>
       </div>
     );
