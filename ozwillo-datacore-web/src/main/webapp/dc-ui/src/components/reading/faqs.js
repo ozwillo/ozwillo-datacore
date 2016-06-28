@@ -1,4 +1,5 @@
 import React from 'react';
+import LinkPlayground from '../linkPlayground.js';
 
 export default class faqs extends React.Component{
   render() {

@@ -43,6 +43,7 @@ export default class ExploreModelsProjects extends React.Component{
                   <li><LinkPlayground tools={this.props.tools} url="/dc/type/dcmo:model_0/cityareauseit:urbanAreaDestinationOfUse_0" value="cityareauseit:urbanAreaDestinationOfUse_0" /></li>
                   <li><LinkPlayground tools={this.props.tools} url="/dc/type/cityarea:cityArea_0" value="cityarea:cityArea_0" /></li>
                 </ul>
+                <br />
                 They can then be queried by country, for instance by:
                 <ul>
                   <li>GET <LinkPlayground tools={this.props.tools} url="/dc/type/plo:country_0" value="/dc/type/plo:country_0" /></li>
@@ -50,9 +51,10 @@ export default class ExploreModelsProjects extends React.Component{
                   <li>GET <LinkPlayground tools={this.props.tools} url="/dc/type/co:company_0" value="/dc/type/co:company_0" /></li>
                   <li>GET <LinkPlayground tools={this.props.tools} url="/dc/type/cityareauseit:urbanAreaDestinationOfUse_0" value="/dc/type/cityareauseit:urbanAreaDestinationOfUse_0" /></li>
                   <li>GET <LinkPlayground tools={this.props.tools} url="/dc/type/cityarea:cityArea_0" value="/dc/type/cityarea:cityArea_0" /></li>
+                  <li>Test</li>
                 </ul>
               </li>
-            </ul>
+        </ul>
 
             <h4>Here are the generic projects :</h4>
             <ul>
@@ -61,7 +63,6 @@ export default class ExploreModelsProjects extends React.Component{
               <li><a className="project">oasis.sample</a> contains unit test technical samples</li>
               <li><a className="project">oasis.sandbox</a> can be used by anyone to test the Datacore with its own models and resources, especially in the Import UI</li>
             </ul>
-
 
             <h4>Here are some of the most often reused projects :</h4>
             <ul>

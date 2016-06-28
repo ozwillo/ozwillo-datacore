@@ -1,4 +1,5 @@
 import React from 'react';
+import LinkPlayground from '../linkPlayground.js';
 
 export default class apiDetails extends React.Component{
 
@@ -42,12 +43,12 @@ export default class apiDetails extends React.Component{
           </li>
           <li>
               i18n as a list of translation objects (like JSONLD), for instance : [{JSON.stringify(jsonTorino) }, {JSON.stringify(jsonTurin) }].
-              It allows language-agnostic lookups such as <a className="playground">/dc/type/pli:city_0?pli:name_i18n=Torino</a>
-              (or using the exact field path <a className="playground">/dc/type/pli:city_0?pli:name_i18n.v=Torino</a>) so that values are
+              It allows language-agnostic lookups such as <LinkPlayground tools={this.props.tools} url="/dc/type/pli:city_0?pli:name_i18n=Torino" value="/dc/type/pli:city_0?pli:name_i18n=Torino" />
+              (or using the exact field path <LinkPlayground tools={this.props.tools} url="/dc/type/pli:city_0?pli:name_i18n.v=Torino" value="/dc/type/pli:city_0?pli:name_i18n.v=Torino" />) so that values are
               useful even if not untranslated and therefore are not siloed in their language, but also language-scoped lookups
-              such as <a className="playground">/dc/type/pli:city_0?pli:name_i18n.it=Torino</a> (or using the exact field path through $elemMatch
-              <a className="playground">/dc/type/pli:city_0?pli:name_i18n=$elemMatch{JSON.stringify(jsonTorino) }</a> ). Moreover, language can also be specified once
-              for the whole query in a l or @language parameter such as in <a className="playground">/dc/type/pli:city_0?pli:name_i18n=Torino&l=it</a>.
+              such as <LinkPlayground tools={this.props.tools} url="/dc/type/pli:city_0?pli:name_i18n.it=Torino" value="/dc/type/pli:city_0?pli:name_i18n.it=Torino" /> (or using the exact field path through $elemMatch
+              <LinkPlayground tools={this.props.tools} url='/dc/type/pli:city_0?pli:name_i18n=$elemMatch{"v":"Torino","l":"it"}' value='/dc/type/pli:city_0?pli:name_i18n=$elemMatch{"v":"Torino","l":"it"}' /> ). Moreover, language can also be specified once
+              for the whole query in a l or @language parameter such as in <LinkPlayground tools={this.props.tools} url="/dc/type/pli:city_0?pli:name_i18n=Torino&l=it" value="/dc/type/pli:city_0?pli:name_i18n=Torino&l=it" />.
               Beyond such exact lookups, all string operators can be used, and most usefully $fulltext (must be explicitly enabled on the field)
               and $regex.
           </li>
