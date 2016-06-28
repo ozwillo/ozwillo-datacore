@@ -14,6 +14,6 @@ class InputCurrentPath extends React.Component{
   }
 }
 const mapStateToPropsInputCurrentPath = (state/*, props*/) => ({
-    currentPath: state.currentPath
+    currentPath: decodeURIComponent(state.currentPath)
 })
 export default InputCurrentPath = connect(mapStateToPropsInputCurrentPath)(InputCurrentPath);

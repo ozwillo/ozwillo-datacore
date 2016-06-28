@@ -101,7 +101,7 @@ export class Content extends React.Component{
     );
   }
 
-  /*Return some services wrapped in a dict, to pass to linkPlayground esaily*/
+  /*Return some services wrapped in a dict, to pass to linkPlayground easily*/
   tools = () => {
     return {
       callAPIUpdatePlaygroundOnClick: this.callAPIUpdatePlaygroundOnClick,
