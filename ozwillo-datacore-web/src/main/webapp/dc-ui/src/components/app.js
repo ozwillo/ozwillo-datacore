@@ -33,7 +33,6 @@ class App extends React.Component{
     });
   }
 
-
   goToTop = () => {
     $("html, body").animate({
         scrollTop: 0
@@ -46,7 +45,7 @@ class App extends React.Component{
         <NavBar projects={getAllProjects()}/>
         <div className="ui container stackable grid" id="mainContainer">
           <Menu/>
-          <Content reading={this.props.children}/>
+          <Content reading={this.props.children} goToTop={this.goToTop}/>
 
           <div className="ui icon button goTop" onClick={this.goToTop}>
             <i className="arrow up icon centered"></i>

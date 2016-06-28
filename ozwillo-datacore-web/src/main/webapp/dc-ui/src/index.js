@@ -41,7 +41,7 @@ ReactDOM.render(
       <Route component={App}>
         <Route path={PATH} component={UserManual}/>
         {initialState.readings.map(function(reading, i){
-          return <Route path={PATH+reading.path} component={reading.component} key={i}/>;
+          return <Route path={PATH+reading.path} component={reading.component} key={reading.id}/>;
         }, this)}
       </Route>
     </Router>

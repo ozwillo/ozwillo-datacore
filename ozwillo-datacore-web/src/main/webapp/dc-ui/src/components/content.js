@@ -106,7 +106,8 @@ export class Content extends React.Component{
     return {
       callAPIUpdatePlaygroundOnClick: this.callAPIUpdatePlaygroundOnClick,
       setUrl: this.setUrl,
-      setErrorMessage: this.setErrorMessage
+      setErrorMessage: this.setErrorMessage,
+      goToTop: this.props.goToTop
     }
   }
 
@@ -131,24 +132,26 @@ export class Content extends React.Component{
             </div>
           </div>
           <div className="row ui centered">
-            <GetButton callAPIUpdatePlayground={this.callAPIUpdatePlayground} setErrorMessage={this.setErrorMessage}/>
-            <ListButton setErrorMessage={this.setErrorMessage}/>
-            <DCButton setErrorMessage={this.setErrorMessage}/>
-            <DebugButton setErrorMessage={this.setErrorMessage}/>
-            <RDFButton setErrorMessage={this.setErrorMessage}/>
-            <EditButtons setErrorMessage={this.setErrorMessage}/>
-            <DeleteButton setErrorMessage={this.setErrorMessage}/>
-            <ModelButton setErrorMessage={this.setErrorMessage} setUrl={this.setUrl}/>
-            <HistoricButton setUrl={this.setUrl} setErrorMessage={this.setErrorMessage}/>
+            <GetButton callAPIUpdatePlayground={this.callAPIUpdatePlayground} setErrorMessage={this.setErrorMessage} />
+            <ListButton setErrorMessage={this.setErrorMessage} />
+            <DCButton setErrorMessage={this.setErrorMessage} />
+            <DebugButton setErrorMessage={this.setErrorMessage} />
+            <RDFButton setErrorMessage={this.setErrorMessage} />
+            <EditButtons setErrorMessage={this.setErrorMessage} />
+            <DeleteButton setErrorMessage={this.setErrorMessage} />
+            <ModelButton setErrorMessage={this.setErrorMessage} setUrl={this.setUrl} />
+            <HistoricButton setUrl={this.setUrl} setErrorMessage={this.setErrorMessage} />
           </div>
 
           {this.state.errorMessage ?
-            <MessageErrorPath setParentState={this.setCurrentState} message={this.state.messageError} messageErrorDetails={this.state.messageErrorDetails}/>
+            <MessageErrorPath setParentState={this.setCurrentState} message={this.state.messageError} messageErrorDetails={this.state.messageErrorDetails} />
            : null}
 
-          <CodeView currentJson={this.props.currentJson} codeView={this.props.codeView}/>
+          <CodeView currentJson={this.props.currentJson} codeView={this.props.codeView} />
 
-          <Reading reading={this.props.reading} tools={this.tools} callAPIUpdatePlaygroundOnClick={this.callAPIUpdatePlaygroundOnClick}/>
+          <Reading reading={this.props.reading}
+            tools={this.tools} callAPIUpdatePlaygroundOnClick={this.callAPIUpdatePlaygroundOnClick}
+          />
         </div>
       </div>
     );
