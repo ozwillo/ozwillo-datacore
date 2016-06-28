@@ -72,7 +72,8 @@ export default class faqs extends React.Component{
             in which case log out and in again or wait for 5 minutes. Otherwise, check that you have the rights to do that or patch them,
             see below.</li>
           <li className="listespace"><strong>How to see Resource-level permissions using the Playground</strong> : Resource-level permissions are returned when querying as owner (or admin) in
-            debug mode. Therefore to check them in the Playground, go to the said Resource by entering ex. <a className="playground">/dc/type/poitour:Geoloc_0/32949</a> in the
+            debug mode. Therefore to check them in the Playground, go to the said Resource by entering ex.
+            <LinkPlayground tools={this.props.tools} url="/dc/type/poitour:Geoloc_0/32949" value="/dc/type/poitour:Geoloc_0/32949" /> in the
             Playground URI address bar, then click on the colon (":") of the URI field (@id) to build a single result query such as this one, then
             go in debug mode by clicking on the "?" button, and finally look in the results for the "ownedEntities" part
             (that only contains data Resources that you have owner / admin rights on, for data security reasons) and within in the "owners", "writers"
