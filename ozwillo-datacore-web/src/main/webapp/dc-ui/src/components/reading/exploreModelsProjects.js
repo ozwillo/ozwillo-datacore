@@ -18,8 +18,8 @@ export default class ExploreModelsProjects extends React.Component{
           To <strong>start exploring available models</strong>, select your chosen project (i.e. the point of view that you wish to explore from,
           ex. <a className="project">geo_1</a> for geographical jurisdictions such as countries and cities) or merely the default <a className="project">oasis.main</a>
           project in the dropdown above the Playground UI. This will display in the Playground the <strong>list of storage models</strong>
-          (ex. in <a className="project">geo_1</a> <LinkPlayground tools={this.props.tools} url="/dc/type/pli:city_0?limit=1" value="geo:Area_0"/> )
-          and for each of them a link to models they store (ex. models stored in geo:Area_0 ).
+          (ex. in <a className="project">geo_1</a> <LinkPlayground tools={this.props.tools} url="/dc/type/dcmo:model_0/geo:Area_0" value="geo:Area_0" /> )
+          and for each of them a link to models they store (ex. <LinkPlayground tools={this.props.tools} url="/dc/type/dcmo:model_0?dcmo:storageModel=geo:Area_0" value="models stored in geo:Area_0" /> ).
         <br/>It also displays the <strong>list of pure mixins</strong> and for each of them a link to models that
           use them as mixins, that are local to the selected project. Note that this is why there are none in the geo project,
           which makes resources and models of <a className="project">geo_1</a> visible but doesn't have any of its own.
@@ -29,26 +29,27 @@ export default class ExploreModelsProjects extends React.Component{
         </p>
         <ul>
           <li>
-            <a className="playground">dcmo:globalMixins=pl:place_0</a>: lists Models that describe a location i.e. have a pl:shape WKS point, such as : <a className="playground">co:company_0</a>, whose WKS can
-              then be retrieved, for instance by GET <a className="playground">/dc/type/co:company_0</a>.
+            <LinkPlayground tools={this.props.tools} url="/dc/type/pli:city_0?limit=1" value="dcmo:globalMixins=pl:place_0" />: lists Models that describe a location i.e. have a pl:shape WKS point,
+              such as : <LinkPlayground tools={this.props.tools} url="/dc/type/dcmo:model_0/co:company_0" value="co:company_0" />, whose WKS can
+              then be retrieved, for instance by GET <LinkPlayground tools={this.props.tools} url="/dc/type/co:company_0" value="/dc/type/co:company_0" />.
             </li>
             <li>
-              <a className="playground">dcmo:globalFields.dcmf:name=plo:name</a> : lists Models that "officially" have a
+              <LinkPlayground tools={this.props.tools} url="/dc/type/dcmo:model_0?dcmo:globalMixins=pl:place_0" value="dcmo:globalFields.dcmf:name=plo:name" />: lists Models that "officially" have a
                 country (i.e. having the "official" field for a country in Ozwillo Datacore), and that can therefore be queried on that, such as :
                 <ul>
-                  <li><a className="playground">plo:country_0</a></li>
-                  <li><a className="playground">pli:city_0</a></li>
-                  <li><a className="playground">co:company_0</a></li>
-                  <li><a className="playground">cityareauseit:urbanAreaDestinationOfUse_0</a></li>
-                  <li><a className="playground">cityarea:cityArea_0</a></li>
+                  <li><LinkPlayground tools={this.props.tools} url="/dc/type/dcmo:model_0/plo:country_0" value="plo:country_0" /></li>
+                  <li><LinkPlayground tools={this.props.tools} url="/dc/type/dcmo:model_0/pli:city_0" value="pli:city_0" /></li>
+                  <li><LinkPlayground tools={this.props.tools} url="/dc/type/dcmo:model_0/co:company_0" value="co:company_0" /></li>
+                  <li><LinkPlayground tools={this.props.tools} url="/dc/type/dcmo:model_0/cityareauseit:urbanAreaDestinationOfUse_0" value="cityareauseit:urbanAreaDestinationOfUse_0" /></li>
+                  <li><LinkPlayground tools={this.props.tools} url="/dc/type/cityarea:cityArea_0" value="cityarea:cityArea_0" /></li>
                 </ul>
                 They can then be queried by country, for instance by:
                 <ul>
-                  <li>GET <a className="playground">/dc/type/plo:country_0</a></li>
-                  <li>GET <a className="playground">/dc/type/pli:city_0</a></li>
-                  <li>GET <a className="playground">/dc/type/co:company_0</a></li>
-                  <li>GET <a className="playground">/dc/type/cityareauseit:urbanAreaDestinationOfUse_0</a></li>
-                  <li>GET <a className="playground">/dc/type/cityarea:cityArea_0</a></li>
+                  <li>GET <LinkPlayground tools={this.props.tools} url="/dc/type/plo:country_0" value="/dc/type/plo:country_0" /></li>
+                  <li>GET <LinkPlayground tools={this.props.tools} url="/dc/type/pli:city_0" value="/dc/type/pli:city_0" /></li>
+                  <li>GET <LinkPlayground tools={this.props.tools} url="/dc/type/co:company_0" value="/dc/type/co:company_0" /></li>
+                  <li>GET <LinkPlayground tools={this.props.tools} url="/dc/type/cityareauseit:urbanAreaDestinationOfUse_0" value="/dc/type/cityareauseit:urbanAreaDestinationOfUse_0" /></li>
+                  <li>GET <LinkPlayground tools={this.props.tools} url="/dc/type/cityarea:cityArea_0" value="/dc/type/cityarea:cityArea_0" /></li>
                 </ul>
               </li>
             </ul>
