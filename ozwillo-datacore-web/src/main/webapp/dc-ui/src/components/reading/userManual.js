@@ -19,7 +19,7 @@ export default class UserManual extends React.Component{
             (see <a href="http://www.w3schools.com/tags/ref_urlencode.asp">http://www.w3schools.com/tags/ref_urlencode.asp
           </a>)
         </td></tr>
-        {/*TODO Note sure if it is the right place to put the last sentence*/}
+        
         <tr><td><strong>Click on /</strong> between a URI's model type and id to look for resources that refer (link) to it : if it's a metamodel
           it queries its resources, otherwise it lists all models that define a resource field that links to it through its model
           type at top level or in a top level list field, and provides links allowing to do the same at further depth below top
