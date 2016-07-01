@@ -323,28 +323,27 @@ public class DataModelServiceImpl implements DCModelService {
 
    /** also adds to mixin TODO is it OK ? */
    public void addModel(DCModelBase dcModel) {
-      getModelProjectOrSetCurrent(dcModel).addLocalModel(dcModel); // TODO LATER better : check, in context...
+      getModelProjectOrCurrent(dcModel).addLocalModel(dcModel); // TODO LATER better : check, in context...
    }
    
-   private DCProject getModelProjectOrSetCurrent(DCModelBase dcModel) {
+   private DCProject getModelProjectOrCurrent(DCModelBase dcModel) {
       String projectName = dcModel.getProjectName();
       DCProject project;
       if (projectName != null) {
          project = getProject(projectName);
       } else {
          project = getProject(); // current
-         dcModel.setPointOfView(project); // sets its projectName
       }
       return project;
    }
    
    /**  @obsolete ONLY TO CREATE DERIVED MODELS ex. Contribution, TODO LATER rather change their name ?!? */
    public void addModel(DCModel dcModel, String name) {
-      getModelProjectOrSetCurrent(dcModel).addModel(dcModel, name); // NB. project can't be null
+      getModelProjectOrCurrent(dcModel).addModel(dcModel, name); // NB. project can't be null
    }
 
    public void removeModel(DCModelBase dcModel) {
-      getModelProjectOrSetCurrent(dcModel).removeLocalModel(dcModel.getName()); // TODO LATER better : check, in context...
+      getModelProjectOrCurrent(dcModel).removeLocalModel(dcModel.getName()); // TODO LATER better : check, in context...
    }
    
    /** @obsolete rather use removeModel(model) to use the right project */

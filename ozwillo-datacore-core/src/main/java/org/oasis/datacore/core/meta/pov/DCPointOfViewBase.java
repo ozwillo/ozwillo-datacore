@@ -138,6 +138,7 @@ public abstract class DCPointOfViewBase implements DCPointOfView {
    @Override
    public void addLocalModel(DCModelBase model) {
       modelMap.put(model.getName(), model);
+      model.setPointOfView(this);
    }
 
    // TODO LATER check version

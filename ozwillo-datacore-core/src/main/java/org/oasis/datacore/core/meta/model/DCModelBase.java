@@ -500,7 +500,7 @@ public abstract class DCModelBase {
 	 */
 	@Override
 	public String toString() {
-	   return "Model[" + this.absoluteName
+	   return "Model[" + (this.absoluteName == null ? this.name : this.absoluteName)
 	         + ";m:" + this.getGlobalMixinMap().keySet()
 	         + "](f:" + this.getGlobalFieldMap().keySet() + ")";
 	}
