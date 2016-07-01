@@ -1,4 +1,3 @@
-//var containerUrl = "http://data.ozwillo.com/"; // rather in dcConf filled at init by /dc/playground/configuration
 
 
 //////////////////////////////////////////////////:
@@ -233,7 +232,6 @@
           // ex. "https%3A%2F%2Fwww.10thingstosee.com%2Fmedia%2Fphotos%2Ffrance-778943_HjRL4GM.jpg
           uri += '/' + encodedId;
       }
-      
       if (!query) {
          query = null;
       }
@@ -321,18 +319,18 @@ function toolifyDcResourceFieldAndColon(value, key, modelType, upperResource, ke
    if (key === '@id') {
       // iteration (for range-based pagination) example :
       return '"' + key + '"'
-         + '<a href="' + buildRelativeUrl(modelType) + '?' + new UriQuery(keyPathInResource.join('.'), '>' + value + '+').s() + '" class="dclink dclinkGreater" onclick="'
-         + 'javascript:return findDataByType($(this).attr(\'href\'));'
+         + '<a href="' + buildRelativeUrl(modelType) + '?' + new UriQuery(keyPathInResource.join('.'), '>' + value + '+').s() + '" class="dclink dclinkGreater"'
+         + 'onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))'
          + '"> : </a>';
    }
-   // field model (TODO LATER find where it is first defined even if list or subfield) then equality query :
-   ///return '"<a href="' + buildRelativeUrl('dcmo:model_0', modelType) + '" class="dclink dclinkType" onclick="'
-   return '"<a href="' + '/dc/type/dcmo:model_0?' + new UriQuery('dcmo:fields.dcmo:name', key).s() + '" class="dclink dclinkType" onclick="'
-      + 'javascript:return getData($(this).attr(\'href\'));'
-      + '">' + key + '</a>"'
-      + '<a href="' + buildRelativeUrl(modelType) + '?' + new UriQuery(keyPathInResource.join('.'), value).s() + '" class="dclink" onclick="'
-      + 'javascript:return findDataByType($(this).attr(\'href\'));'
-      + '"> : </a>';
+   //TODO: faire marcher ces liens
+   // '"<a href="' + '/dc/type/dcmo:model_0?' + new UriQuery('dcmo:fields.dcmo:name', key).s() + '" class="dclink dclinkType"'
+   // + 'onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))"'
+   // + '>' + key + '</a>"'
+   return '"'+ key + '"'
+      + '<a href="' + buildRelativeUrl(modelType) + '?' + new UriQuery(keyPathInResource.join('.'), value).s() + '" class="dclink" '
+      + 'onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))"'
+      + '> : </a>';
 }
 // modelType, upperResource, keyPathInResource are not required for top level resource
 function toolifyDcResource(resource, depth, modelType, upperResource, keyPathInResource) { // or map
@@ -412,32 +410,31 @@ function toolifyDcResourceUri(value) {
    // TODO LATER rather encodeUriPathComponent('dcmo:model_0') etc. (however, $1 and $2 are already encoded)
    return '"' + value.replace(/^http:\/\/data\.ozwillo\.com\/dc\/type\/([^\/]+)\/(.+)$/g,
          dcConf.containerUrl + '/dc/'
-         + '<a href="/dc/type/dcmo:model_0/$1" class="dclink dclinkType" onclick="'
-         + 'javascript:return getData($(this).attr(\'href\'));'
-         + '">type</a>'
+         + '<a href="/dc/type/dcmo:model_0/$1" class="dclink dclinkType"'
+         + 'onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))">type</a>'
          + '/'
-         + '<a href="/dc/type/$1" class="dclink" onclick="'
-         + 'javascript:return findDataByType($(this).attr(\'href\'));'
-         + '">$1</a>'
-         + '<a href="/dc/type/dcmo:model_0?dcmo:globalFields.dcmf:resourceType=$1" class="dclink" onclick="'
-         + 'javascript:return findLinkedData(\'/dc/type/$1/$2\');'
-         + '">/</a>'
-         + '<a href="/dc/type/$1/$2" class="dclink" onclick="'
-         + 'javascript:return getData($(this).attr(\'href\'));'
-         + '">$2</a>') + '"';
+         + '<a href="/dc/type/$1" class="dclink"'
+         + 'onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))"'
+         + '>$1</a>'
+         + '<a href="/dc/type/$2" class="dclink" '
+         + 'onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))"'
+         + '>/</a>'
+         + '<a href="/dc/type/$1/$2" class="dclink" '
+         + 'onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))"'
+         + '>$2</a>') + '"';
 }
 function toolifyDcResourceValue(value, key, depth, modelType, upperResource, keyPathInResource) {
-   if (value == null) {
-      return 'null';
-   }
+  if (value == null) {
+    return 'null';
+  }
 	///if ("o:version" == key || "dc:created" == key || "dc:modified" == key) { // skip
 	var valueType = (typeof value);
 	if (valueType== 'string') {
 		if ("@type" == key // in list
 				|| "dcmf:resourceType" == key) { // for Models
-			return '"<a href="' + buildRelativeUrl(value) + '" class="dclink dclinkType" onclick="'
-				      + 'javascript:return findDataByType($(this).attr(\'href\'));'
-	         + '">' + value + '</a>"';
+			return '"<a href="' + buildRelativeUrl(value) + '" class="dclink dclinkType" '
+				      + 'onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))"'
+	         + '>' + value + '</a>"';
 		}
 		///if ("@id" == key) {
 		if (value.indexOf('http') !== 0) { // shortcut
@@ -462,7 +459,7 @@ function toolifyDcListOrResource(valuesOrResource) {
 }
 
 function toolifyDcResourcePartial(resources, rowNb) {
-   var partialRes = getPartial(resources, rowNb);
+   var partialRes = artial(resources, rowNb);
    return toolifyDcResource(partialRes.res, 0) + ((partialRes.isPartial) ? '<br/>...' : '');
 }
 function stringifyPartial(arrayOrHashmap, rowNb) {
@@ -519,34 +516,40 @@ function getPartialHashmap(hashmap, rowNb) {
 }
 
 
-function setUrl(relativeUrl, dontUpdateDisplay) {
-   if (dontUpdateDisplay || !doUpdateDisplay) {
-      return false;
-   }
-   if (!relativeUrl || relativeUrl === "") {
-      $('.myurl').val('');
-      document.getElementById('mydata').innerHTML = '';
-   } else {
-      if (typeof relativeUrl !== 'object') {
-         relativeUrl = parseUri(relativeUrl);
-      }
-      // build unencoded URI, for better readability :
-      var unencodedRelativeUrl = '/dc/' + (relativeUrl.version != null && typeof relativeUrl.version !== 'undefined' // NOT (version) which is false
-         ? 'h' : 'type') + '/' + relativeUrl.modelType;
-      if (relativeUrl.id) {
-         unencodedRelativeUrl += '/' + relativeUrl.id;
-      }
-      if (relativeUrl.version != null && typeof relativeUrl.version !== 'undefined') { // NOT (version) which is false
-          unencodedRelativeUrl += '/' + relativeUrl.version;
-       }
-      if (relativeUrl.query) {
-         unencodedRelativeUrl += '?' + buildUriQuery(parseUriQuery(relativeUrl.query), true);
-      }
-      $('.myurl').val(unencodedRelativeUrl);
-      $('#mydata').html('...');
-   }
-   return false;
-}
+// function setUrl(relativeUrl, dontUpdateDisplay) {
+//    if (dontUpdateDisplay || !doUpdateDisplay) {
+//       return false;
+//    }
+//    if (!relativeUrl || relativeUrl === "") {
+//
+//       $('.myurl').val('');
+//       document.getElementById('mydata').innerHTML = '';
+//    } else {
+//
+//       if (typeof relativeUrl !== 'object') {
+//          relativeUrl = parseUri(relativeUrl);
+//       }
+//       // build unencoded URI, for better readability :
+//       var unencodedRelativeUrl = '/dc/' + (relativeUrl.version != null && typeof relativeUrl.version !== 'undefined' // NOT (version) which is false
+//          ? 'h' : 'type') + '/' + relativeUrl.modelType;
+//
+//       if (relativeUrl.id) {
+//          unencodedRelativeUrl += '/' + relativeUrl.id;
+//       }
+//
+//       if (relativeUrl.version != null && typeof relativeUrl.version !== 'undefined') { // NOT (version) which is false
+//           unencodedRelativeUrl += '/' + relativeUrl.version;
+//        }
+//
+//       if (relativeUrl.query) {
+//          unencodedRelativeUrl += '?' + buildUriQuery(parseUriQuery(relativeUrl.query), true);
+//       }
+//
+//       $('.myurl').val(unencodedRelativeUrl);
+//       $('#mydata').html('...');
+//    }
+//    return false;
+// }
 // the opposite of setUrl()
 function encodeUri(unencodedUri) {
    var uri = parseUri(unencodedUri);
@@ -569,24 +572,18 @@ function requestToRelativeUrl(request) {
    return relativeUrl;
 }
 
-
 function getProject() {
-   if (!window.currentProject || window.currentProject.length === 0) {
-      return 'oasis.sandbox'; // by default don't pollute anything // oasis.sandbox oasis.main (oasis.sample)
-   }
-   return window.currentProject;
+  return window.getCurrentProject();
 }
 
 function setProject(newProject) {
    window.currentProject = newProject;
-   initProjectPortal();
 }
 
 function initProjectPortal(options) {
-   findData(buildProjectPortalQuery(options), projectPortalSuccess,
+   getData(buildProjectPortalQuery(options), projectPortalSuccess,
          null, null, 25, {'X-Datacore-View':'-'}, options);
 }
-
 function buildProjectPortalQuery(options) {
    var query = 'dcmo:model_0?';
    if (!options || !options.pureMixins || options.storageModels) {
@@ -599,9 +596,9 @@ function buildProjectPortalQuery(options) {
    }
    return query;
 }
-function buildProjectPortalQueryLink(options, linkText) {
+function Link(options, linkText) {
    return '<a href="/dc/type/' + buildProjectPortalQuery(options) + '" class="dclink" onclick="'
-      + 'javascript:return findData($(this).attr(\'href\'), projectPortalSuccess, null, null, 25, {\'X-Datacore-View\':\'-\'}, '
+      + 'javascript:return ta($(this).attr(\'href\'), projectPortalSuccess, null, null, 25, {\'X-Datacore-View\':\'-\'}, '
       + (options ? stringifyForAttribute(options) : 'null') + ');">' + linkText + '</a>';
 }
 function buildProjectPortalTitleHtml(options) {
@@ -630,16 +627,27 @@ function buildProjectPortalTitleHtml(options) {
    html += ' :<br/>';
    return html;
 }
+
+function setCurrentDisplay(currentJson) {
+  return {
+    type: 'SET_CURRENT_DISPLAY',
+    currentJson: currentJson,
+    codeView: "classic"
+  }
+}
+
 function projectPortalSuccess(storageModels, relativeUrl, data, options) {
-   setUrl(relativeUrl); // because not set in findData because it uses this custom handler
    setError('');
    var html = buildListOfStorageModelLinks(storageModels);
    html = addPaginationLinks(data.request, html, storageModels,
            'function (storageModels, relativeUrl, data) { projectPortalSuccess(storageModels, relativeUrl, data, '
            + stringifyForAttribute(options) + '); }');
+
    html = buildProjectPortalTitleHtml(options) + html;
-   $('.mydata').html(html);
+
+   //window.store.dispatch(setCurrentDisplayRDF(html));
 }
+
 function buildListOfStorageModelLinks(models) {
    var html = '';
    for (var mInd in models) {
@@ -649,10 +657,10 @@ function buildListOfStorageModelLinks(models) {
          + 'javascript:return getData($(this).attr(\'href\'));'
          + '">' + modelName + '</a> : its stored '
          + '<a href="/dc/type/dcmo:model_0?dcmo:storageModel=' + modelName + '" class="dclink" onclick="'
-         + 'javascript:return findData($(this).attr(\'href\'), null, null, null, 25, {\'X-Datacore-View\':\'-\'});'
+         + 'javascript:return ta($(this).attr(\'href\'), null, null, null, 25, {\'X-Datacore-View\':\'-\'});'
          + '">models</a> and '
          + '<a href="/dc/type/' + modelName + '" class="dclink" onclick="'
-         + 'javascript:return findData($(this).attr(\'href\'), null, null, null, 25, {\'X-Datacore-View\':\'-\'});'
+         + 'javascript:return ta($(this).attr(\'href\'), null, null, null, 25, {\'X-Datacore-View\':\'-\'});'
          + '">all their resources</a>...'
          + '<br/>';
    }
@@ -663,6 +671,32 @@ function buildListOfStorageModelLinks(models) {
 ///////////////////////////////////////////////////
 // API
 
+/*
+  this function is not as generic than the next one yet. There is no call to swagger, it directly uses the API
+  //
+*/
+// function callAPIUpdatePlayground(event) {
+//   //TODO: encode URI
+//   var relativeUrl = event.currentTarget.href;
+//   console.log(relativeUrl);
+//   $.ajax({
+//     url: relativeUrl,
+//     type: 'GET',
+//     headers: {
+//       "Authorization" : "Basic YWRtaW46YWRtaW4=",
+//       'Accept' : 'application/json',
+//       'X-Datacore-Project': getProject()
+//     },
+//     success: function(data) {
+//       setUrl(relativeUrl, null);
+//
+//       //TODO: teste le cas du RDF
+//       resResourcesOrText = displayJsonListResult(data, relativeUrl, this.headers, this.url);
+//
+//       //success(resResourcesOrText, requestToRelativeUrl(data.request), data, handlerOptions);
+//     },
+//   });
+// }
 ///////////////////////////////////////////////////
 // READ
 
@@ -746,9 +780,12 @@ function getData(relativeUrl, success, error, optionalHeaders, handlerOptions) {
    if (typeof relativeUrl === 'string') {
       // NB. modelType should be encoded as URIs, BUT must be decoded before used as GET URI
       // because swagger.js re-encodes (for resourceId, per path element because __unencoded__-prefixed per hack)
+
       relativeUrl = parseUri(relativeUrl);
+      relativeUrl.id = relativeUrl.query;
+      console.log(relativeUrl);
    }
-   setUrl(relativeUrl, success);
+
    var swaggerParams = {type:relativeUrl.modelType, __unencoded__iri:relativeUrl.id,
            'If-None-Match':-1, Authorization:getAuthHeader()};
    var supplParams = null; // handlerOptions == null ? null : {parent:handlerOptions}; // NO else no error callback
@@ -778,12 +815,14 @@ function getData(relativeUrl, success, error, optionalHeaders, handlerOptions) {
          setError('');
       }
    };
+
    var myError = function(data) {
       setError(data._body._body);
       if (error) {
          error(data, relativeUrl, handlerOptions);
       }
    };
+
    var dcApiFunction = dcApi.dc.getData;
    if (relativeUrl.version != null && typeof relativeUrl.version !== 'undefined') { // NOT (version) which is false
       dcApiFunction = dcApi.dc.findHistorizedResource;
@@ -796,6 +835,7 @@ function getData(relativeUrl, success, error, optionalHeaders, handlerOptions) {
    } else {
       dcApiFunction(swaggerParams, mySuccess, myError);
    }
+
    return false;
 }
 // relativeUrl must be an encoded URI (encode it using builUri and buildUriQuery)
@@ -811,9 +851,6 @@ function findData(relativeUrl, success, error, start, limit, optionalHeaders, ha
    }
    return getData(relativeUrl, success, error, optionalHeaders, handlerOptions);
 }
-
-
-
 function getPreviousData(relativeUrl, success, error, optionalHeaders, handlerOptions) {
    var historyUrl;
    if (typeof relativeUrl === 'string') {
@@ -1111,29 +1148,40 @@ function displayTextResult(data, dontUpdateDisplay, displayAsEditable) {
    return data.content.data;
 }
 
-function displayJsonObjectResult(data, dontUpdateDisplay) {
-   var resource = eval('[' + data.content.data + ']')[0];
-   if (!dontUpdateDisplay && doUpdateDisplay) {
-      var prettyJson = toolifyDcResource(resource, 0); // ,  parseUri(data.request.path).modelType // , upperResource, keyPathInResource
-      //var prettyJson = JSON.stringify(resource, null, '\t').replace(/\n/g, '<br/>');
-      //prettyJson = toolifyDcResourceJson(prettyJson);
-      $('.mydata').html(prettyJson);
-      switchToEditable(false);
-   }
-   return resource;
+function displayJsonObjectResult(resource) {
+
+    var prettyJson = toolifyDcResource(resource, 0);
+    switchToEditable(false);
+
+    return prettyJson;
 }
 
-function displayJsonListResult(data, dontUpdateDisplay) {
-   var resResources = eval(data.content.data);
-   if (!dontUpdateDisplay && doUpdateDisplay) {
-      var prettyJson = toolifyDcList(resResources, 0, null, parseUri(data.request.path).modelType);
-      prettyJson = addPaginationLinks(data.request, prettyJson, resResources);
-      ///var prettyJson = JSON.stringify(resResources, null, '\t').replace(/\n/g, '<br>');
-      ///prettyJson = toolifyDcResourceJson(prettyJson);
-      $('.mydata').html(prettyJson);
-      switchToEditable(false);
-   }
-   return resResources;
+function displayJsonListResult(data, path) {
+
+    var prettyJson = toolifyDcList(data, 0, null, parseUri(path).modelType);
+
+    if(path.indexOf("?") !== -1){
+      var currentPath = path.substring(0, path.indexOf("?"));
+      var currentQuery = path.substring(path.indexOf("?")+1,path.length);
+    }
+    else{
+      var currentPath = path;
+      var currentQuery = "";
+    }
+
+    prettyJson = addPaginationLinks({_query: currentQuery, path: currentPath}, prettyJson, data);
+
+    //$('.mydata').html(prettyJson);
+    switchToEditable(false);
+
+    return prettyJson;
+}
+
+function onClickPerso(path){
+  callAPIUpdatePlayground(path);
+
+  //in order to preventDefault when clicking
+  return false;
 }
 
 // params : request with path, _query and _headers ;
@@ -1145,6 +1193,7 @@ function addPaginationLinks(request, prettyJson, resList, successFunctionName) {
    if (!successFunctionName) {
        successFunctionName = 'null';
    }
+
    var start = 0;
    var limit = dcConf.queryDefaultLimit; // from conf
    var query = '';
@@ -1167,32 +1216,16 @@ function addPaginationLinks(request, prettyJson, resList, successFunctionName) {
    if (start !== 0) {
       var previousStart = Math.max(0, start - limit);
       var relativeUrl = request.path + '?start=' + previousStart + '&limit=' + limit + query;
-      var headers = {};
-      for (var hInd in request._headers) {
-         if (hInd === 'Accept' || hInd.indexOf('X-Datacore-') === 0) {
-            headers[hInd] = request._headers[hInd]; // Accept for RDF, else 'X-Datacore-View'...
-         }
-      }
-      prettyJson = '<a href="' + relativeUrl + '" class="dclink" onclick="'
-            + 'javascript:return findDataByType($(this).attr(\'href\'), ' + successFunctionName + ', null, null, null, '
-            + stringifyForAttribute(headers) + ');'
+      prettyJson = '<a href="' + relativeUrl + '" class="dclink" onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))"'
             + '">...</a>' + lineBreak(0) + prettyJson;
    }
    if (!resList || typeof resList === 'string' // RDF case : always display
          || resList.length === limit) {
       var nextStart = start + limit;
       var relativeUrl = request.path + '?start=' + nextStart + '&limit=' + limit + query;
-      var headers = {};
-      for (var hInd in request._headers) {
-          if (hInd === 'Accept' || hInd.indexOf('X-Datacore-') === 0) {
-             headers[hInd] = request._headers[hInd]; // Accept for RDF, else 'X-Datacore-View'...
-          }
-       }
-      prettyJson += lineBreak(0) + '<a href="' + relativeUrl + '" class="dclink" onclick="'
-            + 'javascript:return findDataByType($(this).attr(\'href\'), ' + successFunctionName + ', null, null, null, '
-            + stringifyForAttribute(headers) + ');'
-            + '">...</a>';
+      prettyJson += lineBreak(0) + '<a href="' + relativeUrl + '" class="dclink" onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))">...</a>';
    }
+
    return prettyJson;
 }
 

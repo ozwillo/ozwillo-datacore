@@ -5,5 +5,7 @@
 
 roadmap :
 - patch doc error @type => rather go to model
+- Finish backward linking on "/" for resource
 - LATER think about how to allow for multiple links from a single element (ex. @type, or generate queries having
 different operators), ex. rollover popup
+- Think about a visual representation of resource -> otherResource. 
