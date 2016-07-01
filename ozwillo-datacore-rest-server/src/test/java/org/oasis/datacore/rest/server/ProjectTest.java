@@ -184,6 +184,15 @@ public class ProjectTest {
       // TODO same tests on write, delete...
    }
 
+   @Test
+   public void testMetamodelStorageModelContainsMetamodel() {
+      DCModelBase metaModel = modelServiceImpl.getProject("oasis.meta").getModel("dcmo:model_0");
+      DCModelBase mixinBackwardCompatibilityModel = modelServiceImpl.getStorageModel(metaModel);
+      Assert.assertEquals("dcmi:mixin_0", mixinBackwardCompatibilityModel.getName());
+      Assert.assertEquals(1, modelServiceImpl.getStoredModels(mixinBackwardCompatibilityModel).stream()
+         .filter(m -> metaModel.getName().equals(m.getName())).count());
+   }
+
    @Ignore // TODO
    @Test
    public void testOrg2() throws MalformedURLException, URISyntaxException {

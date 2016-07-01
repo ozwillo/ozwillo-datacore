@@ -16,7 +16,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
+import org.springframework.test.context.support.DirtiesContextTestExecutionListener;
+import org.springframework.test.context.transaction.TransactionalTestExecutionListener;
 
 
 /**
@@ -27,6 +31,10 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:oasis-datacore-rest-client-test-context.xml" })
+@TestExecutionListeners(listeners = { DependencyInjectionTestExecutionListener.class,
+      DirtiesContextTestExecutionListener.class }) // else (harmless) error :
+// TestContextManager [INFO] Could not instantiate TestExecutionListener [TransactionalTestExecutionListener.class]. Specify custom listener classes or make the default listener classes (and their required dependencies) available. Offending class: [javax/servlet/ServletContext]
+// see http://stackoverflow.com/questions/26125024/could-not-instantiate-testexecutionlistener
 public class DatacoreApiCXFClientTest {
 
    public static final String TEST_USER_JOHN = "john";

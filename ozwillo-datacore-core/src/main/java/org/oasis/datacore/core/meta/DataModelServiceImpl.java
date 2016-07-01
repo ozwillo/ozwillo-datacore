@@ -112,7 +112,7 @@ public class DataModelServiceImpl implements DCModelService {
             continue;
          }*/
          for (DCModelBase m : p.getModels()) { // including visible projects'
-            if (!alreadyDoneModelNames.add(m.getName())) {
+            if (!alreadyDoneModelNames.add(m.getAbsoluteName())) {
                continue;
             }
             if (!m.getGlobalMixinNames().contains(model.getName())

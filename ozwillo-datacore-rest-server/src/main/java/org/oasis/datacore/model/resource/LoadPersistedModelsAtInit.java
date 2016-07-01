@@ -101,8 +101,8 @@ public class LoadPersistedModelsAtInit extends InitableBase {
    public void loadModels(String projectName) throws QueryException {
       // now, reload all models that had been persisted in mongo in last execution :
       // (ONLY those local to this project)
-      List<DCResource> modelResources = findDataInType(
-            ResourceModelIniter.MODEL_MODEL_NAME, ResourceModelIniter.MODEL_NAME_PROP,
+      List<DCResource> modelResources = findDataInType(ResourceModelIniter.MODEL_MODEL_NAME, 
+            ResourceModelIniter.MODEL_NAME_PROP, // which is indexed ; "@id" would also do
             new ImmutableMap.Builder<String,List<String>>().put("dcmo:pointOfViewAbsoluteName",
                   new ImmutableList.Builder<String>().add(projectName).build()).build(), projectName);
       LinkedHashMap<String,ResourceException> previousModelsInError = null, modelsInError = null; // LinkedHashMap to keep order
