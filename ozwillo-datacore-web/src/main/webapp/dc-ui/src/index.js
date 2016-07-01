@@ -13,17 +13,20 @@ import faqs from "./components/reading/faqs.js";
 import commonQueries from "./components/reading/commonQueries.js";
 import apiDetails from "./components/reading/apiDetails.js";
 import serverConfiguration from "./components/reading/serverConfiguration.js";
+import quickstart from "./components/reading/quickstart.js";
 
 export const PATH = "/dc-ui/"
 
 const initialState = {
   readings: [
+    {"title":"Quickstart", "path": "quickstart", "component": quickstart},
     {"title":"Playground User Manual", "path": "user-manual", "component": UserManual},
     {"title":"Explore models and projects", "path": "explore-model", "component": ExploreModelsProjects},
     {"title":"Common queries", "path": "common-queries", "component": commonQueries},
     {"title":"API details", "path": "API-details", "component": apiDetails},
     {"title":"FAQS", "path": "FAQS", "component": faqs},
     {"title":"Server configuration", "path": "server-configuration", "component": serverConfiguration},
+
   ],
   currentPath: "/dc/type/dcmo:model_0",
   currentJson: "",

@@ -416,7 +416,7 @@ function toolifyDcResourceUri(value) {
          + '<a href="/dc/type/$1" class="dclink"'
          + 'onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))"'
          + '>$1</a>'
-         + '<a href="/dc/type/dcmo:model_0?dcmo:globalFields.dcmf:resourceType=$1" class="dclink" '
+         + '<a href="/dc/type/$2" class="dclink" '
          + 'onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))"'
          + '>/</a>'
          + '<a href="/dc/type/$1/$2" class="dclink" '

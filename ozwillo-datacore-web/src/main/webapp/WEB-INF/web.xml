@@ -35,8 +35,8 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 			to (swagger files in) root directory. -->
 	</servlet-mapping>
 
-	
 	<error-page>
+	    <error-code>404</error-code>
 	    <location>/dc-ui/index.html</location>
 	</error-page>
 
