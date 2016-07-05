@@ -408,7 +408,11 @@ public class ModelResourceMappingService {
          if (lf.getKeyFieldName() != null) { fieldPropBuilder.put("dcmf:keyFieldName", lf.getKeyFieldName()); }
          break;
       case "resource" :
-         fieldPropBuilder.put("dcmf:resourceType", ((DCResourceField) field).getResourceType());
+         DCResourceField resourceField = ((DCResourceField) field);
+         fieldPropBuilder.put("dcmf:resourceType", resourceField.getResourceType());
+         if (resourceField.isStorage() != null) {
+            fieldPropBuilder.put("dcmf:isStorage", resourceField.isStorage());
+         }
          // TODO LATER OPT also embedded Resource as map
          break;
       }
@@ -933,6 +937,7 @@ public class ModelResourceMappingService {
       Boolean fulltext = false;
       
       DCField field;
+      DCResourceField resourceField;
       switch (fieldType ) {
       case "map" :
          field = propsToMapField(fieldResource, fieldName);
@@ -970,11 +975,13 @@ public class ModelResourceMappingService {
             throw new ResourceParsingException("dcmf:resourceType can't be null on resource-typed field "
                   + fieldName);
          }
-         field = new DCResourceField(fieldName, fieldResourceType, fieldRequired, fieldQueryLimit);
+         resourceField = new DCResourceField(fieldName, fieldResourceType, fieldRequired, fieldQueryLimit);
+         field = resourceField;
          /*if (!fieldResourceType.equals(topLevelModelType) && project.getModelBase(fieldResourceType)) {
             throw new ResourceParsingException("model " + fieldResourceType
                   + " linked by field " + fieldName + " can't be found");
          }*/ // TODO rather check subresource mixins
+         resourceField.setStorage((Boolean) fieldResource.get("dcmf:isStorage")); // (may be null)
          break;
       case "string" :
          // preparing fulltext handling :

@@ -166,6 +166,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addField(new DCListField("dcmf:mapFields", new DCResourceField("useless", MODEL_FIELD_NAME)))
          // resource :
          .addField(new DCField("dcmf:resourceType", "string", false, 100)) // "required" would required polymorphism ; TODO rather "resource" type ?!
+         .addField(new DCField("dcmf:isStorage", "boolean", false, 0))
          
          // TODO for app.js / openelec (NOT required else other samples KO) :
          .addField(new DCField("dcmf:documentation", "string", false, 0))
@@ -268,6 +269,10 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       modelOrMixinModel.setDocumentation("id = name + '_' + version"); // TODO LATER rather '/' separator
       /*ignCommuneModel.setDocumentsetDocumentationation("{ \"uri\": \"http://localhost:8180/dc/type/country/France\", "
       + "\"name\": \"France\" }");*/
+      
+      // to index _p.dcmo:globalFields.dcmf:name :
+      ((DCResourceField) ((DCListField) modelOrMixinModel.getField("dcmo:globalFields"))
+            .getListElementField()).setStorage(true);
       
       // TODO prefixes & namespaces, fields ??
       // TODO security, OPT private models ???

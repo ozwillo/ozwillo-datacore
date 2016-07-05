@@ -17,6 +17,7 @@ import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCListField;
 import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCModelBase;
+import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.historization.exception.HistorizationException;
 import org.oasis.datacore.historization.service.impl.HistorizationServiceImpl;
 import org.slf4j.Logger;
@@ -339,6 +340,13 @@ public class DatabaseSetupServiceImpl implements DatabaseSetupService {
       case LIST:
          DCField listElementField = ((DCListField) globalField).getListElementField();
          computeFieldIndices(coll, prefixWithoutDot, listElementField, requiredIndexes);
+         break;
+      case RESOURCE:
+         DCResourceField resourceField = ((DCResourceField) globalField);
+         if (resourceField.isStorage() != null && resourceField.isStorage()) {
+            DCModelBase submodel =  modelAdminService.getModelBase(resourceField.getResourceType());
+            computeFieldsIndices(coll, prefixWithoutDot, submodel.getGlobalFields(), requiredIndexes);
+         }
          break;
       case MAP:
          Map<String, DCField> mapFields = ((DCMapField) globalField).getMapFields();

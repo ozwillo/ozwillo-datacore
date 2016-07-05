@@ -14,6 +14,9 @@ public class DCResourceField extends DCField {
    /** required type
     * TODO LATER better, more flexible type constraints : several types, mixins... */
    private String resourceType;
+   /** subresource or stored in another collection ?
+    * (storage-level overridable, like queryLimit defines indexes) */
+   private Boolean isStorage = false;
 
    /** for unmarshalling only */
    public DCResourceField() {
@@ -51,6 +54,14 @@ public class DCResourceField extends DCField {
 
    public void setResourceType(String resourceType) {
       this.resourceType = resourceType;
+   }
+
+   public Boolean isStorage() {
+      return isStorage;
+   }
+
+   public void setStorage(Boolean isStorage) {
+      this.isStorage = isStorage;
    }
 
 }
