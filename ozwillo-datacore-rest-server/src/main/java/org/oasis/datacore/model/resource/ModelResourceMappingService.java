@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.oasis.datacore.core.entity.mongodb.MongoTemplateManager;
 import org.oasis.datacore.core.meta.SimpleUriService;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCI18nField;
@@ -50,7 +51,9 @@ public class ModelResourceMappingService {
     * LATER use it in the whole model mapping process ? */
    @Autowired
    private ResourceEntityMapperService resourceEntityMapperService;
-   
+   /** to check parsed project conf according to its rules */
+   @Autowired
+   private MongoTemplateManager mgoManager;
    
    //////////////////////////////////////////////////////
    // DCModel to Resource (used in ResourceModelIniter) :
@@ -156,6 +159,17 @@ public class ModelResourceMappingService {
       if (project.getVisibleSecurityConstraints() != null) {
          projectResource.set("dcmp:visibleSecurityConstraints", securityToResource(
                project.getVisibleSecurityConstraints(), uri, "dcmp:visibleSecurityConstraints"));
+      }
+      // dcmpvdb :
+      if (project.isDbRobust() != null) {
+         projectResource.set("dcmpvdb:robust", project.isDbRobust());
+      } else {
+         projectResource.getProperties().remove("dcmpvdb:robust");
+      }
+      if (project.getDbUri() != null) {
+         projectResource.set("dcmpvdb:uri", project.getDbUri());
+      } else {
+         projectResource.getProperties().remove("dcmpvdb:uri");
       }
 
       projectResource.setUri(uri);
@@ -459,7 +473,8 @@ public class ModelResourceMappingService {
       @SuppressWarnings("unchecked")
       //List<Map<String, Object>> visibleProjects = (List<Map<String, Object>>) r.get("dcmp:visibleProjects");
       List<String> visibleProjectUris = (List<String>) r.get("dcmp:localVisibleProjects");
-      LinkedHashMap<String, DCProject> lvpMap = new LinkedHashMap<String, DCProject>(visibleProjectUris.size());
+      LinkedHashMap<String, DCProject> lvpMap = (visibleProjectUris == null) ? new LinkedHashMap<String, DCProject>() // in case of (old) project without it
+            : new LinkedHashMap<String, DCProject>(visibleProjectUris.size());
       if (visibleProjectUris != null) {
          for (String visibleProjectUri : visibleProjectUris) {
             String visibleProjectName;
@@ -504,6 +519,7 @@ public class ModelResourceMappingService {
       project.setAllowedModelPrefixes((allowedModelPrefixes == null ? new LinkedHashSet<String>() // in case of old project without it
             : new LinkedHashSet<String>(allowedModelPrefixes)));
       
+      // security :
       @SuppressWarnings("unchecked")
       Map<String, Object> sc = (Map<String, Object>) r.get("dcmp:securityConstraints");
       if (sc != null) {
@@ -527,6 +543,18 @@ public class ModelResourceMappingService {
       if (vsc != null) {
          toSecurity(vsc, getOrSetVisibleSecurityConstraints(project));
       }
+      
+      // non-functional - per project / point of view optimized massive writes & read-heavy queries :
+      Object isDbRobustFound = r.get("dcmpvdb:robust");
+      if (isDbRobustFound != null) {
+         project.setDbRobust((boolean) isDbRobustFound);
+      } // otherwise projet with default or old project without it
+      Object dbUri = r.get("dcmpvdb:uri");
+      if (dbUri != null) {
+         project.setDbUri((String) dbUri);
+      } // otherwise projet with default or old project without it
+      // checking that those values are valid :
+      mgoManager.getMongoTemplate(project); // else explodes
       
       return project;
    }

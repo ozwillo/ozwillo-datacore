@@ -13,6 +13,7 @@ import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.NativeModelService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.mongodb.DatacoreMongoTemplate;
+import org.oasis.datacore.core.entity.mongodb.MongoTemplateManager;
 import org.oasis.datacore.core.entity.query.QueryException;
 import org.oasis.datacore.core.meta.ModelNotFoundException;
 import org.oasis.datacore.core.meta.model.DCField;
@@ -28,7 +29,6 @@ import org.oasis.datacore.core.security.service.DatacoreSecurityService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.server.MonitoringLogServiceImpl;
-import org.oasis.datacore.rest.server.cxf.CxfJaxrsApiProvider;
 import org.oasis.datacore.rest.server.parsing.model.DCQueryParsingContext;
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
 import org.oasis.datacore.rest.server.parsing.model.QueryOperatorsEnum;
@@ -116,9 +116,10 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    @Autowired
    @Qualifier("datacoreSecurityServiceImpl")
    private DatacoreSecurityService securityService;
-   
+
+   /** can provide MongoTemplate/Operations customized to project */
    @Autowired
-   private /*MongoOperations*/DatacoreMongoTemplate mgo; // TODO remove it by hiding it in services
+   private MongoTemplateManager mgoManager;
    
    @Autowired
    private QueryParsingService queryParsingService;
@@ -128,15 +129,12 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
 
    /** to access debug switch & put its explained results */
    @Autowired
-   private CxfJaxrsApiProvider cxfJaxrsApiProvider;
-   /** to access debug switch & put its explained results */
-   @Autowired
    protected DatacoreRequestContextService serverRequestContext;
    
    /** to evaluate model-level rights */
    @Autowired
    private EntityPermissionEvaluator permissionEvaluator;
-
+   
    
    @Override
    public List<DCEntity> findDataInType(String modelType, Map<String, List<String>> params,
@@ -712,10 +710,14 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          springMongoQuery.addCriteria(new Criteria(DCEntity.KEY_ALIAS_OF).exists(false));
       }
       
+      // using custom mongo ex. for analytics :
+      DatacoreMongoTemplate mgo = mgoManager.getMongoTemplate();
+      
       // compute overall maxScan :
       // (BEWARE it is NOT the max amount of doc returned because sorts or multiple
       // criteria can eat some scans)
-      boolean applyMaxScan = queryParsingContext.isHasNoIndexedField(); // true // to test only
+      boolean applyMaxScan = queryParsingContext.isHasNoIndexedField() // true // to test only
+            || mgo == mgoManager.getDefaultMongoTemplate(); // else custom secondary
       int maxScan = 0;
       if (applyMaxScan) {
          maxScan = this.maxScan;
@@ -740,7 +742,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       boolean doExplainQuery = isDebug || applyMaxScan;
       
       // using custom CursorPreparer to get access to mongo DBCursor for explain() etc. :
-      // (rather than mgo.find(springMongoQuery, DCEntity.class, collectionName)) 
+      // (rather than mgo.find(springMongoQuery, DCEntity.class, collectionName))
       CursorProviderQueryCursorPreparer cursorProvider = new CursorProviderQueryCursorPreparer(mgo,
             springMongoQuery, doExplainQuery, maxScan, maxTime);
       
@@ -766,6 +768,8 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          debugCtx.put("mongoIndexes", cursorProvider.getCursorPrepared().getCollection().getIndexInfo());
          debugCtx.put("hasNoIndexedField", queryParsingContext.isHasNoIndexedField());
          debugCtx.put("maxScan", maxScan);
+         debugCtx.put("queryParsingContext.aggregatedQueryLimit", queryParsingContext.getAggregatedQueryLimit());
+         debugCtx.put("storageModel.maxScan", storageModel.getMaxScan());
          // NB. can't get special so adding maxScan
          debugCtx.put("options", cursorProvider.getCursorPrepared().getOptions());
          // NB. queryOptions = cursorTailable, slaveOk, oplogReplay, noCursorTimeout, awaitData, exhaust http://api.mongodb.org/cplusplus/1.5.4/namespacemongo.html
@@ -785,7 +789,8 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
             } else {
                // NB. and not nscannedObjects which may be lower because some scans have been eaten
                // by sorts, multiple criteria etc. see http://docs.mongodb.org/manual/reference/method/cursor.explain/
-               throw new QueryException("Query or sort with non indexed fields has reached maxScan (" + maxScan
+               throw new QueryException("Query or sort on collection " + cursorProvider.getCursorPrepared().getCollection().getName()
+                     + " with non indexed fields has reached maxScan (" + maxScan
                      + ") before document limit (found " + foundEntities.size() + "<" + springMongoQuery.getLimit()
                      + ") , meaning some documents can't be found without prohibitive cost. "
                      + "Use only indexed fields, or if you really want the few documents already "

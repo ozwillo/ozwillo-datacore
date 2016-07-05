@@ -37,6 +37,8 @@ public class DCProject extends DCPointOfViewBase {
    private String documentation;
    
    private LinkedHashMap<String,DCUseCasePointOfView> useCasePointOfViewMap = new LinkedHashMap<String, DCUseCasePointOfView>();
+   private Boolean dbRobust = null;
+   private String dbUri = null;
    
    /** local visible projects ; LATER also reuse visible ones ? */
    private LinkedHashMap<String,DCProject> visibleProjectMap = new LinkedHashMap<String, DCProject>(); // TODO merge in visibleStorageProjectMap
@@ -549,6 +551,22 @@ public class DCProject extends DCPointOfViewBase {
 
    public void setVisibleSecurityConstraints(DCSecurity visibleSecurityConstraints) {
       this.visibleSecurityConstraints = visibleSecurityConstraints;
+   }
+
+   public Boolean isDbRobust() {
+      return dbRobust;
+   }
+
+   public void setDbRobust(Boolean dbRobust) {
+      this.dbRobust = dbRobust;
+   }
+
+   public String getDbUri() {
+      return dbUri;
+   }
+
+   public void setDbUri(String dbUri) {
+      this.dbUri = dbUri;
    }
    
    

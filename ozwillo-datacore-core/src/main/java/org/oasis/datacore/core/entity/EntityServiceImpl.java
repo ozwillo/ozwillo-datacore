@@ -2,18 +2,20 @@ package org.oasis.datacore.core.entity;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.mongodb.DuplicateKeyException;
 import org.joda.time.DateTime;
 import org.oasis.datacore.core.entity.model.DCEntity;
+import org.oasis.datacore.core.entity.mongodb.MongoTemplateManager;
 import org.oasis.datacore.core.meta.SimpleUriService;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
@@ -34,8 +36,9 @@ public class EntityServiceImpl implements EntityService {
    
    //@Autowired
    //private DCDataEntityRepository dataRepo; // NO rather for (meta)model, for data can't be used because can't specify collection
+   /** can provide MongoTemplate/Operations customized to project */
    @Autowired
-   private MongoOperations mgo;
+   private MongoTemplateManager mgoManager;
    // NB. MongoTemplate would be required to check last operation result, but we rather use WriteConcerns
    @Autowired
    private EntityModelService entityModelService;
@@ -79,7 +82,7 @@ public class EntityServiceImpl implements EntityService {
       
       // if exists (with same uri, and if multiProjectStorage same project),
       // will fail (no need to enforce any version) 
-      mgo.insert(dataEntity, collectionName);
+      mgoManager.getMongoTemplate().insert(dataEntity, collectionName);
    }
    
    /* (non-Javadoc)
@@ -96,7 +99,8 @@ public class EntityServiceImpl implements EntityService {
       //entityService.findById(uri, type/collectionName); // TODO
       //dataEntity = dataRepo.findOne(uri); // NO can't be used because can't specify collection
       //dataEntity = mgo.findById(uri, DCEntity.class, collectionName);
-      List<DCEntity> entitiesFound = mgo.find(new Query(criteria) , DCEntity.class, collectionName);
+      List<DCEntity> entitiesFound = mgoManager.getMongoTemplate()
+            .find(new Query(criteria) , DCEntity.class, collectionName);
       switch (entitiesFound.size()) {
       case 0:
          return null;
@@ -141,7 +145,7 @@ public class EntityServiceImpl implements EntityService {
       //entityService.findById(uri, type/collectionName); // TODO
       //dataEntity = dataRepo.findOne(uri); // NO can't be used because can't specify collection
       //dataEntity = mgo.findById(uri, DCEntity.class, collectionName);
-      long count = mgo.count(new Query(criteria), collectionName);
+      long count = mgoManager.getMongoTemplate().count(new Query(criteria), collectionName);
       // NB. efficient because should not be more than 1 ; or TODO LATER or better execute ?
       if (count == 0) {
          return null;
@@ -172,7 +176,7 @@ public class EntityServiceImpl implements EntityService {
       // TODO better using annotated hasPermission ?
       // TODO or only as operation criteria ?? ($and _w $in currentUserRoles)
 
-      mgo.save(dataEntity, collectionName); // (spring data ensures atomically same version)
+      mgoManager.getMongoTemplate().save(dataEntity, collectionName); // (spring data ensures atomically same version)
    }
    
    /* (non-Javadoc)
@@ -190,7 +194,7 @@ public class EntityServiceImpl implements EntityService {
       
       Criteria criteria = Criteria.where(DCEntity.KEY_URI).is(dataEntity.getUri()).and(DCEntity.KEY_V).is(dataEntity.getVersion());
       entityModelService.addMultiProjectStorageCriteria(criteria, storageModel, dataEntity); // in EXACT same project
-      mgo.remove(new Query(criteria), collectionName);
+      mgoManager.getMongoTemplate().remove(new Query(criteria), collectionName);
       // NB. NOT remove(dataEntity) which DOESN'T check version through Spring Data @Version !!!! (tested)
       // NB. obviously won't conflict / throw MongoDataIntegrityViolationException
       
@@ -220,7 +224,7 @@ public class EntityServiceImpl implements EntityService {
 		
 		String collectionName = entityModelService.getCollectionName(dataEntity);
       addMultiProjectStorageValue(dataEntity, entityModelService.getStorageModel(dataEntity));
-		mgo.save(dataEntity, collectionName);
+      mgoManager.getMongoTemplate().save(dataEntity, collectionName);
 		
 	}
 	
@@ -233,7 +237,8 @@ public class EntityServiceImpl implements EntityService {
    public DCEntity getSampleData() throws URISyntaxException {
       String sampleCollectionName = "sample";
       
-      DCEntity dcEntity = mgo.findOne(new Query(), DCEntity.class, sampleCollectionName);
+      DCEntity dcEntity = mgoManager.getMongoTemplate()
+            .findOne(new Query(), DCEntity.class, sampleCollectionName);
       
       if (dcEntity != null) {
          return dcEntity;
@@ -278,7 +283,7 @@ public class EntityServiceImpl implements EntityService {
       // OPT if used / modeled : URL...
       // OPT if modeled : BigInteger/Decimal, Locale, Serializing (NOT mongo binary)
       
-      mgo.insert(dcEntity, sampleCollectionName);
+      mgoManager.getMongoTemplate().insert(dcEntity, sampleCollectionName);
       
       return getSampleData();
    }
@@ -295,7 +300,7 @@ public class EntityServiceImpl implements EntityService {
       String collectionName = storageModel.getCollectionName(); // TODO for view Models or weird type names ?!?
       addMultiProjectStorageValue(alias, storageModel);
 
-      mgo.insert(alias, collectionName);
+      mgoManager.getMongoTemplate().insert(alias, collectionName);
 
    }
 
@@ -314,7 +319,9 @@ public class EntityServiceImpl implements EntityService {
    private String getAliasedByStorageModel(String uri, DCModelBase storageModel) {
       String collectionName = storageModel.getCollectionName();
 
-      return mgo.findOne(new Query(new Criteria(DCEntity.KEY_URI).is(uri)), DCEntity.class, collectionName).getAliasOf();
+      return mgoManager.getMongoTemplate()
+            .findOne(new Query(new Criteria(DCEntity.KEY_URI).is(uri)), DCEntity.class, collectionName)
+            .getAliasOf();
    }
 
 
@@ -341,7 +348,8 @@ public class EntityServiceImpl implements EntityService {
    private boolean isAliasByStorageModel(String uri, DCModelBase storageModel) {
       String collectionName = storageModel.getCollectionName();
 
-      return mgo.count(new Query(new Criteria(DCEntity.KEY_URI).is(uri).and(DCEntity.KEY_ALIAS_OF).exists(true)), collectionName) > 0;
+      return mgoManager.getMongoTemplate()
+            .count(new Query(new Criteria(DCEntity.KEY_URI).is(uri).and(DCEntity.KEY_ALIAS_OF).exists(true)), collectionName) > 0;
    }
 
 
@@ -354,10 +362,11 @@ public class EntityServiceImpl implements EntityService {
    }
 
    private void recurseDeleteAliases(String uri, String collectionName) {
-      List<DCEntity> entities = mgo.find(new Query(new Criteria(DCEntity.KEY_ALIAS_OF).is(uri)), DCEntity.class, collectionName);
+      List<DCEntity> entities = mgoManager.getMongoTemplate()
+            .find(new Query(new Criteria(DCEntity.KEY_ALIAS_OF).is(uri)), DCEntity.class, collectionName);
       for (DCEntity entity : entities) {
          recurseDeleteAliases(entity.getUri(), collectionName);
-         mgo.remove(entity, collectionName); // NB here it's okay that we don't check version numbers: aliases aren't versioned.
+         mgoManager.getMongoTemplate().remove(entity, collectionName); // NB here it's okay that we don't check version numbers: aliases aren't versioned.
       }
 
    }
@@ -366,14 +375,15 @@ public class EntityServiceImpl implements EntityService {
    public void unwindAliases(DCEntity dataEntity, String previousUri) {
       String collectionName = entityModelService.getStorageModel(dataEntity).getCollectionName();
 
-      DCEntity existing = mgo.findOne(new Query(new Criteria(DCEntity.KEY_URI).is(dataEntity.getUri()).and(DCEntity.KEY_ALIAS_OF).exists(true)), DCEntity.class, collectionName);
+      DCEntity existing = mgoManager.getMongoTemplate()
+            .findOne(new Query(new Criteria(DCEntity.KEY_URI).is(dataEntity.getUri()).and(DCEntity.KEY_ALIAS_OF).exists(true)), DCEntity.class, collectionName);
       if (existing != null) {
          // OK, we have an alias where we want to put our entity.
          // check that it points to our entity before deleting it.
          String uri = walkDownAliasChain(existing, collectionName);
          if (uri != null && uri.equals(previousUri)) {
             // remove the alias
-            mgo.remove(existing, collectionName);
+            mgoManager.getMongoTemplate().remove(existing, collectionName);
          }
       }
 
@@ -384,7 +394,8 @@ public class EntityServiceImpl implements EntityService {
     */
    private String walkDownAliasChain(DCEntity alias, String collectionName) {
       if (alias.isAlias()) {
-         DCEntity target = mgo.findOne(new Query(new Criteria(DCEntity.KEY_URI).is(alias.getAliasOf())), DCEntity.class, collectionName);
+         DCEntity target = mgoManager.getMongoTemplate()
+               .findOne(new Query(new Criteria(DCEntity.KEY_URI).is(alias.getAliasOf())), DCEntity.class, collectionName);
          if (target == null) {
             return null;
          }
@@ -409,7 +420,8 @@ public class EntityServiceImpl implements EntityService {
 
    private void recurseGetAliases(String uri, String collectionName, List<String> aliases) {
       aliases.add(uri);
-      List<DCEntity> entities = mgo.find(new Query(new Criteria(DCEntity.KEY_ALIAS_OF).is(uri)), DCEntity.class, collectionName);
+      List<DCEntity> entities = mgoManager.getMongoTemplate()
+            .find(new Query(new Criteria(DCEntity.KEY_ALIAS_OF).is(uri)), DCEntity.class, collectionName);
       for (DCEntity entity : entities) {
          recurseGetAliases(entity.getUri(), collectionName, aliases);
       }

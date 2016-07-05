@@ -10,8 +10,8 @@
       http://www.springframework.org/schema/context/spring-context-3.2.xsd">
 
    <!-- overriding some properties (BEFORE import to take precedence over imported properties) -->
-   <!-- context:property-placeholder location="classpath:oasis-datacore-core-test.properties"
-      order="-2" ignore-unresolvable="true"/ --><!-- so defaults to importing PropertyPlaceholder/*Resolver -->
+   <context:property-placeholder location="classpath:oasis-datacore-core-test.properties"
+      order="-2" ignore-unresolvable="true"/><!-- so defaults to importing PropertyPlaceholder/*Resolver -->
    
    <!-- common definition -->
    <import resource="classpath:oasis-datacore-common-context.xml" /><!-- required for DCRequestContextProviderFactory -->

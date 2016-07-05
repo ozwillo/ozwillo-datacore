@@ -60,6 +60,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
    public static final String MODEL_STORAGE_NAME = MODEL_MIXIN_NAME;
    public static final String MODEL_POINTOFVIEW_NAME = "dcmpv:PointOfView_0";
    public static final String POINTOFVIEW_NAME_PROP = "dcmpv:name";
+   public static final String MODEL_DATABASEPOINTOFVIEW_NAME = "dcmpvdb:DatabasePointOfView_0";
    public static final String MODEL_PROJECT_NAME = "dcmp:Project_0";
    public static final String MODEL_USECASEPOINTOFVIEW_NAME = "dcmpv:UseCasePointOfView_0";
    public static final String MODEL_USECASEPOINTOFVIEWELEMENT_NAME = "dcmpv:UseCasePointOfViewElement_0";
@@ -285,8 +286,17 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       pointOfViewModel.setStorage(true);
       pointOfViewModel.setInstanciable(false); // polymorphic root storage
 
+      DCModelBase databasePointOfViewModel = new DCMixin(MODEL_DATABASEPOINTOFVIEW_NAME)
+         .addMixin(pointOfViewModel)
+         .addField(new DCField("dcmpvdb:robust", "boolean", false, 0))
+         .addField(new DCField("dcmpvdb:uri", "string", false, 0))
+         ;
+      databasePointOfViewModel.setStorage(false); // store in dcmpv
+      databasePointOfViewModel.setInstanciable(false);
+      
       DCModelBase projectModel = new DCMixin(MODEL_PROJECT_NAME)
          .addMixin(pointOfViewModel)
+         .addMixin(databasePointOfViewModel)
          ///.addField(new DCField("dcmp:name", "string", true, 100))
          ///.addField(new DCField("dcmp:documentation", "string", false, 100))
          .addField(new DCListField("dcmp:localVisibleProjects", new DCResourceField("useless", MODEL_PROJECT_NAME)))
@@ -321,7 +331,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          ;
       ((DCListField) useCasePointOfViewModel.getField("dcmp:useCasePointOfViewElements")).setIsSet(true); // (not used yet) merge at restart, rather than override
       useCasePointOfViewModel.setStorage(false); // store in dcmpv
-      projectModel.setInstanciable(true);
+      ///useCasePointOfViewModel.setInstanciable(true);
 
       DCModelBase useCasePointOfViewElementModel = new DCMixin(MODEL_USECASEPOINTOFVIEWELEMENT_NAME)
          .addMixin(pointOfViewModel)
@@ -345,7 +355,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       modelsToCreate.addAll(Arrays.asList(displayableModel, countryLanguageSpecificModel,
             fieldIdentificationModel, fieldModel,
             mixinBackwardCompatibilityModel, modelIdentificationModel, modelSecurityModel, modelOrMixinModel,
-            pointOfViewModel, projectModel, useCasePointOfViewModel, useCasePointOfViewElementModel,
+            pointOfViewModel, databasePointOfViewModel, projectModel, useCasePointOfViewModel, useCasePointOfViewElementModel,
             ancestorsModel));
    }
 
