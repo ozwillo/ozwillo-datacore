@@ -6,7 +6,7 @@ export default class Quickstart extends React.Component{
   render() {
     return (
       <div>
-        <h2>Playground User Manual</h2>
+        <h2>Quickstart</h2>
         <p>The aim of this playground is to familiarize yourself with the <a>Ozwillo Datacore API</a>.<br/>
         Indeed, it is far easier to discover this API with the playground than calling it with curl or equivalent.</p>
     <ul>
