@@ -2123,11 +2123,13 @@
          }
       }
       
+      // range-based iteration on dcmo:globalFields.dcmf:name (indexed thanks to #168) :
+      // (sort must ALSO be on dcmo:globalFields.dcmf:name else "maxScan reached" error)
       findDataByType({ modelType : 'dcmo:model_0', query : new UriQuery(
          'dcmo:globalFields.dcmf:name', '$in'
          // globalFields else won't get ex. CountryFR inheriting from Country but with no additional field (??)
          + JSON.stringify(fieldNamesOnePerModelIfPossible, null, null)
-      ).p('dcmo:name', (lastEnrichedModelOrMixinName ? '>' + lastEnrichedModelOrMixinName : '') +  '+').s() },
+      ).p('dcmo:globalFields.dcmf:name', (lastEnrichedModelOrMixinName ? '>' + lastEnrichedModelOrMixinName : '') +  '+').s() },
          function(fieldNameMixinsFound, relativeUrl, data, importState) {
             for (var fnmInd in fieldNameMixinsFound) {
                var involvedMixin = fieldNameMixinsFound[fnmInd];
