@@ -95,7 +95,12 @@ public class ResourceEntityMapperService {
    protected DatacoreRequestContextService serverRequestContext;
 
 
-   /** LATER use request context */
+   /**
+    * LATER use request context
+    * @param dcI18nField
+    * @param dcFieldModel
+    * @return never null, at worse en
+    */
    public String getDefaultLanguage(DCI18nField dcI18nField, DCModelBase dcFieldModel) {
       String defaultLanguage = null;
       // assume it is translated in the default language...
@@ -124,6 +129,24 @@ public class ResourceEntityMapperService {
       i18nLanguageMap.put(DCI18nField.KEY_LANGUAGE, language);
       i18nLanguageMap.put(DCI18nField.KEY_VALUE, value);
       return i18nLanguageMap;
+   }
+   /** used for alias checking */
+   public String getDefaultLanguageValue(DCResource resource, DCI18nField field, DCModelBase model) {
+      String defaultLanguage = this.getDefaultLanguage((DCI18nField) field, model);
+      String fieldName = field.getName();
+      Object value = resource.get(fieldName);
+      if (value == null) {
+         return null;
+      }
+      @SuppressWarnings("unchecked")
+      List<Map<String, String>> languageToValueMaps = (List<Map<String, String>>) value;
+      String defaultValue = null;
+      for (Map<String, String> languageToValueMap : languageToValueMaps) {
+         if (defaultLanguage.equals(languageToValueMap.get(DCI18nField.KEY_LANGUAGE))) {
+            return languageToValueMap.get(DCI18nField.KEY_VALUE);
+         }
+      }
+      return null;
    }
    /** same as ValueParsingService's, but using context (field, global defaults, LATER request) ;
     * especially allows to parse (i18n) according to context

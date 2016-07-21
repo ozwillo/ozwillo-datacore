@@ -5,6 +5,7 @@ import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.EntityService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.model.DCField;
+import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.model.DCSecurity;
@@ -21,7 +22,6 @@ import org.oasis.datacore.rest.server.event.DCResourceEvent.Types;
 import org.oasis.datacore.rest.server.event.EventService;
 import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
-import org.oasis.datacore.rest.server.parsing.service.QueryParsingService;
 import org.oasis.datacore.server.uri.BadUriException;
 import org.oasis.datacore.server.uri.UriService;
 import org.slf4j.Logger;
@@ -33,6 +33,7 @@ import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
 
+import java.net.URISyntaxException;
 import java.util.*;
 
 /**
@@ -83,9 +84,10 @@ public class ResourceService {
    /** to pass putRatherThanPatchMode */
    @Autowired
    protected DCRequestContextProviderFactory requestContextProviderFactory;
-
+   
+   /** for alias behaviour, to rebuild resource ID & URI */
    @Autowired
-   private QueryParsingService queryParsingService;
+   private ValueParsingService valueParsingService;
    
    @Autowired
    private HistorizationService historizationService;
@@ -441,7 +443,7 @@ public class ResourceService {
           * ID field names are enforced: we should have URI = ID fields
           * So let's check that!
           */
-         String computedUri = computeURIFromFields(resource, dcModel, project);
+         String computedUri = computeURIFromFields(resource, dcModel, project).toString();
          String previousUri = resource.getUri();
          if (!computedUri.equals(previousUri)) {
 
@@ -724,7 +726,7 @@ public class ResourceService {
       return aliases;
    }
 
-   private String computeURIFromFields(DCResource resource, DCModelBase dcModel, DCProject project) throws ResourceException, BadUriException {
+   private DCURI computeURIFromFields(DCResource resource, DCModelBase dcModel, DCProject project) throws ResourceException, BadUriException {
       if (dcModel.getIdFieldNames() != null) {
          String computedId;
          try {
@@ -732,8 +734,8 @@ public class ResourceService {
                     .map(fn -> fieldNameToString(fn, resource, dcModel))
                     .reduce("", (a, b) -> a + "/" + b);
             DCURI dcuri = uriService.parseUri(resource.getUri());
-            return dcuri.getContainer() + "/dc/type/" + dcuri.getType() + computedId;
-         } catch (FieldMappingException e) {
+            return new DCURI(dcuri.getContainer(), dcuri.getType(), computedId);
+         } catch (FieldMappingException | URISyntaxException e) {
             throw new ResourceException(e.getMessage(), resource, project);
          }
       } else {
@@ -761,9 +763,28 @@ public class ResourceService {
             }
 
          case "string":
-            return (String) resource.get(fieldName);
+         case "boolean":
+         case "int":
+         case "float":
+         case "long":
+         case "double":
+         case "date":
+         try {
+            return valueParsingService.valueToString(resource.get(fieldName));
+         } catch (ResourceParsingException e) {
+            throw new RuntimeException("While checking for aliases of " + fieldName
+                  + " structural field, error writing its value " + resource.get(fieldName));
+         }
 
-         default:
+         case "i18n":
+            String defaultLanguageValue = resourceEntityMapperService.getDefaultLanguageValue(resource, (DCI18nField) field, model);
+            if (defaultLanguageValue == null) {
+               throw new FieldMappingException("While checking for aliases of " + fieldName
+                     + " structural field, no default language value found (so no reproducible ID) in "
+                     + resource.get(fieldName));
+            }
+            return defaultLanguageValue;
+         default: // map, list
             throw new FieldMappingException("Field type " + fieldName + " not supported in a structural field");
       }
    }
@@ -773,6 +794,8 @@ public class ResourceService {
     * percolate up the stack
     */
    private static class FieldMappingException extends RuntimeException {
+      private static final long serialVersionUID = 4969427960384681966L;
+
       public FieldMappingException(String message) {
          super(message);
       }
