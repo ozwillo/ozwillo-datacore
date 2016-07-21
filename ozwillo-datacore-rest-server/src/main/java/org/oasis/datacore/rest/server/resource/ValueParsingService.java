@@ -422,13 +422,16 @@ public class ValueParsingService {
       if (value == null) {
          return null;
       }
-      if (value instanceof Date) {
-         if (!(value instanceof DateTime)) {
-            // TODO better in mongo persistence
-            return new DateTime((Date) value, DateTimeZone.UTC).toString();
-            // NB. if not UTC, default timezone has a non-integer time shift
-         }
+      if (value instanceof String) { // not recognized as java primitive
+         return (String) value;
+      }
+      if (value instanceof DateTime) { // not recognized as java primitive, nor inherits from Date
          return value.toString();
+      }
+      if (value instanceof Date) { // should not happen from REST API
+         // TODO better in mongo persistence
+         return new DateTime((Date) value, DateTimeZone.UTC).toString();
+         // NB. if not UTC, default timezone has a non-integer time shift
       } else {
          Class<? extends Object> valueClass = value.getClass();
          if (valueClass.isPrimitive() || ClassUtils.wrapperToPrimitive(valueClass) != null) {
@@ -451,7 +454,7 @@ public class ValueParsingService {
          return value.toString(); // TODO Date case ? (TimeZone ??) or quoted ?
       default:
       }*/
-      // list (including i18n) or map :
+      // map & list (including i18n, as string rather see resourceService.geDefaulttLannguageValue()) :
       try {
          return mapper.writer().writeValueAsString(value);
       } catch (JsonProcessingException jpex) {
