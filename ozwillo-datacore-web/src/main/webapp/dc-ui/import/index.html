@@ -232,6 +232,12 @@ Windows encoding and semicolon separator instead (see
 <a href="https://support.office.com/en-za/article/Import-or-export-text-txt-or-csv-files-5250ac4c-663c-47ce-937b-339e391393ba">how to configure Excel</a>),
 Google Doc Spreadsheet can help instead but migrating between different spreadsheet
 softwares (such as Google Doc's) often breaks files (ex. "true" becomes VRAI, "false" becomes "0").
+<br/><br/>
+To help with importing dates, in addition to the Datacore API's full
+<a href="https://en.wikipedia.org/wiki/ISO_8601">ISO8601</a> format (<span class="dcjsonline">YYYY-MM-DDTHH:mm:ss.SSSZ</span>),
+the import tool also supports <span class="dcjsonline">YYYY-MM-DDTHH:mm:ssZ</span>, <span class="dcjsonline">YYYY-MM-DDZ</span>,
+<span class="dcjsonline">YYYYMMDDZ</span>, <span class="dcjsonline">YYYYMMDD</span>
+(thanks to <a href="http://momentjs.com/docs/#/parsing/string-formats/">momentjs</a>).
 </div>
 
 

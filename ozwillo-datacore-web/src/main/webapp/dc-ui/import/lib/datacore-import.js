@@ -101,12 +101,23 @@
    function identity(s) {
       return s;
    }
-   var defaultCsvDateFormat = "YYYYMMDD" + "Z"; // TODO in model csv ?!
-   var defaultTimezone = "+01:00"; // fr summer timezone ; TODO winter hour !!
+   var defaultDateDisplayFormat = "YYYY-MM-DDTHH:mm:ss.SSS"; // (in UTC) PLUS Z at the end
+   var defaultDateFormat = defaultDateDisplayFormat + 'Z';
+   var supportedCsvDateFormats = [ "YYYYMMDD", // backward compatible before #17x, ex. 2016-04-04T00:00:00+02:00 in UTC+2
+         // (but in French summer, import tool will produce "+02:00" instead of "+01:00" timezoned dates,
+         // but all are converted to UTC anyway)
+         "YYYYMMDDZ", "YYYY-MM-DDZ", // ex. 2016-04-04T02:00:00+02:00 in UTC+2
+         "YYYY-MM-DDTHH:mm:ssZ", // without milliseconds
+         defaultDateFormat ]; // TODO LATER move to import conf, make it conf'ble...
    var convertMap = {
-      "date" : function(stringValue) { return moment(stringValue + defaultTimezone,
-          defaultCsvDateFormat).format("YYYY-MM-DDTHH:mm:ssZ"); }, // rather than .toISOString()
-          // which converts dates to GMT and don't preserve timezone, see http://momentjs.com/docs/
+      "date" : function(stringValue) {
+         // autodetect format among a list http://momentjs.com/docs/#/parsing/string-formats/
+         return moment(stringValue, supportedCsvDateFormats)
+               .utc() // ex. 2016-04-04T00:00:002 because server stores and returns them
+               // like this anyway, see http://momentjs.com/docs/#/parsing/utc/
+               .format(defaultDateDisplayFormat) + 'Z'; // rather than .toISOString()
+         // which converts dates to GMT and don't preserve timezone, see http://momentjs.com/docs/
+      },
       "resource" : identity, // NOT subresource
       "map" : identity,
       "i18n" : identity, // list of map

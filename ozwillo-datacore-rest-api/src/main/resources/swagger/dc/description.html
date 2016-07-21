@@ -359,8 +359,10 @@ but can be something else if parsing is defined consistently within $subResource
 <b>Values</b> are formatted in JSON as follows :
 <br/><br/>
 &nbsp;&nbsp;- <span class="dcjsonline">date</span> as <a href="http://en.wikipedia.org/wiki/ISO_8601">ISO8601</a>
-such as <span class="dcjsonline">"2014-01-08T09:31:19.062Z"</span>, <span class="dcjsonline">"2014-01-08T10:31:19.062+01:00"</span>.
-Put your (data or application) timezone in your dates so that they can be shared across the world while staying readable for your local use case.
+such as <span class="dcjsonline">"2014-01-08T09:31:19.062Z"</span>. Non-UTC timezones (such as
+<span class="dcjsonline">"2014-01-08T10:31:19.062+01:00"</span>) are supported but will be converted to UTC.
+Put your (data or application) timezone in your dates so that they can be shared across the world
+while staying readable for your local use case.
 <br/><br/>
 &nbsp;&nbsp;- <span class="dcjsonline">long</span> and <span class="dcjsonline">double</span> as string
 <br/><br/>
