@@ -589,6 +589,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
                + ((i == 0) ? fieldPathElements.length - 1 : i) + "th path element "
                + fieldPathElement + ", because field is unkown. Allowed fields are "
                + linkModel.getGlobalFieldMap().keySet());
+         return null;
       }
       String storageReadName = subDcField.getStorageReadName();
       if (storageReadName == null) {
