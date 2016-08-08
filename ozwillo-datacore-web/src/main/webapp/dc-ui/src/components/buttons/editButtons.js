@@ -8,6 +8,7 @@ import {ajaxCall} from '../../utils.js';
 class EditButtons extends React.Component{
   editButton = () => {
     var relativeUrl = this.props.currentPath;
+
     //we make a call in order to get the datas without the html formating
     ajaxCall(
       relativeUrl,
@@ -46,7 +47,6 @@ class EditButtons extends React.Component{
         else{
           var resource = displayJsonObjectResult(data);
         }
-        
         this.props.dispatch(actions.setCurrentQueryPath(this.extractURIFromId(data[0]["@id"])));
         this.props.dispatch(actions.setCurrentDisplay(resource));
       },

@@ -1,9 +1,24 @@
+function readCookie(key) {
+   var result;
+   return (result = new RegExp('(?:^|; )' + encodeURIComponent(key) + '=([^;]*)').exec(document.cookie)) ? (result[1]) : null;
+}
+
+function getAuthHeader() {
+   var authCookie = readCookie("authorization");
+   if (authCookie && authCookie.length != 0) {
+      return authCookie;
+   }
+   return 'Basic YWRtaW46YWRtaW4=';
+}
+
 /*CurrentProject is optional: we have to use it only when the store takes to long to update the components (which means the getProject is not up-to-date yet)*/
 export function ajaxCall(relativeUrl, currentSuccess, currentError, additionalHeaders, operation, data, currentProject){
   var currentOperation = operation !== null ? operation: 'GET';
   var currentProject = currentProject ? currentProject : getProject();
+
+
   var headers = {
-    'Authorization' : "Basic YWRtaW46YWRtaW4=",
+    'Authorization' : getAuthHeader(),
     'If-None-Match': -1,
     'Accept' : 'application/json',
     'X-Datacore-Project': currentProject
