@@ -392,7 +392,6 @@ public class ResourceModelIniter extends DatacoreSampleBase {
             "Geographical jurisdictions", null); // "Geographical jurisdictions (" + toPlaygroundLink("geo:Area_0") + ")"
       DCProject geoProject = projectInitService.buildFacadeProjectDefaultConf(geo1Project);
 
-      /*
       DCProject org0Project = projectInitService.buildContainerVersionedProjectDefaultConf("org", 0,
             "Organizations, public and private, as well as Persons", null, geo0Project);
       org0Project.setModelLevelSecurityEnabled(true);
@@ -402,8 +401,8 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       org1Project.setModelLevelSecurityEnabled(true);
       org1Project.getSecurityDefaults().setAuthentifiedCreatable(true); // anybody can create an org
       DCProject orgProject = projectInitService.buildFacadeProjectDefaultConf(org1Project);
-      */
 
+      /*
       DCProject citizenkin0Project = projectInitService.buildContainerVersionedProjectDefaultConf("citizenkin", 0,
             "Citizen Kin procedures", null, geoProject);
       citizenkin0Project.setModelLevelSecurityEnabled(true);
@@ -412,11 +411,12 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       citizenkin0Project.getSecurityDefaults().setResourceCreationOwners(new LinkedHashSet<String>()); // owner is u_user as before BUT THIS SHOULD NOT WORK ??
       // (for both to be used, security on CK models should be voided)
       DCProject citizenkinProject = projectInitService.buildFacadeProjectDefaultConf(citizenkin0Project);
-      
+      */
+
       // create if not exist :
       DCProject[] defaultProjects = new DCProject[] { geo0Project, geo1Project, geoProject, // not commented for citizenkin
-            ///org0Project, org1Project, orgProject, // could be put back if needed
-            citizenkin0Project, citizenkinProject };
+            org0Project, org1Project, orgProject // could be put back if needed
+            /*citizenkin0Project, citizenkinProject */ };
       for (DCProject defaultProject : defaultProjects) {
          try {
             resourceService.get(SimpleUriService.buildUri(ResourceModelIniter.MODEL_PROJECT_NAME,
