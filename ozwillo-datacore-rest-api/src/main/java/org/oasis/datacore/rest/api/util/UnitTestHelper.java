@@ -33,7 +33,7 @@ public class UnitTestHelper {
             throw new RuntimeException(e);
          }
       }
-      throw new IllegalArgumentException(); // when ??
+      return entity + ""; // when calling local server impl i.e. datacoreApiImpl directly
    }
 	
 	public static String arrayToIri(String... array) {

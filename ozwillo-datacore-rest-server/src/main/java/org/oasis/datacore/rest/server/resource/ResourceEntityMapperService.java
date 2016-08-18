@@ -19,6 +19,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Instant;
 import org.oasis.datacore.core.context.DatacoreRequestContextService;
 import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.EntityService;
@@ -250,8 +251,12 @@ public class ResourceEntityMapperService {
          
       } else if ("date".equals(dcField.getType())) {
          if (!(resourceValue instanceof String)) {
-            if (resourceValue instanceof DateTime) { // allow it when ex. in a local call
+            // allow joda date when ex. in a local call :
+            if (resourceValue instanceof DateTime) {
                entityValue = (DateTime) resourceValue;
+            } else if (resourceValue instanceof Instant) {
+               entityValue = ((Instant) resourceValue).toDateTime();
+            // NB. could similarly allow java 8 date BUT requires conversion (through string ?)
             } else {
                throw new ResourceParsingException("date Field value is not a string : " + resourceValue);
             }

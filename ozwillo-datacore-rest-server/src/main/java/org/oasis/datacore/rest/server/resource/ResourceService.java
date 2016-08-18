@@ -246,7 +246,7 @@ public class ResourceService {
       if (existingDataEntity != null) {
          if (isCreation) {
             // already exists, but only allow creation
-            throw new ResourceException("Already exists at uri (forbidden in strict POST mode) :\n"
+            throw new ResourceException("Already exists at uri (so version should be provided) :\n"
                         + existingDataEntity.toString(), resource, project); // TODO TODO security check access first !!!
          }/* else {
             // HTTP ETag checking (provided in an If-Match header) :
