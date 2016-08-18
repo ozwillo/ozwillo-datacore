@@ -191,10 +191,21 @@ public class DCResource {
     */
    public DCResource setUriFromId(String containerUrl, String id) throws URISyntaxException {
       this.setUri(UriHelper.buildUri(containerUrl, this.getTypes().get(0), id));
+      this.setId(id);
       return this;
    }
+   /**
+    * Helps set URI once props are set, also sets id.
+    * Example :
+    * r.setUriFromId(containerUrl, "" + r.get("org:countryId") + '/' + r.get("org:regNumber"));
+    * @param containerUrl
+    * @param id
+    * @return
+    * @throws URISyntaxException 
+    */
    public DCResource setUriFromId(URI containerUrl, String id) {
       this.setUri(UriHelper.buildUri(containerUrl, this.getTypes().get(0), id));
+      this.setId(id);
       return this;
    }
    /** helper method to build new DCResources FOR TESTING
