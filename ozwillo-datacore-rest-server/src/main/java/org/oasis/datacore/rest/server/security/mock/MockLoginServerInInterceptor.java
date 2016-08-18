@@ -20,7 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 /**
- * USED ONLY BY TESTS i.e. fails if localauthdevmode=falls
+ * USED ONLY BY TESTS i.e. fails if localauthdevmode=false
  * Logs in (without any check) as provided user available in conf'd UserDetailsService.
  * Done as CXF interceptor because looks in HTTP request.
  * 

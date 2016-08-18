@@ -1,18 +1,14 @@
 package org.oasis.datacore.core.security.mock;
 
-import java.util.ArrayList;
 import java.util.Set;
 
 import org.oasis.datacore.core.security.DCUserImpl;
 import org.oasis.datacore.core.security.service.impl.DatacoreSecurityServiceImpl;
+import org.oasis.datacore.rest.client.cxf.mock.AuthenticationHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -48,7 +44,7 @@ public class LocalAuthenticationService {
    /** TODO LATER remove optional when there is a mock in the -core project */
    @Autowired(required = false)
    @Qualifier("datacore.localUserDetailsService")
-   private UserDetailsService mockUserDetailsService;
+   private UserDetailsService mockUserDetailsService = null;
 
    /** to init user */
    @Autowired
@@ -60,33 +56,23 @@ public class LocalAuthenticationService {
     * @param username
     */
    public void loginAs(String username) {
-      if (mockUserDetailsService == null) {
-         return; // ex. in -core tests
+      if (mockUserDetailsService != null) {
+         UserDetails userDetails = mockUserDetailsService.loadUserByUsername(username);
+         if (userDetails == null) {
+            SecurityContextHolder.clearContext();
+            throw new RuntimeException("Unknown user " + username);
+         }
+         
+         User user = securityServiceImpl.buildUser((User) userDetails); // NB. also precomputes its permissions
+         AuthenticationHelper.loginAs(user);
+         
+      } else { // ex. in -core tests or client
+         AuthenticationHelper.loginAs(username);
       }
-      UserDetails userDetails = mockUserDetailsService.loadUserByUsername(username);
-      if (userDetails == null) {
-         SecurityContextHolder.clearContext();
-         throw new RuntimeException("Unknown user " + username);
-      }
-      
-      DCUserImpl user = securityServiceImpl.buildUser((User) userDetails); // NB. also precomputes its permissions 
-      
-      Authentication authentication = new TestingAuthenticationToken(user, "",
-            new ArrayList<GrantedAuthority>(userDetails.getAuthorities()));
-      // TODO rather than PreAuthenticatedAuthenticationToken because mock 
-      
-      authentication.setAuthenticated(true); // else in MethodSecurityInterceptor tries to reauth...
-      // TODO but don't do it for guest ??
-      
-      // TODO guest rather using AnonymousAuthenticationToken ?!
-      
-      SecurityContext sc = new SecurityContextImpl();
-      sc.setAuthentication(authentication);
-      SecurityContextHolder.setContext(sc);
    }
    
    public void logout() {
-      SecurityContextHolder.clearContext();
+      AuthenticationHelper.logout(); // clears context
    }
  
    /**

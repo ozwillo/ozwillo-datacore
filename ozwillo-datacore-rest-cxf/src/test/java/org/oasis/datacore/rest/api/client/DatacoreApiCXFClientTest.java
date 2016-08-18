@@ -11,7 +11,7 @@ import org.junit.runner.RunWith;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.client.QueryParameters;
-import org.oasis.datacore.rest.client.cxf.mock.MockClientAuthenticationHelper;
+import org.oasis.datacore.rest.client.cxf.mock.AuthenticationHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -119,14 +119,14 @@ public class DatacoreApiCXFClientTest {
    
    @Test
    public void testMockAuthenticationTestUser() {
-      MockClientAuthenticationHelper.loginAs(TEST_USER_JOHN);
+      AuthenticationHelper.loginAs(TEST_USER_JOHN);
       try {
          List<DCResource> res = datacoreApiClient.findDataInType(DatacoreApiMockServerImpl.TEST_HEADER_MODEL_TYPE_QUERY_TRIGGER,
                new QueryParameters(), 0, 0);
          Assert.assertTrue("Test user login should have been found in testUser header",
                res != null && !res.isEmpty() && TEST_USER_JOHN.equals(res.get(0).get("testUser")));
       } finally {
-         MockClientAuthenticationHelper.logout();
+         AuthenticationHelper.logout();
       }
    }
 }

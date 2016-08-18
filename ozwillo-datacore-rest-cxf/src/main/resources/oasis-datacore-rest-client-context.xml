@@ -120,7 +120,8 @@
          <bean class="org.oasis.datacore.rest.client.cxf.QueryParametersClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.ETagClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.ContextClientOutInterceptor"/>
-         <bean class="org.oasis.datacore.rest.client.cxf.mock.MockLoginClientOutInterceptor"/><!-- TODO mock -->
+         <bean class="org.oasis.datacore.rest.client.cxf.LoginClientOutInterceptor"/><!-- also provides testUser header
+         but anyway it only works if server is in localauthdevmode=true -->
       </jaxrsc:outInterceptors>
       <!-- jaxrsc:inInterceptors>
          <bean class="org.oasis.datacore.rest.client.cxf.obsolete.ETagClientInInterceptor"/>
@@ -154,7 +155,8 @@
          <bean class="org.oasis.datacore.rest.client.cxf.QueryParametersClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.ETagClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.ContextClientOutInterceptor"/>
-         <bean class="org.oasis.datacore.rest.client.cxf.mock.MockLoginClientOutInterceptor"/><!-- TODO mock -->
+         <bean class="org.oasis.datacore.rest.client.cxf.LoginClientOutInterceptor"/><!-- also provides testUser header
+         but anyway it only works if server is in localauthdevmode=true -->
       </jaxrsc:outInterceptors>
       <jaxrsc:features>
          <cxf:logging/>
@@ -177,7 +179,8 @@
          <bean class="org.oasis.datacore.rest.client.cxf.QueryParametersClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.ETagClientOutInterceptor"/>
          <bean class="org.oasis.datacore.rest.client.cxf.ContextClientOutInterceptor"/>
-         <bean class="org.oasis.datacore.rest.client.cxf.mock.MockLoginClientOutInterceptor"/><!-- TODO mock -->
+         <bean class="org.oasis.datacore.rest.client.cxf.LoginClientOutInterceptor"/><!-- also provides testUser header
+         but anyway it only works if server is in localauthdevmode=true -->
       </jaxrsc:outInterceptors>
       <jaxrsc:features>
          <cxf:logging/>
