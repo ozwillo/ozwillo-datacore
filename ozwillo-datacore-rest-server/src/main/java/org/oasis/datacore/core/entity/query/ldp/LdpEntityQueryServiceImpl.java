@@ -23,9 +23,11 @@ import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.model.DCResourceField;
+import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.core.security.DCUserImpl;
 import org.oasis.datacore.core.security.EntityPermissionEvaluator;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
+import org.oasis.datacore.model.resource.ResourceMetamodelIniter;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.server.MonitoringLogServiceImpl;
@@ -718,7 +720,13 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       // (BEWARE it is NOT the max amount of doc returned because sorts or multiple
       // criteria can eat some scans)
       boolean applyMaxScan = queryParsingContext.isHasNoIndexedField() // true // to test only
-            || mgo == mgoManager.getDefaultMongoTemplate(); // else custom secondary
+            //&& !storageModel.getCollectionName().equals(DCProject.OASIS_META + '.' + ResourceMetamodelIniter.MODEL_MIXIN_NAME) // don't apply
+            && !storageModel.getCollectionName().startsWith(DCProject.OASIS_META + '.') // don't apply
+            // on metamodel ; WORKAROUND FOR #175 Project not found at startup because maxScan reached on model mongo queries
+            // which is OK because there are not a lot of entities in metamodel.
+            // Solution : maybe prefix existing indexes ex. _p.dcmo:globalFields.dcmf:name by _b,
+            // but shouldn't they be used anyway ?
+            && mgo == mgoManager.getDefaultMongoTemplate(); // don't apply on custom secondary
       int maxScan = 0;
       if (applyMaxScan) {
          maxScan = this.maxScan;
