@@ -80,6 +80,17 @@ export class Content extends React.Component{
 
   callAPIUpdatePlayground = (relativeUrl) => {
     //TODO: encode URI
+    var myEncodeUri = encodeUri(relativeUrl);
+
+    if(myEncodeUri.query){
+      relativeUrl = '/dc/type/'+myEncodeUri.modelType+'?'+myEncodeUri.query
+    }
+    else{
+      relativeUrl = '/dc/type/'+myEncodeUri.modelType
+    }
+
+
+
     var reactParent = this;
     ajaxCall(
       relativeUrl,

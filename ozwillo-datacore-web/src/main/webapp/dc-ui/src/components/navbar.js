@@ -33,8 +33,10 @@ class NavBar extends React.Component{
     for(var model of models){
       var modelName = getModelFromModel(model["@id"]);
       display += '- <a onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))"\
-        href="/dc/type/dcmo:model_0/'+modelName+'" class="dclink">'+modelName+'</a> and <a\
-        onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))" \
+        href="/dc/type/dcmo:model_0/'+modelName+'" class="dclink">'+modelName+'</a>:  \
+        its stored <a onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))"\
+        href="/dc/type/dcmo:model_0?dcmo:storageModel='+modelName+'" class="dclink">models</a>:  \
+        and <a onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))" \
         href="/dc/type/'+modelName+'" class="dclink">all their resources</a> <br/>';
     }
 
