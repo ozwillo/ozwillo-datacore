@@ -48722,10 +48722,10 @@
 
 	          var modelName = (0, _utils.getModelFromModel)(model["@id"]);
 	          display += '- <a onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))"\
-	        href="/dc/type/dcmo:model_0/' + modelName + '" class="dclink">' + modelName + '</a>:  \
-	        its stored <a onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))"\
-	        href="/dc/type/dcmo:model_0?dcmo:storageModel=' + modelName + '" class="dclink">models</a>:  \
-	        and <a onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))" \
+	        href="/dc/type/dcmo:model_0/' + modelName + '" class="dclink">' + modelName + '</a>: its \
+	        stored <a onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))"\
+	        href="/dc/type/dcmo:model_0?dcmo:storageModel=' + modelName + '" class="dclink">models</a> and\
+	        <a onclick="window.functionExposition.callAPIUpdatePlayground($(this).attr(\'href\'))" \
 	        href="/dc/type/' + modelName + '" class="dclink">all their resources</a> <br/>';
 	        }
 	      } catch (err) {
@@ -49121,14 +49121,14 @@
 	    };
 
 	    _this.callAPIUpdatePlayground = function (relativeUrl) {
-	      //TODO: encode URI
-	      var myEncodeUri = encodeUri(relativeUrl);
-
-	      if (myEncodeUri.query) {
-	        relativeUrl = '/dc/type/' + myEncodeUri.modelType + '?' + myEncodeUri.query;
-	      } else {
-	        relativeUrl = '/dc/type/' + myEncodeUri.modelType;
-	      }
+	      // var myEncodeUri = encodeUri(relativeUrl);
+	      //
+	      // if(myEncodeUri.query){
+	      //   relativeUrl = '/dc/type/'+myEncodeUri.modelType+'?'+myEncodeUri.query
+	      // }
+	      // else{
+	      //   relativeUrl = '/dc/type/'+myEncodeUri.modelType
+	      // }
 
 	      var reactParent = _this;
 	      (0, _utils.ajaxCall)(relativeUrl, function (data) {
@@ -51038,11 +51038,16 @@
 	        _this.props.setErrorMessage("Can't delete this data", xhr.responseText);
 	      }, null, 'GET');
 	    }, _this.deleteRessource = function (relativeUrl, version) {
-	      (0, _utils.ajaxCall)(relativeUrl, function (data) {
-	        _this.props.dispatch(actions.setCurrentDisplay(data));
-	      }, function (xhr) {
-	        _this.props.setErrorMessage("Can't delete this data", xhr.responseText);
-	      }, { "If-match": version }, 'DELETE');
+	      var reactParent = _this;
+	      $('.confirmationDelete').modal({
+	        onApprove: function onApprove() {
+	          (0, _utils.ajaxCall)(relativeUrl, function (data) {
+	            reactParent.props.dispatch(actions.setCurrentDisplay(data));
+	          }, function (xhr) {
+	            reactParent.props.setErrorMessage("Can't delete this data", xhr.responseText);
+	          }, { "If-match": version }, 'DELETE');
+	        }
+	      }).modal('show');
 	    }, _temp), _possibleConstructorReturn(_this, _ret);
 	  }
 
@@ -51050,9 +51055,42 @@
 	    key: 'render',
 	    value: function render() {
 	      return _react2.default.createElement(
-	        'button',
-	        { className: 'small ui button', onClick: this.deleteButton, id: 'delButton', 'data-content': 'Delete data' },
-	        'del'
+	        'div',
+	        null,
+	        _react2.default.createElement(
+	          'button',
+	          { className: 'small ui button', onClick: this.deleteButton, id: 'delButton', 'data-content': 'Delete data' },
+	          'del'
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'ui basic modal confirmationDelete' },
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'description myCentering' },
+	            _react2.default.createElement(
+	              'p',
+	              null,
+	              'You are going to delete datas, are you sure?'
+	            )
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'actions' },
+	            _react2.default.createElement(
+	              'div',
+	              { className: 'ui ok green basic right inverted button' },
+	              _react2.default.createElement('i', { className: 'checkmark icon' }),
+	              'Yes'
+	            ),
+	            _react2.default.createElement(
+	              'div',
+	              { className: 'ui cancel red basic right inverted button' },
+	              _react2.default.createElement('i', { className: 'remove icon' }),
+	              'No'
+	            )
+	          )
+	        )
 	      );
 	    }
 	  }]);
@@ -52305,7 +52343,7 @@
 	            _react2.default.createElement(_linkPlayground2.default, { tools: this.props.tools, url: '/dc/type/geon3fr:D%C3%A9partement_0?geon:parent=http://data.ozwillo.com/dc/type/geon2fr:R%C3%A9gion_0/FR/FR-J&geo:name=+', value: 'NUTS3s by NUTS2' }),
 	            ', or depending on your country',
 	            _react2.default.createElement(_linkPlayground2.default, { tools: this.props.tools, url: '/dc/type/geon3:Nuts3_0?geo:country=http://data.ozwillo.com/dc/type/geocobg:C%D1%82%D1%80%D0%B0%D0%BD%D0%B0_0/BG&geo:name=+', value: 'NUTS3s by country' }),
-	            ' (or',
+	            ' ( or ',
 	            _react2.default.createElement(_linkPlayground2.default, { tools: this.props.tools, url: '/dc/type/geon3bg:%D0%9E%D0%B1%D0%BB%D0%B0%D1%81%D1%82_0?geo:name=+', value: 'country NUTS3s' }),
 	            '), and finally ',
 	            _react2.default.createElement(_linkPlayground2.default, { tools: this.props.tools, url: '/dc/type/addrpostci:PostalCity_0?addrpostci:nuts3=http://data.ozwillo.com/dc/type/geon3fr:D%C3%A9partement_0/FR/FR-75', value: 'address cities by NUTS3' }),
@@ -52361,7 +52399,7 @@
 	            _react2.default.createElement(_linkPlayground2.default, { tools: this.props.tools, url: '/dc/type/orgact:Activity_0?limit=100&@id=+', value: 'first query' }),
 	            ', then iterate on activities coming after last name returned : ',
 	            _react2.default.createElement(_linkPlayground2.default, { tools: this.props.tools, url: '/dc/type/orgact:Activity_0?limit=100&@id=>http://data.ozwillo.com/dc/type/orgactbg:%D0%94%D0%B5%D0%B9%D0%BD%D0%BE%D1%81%D1%82%D0%9A%D0%98%D0%94_0/BG/14.13+', value: 'second query' }),
-	            ',',
+	            ', ',
 	            _react2.default.createElement(_linkPlayground2.default, { tools: this.props.tools, url: '/dc/type/orgact:Activity_0?limit=100&@id=>http://data.ozwillo.com/dc/type/orgactbg:%D0%94%D0%B5%D0%B9%D0%BD%D0%BE%D1%81%D1%82%D0%9A%D0%98%D0%94_0/BG/25.61+', value: 'third query' }),
 	            '...'
 	          )
@@ -52515,7 +52553,7 @@
 	            _react2.default.createElement(_linkPlayground2.default, { tools: this.props.tools, url: '/dc/type/pli:city_0?pli:name_i18n.v=Torino', value: '/dc/type/pli:city_0?pli:name_i18n.v=Torino' }),
 	            ') so that values are useful even if not untranslated and therefore are not siloed in their language, but also language-scoped lookups such as ',
 	            _react2.default.createElement(_linkPlayground2.default, { tools: this.props.tools, url: '/dc/type/pli:city_0?pli:name_i18n.it=Torino', value: '/dc/type/pli:city_0?pli:name_i18n.it=Torino' }),
-	            ' (or using the exact field path through $elemMatch',
+	            '  (or using the exact field path through $elemMatch',
 	            _react2.default.createElement(_linkPlayground2.default, { tools: this.props.tools, url: '/dc/type/pli:city_0?pli:name_i18n=$elemMatch{"v":"Torino","l":"it"}', value: '/dc/type/pli:city_0?pli:name_i18n=$elemMatch{"v":"Torino","l":"it"}' }),
 	            ' ). Moreover, language can also be specified once for the whole query in a l or @language parameter such as in ',
 	            _react2.default.createElement(_linkPlayground2.default, { tools: this.props.tools, url: '/dc/type/pli:city_0?pli:name_i18n=Torino&l=it', value: '/dc/type/pli:city_0?pli:name_i18n=Torino&l=it' }),
