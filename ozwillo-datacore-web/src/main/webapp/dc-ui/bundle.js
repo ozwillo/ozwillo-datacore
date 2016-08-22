@@ -49129,7 +49129,7 @@
 	      // else{
 	      //   relativeUrl = '/dc/type/'+myEncodeUri.modelType
 	      // }
-
+	      _this.state = { errorMessage: false };
 	      var reactParent = _this;
 	      (0, _utils.ajaxCall)(relativeUrl, function (data) {
 	        _this.setUrl(relativeUrl, null);
@@ -49400,7 +49400,7 @@
 	          moreDetails
 	        );
 	      } else {
-	        var message = this.props.messageErrorDetails;
+	        var message = this.props.messageErrorDetails.slice(1, this.props.messageErrorDetails.length - 1);
 	      }
 
 	      return _react2.default.createElement(
@@ -51038,13 +51038,13 @@
 	        _this.props.setErrorMessage("Can't delete this data", xhr.responseText);
 	      }, null, 'GET');
 	    }, _this.deleteRessource = function (relativeUrl, version) {
-	      var reactParent = _this;
+	      var reactComponent = _this;
 	      $('.confirmationDelete').modal({
 	        onApprove: function onApprove() {
 	          (0, _utils.ajaxCall)(relativeUrl, function (data) {
-	            reactParent.props.dispatch(actions.setCurrentDisplay(data));
+	            reactComponent.props.dispatch(actions.setCurrentDisplay(data));
 	          }, function (xhr) {
-	            reactParent.props.setErrorMessage("Can't delete this data", xhr.responseText);
+	            reactComponent.props.setErrorMessage("Can't delete this data", xhr.responseText);
 	          }, { "If-match": version }, 'DELETE');
 	        }
 	      }).modal('show');
@@ -52217,9 +52217,9 @@
 	              null,
 	              'How to see Resource-level permissions using the Playground'
 	            ),
-	            ' : Resource-level permissions are returned when querying as owner (or admin) in debug mode. Therefore to check them in the Playground, go to the said Resource by entering ex.',
+	            ' : Resource-level permissions are returned when querying as owner (or admin) in debug mode. Therefore to check them in the Playground, go to the said Resource by entering ex. ',
 	            _react2.default.createElement(_linkPlayground2.default, { tools: this.props.tools, url: '/dc/type/poitour:Geoloc_0/32949', value: '/dc/type/poitour:Geoloc_0/32949' }),
-	            ' in the Playground URI address bar, then click on the colon (":") of the URI field (@id) to build a single result query such as this one, then go in debug mode by clicking on the "?" button, and finally look in the results for the "ownedEntities" part (that only contains data Resources that you have owner / admin rights on, for data security reasons) and within in the "owners", "writers" and "readers" entity fields. See below how to change them.'
+	            'in the Playground URI address bar, then click on the colon (":") of the URI field (@id) to build a single result query such as this one, then go in debug mode by clicking on the "?" button, and finally look in the results for the "ownedEntities" part (that only contains data Resources that you have owner / admin rights on, for data security reasons) and within in the "owners", "writers" and "readers" entity fields. See below how to change them.'
 	          ),
 	          _react2.default.createElement(
 	            'li',

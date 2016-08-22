@@ -87,9 +87,7 @@ export class Content extends React.Component{
     // else{
     //   relativeUrl = '/dc/type/'+myEncodeUri.modelType
     // }
-
-    
-
+    this.state = {errorMessage: false};
     var reactParent = this;
     ajaxCall(
       relativeUrl,

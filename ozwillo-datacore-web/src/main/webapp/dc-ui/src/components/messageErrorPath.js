@@ -39,7 +39,7 @@ export default class MessageErrorPath extends React.Component{
         </span>;
     }
     else{
-      var message = this.props.messageErrorDetails;
+      var message = this.props.messageErrorDetails.slice(1,this.props.messageErrorDetails.length-1);
     }
 
     return(

@@ -6,7 +6,7 @@ import {ajaxCall} from '../../utils.js';
 
 class GetButton extends React.Component{
   getButton = () => {
-    this.props.callAPIUpdatePlayground(this.props.currentPath)
+    this.props.callAPIUpdatePlayground(this.props.currentPath);
   }
 
   render() {

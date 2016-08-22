@@ -33,16 +33,16 @@ class DeleteButton extends React.Component{
   }
 
   deleteRessource = (relativeUrl, version) => {
-    var reactParent = this;
+    var reactComponent = this;
     $('.confirmationDelete').modal({
       onApprove: function() {
         ajaxCall(
           relativeUrl,
           (data) => {
-            reactParent.props.dispatch(actions.setCurrentDisplay(data));
+            reactComponent.props.dispatch(actions.setCurrentDisplay(data));
           },
           (xhr) => {
-            reactParent.props.setErrorMessage("Can't delete this data", xhr.responseText);
+            reactComponent.props.setErrorMessage("Can't delete this data", xhr.responseText);
           },
           {"If-match": version},
           'DELETE'
