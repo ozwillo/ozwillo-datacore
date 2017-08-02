@@ -14,6 +14,7 @@ import org.oasis.datacore.core.entity.mongodb.MongoUri;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.pov.DCProject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.CannotGetMongoDbConnectionException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
@@ -95,7 +96,17 @@ public class MongoTemplateManagerTest {
       Assert.assertEquals(localhostMongoTemplate, mtm.getMongoTemplate());
       String loopbackIpMongoUri = "mongodb://127.0.0.1:27017/datacore";
       testProject.setDbUri(loopbackIpMongoUri);
-      Assert.assertNotEquals(localhostMongoTemplate, mtm.getMongoTemplate());
+      DatacoreMongoTemplate loopbackIpMongoTemplate = mtm.getMongoTemplate();
+      Assert.assertNotEquals(localhostMongoTemplate, loopbackIpMongoTemplate);
+      
+      // test connection of loopbackIp mongoTemplate :
+      try {
+         loopbackIpMongoTemplate.collectionExists("test.index");
+      } catch (CannotGetMongoDbConnectionException cgmdbex) {
+         Assert.assertTrue(cgmdbex.getMessage().contains("not configured among secondary only ones"));
+      } catch (Exception rex) {
+         Assert.assertTrue(rex.getMessage().contains("not configured among secondary only ones"));
+      }
       
       String notallowedMongoUri = "mongodb://notallowed:27017/datacore";
       testProject.setDbUri(notallowedMongoUri);

@@ -41,9 +41,13 @@ public class MongoTemplateManager {
 
    public static final String WILDCARD = "*";
 
+   /** empty or null means none ; instead of java #{${oasis.datacore.mongodb.username}}
+    * i.e. quoted string or null, which is cleaner but impacting (pre)prod conf */
    @Value("${oasis.datacore.mongodb.username}")
    private String username;
 
+   /** empty or null means none ; instead of java #{${oasis.datacore.mongodb.username}}
+    * i.e. quoted string or null, which is cleaner but impacting (pre)prod conf */
    @Value("${oasis.datacore.mongodb.password}")
    private String password;
 
@@ -80,6 +84,24 @@ public class MongoTemplateManager {
    @PostConstruct
    protected void init() throws URISyntaxException {
       allowedSecondaryOnlyServerAddressSet = StringUtils.commaDelimitedListToSet(allowedSecondaryOnlyServerAddresses);
+      
+      if (username == null || username.trim().isEmpty() || username.trim().equals("null")) {
+         username = null; // no auth
+      } else {
+         username = unquote(username);
+         password = unquote(password);
+      }
+   }
+   
+   private String unquote(String s) {
+      if (s == null || s.length() <= 2) {
+         return s;
+      }
+      s = s.trim();
+      if (s.charAt(0) == '"' && s.charAt(s.length() - 1) == '"') {
+         return s.substring(1, s.length() - 1); 
+      }
+      return s;
    }
    
    
@@ -163,7 +185,7 @@ public class MongoTemplateManager {
    @SuppressWarnings("deprecation")
    private DatacoreMongoTemplate createMongoTemplate(MongoUri dbUri, Boolean isDbRobust) {
       DatacoreMongoTemplate mgo;
-      if (dbUri == null) {
+      if (dbUri == null) { // we can reuse the default mongoDbFactory :
          mgo = new DatacoreMongoTemplate(mongoDbFactory, this.mgo.getConverter());
          
       } else {
@@ -176,7 +198,9 @@ public class MongoTemplateManager {
             throw new RuntimeException("Error creating custom mongo " + dbUri, e);
          }
          
-         UserCredentials credentials = new UserCredentials(username, password);
+         UserCredentials credentials = username == null || username.trim().isEmpty()
+               || username.trim().equals("null") ? null :
+               new UserCredentials(username, password);
          MongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(mongo, dbUri.getDatabase(), credentials);
          NoIndexCreationMongoConverter readonlyMongoConverter = new NoIndexCreationMongoConverter(mongoConverter);
          mgo = new DatacoreMongoTemplate(mongoDbFactory, readonlyMongoConverter);
