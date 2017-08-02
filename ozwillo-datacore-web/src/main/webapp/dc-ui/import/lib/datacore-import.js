@@ -1052,6 +1052,10 @@
          var fieldOrListFieldType = fieldOrListField["dcmf:type"];
          
          var subFieldNameTree = fieldNameTree[fieldName];
+         if (typeof stopRowMixinFieldName !== 'undefined' && stopRowMixinFieldName === typeName + '.' + fieldName) { // TODO RegExp or * ; set stopRowMixinFieldName in the js console
+            console.log('STOP row field=', typeName, fieldName);//
+         }
+         //console.log('fieldName ===', typeName, fieldName);//
          // stack up subPathInFieldNameTree :
          try {
             importState.data.row.pathInFieldNameTree.push(fieldName);
@@ -2494,7 +2498,9 @@
                     continue fieldsLoop;
                  }
                  mixin = candidateMixin;
-                 mixinFields = mixin["dcmo:fields"];
+                 mixinFields = mixin["dcmo:fields"]; // TODO LATER dcmo:globalFields,
+                 // for now requires to override all subpath fields in their path mixin ! (else "mixinFields undefined")
+                 // BUT STILL would create geoco:Country_0/FR rather than geocofr because null modelTypeToRowResources for findBestMatchingRowResourceForType 
               } else if (typeof subFieldType !== 'undefined') {
                  importState.model.errors.push({ code : "notMapOrResourceTypedFieldBeforeEndOfDottedPath", mixin : rootMixinName,
                        field : fieldPath, intermediateMixin : mixin, subField : fieldName,
