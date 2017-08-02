@@ -160,6 +160,10 @@ public class ModelResourceMappingService {
          projectResource.set("dcmp:visibleSecurityConstraints", securityToResource(
                project.getVisibleSecurityConstraints(), uri, "dcmp:visibleSecurityConstraints"));
       }
+      if (project.getFacadeProjectNames() != null) {
+         projectResource.set("dcmp:facadeProjectNames", new ArrayList<String>(
+               project.getFacadeProjectNames()));
+      }
       // dcmpvdb :
       if (project.isDbRobust() != null) {
          projectResource.set("dcmpvdb:robust", project.isDbRobust());
@@ -547,6 +551,10 @@ public class ModelResourceMappingService {
       if (vsc != null) {
          toSecurity(vsc, getOrSetVisibleSecurityConstraints(project));
       }
+      @SuppressWarnings("unchecked")
+      List<String> facadeProjectNames = (List<String>) r.get("dcmp:facadeProjectNames");
+      project.setFacadeProjectNames((facadeProjectNames == null ? new LinkedHashSet<String>() // in case of old project without it
+            : new LinkedHashSet<String>(facadeProjectNames)));
       
       // non-functional - per project / point of view optimized massive writes & read-heavy queries :
       Object isDbRobustFound = r.get("dcmpvdb:robust");

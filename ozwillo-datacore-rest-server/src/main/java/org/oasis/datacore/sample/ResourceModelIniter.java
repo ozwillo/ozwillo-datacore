@@ -317,6 +317,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
          .addField(new DCField("dcmp:modelLevelSecurityEnabled", "boolean", (Object) false, 0))
          .addField(new DCField("dcmp:useModelSecurity", "boolean", (Object) false, 0))
          .addField(new DCResourceField("dcmp:visibleSecurityConstraints", MODEL_SECURITY_NAME, false, 0)) // embedded subresource
+         .addField(new DCListField("dcmp:facadeProjectNames", new DCField("useless", "string", false, 0)))
          ;
       ((DCListField) projectModel.getField("dcmp:localVisibleProjects")).setIsSet(true); // merge at restart, rather than override
       ((DCListField) projectModel.getField("dcmp:visibleProjectNames")).setIsSet(true); // (not required because computed) merge at restart, rather than override
@@ -324,6 +325,7 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       ((DCListField) projectModel.getField("dcmp:frozenModelNames")).setIsSet(true); // merge at restart, rather than override
       ((DCListField) projectModel.getField("dcmp:allowedModelPrefixes")).setIsSet(true); // merge at restart, rather than override
       ((DCListField) projectModel.getField("dcmp:useCasePointOfViews")).setIsSet(true); // (not used yet) merge at restart, rather than override
+      ((DCListField) projectModel.getField("dcmp:facadeProjectNames")).setIsSet(true); // merge at restart, rather than override
       // TODO LATER also make other DCProject (& DCModel) list fields sets
       projectModel.setStorage(false); // store in dcmpv
       projectModel.setInstanciable(true);

@@ -198,9 +198,9 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
       DCProject currentProject = modelService.getProject();
       DCProject project = entityModelService.getProject(dataEntity, model); // entity (in case of multi project) or model project
       boolean shouldCheckVisibleProjectConstraints = true;
-      if (!model.getProjectName().equals(currentProject.getName())
-            // TODO TODO HACK avoid visible constraints in case of facade projects :
-            && !isFacadeProject(model.getProjectName())) {
+      if (!project.getName().equals(currentProject.getName())
+            // avoid visible constraints in case of facade projects :
+            && !isFacadeProject(currentProject, project)) {
          DCModelBase storageModel = (dataEntity != null) ? // else none yet (been queried by LDP)
                entityModelService.getStorageModel(dataEntity) : modelService.getStorageModel(model);
          if (storageModel != null && storageModel.isMultiProjectStorage()) { // especially oasis.meta.dcmi:mixin_0 in case of model resources !
@@ -393,12 +393,13 @@ public class EntityPermissionEvaluator implements PermissionEvaluator {
    }
 
    /**
-    * TODO TODO HACK avoid visible constraints in case of facade projects
+    * Avoid visible constraints in case of facade projects
     * @param projectName
     * @return
     */
-   private boolean isFacadeProject(String projectName) {
-      return modelService.getProject(projectName).getUnversionedName().equals(modelService.getProject().getName());
+   private boolean isFacadeProject(DCProject currentProject, DCProject entityProject) {
+      return entityProject.getUnversionedName().equals(currentProject.getName()) // old behaviour (backward compatible)
+            || entityProject.getFacadeProjectNames().contains(currentProject.getName()); // ex. energy_upload_0 is facade of energy_0
    }
 
    private boolean isDefaultSecurityAllowed(DCEntityBase dataEntity, DCProject project, DCUserImpl user,

@@ -94,6 +94,10 @@ public class DCProject extends DCPointOfViewBase {
     * TODO null resourceReaders means no check (and empty none ?),
     * !isAuthentifiedWritable no write from another project */
    private DCSecurity visibleSecurityConstraints = null;
+   /** facade projects (e.g. alias) bypass visibleSecurityConstraints
+    * ex. for energy_analytics_0. NOT regex else if .* anybody could create
+    * a facade project !!! which is only for sandboxes so not interesting */
+   private LinkedHashSet<String> facadeProjectNames = new LinkedHashSet<String>();
    // NB. no forkStorageConstraint else won't know to store a in b or c if c sees b which sees a... 
 
    /** for unmarshalling only */
@@ -551,6 +555,14 @@ public class DCProject extends DCPointOfViewBase {
 
    public void setVisibleSecurityConstraints(DCSecurity visibleSecurityConstraints) {
       this.visibleSecurityConstraints = visibleSecurityConstraints;
+   }
+
+   public LinkedHashSet<String> getFacadeProjectNames() {
+      return facadeProjectNames;
+   }
+
+   public void setFacadeProjectNames(LinkedHashSet<String> facadeProjectNames) {
+      this.facadeProjectNames = facadeProjectNames;
    }
 
    public Boolean isDbRobust() {
