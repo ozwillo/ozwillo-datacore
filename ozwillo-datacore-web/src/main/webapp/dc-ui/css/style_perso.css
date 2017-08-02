@@ -1,0 +1,132 @@
+.darkred{
+  background-color: rgba(204,18,18, 1) !important;
+}
+
+.largefont{
+  font-size: 1.4em;
+}
+
+.normalfont{
+  font-size: 1.0em;
+}
+
+.groupementmenu{
+  padding-top: 10px;
+}
+
+
+.myCentering{
+  text-align: center;
+}
+
+.menubutton{
+  width: auto;
+  height: auto;
+  margin-top: 0 !important;
+}
+
+.mymenu{
+  margin-top: 10px !important;
+}
+
+.adresseget{
+  width: 100% !important;
+}
+
+.segmentpadding{
+  padding: 20px !important;
+}
+
+.listespace{
+  padding: 0 0 10px 0   !important;
+}
+
+.playground{
+  color: rgba(204,18,18, 1) !important;
+}
+
+.project{
+
+}
+
+.main{
+  -webkit-transition: width 0.2s !important; /* Safari */
+  transition: width 0.2s !important;
+}
+
+pre{
+  background-color: rgb(255,255,255);
+}
+
+.generalContainer{
+  margin-bottom: 70px;
+}
+
+.mydata{
+  height: 450px ;
+  width: 100%;
+}
+
+.textareamydata{
+  border: none;
+  overflow: auto;
+  outline: none;
+
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+}
+
+.editButtonTransition-enter{
+  opacity: 0.01;
+}
+.editButtonTransition-enter.editButtonTransition-enter-active {
+  opacity: 1;
+  transition: opacity 0.3s !important;
+}
+.editButtonTransition-leave{
+  opacity: 1;
+}
+.editButtonTransition-leave.editButtonTransition-leave-active {
+  opacity: 0.01;
+  transition: opacity 0.1s !important;
+}
+
+
+.postPutButtonsTransition-enter{
+  opacity: 0.01;
+}
+.postPutButtonsTransition-enter-active {
+  opacity: 1;
+  transition: opacity 0.3s !important;
+}
+.postPutButtonsTransition-leave{
+  opacity: 1;
+}
+.postPutButtonsTransition-leave-active {
+  opacity: 0.01;
+  transition: opacity 0.100s !important;
+}
+
+.goTop{
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 60px !important;
+  transition: opacity 0.2s ease-out;
+  opacity: 0;
+}
+
+.goTop.show {
+    opacity: 1;
+}
+
+
+.myCentering{
+  text-align: center;
+}
+
+.myCentering {
+    display: block;
+    margin: 0 auto;
+    text-align: center;
+}
