@@ -124,8 +124,6 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-		<ozwillo-datacore.version>1.0-SNAPSHOT</ozwillo-datacore.version>
-
 		<java.version>1.8</java.version>
 
 		<!-- testing : -->
@@ -435,47 +433,47 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 			<dependency>
 				<groupId>org.ozwillo.datacore</groupId>
 				<artifactId>ozwillo-datacore-samples</artifactId>
-				<version>${ozwillo-datacore.version}</version>
+				<version>${project.version}</version>
 			</dependency>
 	      <dependency>
 	        <groupId>org.ozwillo.datacore</groupId>
 	        <artifactId>ozwillo-datacore-common</artifactId><!-- brings DCRequestContext -->
-				<version>${ozwillo-datacore.version}</version>
+				<version>${project.version}</version>
 	      </dependency>
 			<dependency>
 				<groupId>org.ozwillo.datacore</groupId>
 				<artifactId>ozwillo-datacore-core</artifactId>
-				<version>${ozwillo-datacore.version}</version>
+				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.ozwillo.datacore</groupId>
 				<artifactId>ozwillo-datacore-rest-api</artifactId>
-				<version>${ozwillo-datacore.version}</version>
+				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.ozwillo.datacore</groupId>
 				<artifactId>ozwillo-datacore-rest-server</artifactId>
-				<version>${ozwillo-datacore.version}</version>
+				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.ozwillo.datacore</groupId>
 				<artifactId>ozwillo-datacore-rest-cxf</artifactId>
-				<version>${ozwillo-datacore.version}</version>
+				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.ozwillo.datacore</groupId>
 				<artifactId>ozwillo-datacore-api-client</artifactId>
-				<version>${ozwillo-datacore.version}</version>
+				<version>${project.version}</version>
 			</dependency>
 	      <dependency>
 	        <groupId>org.ozwillo.datacore</groupId>
 	        <artifactId>ozwillo-datacore-kernel-client</artifactId>
-	        <version>${ozwillo-datacore.version}</version>
+	        <version>${project.version}</version>
 	      </dependency>
 	      <dependency>
 	        <groupId>org.ozwillo.datacore</groupId>
 	        <artifactId>ozwillo-datacore-monitoring</artifactId>
-	        <version>${ozwillo-datacore.version}</version>
+	        <version>${project.version}</version>
 	      </dependency>
 
 			<!-- logging : using slf4j (MIT License) facade on log4j (Apache 2.0 License) backend
