@@ -21,7 +21,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 	<artifactId>ozwillo-datacore</artifactId>
 	<name>Ozwillo Datacore</name>
 	<description>Ozwillo Datacore is a collaborative Open Linked Data Cloud platform.</description>
-	<version>1.10</version>
+	<version>1.11-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<!-- =================== -->
