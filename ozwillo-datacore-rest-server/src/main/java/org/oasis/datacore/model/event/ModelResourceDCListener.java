@@ -293,7 +293,7 @@ public class ModelResourceDCListener extends DCResourceEventListener implements 
                         + modelOrMixin.getAbsoluteName();
                   logger.error(msg, ex);
                   throw new RuntimeException(msg, ex);
-               } catch (Exception ex) {
+               } catch (Exception ex) { // ex. EntityException
                   String msg = "Unknown error while repersisting model with impacted global fields "
                         + modelWithImpactedGlobalFields.getAbsoluteName() + " by change in model "
                         + modelOrMixin.getAbsoluteName();
