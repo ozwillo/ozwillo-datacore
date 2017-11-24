@@ -22,8 +22,8 @@ before_script:
   - mkdir ${PWD}/mongodb-linux-x86_64-${MONGODB}/data
   - ${PWD}/mongodb-linux-x86_64-${MONGODB}/bin/mongod --dbpath ${PWD}/mongodb-linux-x86_64-${MONGODB}/data --logpath ${PWD}/mongodb-linux-x86_64-${MONGODB}/mongodb.log --fork
 
-script:
-  - mvn test -B
+#script:
+#  - mvn test -B
 
 after_script:
 - pkill mongod

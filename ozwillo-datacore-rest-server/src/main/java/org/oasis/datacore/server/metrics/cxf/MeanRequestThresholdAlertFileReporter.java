@@ -2,16 +2,12 @@ package org.oasis.datacore.server.metrics.cxf;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
 import java.text.DateFormat;
 import java.util.Locale;
 import java.util.SortedMap;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +21,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * A reporter which allows for horizontal scalability, by triggering an alert if the currently
@@ -213,7 +208,7 @@ public class MeanRequestThresholdAlertFileReporter extends ScheduledReporter {
     /** OCCI conf in (MART) server where the threshold is retrieved from, ex.
      * http://localhost:8080/LDServicePerformanceSLOMixin/ or to test it .../compute/
      * (if empty, explicit max/min props are used) */
-    private URL occiUrl = null;
+    private String occiUrl = null;
     /** ex. "/0/attributes/requestPerMinuteMax" or to test it "/0/attributes/occi.compute.cores" */
     private String maxOcciJsonPointer = "";
     /** max threshold (disabled if 0) */
@@ -227,7 +222,6 @@ public class MeanRequestThresholdAlertFileReporter extends ScheduledReporter {
     /** this file will be created by BrokenThresholdReporter if there is a min threshold and it is broken */
     private String minAlertFilePath = "/tmp/vmfilemin";
     private String timerName = "DatacoreApiImpl_Attribute=Totals";
-    private ObjectMapper mapper = new ObjectMapper(); // to parse OCCI
 
     private MeanRequestThresholdAlertFileReporter(MetricRegistry registry,
                             Locale locale,
@@ -248,21 +242,14 @@ public class MeanRequestThresholdAlertFileReporter extends ScheduledReporter {
                                                          DateFormat.MEDIUM,
                                                          locale);
         dateFormat.setTimeZone(timeZone);
-        
+
+        this.occiUrl = occiUrl;
         this.maxOcciJsonPointer = maxOcciJsonPointer;
         this.max = max;
         this.maxAlertFilePath = maxAlertFilePath;
         this.minOcciJsonPointer = minOcciJsonPointer;
         this.min = min;
         this.minAlertFilePath = minAlertFilePath;
-        
-        if (occiUrl != null && !occiUrl.isEmpty()) {
-           try {
-              this.occiUrl = new URL(occiUrl);
-           } catch (MalformedURLException e) {
-              logger.error("Bad URL for datacoreApiServer.metrics.meanRequestThreshold.occiUrl : " + occiUrl, e);
-           }
-        }
     }
 
     @Override
@@ -281,22 +268,18 @@ public class MeanRequestThresholdAlertFileReporter extends ScheduledReporter {
        // get thresholds :
        float max = this.max;
        float min = this.min;
-       if (this.occiUrl != null) {
-          try {
-             // get SLO conf from OCCI server :
-             URLConnection httpConn = this.occiUrl.openConnection();
-             httpConn.setRequestProperty("Accept", "application/json");
-             httpConn.connect();
-             String occiJsonRes = IOUtils.toString(httpConn.getInputStream());
-             JsonNode occiJsonNode = mapper.readTree(occiJsonRes); 
+       try {
+          // get SLO conf from OCCI server :
+          JsonNode occiJsonNode = OcciUtils.getOcciJsonNode(this.occiUrl);
+          if (occiJsonNode != null) {
              max = (float) occiJsonNode.at(this.maxOcciJsonPointer).asDouble(0);
              min = (float) occiJsonNode.at(this.minOcciJsonPointer).asDouble(0);
-         } catch (Exception e) {
-            logger.error("Error retrieving min/max thresholds from OCCI MARTServer "
-                  + this.occiUrl + " using JSON pointer expressions "
-                  + this.minOcciJsonPointer + " "
-                  + this.maxOcciJsonPointer);
-         }
+          } // else disabled
+       } catch (Exception e) {
+          logger.error("Error retrieving min/max thresholds from OCCI MARTServer "
+                + this.occiUrl + " using JSON pointer expressions "
+                + this.minOcciJsonPointer + " "
+                + this.maxOcciJsonPointer);
        }
        
        // compare :
@@ -319,8 +302,7 @@ public class MeanRequestThresholdAlertFileReporter extends ScheduledReporter {
              try {
                 alertFile.createNewFile();
              } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                logger.error("Error creating alert file " + alertFile.getAbsolutePath(), e);
              }
           }
        }

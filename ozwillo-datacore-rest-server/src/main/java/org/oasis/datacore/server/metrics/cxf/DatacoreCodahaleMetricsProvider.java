@@ -10,6 +10,8 @@ import org.apache.cxf.metrics.MetricsContext;
 import org.apache.cxf.metrics.codahale.CodahaleMetricsContext;
 import org.apache.cxf.metrics.codahale.CodahaleMetricsProvider;
 import org.apache.cxf.service.model.BindingOperationInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Component;
 
 import com.codahale.metrics.CsvReporter;
 import com.codahale.metrics.MetricRegistry;
+import com.fasterxml.jackson.databind.JsonNode;
 
 
 /**
@@ -59,6 +62,8 @@ import com.codahale.metrics.MetricRegistry;
  */
 @Component("datacoreApiServer.metrics.provider")
 public class DatacoreCodahaleMetricsProvider extends CodahaleMetricsProvider {
+
+   private static final Logger logger = LoggerFactory.getLogger(DatacoreCodahaleMetricsProvider.class);
    
    ////////////////////
    // CSV
@@ -73,6 +78,14 @@ public class DatacoreCodahaleMetricsProvider extends CodahaleMetricsProvider {
    ////////////////////
    // SCALABILITY
 
+   /** OCCI conf in (MART) server where the threshold is retrieved from, ex.
+    * http://localhost:8080/LDDropWizardSensor/ or to test it .../compute/
+    * (if empty, explicit meanRequestThresholdPeriod is used) */
+   //@Value("${datacoreApiServer.metrics.meanRequestThreshold.periodOcciUrl}")
+   private String meanRequestThresholdPeriodOcciUrl = "";
+   /** ex. "/0/attributes/occi.collector.period" or to test it "/0/attributes/occi.compute.cores" */
+   //@Value("${datacoreApiServer.metrics.meanRequestThreshold.periodOcciJsonPointer}")
+   private String meanRequestThresholdPeriodOcciJsonPointer = "/0/attributes/occi.collector.period";
    /** 60 SECONDS (or finer ex. 5 for tests) */
    //@Value("${datacoreApiServer.metrics.meanRequestThreshold.period}")
    private long meanRequestThresholdPeriod = 5;
@@ -83,7 +96,7 @@ public class DatacoreCodahaleMetricsProvider extends CodahaleMetricsProvider {
    private String meanRequestThresholdOcciUrl = "";
    /** ex. "/0/attributes/requestPerMinuteMax" or to test it "/0/attributes/occi.compute.cores" */
    //@Value("${datacoreApiServer.metrics.meanRequestThreshold.maxOcciJsonPointer}")
-   private String meanRequestThresholdMaxOcciJsonPointer = "";
+   private String meanRequestThresholdMaxOcciJsonPointer = "/0/attributes/requestPerMinuteMax";
    /** max threshold (only if no occiMartServerUrl, disabled if 0) */
    //@Value("${datacoreApiServer.metrics.meanRequestThreshold.defaultMax}")
    private float meanRequestThresholdMax = 0;
@@ -92,7 +105,7 @@ public class DatacoreCodahaleMetricsProvider extends CodahaleMetricsProvider {
    private String meanRequestThresholdMaxAlertFilePath = "/tmp/vmfile";
    /** ex. "/0/attributes/requestPerMinuteMin" */
    //@Value("${datacoreApiServer.metrics.meanRequestThreshold.minOcciJsonPointer}")
-   private String meanRequestThresholdMinOcciJsonPointer = "";
+   private String meanRequestThresholdMinOcciJsonPointer = "/0/attributes/requestPerMinuteMin";
    /** min threshold (only if no occiMartServerUrl, disabled if 0) */
    //@Value("${datacoreApiServer.metrics.meanRequestThreshold.defaultMin}")
    private float meanRequestThresholdMin = 0;
@@ -113,6 +126,8 @@ public class DatacoreCodahaleMetricsProvider extends CodahaleMetricsProvider {
          @Qualifier("datacoreApiServer") final Object datacoreApiServer,
          @Value("${datacoreApiServer.metrics.csvReportPath}") final String csvReportPath,
          @Value("${datacoreApiServer.metrics.csvReportPeriod}") final long csvReportPeriod,
+         @Value("${datacoreApiServer.metrics.meanRequestThreshold.periodOcciUrl}") final String meanRequestThresholdPeriodOcciUrl,
+         @Value("${datacoreApiServer.metrics.meanRequestThreshold.periodOcciJsonPointer}") final String meanRequestThresholdPeriodOcciJsonPointer,
          @Value("${datacoreApiServer.metrics.meanRequestThreshold.period}") final long meanRequestThresholdPeriod,
          @Value("${datacoreApiServer.metrics.meanRequestThreshold.occiUrl}") final String meanRequestThresholdOcciUrl,
          @Value("${datacoreApiServer.metrics.meanRequestThreshold.maxOcciJsonPointer}") final String meanRequestThresholdMaxOcciJsonPointer,
@@ -130,6 +145,8 @@ public class DatacoreCodahaleMetricsProvider extends CodahaleMetricsProvider {
       setupCSVReporter(this.registry);
       
       // scalability
+      this.meanRequestThresholdPeriodOcciUrl = meanRequestThresholdPeriodOcciUrl;
+      this.meanRequestThresholdPeriodOcciJsonPointer = meanRequestThresholdPeriodOcciJsonPointer;
       this.meanRequestThresholdPeriod = meanRequestThresholdPeriod;
       this.meanRequestThresholdOcciUrl = meanRequestThresholdOcciUrl;
       this.meanRequestThresholdMaxOcciJsonPointer = meanRequestThresholdMaxOcciJsonPointer;
@@ -161,6 +178,19 @@ public class DatacoreCodahaleMetricsProvider extends CodahaleMetricsProvider {
    }
 
    private void setupMeanRequestThresholdAlertReporter(MetricRegistry registry) {
+      long meanRequestThresholdPeriod = this.meanRequestThresholdPeriod;
+      try {
+         // get period from OCCI server :
+         JsonNode occiJsonNode = OcciUtils.getOcciJsonNode(this.meanRequestThresholdPeriodOcciUrl);
+         if (occiJsonNode != null) {
+            meanRequestThresholdPeriod = occiJsonNode.at(this.meanRequestThresholdPeriodOcciJsonPointer).asLong(0);
+         } // else disabled
+      } catch (Exception e) {
+         logger.error("Error retrieving meanRequestThresholdPeriod from OCCI MARTServer URL "
+               + this.meanRequestThresholdPeriodOcciUrl + " using JSON pointer expressions "
+               + this.meanRequestThresholdPeriodOcciJsonPointer);
+      }
+      
       if (meanRequestThresholdPeriod <= 0) {
          return; // disabled
       }
@@ -179,7 +209,6 @@ public class DatacoreCodahaleMetricsProvider extends CodahaleMetricsProvider {
                .minAlertFilePath(meanRequestThresholdMinAlertFilePath)
                .build();
          meanThresholdBrokenFileReporter.start(meanRequestThresholdPeriod, TimeUnit.SECONDS); // 60 SECONDS (or finer ex. for tests)
-         // TODO LATER get csvReportPeriod from OCCI server
       } // else disabled
    }
    
