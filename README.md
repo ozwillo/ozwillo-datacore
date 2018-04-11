@@ -1,14 +1,4 @@
-=====================================================
-
-Ozwillo - Datacore
-http://www.ozwillo.com/
-https://github.com/ozwillo/ozwillo-datacore
-Copyright (c) 2013-2017 Smile - http://www.smile.fr
-
 [![Build Status](https://travis-ci.org/ozwillo/ozwillo-datacore.svg?branch=master)](https://travis-ci.org/ozwillo/ozwillo-datacore) [![Project Stats](https://www.openhub.net/p/ozwillo-datacore/widgets/project_thin_badge.gif)](https://www.openhub.net/p/ozwillo-datacore)
-
-=====================================================
-
 
 About Ozwillo Datacore
 --------------------
@@ -144,5 +134,13 @@ Release Notes - 1.0
 Release Notes - 0.5
 -------------------
 * Prototype : REST API & Java client, server with Resource parsing and querying according to Model on top of MongoDB storage
+
+=====================================================
+
+Ozwillo - Datacore
+http://www.ozwillo.com/
+https://github.com/ozwillo/ozwillo-datacore
+
+Copyright (c) 2013-2017 Smile - http://www.smile.fr
 
 
