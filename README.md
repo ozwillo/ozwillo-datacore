@@ -24,7 +24,7 @@ Features
    * HTTP REST API for sharing data, with OAuth2 authentication, client-side caching and Entity Tag-based optimistic locking
    * W3C JSON-LD-like data Resource representation, as well as RDF (nquads, turtle). Views allow outputting less fields.
    * W3C LDP-inspired query filters (logical operators including "between", regex, fulltext, pagination, MongoDB-inspired operators, capped)
-   * scalable MongoDB storage (replicated, sharded cluster-ready), Java server (Apache CXF 3 / Spring 3)
+   * Scalable MongoDB storage (replicated, sharded cluster-ready), Java server (Apache CXF 3 / Spring 3)
    * JSON Schema-like data models with Model (primary) and Mixin (reusable) types. Models are the place where collaboration on data happens.
    * Supported field types are string, boolean, int, float, long, double, date (ISO8601), map, list, i18n (optimized for search on value only), resource (i.e. link).
    * Similar models inheriting from the same storage model are stored in it and can be queried together. Fields may be indexed, fulltext, aliased, readonly, required, have a default value. Along with Mixins and Views, it allows multiple point of views.
@@ -55,7 +55,7 @@ Requirements : [Java JDK 8](http://www.oracle.com/technetwork/java/javase/downlo
 
 Build ([Maven 3](http://maven.apache.org/download.cgi) required) : at root, do : mvn clean install
 
-Deployment : go in the ozwillo-datacore-web subproject and do : mvn jetty:run
+Deployment : go in the ozwillo-datacore-web subproject and do `mvn jetty:run`
 
 Then go have a look at API documentation and playground at [http://localhost:8080/dc-ui/index.html](http://localhost:8080/dc-ui/index.html). To try it out, for instance do a GET ``/dc/type/geo:Area_0`` to see what geographical areas (cities...) are available. To learn more about available operations, follow the [wiki Playground tutorial](https://github.com/ozwillo/ozwillo-datacore/wiki/Playground-&-Import-UI-demo-scenario---Provto-&-OpenElec) and do the [city & country Tutorial](https://github.com/ozwillo/ozwillo-datacore/wiki/Tutorial---city-&-country). To learn about out to use them, have a look at the detailed API doc below.
 
@@ -99,7 +99,7 @@ Here are such clients that might help you :
     ...
     datacoreSwaggerApi.apis.city.findDataInType({type:"sample.city.city", name:"London"},  successCallback);
 
-or jQuery [like Citizen Kin did at some time](https://github.com/pole-numerique/oasis-citizenkin/blob/master/oasis-citizenkin-parent/oasis-citizenkin-webapp-back/src/main/webapp/WEB-INF/jsp/permissions.jsp) :
+or jQuery [like Citizen Kin did at some time](https://github.com/ozwillo/oasis-citizenkin/blob/master/oasis-citizenkin-parent/oasis-citizenkin-webapp-back/src/main/webapp/WEB-INF/jsp/permissions.jsp) :
 
     $.get(datacoreRestClientBaseurl + "dc/type/sample.citizenkin.user" + "?lastName=" + encodeURIComponent("Smith"), callback))
 
@@ -121,7 +121,7 @@ Tips for integrating it in a client business application, from a functional poin
 Documentation
 --------------
 
-See online API (ask URL to Pole Numerique or run your own local Datacore) and its packaged examples, [wiki](https://github.com/ozwillo/ozwillo-datacore/wiki) and Java tests.
+See online API (ask URL to Ozwillo or run your own local Datacore) and its packaged examples, [wiki](https://github.com/ozwillo/ozwillo-datacore/wiki) and Java tests.
 
 Documentation still can be improved. If something is missing, ask us about it. Especially missing is a more formal description of supported data resources : what field types are supported, how to model them, how they behave (especially Map, List and external vs embedded Resource fields types) ; and wider, documentation of the metamodel itself : field types, Mixin (light, reusable, multiple) types and inheritance, security and mediation configuration...
 
