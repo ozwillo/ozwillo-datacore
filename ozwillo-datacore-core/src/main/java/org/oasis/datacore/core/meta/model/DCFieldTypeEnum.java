@@ -47,11 +47,8 @@ public enum DCFieldTypeEnum {
          .Builder<DCFieldTypeEnum>().add(DCFieldTypeEnum.STRING).add(DCFieldTypeEnum.RESOURCE).build());
    public static final Set<DCFieldTypeEnum> stringSerializedPrimitiveTypes = Sets.immutableEnumSet(new ImmutableSet
          .Builder<DCFieldTypeEnum>().add(DCFieldTypeEnum.DATE).add(DCFieldTypeEnum.LONG).build());
-   //public static final Set<DCFieldTypeEnum> stringSerializedPrimitiveTypes = Sets.immutableEnumSet(new ImmutableSet
-   //      .Builder<DCFieldTypeEnum>().add(DCFieldTypeEnum.STRING).add(DCFieldTypeEnum.DATE)
-   //      .add(DCFieldTypeEnum.LONG).add(DCFieldTypeEnum.RESOURCE).build());
-	
-	private DCFieldTypeEnum(String type, Class<?> toClass) {
+
+	DCFieldTypeEnum(String type, Class<?> toClass) {
 		this.type = type;
 		this.toClass = toClass;
 	}

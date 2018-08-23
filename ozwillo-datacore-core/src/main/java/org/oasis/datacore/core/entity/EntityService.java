@@ -24,14 +24,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
 public interface EntityService {
 
    /**
-    * 
-    * @param version
     * @return true if null or < 0
     */
    boolean isCreation(Long version);
    
    /**
     * Creates a new entity.
+    *
     * Uses transient cached model if any.
     * TODO rights
     * @param dataEntity without version (< 0 not allowed, though it is in DCResource)
@@ -45,9 +44,7 @@ public interface EntityService {
     * TODO or cache model : in custom context implementing "get" reused in both hasPermission & here ??
     * as transient param of resource ?? in EHCache (but beware of Resource obsolescence) ??
     * This method does not change state (else @PostAuthorize would not work)
-    * @param uri
-    * @param dcModel
-    * @return
+    *
     * @throws NonTransientDataAccessException other, unexpected storage error
     * @throws EntityException when implicit only fork (several entities with the same uri).
     * To convert to ResourceException / HTTP 400.
@@ -59,10 +56,7 @@ public interface EntityService {
     * Unprotected read to be used only for update purpose (to get ex. right ACL lists) ;
     * BEWARE no rights check, so should be followed by update() to check them or only
     * used for checking existence of Resource reference.
-    * @param uri
-    * @param dcModel
-    * @return
-    * @throws NonTransientDataAccessException
+    *
     * @throws EntityException from getUri() when implicit only fork (several entities with the same uri).
     * To convert to ResourceException / HTTP 400.
     */
@@ -73,9 +67,7 @@ public interface EntityService {
     * allows not to load entity (nor resource) if same version.
     * BEWARE no rights check, so should be followed by ex. getByUriId()
     * to check them.
-    * @param uri
-    * @param dcModel
-    * @param version
+    *
     * @return null if given version matches
     * @throws NonTransientDataAccessException other, unexpected storage error
     * @throws EntityException from getUri() (not called if no entity with this uri and version
@@ -88,7 +80,6 @@ public interface EntityService {
     * Updates given entity.
     * Uses transient cached model if any.
     * @param dataEntity must exist with version >= 0 and its ACLs be in sync with saved ones
-    * @param dcModel
     * @throws OptimisticLockingFailureException if not up to date
     * @throws NonTransientDataAccessException other, unexpected storage error
     */
@@ -117,21 +108,19 @@ public interface EntityService {
    /**
     * Only here to check if we are owner on the resource
     * If we are not an exception is thrown
-    * @param dataEntity
     */
    @PreAuthorize("hasPermission(#dataEntity, 'getRights')")
    void getRights(DCEntity dataEntity);
    
    /** TODO (re)move ?
-    * @obsolete
-    * @throws URISyntaxException */
+    * @deprecated
+    */
    DCEntity getSampleData() throws URISyntaxException;
 
    /**
     * Create an alias of 'target' with the provided URI
     * @param target the entity to alias to
     * @param uri the uri that should be an alias of 'target'
-    * @throws NonTransientDataAccessException
     */
    @PreAuthorize("hasPermission(#target, 'write')")
    void aliasOf(DCEntity target, String uri) throws NonTransientDataAccessException;
@@ -139,10 +128,8 @@ public interface EntityService {
 
    /**
     * Does the provided URI point to an alias?
-    * @param dcModel
     * @param uri          provided URI
     * @param rawEntity    entity the URI refers to
-    * @return
     */
    boolean isAlias(String uri, DCEntity rawEntity);
 
@@ -150,7 +137,6 @@ public interface EntityService {
     * Does the provided URI point to an alias?
     * @param uri      provided URI
     * @param model    model for that resource
-    * @return
     */
    boolean isAlias(String uri, DCModelBase model);
 
@@ -159,24 +145,19 @@ public interface EntityService {
     * Return the "real" aliased URI
     * @param uri          provided URI
     * @param rawEntity    "raw" entity the URI refers to
-    * @return
     */
    String getAliased(String uri, DCEntity rawEntity);
 
    /**
     * Return the "real" aliased URI
-    * @param dcModel
     * @param uri     provided URI
     * @param model   the model for that resource
-    * @return
     */
    String getAliased(String uri, DCModelBase model);
 
 
    /**
     * Recursively delete all aliases that point to the provided URI
-    * @param uri
-    * @param model
     */
    void deleteAliases(String uri, DCModelBase model);
 
@@ -185,8 +166,6 @@ public interface EntityService {
     * by way of other aliases) to our entity's previous uri, then delete that
     * alias (and only that alias: we want all previous uris for the resource
     * to remain valid)
-    * @param dataEntity
-    * @param previousUri
     */
    void unwindAliases(DCEntity dataEntity, String previousUri);
 

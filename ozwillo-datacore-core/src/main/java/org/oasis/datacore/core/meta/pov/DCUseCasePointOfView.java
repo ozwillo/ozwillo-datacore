@@ -11,6 +11,5 @@ import org.oasis.datacore.core.meta.model.DCModelBase;
 public interface DCUseCasePointOfView extends DCPointOfView {
    
    /** checks whether this POV (found by name) applies to given entity and then returns (one of) the POV's model(s) */
-   public DCModelBase getModel(DCEntity dataEntity);
-   
+   DCModelBase getModel(DCEntity dataEntity);
 }

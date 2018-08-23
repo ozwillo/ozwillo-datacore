@@ -132,6 +132,7 @@ public class EntityServiceImpl implements EntityService {
          throws NonTransientDataAccessException, EntityException {
       return getIfUpToDate(uri, dcModel, version) != null;
    }
+
    private DCEntity getIfUpToDate(String uri, DCModelBase dcModel, Long version) {
       if (version == null || version < 0) {
          return null;

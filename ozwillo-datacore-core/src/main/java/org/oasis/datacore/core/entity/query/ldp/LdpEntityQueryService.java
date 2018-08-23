@@ -26,13 +26,11 @@ public interface LdpEntityQueryService {
     * or native (ex. dc:modified) field ex. my:field=>\"lastValueReturned\"+ 
     * (with the first query having been sort only ex. my:field=\"lastValueReturned\"+).
     * @param limit if > maxLimit reset to maxLimit
-    * @return
-    * @throws QueryException
     */
    List<DCEntity> findDataInType(String modelType, Map<String, List<String>> params,
          Integer start, Integer limit) throws QueryException;
    
-   public int getMaxStart();
-   public int getMaxLimit();
-   public int getMaxScan();
+   int getMaxStart();
+   int getMaxLimit();
+   int getMaxScan();
 }

@@ -7,17 +7,6 @@ public class ProjectException extends RuntimeException {
    private DCProject project = null;
    private String projectName;
 
-   public ProjectException(DCProject project, String message, Throwable cause) {
-      super(buildMessageFromModelMessage(message, project, null), cause);
-      this.project = project;
-      this.projectName = project.getName();
-   }
-
-   public ProjectException(String projectName, String message, Throwable cause) {
-      super(buildMessageFromModelMessage(message, null, projectName), cause);
-      this.projectName = projectName;
-   }
-
    public ProjectException(DCProject project, String message) {
       super(buildMessageFromModelMessage(message, project, null));
       this.project = project;

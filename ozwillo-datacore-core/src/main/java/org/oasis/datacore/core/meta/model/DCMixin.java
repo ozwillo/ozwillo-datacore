@@ -30,10 +30,6 @@ public class DCMixin extends DCModelBase {
       this.setInstanciable(false);
    }
 
-   /*public DCMixin(String name, DCPointOfView ... pointOfViews) {
-      super(name, pointOfViews);
-   }*/
-
    public DCMixin(String name, DCPointOfView pointOfView) {
       this(name, pointOfView.getName());
    }
@@ -42,6 +38,4 @@ public class DCMixin extends DCModelBase {
       this.setStorage(false);
       this.setInstanciable(false);
    }
-
-
 }

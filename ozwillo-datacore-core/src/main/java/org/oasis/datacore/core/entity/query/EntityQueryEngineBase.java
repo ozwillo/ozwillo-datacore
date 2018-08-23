@@ -1,10 +1,9 @@
-package org.oasis.datacore.core.entity.query.sparql;
-
-import javax.annotation.PostConstruct;
+package org.oasis.datacore.core.entity.query;
 
 import org.oasis.datacore.core.entity.EntityQueryService;
-import org.oasis.datacore.core.entity.query.EntityQueryServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
 
 public abstract class EntityQueryEngineBase implements EntityQueryService {
    

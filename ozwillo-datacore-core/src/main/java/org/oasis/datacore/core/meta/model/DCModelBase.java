@@ -33,45 +33,19 @@ public abstract class DCModelBase {
    // ID Field names: is the naming scheme enforced by the data core? (default: no)
    private boolean enforceIdFieldNames = false;
 
-
-
    /** to be incremented each time there is a backward incompatible
     * (ex. field change, rather than new field) */
    private long majorVersion = 0;
    /** regular optimistic locking version (though NOT an explicit minor version of the major version) */
    private long version = -1;
-   /** TODO draft state & publish / life cycle */
+   // TODO draft state & publish / life cycle
    
-   // POLY :
-   /*
-   // TODO or inheritance kinds : of business only, or (business and) implConf only
-   // TODO or booleans defining inheritance kinds for inheritors
-   // BUT then there must be 3 models for each model (or 2 if instances deported in ModelStorage)
-   // and NOOOOOO even pure business models should define some impl conf as guidelines
-   private Set<String> businesses; // Resource URIs or ids in a treemap
-   private DCModelBase businessModelName; // if not itself then business modelization must be the same (or overriden ?), it's another use case,
-   // and implConfigurationModelName is itself or isModelImplInstance. NB. inheritances are ALWAYS at least business NOOOOO o: name
-   private boolean isModelBusinessDefinition;
-   private DCModelBase implConfigurationModelName; // if not itself then implConf must be the same (or overriden ?), it's a true fork,
-   // and isModelImplInstance NOO ex. pliit in forked pli. Ex. pli, pliit & plifr for cities to be queried by name ; != (?) co.pli to query companies by city name 
-   private boolean isModelImplConfiguration;
-   //private DCModelBase implInstanciationModelName;
-   private boolean isModelImplInstance; // false for mixins, true only if this collection exists ex. pli ; if instance only
-   // (i.e. pure fork) then must be specified for GET as header and for link storage as "project" dependency
-   */
    /** can its modelization change from its inherited (first) mixin ? */
    private boolean isDefinition = true;
-   /* Does it define a storage (collection & indexes) BUT no modelization ? */
-   ///private boolean isStorageOnly = false;  // = !isDefinition
    /** Does it define a storage (collection & indexes) or not ? */
    private boolean isStorage = true; // default ? TODO rather in DCModel(Storage) ?? or getStorageModel() ex. for subResource ???
    /** Can Resources of this exact model type be created ? true = old DCModel */
    private boolean isInstanciable = true;
-   /* does it define a NEW definition with a NEW name, or does it take the name
-    * of the single model or mixin it inherits from ?
-    * NOOOO TODO POLY done using name & in Project
-    * alternative : diffs & "copiedFrom" i.e. git */
-   ///private boolean isAnonymous = true; // TODO = !isStorageOnly
    /** can it also store resources of data-only forks ?
     * (then adds DCEntity._pv list of projects where it is visible, first being its actual project)
     * default is usually false for forked models, though true for the original oasis.meta.dcmi:mixin_0 */
@@ -79,14 +53,14 @@ public abstract class DCModelBase {
    
    /** doc TODO what (business), how (impl conf & instanciation), samples... */
    private String documentation; // TODO move in another collection for performance
-   private LinkedHashMap<String,DCField> fieldMap = new LinkedHashMap<String,DCField>();
+   private LinkedHashMap<String,DCField> fieldMap = new LinkedHashMap<>();
    /** to maintain order ; persisted (json / mongo) as list */
-   private LinkedHashSet<String> fieldAndMixinNames = new LinkedHashSet<String>();
+   private LinkedHashSet<String> fieldAndMixinNames = new LinkedHashSet<>();
    /** NB. (concrete) models allowed */
-   private LinkedHashMap<String,DCModelBase> mixinMap = new LinkedHashMap<String,DCModelBase>();
+   private LinkedHashMap<String,DCModelBase> mixinMap = new LinkedHashMap<>();
    // TODO allFieldNames, allFieldMap cached (?! beware versioning !!)
    /** Resource type event listeners (that use this DCModelBase's name as topic) */
-   private List<Object> listeners = new ArrayList<Object>(); // TODO DC(Model/ResourceType)EventListener
+   private List<Object> listeners = new ArrayList<>(); // TODO DC(Model/ResourceType)EventListener
 
    /** same as globalFieldMap */
    private LinkedHashMap<String,DCModelBase> globalMixinMap = null;
@@ -283,29 +257,19 @@ public abstract class DCModelBase {
       this.globalFieldMap = null;
       return this;
    }
+
    public DCModelBase addMixins(DCMixin ... mixins) {
       for (DCMixin mixin : mixins) {
          addMixin(mixin);
       }
       return this;
    }
-   
-   
-   
+
    // update methods
 
    /** helper method to build new DCModel/Mixins FOR TESTING
     * TODO or in builder instance ? */
    public DCModelBase addListener(Object listener) { // TODO DCResourceEventListener & set its services
-      // TODO clone if not for this type
-      /*String resourceType = listener.getResourceType();
-      if (resourceType == null) {
-         listener.setTopic(resourceType);
-      } else if (!resourceType.equals(name)) {
-         listener = listener.clone(resourceType);
-         listener.setTopic(resourceType);
-      }
-      listener.init();*/
       this.getListeners().add(listener);
       return this;
    }
@@ -318,13 +282,6 @@ public abstract class DCModelBase {
    }
    public void setName(String name) {
       this.name = name;
-   }
-   public List<String> getPointOfViewNames() {
-      return pointOfViewNames;
-   }
-   public void setPointOfViewNames(List<String> pointOfViewNames) {
-      this.pointOfViewNames = pointOfViewNames;
-      buildAbsoluteNames();
    }
 
    public List<String> getIdFieldNames() {
@@ -357,25 +314,7 @@ public abstract class DCModelBase {
       this.pointOfViewAbsoluteName = this.pointOfViewNames.stream().collect(Collectors.joining("."));
       this.absoluteName = pointOfViewAbsoluteName + "." + name;
    }
-   /*public String getProjectName() {
-      return projectName;
-   }
-   public void setProjectName(String projectName) {
-      this.projectName = projectName;
-   }
-   public String getUseCasePointOfViewName() {
-      return useCasePointOfViewName;
-   }
-   public void setUseCasePointOfViewName(String useCasePointOfViewName) {
-      this.useCasePointOfViewName = useCasePointOfViewName;
-   }
-   public String getUseCasePointOfViewElementName() {
-      return useCasePointOfViewElementName;
-   }
-   public void setUseCasePointOfViewElementName(String useCasePointOfViewElementName) {
-      this.useCasePointOfViewElementName = useCasePointOfViewElementName;
-   }*/
-   
+
    public void setMajorVersion(long majorVersion) {
       this.majorVersion = majorVersion;
    }
@@ -388,11 +327,11 @@ public abstract class DCModelBase {
    }
 
    public void setFieldMap(Map<String, DCField> fieldMap) {
-      this.fieldMap = new LinkedHashMap<String, DCField>(fieldMap);
+      this.fieldMap = new LinkedHashMap<>(fieldMap);
    }
    
    public void setMixinMap(LinkedHashMap<String, DCModelBase> mixinMap) {
-      this.mixinMap = new LinkedHashMap<String, DCModelBase>(mixinMap);
+      this.mixinMap = new LinkedHashMap<>(mixinMap);
    }
    
    public void setListeners(List<Object> listeners) {
@@ -408,9 +347,6 @@ public abstract class DCModelBase {
    }
    public void setDefinition(boolean isDefinition) {
       this.isDefinition = isDefinition;
-   }
-   public boolean isStorageOnly() {
-      return !isDefinition;
    }
    public boolean isStorage() {
       return isStorage;
@@ -494,7 +430,6 @@ public abstract class DCModelBase {
       this.countryLanguage = countryLanguage;
    }
 
-   
 	/**
     * TODO better (ObjectMapper ??)
 	 */
@@ -504,6 +439,4 @@ public abstract class DCModelBase {
 	         + ";m:" + this.getGlobalMixinMap().keySet()
 	         + "](f:" + this.getGlobalFieldMap().keySet() + ")";
 	}
-
-
 }

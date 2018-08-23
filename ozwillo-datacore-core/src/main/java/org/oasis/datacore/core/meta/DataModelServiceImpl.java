@@ -1,19 +1,7 @@
 package org.oasis.datacore.core.meta;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import javax.annotation.Resource;
-
 import org.oasis.datacore.common.context.DCRequestContextProvider;
 import org.oasis.datacore.common.context.DCRequestContextProviderFactory;
-import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
@@ -24,6 +12,10 @@ import org.oasis.datacore.core.meta.pov.ProjectException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * TODO readonly : get & set map only for tests, LATER admin using another (inheriting) model ?!?
@@ -39,19 +31,13 @@ public class DataModelServiceImpl implements DCModelService {
    private boolean devmode;
    
    @Autowired
-   ///@Qualifier("datacore.cxfJaxrsApiProvider")
-   //protected DCRequestContextProvider requestContextProvider;
    protected DCRequestContextProviderFactory requestContextProviderFactory;
+
    /** to inject caching... */
    @Resource(name="modelService")// or @PostConstruct ; @Autowired doesn't work http://stackoverflow.com/questions/5152686/self-injection-with-spring
    protected DCModelService dataModelService;
    
-   //TODO modelTo(ModelImplementation)CollectionMap ?
-   //TODO (modelDefinitionMap) modelImplementationConfigurationMap, modelImplementationInstanciationMap, modelToImplementatioI(|C)Map
-   //TODO ModelImplementationConfiguration MICCStrategy.checkAccepted(model, or Resource ex. if depends from contributor vs model owner ??)
-   //TODO having MICCRootTypesStrategy.rootTypes = cofr, coit... or MICCModelOwnerStrategy.modelOwners = cofr_owners, coit_owners...
-   
-   private Map<String,DCProject> projectMap = new HashMap<String, DCProject>();
+   private Map<String,DCProject> projectMap = new HashMap<>();
 
    /**
     * forkedUris are ordered with leaf projects being last.
@@ -79,12 +65,6 @@ public class DataModelServiceImpl implements DCModelService {
       DCProject project = getProject(); // NB. can't be null
       // NB. devmode default alt models building is done in there :
       return project.getModel(type); // TODO if isStorageOnly, get inherited model ?
-   }
-   @Override
-   public DCModelBase getNonLocalModel(String type) {
-      DCProject project = getProject(); // NB. can't be null
-      // NB. devmode default alt models building is done in there :
-      return project.getNonLocalModel(type);
    }
    @Override
    public DCModelBase getDefinitionModel(DCModelBase model) {
@@ -202,8 +182,8 @@ public class DataModelServiceImpl implements DCModelService {
 
    @Override
    public LinkedHashSet<String> toNames(Collection<? extends DCPointOfView> projects) {
-      return new LinkedHashSet<String>(projects.stream()
-            .map(p -> p.getName()).collect(Collectors.toList()));
+      return projects.stream()
+              .map(DCPointOfView::getName).collect(Collectors.toCollection(LinkedHashSet::new));
    }
    @Override
    public LinkedHashSet<String> getForkedUriProjectNames(String uri) {
@@ -211,8 +191,8 @@ public class DataModelServiceImpl implements DCModelService {
          // NB. not required to be synchronized, because there's no problem if it's
          // done twice at the same time
          this.forkedUriToProjectNames = buildForkedUriToProjectNames(
-               this.projectMap.values(), new HashMap<String,LinkedHashSet<String>>(),
-               new HashSet<DCProject>(this.projectMap.size()));
+               this.projectMap.values(), new HashMap<>(),
+               new HashSet<>(this.projectMap.size()));
       }
       return forkedUriToProjectNames.get(uri);
    }
@@ -241,51 +221,16 @@ public class DataModelServiceImpl implements DCModelService {
       return res;
    }
 
-   /*@Override
-   public LinkedHashSet<String> getVisibleProjectNames(Collection<String> projectNames) {
-      LinkedHashSet<DCProject> allVisibleProjects = new LinkedHashSet<DCProject>();
-      for (String projectName : projectNames) {
-         fillVisibleProjects(this.getProject(projectName), allVisibleProjects);
-      }
-      return new LinkedHashSet<String>(allVisibleProjects.stream()
-            .map(p -> p.getName()).collect(Collectors.toList()));
-   }*/
-   
    @Override
    public DCProject getProject(String projectName) {
-      DCProject project = projectMap.get(projectName);
-      if (project == null) { // && devmode
-         // devmode default projects building :
-         /*if (projectName.endsWith(".test")) {
-            String testedProjectName = projectName.substring(0,
-                  projectName.length() - ".test".length());
-            DCProject testedProject = projectMap.get(testedProjectName);
-            if (testedProject != null) {
-               project = new DCProject(projectName);
-               project.addLocalVisibleProject(testedProject);
-               this.addProject(project);
-            }
-         
-         // auto created projects :
-         // TODO move to init
-         } else if (DCProject.OASIS_MAIN.equals(projectName)) {
-            project = new DCProject(DCProject.OASIS_MAIN);
-            this.addProject(project);
-         } else if (DCProject.OASIS_SAMPLE.equals(projectName)) {
-            project = new DCProject(DCProject.OASIS_SAMPLE);
-            this.addProject(project);
-         }*/
-      }
-      return project;
+      return projectMap.get(projectName);
    }
+
    @Override
    public DCProject getProject() {
       String projectName = (String) requestContextProviderFactory.get(DCRequestContextProvider.PROJECT);
       if (projectName == null) {
          projectName = DCProject.OASIS_MAIN; // default TODO TODO rather oasis.test
-      }
-      if (projectName == null) { // TODO or default
-         throw new ProjectException("[current]", "Unable to find current project");
       }
       DCProject project = getProject(projectName);
       if (project == null) {
@@ -295,28 +240,10 @@ public class DataModelServiceImpl implements DCModelService {
    }
 
    @Override
-   public DCField getFieldByPath(DCModelBase dcModel, String fieldPath) {
-      // see impl in DatacoreApiImpl BUT pb providing also lastHighestListField
-      throw new UnsupportedOperationException();
-   }
-
-   @Override
    public Collection<DCModelBase> getModels() {
       return getProject().getModels();
    }
 
-   @Override
-   public Collection<DCModelBase> getModels(boolean isInstanciable) {
-      ArrayList<DCModelBase> models = new ArrayList<DCModelBase>();
-      for (DCModelBase model : getProject().getModels()) {
-         if (model.isInstanciable() == isInstanciable) {
-            models.add(model);
-         }
-      }
-      return models;
-   }
-   
-   
    ///////////////////////////////////////
    // admin / update methods
    // TODO TODO global write lock on those, & also when updating from Resource persistence
@@ -337,7 +264,7 @@ public class DataModelServiceImpl implements DCModelService {
       return project;
    }
    
-   /**  @obsolete ONLY TO CREATE DERIVED MODELS ex. Contribution, TODO LATER rather change their name ?!? */
+   /**  @deprecated  ONLY TO CREATE DERIVED MODELS ex. Contribution, TODO LATER rather change their name ?!? */
    public void addModel(DCModel dcModel, String name) {
       getModelProjectOrCurrent(dcModel).addModel(dcModel, name); // NB. project can't be null
    }
@@ -346,7 +273,7 @@ public class DataModelServiceImpl implements DCModelService {
       getModelProjectOrCurrent(dcModel).removeLocalModel(dcModel.getName()); // TODO LATER better : check, in context...
    }
    
-   /** @obsolete rather use removeModel(model) to use the right project */
+   /** @deprecated rather use removeModel(model) to use the right project */
    public void removeModel(String name) {
       getProject().removeLocalModel(name); // NB. project can't be null
    }
@@ -373,13 +300,6 @@ public class DataModelServiceImpl implements DCModelService {
       }
    }
 
-   /** helper */
-   public void removeForkedUri(DCProject project, String forkedUri) {
-      if (project.getForkedUris().remove(forkedUri)) {
-         this.updateProject(project);
-      }
-   }
-
    public void addLocalModel(DCProject project, DCModelBase localModel) {
       this.addLocalModel(project, localModel, false);
    }
@@ -391,5 +311,4 @@ public class DataModelServiceImpl implements DCModelService {
          this.addForkedUri(project, SimpleUriService.buildModelUri(localModel.getName()));
       }
    }
-   
 }

@@ -216,7 +216,6 @@ public class DCField {
       if (singleAliasedStorageName != null) {
          this.aliasedStorageNames.add(singleAliasedStorageName);
       } else {// else not stored (soft computed)
-      System.out.println("zaa");
       }
    }
 

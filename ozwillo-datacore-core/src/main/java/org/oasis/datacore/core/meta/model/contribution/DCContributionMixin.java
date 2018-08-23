@@ -6,8 +6,6 @@ import org.oasis.datacore.core.meta.model.DCModelBase;
 
 public class DCContributionMixin extends DCMixin {
 
-	private static String MIXIN_PREFIX = "odc";
-	private static String MIXIN_FIELD_NAME_SEPARATOR = ":";
 	public static String MIXIN_NAME = "oasis.contribution";
 	
 	/**
@@ -44,6 +42,8 @@ public class DCContributionMixin extends DCMixin {
 	}
 	
 	public static String getFieldName(String fieldName) {
+		String MIXIN_PREFIX = "odc";
+		String MIXIN_FIELD_NAME_SEPARATOR = ":";
 		return MIXIN_PREFIX + MIXIN_FIELD_NAME_SEPARATOR + fieldName;
 	}
 	

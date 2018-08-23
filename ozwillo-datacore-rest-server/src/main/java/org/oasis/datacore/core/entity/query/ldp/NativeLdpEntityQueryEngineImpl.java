@@ -8,7 +8,7 @@ import org.apache.cxf.jaxrs.utils.JAXRSUtils;
 import org.oasis.datacore.core.entity.EntityQueryService;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.query.QueryException;
-import org.oasis.datacore.core.entity.query.sparql.EntityQueryEngineBase;
+import org.oasis.datacore.core.entity.query.EntityQueryEngineBase;
 import org.oasis.datacore.core.meta.model.DCFieldTypeEnum;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.rest.server.parsing.exception.ResourceParsingException;
@@ -18,8 +18,8 @@ import org.springframework.stereotype.Component;
 
 
 /**
- * Provides W3C LDP (Linked Data Platform)-like query support by using
- * native impl of LdpEntityQueryService.
+ * Provides W3C LDP (Linked Data Platform)-like query support by using native impl of LdpEntityQueryService.
+ *
  * Not actually used since LdpEntityQueryService is directly provided
  * as REST by DatacoreApiImpl, but rather useful as an example of engine.
  * 

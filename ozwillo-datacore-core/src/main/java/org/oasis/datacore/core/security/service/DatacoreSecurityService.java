@@ -4,10 +4,9 @@ import org.oasis.datacore.core.security.DCUserImpl;
 
 public interface DatacoreSecurityService {
 
-	public DCUserImpl getCurrentUser();
+	DCUserImpl getCurrentUser();
 
-	public String getCurrentUserId();
+	String getCurrentUserId();
 
-	public String getUserGroup();
-
+	String getUserGroup();
 }

@@ -1,16 +1,14 @@
 package org.oasis.datacore.core.meta.pov;
 
+import com.google.common.collect.ImmutableList;
+import org.oasis.datacore.core.meta.model.DCModelBase;
+
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import org.oasis.datacore.core.meta.model.DCModelBase;
-
-import com.google.common.collect.ImmutableList;
 
 public abstract class DCPointOfViewBase implements DCPointOfView {
 
@@ -23,17 +21,14 @@ public abstract class DCPointOfViewBase implements DCPointOfView {
    private long majorVersion = -1;
    private String unversionedName;
    private List<String> parentPointOfViewNames;
-   private String parentAbsoluteName;
-   /** cache */
+    /** cache */
    private String absoluteName = null;
-   ///protected LinkedHashMap<String,DCPointOfView> pointOfViewMap = new LinkedHashMap<String,DCPointOfView>();
    /** especially used in inheriting DCProject */
-   protected LinkedHashMap<String,DCModelBase> modelMap = new LinkedHashMap<String,DCModelBase>();
+   LinkedHashMap<String,DCModelBase> modelMap = new LinkedHashMap<String,DCModelBase>();
 
    /** for unmarshalling only */
-   public DCPointOfViewBase() {
-      
-   }
+   public DCPointOfViewBase() {}
+
    public DCPointOfViewBase(String name, String ... parentPointOfViewNames) {
       this.name = name;
       Matcher versionedNameMatcher = versionedNamePattern.matcher(name); // ex. geo_0
@@ -49,6 +44,7 @@ public abstract class DCPointOfViewBase implements DCPointOfView {
       this.parentPointOfViewNames = ImmutableList.copyOf(parentPointOfViewNames);
       buildAbsoluteNames();
    }
+
    public DCPointOfViewBase(String unversionedName, long majorVersion, String ... parentPointOfViewNames) {
       this.name = unversionedName;
       if (majorVersion >= 0) {
@@ -91,13 +87,8 @@ public abstract class DCPointOfViewBase implements DCPointOfView {
    public String getUnversionedName() {
       return unversionedName;
    }
-   public void setUnversionedName(String unversionedName) {
+   private void setUnversionedName(String unversionedName) {
       this.unversionedName = unversionedName;
-   }
-   
-   @Override
-   public String getParentAbsoluteName() {
-      return parentAbsoluteName;
    }
    
    @Override
@@ -116,14 +107,6 @@ public abstract class DCPointOfViewBase implements DCPointOfView {
    public DCModelBase getModel(String type) {
       return modelMap.get(type);
    }
-
-   ///@Override
-   public abstract Map<String, ? extends DCPointOfView> getPointOfViewMap();
-
-   /*@Override
-   public Map<String, DCModelBase> getLocalModelMap() {
-      return modelMap;
-   }*/
 
    @Override
    public Collection<DCModelBase> getLocalModels() {
@@ -154,22 +137,17 @@ public abstract class DCPointOfViewBase implements DCPointOfView {
    public List<String> getParentPointOfViewNames() {
       return parentPointOfViewNames;
    }
-   public void setParentPointOfViewNames(List<String> parentPointOfViewNames) {
-      this.parentPointOfViewNames = parentPointOfViewNames;
-      buildAbsoluteNames();
-   }
-   
+
    protected void buildAbsoluteNames() {
       if (name == null || name.length() == 0) {
          throw new RuntimeException("Empty name when creating new project " + name);
       }
-      if (parentPointOfViewNames == null || parentPointOfViewNames.isEmpty()) {
-         this.parentAbsoluteName = "";
-         this.absoluteName = name;
+       String parentAbsoluteName;
+       if (parentPointOfViewNames == null || parentPointOfViewNames.isEmpty()) {
+           this.absoluteName = name;
          return;
       }
-      this.parentAbsoluteName = this.parentPointOfViewNames.stream().collect(Collectors.joining("."));
+      parentAbsoluteName = this.parentPointOfViewNames.stream().collect(Collectors.joining("."));
       this.absoluteName = parentAbsoluteName + "." + name;
    }
-   
 }

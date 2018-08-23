@@ -96,11 +96,6 @@ public class EntityModelService {
       checkAndFillDataEntityCaches(dataEntity);
       return dataEntity.getCachedModel();
    }
-   /** Might not be there (or not instanciable) if obsolete dataEntity (i.e. its model has changed, only in test),
-    * so check it or use a method that does it ex. getCollectionName() */
-   public DCModelBase getInstanciableModel(DCEntity dataEntity) {
-      return getModel(dataEntity);
-   }
 
    /** Might not be there if obsolete dataEntity (i.e. its model has changed), so check it
     * or use a method that does it ex. getCollectionName() */
@@ -109,12 +104,6 @@ public class EntityModelService {
       return dataEntity.getCachedStorageModel();
    }
 
-   /** Might not be there if obsolete dataEntity (i.e. its model has changed), so check it */
-   public DCModelBase getDefinitionModel(DCEntity dataEntity) {
-      checkAndFillDataEntityCaches(dataEntity);
-      return dataEntity.getCachedDefinitionModel();
-   }
-   
    /**
     * Fills Models cache in given Entity and checks them. 
     * Indeed, if they are not there (or model type not instanciable) ex. if obsolete dataEntity
@@ -315,12 +304,4 @@ public class EntityModelService {
          criteria.and(DCEntity.KEY_B).is(dataEntity.getProjectName());
       } // (else forkedUris would have been handled in project.get(Storage)Model())
    }
-
-   public boolean isDisableMultiProjectStorageCriteriaForTesting() {
-      return disableMultiProjectStorageCriteriaForTesting;
-   }
-   public void setDisableMultiProjectStorageCriteriaForTesting(boolean disableMultiProjectStorageCriteriaForTesting) {
-      this.disableMultiProjectStorageCriteriaForTesting = disableMultiProjectStorageCriteriaForTesting;
-   }
-   
 }

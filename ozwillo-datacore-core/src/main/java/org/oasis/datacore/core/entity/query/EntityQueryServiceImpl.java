@@ -11,16 +11,15 @@ import org.springframework.stereotype.Component;
 
 
 /**
- * This impl dispatches between query engines (implementing EntityQueryService)
- * according to language
- * @author mdutoo
+ * This impl dispatches between query engines (implementing EntityQueryService) according to language.
  *
+ * @author mdutoo
  */
 @Component
 @Qualifier("datacore.entityQueryService")
 public class EntityQueryServiceImpl implements EntityQueryService {
    
-   private Map<String,EntityQueryService> queryEngineMap = new HashMap<String,EntityQueryService>();
+   private Map<String,EntityQueryService> queryEngineMap = new HashMap<>();
 
    @Override
    public List<DCEntity> queryInType(String modelType, String query, String language) throws QueryException {
@@ -47,24 +46,4 @@ public class EntityQueryServiceImpl implements EntityQueryService {
    public void registerQueryEngine(String language, EntityQueryService queryEngine) {
       this.queryEngineMap.put(language, queryEngine);
    }
-   
-   /**
-    * 
-    * @param language
-    * @return whether a corresponding query engine has been unregistered
-    */
-   // TODO rather in (admin ?) interface ?
-   public boolean unregisterQueryEngine(String language) {
-      return this.queryEngineMap.remove(language) != null;
-   }
-   
-   /**
-    * only for knowing what's there and helping unregister
-    * @return a copy
-    */
-   // TODO rather in (admin ?) interface ?
-   public Map<String,EntityQueryService> getQueryEngines() {
-      return new HashMap<String,EntityQueryService>(queryEngineMap);
-   }
-
 }

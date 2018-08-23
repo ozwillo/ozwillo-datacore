@@ -1332,7 +1332,7 @@
               </net.java.amateras.uml.properties.BooleanPropertyDescriptor>
             </propertyDescriptors>
             <stereoType></stereoType>
-            <name>org.oasis.datacore.core.entity.query.sparql.EntityQueryEngineBase</name>
+            <name>org.oasis.datacore.core.entity.query.EntityQueryEngineBase</name>
             <isAbstract>false</isAbstract>
           </net.java.amateras.uml.classdiagram.model.ClassModel>
           <net.java.amateras.uml.classdiagram.model.ClassModel>

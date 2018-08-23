@@ -1,12 +1,5 @@
 package org.oasis.datacore.core.meta.pov;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.meta.ModelException;
 import org.oasis.datacore.core.meta.ModelNotFoundException;
@@ -15,6 +8,12 @@ import org.oasis.datacore.core.meta.model.DCMixin;
 import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCSecurity;
+
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class DCProject extends DCPointOfViewBase {
    
@@ -26,44 +25,29 @@ public class DCProject extends DCPointOfViewBase {
    /** for frozen model names & allowed model prefixes */
    public static final String MODEL_NAMES_WILDCARD = "*";
 
-   /* TODO organization.project ex. oasis.main */
-   /*
-   private String name;
-
-   private LinkedHashMap<String,DCModelBase> altModelMap = new LinkedHashMap<String, DCModelBase>();
-   ///private LinkedHashMap<String,List<DCStorage>> altStoragesMap = new LinkedHashMap<String, List<DCStorage>>();
-   ///private LinkedHashMap<String,DCStorage> altStorageMap = new LinkedHashMap<String, DCStorage>();
-   */
    private String documentation;
    
-   private LinkedHashMap<String,DCUseCasePointOfView> useCasePointOfViewMap = new LinkedHashMap<String, DCUseCasePointOfView>();
+   private LinkedHashMap<String,DCUseCasePointOfView> useCasePointOfViewMap = new LinkedHashMap<>();
    private Boolean dbRobust = null;
    private String dbUri = null;
    
    /** local visible projects ; LATER also reuse visible ones ? */
-   private LinkedHashMap<String,DCProject> visibleProjectMap = new LinkedHashMap<String, DCProject>(); // TODO merge in visibleStorageProjectMap
-   private LinkedHashSet<String> forkedUris = new LinkedHashSet<String>();
-   private LinkedHashSet<String> frozenModelNames = new LinkedHashSet<String>();
-   private LinkedHashSet<String> allowedModelPrefixes = new LinkedHashSet<String>();
+   // TODO merge in visibleStorageProjectMap
+   private LinkedHashMap<String,DCProject> visibleProjectMap = new LinkedHashMap<>();
+   private LinkedHashSet<String> forkedUris = new LinkedHashSet<>();
+   private LinkedHashSet<String> frozenModelNames = new LinkedHashSet<>();
+   private LinkedHashSet<String> allowedModelPrefixes = new LinkedHashSet<>();
    
    /** LATER can see outside model (unless alt model) but not data (by alt'ing model anonymously as not storage),
     * for this the local alt (storage) model must be created, optionally with some sample copied or rather imported data */
-   private LinkedHashMap<String,DCProject> visibleDefProjectMap = new LinkedHashMap<String, DCProject>();
+   private LinkedHashMap<String,DCProject> visibleDefProjectMap = new LinkedHashMap<>();
    /** OPT can see outside data (get & refer to it IF SECURITY OK) (unless alt storage) but not change (POST) (by alt'ing its DCSecurity to readonly),
     * for this the local alt (storage only) model must be created, probably with some sample copied data, with same security + data tester ;
     * modelization is not expected to change */
-   private LinkedHashMap<String,DCProject> visibleDataProjectMap = new LinkedHashMap<String, DCProject>(); // TODO OPT
+   private LinkedHashMap<String,DCProject> visibleDataProjectMap = new LinkedHashMap<>(); // TODO OPT
    /** (TODO or not ?) can change outside data (POST) (unless alt'd as not storage), i.e. allows oasis.main to redirect to others
     * AND DELEGATE SECURITY i.e. no fork at all */
-   private LinkedHashMap<String,DCProject> visibleStorageProjectMap = new LinkedHashMap<String, DCProject>(); // TODO or not ?
-
-   /** TODO ordered cache, includes itself
-    * to be invalidated each type (even indirectly) visible projects change
-    * (including when backward compatible).
-    * TODO not thread-safe, handle it the REST way
-    * TODO minorVersion ??? */
-   private LinkedHashMap<String,DCProject> allVisibleProjectMap = null;
-   private LinkedHashMap<String,DCModelBase> allAltModelMap = null;
+   private LinkedHashMap<String,DCProject> visibleStorageProjectMap = new LinkedHashMap<>(); // TODO or not ?
 
    /** to be checked firsthand if any WHATEVER THE RESOURCE (null dataEntity)
     * when checking rights in a model ;
@@ -97,7 +81,7 @@ public class DCProject extends DCPointOfViewBase {
    /** facade projects (e.g. alias) bypass visibleSecurityConstraints
     * ex. for energy_analytics_0. NOT regex else if .* anybody could create
     * a facade project !!! which is only for sandboxes so not interesting */
-   private LinkedHashSet<String> facadeProjectNames = new LinkedHashSet<String>();
+   private LinkedHashSet<String> facadeProjectNames = new LinkedHashSet<>();
    // NB. no forkStorageConstraint else won't know to store a in b or c if c sees b which sees a... 
 
    /** for unmarshalling only */
@@ -114,10 +98,9 @@ public class DCProject extends DCPointOfViewBase {
    }
 
    /**
-    * 
-    * @param type
     * @return null if its URI forked, else getNonLocalModel(type)
     */
+   @Override
    public DCModelBase getModel(String type) { // TODO or in projectService ?!
       // TODO rather from cache allAltModelMap
       DCModelBase model = super.getModel(type); // existing local alt model
@@ -133,8 +116,6 @@ public class DCProject extends DCPointOfViewBase {
    
    /**
     * i.e. in this project's visible projects only
-    * @param type
-    * @return
     */
    public DCModelBase getNonLocalModel(String type) { // TODO or in projectService ?!
       DCModelBase model;
@@ -158,18 +139,6 @@ public class DCProject extends DCPointOfViewBase {
       for (DCProject project : visibleDataProjectMap.values()) { // TODO cache allVisibleProjectMap
          model = project.getModel(type);
          if (model != null) {
-            /*if (model.isStorage()) { // && !model.getSecurity().isReadOnly()
-               // TODO new model (with storage) with readonly (but not new data TODO POSSIBLE ???)
-               DCModel inheritedModel = model;
-               model = new DCModel(type); // DCAltModel
-               model.addMixin(inheritedModel);
-               model.setStorage(true);
-               DCSecurity security = new DCSecurity();
-               security.setReadOnly(true); // TODO LATER readonly IN ADDITION to other rights
-               model.setSecurity(security);
-               // data : reused
-               model.setCollectionName(inheritedModel.getCollectionName());
-            } else */
             if (model.isStorage()) {
                // TODO new model (with storage) with readonly (but not new data TODO POSSIBLE ???)
                DCModelBase inheritedModel = model;
@@ -185,13 +154,6 @@ public class DCProject extends DCPointOfViewBase {
       for (DCProject project : visibleStorageProjectMap.values()) { // TODO cache allVisibleProjectMap
          model = project.getModel(type);
          if (model != null) {
-            /*???if (!model.isStorage()) {
-               // TODO new model with storage
-               DCModel inheritedModel = model;
-               model = new DCModel(type); // DCModelOrMixin
-               model.addMixin(inheritedModel);
-               model.setStorageOnly(true); // & storage
-            }*/
             return model;
          }
       }
@@ -204,6 +166,7 @@ public class DCProject extends DCPointOfViewBase {
       return null;
    }
 
+   @Override
    public DCModelBase getLocalModel(String type) {
       // NB. other impls i.e. routing strategies are allowed by DCUseCasePointOfView
       return modelMap.get(type);
@@ -212,7 +175,6 @@ public class DCProject extends DCPointOfViewBase {
    /**
     * Visits models in their order of inheritance,
     * using getModel(parentName) (allows definition forking by forking only definition models)
-    * @param model
     * @return null if abstract model
     */
    // can't return null (explodes)
@@ -244,7 +206,6 @@ public class DCProject extends DCPointOfViewBase {
    /**
     * Visits models in their order of inheritance (depth-first),
     * using getModel(parentName) (allows data forking by forking only storage models)
-    * @param model
     * @return null if abstract model
     */
    public DCModelBase getStorageModel(DCModelBase model) {
@@ -262,26 +223,8 @@ public class DCProject extends DCPointOfViewBase {
             return parentMixinStorageModel;
          }
       }
-      /*throw new ModelNotFoundException(inheritedType, this, "Can't find storage model "
-            + "while looking for definition of type " + model.getName()
-            + " in project " + this.getName());*/
       return null; // abstract model
    }
-
-   /*public DCStorage getVisibleProject(String type) { // TODO or in projectService ?!
-      // TODO rather from cache allAltStoragesMap
-      DCStorage storage = getLocalStorage(type);
-      if (storage != null) {
-         return storage;
-      }
-      for (DCProject project : visibleProjectMap.values()) { // TODO cache allVisibleProjectMap
-         storage = project.getLocalStorage(type);
-         if (storage != null) {
-            return storage;
-         }
-      }
-      return null;
-   }*/
 
    public DCProject getLocalVisibleProject(String projectName) {
       return visibleProjectMap.get(projectName);
@@ -305,10 +248,8 @@ public class DCProject extends DCPointOfViewBase {
     * TODO or rather return Model & (not only) Storage
     * NB. requestContextProvider.getRequestContext() could be used to
     * answer depending on REST request i.e. GET or POST/PUT...
-    * @param dataEntity
-    * @return
     */
-   public /*DCPointOfView*/DCModelBase getModel(DCEntity dataEntity) {
+   public DCModelBase getModel(DCEntity dataEntity) {
       String dataEntityModelType = dataEntity.getTypes().iterator().next(); // TODO dataEntity.getModelName() ?
       DCUseCasePointOfView pointOfView = useCasePointOfViewMap.get(dataEntityModelType);
       if (pointOfView != null) {
@@ -317,8 +258,6 @@ public class DCProject extends DCPointOfViewBase {
       return getModel(dataEntityModelType);
    }
 
-   
-   
    ///////////////////////////////////////
    // DCModelService impl :
 
@@ -327,7 +266,7 @@ public class DCProject extends DCPointOfViewBase {
       /*if (allAltModelMap != null) {
          return allAltModelMap.values();
       }*/
-      LinkedHashMap<String, DCModelBase> allAltModelMap = new LinkedHashMap<String, DCModelBase>();
+      LinkedHashMap<String, DCModelBase> allAltModelMap = new LinkedHashMap<>();
       for (DCModelBase model : modelMap.values()) {
          allAltModelMap.put(model.getName(),model); // TODO altName ??
       }
@@ -371,38 +310,14 @@ public class DCProject extends DCPointOfViewBase {
       return allAltModelMap.values();
    }
 
-
-   ///@Override
-   public Map<String, ? extends DCPointOfView> getPointOfViewMap() {
-      return useCasePointOfViewMap;
-   }
    @Override
    public Collection<? extends DCPointOfView> getPointOfViews() {
       return useCasePointOfViewMap.values(); // TODO TODO and ((local)) visible projects ?? 
    }
    
-   public void addUseCasePointOfView(DCUseCasePointOfView pointOfView) {
-      useCasePointOfViewMap.put(pointOfView.getName(), pointOfView);
-   }
-
-   public DCUseCasePointOfView getUseCasePointOfView(String name) {
-      return useCasePointOfViewMap.get(name);
-   }
-
    public Collection<DCUseCasePointOfView> getUseCasePointOfViews() {
       return useCasePointOfViewMap.values();
    }
-   
-   /** TODO ?? ONLY TO CREATE DERIVED MODELS ex. Contribution, TODO LATER rather change their name ?!? */
-   /*public void addUseCasePointOfView(DCModelBase dcModel, String name) {
-      altModelMap.put(name, dcModel);
-   }*/
-
-   public void removePointOfView(String name) {
-      useCasePointOfViewMap.remove(name);
-   }
-   
-   
    
    ///////////////////////////////////////
    // COPIED FROM DataAdminServiceImpl
@@ -413,7 +328,6 @@ public class DCProject extends DCPointOfViewBase {
    /**
     * also adds to mixin TODO is it OK ?
     * Checks whether its used mixin models are already known (TODO in same version)
-    * @param dcModel
     * @throws RuntimeException if unknown (non local if has same name mixin) or bad version mixin
     */
    @Override
@@ -434,13 +348,13 @@ public class DCProject extends DCPointOfViewBase {
          throw new ModelException(dcModel, this, "Unable to add model to project "
                + getName() + " with visible projects " + visibleProjectMap
                + ", this model has unknown mixins : "
-               + unknownMixins.stream().map(mixin -> mixin.getName()).collect(Collectors.toList())); // TODO business exception
+               + unknownMixins.stream().map(DCModelBase::getName).collect(Collectors.toList())); // TODO business exception
       }
       if (badVersionMixins.size() != 0) {
          throw new ModelException(dcModel, this, "Unable to add model to project "
                + getName() + " with visible projects " + visibleProjectMap
                + ", this model has obsolete version mixins : "
-               + badVersionMixins.stream().map(mixin -> mixin.getName()).collect(Collectors.toList())); // TODO business exception
+               + badVersionMixins.stream().map(DCModelBase::getName).collect(Collectors.toList())); // TODO business exception
       }
       super.addLocalModel(dcModel);
       ///addMixin(dcModel); // TODO all alt mixin cache ??
@@ -474,39 +388,6 @@ public class DCProject extends DCPointOfViewBase {
    public void setAllowedModelPrefixes(LinkedHashSet<String> allowedModelPrefixes) {
       this.allowedModelPrefixes = allowedModelPrefixes;
    }
-
-   /*
-    * TODO LATER also check version
-    * @param name
-    */
-   /*public void removeModel(String name) {
-      altModelMap.remove(name);
-      ///removeMixin(name); // TODO all alt mixin cache ??
-   }*/
-   
-   /*public Map<String, DCModelBase> getModelMap() {
-      return this.altModelMap;
-   }
-
-   public void setModelMap(LinkedHashMap<String, DCModelBase> modelMap) {
-      this.altModelMap = modelMap;
-   }
-
-   public void addMixin(DCModelBase mixin) { // TODO or addAsMixin i.e. alt'ing without storage ??
-      mixinMap.put(mixin.getName(), mixin);
-   }
-   
-   public void removeMixin(String name) {
-      mixinMap.remove(name);
-   }
-   
-   public Map<String, DCModelBase> getMixinMap() {
-      return this.mixinMap;
-   }
-
-   public void setMixinMap(Map<String, DCModelBase> mixinMap) {
-      this.mixinMap = mixinMap;
-   }*/
 
    public String getDocumentation() {
       return documentation;
@@ -600,9 +481,9 @@ public class DCProject extends DCPointOfViewBase {
    public String toString() {
       return "project " + this.getName()
             + "; " + this.getLocalVisibleProjects().stream()
-            .map(p -> p.getName()).collect(Collectors.toList())
+            .map(DCPointOfViewBase::getName).collect(Collectors.toList())
             + "\n   " + this.getLocalModels().stream()
-            .map(m -> m.getName()).collect(Collectors.toList())
+            .map(DCModelBase::getName).collect(Collectors.toList())
             ;
    }
    

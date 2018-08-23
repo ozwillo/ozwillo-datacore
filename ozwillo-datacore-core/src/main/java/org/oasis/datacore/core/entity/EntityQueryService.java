@@ -23,11 +23,10 @@ import org.oasis.datacore.core.meta.ModelNotFoundException;
  */
 public interface EntityQueryService {
 
-   String LANGUAGE_SPARQL = "SPARQL";
    String LANGUAGE_LDPQL = "LDPQL";
    
-   public List<DCEntity> queryInType(String modelType, String query, String language)
+   List<DCEntity> queryInType(String modelType, String query, String language)
          throws ModelNotFoundException, QueryException;
-   public List<DCEntity> query(String query, String language) throws QueryException;
+   List<DCEntity> query(String query, String language) throws QueryException;
    
 }

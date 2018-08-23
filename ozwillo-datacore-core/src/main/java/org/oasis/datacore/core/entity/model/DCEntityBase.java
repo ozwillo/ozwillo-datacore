@@ -123,23 +123,6 @@ public abstract class DCEntityBase implements Comparable<DCEntityBase>, Serializ
     * TODO dates are loaded as Date and not Joda DateTime */
    @Field(KEY_P)
    private Map<String,Object> properties;
-   //private Map<String,DCEntityValueBase> properties;
-   //private ArrayList<HashMap<String,Object>> propertiesList; // TODO OPT alternate value properties ?
-
-   // NB. also spring mongo :
-   // @DBRef : annotated reference (asssociations / relationships) see
-   // http://satishab.blogspot.fr/2013/03/part-2-persistence-layer-with-mongo-db.html
-   // @Field : alias
-   // @Indexed(unique=true)
-   // inheritance...
-
-   // TODO Q not in spring but in mongoid :
-   // (previous)changes (history ?!) & reset, default values, types (binary,
-   // range, regexp, symbol)
-   // localization & fallbacks order
-   // dynamic fields, security, readonly fields
-
-   // TODO Q for datacore : _container_id/uri
 
    /** required to check query rights (which is read mass operation) in a single step.
     * Computed out of readers (only) + writers + readers. Only readers are not enough
@@ -195,7 +178,7 @@ public abstract class DCEntityBase implements Comparable<DCEntityBase>, Serializ
       
       this.setUri(dcEntity.getUri());
       this.setVersion(dcEntity.getVersion());
-      this.setTypes(new ArrayList<String>(dcEntity.getTypes()));
+      this.setTypes(new ArrayList<>(dcEntity.getTypes()));
       if (dcEntity.getProjectName() != null) {
          this.setProjectName(dcEntity.getProjectName());
       } // else not multiStorageProject
@@ -209,8 +192,7 @@ public abstract class DCEntityBase implements Comparable<DCEntityBase>, Serializ
 
       // NB. not copying model caches in case of derived model ex. historization
       
-      this.properties = new HashMap<String, Object>(dcEntity.properties.size());
-      //this.properties = new HashMap<String, DCEntityValueBase>(dcEntity.properties.size());
+      this.properties = new HashMap<>(dcEntity.properties.size());
       for (String key : dcEntity.properties.keySet()) {
          Object value = dcEntity.properties.get(key);
          if (value instanceof DCEntityBase) {
@@ -344,7 +326,6 @@ public abstract class DCEntityBase implements Comparable<DCEntityBase>, Serializ
 
    /**
     * sets to null if < 0 (for Spring)
-    * @param version
     */
    public void setVersion(Long version) {
       if (version != null && version < 0) {
@@ -407,7 +388,7 @@ public abstract class DCEntityBase implements Comparable<DCEntityBase>, Serializ
 
    public Map<String,Object> getProperties() {
       if (this.properties == null) {
-         this.properties = new  HashMap<String,Object>(); // TODO TODO does it take (too much) place in mongodb ???
+         this.properties = new HashMap<>(); // TODO TODO does it take (too much) place in mongodb ???
       }
       return this.properties;
    }

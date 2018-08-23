@@ -38,7 +38,7 @@ public class DCSecurity {
 	 * Read resource : YES
 	 * Write resource : YES
 	 */
-	private LinkedHashSet<String> resourceOwners = new LinkedHashSet<String>();
+	private LinkedHashSet<String> resourceOwners = new LinkedHashSet<>();
 	
 	/**
 	 * Set as owners in ACLs of resource at creation. If model's is null,
@@ -52,10 +52,10 @@ public class DCSecurity {
 	 * Read resource : YES
 	 * Write resource : NO
 	 */
-	private LinkedHashSet<String> resourceCreators = new LinkedHashSet<String>();
+	private LinkedHashSet<String> resourceCreators = new LinkedHashSet<>();
 
 	/** who to set owner at creation (u_creator if empty) */
-   private LinkedHashSet<String> resourceCreationOwners = new LinkedHashSet<String>();
+   private LinkedHashSet<String> resourceCreationOwners = new LinkedHashSet<>();
 	
 	/**
 	 * Give access to all data no matter what permissions on the entity
@@ -64,7 +64,7 @@ public class DCSecurity {
 	 * Read resource : YES
 	 * Write resource : YES
 	 */
-	private LinkedHashSet<String> resourceWriters = new LinkedHashSet<String>();
+	private LinkedHashSet<String> resourceWriters = new LinkedHashSet<>();
 	
 	/**
 	 * Give access to all data no matter what permissions on the entity
@@ -73,7 +73,7 @@ public class DCSecurity {
 	 * Read resource : YES
 	 * Write resource : NO
 	 */
-	private LinkedHashSet<String> resourceReaders = new LinkedHashSet<String>();
+	private LinkedHashSet<String> resourceReaders = new LinkedHashSet<>();
 	
 
 	/** defaults */
@@ -86,10 +86,10 @@ public class DCSecurity {
       this.isAuthentifiedReadable = original.isAuthentifiedReadable;
       this.isAuthentifiedWritable = original.isAuthentifiedWritable;
       this.isAuthentifiedCreatable = original.isAuthentifiedCreatable;
-      this.resourceOwners = new LinkedHashSet<String>(original.resourceOwners);
-      this.resourceCreators = new LinkedHashSet<String>(original.resourceCreators);
-      this.resourceWriters = new LinkedHashSet<String>(original.resourceWriters);
-      this.resourceReaders = new LinkedHashSet<String>(original.resourceReaders);
+      this.resourceOwners = new LinkedHashSet<>(original.resourceOwners);
+      this.resourceCreators = new LinkedHashSet<>(original.resourceCreators);
+      this.resourceWriters = new LinkedHashSet<>(original.resourceWriters);
+      this.resourceReaders = new LinkedHashSet<>(original.resourceReaders);
    }
 
 	public boolean isAuthentifiedReadable() {
