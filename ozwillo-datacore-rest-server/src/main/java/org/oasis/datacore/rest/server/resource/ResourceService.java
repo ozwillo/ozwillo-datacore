@@ -745,7 +745,7 @@ public class ResourceService {
 
    private String fieldNameToString(String fieldName, DCResource resource, DCModelBase model) {
 
-      DCField field = model.getField(fieldName);
+      DCField field = model.getGlobalField(fieldName);
       switch (field.getType()) {
          case "resource":
             String uri = (String) resource.get(fieldName);
