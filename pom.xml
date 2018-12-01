@@ -138,7 +138,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 
 		<!-- spring IoC -->
 		<!-- spring.version>3.2.4.RELEASE</spring.version -->
-		<spring.version>3.2.10.RELEASE</spring.version><!-- brought by spring data's ; older : 3.1.4.RELEASE -->
+		<spring.version>3.2.14.RELEASE</spring.version><!-- brought by spring data's ; older : 3.1.4.RELEASE -->
 		<cglib.version>2.2.2</cglib.version>
 		<hibernate-validator.version>4.2.0.Final</hibernate-validator.version>
 
@@ -149,7 +149,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		<joda-time.version>2.1</joda-time.version><!-- from Jackson -->
 
 		<!-- spring data on neo4j (TODO for Social Graph mock ?!?) -->
-		<spring-data-neo4j.version>2.2.2.RELEASE</spring-data-neo4j.version>
+		<spring-data-neo4j.version>3.1.2.RELEASE</spring-data-neo4j.version>
 		<neo4j.version>1.8.1</neo4j.version><!-- depended on by spring ; NB. 1.9.4 
 			not compatible, 2.0 not out yet -->
 
