@@ -191,7 +191,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		<google.oauth.client.java6.version>1.17.0-rc</google.oauth.client.java6.version><!-- for tests -->
       
       <!-- JSON-LD (for RDF facade) -->
-      <jsonld-java.version>0.4</jsonld-java.version>
+      <jsonld-java.version>0.12.2</jsonld-java.version>
       <httpclient.version>4.2.5</httpclient.version><!-- same as openid-connect-common 1.1.0's -->
       <!-- jackson.version>2.3.3</jackson.version><!- would conflict ->
       <sesame.version>2.7.11</sesame.version>
