@@ -83,35 +83,6 @@
 		    <artifactId>joda-time</artifactId>
 		</dependency>
       
-      <!-- spring on neo4j  NO ELSE ITS scala-library 2.9.1-1 CONFLICTS WITH SWAGGER's 2.10.0 -->
-      <!-- dependency>
-         <groupId>org.springframework</groupId>
-         <artifactId>spring-tx</artifactId>
-         <version>${spring.version}</version>
-      </dependency>
-      <!- TODO ? ->
-      <dependency>
-         <groupId>org.springframework</groupId>
-         <artifactId>spring-expression</artifactId>
-         <version>${spring.version}</version>
-      </dependency>
-      <dependency>
-         <groupId>javax.validation</groupId>
-         <artifactId>validation-api</artifactId>
-         <version>${validation-api.version}</version>
-      </dependency>
-      <dependency>
-         <groupId>org.springframework.data</groupId>
-         <artifactId>spring-data-neo4j</artifactId>
-      <version>${spring-data-neo4j.version}</version>
-      </dependency>
-      <!- neo4j (depended on by spring) ->
-      <dependency>
-        <groupId>org.neo4j</groupId>
-        <artifactId>neo4j</artifactId>
-        <version>${neo4j.version}</version>
-      </dependency -->
-      
       <!-- else ValidationException: Unable to create a Configuration, because no Bean Validation provider could be found. Add a provider like Hibernate Validator (RI) to your classpath.
       see http://goldenpackagebyanuj.blogspot.fr/2013/05/validationException-no-Bean-Validation-provider-could-be-found.html -->
       <dependency>

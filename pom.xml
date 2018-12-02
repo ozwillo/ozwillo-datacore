@@ -148,11 +148,6 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		<mongodb.version>2.12.4</mongodb.version><!-- supports MongoDB 2.6 ; older : 2.11.2 -->
 		<joda-time.version>2.1</joda-time.version><!-- from Jackson -->
 
-		<!-- spring data on neo4j (TODO for Social Graph mock ?!?) -->
-		<spring-data-neo4j.version>2.2.2.RELEASE</spring-data-neo4j.version>
-		<neo4j.version>1.8.1</neo4j.version><!-- depended on by spring ; NB. 1.9.4 
-			not compatible, 2.0 not out yet -->
-
 		<!-- TODO ? -->
 		<logback.version>1.0.13</logback.version>
 		<validation-api.version>1.1.0.Final</validation-api.version>
