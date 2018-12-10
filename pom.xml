@@ -185,8 +185,8 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
       so version of aop, beans, expression, webmvc, security web must be forced to 3.1.4
       in dependencyManagement even if not used !!
       see http://www.baeldung.com/spring-security-with-maven -->
-		<spring.security.version>3.1.4.RELEASE</spring.security.version>
-      <spring.security.oauth2.version>1.0.5.RELEASE</spring.security.oauth2.version>
+		<spring.security.version>4.2.3.RELEASE</spring.security.version>
+      <spring.security.oauth2.version>2.0.13.RELEASE</spring.security.oauth2.version>
 		<mitre-openid-client.version>1.1.0</mitre-openid-client.version><!-- for client & test -->
 		<google.oauth.client.java6.version>1.17.0-rc</google.oauth.client.java6.version><!-- for tests -->
       
