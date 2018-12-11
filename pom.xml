@@ -149,7 +149,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		<joda-time.version>2.1</joda-time.version><!-- from Jackson -->
 
 		<!-- spring data on neo4j (TODO for Social Graph mock ?!?) -->
-		<spring-data-neo4j.version>2.2.2.RELEASE</spring-data-neo4j.version>
+		<spring-data-neo4j.version>4.2.11.RELEASE</spring-data-neo4j.version>
 		<neo4j.version>1.8.1</neo4j.version><!-- depended on by spring ; NB. 1.9.4 
 			not compatible, 2.0 not out yet -->
 
