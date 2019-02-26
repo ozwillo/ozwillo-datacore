@@ -46,26 +46,26 @@ public class CursorProviderQueryCursorPreparer extends QueryCursorPreparer {
       this.maxTime = maxTime;
    }
 
-   @Override
-   public DBCursor prepare(DBCursor cursor) {
-      if (doExplainQuery) {
-         // cursor has just been created for query, let's get its explain() before
-         // it gets changed by a possible sort
-         queryExplain = cursor.explain();
-      }
-      
-      this.cursorPrepared = super.prepare(cursor);
-      
-      // NB. not explaining sort because it can still be done afterwards using cursorPrepared
-      
-      if (maxScan > 0) {
-         this.cursorPrepared.addSpecial(MAX_SCAN, maxScan);
-      }
-      if (maxTime > 0) {
-         this.cursorPrepared.maxTime(maxTime, TimeUnit.MICROSECONDS);
-      }
-      return this.cursorPrepared;
-   }
+//   @Override
+//   public DBCursor prepare(DBCursor cursor) {
+//      if (doExplainQuery) {
+//         // cursor has just been created for query, let's get its explain() before
+//         // it gets changed by a possible sort
+//         queryExplain = cursor.explain();
+//      }
+//
+//      this.cursorPrepared = super.prepare(cursor);
+//
+//      // NB. not explaining sort because it can still be done afterwards using cursorPrepared
+//
+//      if (maxScan > 0) {
+//         this.cursorPrepared.addSpecial(MAX_SCAN, maxScan);
+//      }
+//      if (maxTime > 0) {
+//         this.cursorPrepared.maxTime(maxTime, TimeUnit.MICROSECONDS);
+//      }
+//      return this.cursorPrepared;
+//   }
 
    public DBCursor getCursorPrepared() {
       return cursorPrepared;

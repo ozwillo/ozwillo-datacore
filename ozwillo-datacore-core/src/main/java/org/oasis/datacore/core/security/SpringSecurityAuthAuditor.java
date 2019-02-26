@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.AuditorAware;
 
+import java.util.Optional;
+
 /**
  * Returns current user id according to Spring Security.
  * 
@@ -23,8 +25,9 @@ public class SpringSecurityAuthAuditor implements AuditorAware<String> {
 	 * Returns current user id
 	 */
 	@Override
-	public String getCurrentAuditor() {
-		return datacoreSecurityService.getCurrentUserId();
+	public Optional<String> getCurrentAuditor() {
+		 Optional<String> opt = Optional.of(datacoreSecurityService.getCurrentUserId());
+		 return opt;
 	}
 
 }

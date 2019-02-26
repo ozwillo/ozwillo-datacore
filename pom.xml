@@ -21,7 +21,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 	<artifactId>ozwillo-datacore</artifactId>
 	<name>Ozwillo Datacore</name>
 	<description>Ozwillo Datacore is a collaborative Open Linked Data Cloud platform.</description>
-	<version>1.11-SNAPSHOT</version>
+	<version>5.1.4.RELEASE</version>
 	<packaging>pom</packaging>
 
 	<!-- =================== -->
@@ -105,7 +105,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
          </roles>
       </developer>
 	</developers>
-  
+
 	<distributionManagement>
 		<repository>
 			<id>sonatype-nexus-staging</id>
@@ -138,19 +138,19 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 
 		<!-- spring IoC -->
 		<!-- spring.version>3.2.4.RELEASE</spring.version -->
-		<spring.version>3.2.10.RELEASE</spring.version><!-- brought by spring data's ; older : 3.1.4.RELEASE -->
+		<spring.version>5.1.4.RELEASE</spring.version><!-- brought by spring data's ; older : 3.1.4.RELEASE -->
 		<cglib.version>2.2.2</cglib.version>
 		<hibernate-validator.version>4.2.0.Final</hibernate-validator.version>
 
 		<!-- spring data on mongodb -->
-		<spring-data-mongodb.version>1.5.2.RELEASE</spring-data-mongodb.version><!-- 
+		<spring-data-mongodb.version>2.1.4.RELEASE</spring-data-mongodb.version><!--
 			WARNING depends on spring 3.2.10.RELEASE --><!-- older : 1.2.3.RELEASE with spring 3.1.4.RELEASE -->
-		<mongodb.version>2.12.4</mongodb.version><!-- supports MongoDB 2.6 ; older : 2.11.2 -->
+		<mongodb.version>3.9.1</mongodb.version><!-- supports MongoDB 2.6 ; older : 2.11.2 -->
 		<joda-time.version>2.1</joda-time.version><!-- from Jackson -->
 
 		<!-- spring data on neo4j (TODO for Social Graph mock ?!?) -->
 		<spring-data-neo4j.version>2.2.2.RELEASE</spring-data-neo4j.version>
-		<neo4j.version>1.8.1</neo4j.version><!-- depended on by spring ; NB. 1.9.4 
+		<neo4j.version>1.8.1</neo4j.version><!-- depended on by spring ; NB. 1.9.4
 			not compatible, 2.0 not out yet -->
 
 		<!-- TODO ? -->
@@ -158,15 +158,15 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		<validation-api.version>1.1.0.Final</validation-api.version>
 
 		<!-- REST -->
-		<jackson.version>2.2.3</jackson.version><!-- latest, also jsonld-java's 
+		<jackson.version>2.2.3</jackson.version><!-- latest, also jsonld-java's
 			as of 201309 -->
 		<cxf.version>3.1.4</cxf.version><!-- before 3.0.4 for JAXRS 2.0, 3.1.4 for metrics -->
 		<metrics.version>3.1.2</metrics.version><!-- cxf 3.1.4's' (optional dep) version AND latest on 20151201 -->
 		<ehcache.version>2.7.4</ehcache.version><!-- for client-side cache ; spring's version -->
-      
+
       <guava.version>14.0.1</guava.version><!-- for ImmutableMap/List(.Builder) (prefer it to Apache Commons Collections),
       also used by MITRE OpenIdConnect & Swagger (in 13.0.1, 11.0.2) -->
-		<commons-collections.version>3.2.2</commons-collections.version><!-- for 
+		<commons-collections.version>3.2.2</commons-collections.version><!-- for
 			ListUtils NOO never used, rather use guava -->
 		<commons-lang.version>2.6</commons-lang.version><!-- for ExceptionUtils -->
 		<commons-io.version>2.4</commons-io.version><!-- for IOUtils TODO used ?? -->
@@ -176,7 +176,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
       <!-- monitoring -->
       <!-- UDP is bugged in 0.2.10, rather use TCP for now -->
       <riemann-client.version>0.2.10</riemann-client.version>
-      
+
       <!-- spring security & al : BEWARE,
       * security core 3.1.4 depends on aop, beans, expression 3.0.7 (others are 3.1.4)
       * security config 3.1.4 depends on aop, beans 3.0.7 (others are 3.1.4)
@@ -185,18 +185,18 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
       so version of aop, beans, expression, webmvc, security web must be forced to 3.1.4
       in dependencyManagement even if not used !!
       see http://www.baeldung.com/spring-security-with-maven -->
-		<spring.security.version>3.1.4.RELEASE</spring.security.version>
-      <spring.security.oauth2.version>1.0.5.RELEASE</spring.security.oauth2.version>
+		<spring.security.version>5.1.4.RELEASE</spring.security.version>
+      <spring.security.oauth2.version>2.0.5.RELEASE</spring.security.oauth2.version>
 		<mitre-openid-client.version>1.1.0</mitre-openid-client.version><!-- for client & test -->
 		<google.oauth.client.java6.version>1.17.0-rc</google.oauth.client.java6.version><!-- for tests -->
-      
+
       <!-- JSON-LD (for RDF facade) -->
       <jsonld-java.version>0.4</jsonld-java.version>
       <httpclient.version>4.2.5</httpclient.version><!-- same as openid-connect-common 1.1.0's -->
       <!-- jackson.version>2.3.3</jackson.version><!- would conflict ->
       <sesame.version>2.7.11</sesame.version>
       <slf4j.version>1.7.7</slf4j.version -><!- would conflict -->
-      
+
       <!-- import, for tests : -->
       <opencsv.version>2.3</opencsv.version>
 
@@ -241,12 +241,12 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 						<!-- configuration>
 							<check>
 								<branchRate>85</branchRate>
-								<lineRate>85</lineRate> 
+								<lineRate>85</lineRate>
 								<haltOnFailure>true</haltOnFailure>
-								<totalBranchRate>85</totalBranchRate> 
+								<totalBranchRate>85</totalBranchRate>
 								<totalLineRate>85</totalLineRate>
 								<packageLineRate>85</packageLineRate>
-								<packageBranchRate>85</packageBranchRate> 
+								<packageBranchRate>85</packageBranchRate>
 							</check>
 						</configuration -->
 						<!-- see http://stackoverflow.com/questions/6931360/what-is-the-proper-way-to-use-cobertura-with-maven-3-0-2 -->
@@ -254,22 +254,22 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 							<execution>
 								<id>clean</id>
 								<phase>clean</phase>
-								<goals> 
+								<goals>
 									<goal>clean</goal>
 								</goals>
 							</execution>
 							<execution>
-								<id>instrument</id> 
+								<id>instrument</id>
 								<phase>process-classes</phase>
 								<goals>
 									<goal>instrument</goal>
 								</goals>
 							</execution -->
-							<!-- No "check" in verify phase, else error : Unable to prepare instrumentation 
+							<!-- No "check" in verify phase, else error : Unable to prepare instrumentation
 								directory. source and destination are the same directory. -->
-							<!-- NB. instrument and check must never be in the same execution because 
+							<!-- NB. instrument and check must never be in the same execution because
 								one depends on the other see http://blog.bielu.com/2012/01/errata-to-maven2-maven3-migration.html -->
-							<!-- No "cobertura" in package phase, because it must be done in reporting 
+							<!-- No "cobertura" in package phase, because it must be done in reporting
 								element instead -->
 						<!-- /executions -->
 					</plugin>
@@ -373,7 +373,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		</dependency>
 		<!-- dependency>
 			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId> 
+			<artifactId>mockito-all</artifactId>
 			<scope>test</scope>
 		</dependency --><!-- LATER mocked tests -->
 	</dependencies>
@@ -402,7 +402,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 			framework (TODO say it in a notice), nor providing it to (api) users since it's not used operationally)
 			which depends on hamcrest-core ((new) BSD License),
 			- jetty (EPL 1.0 License which is incompatible with GPL BUT we are not providing
-			it to (api) users since it is only used in mvn jetty:run and in tests and 
+			it to (api) users since it is only used in mvn jetty:run and in tests and
 			tomcat is used operationally instead) -->
 			<dependency>
 				<groupId>junit</groupId>
@@ -477,11 +477,11 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 	      </dependency>
 
 			<!-- logging : using slf4j (MIT License) facade on log4j (Apache 2.0 License) backend
-			   NB. logback (log4j successor) more 
-				recent, but log4j backend easier with spring & for single conf file why http://stackoverflow.com/questions/2533614/what-are-the-latest-options-in-java-logging-frameworks 
-				how http://stackoverflow.com/questions/4311026/how-to-get-slf4j-hello-world-working-with-log4j 
-				LATER slf4j also for spring (using jcl-over-slf4j, also Apache 2.0 License) http://spring.io/blog/2009/12/04/logging-dependencies-in-spring/ 
-				LATER2 logback see gru http://www.lordofthejars.com/2012/04/hey-teachers-leave-them-kids-alone-all.html 
+			   NB. logback (log4j successor) more
+				recent, but log4j backend easier with spring & for single conf file why http://stackoverflow.com/questions/2533614/what-are-the-latest-options-in-java-logging-frameworks
+				how http://stackoverflow.com/questions/4311026/how-to-get-slf4j-hello-world-working-with-log4j
+				LATER slf4j also for spring (using jcl-over-slf4j, also Apache 2.0 License) http://spring.io/blog/2009/12/04/logging-dependencies-in-spring/
+				LATER2 logback see gru http://www.lordofthejars.com/2012/04/hey-teachers-leave-them-kids-alone-all.html
 				LATER3 mongo-backed logging ?? https://github.com/deftlabs/mongo-java-logging -->
 			<dependency>
 				<groupId>org.slf4j</groupId>
@@ -501,13 +501,13 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 			<!-- LATER for logback backend instead -->
 			<!-- dependency>
 				<groupId>org.slf4j</groupId>
-				<artifactId>jcl-over-slf4j</artifactId> 
+				<artifactId>jcl-over-slf4j</artifactId>
 				<version>${slf4j.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>ch.qos.logback</groupId> 
+				<groupId>ch.qos.logback</groupId>
 				<artifactId>logback-classic</artifactId>
-				<version>${logback.version}</version> 
+				<version>${logback.version}</version>
 			</dependency -->
 
 			<!-- Spring framework and deps (all Apache 2.0 License) :
@@ -548,7 +548,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 	         <artifactId>hibernate-validator</artifactId>
 	         <version>${hibernate-validator.version}</version>
 	      </dependency>
-	      
+
 
          <!-- Spring security (Apache 2.0 License) -->
          <dependency>
@@ -681,21 +681,21 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 			<!-- Jackson JAXRS (pulls all other deps) (Apache 2.0 License) -->
 			<dependency>
 				<groupId>com.fasterxml.jackson.jaxrs</groupId>
-				<artifactId>jackson-jaxrs-json-provider</artifactId><!-- brings JacksonJsonProvider, 
+				<artifactId>jackson-jaxrs-json-provider</artifactId><!-- brings JacksonJsonProvider,
 					to configure in clients -->
 				<version>${jackson.version}</version>
 			</dependency>
-			<!-- dates in jackson REST using Joda's DateTime : (not required to compile 
-				but DCResource can't be parsed without it) (WARNING requires also module 
+			<!-- dates in jackson REST using Joda's DateTime : (not required to compile
+				but DCResource can't be parsed without it) (WARNING requires also module
 				conf) -->
 			<dependency>
 				<groupId>com.fasterxml.jackson.datatype</groupId>
 				<artifactId>jackson-datatype-joda</artifactId>
 				<version>${jackson.version}</version>
 			</dependency>
-			<!-- NB. other Jackson deps : ex. for mere (JSONLD) parsing only core 
+			<!-- NB. other Jackson deps : ex. for mere (JSONLD) parsing only core
 				& databind -->
-			<!-- Servlet 3 (Apache 2.0 License), from CXF's Jetty and compatible with Tomcat 7 ; otherwise 
+			<!-- Servlet 3 (Apache 2.0 License), from CXF's Jetty and compatible with Tomcat 7 ; otherwise
 				javax.servlet javax.servlet-api 3.1.0 ?? -->
 			<dependency>
 				<groupId>org.apache.geronimo.specs</groupId>
@@ -751,7 +751,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 			since no XML representation) -->
 			<!-- dependency>
 				<groupId>org.apache.cxf</groupId>
-				<artifactId>cxf-rt-frontend-jaxws</artifactId> 
+				<artifactId>cxf-rt-frontend-jaxws</artifactId>
 				<version>${cxf.version}</version>
 				<exclusions>
 				  <exclusion>
@@ -789,7 +789,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
             <artifactId>metrics-core</artifactId>
             <version>${metrics.version}</version>
          </dependency>
-   		
+
 			<!-- for packaging on tomcat -->
 			<dependency>
 				<groupId>org.apache.cxf</groupId>
@@ -813,7 +813,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 			<!-- for async BUT ONLY ON JETTY -->
 			<!-- dependency>
 				<groupId>org.eclipse.jetty</groupId>
-				<artifactId>jetty-continuation</artifactId> 
+				<artifactId>jetty-continuation</artifactId>
 				<version>${jetty.version}</version>
 				<scope>test</scope>
 			</dependency -->
@@ -824,9 +824,9 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 				<artifactId>ehcache-core</artifactId>
 				<version>${ehcache.version}</version>
 				<!-- groupId>net.sf.ehcache</groupId>
-				<artifactId>ehcache</artifactId> 
-				<type>pom</type --><!-- NO worked in 2.6.0 but not in 2.7.4 anymore because no more dependencies 
-					to ehcache-core etc. (but in 2.9 works again !) would probably work without 
+				<artifactId>ehcache</artifactId>
+				<type>pom</type --><!-- NO worked in 2.6.0 but not in 2.7.4 anymore because no more dependencies
+					to ehcache-core etc. (but in 2.9 works again !) would probably work without
 					type=pom but brings in too much stuff (hibernate, terracotta...) -->
 			</dependency>
 
@@ -943,16 +943,16 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
             <artifactId>httpclient-cache</artifactId>
             <version>${httpclient.version}</version>
          </dependency>
-         
+
          <!-- import, for samples & tests (Apache 2.0 License) : -->
          <dependency>
             <groupId>net.sf.opencsv</groupId>
             <artifactId>opencsv</artifactId>
             <version>${opencsv.version}</version>
          </dependency>
-         
+
 		</dependencies>
-		
+
 		<!--
 		and on JS UI side :
 		(though APIs don't depend on it, so JS UI could not be Open Sourced or using another license)
@@ -978,7 +978,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 			</plugin>
 			<!-- plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId> 
+				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.2.1</version>
 			</plugin -->
 
@@ -1000,12 +1000,12 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 			<!-- TODO in release profile -->
 			<!-- plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId> 
+				<artifactId>maven-javadoc-plugin</artifactId>
 				<executions>
 					<execution>
 						<id>attach-javadocs</id>
 						<goals>
-							<goal>jar</goal> 
+							<goal>jar</goal>
 						</goals>
 					</execution>
 				</executions>
@@ -1014,14 +1014,14 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 
 			<!-- plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-eclipse-plugin</artifactId> 
+				<artifactId>maven-eclipse-plugin</artifactId>
 				<version>2.9</version>
 				<configuration>
-					<downloadSources>true</downloadSources> 
+					<downloadSources>true</downloadSources>
 					<downloadJavadocs>true</downloadJavadocs>
 				</configuration>
 			</plugin -->
-			
+
 		</plugins>
 
 		<!-- ================= -->

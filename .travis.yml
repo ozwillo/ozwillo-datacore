@@ -7,7 +7,7 @@ jdk:
 
 env:
   matrix:
-    - MONGODB=2.6.12
+    - MONGODB=4.0.6
 
 matrix:
   fast_finish: true

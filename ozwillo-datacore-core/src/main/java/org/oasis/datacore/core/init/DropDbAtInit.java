@@ -27,7 +27,7 @@ public class DropDbAtInit extends InitableBase {
    protected void doInit() {
       if (devmode && "true".equals(System.getProperty("datacore.dropdb"))) {
          logger.info("dropping db...");
-         mgt.getDb().dropDatabase();
+         mgt.getDb().drop();
       }
    }
 

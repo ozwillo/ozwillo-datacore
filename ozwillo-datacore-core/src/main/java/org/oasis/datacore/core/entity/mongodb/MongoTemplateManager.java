@@ -8,6 +8,7 @@ import java.util.Set;
 
 import javax.annotation.PostConstruct;
 
+import com.mongodb.MongoClient;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.pov.DCProject;
 import org.slf4j.Logger;
@@ -190,10 +191,12 @@ public class MongoTemplateManager {
          
       } else {
          Mongo mongo;
+         MongoClient mongoClient;
          try {
             mongo = new Mongo(dbUri.getHost(), dbUri.getPort());
+            mongoClient = new MongoClient(dbUri.getHost(), dbUri.getPort());
             mongo.slaveOk();
-         } catch (UnknownHostException e) {
+         } catch (Exception e) {
             // configuration problem, don't hide it :
             throw new RuntimeException("Error creating custom mongo " + dbUri, e);
          }
@@ -201,12 +204,12 @@ public class MongoTemplateManager {
          UserCredentials credentials = username == null || username.trim().isEmpty()
                || username.trim().equals("null") ? null :
                new UserCredentials(username, password);
-         MongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(mongo, dbUri.getDatabase(), credentials);
+         MongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(mongoClient, dbUri.getDatabase());
          NoIndexCreationMongoConverter readonlyMongoConverter = new NoIndexCreationMongoConverter(mongoConverter);
          mgo = new DatacoreMongoTemplate(mongoDbFactory, readonlyMongoConverter);
          readonlyMongoConverter.completeInit(mgo);
       }
-      
+
       if (isDbRobust) {
          mgo.setWriteConcern(writeConcern);
       } else {

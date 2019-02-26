@@ -2,6 +2,7 @@ package org.oasis.datacore.core.entity.mongodb;
 
 import java.lang.reflect.Field;
 
+import org.bson.conversions.Bson;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -47,14 +48,12 @@ public class NoIndexCreationMongoConverter implements MongoConverter {
       }
       this.inited = true;
    }
-   
-   
-   
-   public <R> R read(Class<R> type, DBObject source) {
+
+   public <R> R read(Class<R> type, Bson source) {
       return delegate.read(type, source);
    }
 
-   public void write(Object source, DBObject sink) {
+   public void write(Object source, Bson sink) {
       delegate.write(source, sink);
    }
 

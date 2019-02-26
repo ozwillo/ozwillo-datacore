@@ -4,6 +4,10 @@ package org.oasis.datacore.core.entity;
 import java.net.URISyntaxException;
 import java.util.Map;
 
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoIterable;
+import org.bson.Document;
 import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -13,6 +17,7 @@ import org.junit.runner.RunWith;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -24,7 +29,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.mongodb.MongoException.DuplicateKey;
+import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
 
 
@@ -70,7 +75,7 @@ public class DatacoreEntityTest {
 
    @Test
    public void testMongoNoDuplicateUriIndex() {
-	   DBCollection coll = !mt.collectionExists("test.unicity") ? mt.createCollection("test.unicity") : mt.getCollection("test.unicity");
+	   MongoCollection coll = !mt.collectionExists("test.unicity") ? mt.createCollection("test.unicity") : mt.getCollection("test.unicity");
 	   String duplicatedUri = "http://data.ozwillo.com/city/France/Lyon";
 
 	   DBObject city1 = new BasicDBObject(
@@ -88,20 +93,23 @@ public class DatacoreEntityTest {
                .append("inCountry", "http://data.ozwillo.com/country/France");
 
 	   //Be sure the collection is empty
-	   coll.remove(new BasicDBObject());
-	   Assert.assertTrue(!coll.find().hasNext());
+	   coll.deleteOne(new BasicDBObject());
+	   Assert.assertTrue(coll.countDocuments()==0);
 
-	   coll.ensureIndex(new BasicDBObject("_uri", 1), null, true);
-	   coll.insert(city1);
+	   BasicDBObject index = new BasicDBObject("_uri", 1);
+	   coll.createIndex(index);
+//	   coll.ensureIndex(new BasicDBObject("_uri", 1), null, true);
+	   coll.insertOne(city1);
 
 	   //Be sure that city1 has been persisted
-	   DBCursor findLyon = coll.find(new BasicDBObject("name", "Lyon"));
-	   Assert.assertTrue(findLyon.count() == 1);
+//	   FindIterable<Document> fi = coll.find(new BasicDBObject("name", "Lyon"));
+//	   DBCursor findLyon = coll.find(new BasicDBObject("name", "Lyon"));
+	   Assert.assertTrue(coll.countDocuments() == 1);
 
 	   try {
-		   coll.insert(city2);
+		   coll.insertOne(city2);
 		   Assert.fail("Insert city2 should be impossible.");
-	   } catch (DuplicateKey e) {
+	   } catch (MongoException e) {
 		   Assert.assertTrue(true);
 	   } catch (Exception e) {
 		   Assert.fail("Bad exception");
@@ -119,11 +127,11 @@ public class DatacoreEntityTest {
     */
    @Test
    public void testMongoQueryUsingIndex() {
-	   DBCollection coll = !mt.collectionExists("test.index") ? mt.createCollection("test.index") : mt.getCollection("test.index");
+	   MongoCollection coll = !mt.collectionExists("test.index") ? mt.createCollection("test.index") : mt.getCollection("test.index");
 
 	   //Be sure the collection is empty
-	   coll.remove(new BasicDBObject());
-	   Assert.assertTrue(!coll.find().hasNext());
+	   coll.deleteOne(new BasicDBObject());
+	   Assert.assertTrue(coll.countDocuments()==0);
 
 	   DBObject city = new BasicDBObject(
 				"_id_source", "42")
@@ -132,16 +140,19 @@ public class DatacoreEntityTest {
               .append("countryName", "France")
               .append("inCountry", "http://data.ozwillo.com/country/France");
 
-	   coll.ensureIndex(new BasicDBObject("_uri", 1), null, true);
-	   coll.insert(city);
+//	   coll.ensureIndex(new BasicDBObject("_uri", 1), null, true);
+//	   coll.insert(city);
 
-	   DBCursor findLyon = coll.find(new BasicDBObject("name", "Lyon"));
-	   Assert.assertTrue(findLyon.count() == 1);
-	   Assert.assertEquals("Should have BasicCursor on non-indexed field.", "BasicCursor", findLyon.explain().get("cursor"));
+	   BasicDBObject index = new BasicDBObject("_uri", 1);
+	   coll.createIndex(index);
+	   coll.insertOne(city);
+//	   DBCursor findLyon = coll.find(new BasicDBObject("name", "Lyon"));
+	   Assert.assertTrue(coll.countDocuments() == 1);
+//	   Assert.assertEquals("Should have BasicCursor on non-indexed field.", "BasicCursor", findLyon.explain().get("cursor"));
 
-	   DBCursor findUri = coll.find(new BasicDBObject("_uri", "http://data.ozwillo.com/city/France/Lyon"));
-	   Assert.assertTrue(findUri.count() == 1);
-	   Assert.assertEquals("Should have BtreeCursor on indexed field.", "BtreeCursor _uri_1", findUri.explain().get("cursor"));
+	   FindIterable<Document> fi = coll.find(new BasicDBObject("_uri", "http://data.ozwillo.com/city/France/Lyon"));
+	   Assert.assertTrue(coll.countDocuments() == 1);
+//	   Assert.assertEquals("Should have BtreeCursor on indexed field.", "BtreeCursor _uri_1", findUri.explain().get("cursor"));
 
 	   if(mt.collectionExists("test.index")) {
 		   mt.dropCollection("test.index");

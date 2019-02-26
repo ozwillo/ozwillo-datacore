@@ -198,7 +198,7 @@ public class MongoBasicTest {
 			
 			coll.remove(new BasicDBObject());
 			Assert.assertTrue("collection should be empty.", !coll.find().hasNext());
-		   
+
 			DBObject city = new BasicDBObject(
 					"_id_source", "42")
 	               .append("_uri", "http://data.ozwillo.com/city/France/Lyon")
@@ -206,8 +206,9 @@ public class MongoBasicTest {
 	               .append("countryName", "France")
 	               .append("inCountry", "http://data.ozwillo.com/country/France")
 	               .append("description", "Lyon is known for its historical and architectural landmarks and is a UNESCO World Heritage Site.");
-			
-			coll.ensureIndex(new BasicDBObject("description", "text"), null, true);
+			BasicDBObject index = new BasicDBObject("description", "text");
+			coll.createIndex(index);
+//			coll.ensureIndex(new BasicDBObject("description", "text"), null, true);
 			coll.insert(city);	
 			
 		    //Be sure that city has been persisted
