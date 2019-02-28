@@ -1,12 +1,12 @@
 package org.oasis.datacore.rest.server.resource.mongodb;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.IndexModel;
+import com.mongodb.client.model.IndexOptions;
+import org.bson.Document;
 import org.oasis.datacore.core.entity.DatabaseSetupService;
 import org.oasis.datacore.core.entity.NativeModelService;
 import org.oasis.datacore.core.entity.model.DCEntity;
@@ -31,6 +31,7 @@ import org.springframework.stereotype.Component;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.client.model.Indexes;
 
 /**
  * Creates indexes
@@ -38,7 +39,7 @@ import com.mongodb.DBObject;
  *
  */
 @Component
-public class DatabaseSetupServiceImpl implements DatabaseSetupService {
+public class   DatabaseSetupServiceImpl implements DatabaseSetupService {
 
    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -170,11 +171,15 @@ public class DatabaseSetupServiceImpl implements DatabaseSetupService {
          }
          
          //boolean collectionAlreadyExists = ensureGenericCollectionAndIndices(historizedModel); // NOO only use is GET(uri, version)
-         boolean collectionAlreadyExists = mgo.collectionExists(historizedCollectionName); 
+         boolean collectionAlreadyExists = mgo.collectionExists(historizedCollectionName);
+         List<IndexModel> list = new ArrayList<>();
+
          // compound index on uri & version :
-         mgo.getCollection(historizedCollectionName).createIndex(
-               new BasicDBObject(DCEntity.KEY_URI, 1).append(DCEntity.KEY_V, 1),
-               new BasicDBObject("unique", true));
+         IndexOptions indexOptions = new IndexOptions().unique(true);
+         mgo.getCollection(historizedCollectionName).createIndex(Indexes.descending(DCEntity.KEY_URI, DCEntity.KEY_V), indexOptions);
+//         mgo.getCollection(historizedCollectionName).createIndex(
+//               new BasicDBObject(DCEntity.KEY_URI, 1).append(DCEntity.KEY_V, 1),
+//               new BasicDBObject("unique", true));
          // NB. does nothing if already exists http://docs.mongodb.org/manual/tutorial/create-an-index/
          return collectionAlreadyExists;
       } catch (HistorizationException e) {
@@ -205,9 +210,12 @@ public class DatabaseSetupServiceImpl implements DatabaseSetupService {
          dataEntityUniqueIndex.append(DCEntity.KEY_B, 1);
       }
       // TODO isMultiVersionStorage for History
-      dataEntityUniqueIndex.append(DCEntity.KEY_URI, 1);
-      mgo.getCollection(model.getCollectionName()).createIndex(
-            dataEntityUniqueIndex, new BasicDBObject("unique", true)); // TODO dropDups ??
+      IndexOptions indexOptions = new IndexOptions().unique(true);
+      mgo.getCollection(model.getCollectionName()).createIndex(Indexes.descending(DCEntity.KEY_URI), indexOptions);
+
+//      dataEntityUniqueIndex.append(DCEntity.KEY_URI, 1);
+//      mgo.getCollection(model.getCollectionName()).createIndex(
+//            dataEntityUniqueIndex, new BasicDBObject("unique", true)); // TODO dropDups ??
       // NB. does nothing if already exists http://docs.mongodb.org/manual/tutorial/create-an-index/
       return res;
    }
@@ -217,7 +225,7 @@ public class DatabaseSetupServiceImpl implements DatabaseSetupService {
     * @return
     */
    private boolean ensureGenericCollectionAndIndices(DCModelBase model) {
-      DBCollection coll;
+      MongoCollection<Document> coll;
       boolean collectionAlreadyExists = mgo.collectionExists(model.getCollectionName()); 
       if (collectionAlreadyExists) {
          coll = mgo.getCollection(model.getCollectionName());
@@ -293,10 +301,10 @@ public class DatabaseSetupServiceImpl implements DatabaseSetupService {
     * @param coll
     * @return existing indexes
     */
-   private Set<String> getNonUniqueSingleIndexedPathes(DBCollection coll) {
-      List<DBObject> mongoIndexInfos = coll.getIndexInfo();
-      Set<String> nonUniqueSingleIndexedPathes = new HashSet<String>(mongoIndexInfos.size());
-      for (DBObject mongoIndexInfo : mongoIndexInfos) {
+   private Set<String> getNonUniqueSingleIndexedPathes( MongoCollection<Document> coll) {
+      FindIterable<Document> mongoIndexInfos = coll.find();
+      Set<String> nonUniqueSingleIndexedPathes = new HashSet<String>();
+      for (Document mongoIndexInfo : mongoIndexInfos) {
          Object uniqueFound = mongoIndexInfo.get("unique");
          if (uniqueFound != null && ((Boolean) uniqueFound).booleanValue()) {
             continue;
@@ -318,14 +326,14 @@ public class DatabaseSetupServiceImpl implements DatabaseSetupService {
     * not supported for now, since can't know whether embedded or not)
     * @param requiredIndexes
     */
-   private void computeFieldsIndices(DBCollection coll, String prefixWithoutDot,
+   private void computeFieldsIndices( MongoCollection<Document> coll, String prefixWithoutDot,
          Collection<DCField> globalFields, LinkedHashSet<String> requiredIndexes) {
       for (DCField globalField : globalFields) {
          computeMapOrResourceFieldPathAndIndices(coll, prefixWithoutDot, globalField, requiredIndexes);
       }
    }
 
-   private void computeMapOrResourceFieldPathAndIndices(DBCollection coll, String prefixWithoutDot,
+   private void computeMapOrResourceFieldPathAndIndices( MongoCollection<Document> coll, String prefixWithoutDot,
          DCField globalField, LinkedHashSet<String> requiredIndexes) {
       String storageReadName = globalField.getStorageReadName();
       if (storageReadName == null) {
@@ -334,7 +342,7 @@ public class DatabaseSetupServiceImpl implements DatabaseSetupService {
       String prefixedGlobalFieldStorageName = prefixWithoutDot + "." + storageReadName;
       computeFieldIndices(coll, prefixedGlobalFieldStorageName, globalField, requiredIndexes);
    }
-   private void computeFieldIndices(DBCollection coll, String prefixWithoutDot,
+   private void computeFieldIndices( MongoCollection<Document> coll, String prefixWithoutDot,
          DCField globalField, LinkedHashSet<String> requiredIndexes) {
       switch (DCFieldTypeEnum.getEnumFromStringType(globalField.getType())) {
       case LIST:

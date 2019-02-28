@@ -21,7 +21,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 	<artifactId>ozwillo-datacore</artifactId>
 	<name>Ozwillo Datacore</name>
 	<description>Ozwillo Datacore is a collaborative Open Linked Data Cloud platform.</description>
-	<version>5.1.4.RELEASE</version>
+	<version>1.1.12.RELEASE</version>
 	<packaging>pom</packaging>
 
 	<!-- =================== -->
@@ -127,26 +127,26 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		<java.version>1.8</java.version>
 
 		<!-- testing : -->
-		<junit.version>4.12</junit.version><!-- cxf3' ; 4.11 solves method execution order 
+		<junit.version>4.12</junit.version><!-- cxf3' ; 4.11 solves method execution order
 			bug -->
-		<jetty.version>9.2.11.v20150529</jetty.version><!-- cxf 3.1.4's (3.0.4's 8.1.12.v20130726) -->
+		<jetty.version>9.4.12.v20180830</jetty.version><!-- cxf 3.1.4's (3.0.4's 8.1.12.v20130726) -->
 
 
 		<!-- logging -->
-		<slf4j.version>1.7.5</slf4j.version>
+		<slf4j.version>1.7.25</slf4j.version>
 		<log4j.version>1.2.17</log4j.version>
 
 		<!-- spring IoC -->
 		<!-- spring.version>3.2.4.RELEASE</spring.version -->
-		<spring.version>5.1.4.RELEASE</spring.version><!-- brought by spring data's ; older : 3.1.4.RELEASE -->
-		<cglib.version>2.2.2</cglib.version>
-		<hibernate-validator.version>4.2.0.Final</hibernate-validator.version>
+		<spring.version>5.1.3.RELEASE</spring.version><!-- brought by spring data's ; older : 3.1.4.RELEASE -->
+		<cglib.version>3.2.10</cglib.version>
+		<hibernate-validator.version>6.0.13.Final</hibernate-validator.version>
 
 		<!-- spring data on mongodb -->
-		<spring-data-mongodb.version>2.1.4.RELEASE</spring-data-mongodb.version><!--
+		<spring-data-mongodb.version>2.1.3.RELEASE</spring-data-mongodb.version><!--
 			WARNING depends on spring 3.2.10.RELEASE --><!-- older : 1.2.3.RELEASE with spring 3.1.4.RELEASE -->
 		<mongodb.version>3.9.1</mongodb.version><!-- supports MongoDB 2.6 ; older : 2.11.2 -->
-		<joda-time.version>2.1</joda-time.version><!-- from Jackson -->
+		<joda-time.version>2.10.1</joda-time.version><!-- from Jackson -->
 
 		<!-- spring data on neo4j (TODO for Social Graph mock ?!?) -->
 		<spring-data-neo4j.version>2.2.2.RELEASE</spring-data-neo4j.version>
@@ -186,7 +186,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
       in dependencyManagement even if not used !!
       see http://www.baeldung.com/spring-security-with-maven -->
 		<spring.security.version>5.1.4.RELEASE</spring.security.version>
-      <spring.security.oauth2.version>2.0.5.RELEASE</spring.security.oauth2.version>
+      <spring.security.oauth2.version>2.3.5.RELEASE</spring.security.oauth2.version>
 		<mitre-openid-client.version>1.1.0</mitre-openid-client.version><!-- for client & test -->
 		<google.oauth.client.java6.version>1.17.0-rc</google.oauth.client.java6.version><!-- for tests -->
 
@@ -201,7 +201,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
       <opencsv.version>2.3</opencsv.version>
 
 		<!-- mockito, for better unit tests -->
-		<mockito.version>1.9.5</mockito.version>
+		<mockito.version>2.23.4</mockito.version>
 	</properties>
 
 	<!-- ======= -->

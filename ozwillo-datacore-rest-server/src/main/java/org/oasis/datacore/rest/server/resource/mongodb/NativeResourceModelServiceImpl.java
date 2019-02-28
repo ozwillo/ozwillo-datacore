@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.annotation.PostConstruct;
 
@@ -18,6 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.IndexDefinitionHolder;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.stereotype.Component;
 
 
@@ -120,9 +123,11 @@ public class NativeResourceModelServiceImpl implements NativeModelService {
    }
 
    private void checkIndexedFields() throws NativeModelException {
-      List<IndexDefinitionHolder> indexDefHolders = indexResolver.resolveIndexForClass(DCEntity.class);
-      
-      Set<String> indexedPathes = indexDefHolders.stream()
+      TypeInformation<? extends Object> type = ClassTypeInformation.from(DCEntity.class);
+
+      // get the map's key type
+      Iterable<? extends MongoPersistentEntityIndexResolver.IndexDefinitionHolder> indexDefHolders = indexResolver.resolveIndexFor(type);
+      Set<String> indexedPathes = StreamSupport.stream(indexDefHolders.spliterator(), false)
             .map(idf -> idf.getPath()).collect(Collectors.toSet());
       
       // native id field :
@@ -154,7 +159,7 @@ public class NativeResourceModelServiceImpl implements NativeModelService {
                + "some @Indexed DCEntity fields are not used by any DCField : " + unusedIndexedPathes
                + " (native id field " + this.getNativeIdFieldName(null)
                + " ; DCFields : " + nativeExposedOrNotIndexedFieldNames + ", @Indexed : "
-               + indexDefHolders.stream().map(idh -> idh.getPath()).collect(Collectors.toList()));
+               + StreamSupport.stream(indexDefHolders.spliterator(), false).map(idh -> idh.getPath()).collect(Collectors.toList()));
       }
    }
    

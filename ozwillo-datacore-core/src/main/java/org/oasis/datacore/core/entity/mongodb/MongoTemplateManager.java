@@ -190,12 +190,12 @@ public class MongoTemplateManager {
          mgo = new DatacoreMongoTemplate(mongoDbFactory, this.mgo.getConverter());
          
       } else {
-         Mongo mongo;
+//         Mongo mongo;
          MongoClient mongoClient;
          try {
-            mongo = new Mongo(dbUri.getHost(), dbUri.getPort());
+//            mongo = new Mongo(dbUri.getHost(), dbUri.getPort());
             mongoClient = new MongoClient(dbUri.getHost(), dbUri.getPort());
-            mongo.slaveOk();
+            mongoClient.slaveOk();
          } catch (Exception e) {
             // configuration problem, don't hide it :
             throw new RuntimeException("Error creating custom mongo " + dbUri, e);

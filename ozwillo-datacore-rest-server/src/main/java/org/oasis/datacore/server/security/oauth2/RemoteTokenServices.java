@@ -1,11 +1,9 @@
 package org.oasis.datacore.server.security.oauth2;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -29,8 +27,8 @@ import org.springframework.security.crypto.codec.Base64;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
-import org.springframework.security.oauth2.provider.DefaultAuthorizationRequest;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.security.oauth2.provider.OAuth2Request;
 import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -123,10 +121,16 @@ public class RemoteTokenServices implements ResourceServerTokenServices {
 				scope.addAll(values);
 			}
 		}
-		DefaultAuthorizationRequest clientAuthentication = new DefaultAuthorizationRequest(remoteClientId, scope);
-		
+		Map<String, String> requestParameters = Collections.emptyMap();
+		boolean approved = true;
+		Set<String> responseTypes = Collections.emptySet();
+		Set<String> resourceIds = Collections.emptySet();
+		Map<String, Serializable> extensionProperties = Collections.emptyMap();
+		OAuth2Request clientAuthentication = new OAuth2Request(requestParameters, clientId, null, approved, scope,
+				resourceIds, checkTokenEndpointUrl, responseTypes, extensionProperties);
+
+
 		Authentication userAuthentication = getUserAuthentication(map, scope);
-		clientAuthentication.setApproved(true);
 		
 		return new OAuth2Authentication(clientAuthentication, userAuthentication);
 	}

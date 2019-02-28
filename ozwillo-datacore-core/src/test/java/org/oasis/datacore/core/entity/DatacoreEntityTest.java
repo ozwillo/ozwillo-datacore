@@ -102,7 +102,7 @@ public class DatacoreEntityTest {
 	   coll.insertOne(city1);
 
 	   //Be sure that city1 has been persisted
-//	   FindIterable<Document> fi = coll.find(new BasicDBObject("name", "Lyon"));
+	   FindIterable<Document> fi = coll.find(new BasicDBObject("name", "Lyon"));
 //	   DBCursor findLyon = coll.find(new BasicDBObject("name", "Lyon"));
 	   Assert.assertTrue(coll.countDocuments() == 1);
 
