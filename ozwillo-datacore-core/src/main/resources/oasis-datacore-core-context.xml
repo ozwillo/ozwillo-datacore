@@ -15,23 +15,22 @@
    <context:property-placeholder location="classpath:oasis-datacore-core.properties"
       order="0" ignore-unresolvable="true"/><!-- so defaults to importing PropertyPlaceholder/*Resolver -->
 
-   <bean name="uriService" class="org.oasis.datacore.core.meta.SimpleUriService"/><!-- (overriden in -server) -->
+   <bean name="uriService" class="org.oasis.datacore.core.meta.SimpleUriService" /><!-- (overriden in -server) -->
    
    <context:component-scan base-package="org.oasis.datacore.core" />
    <context:annotation-config /><!-- actually auto enabled by previous line -->
 
 
-
    <!-- Default mongo bean name is 'mongo'
    NB. most of the mongo conf is done on client side !
    NB. no socket timeout because would NOT stop the query on the mongo server see #23 -->
-   <mongo:mongo-client id="mongoClient" host="${oasis.datacore.mongodb.host}" port="${oasis.datacore.mongodb.port}"
-   credentials="#{${oasis.datacore.mongodb.username}}:#{${oasis.datacore.mongodb.password}}@#{${oasis.datacore.mongodb.dbname}}">
+   <mongo:mongo-client id="mongoClient" host="${oasis.datacore.mongodb.host}" port="${oasis.datacore.mongodb.port}">
+   <!--credentials="${oasis.datacore.mongodb.username}:${oasis.datacore.mongodb.password}@${oasis.datacore.mongodb.dbname}">-->
       <mongo:client-options
          connections-per-host="100"
          threads-allowed-to-block-for-connection-multiplier="4"
       />
-      <!-- mongo:options
+      <!-- mongo:optionsadvantege
             write-number="1"
             write-timeout="0"
             write-fsync="false"
@@ -99,9 +98,9 @@
    NB. ReadPreference is not available here but on MongoTemplate
    BEWARE T(com.mongodb.WriteConcern).ACKNOWLEDGED differs from string "ACKNOWLEDGED" WriteConcern,
    see http://stackoverflow.com/questions/17865270/error-handling-with-spring-data-and-mongo-java-driver-->
-   <mongo:db-factory id="mongoDbFactory" dbname="${oasis.datacore.mongodb.dbname}"
-      mongo-ref="mongoClient"
-      write-concern="#{T(com.mongodb.WriteConcern).valueOf(&quot;${oasis.datacore.mongodb.writeConcern}&quot;)}"/>
+      <mongo:db-factory id="mongoDbFactory" dbname="${oasis.datacore.mongodb.dbname}"
+      mongo-ref="mongoClient"/>
+      <!--write-concern="#{T(com.mongodb.WriteConcern).valueOf(&quot;${oasis.datacore.mongodb.writeConcern}&quot;)}"/>-->
       <!--username="#{${oasis.datacore.mongodb.username}}"-->
       <!--password="#{${oasis.datacore.mongodb.password}}"/>-->
 
@@ -122,8 +121,10 @@
             <constructor-arg name="j" value="true" /><!- wait for journaled ->
          </bean>
       </property -->
-      <property name="readPreference" value="#{${oasis.datacore.mongodb.readPreference}}"/>
+      <!--<property name="readPreference" value="${oasis.datacore.mongodb.readPreference}"/>-->
    </bean>
+   <bean class=
+                 "org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor"/>
    <mongo:repositories base-package="org.oasis.datacore.core" /><!-- TODO -->
 
    <!-- TODO Custom converters.

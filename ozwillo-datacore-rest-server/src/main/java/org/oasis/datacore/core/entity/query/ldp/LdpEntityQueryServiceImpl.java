@@ -67,7 +67,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
 
    public static final String MONGO_FIELD_PREFIX = "_p.";
    private static final String DOT = ".";
-   
+
    private static Set<String> findConfParams = new HashSet<String>();
    static {
       // TODO rather using Enum, see BSON$RegexFlag
@@ -749,12 +749,12 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
 
       boolean isDebug = serverRequestContext.isDebug();
       boolean doExplainQuery = isDebug || applyMaxScan;
-      
+
       // using custom CursorPreparer to get access to mongo DBCursor for explain() etc. :
       // (rather than mgo.find(springMongoQuery, DCEntity.class, collectionName))
       CursorProviderQueryCursorPreparer cursorProvider = new CursorProviderQueryCursorPreparer(mgo,
             springMongoQuery, doExplainQuery, maxScan, maxTime);
-      
+
       // TODO request priority : privilege INDEXED (Queriable) fields for query & sort !!!
       // TODO LATER explode in queryParsingContext.isHasNoIndexedField() if not dev nor paid...
       

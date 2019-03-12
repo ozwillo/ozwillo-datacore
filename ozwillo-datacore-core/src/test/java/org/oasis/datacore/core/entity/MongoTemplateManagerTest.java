@@ -27,7 +27,7 @@ import com.google.common.collect.ImmutableMap;
 
 
 /**
- * 
+ *
  * @author mdutoo
  *
  */
@@ -59,7 +59,7 @@ public class MongoTemplateManagerTest {
       MongoUri normalizedMongoUri = MongoUri.parse(localhostMongoUri);
       Assert.assertEquals("datacore", normalizedMongoUri.getDatabase());
    }
-   
+
    @Test
    public void testMongoTemplateManager() {
       DCProject testProject = new DCProject("mtmTest");
@@ -69,17 +69,17 @@ public class MongoTemplateManagerTest {
             .build()); // else "There is no context" in CxfRequestContextProvider l63, TODO simpler ex. in client
       modelAdminService.removeProject(testProject); // in case of previous test (?)
       modelAdminService.addProject(testProject);
-      
+
       DatacoreMongoTemplate defaultMongoTemplate = mtm.getMongoTemplate();
       Assert.assertEquals(mt, defaultMongoTemplate);
       Assert.assertEquals(null, testProject.isDbRobust());
-      
+
       testProject.setDbRobust(false);
       Assert.assertEquals(testProject.isDbRobust(), false);
       DatacoreMongoTemplate notRobustMongoTemplate = mtm.getMongoTemplate();
       Assert.assertNotEquals(mt, notRobustMongoTemplate);
       // TODO test
-      
+
       String localhostMongoUri = "mongodb://localhost:27017/datacore";
       testProject.setDbUri(localhostMongoUri);
       try {
@@ -90,7 +90,7 @@ public class MongoTemplateManagerTest {
       testProject.setDbRobust(true);
       DatacoreMongoTemplate localhostMongoTemplate = mtm.getMongoTemplate();
       Assert.assertNotEquals(mt, localhostMongoTemplate);
-      
+
       String localhostNoPortMongoUri = "mongodb://localhost/datacore";
       testProject.setDbUri(localhostNoPortMongoUri);
       Assert.assertEquals(localhostMongoTemplate, mtm.getMongoTemplate());
@@ -98,7 +98,7 @@ public class MongoTemplateManagerTest {
       testProject.setDbUri(loopbackIpMongoUri);
       DatacoreMongoTemplate loopbackIpMongoTemplate = mtm.getMongoTemplate();
       Assert.assertNotEquals(localhostMongoTemplate, loopbackIpMongoTemplate);
-      
+
       // test connection of loopbackIp mongoTemplate :
       try {
          loopbackIpMongoTemplate.collectionExists("test.index");
@@ -107,7 +107,7 @@ public class MongoTemplateManagerTest {
       } catch (Exception rex) {
          Assert.assertTrue(rex.getMessage().contains("not configured among secondary only ones"));
       }
-      
+
       String notallowedMongoUri = "mongodb://notallowed:27017/datacore";
       testProject.setDbUri(notallowedMongoUri);
       try {

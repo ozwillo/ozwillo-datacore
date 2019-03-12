@@ -2,13 +2,11 @@ package org.oasis.datacore.core.entity.mongodb;
 
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.annotation.PostConstruct;
 
-import com.mongodb.MongoClient;
+import com.mongodb.*;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.pov.DCProject;
 import org.slf4j.Logger;
@@ -16,15 +14,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-
-import com.mongodb.Mongo;
-import com.mongodb.WriteConcern;
 
 
 /**
@@ -194,16 +190,20 @@ public class MongoTemplateManager {
          MongoClient mongoClient;
          try {
 //            mongo = new Mongo(dbUri.getHost(), dbUri.getPort());
-            mongoClient = new MongoClient(dbUri.getHost(), dbUri.getPort());
+            MongoCredential mongoCredential = username == null || username.trim().isEmpty()
+                    || username.trim().equals("null") ? null
+                    : MongoCredential.createPlainCredential(username, dbUri.getDatabase(), password.toCharArray());
+            List<MongoCredential> auths = new ArrayList<>();
+            auths.add(mongoCredential);
+            ServerAddress serverAddress = new ServerAddress(dbUri.getHost(), dbUri.getPort());
+            mongoClient = new MongoClient(serverAddress, auths);
+//            mongoClient = new MongoClient(dbUri.getHost(), dbUri.getPort());
+            mongoClient.setReadPreference(ReadPreference.secondaryPreferred());
             mongoClient.slaveOk();
          } catch (Exception e) {
             // configuration problem, don't hide it :
             throw new RuntimeException("Error creating custom mongo " + dbUri, e);
          }
-         
-         UserCredentials credentials = username == null || username.trim().isEmpty()
-               || username.trim().equals("null") ? null :
-               new UserCredentials(username, password);
          MongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(mongoClient, dbUri.getDatabase());
          NoIndexCreationMongoConverter readonlyMongoConverter = new NoIndexCreationMongoConverter(mongoConverter);
          mgo = new DatacoreMongoTemplate(mongoDbFactory, readonlyMongoConverter);

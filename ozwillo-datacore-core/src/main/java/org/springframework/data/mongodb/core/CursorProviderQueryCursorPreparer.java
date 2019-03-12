@@ -1,28 +1,27 @@
 package org.springframework.data.mongodb.core;
 
-import java.util.concurrent.TimeUnit;
-
-import org.springframework.data.mongodb.core.MongoTemplate.QueryCursorPreparer;
-import org.springframework.data.mongodb.core.query.Query;
-
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.mongodb.client.FindIterable;
+import org.bson.Document;
+import org.springframework.data.mongodb.core.MongoTemplate.QueryCursorPreparer;
+import org.springframework.data.mongodb.core.query.Query;
 
 
 /**
  * Helps DatacoreMongoTemplate to manipulate DBCursor (ex. call explain()), by making visible cursorPreparer
  * NB. can't be in another package, else QueryCursorPreparer not visible
- * 
+ *
  * Impl notes :
- * Has to extend QueryCursorPreparer, custom code must be written in it after calling its super. 
- * 
+ * Has to extend QueryCursorPreparer, custom code must be written in it after calling its super.
+ *
  * @author mdutoo
  *
  */
 public class CursorProviderQueryCursorPreparer extends QueryCursorPreparer {
-   
+
    private static final String MAX_SCAN = "$maxScan";
-   
+
    private DBCursor cursorPrepared;
    private boolean doExplainQuery;
    private DBObject queryExplain;
@@ -31,7 +30,7 @@ public class CursorProviderQueryCursorPreparer extends QueryCursorPreparer {
    private int maxTime;
 
    /**
-    * 
+    *
     * @param mongoTemplate
     * @param query
     * @param doExplainQuery
@@ -83,4 +82,9 @@ public class CursorProviderQueryCursorPreparer extends QueryCursorPreparer {
       return maxScan;
    }
 
+   @Override
+   public FindIterable<Document> prepare(FindIterable<Document> cursor) {
+
+      return super.prepare(cursor);
+   }
 }
