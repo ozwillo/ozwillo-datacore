@@ -43,6 +43,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.CursorProviderQueryCursorPreparer;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
@@ -714,7 +715,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       }
       
       // using custom mongo ex. for analytics :
-      DatacoreMongoTemplate mgo = mgoManager.getMongoTemplate();
+      MongoTemplate mgo = mgoManager.getMongoTemplate();
       
       // compute overall maxScan :
       // (BEWARE it is NOT the max amount of doc returned because sorts or multiple
@@ -759,7 +760,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       // TODO LATER explode in queryParsingContext.isHasNoIndexedField() if not dev nor paid...
       
       List<DCEntity> foundEntities = mgo.find(springMongoQuery, DCEntity.class,
-            storageModel.getCollectionName(), cursorProvider);
+            storageModel.getCollectionName());
       
       if (isDebug) {
          //Populate cxf exchange with info concerning the query :

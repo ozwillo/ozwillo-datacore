@@ -17,6 +17,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.stereotype.Component;
@@ -48,6 +50,9 @@ public class MongoTemplateManager {
    @Value("${oasis.datacore.mongodb.password}")
    private String password;
 
+   @Value("${oasis.datacore.mongodb.dbname}")
+   private String dbName;
+
    /** default WriteConcern */
    @Value("#{T(com.mongodb.WriteConcern).valueOf(\"${oasis.datacore.mongodb.writeConcern}\")}")
    private WriteConcern writeConcern;
@@ -59,7 +64,7 @@ public class MongoTemplateManager {
    
    /** default mongo, if there is a cluster it is it */
    @Autowired
-   private /*MongoOperations*/DatacoreMongoTemplate mgo; // TODO remove it by hiding it in services
+   private /*MongoOperations*/MongoTemplate mgo; // TODO remove it by hiding it in services
    /** to access request-specific mongo conf */
    @Autowired
    protected DCModelService modelService;
@@ -102,19 +107,21 @@ public class MongoTemplateManager {
    }
    
    
-   public DatacoreMongoTemplate getDefaultMongoTemplate() {
+   public MongoTemplate getDefaultMongoTemplate() {
       return mgo;
    }
    
-   public DatacoreMongoTemplate getMongoTemplate() {
-      return getMongoTemplate(modelService.getProject());
+   public MongoTemplate getMongoTemplate() {
+      return new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(),
+              dbName));
+
    }
    /**
     * allows to check conf with a not yet saved project
     * @param project
     * @return
     */
-   public DatacoreMongoTemplate getMongoTemplate(DCProject project) {
+   public MongoTemplate getMongoTemplate(DCProject project) {
       boolean isDefault = true;
       
       MongoUri dbUri = MongoUri.parse(project.getDbUri());

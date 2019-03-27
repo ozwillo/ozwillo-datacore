@@ -30,21 +30,8 @@
          connections-per-host="100"
          threads-allowed-to-block-for-connection-multiplier="4"
       />
-      <!-- mongo:optionsadvantege
-            write-number="1"
-            write-timeout="0"
-            write-fsync="false"
-            / -->
-            <!-- connections-per-host="8"
-            threads-allowed-to-block-for-connection-multiplier="4"
-            connect-timeout="1000"
-            max-wait-time="1500}"
-            auto-connect-retry="true"
-            socket-keep-alive="true"
-            socket-timeout="1500"
-            slave-ok="true"
-            write-fsync="true" --><!-- FSYNCED -->
    </mongo:mongo-client>
+
    <!-- mongo:mongo id="mongo" replica-set="127.0.0.1:27017,localhost:27018"/ -->
   
   
@@ -99,7 +86,7 @@
    BEWARE T(com.mongodb.WriteConcern).ACKNOWLEDGED differs from string "ACKNOWLEDGED" WriteConcern,
    see http://stackoverflow.com/questions/17865270/error-handling-with-spring-data-and-mongo-java-driver-->
       <mongo:db-factory id="mongoDbFactory" dbname="${oasis.datacore.mongodb.dbname}"
-      mongo-ref="mongoClient"/>
+      mongo-ref="mongoClient" />
       <!--write-concern="#{T(com.mongodb.WriteConcern).valueOf(&quot;${oasis.datacore.mongodb.writeConcern}&quot;)}"/>-->
       <!--username="#{${oasis.datacore.mongodb.username}}"-->
       <!--password="#{${oasis.datacore.mongodb.password}}"/>-->
@@ -109,7 +96,7 @@
    (and then this declaration must happen after their's).
    Using custom one to expose mongo DBCursor through CursorPreparer. -->
    <!-- bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate" -->
-   <bean id="mongoTemplate" class="org.oasis.datacore.core.entity.mongodb.DatacoreMongoTemplate">
+   <bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
       <constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
       <constructor-arg name="mongoConverter" ref="mappingConverter"/>
       <!-- RATHER AT DB LEVEL here only per operation, and error "no replication has been enabled, so w=\"1\" won't work" -->

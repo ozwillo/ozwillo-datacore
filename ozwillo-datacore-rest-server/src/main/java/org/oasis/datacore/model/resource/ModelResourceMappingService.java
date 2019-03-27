@@ -1,5 +1,6 @@
 package org.oasis.datacore.model.resource;
 
+
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -39,7 +40,6 @@ import org.springframework.stereotype.Component;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
-
 @Component
 public class ModelResourceMappingService {
    

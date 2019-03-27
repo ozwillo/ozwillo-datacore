@@ -8,14 +8,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.mongodb.MongoClient;
 import org.joda.time.DateTime;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.mongodb.MongoTemplateManager;
 import org.oasis.datacore.core.meta.SimpleUriService;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
@@ -42,6 +47,8 @@ public class EntityServiceImpl implements EntityService {
    // NB. MongoTemplate would be required to check last operation result, but we rather use WriteConcerns
    @Autowired
    private EntityModelService entityModelService;
+   @Value("$oasis.datacore.mongodb.dbname")
+   private String dbName;
 
 
    @Override
@@ -81,8 +88,10 @@ public class EntityServiceImpl implements EntityService {
       }*/
       
       // if exists (with same uri, and if multiProjectStorage same project),
-      // will fail (no need to enforce any version) 
-      mgoManager.getMongoTemplate().insert(dataEntity, collectionName);
+      // will fail (no need to enforce any version)
+      MongoOperations mongoOps = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), dbName));
+      mongoOps.insert(dataEntity, collectionName);
+//      mgoManager.getMongoTemplate().insert(dataEntity, collectionName);
    }
    
    /* (non-Javadoc)
@@ -99,6 +108,8 @@ public class EntityServiceImpl implements EntityService {
       //entityService.findById(uri, type/collectionName); // TODO
       //dataEntity = dataRepo.findOne(uri); // NO can't be used because can't specify collection
       //dataEntity = mgo.findById(uri, DCEntity.class, collectionName);
+      MongoOperations mongoOps = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), dbName));
+      mongoOps.find(new Query(criteria) , DCEntity.class, collectionName);
       List<DCEntity> entitiesFound = mgoManager.getMongoTemplate()
             .find(new Query(criteria) , DCEntity.class, collectionName);
       switch (entitiesFound.size()) {
