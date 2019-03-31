@@ -1,7 +1,5 @@
 package org.oasis.datacore.core.entity.mongodb;
 
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.util.*;
 
 import javax.annotation.PostConstruct;
@@ -14,10 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -38,7 +33,7 @@ public class MongoTemplateManager {
 
    private static final Logger logger = LoggerFactory.getLogger(MongoTemplateManager.class);
 
-   public static final String WILDCARD = "*";
+   private static final String WILDCARD = "*";
 
    /** empty or null means none ; instead of java #{${oasis.datacore.mongodb.username}}
     * i.e. quoted string or null, which is cleaner but impacting (pre)prod conf */
@@ -80,11 +75,11 @@ public class MongoTemplateManager {
    private MongoDbFactory mongoDbFactory;
 
    /** caches default & custom mongos ONLY (not default because can be cluster so not only host prop !) */
-   private Map<String,DatacoreMongoTemplate> customMongoTemplateCacheMap = new HashMap<String,DatacoreMongoTemplate>();
+   private Map<String,DatacoreMongoTemplate> customMongoTemplateCacheMap = new HashMap<>();
 
 
    @PostConstruct
-   protected void init() throws URISyntaxException {
+   protected void init() {
       allowedSecondaryOnlyServerAddressSet = StringUtils.commaDelimitedListToSet(allowedSecondaryOnlyServerAddresses);
       
       if (username == null || username.trim().isEmpty() || username.trim().equals("null")) {
@@ -118,8 +113,6 @@ public class MongoTemplateManager {
    }
    /**
     * allows to check conf with a not yet saved project
-    * @param project
-    * @return
     */
    public MongoTemplate getMongoTemplate(DCProject project) {
       boolean isDefault = true;
@@ -178,35 +171,28 @@ public class MongoTemplateManager {
    /**
     * 
     * @param dbUri can be null if default (and another param is not default)
-    * @param isDbRobust
-    * @return
     */
    private String buildCustomMgoId(MongoUri dbUri, Boolean isDbRobust) {
       return "uri=" + dbUri + "," + "robust=" + isDbRobust;
    }
 
-
-   @SuppressWarnings("deprecation")
    private DatacoreMongoTemplate createMongoTemplate(MongoUri dbUri, Boolean isDbRobust) {
       DatacoreMongoTemplate mgo;
       if (dbUri == null) { // we can reuse the default mongoDbFactory :
          mgo = new DatacoreMongoTemplate(mongoDbFactory, this.mgo.getConverter());
          
       } else {
-//         Mongo mongo;
          MongoClient mongoClient;
          try {
-//            mongo = new Mongo(dbUri.getHost(), dbUri.getPort());
             MongoCredential mongoCredential = username == null || username.trim().isEmpty()
                     || username.trim().equals("null") ? null
                     : MongoCredential.createPlainCredential(username, dbUri.getDatabase(), password.toCharArray());
-            List<MongoCredential> auths = new ArrayList<>();
-            auths.add(mongoCredential);
             ServerAddress serverAddress = new ServerAddress(dbUri.getHost(), dbUri.getPort());
-            mongoClient = new MongoClient(serverAddress, auths);
-//            mongoClient = new MongoClient(dbUri.getHost(), dbUri.getPort());
-            mongoClient.setReadPreference(ReadPreference.secondaryPreferred());
-            mongoClient.slaveOk();
+            MongoClientOptions mongoClientOptions =
+                    MongoClientOptions.builder()
+                        .readPreference(ReadPreference.secondaryPreferred())
+                        .build();
+            mongoClient = new MongoClient(serverAddress, mongoCredential, mongoClientOptions);
          } catch (Exception e) {
             // configuration problem, don't hide it :
             throw new RuntimeException("Error creating custom mongo " + dbUri, e);

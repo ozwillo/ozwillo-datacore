@@ -4,13 +4,15 @@ package org.oasis.datacore.core.entity;
 import java.io.File;
 import java.io.IOException;
 
-import org.junit.Assert;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import org.bson.BsonDocument;
+import org.bson.BsonString;
+import org.bson.Document;
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -19,12 +21,9 @@ import org.springframework.test.context.support.DirtiesContextTestExecutionListe
 import org.springframework.test.context.transaction.TransactionalTestExecutionListener;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.CommandResult;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
+
+import static org.junit.Assert.*;
 
 
 /**
@@ -41,12 +40,6 @@ import com.mongodb.MongoClient;
 @FixMethodOrder // else random since java 7
 public class MongoBasicTest {
    
-   @Autowired
-   private EntityService dcEntityService;
-
-   @Autowired
-   private MongoTemplate mt; // to check mongo conf, last operation result...
-  
    /**
     * testMongoJournal
     * 
@@ -59,7 +52,6 @@ public class MongoBasicTest {
     * 
     * 
     * WARNING: It will fail if mongod is not initialized when trying to access admin db.
-    * @Ignore
     */
    @Test
    @Ignore
@@ -79,34 +71,33 @@ public class MongoBasicTest {
 			Runtime.getRuntime().exec("mongod --dbpath /tmp/mongod/ --logpath /tmp/mongod/testJournal.log --journal --port 4242");
 			Thread.sleep(20000);//Ensure that mongo has time to start
 		} catch (IOException | InterruptedException e) {
-			Assert.fail("Bad exception");
+			fail("Bad exception");
 		}
 		
 		try {
 			MongoClient mongo = new MongoClient("localhost" , 4242);						
-			DB admin = mongo.getDB("admin");
-			CommandResult params = admin.command("getCmdLineOpts");
+			MongoDatabase admin = mongo.getDatabase("admin");
+			Document params = admin.runCommand(new Document("getCmdLineOpts", 1));
 			
 			Boolean argv = params.get("argv").toString().contains("--journal");			
 			Boolean parsed = params.get("parsed").toString().contains("\"journal\" : true");			
 			if(!argv || !parsed) {
-				Assert.fail("Journaling is not enabled.");
-			}		
+				fail("Journaling is not enabled.");
+			}
 			
-			DB db = mongo.getDB("test");
-			DBCollection coll = db.getCollection("journal");
+			MongoDatabase db = mongo.getDatabase("test");
+			MongoCollection<Document> coll = db.getCollection("journal");
 			
-			coll.remove(new BasicDBObject());
-			Assert.assertTrue("collection should be empty.", !coll.find().hasNext());
+			coll.deleteOne(new BasicDBObject());
+			assertEquals(0, coll.countDocuments());
 		   
-			DBObject city = new BasicDBObject(
-					"_id_source", "42")
+			Document city = new Document("_id_source", "42")
 	               .append("_uri", "http://data.ozwillo.com/city/France/Lyon")
 	               .append("name", "Lyon")
 	               .append("countryName", "France")
 	               .append("inCountry", "http://data.ozwillo.com/country/France");
 
-			coll.insert(city);		
+			coll.insertOne(city);
 			mongo.close();
 		   
 		   
@@ -115,17 +106,17 @@ public class MongoBasicTest {
 			Runtime.getRuntime().exec(args);
 	
 			File f = new File("/tmp/mongod/journal/j._0");
-			Assert.assertTrue("Should a journal file j._0 exists.", f.exists());
+			assertTrue("Should a journal file j._0 exists.", f.exists());
 
 			//Restart mongod and check if data is in db
 			Runtime.getRuntime().exec("mongod --dbpath /tmp/mongod/ --logpath /tmp/mongod/testJournal.log --journal --port 2121");
 			Thread.sleep(10000);
 			
 			mongo = new MongoClient("localhost" , 2121);
-			db = mongo.getDB("test");
+			db = mongo.getDatabase("test");
 			coll = db.getCollection("journal");
-			DBCursor findLyon = coll.find(new BasicDBObject("name", "Lyon"));
-			Assert.assertTrue("Should have a document with name Lyon.", findLyon.count() == 1);
+			long findLyonCount = coll.countDocuments(new BasicDBObject("name", "Lyon"));
+			assertEquals("Should have a document with name Lyon.", 1, findLyonCount);
 			mongo.close();
 			//Clean the remaining mongod		
 			String[] args2 = {"/usr/bin/pkill", "-9", "-f", "mongod --dbpath /tmp/mongod/ --logpath /tmp/mongod/testJournal.log --journal --port 2121"}; 
@@ -136,7 +127,7 @@ public class MongoBasicTest {
 			Runtime.getRuntime().exec(rm);
 			   
 		} catch (IOException | InterruptedException e) {
-			Assert.fail("Bad exception");
+			fail("Bad exception");
 		}
    }
    
@@ -159,7 +150,6 @@ public class MongoBasicTest {
     * http://docs.mongodb.org/manual/core/index-text/
     * 
     * LATER automate it in another, less frequent CI job
-    * @Ignore
     */
    @Test
    @Ignore
@@ -179,28 +169,27 @@ public class MongoBasicTest {
 			Runtime.getRuntime().exec("mongod --dbpath /tmp/mongod/ --logpath /tmp/mongod/textIndexTest.log --port 2424 --setParameter textSearchEnabled=true");
 			Thread.sleep(20000);//Ensure that mongo has time to start
 		} catch (IOException | InterruptedException e) {
-			Assert.fail("Bad exception");
+			fail("Bad exception");
 		}
 	   
 		try {
 			MongoClient mongo = new MongoClient("localhost" , 2424);						
-			DB admin = mongo.getDB("admin");
-			CommandResult params = admin.command("getCmdLineOpts");
+			MongoDatabase admin = mongo.getDatabase("admin");
+			Document params = admin.runCommand(new Document("getCmdLineOpts", 1));
 			
 			Boolean argv = params.get("argv").toString().contains("textSearchEnabled=true");			
 			Boolean parsed = params.get("parsed").toString().contains("textSearchEnabled=true");			
 			if(!argv || !parsed) {
-				Assert.fail("Text search is not enabled.");
+				fail("Text search is not enabled.");
 			}
 			
-			DB db = mongo.getDB("test");
-			DBCollection coll = db.getCollection("textSearch");
+			MongoDatabase db = mongo.getDatabase("test");
+			MongoCollection<Document> coll = db.getCollection("textSearch");
 			
-			coll.remove(new BasicDBObject());
-			Assert.assertTrue("collection should be empty.", !coll.find().hasNext());
+			coll.deleteOne(new BasicDBObject());
+			assertEquals(0, coll.countDocuments());
 
-			DBObject city = new BasicDBObject(
-					"_id_source", "42")
+			Document city = new Document("_id_source", "42")
 	               .append("_uri", "http://data.ozwillo.com/city/France/Lyon")
 	               .append("name", "Lyon")
 	               .append("countryName", "France")
@@ -208,19 +197,17 @@ public class MongoBasicTest {
 	               .append("description", "Lyon is known for its historical and architectural landmarks and is a UNESCO World Heritage Site.");
 			BasicDBObject index = new BasicDBObject("description", "text");
 			coll.createIndex(index);
-//			coll.ensureIndex(new BasicDBObject("description", "text"), null, true);
-			coll.insert(city);	
+			coll.insertOne(city);
 			
 		    //Be sure that city has been persisted
-		    DBCursor findLyon = coll.find(new BasicDBObject("name", "Lyon"));
-		    Assert.assertTrue(findLyon.count() == 1);	    
+			assertEquals(1, coll.countDocuments(new BasicDBObject("name", "Lyon")));
 
-		    DBObject textSearchCommand = new BasicDBObject();
-		    textSearchCommand.put("text", "textSearch");
-		    textSearchCommand.put("search", "historical");
-		    CommandResult useTextQuery = db.command(textSearchCommand);
+			BsonDocument bsonDocument = new BsonDocument();
+			bsonDocument.append("text", new BsonString("textSearch"));
+			bsonDocument.append("search", new BsonString("historical"));
+		    Document useTextQuery = db.runCommand(bsonDocument);
 		    
-		    Assert.assertTrue("Text search should have a language field.", useTextQuery.containsField("language"));
+		    assertTrue("Text search should have a language field.", useTextQuery.containsKey("language"));
 			
 			mongo.close();
 			//Clean the remaining mongod		
@@ -232,7 +219,7 @@ public class MongoBasicTest {
 			Runtime.getRuntime().exec(rm);
 			   
 		} catch (IOException e) {
-			Assert.fail("Bad exception");
+			fail("Bad exception");
 		}   
 
    }

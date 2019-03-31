@@ -8,7 +8,6 @@ import org.junit.runner.RunWith;
 import org.oasis.datacore.common.context.DCRequestContextProvider;
 import org.oasis.datacore.common.context.DCRequestContextProviderFactory;
 import org.oasis.datacore.common.context.SimpleRequestContextProvider;
-import org.oasis.datacore.core.entity.mongodb.DatacoreMongoTemplate;
 import org.oasis.datacore.core.entity.mongodb.MongoTemplateManager;
 import org.oasis.datacore.core.entity.mongodb.MongoUri;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
@@ -49,8 +48,6 @@ public class MongoTemplateManagerTest {
    @Autowired
    private DataModelServiceImpl modelAdminService;
    @Autowired
-   ///@Qualifier("datacore.cxfJaxrsApiProvider")
-   //protected DCRequestContextProvider requestContextProvider;
    protected DCRequestContextProviderFactory requestContextProviderFactory; // to check MongoTemplateManager
 
 
@@ -71,15 +68,10 @@ public class MongoTemplateManagerTest {
       modelAdminService.removeProject(testProject); // in case of previous test (?)
       modelAdminService.addProject(testProject);
 
-      MongoTemplate defaultMongoTemplate = mtm.getMongoTemplate();
-//      Assert.assertEquals(mt, defaultMongoTemplate);
       Assert.assertEquals(null, testProject.isDbRobust());
 
       testProject.setDbRobust(false);
       Assert.assertEquals(testProject.isDbRobust(), false);
-      MongoOperations notRobustMongoTemplate = mtm.getMongoTemplate();
-//      Assert.assertNotEquals(mt, notRobustMongoTemplate);
-      // TODO test
 
       String localhostMongoUri = "mongodb://localhost:27017/datacore";
       testProject.setDbUri(localhostMongoUri);
@@ -94,7 +86,6 @@ public class MongoTemplateManagerTest {
 
       String localhostNoPortMongoUri = "mongodb://localhost/datacore";
       testProject.setDbUri(localhostNoPortMongoUri);
-//      Assert.assertEquals(localhostMongoTemplate, mtm.getMongoTemplate());
       String loopbackIpMongoUri = "mongodb://127.0.0.1:27017/datacore";
       testProject.setDbUri(loopbackIpMongoUri);
       MongoOperations loopbackIpMongoTemplate = mtm.getMongoTemplate();
@@ -119,13 +110,6 @@ public class MongoTemplateManagerTest {
 
       String wrongMongoUri = "mongodb://nohost/datacore";
       testProject.setDbUri(wrongMongoUri);
-      /*try { // disabling else too slow
-         mtm.getMongoTemplate();
-         Assert.fail("should not be able to connect");
-      } catch (Exception e) {
-         //com.mongodb.MongoTimeoutException: Timed out after 10000 ms while waiting for a server that matches AnyServerSelector{}. Client view of cluster state is {type=Unknown, servers=[{address=nohost:27017, type=Unknown, state=Connecting, exception={com.mongodb.MongoException$Network: Exception opening the socket}, caused by {java.net.UnknownHostException: nohost: unknown error}}]
-         Assert.assert(e instanceof MongoTimeoutException);
-      }*/
    }
 
 }
