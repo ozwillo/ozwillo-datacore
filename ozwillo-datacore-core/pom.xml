@@ -115,8 +115,9 @@
       <!-- else ValidationException: Unable to create a Configuration, because no Bean Validation provider could be found. Add a provider like Hibernate Validator (RI) to your classpath.
       see http://goldenpackagebyanuj.blogspot.fr/2013/05/validationException-no-Bean-Validation-provider-could-be-found.html -->
       <dependency>
-         <groupId>org.hibernate</groupId>
+         <groupId>org.hibernate.validator</groupId>
          <artifactId>hibernate-validator</artifactId>
+          <version>6.0.13.Final</version>
       </dependency>
       
       <!-- for ImmutableMap/List(.Builder), also used by MITRE OpenIdConnect & Swagger -->
