@@ -1,21 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xmlns:p="http://www.springframework.org/schema/p"
       xmlns:context="http://www.springframework.org/schema/context"
       xmlns:jaxrs="http://cxf.apache.org/jaxrs"
-      xmlns:jaxrsc="http://cxf.apache.org/jaxrs-client"
       xmlns:cxf="http://cxf.apache.org/core"
-      xmlns:cache="http://www.springframework.org/schema/cache"
       xsi:schemaLocation=
       "http://www.springframework.org/schema/beans
       http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
       http://www.springframework.org/schema/context
       http://www.springframework.org/schema/context/spring-context-3.2.xsd
       http://cxf.apache.org/core http://cxf.apache.org/schemas/core.xsd
-      http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd
-      http://cxf.apache.org/jaxrs-client http://cxf.apache.org/schemas/jaxrs-client.xsd
-      http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache-3.2.xsd">
+      http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd">
 
    <!-- overriding some properties (BEFORE import to take precedence over imported properties) -->
    <context:property-placeholder location="classpath:oasis-datacore-rest-client-test.properties"
@@ -30,13 +25,12 @@
    <!-- injected in ArrayServerInInterceptor -->
    <bean id="datacoreApiCXFTestMockServer.objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper"/>
    <bean id="datacoreApiCXFTestMockServer.jacksonJsonProvider" class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider">
-      <constructor-arg><ref bean="datacoreApiCXFTestMockServer.objectMapper"/></constructor-arg>
+      <constructor-arg ref="datacoreApiCXFTestMockServer.objectMapper"/>
    </bean>
    <!-- Helps supporting POST of single DCResource. Let Jackson accepting single value as ARRRAY.
    See more details in ArrayServerInInterceptor -->
    <bean factory-bean="datacoreApiCXFTestMockServer.jacksonJsonProvider" factory-method="enable">
       <constructor-arg value="ACCEPT_SINGLE_VALUE_AS_ARRAY"/>
-      <constructor-arg value="true"/><!-- NOT USED -->
    </bean>
    
    <!-- Spring configuration for Datacore API CXF mock server -->
