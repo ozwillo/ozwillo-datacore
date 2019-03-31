@@ -64,7 +64,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		</mailingList -->
 	</mailingLists>
 	<issueManagement>
-		<url>https://github.com/ozwillo/ozwillo-datacoree/issues</url>
+		<url>https://github.com/ozwillo/ozwillo-datacore/issues</url>
 		<system>GitHub Issues</system>
 	</issueManagement>
 	<ciManagement>
