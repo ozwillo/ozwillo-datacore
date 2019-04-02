@@ -3,7 +3,6 @@ package org.oasis.datacore.core.security.providers;
 import org.oasis.datacore.core.security.DCUserImpl;
 import org.oasis.datacore.core.security.service.impl.DatacoreSecurityServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -19,10 +18,7 @@ import org.springframework.security.core.userdetails.UserDetails;
  * @author mdutoo
  *
  */
-public class ProxyDaoAuthenticationProvider implements AuthenticationProvider {
-
-	@Autowired
-	private DaoAuthenticationProvider delegate;
+public class ProxyDaoAuthenticationProvider extends DaoAuthenticationProvider implements AuthenticationProvider {
 
 	/** to init user */
    @Autowired
@@ -30,7 +26,7 @@ public class ProxyDaoAuthenticationProvider implements AuthenticationProvider {
 
 	@Override
 	public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-		Authentication auth = delegate.authenticate(authentication);
+		Authentication auth = super.authenticate(authentication);
 		if (auth != null && auth.getPrincipal() != null && auth.getPrincipal() instanceof User) {
 			DCUserImpl dcUser = securityServiceImpl.buildUser((UserDetails) auth.getPrincipal());
 			UsernamePasswordAuthenticationToken result = new UsernamePasswordAuthenticationToken(
@@ -49,13 +45,4 @@ public class ProxyDaoAuthenticationProvider implements AuthenticationProvider {
 			return false;
 		}
 	}
-
-	public void setDelegate(DaoAuthenticationProvider delegate) {
-		this.delegate = delegate;
-	}
-
-	public DaoAuthenticationProvider getDelegate() {
-		return delegate;
-	}
-
 }

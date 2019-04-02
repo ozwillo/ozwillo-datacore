@@ -47,7 +47,7 @@
 	</security:authentication-manager>
 	
 	<bean id="proxyDaoAuthenticationProvider" class="org.oasis.datacore.core.security.providers.ProxyDaoAuthenticationProvider">
-		<property name="delegate.userDetailsService" ref="datacore.localUserDetailsService" />
+		<property name="userDetailsService" ref="datacore.localUserDetailsService" />
 	</bean>
    
    <!-- locally-defined users : -->
