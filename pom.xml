@@ -160,7 +160,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		<!-- REST -->
 		<jackson.version>2.9.8</jackson.version><!-- latest, also jsonld-java's
 			as of 201309 -->
-		<cxf.version>3.1.4</cxf.version><!-- before 3.0.4 for JAXRS 2.0, 3.1.4 for metrics -->
+		<cxf.version>3.3.1</cxf.version><!-- before 3.0.4 for JAXRS 2.0, 3.1.4 for metrics -->
 		<metrics.version>3.1.2</metrics.version><!-- cxf 3.1.4's' (optional dep) version AND latest on 20151201 -->
 		<ehcache.version>2.7.4</ehcache.version><!-- for client-side cache ; spring's version -->
 
@@ -714,6 +714,12 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
 				<artifactId>jackson-databind</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core -->
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-core</artifactId>
 				<version>${jackson.version}</version>
 			</dependency>
 
