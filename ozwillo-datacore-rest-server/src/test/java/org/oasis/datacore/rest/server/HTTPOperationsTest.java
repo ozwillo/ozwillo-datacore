@@ -12,7 +12,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.oasis.datacore.common.context.SimpleRequestContextProvider;
-import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
@@ -24,7 +23,6 @@ import org.oasis.datacore.sample.BrandCarMotorcycleModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -43,12 +41,6 @@ public class HTTPOperationsTest {
    @Value("#{new java.net.URI('${datacoreApiClient.containerUrl}')}")
    //@Value("#{uriService.getContainerUrl()}")
    private URI containerUrl;
-
-	@Autowired
-	private DataModelServiceImpl modelAdminService;
-
-	@Autowired
-	private MongoOperations mongoOperations;
 
 	@Autowired
 	private BrandCarMotorcycleData brandCarMotorcycleData;

@@ -1,17 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:security="http://www.springframework.org/schema/security"
-	xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
 	xsi:schemaLocation="
       http://www.springframework.org/schema/beans
       http://www.springframework.org/schema/beans/spring-beans.xsd
-      http://www.springframework.org/schema/context
-      http://www.springframework.org/schema/context/spring-context.xsd
       http://www.springframework.org/schema/security
-      http://www.springframework.org/schema/security/spring-security.xsd
-      http://www.springframework.org/schema/security/oauth2
-      http://www.springframework.org/schema/security/spring-security-oauth2.xsd">
+      http://www.springframework.org/schema/security/spring-security.xsd">
 
 	<!-- security:http pattern="/dc/**" authentication-manager-ref="authenticationManager"><!- entry-point-ref="clientAuthenticationEntryPoint" ->
 	  <security:intercept-url pattern="/dc/model/**" access="ROLE_ADMIN" /><!- TODO for model admin ->
