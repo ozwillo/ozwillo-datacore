@@ -15,16 +15,18 @@
 
    <!-- context:property-placeholder location="classpath:oasis-datacore-security.properties,classpath:oasis-datacore-rest-api.properties,classpath:oasis-datacore-rest-server.properties,classpath*:oasis-datacore-deploy*.properties"
       order="-1" ignore-unresolvable="true"/ -->
-
+	<import resource="classpath:oasis-datacore-security-oauth2-context.xml" />
 
    <!-- login entry point is Kernel's -->
 	<bean id="oauthAuthenticationEntryPoint" class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
-		<property name="loginFormUrl" value="${datacorePlayground.loginUrl}" />
+		<constructor-arg name="loginFormUrl" value="${datacorePlayground.loginUrl}" />
 	</bean>
 
    <!-- Spring Security web filterChain : -->	
 	<!-- NB. could maybe be overriden (name="org.springframework.security.filterChains") but not its filters  -->
-	<security:http name="org.springframework.security.filterChains" entry-point-ref="oauthAuthenticationEntryPoint" access-decision-manager-ref="accessDecisionManager" authentication-manager-ref="authenticationManager" create-session="never">
+	<security:http name="org.springframework.security.filterChains" entry-point-ref="oauthAuthenticationEntryPoint"
+				   access-decision-manager-ref="accessDecisionManager"
+				   authentication-manager-ref="authenticationManager" create-session="never">
 	<!-- security:http name="org.springframework.security.filterChains" entry-point-ref="oauthAuthenticationEntryPoint" access-decision-manager-ref="accessDecisionManager" authentication-manager-ref="authenticationManager" create-session="never"
 	      use-expressions="true"><!- else Unsupported configuration attributes: [permitAll], see http://stackoverflow.com/questions/3388779/websphere-unsupported-configuration-attributes-permitall-using-spring -->
 		

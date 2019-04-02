@@ -150,7 +150,6 @@
    Let Jackson accepting single value as ARRRAY. See more details in ArrayServerInInterceptor -->
    <bean factory-bean="datacoreApiServer.jacksonJsonProvider" factory-method="enable">
       <constructor-arg value="ACCEPT_SINGLE_VALUE_AS_ARRAY"/>
-      <constructor-arg value="true"/><!-- NOT USED -->
    </bean>
 
    <!-- Spring configuration for Datacore API CXF server -->
