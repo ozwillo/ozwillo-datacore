@@ -3,6 +3,7 @@ package org.oasis.datacore.core.security.providers;
 import org.oasis.datacore.core.security.DCUserImpl;
 import org.oasis.datacore.core.security.service.impl.DatacoreSecurityServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;

@@ -5,13 +5,13 @@
 	xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
 	xsi:schemaLocation="
       http://www.springframework.org/schema/beans
-      http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+      http://www.springframework.org/schema/beans/spring-beans.xsd
       http://www.springframework.org/schema/context
-      http://www.springframework.org/schema/context/spring-context-3.2.xsd
+      http://www.springframework.org/schema/context/spring-context.xsd
       http://www.springframework.org/schema/security
-      http://www.springframework.org/schema/security/spring-security-3.1.xsd
+      http://www.springframework.org/schema/security/spring-security.xsd
       http://www.springframework.org/schema/security/oauth2
-      http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
+      http://www.springframework.org/schema/security/spring-security-oauth2.xsd">
 
 	<!-- security:http pattern="/dc/**" authentication-manager-ref="authenticationManager"><!- entry-point-ref="clientAuthenticationEntryPoint" ->
 	  <security:intercept-url pattern="/dc/model/**" access="ROLE_ADMIN" /><!- TODO for model admin ->
@@ -34,10 +34,10 @@
 	
 	<!-- BASIC auth filter, on top of mock hardcoded user store : -->
 	<bean id="basicAuthenticationFilter" class="org.springframework.security.web.authentication.www.BasicAuthenticationFilter">
-	    <property name="authenticationManager" ref="datacore.AuthenticationManager" />
-	    <property name="authenticationEntryPoint" ref="authenticationEntryPoint" />
+		<constructor-arg  name="authenticationManager" ref="datacore.AuthenticationManager" />
+	    <constructor-arg  name="authenticationEntryPoint" ref="authenticationEntryPoint" />
 	</bean>
-	
+
 	<bean id="authenticationEntryPoint" class="org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint">
     	<property name="realmName" value="datacore" />
 	</bean>
@@ -48,7 +48,7 @@
 	
 	<bean id="proxyDaoAuthenticationProvider" class="org.oasis.datacore.core.security.providers.ProxyDaoAuthenticationProvider">
 		<property name="delegate.userDetailsService" ref="datacore.localUserDetailsService" />
-	</bean> 
+	</bean>
    
    <!-- locally-defined users : -->
    <!-- (NB. outside localauthdevmode, only logged in from LocalAuthenticationService so password are useless) -->

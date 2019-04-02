@@ -14,9 +14,9 @@
 		xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
       xsi:schemaLocation=
       "http://www.springframework.org/schema/beans
-      http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+      http://www.springframework.org/schema/beans/spring-beans.xsd
       http://www.springframework.org/schema/context
-      http://www.springframework.org/schema/context/spring-context-3.2.xsd
+      http://www.springframework.org/schema/context/spring-context.xsd
       http://www.springframework.org/schema/data/mongo
       http://www.springframework.org/schema/data/mongo/spring-mongo-1.5.xsd
       http://cxf.apache.org/core http://cxf.apache.org/schemas/core.xsd
@@ -28,7 +28,7 @@
       http://www.springframework.org/schema/security
       http://www.springframework.org/schema/security/spring-security.xsd
       http://www.springframework.org/schema/security/oauth2
-      http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd">
+      http://www.springframework.org/schema/security/spring-security-oauth2.xsd">
       
    <!-- default & overriding some properties (BEFORE import to take precedence over imported properties)
    (overriding ones are at end of comma-separated location)
