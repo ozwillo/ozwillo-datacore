@@ -155,13 +155,13 @@
                 <webAppConfig>
                   <contextPath>/</contextPath>
                 </webAppConfig>
-                <connectors>
-                  <connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
-                    <port>8080</port>
-                    <maxIdleTime>60000</maxIdleTime>
-                    <confidentialPort>8443</confidentialPort>
-                  </connector>
-                </connectors>
+                <!--<connectors>-->
+                  <!--<connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">-->
+                    <!--<port>8080</port>-->
+                    <!--<maxIdleTime>60000</maxIdleTime>-->
+                    <!--<confidentialPort>8443</confidentialPort>-->
+                  <!--</connector>-->
+                <!--</connectors>-->
               </configuration>
               </plugin>
 
@@ -200,7 +200,7 @@
                </plugin>
             
               <plugin>
-              <groupId>org.mortbay.jetty</groupId>
+              <groupId>org.eclipse.jetty</groupId>
               <artifactId>jetty-maven-plugin</artifactId>
               <version>${jetty.version}</version>
               <configuration>
@@ -209,13 +209,13 @@
                 <webAppConfig>
                   <contextPath>/</contextPath>
                 </webAppConfig>
-                <connectors>
-                  <connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
-                    <port>8080</port>
-                    <maxIdleTime>60000</maxIdleTime>
-                    <confidentialPort>8443</confidentialPort>
-                  </connector>
-                </connectors>
+                <!--<connectors>-->
+                  <!--<connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">-->
+                    <!--<port>8080</port>-->
+                    <!--<maxIdleTime>60000</maxIdleTime>-->
+                    <!--<confidentialPort>8443</confidentialPort>-->
+                  <!--</connector>-->
+                <!--</connectors>-->
               </configuration>
               <executions>
                 <execution>
@@ -226,7 +226,7 @@
                   </goals>
                   <configuration>
                     <scanIntervalSeconds>0</scanIntervalSeconds>
-                    <daemon>true</daemon>
+                    <!--<daemon>true</daemon>-->
                   </configuration>
                 </execution>
                 <execution>
