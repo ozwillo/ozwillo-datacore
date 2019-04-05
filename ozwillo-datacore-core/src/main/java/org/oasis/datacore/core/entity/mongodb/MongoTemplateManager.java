@@ -59,7 +59,7 @@ public class MongoTemplateManager {
    
    /** default mongo, if there is a cluster it is it */
    @Autowired
-   private /*MongoOperations*/MongoTemplate mgo; // TODO remove it by hiding it in services
+   private MongoTemplate mgo; // TODO remove it by hiding it in services
    /** to access request-specific mongo conf */
    @Autowired
    protected DCModelService modelService;
@@ -107,7 +107,10 @@ public class MongoTemplateManager {
    }
    
    public MongoTemplate getMongoTemplate() {
-      return new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), dbName));
+      return getDefaultMongoTemplate();
+      // I guess this was meant for some sort of sharding based on projects
+      // but I will never go that point ...
+      // return getMongoTemplate(modelService.getProject());
    }
 
    /**

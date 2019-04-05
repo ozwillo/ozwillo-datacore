@@ -47,8 +47,6 @@ public class EntityServiceImpl implements EntityService {
    // NB. MongoTemplate would be required to check last operation result, but we rather use WriteConcerns
    @Autowired
    private EntityModelService entityModelService;
-   @Value("${oasis.datacore.mongodb.dbname}")
-   private String dbName;
 
 
    @Override
@@ -89,7 +87,7 @@ public class EntityServiceImpl implements EntityService {
       
       // if exists (with same uri, and if multiProjectStorage same project),
       // will fail (no need to enforce any version)
-      MongoOperations mongoOps = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), dbName));
+      MongoOperations mongoOps = mgoManager.getDefaultMongoTemplate();
       mongoOps.insert(dataEntity, collectionName);
 //      mgoManager.getMongoTemplate().insert(dataEntity, collectionName);
    }
@@ -108,7 +106,7 @@ public class EntityServiceImpl implements EntityService {
       //entityService.findById(uri, type/collectionName); // TODO
       //dataEntity = dataRepo.findOne(uri); // NO can't be used because can't specify collection
       //dataEntity = mgo.findById(uri, DCEntity.class, collectionName);
-      MongoOperations mongoOps = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), dbName));
+      MongoOperations mongoOps = mgoManager.getDefaultMongoTemplate();
       mongoOps.find(new Query(criteria) , DCEntity.class, collectionName);
       List<DCEntity> entitiesFound = mgoManager.getMongoTemplate()
             .find(new Query(criteria) , DCEntity.class, collectionName);

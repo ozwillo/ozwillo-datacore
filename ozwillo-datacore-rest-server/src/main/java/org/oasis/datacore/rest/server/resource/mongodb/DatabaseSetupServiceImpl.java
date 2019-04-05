@@ -23,7 +23,7 @@ import org.oasis.datacore.historization.service.impl.HistorizationServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
@@ -47,8 +47,9 @@ public class   DatabaseSetupServiceImpl implements DatabaseSetupService {
    protected DataModelServiceImpl modelAdminService;
    @Autowired
    protected NativeModelService nativeModelService;
+
    @Autowired
-   protected MongoOperations mgo;
+   private MongoTemplate mongoTemplate;
 
    @Autowired
    private HistorizationServiceImpl historizationService;
@@ -64,15 +65,15 @@ public class   DatabaseSetupServiceImpl implements DatabaseSetupService {
       if (model.getCollectionName().endsWith(HistorizationServiceImpl.HISTORIZATION_COLLECTION_SUFFIX)) {
          return false;
       }
-      mgo.dropCollection(model.getCollectionName()); // delete data // storageModel.getAbsoluteName()
+      
+      mongoTemplate.dropCollection(model.getCollectionName()); // delete data // storageModel.getAbsoluteName()
       // TODO rm indexes specific to it in inheriting models also
    
       // TODO LATER make historizable & contributable more than storage models !
       if (model.isHistorizable()) {
          try {
             String historizationCollectionName = historizationService.getHistorizedCollectionNameFromOriginalModel(model);
-            //mgo.remove(new Query(), historizationCollectionName);
-            mgo.dropCollection(historizationCollectionName);
+            mongoTemplate.dropCollection(historizationCollectionName);
          } catch (HistorizationException e) {
             logger.error("error while dropping (historization of) model "
                   + model.getName(), e);
@@ -81,8 +82,7 @@ public class   DatabaseSetupServiceImpl implements DatabaseSetupService {
       
       if (model.isContributable()) {
          String contributionCollectionName = model.getName() + ".c"; // TODO TODOOOOOO move
-         //mgo.remove(new Query(), historizationCollectionName);
-         mgo.dropCollection(contributionCollectionName);
+         mongoTemplate.dropCollection(contributionCollectionName);
       }
       
       return true;
@@ -105,12 +105,12 @@ public class   DatabaseSetupServiceImpl implements DatabaseSetupService {
          return false;
       }
       // delete (rather than drop & recreate !) : 
-      mgo.remove(deleteQuery, storageModel.getCollectionName());
+      mongoTemplate.remove(deleteQuery, storageModel.getCollectionName());
 
       // TODO LATER make historizable & contributable more than storage models !
       if (model.isHistorizable()) {
          try {
-            mgo.remove(deleteQuery, historizationService.getHistorizedCollectionNameFromOriginalModel(model));
+            mongoTemplate.remove(deleteQuery, historizationService.getHistorizedCollectionNameFromOriginalModel(model));
          } catch (HistorizationException e) {
             throw new RuntimeException("Historization init error for Model " + model.getName(), e);
          }
@@ -118,7 +118,7 @@ public class   DatabaseSetupServiceImpl implements DatabaseSetupService {
       
       if (storageModel.isContributable()) {
          String contributionCollectionName = storageModel.getName() + ".c"; // TODO TODOOOOOO move
-         mgo.remove(new Query(), contributionCollectionName);
+         mongoTemplate.remove(new Query(), contributionCollectionName);
       }
       return true;
    }
@@ -137,7 +137,7 @@ public class   DatabaseSetupServiceImpl implements DatabaseSetupService {
       }
       if (deleteCollectionsFirst) {
          // cleaning data first
-         mgo.dropCollection(model.getCollectionName());
+         mongoTemplate.dropCollection(model.getCollectionName());
          // TODO better when not storage
       }
       boolean collectionAlreadyExists = ensureCollectionAndIndices(model);
@@ -165,17 +165,17 @@ public class   DatabaseSetupServiceImpl implements DatabaseSetupService {
          String historizedCollectionName = historizationService.getHistorizedCollectionNameFromOriginalModel(model);
          if (deleteCollectionsFirst) {
             // cleaning data first
-            mgo.dropCollection(historizedCollectionName);
+            mongoTemplate.dropCollection(historizedCollectionName);
          }
          
          //boolean collectionAlreadyExists = ensureGenericCollectionAndIndices(historizedModel); // NOO only use is GET(uri, version)
-         boolean collectionAlreadyExists = mgo.collectionExists(historizedCollectionName);
+         boolean collectionAlreadyExists = mongoTemplate.collectionExists(historizedCollectionName);
          List<IndexModel> list = new ArrayList<>();
 
          // compound index on uri & version :
          IndexOptions indexOptions = new IndexOptions().unique(true);
-         mgo.getCollection(historizedCollectionName).createIndex(Indexes.descending(DCEntity.KEY_URI, DCEntity.KEY_V), indexOptions);
-//         mgo.getCollection(historizedCollectionName).createIndex(
+         mongoTemplate.getCollection(historizedCollectionName).createIndex(Indexes.descending(DCEntity.KEY_URI, DCEntity.KEY_V), indexOptions);
+//         mongoTemplate.getCollection(historizedCollectionName).createIndex(
 //               new BasicDBObject(DCEntity.KEY_URI, 1).append(DCEntity.KEY_V, 1),
 //               new BasicDBObject("unique", true));
          // NB. does nothing if already exists http://docs.mongodb.org/manual/tutorial/create-an-index/
@@ -190,7 +190,7 @@ public class   DatabaseSetupServiceImpl implements DatabaseSetupService {
       if (deleteCollectionsFirst) {
          // cleaning data first
          String contributionCollectionName = model.getName() + ".c"; // TODO TODOOOOOO move
-         mgo.dropCollection(contributionCollectionName);
+         mongoTemplate.dropCollection(contributionCollectionName);
       }
       // TODO TODOOOOO compound index on uri and contributor / organization ?!
       return false; // ensureCollectionAndIndices(historizedModel); // TODO TODOOOO
@@ -209,10 +209,10 @@ public class   DatabaseSetupServiceImpl implements DatabaseSetupService {
       }
       // TODO isMultiVersionStorage for History
       IndexOptions indexOptions = new IndexOptions().unique(true);
-      mgo.getCollection(model.getCollectionName()).createIndex(Indexes.descending(DCEntity.KEY_URI), indexOptions);
+      mongoTemplate.getCollection(model.getCollectionName()).createIndex(Indexes.descending(DCEntity.KEY_URI), indexOptions);
 
 //      dataEntityUniqueIndex.append(DCEntity.KEY_URI, 1);
-//      mgo.getCollection(model.getCollectionName()).createIndex(
+//      mongoTemplate.getCollection(model.getCollectionName()).createIndex(
 //            dataEntityUniqueIndex, new BasicDBObject("unique", true)); // TODO dropDups ??
       // NB. does nothing if already exists http://docs.mongodb.org/manual/tutorial/create-an-index/
       return res;
@@ -224,11 +224,11 @@ public class   DatabaseSetupServiceImpl implements DatabaseSetupService {
     */
    private boolean ensureGenericCollectionAndIndices(DCModelBase model) {
       MongoCollection<Document> coll;
-      boolean collectionAlreadyExists = mgo.collectionExists(model.getCollectionName()); 
+      boolean collectionAlreadyExists = mongoTemplate.collectionExists(model.getCollectionName()); 
       if (collectionAlreadyExists) {
-         coll = mgo.getCollection(model.getCollectionName());
+         coll = mongoTemplate.getCollection(model.getCollectionName());
       } else {
-         coll = mgo.createCollection(model.getCollectionName());
+         coll = mongoTemplate.createCollection(model.getCollectionName());
       }
       
       LinkedHashSet<String> requiredIndexes = new LinkedHashSet<String>();

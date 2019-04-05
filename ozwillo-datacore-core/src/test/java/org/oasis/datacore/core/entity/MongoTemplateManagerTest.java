@@ -6,7 +6,6 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.oasis.datacore.common.context.DCRequestContextProvider;
-import org.oasis.datacore.common.context.DCRequestContextProviderFactory;
 import org.oasis.datacore.common.context.SimpleRequestContextProvider;
 import org.oasis.datacore.core.entity.mongodb.MongoTemplateManager;
 import org.oasis.datacore.core.entity.mongodb.MongoUri;
@@ -47,8 +46,6 @@ public class MongoTemplateManagerTest {
    private MongoTemplateManager mtm; // to check MongoTemplateManager
    @Autowired
    private DataModelServiceImpl modelAdminService;
-   @Autowired
-   protected DCRequestContextProviderFactory requestContextProviderFactory; // to check MongoTemplateManager
 
 
    @Test
@@ -82,14 +79,14 @@ public class MongoTemplateManagerTest {
       }
       testProject.setDbRobust(true);
       MongoOperations localhostMongoTemplate = mtm.getMongoTemplate();
-      Assert.assertNotEquals(mt, localhostMongoTemplate);
+      Assert.assertEquals(mt, localhostMongoTemplate);
 
       String localhostNoPortMongoUri = "mongodb://localhost/datacore";
       testProject.setDbUri(localhostNoPortMongoUri);
       String loopbackIpMongoUri = "mongodb://127.0.0.1:27017/datacore";
       testProject.setDbUri(loopbackIpMongoUri);
       MongoOperations loopbackIpMongoTemplate = mtm.getMongoTemplate();
-      Assert.assertNotEquals(localhostMongoTemplate, loopbackIpMongoTemplate);
+      Assert.assertEquals(mt, loopbackIpMongoTemplate);
 
       // test connection of loopbackIp mongoTemplate :
       try {
