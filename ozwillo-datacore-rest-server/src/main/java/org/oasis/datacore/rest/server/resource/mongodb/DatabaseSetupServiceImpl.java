@@ -2,7 +2,7 @@ package org.oasis.datacore.rest.server.resource.mongodb;
 
 import java.util.*;
 
-import com.mongodb.client.FindIterable;
+import com.mongodb.client.ListIndexesIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.IndexModel;
 import com.mongodb.client.model.IndexOptions;
@@ -29,8 +29,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
 import com.mongodb.client.model.Indexes;
 
 /**
@@ -302,18 +300,18 @@ public class   DatabaseSetupServiceImpl implements DatabaseSetupService {
     * @return existing indexes
     */
    private Set<String> getNonUniqueSingleIndexedPathes( MongoCollection<Document> coll) {
-      FindIterable<Document> mongoIndexInfos = coll.find();
-      Set<String> nonUniqueSingleIndexedPathes = new HashSet<String>();
+      ListIndexesIterable<Document> mongoIndexInfos = coll.listIndexes();
+      Set<String> nonUniqueSingleIndexedPathes = new HashSet<>();
       for (Document mongoIndexInfo : mongoIndexInfos) {
          Object uniqueFound = mongoIndexInfo.get("unique");
-         if (uniqueFound != null && ((Boolean) uniqueFound).booleanValue()) {
+         if (uniqueFound != null && (Boolean) uniqueFound) {
             continue;
          }
-         Set<String> keyNames = ((DBObject) mongoIndexInfo.get("key")).keySet();
+         Set<String> keyNames = ((Document) mongoIndexInfo.get("key")).keySet();
          if (keyNames.size() != 1) {
             continue;
          }
-         nonUniqueSingleIndexedPathes.add((String) keyNames.iterator().next());
+         nonUniqueSingleIndexedPathes.add(keyNames.iterator().next());
       }
       return nonUniqueSingleIndexedPathes;
    }
