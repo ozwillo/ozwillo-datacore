@@ -109,16 +109,6 @@ public class ProjectInitService {
       return project;
    }
 
-   public DCProject getCitizenKinProject() {
-      String projectName = "citizenkin_0";
-      DCProject project = modelAdminService.getProject(projectName);
-      if (project == null) {
-         throw new RuntimeException("Create in playground project " + projectName
-               + " with default dcms:modelLevelSecurityEnabled and dmcs:useModelSecurity set to true");
-      }
-      return project;
-   }
-   
    /**
     * i.e. main's sandbox
     * @return
