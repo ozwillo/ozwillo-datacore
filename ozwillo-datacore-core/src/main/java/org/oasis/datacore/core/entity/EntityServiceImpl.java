@@ -47,7 +47,7 @@ public class EntityServiceImpl implements EntityService {
    // NB. MongoTemplate would be required to check last operation result, but we rather use WriteConcerns
    @Autowired
    private EntityModelService entityModelService;
-   @Value("$oasis.datacore.mongodb.dbname")
+   @Value("${oasis.datacore.mongodb.dbname}")
    private String dbName;
 
 
