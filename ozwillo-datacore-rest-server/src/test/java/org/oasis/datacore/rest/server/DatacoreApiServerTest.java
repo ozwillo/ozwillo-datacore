@@ -24,7 +24,6 @@ import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCI18nField;
 import org.oasis.datacore.core.meta.pov.DCProject;
-import org.oasis.datacore.core.security.mock.LocalAuthenticationService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.util.ResourceParsingHelper;
@@ -40,7 +39,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
-import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -60,18 +58,11 @@ public class DatacoreApiServerTest {
    
    @Autowired
    @Qualifier("datacoreApiCachedJsonClient")
-   private /*DatacoreApi*/DatacoreCachedClient datacoreApiClient;
+   private DatacoreCachedClient datacoreApiClient;
    
    /** to init models */
    @Autowired
-   private /*static */DataModelServiceImpl modelServiceImpl;
-   ///@Autowired
-   ///private CityCountrySample cityCountrySample;
-   
-   /** to cleanup db
-    * TODO LATER rather in service */
-   @Autowired
-   private /*static */MongoOperations mgo;
+   private DataModelServiceImpl modelServiceImpl;
 
    /** to clean cache for tests */
    @Autowired
@@ -101,10 +92,6 @@ public class DatacoreApiServerTest {
    /** for testing purpose */
    @Autowired
    private LdpEntityQueryServiceImpl ldpEntityQueryServiceImpl;
-   
-   /** to log ing */
-   @Autowired
-   private LocalAuthenticationService localAuthenticationService;
    
    @Autowired
    private CityCountrySample cityCountrySample;
@@ -654,7 +641,8 @@ public class DatacoreApiServerTest {
             CityCountrySample.COUNTRY_MODEL_NAME, "France").set("n:name", "France"));
       DCResource lyonCity = DCResource.create(containerUrl, CityCountrySample.CITY_MODEL_NAME,
             "France/Lyon").set("n:name", "Lyon").set("city:inCountry", franceCountry.getUri())
-            .set("city:populationCount", 500000);
+               .set("city:populationCount", 500000)
+               .set("city:i18nname", "Lyon");
       lyonCity.set("city:pointsOfInterest", DCResource.listBuilder().add(fourvierePoi.getUri()).build());
       // WARNING used as referenced rather than embedded resource as elsewhere in CityCountrySample !!!
       DCResource postedLyonCity = datacoreApiClient.postDataInType(lyonCity);
