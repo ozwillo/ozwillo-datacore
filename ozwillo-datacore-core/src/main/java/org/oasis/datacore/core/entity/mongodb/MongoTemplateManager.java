@@ -21,7 +21,7 @@ import org.springframework.util.StringUtils;
 
 
 /**
- * Provides DatacoreMongoTemplate (= MongoOperations implementation)
+ * Provides MongoTemplate (= MongoOperations implementation)
  * that may have custom configuration, according to the current project's configuration :
  * - allows to use a specific secondary for read queries instead
  * - allows to write without waiting for confirmation
@@ -75,7 +75,7 @@ public class MongoTemplateManager {
    private MongoDbFactory mongoDbFactory;
 
    /** caches default & custom mongos ONLY (not default because can be cluster so not only host prop !) */
-   private Map<String,DatacoreMongoTemplate> customMongoTemplateCacheMap = new HashMap<>();
+   private Map<String,MongoTemplate> customMongoTemplateCacheMap = new HashMap<>();
 
 
    @PostConstruct
@@ -107,10 +107,9 @@ public class MongoTemplateManager {
    }
    
    public MongoTemplate getMongoTemplate() {
-      return new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(),
-              dbName));
-
+      return new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), dbName));
    }
+
    /**
     * allows to check conf with a not yet saved project
     */
@@ -149,12 +148,12 @@ public class MongoTemplateManager {
       }
       
       String mgoId = buildCustomMgoId(dbUri, isDbRobust);
-      DatacoreMongoTemplate mgo = customMongoTemplateCacheMap.get(mgoId);
+      MongoTemplate mgo = customMongoTemplateCacheMap.get(mgoId);
       if (mgo == null) {
          mgo = createMongoTemplate(dbUri, isDbRobust);
          
          synchronized(customMongoTemplateCacheMap) {
-            DatacoreMongoTemplate justSetMgo = customMongoTemplateCacheMap.get(mgoId);
+            MongoTemplate justSetMgo = customMongoTemplateCacheMap.get(mgoId);
             if (justSetMgo != null) {
                mgo = justSetMgo; // rather reuse mgo that has been created in between
             } else {
@@ -176,10 +175,10 @@ public class MongoTemplateManager {
       return "uri=" + dbUri + "," + "robust=" + isDbRobust;
    }
 
-   private DatacoreMongoTemplate createMongoTemplate(MongoUri dbUri, Boolean isDbRobust) {
-      DatacoreMongoTemplate mgo;
+   private MongoTemplate createMongoTemplate(MongoUri dbUri, Boolean isDbRobust) {
+      MongoTemplate mgo;
       if (dbUri == null) { // we can reuse the default mongoDbFactory :
-         mgo = new DatacoreMongoTemplate(mongoDbFactory, this.mgo.getConverter());
+         mgo = new MongoTemplate(mongoDbFactory, this.mgo.getConverter());
          
       } else {
          MongoClient mongoClient;
@@ -199,7 +198,7 @@ public class MongoTemplateManager {
          }
          MongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(mongoClient, dbUri.getDatabase());
          NoIndexCreationMongoConverter readonlyMongoConverter = new NoIndexCreationMongoConverter(mongoConverter);
-         mgo = new DatacoreMongoTemplate(mongoDbFactory, readonlyMongoConverter);
+         mgo = new MongoTemplate(mongoDbFactory, readonlyMongoConverter);
          readonlyMongoConverter.completeInit(mgo);
       }
 
