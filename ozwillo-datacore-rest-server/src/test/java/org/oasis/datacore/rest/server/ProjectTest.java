@@ -90,9 +90,6 @@ public class ProjectTest {
       // cleanDataAndCache :
       orgSample.cleanDataOfCreatedModels(); // (was already called but this first cleans up data)
       datacoreApiClient.getCache().clear(); // to avoid side effects
-      
-      // resetDefaults :
-      ldpEntityQueryServiceImpl.setMaxScan(0); // unlimited, default in test
    }
    
    @Test

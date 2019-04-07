@@ -86,10 +86,6 @@ public class DatacoreApiServerRdfTest {
       SimpleRequestContextProvider.setSimpleRequestContext(new ImmutableMap.Builder<String, Object>()
             .put(DatacoreApi.PROJECT_HEADER, DCProject.OASIS_SAMPLE).build());
    }
-   @After
-   public void resetDefaults() {
-      ldpEntityQueryServiceImpl.setMaxScan(0); // unlimited, default in test
-   }
 
    private DCResource buildNamedData(String type, String name) {
       DCResource resource = DCResource.create(containerUrl, type, name).set("n:name", name);
@@ -100,8 +96,10 @@ public class DatacoreApiServerRdfTest {
          int populationCount, boolean embeddedCountry) {
       String type = CityCountrySample.CITY_MODEL_NAME;
       String iri = countryName + '/' + name;
-      DCResource cityResource = DCResource.create(containerUrl, type, iri).set("n:name", name);
-      cityResource.set("city:populationCount", populationCount);
+      DCResource cityResource = DCResource.create(containerUrl, type, iri)
+              .set("n:name", name)
+              .set("city:i18nname", name)
+              .set("city:populationCount", populationCount);
 
       String countryUri = UriHelper.buildUri(containerUrl, CityCountrySample.COUNTRY_MODEL_NAME, countryName);
       if (embeddedCountry) {

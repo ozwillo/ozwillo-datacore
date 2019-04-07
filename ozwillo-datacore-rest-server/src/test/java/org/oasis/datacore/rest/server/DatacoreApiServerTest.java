@@ -103,9 +103,6 @@ public class DatacoreApiServerTest {
       cityCountrySample.cleanDataOfCreatedModels(); // (was already called but this first cleans up data)
       datacoreApiClient.getCache().clear(); // to avoid side effects
       
-      // resetDefaults :
-      ldpEntityQueryServiceImpl.setMaxScan(0); // unlimited, default in test
-      
       // set sample project :
       SimpleRequestContextProvider.setSimpleRequestContext(new ImmutableMap.Builder<String, Object>()
             .put(DatacoreApi.PROJECT_HEADER, DCProject.OASIS_SAMPLE).build());
@@ -798,7 +795,7 @@ public class DatacoreApiServerTest {
    }
 
    @Test
-   public void testFind() throws Exception {
+   public void testFind() {
       // query all - no resource
       List<DCResource> resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters(), null, null);
@@ -844,14 +841,6 @@ public class DatacoreApiServerTest {
             new QueryParameters().add("n:name", "$fulltextu.*"), null, 10);
       Assert.assertEquals(1, resources.size()); // "UK"
       Assert.assertEquals(postedUkCountryData.getUri(), resources.get(0).getUri());
-      
-      // unquoted fulltext on string - checking index
-      List<DCResource> debugRes = datacoreApiClient.findDataInType(CityCountrySample.COUNTRY_MODEL_NAME,
-            new QueryParameters().add("n:name", "$fulltextu")
-            .add("n:name", "+") // to override default sort on _chAt which could blur results
-            .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
-      Assert.assertTrue("Should have used index",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p._ft.v_1"));
       
       // unquoted fulltext KO on fields not configured as such
       try {
@@ -1045,83 +1034,8 @@ public class DatacoreApiServerTest {
       Assert.assertEquals(postedBordeauxCityData.get("n:name"), resources.get(0).get("n:name"));
    }
 
-
    @Test
-   public void testQueryMaxScanError() throws Exception {
-      ldpEntityQueryServiceImpl.setMaxScan(0); // unlimited, default in test
-      
-      // no resource
-      
-      // query all
-      List<DCResource> resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-            new QueryParameters(), null, null);
-      // should not fail : query has no non indexed field
-      Assert.assertEquals(0, resources.size());
-
-      String nonExistingFoundedDate = "=\"1200-04-01T00:00:00.000+01:00\"";
-
-      // unquoted equals (empty)
-      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-            new QueryParameters().add("city:founded", nonExistingFoundedDate), null, 10);
-      // should not fail : less documents in db than any maxScan for now
-      Assert.assertEquals(0, resources.size());
-      
-      // two resources
-      datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "UK"));
-      DateTime londonFoundedDate = new DateTime(-43, 4, 1, 0, 0, DateTimeZone.UTC);
-      DCResource londonCityData = buildCityData("London", "UK", 10000000, false);
-      londonCityData.setProperty("city:founded", londonFoundedDate);
-      datacoreApiClient.postDataInType(londonCityData );
-      datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "France"));
-      DCResource bordeauxCityData = buildCityData("Bordeaux", "France", 10000000, false);
-      DateTime bordeauxFoundedDate = new DateTime(300, 4, 1, 0, 0, DateTimeZone.forID("+01:00"));
-      bordeauxCityData.setProperty("city:founded", bordeauxFoundedDate);
-      DCResource postedBordeauxCityData = datacoreApiClient.postDataInType(bordeauxCityData);
-      
-      // query all
-      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-            new QueryParameters(), null, null);
-      // should not fail : query has no non indexed field
-      Assert.assertEquals(2, resources.size());
-      // limiting maxScan to less than document nb :
-      ldpEntityQueryServiceImpl.setMaxScan(1
-            *2); // must handle default sort on _chAt
-      resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-            new QueryParameters().add(DatacoreApi.DEBUG_PARAM, "true"), null, null);
-      // should not fail : query has no non indexed field
-      Assert.assertEquals(1, resources.size());
-      
-      // three resources
-      DCResource valenceCityData = buildCityData("Valence", "France", 100000, false);
-      DateTime valenceFoundedDate = new DateTime(500, 4, 1, 0, 0, DateTimeZone.forID("+01:00"));
-      valenceCityData.setProperty("city:founded", valenceFoundedDate);
-      DCResource postedValenceCityData = datacoreApiClient.postDataInType(valenceCityData);
-
-      // limiting maxScan to (less or equal than) document nb / 3 :
-      int resourceNb = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-            null, null, 10).size();
-      ldpEntityQueryServiceImpl.setMaxScan(resourceNb / 3);
-      Assert.assertTrue("city:founded should not be indexed", modelServiceImpl.getModelBase(
-            CityCountrySample.CITY_MODEL_NAME).getField("city:founded").getQueryLimit() <= 0);
-      try {
-         // unquoted equals (empty)
-         QueryParameters queryOnNonIndexedFields = new QueryParameters()
-               .add("city:founded", nonExistingFoundedDate + "+");
-         resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-               queryOnNonIndexedFields, null, 10); // adding sort to remove default sort on _chAt
-         //Assert.assertEquals(0, resources.size());
-         //Assert.assertEquals(postedBordeauxCityData.getUri(), resources.get(0).getUri());
-         Assert.fail("Should have raised exception because query on non indexed field reached "
-               + "maxScan before document limit");
-      } catch (BadRequestException brex) {
-         Assert.assertTrue((UnitTestHelper.readBodyAsString(brex)).contains("maxScan"));
-      }
-
-   }
-
-
-   @Test
-   public void testFindDcEntityIndexedFields() throws Exception {
+   public void testFindDcEntityIndexedFields() {
       // two resources
       datacoreApiClient.postDataInType(buildNamedData(CityCountrySample.COUNTRY_MODEL_NAME, "UK"));
       DCResource londonCityData = datacoreApiClient.postDataInType(buildCityData("London", "UK", 10000000, false));
@@ -1137,7 +1051,6 @@ public class DatacoreApiServerTest {
             new QueryParameters().add(DCResource.KEY_URI,  ">=" + londonCityData.getUri()
                   + "+") // adding sort in >= operator to remove default sort on _chAt
             .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
-      Assert.assertTrue(TestHelper.getDebugCursor(debugResult).startsWith("BtreeCursor _uri_1"));
       List<Map<String, Object>> resources = TestHelper.getDebugResources(debugResult);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(londonCityData.getUri(), resources.get(0).get(DCResource.KEY_URI));
@@ -1147,7 +1060,6 @@ public class DatacoreApiServerTest {
             new QueryParameters().add(DCResource.KEY_DCMODIFIED, bordeauxCityData.getLastModified().toString())
             // NB. there is a sort on _chAt by default !
             .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
-      Assert.assertTrue(TestHelper.getDebugCursor(debugResult).startsWith("BtreeCursor _chAt"));
       resources = TestHelper.getDebugResources(debugResult);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(bordeauxCityData.getLastModified(),
@@ -1158,7 +1070,6 @@ public class DatacoreApiServerTest {
             new QueryParameters().add("n:name", "=Bordeaux")
             // NB. there is a sort on _chAt by default !
             .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
-      Assert.assertTrue(TestHelper.getDebugCursor(debugResult).startsWith("BtreeCursor _p.n:name"));
       resources = TestHelper.getDebugResources(debugResult);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(bordeauxCityData.getUri(), resources.get(0).get(DCResource.KEY_URI));
@@ -1168,7 +1079,6 @@ public class DatacoreApiServerTest {
             new QueryParameters().add("city:historicalEvents.city:historicalEventDate", ">\"-0143-04-01T00:00:00.000Z\"")
             // NB. there is a sort on _chAt by default !
             .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
-      Assert.assertTrue(TestHelper.getDebugCursor(debugResult).startsWith("BtreeCursor _p.city:historicalEvents.city:historicalEventDate"));
       resources = TestHelper.getDebugResources(debugResult);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(bordeauxCityData.getUri(), resources.get(0).get(DCResource.KEY_URI));
@@ -1258,88 +1168,47 @@ public class DatacoreApiServerTest {
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(moscowCityUri, resources.get(0).getUri());
    
-      // checking used index
-      List<DCResource> debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-            new QueryParameters().add("i18n:name.v", "Moscow")
-            .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
-            .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
-      Assert.assertTrue("Should have used index on i18n v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor " + cityI18nNameStoragePath));
-      
       // i18n, looking for a particular language
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters().add("i18n:name.l", "ru"), null, 10);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(moscowCityUri, resources.get(0).getUri());
-      
-      // checking (not) used index
-      debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-            new QueryParameters().add("i18n:name.v", "Moscow")
-            .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
-            .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
-      Assert.assertFalse("Should not have used index on i18n",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p.i18n:name"));
 
-      // i18n, looking up in a given language
-      debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-            new QueryParameters().add("i18n:name.v", "Moskva").add("i18n:name.l", "ru")
-            .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
-            .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
-      Assert.assertTrue("Should have used index on i18n v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor " + cityI18nNameStoragePath));
       // checking that not found in wrong language
-      debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-            new QueryParameters().add("i18n:name.en", "Moskva")
-            .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
-            .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
+      List<DCResource> debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
+              new QueryParameters().add("i18n:name.en", "Moskva")
+                      .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
+                      .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
       Assert.assertEquals("Should have no result", 0, TestHelper.getDebugResourcesNb(debugRes));
-      Assert.assertTrue("Should have used index on i18n v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor " + cityI18nNameStoragePath));
       // i18n, looking up in global language
       debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-            new QueryParameters().add("i18n:name.v", "Moskva").add("l", "ru")
-            .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
-            .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
+              new QueryParameters().add("i18n:name.v", "Moskva").add("l", "ru")
+                      .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
+                      .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
       Assert.assertEquals("Should have a single result", 1, TestHelper.getDebugResourcesNb(debugRes));
-      Assert.assertTrue("Should have used index on i18n v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor " + cityI18nNameStoragePath));
       // checking that not found in wrong global language
       debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-            new QueryParameters().add("i18n:name.v", "Moskva").add("l", "en")
-            .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
-            .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
+              new QueryParameters().add("i18n:name.v", "Moskva").add("l", "en")
+                      .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
+                      .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
       Assert.assertEquals("Should have no result", 0, TestHelper.getDebugResourcesNb(debugRes));
-      Assert.assertTrue("Should have used index on i18n v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor " + cityI18nNameStoragePath));
       // i18n, looking up in JSON-LD global language
       debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-            new QueryParameters().add("i18n:name.v", "Moskva").add("@language", "ru")
-            .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
-            .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
+              new QueryParameters().add("i18n:name.v", "Moskva").add("@language", "ru")
+                      .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
+                      .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
       Assert.assertEquals("Should have a single result", 1, TestHelper.getDebugResourcesNb(debugRes));
-      Assert.assertTrue("Should have used index on i18n v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor " + cityI18nNameStoragePath));
       // checking that not found in wrong JSON-LD global language
       debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-            new QueryParameters().add("i18n:name.v", "Moskva").add("@language", "en")
-            .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
-            .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
+              new QueryParameters().add("i18n:name.v", "Moskva").add("@language", "en")
+                      .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
+                      .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
       Assert.assertEquals("Should have no result", 0, TestHelper.getDebugResourcesNb(debugRes));
-      Assert.assertTrue("Should have used index on i18n v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor " + cityI18nNameStoragePath));
-      
       // i18n, checking that found using $elemMatch
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters().add("i18n:name", "$elemMatch{\"v\":\"Moskva\",\"l\":\"ru\"}"), null, 10);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(moscowCityUri, resources.get(0).getUri());
-      // checking used index
-      debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-            new QueryParameters().add("i18n:name", "$elemMatch{\"v\":\"Moskva\",\"l\":\"ru\"}")
-            .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
-            .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
-      Assert.assertTrue("Should have used index on i18n v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor " + cityI18nNameStoragePath));
       // checking that not found in wrong language using $elemMatch
       resources = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters().add("i18n:name", "$elemMatch{\"v\":\"Moscow\",\"l\":\"ru\"}"), null, 10);
@@ -1356,73 +1225,55 @@ public class DatacoreApiServerTest {
             .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
             .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
       Assert.assertEquals("Should have a single result", 1, TestHelper.getDebugResourcesNb(debugRes));
-      Assert.assertTrue("Should have used index on _ft v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p._ft.v_1"));
       // same, with shortcut
       debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters().add("i18n:name", "$fulltextmosk")
             .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
             .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
       Assert.assertEquals("Should have a single result", 1, TestHelper.getDebugResourcesNb(debugRes));
-      Assert.assertTrue("Should have used index on _ft v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p._ft.v_1"));
       // checking that not found if wrong token
       debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters().add("i18n:name.v", "$fulltextmosq")
             .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
             .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
       Assert.assertEquals("Should have no result", 0, TestHelper.getDebugResourcesNb(debugRes));
-      Assert.assertTrue("Should have used index on _ft v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p._ft.v_1"));
       // i18n fulltext, looking up in a given language
       debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters().add("i18n:name.ru", "$fulltextmosk")
             .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
             .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
       Assert.assertEquals("Should have a single result", 1, TestHelper.getDebugResourcesNb(debugRes));
-      Assert.assertTrue("Should have used index on _ft v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p._ft.v_1"));
       // same, in another given language
       debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters().add("i18n:name.en", "$fulltextmosc")
             .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
             .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
       Assert.assertEquals("Should have a single result", 1, TestHelper.getDebugResourcesNb(debugRes));
-      Assert.assertTrue("Should have used index on _ft v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p._ft.v_1"));
       // i18n fulltext, looking up several tokens in a given language
       debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters().add("i18n:name.ru", "$fulltextmosk mos")
             .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
             .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
       Assert.assertEquals("Should have a single result", 1, TestHelper.getDebugResourcesNb(debugRes));
-      Assert.assertTrue("Should have used index on _ft v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p._ft.v_1"));
       // checking that not found in wrong language
       debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters().add("i18n:name.ru", "$fulltextmosc")
             .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
             .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
       Assert.assertEquals("Should have no result", 0, TestHelper.getDebugResourcesNb(debugRes));
-      Assert.assertTrue("Should have used index on _ft v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p._ft.v_1"));
       // checking that not found if all tokens are not in the right language
       debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters().add("i18n:name.ru", "$fulltextmosc mosk")
             .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
             .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
       Assert.assertEquals("Should have no result", 0, TestHelper.getDebugResourcesNb(debugRes));
-      Assert.assertTrue("Should have used index on _ft v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p._ft.v_1"));
       // checking that not found in language if wrong token
       debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters().add("i18n:name.ru", "$fulltextmosc")
             .add("i18n:name.v", "+") // to override default sort on _chAt which could blur results
             .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
       Assert.assertEquals("Should have no result", 0, TestHelper.getDebugResourcesNb(debugRes));
-      Assert.assertTrue("Should have used index on _ft v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p._ft.v_1"));
-      
+
       // i18n fulltext ordering :
       // checking that Saint-Lô is the second result by default (order of last modification)
       debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
@@ -1433,8 +1284,6 @@ public class DatacoreApiServerTest {
       Assert.assertEquals("Saint-Lormel should be first", "Saint-Lormel", debugResources.get(0).get("n:name"));
       Assert.assertEquals("Saint-Lô should be second", "Saint-Lô", debugResources.get(1).get("n:name"));
       Assert.assertEquals("Saint-Lubert should be last", "Saint-Loubert", debugResources.get(2).get("n:name"));
-      Assert.assertTrue("Should have used index on _ft v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p._ft.v_1"));
       // checking that Saint-Lô is the first result using ascending sort
       debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters().add("i18n:name.fr", "$fulltextsaint lo")
@@ -1445,8 +1294,6 @@ public class DatacoreApiServerTest {
       Assert.assertEquals("Saint-Lô should be first", "Saint-Lô", debugResources.get(0).get("n:name"));
       Assert.assertEquals("Saint-Lormel should be second", "Saint-Lormel", debugResources.get(1).get("n:name"));
       Assert.assertEquals("Saint-Lubert should be last", "Saint-Loubert", debugResources.get(2).get("n:name"));
-      Assert.assertTrue("Should have used index on _ft v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p._ft.v_1"));
       // same but with explicit & short sort version
       debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters().add("i18n:name.fr", "$fulltextsaint lo+")
@@ -1456,8 +1303,6 @@ public class DatacoreApiServerTest {
       Assert.assertEquals("Saint-Lô should be first", "Saint-Lô", debugResources.get(0).get("n:name"));
       Assert.assertEquals("Saint-Lormel should be second", "Saint-Lormel", debugResources.get(1).get("n:name"));
       Assert.assertEquals("Saint-Lubert should be last", "Saint-Loubert", debugResources.get(2).get("n:name"));
-      Assert.assertTrue("Should have used index on _ft v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p._ft.v_1"));
       // checking that Saint-Lô is the last result when using descending sort on name (which should work)
       debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters().add("i18n:name.fr", "$fulltextsaint lo")
@@ -1468,8 +1313,6 @@ public class DatacoreApiServerTest {
       Assert.assertEquals("Saint-Loubert should be first", "Saint-Loubert", debugResources.get(0).get("n:name"));
       Assert.assertEquals("Saint-Lormel should be second", "Saint-Lormel", debugResources.get(1).get("n:name"));
       Assert.assertEquals("Saint-Lô should be last", "Saint-Lô", debugResources.get(2).get("n:name"));
-      Assert.assertTrue("Should have used index on _ft v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p._ft.v_1"));
       // same but with explicit & short sort version
       debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
             new QueryParameters().add("i18n:name.fr", "$fulltextsaint lo-") // so that Saint-Lô becomes last
@@ -1479,8 +1322,6 @@ public class DatacoreApiServerTest {
       Assert.assertEquals("Saint-Lubert should be first", "Saint-Loubert", debugResources.get(0).get("n:name"));
       Assert.assertEquals("Saint-Lormel should be second", "Saint-Lormel", debugResources.get(1).get("n:name"));
       Assert.assertEquals("Saint-Lô should be last", "Saint-Lô", debugResources.get(2).get("n:name"));
-      Assert.assertTrue("Should have used index on _ft v",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p._ft.v_1"));
 
       // i18n, JSONLD-style lookup on value
       QueryParameters jsonldParams = new QueryParameters().add("i18n:name.@value", "Moscow")

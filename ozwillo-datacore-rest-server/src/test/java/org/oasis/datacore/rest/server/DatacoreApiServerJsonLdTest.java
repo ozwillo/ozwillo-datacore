@@ -105,11 +105,7 @@ public class DatacoreApiServerJsonLdTest {
       SimpleRequestContextProvider.setSimpleRequestContext(new ImmutableMap.Builder<String, Object>()
             .put(DatacoreApi.PROJECT_HEADER, DCProject.OASIS_SAMPLE).build());
    }
-   @After
-   public void resetDefaults() {
-      ldpEntityQueryServiceImpl.setMaxScan(0); // unlimited, default in test
-   }
-   
+
    /**
     * Cleans up data of all Models
     */
@@ -137,13 +133,8 @@ public class DatacoreApiServerJsonLdTest {
       String type = CityCountrySample.CITY_MODEL_NAME;
       String iri = countryName + '/' + name;
       DCResource cityResource = DCResource.create(containerUrl, type, iri).set("n:name", name);
-      /*DCResource cityResource = new DCResource();
-      cityResource.setUri(UriHelper.buildUri(containerUrl, type, iri));
-      cityResource.setProperty("name", name);*/
-      //cityResource.setVersion(-1l);
-      /*cityResource.setProperty("type", type);
-      cityResource.setProperty("iri", iri);*/
       cityResource.set("city:populationCount", populationCount);
+      cityResource.set("city:i18nname", name);
       
       String countryUri = UriHelper.buildUri(containerUrl, CityCountrySample.COUNTRY_MODEL_NAME, countryName);
       if (embeddedCountry) {

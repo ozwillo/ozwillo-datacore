@@ -75,9 +75,7 @@ public class ResourceModelTest {
    
    @Autowired
    private ResourceService resourceService;
-   @Autowired
-   private EventService eventService;
-   
+
    /** to init models */
    @Autowired
    private /*static */DataModelServiceImpl modelServiceImpl;
@@ -92,11 +90,6 @@ public class ResourceModelTest {
    /** to setup security tests & test multiProjectStorage */
    @Autowired
    private EntityService entityService;
-   /** to enable index testing NOO only find in models */
-   @Autowired
-   private EntityModelService entityModelService;
-   @Autowired
-   private EntityPermissionService entityPermissionService;
    @Autowired
    private LocalAuthenticationService authenticationService;
    
@@ -109,14 +102,6 @@ public class ResourceModelTest {
    @Value("#{new java.net.URI('${datacoreApiClient.containerUrl}')}")
    //@Value("#{uriService.getContainerUrl()}")
    private URI containerUrl;
-
-   /** for testing purpose, including of security */
-   @Autowired
-   @Qualifier("datacoreApiImpl") 
-   private DatacoreApiImpl datacoreApiImpl;
-   /** for security testing purpose */
-   @Autowired
-   private LdpEntityQueryService ldpEntityQueryService;
 
    @Autowired
    private DataModelServiceImpl modelAdminService; // TODO rm refactor
@@ -131,8 +116,6 @@ public class ResourceModelTest {
    
    @Before
    public void setProject() {
-      ///cityCountrySample.initData();
-      
       SimpleRequestContextProvider.setSimpleRequestContext(new ImmutableMap.Builder<String, Object>()
             .put(DatacoreApi.PROJECT_HEADER, DCProject.OASIS_SAMPLE).build());
    }
@@ -312,11 +295,7 @@ public class ResourceModelTest {
       QueryParameters cityFoundedDebugParams = new QueryParameters().add("city:founded", new DateTime().toString())
             .add("city:founded", "+") // to override default sort on _chAt which could blur results
             .add(DatacoreApi.DEBUG_PARAM, "true");
-      List<DCResource> debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-            cityFoundedDebugParams, null, 10);
-      Assert.assertFalse("Should not have used index on city:founded",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p.city:founded"));
-      
+
       // create referring model :
       String frCityModelName = "sample.city.cityFR";
       ArrayList<String> frCityModelMixins = new ArrayList<String>();
@@ -338,14 +317,9 @@ public class ResourceModelTest {
       Assert.assertNotNull(frCityModelResource);
       resourceService.resourceToEntity(frCityModelResource); // cleans up resource, else ex. Long props are rather Integers,
       // which toModelOrMixin doesn't support 
-      frCityModel = (DCModel) mrMappingService.toModelOrMixin(frCityModelResource);
+      frCityModel = mrMappingService.toModelOrMixin(frCityModelResource);
       Assert.assertTrue(!frCityModel.getGlobalField("city:founded").isRequired());
-      // and has not index :
-      debugRes = datacoreApiClient.findDataInType(frCityModelName,
-            cityFoundedDebugParams, null, 10);
-      Assert.assertFalse("cityFR should not have index on city:founded",
-            TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p.city:founded"));
-      
+
       // update referred model :
       
       // getting referred model and changing it
@@ -412,18 +386,7 @@ public class ResourceModelTest {
          frCityModelResource = datacoreApiClient.postDataInType(
                mrMappingService.modelToResource(frCityModel, frCityModelResource));
          //entityModelService.setDisableMultiProjectStorageCriteriaForTesting(true); // NOO only find in models
-         // and checking that referrer has not, but referred still has :
-         debugRes = datacoreApiClient.findDataInType(frCityModelName,
-               cityFoundedDebugParams, null, 10);
-         Assert.assertFalse("cityFR should have index on city:founded",
-               TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p.city:founded"));
-         debugRes = datacoreApiClient.findDataInType(CityCountrySample.CITY_MODEL_NAME,
-               cityFoundedDebugParams, null, 10);
-         Assert.assertTrue("city should also have index on city:founded",
-               TestHelper.getDebugCursor(debugRes).startsWith("BtreeCursor _p.city:founded"));
-         ///entityModelService.setDisableMultiProjectStorageCriteriaForTesting(false); // NOO only find in models
-         
-         
+
          } finally {
             // putting it back in default state
             clientCityFoundedField.setRequired(false);

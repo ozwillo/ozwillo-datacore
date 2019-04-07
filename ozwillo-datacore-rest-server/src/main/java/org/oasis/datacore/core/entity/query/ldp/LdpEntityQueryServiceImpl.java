@@ -22,13 +22,11 @@ import org.oasis.datacore.core.meta.model.DCMapField;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.model.DCResourceField;
-import org.oasis.datacore.core.meta.pov.DCProject;
 import org.oasis.datacore.core.security.DCUserImpl;
 import org.oasis.datacore.core.security.EntityPermissionEvaluator;
 import org.oasis.datacore.core.security.service.DatacoreSecurityService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
-import org.oasis.datacore.rest.server.MonitoringLogServiceImpl;
 import org.oasis.datacore.rest.server.parsing.model.DCQueryParsingContext;
 import org.oasis.datacore.rest.server.parsing.model.DCResourceParsingContext;
 import org.oasis.datacore.rest.server.parsing.model.QueryOperatorsEnum;
@@ -40,7 +38,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.core.CursorProviderQueryCursorPreparer;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -59,15 +56,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
 
-   public static final String DEBUG_QUERY_EXPLAIN = "queryExplain";
-   public static final String DEBUG_WARNINGS = "warnings";
+   private static final String DEBUG_WARNINGS = "warnings";
 
    private static final Logger logger = LoggerFactory.getLogger(LdpEntityQueryServiceImpl.class);
 
-   public static final String MONGO_FIELD_PREFIX = "_p.";
+   private static final String MONGO_FIELD_PREFIX = "_p.";
    private static final String DOT = ".";
 
-   private static Set<String> findConfParams = new HashSet<String>();
+   private static Set<String> findConfParams = new HashSet<>();
    static {
       // TODO rather using Enum, see BSON$RegexFlag
       findConfParams.add(DatacoreApi.START_PARAM);
@@ -85,8 +81,6 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
     * DCFields', themselves limited by DCModel's. 0 means no limit (for tests), else ex.
     * 1000 (secure default), 100000 (on query-only nodes using secondary & timeout)... 
     * http://docs.mongodb.org/manual/reference/operator/meta/maxScan/ */
-   @Value("${datacoreApiServer.query.maxScan}")
-   private int maxScan;
    /** pagination - default maximum start position : 500... */
    @Value("${datacoreApiServer.query.maxStart}")
    private int maxStart;
@@ -125,9 +119,6 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    @Autowired
    private QueryParsingService queryParsingService;
 
-   @Autowired
-   private MonitoringLogServiceImpl monitoringLogServiceImpl;
-
    /** to access debug switch & put its explained results */
    @Autowired
    protected DatacoreRequestContextService serverRequestContext;
@@ -163,7 +154,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       }
       
       if (params == null) {
-         params = new HashMap<String,List<String>>(0);
+         params = new HashMap<>(0);
       }
       
       //Log to AuditLog Endpoint
@@ -269,10 +260,9 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          debugCtx.put("queryParameters", params);
          debugCtx.put(DatacoreApi.START_PARAM, start);
          debugCtx.put(DatacoreApi.LIMIT_PARAM, limit);
-         DCUserImpl user = securityService.getCurrentUser();
          debugCtx.put("ownedEntities", foundEntities.stream()
                .filter(e -> permissionEvaluator.hasPermission(null, e, EntityPermissionEvaluator.GET_RIGHTS))
-               .map(e -> new DCEntity(e)) // otherwise once filled getCachedModel() triggers foundDatas being null on client side ?!?!
+               .map(DCEntity::new) // otherwise once filled getCachedModel() triggers foundDatas being null on client side ?!?!
                .collect(Collectors.toList()));
       }
       
@@ -497,7 +487,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    }
 
    /** used to check model-level rights of each queried field ; TODO cache */
-   public DCModelBase getFieldModel(DCModelBase dcModel, String topFieldPathElement) {
+   private DCModelBase getFieldModel(DCModelBase dcModel, String topFieldPathElement) {
       if (dcModel.getField(topFieldPathElement) != null) {
          return dcModel;
       }
@@ -702,6 +692,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    
    private List<DCEntity> executeMongoDbQuery(Query springMongoQuery,
          DCQueryParsingContext queryParsingContext) throws QueryException {
+
       DCModelBase model = queryParsingContext.peekModel();
       DCModelBase storageModel = queryParsingContext.peekStorageModel();
       if (!model.getName().equals(storageModel.getName())) {
@@ -715,50 +706,12 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       // using custom mongo ex. for analytics :
       MongoTemplate mgo = mgoManager.getMongoTemplate();
       
-      // compute overall maxScan :
-      // (BEWARE it is NOT the max amount of doc returned because sorts or multiple
-      // criteria can eat some scans)
-      boolean applyMaxScan = queryParsingContext.isHasNoIndexedField() // true // to test only
-            //&& !storageModel.getCollectionName().equals(DCProject.OASIS_META + '.' + ResourceMetamodelIniter.MODEL_MIXIN_NAME) // don't apply
-            && !storageModel.getCollectionName().startsWith(DCProject.OASIS_META + '.') // don't apply
-            // on metamodel ; WORKAROUND FOR #175 Project not found at startup because maxScan reached on model mongo queries
-            // which is OK because there are not a lot of entities in metamodel.
-            // Solution : maybe prefix existing indexes ex. _p.dcmo:globalFields.dcmf:name by _b,
-            // but shouldn't they be used anyway ?
-            && mgo == mgoManager.getDefaultMongoTemplate(); // don't apply on custom secondary
-      int maxScan = 0;
-      if (applyMaxScan) {
-         maxScan = this.maxScan;
-         if (queryParsingContext.getAggregatedQueryLimit() > maxScan) {
-            // allow at least enough scan for expected results
-            maxScan = queryParsingContext.getAggregatedQueryLimit();
-         }
-         if (storageModel.getMaxScan() > 0) {
-            // limit maxScan : take smallest
-            maxScan = (maxScan > storageModel.getMaxScan()) ?
-                  storageModel.getMaxScan() : maxScan;
-         }
-         /*if (springMongoQuery.getLimit() < maxScan) {
-            maxScan = springMongoQuery.getLimit(); // should not need more
-         }*/ // NOO else criterized unindexed queries are sure to fail
-         // ex. HTTPOperationsTest.testDeleteDcTypeIri()'s find
-         maxScan = maxScan * 3; // for sort maxScan (because sort "scanned" is ex. 120 when query "scanned" is 83)
-         // but also because in the same example limit was 50
-      }
-
       boolean isDebug = serverRequestContext.isDebug();
-      boolean doExplainQuery = isDebug || applyMaxScan;
-
-      // using custom CursorPreparer to get access to mongo DBCursor for explain() etc. :
-      // (rather than mgo.find(springMongoQuery, DCEntity.class, collectionName))
-      CursorProviderQueryCursorPreparer cursorProvider = new CursorProviderQueryCursorPreparer(mgo,
-            springMongoQuery, doExplainQuery, maxScan, maxTime);
 
       // TODO request priority : privilege INDEXED (Queriable) fields for query & sort !!!
       // TODO LATER explode in queryParsingContext.isHasNoIndexedField() if not dev nor paid...
-      
-      List<DCEntity> foundEntities = mgo.find(springMongoQuery, DCEntity.class,
-            storageModel.getCollectionName());
+      springMongoQuery.maxTimeMsec(maxTime);
+      List<DCEntity> foundEntities = mgo.find(springMongoQuery, DCEntity.class, storageModel.getCollectionName());
       
       if (isDebug) {
          //Populate cxf exchange with info concerning the query :
@@ -767,53 +720,17 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          // or even Model (type(s), fields)...
          // TODO constants
          Map<String, Object> debugCtx = serverRequestContext.getDebug(); // never null because isDebug()
-         debugCtx.put("collectionName", cursorProvider.getCursorPrepared().getCollection().getName());
-         debugCtx.put("mongoQuery", cursorProvider.getCursorPrepared().getQuery());
+         debugCtx.put("collectionName", storageModel.getCollectionName());
+         debugCtx.put("mongoQuery", springMongoQuery.getQueryObject());
          debugCtx.put("springMongoQuery", springMongoQuery);
-         debugCtx.put(DEBUG_QUERY_EXPLAIN, cursorProvider.getQueryExplain());
-         debugCtx.put("sortExplain", cursorProvider.getCursorPrepared().explain());
-         // NB. sort explain is end cursor explain if sort (but we always sort, at worst on _chAt)
-         debugCtx.put("mongoIndexes", cursorProvider.getCursorPrepared().getCollection().getIndexInfo());
          debugCtx.put("hasNoIndexedField", queryParsingContext.isHasNoIndexedField());
-         debugCtx.put("maxScan", maxScan);
          debugCtx.put("queryParsingContext.aggregatedQueryLimit", queryParsingContext.getAggregatedQueryLimit());
          debugCtx.put("storageModel.maxScan", storageModel.getMaxScan());
-         // NB. can't get special so adding maxScan
-         debugCtx.put("options", cursorProvider.getCursorPrepared().getOptions());
-         // NB. queryOptions = cursorTailable, slaveOk, oplogReplay, noCursorTimeout, awaitData, exhaust http://api.mongodb.org/cplusplus/1.5.4/namespacemongo.html
-         debugCtx.put("readPreference", cursorProvider.getCursorPrepared().getReadPreference());
-         debugCtx.put("serverAddress", cursorProvider.getCursorPrepared().getServerAddress());
          debugCtx.put(DEBUG_WARNINGS, queryParsingContext.getWarnings());
          //explainCtx.put("parsedQuery", exchange.get("dc.query.parsedQuery")
       }
 
-      if (maxScan != 0 && doExplainQuery) { // if !doExplainQuery can't check "scanned"
-         // (if maxScan == 0 it is infinite and its limit can't be reached)
-         if (foundEntities.size() < springMongoQuery.getLimit()
-               && (((int) cursorProvider.getQueryExplain().get("nscanned")) >= maxScan
-               || ((int) cursorProvider.getCursorPrepared().explain().get("nscanned")) >= maxScan)) {
-            if (isDebug) {
-               serverRequestContext.getDebug().put("hasReachedMaxScan", true);
-            } else {
-               // NB. and not nscannedObjects which may be lower because some scans have been eaten
-               // by sorts, multiple criteria etc. see http://docs.mongodb.org/manual/reference/method/cursor.explain/
-               throw new QueryException("Query or sort on collection " + cursorProvider.getCursorPrepared().getCollection().getName()
-                     + " with non indexed fields has reached maxScan (" + maxScan
-                     + ") before document limit (found " + foundEntities.size() + "<" + springMongoQuery.getLimit()
-                     + ") , meaning some documents can't be found without prohibitive cost. "
-                     + "Use only indexed fields, or if you really want the few documents already "
-                     + "found lower limit, or if in Model design mode add indexes. "
-                     + "Retry in debug mode to get more information.");
-            }
-         }
-      }
-   
       return foundEntities;
-   }
-
-
-   public int getMaxScan() {
-      return maxScan;
    }
 
    public int getMaxStart() {
@@ -824,11 +741,6 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
       return maxLimit;
    }
    
-   /** for tests */
-   public void setMaxScan(int maxScan) {
-      this.maxScan = maxScan;
-   }
-
    /** for tests */
    public void setMaxStart(int maxStart) {
       this.maxStart = maxStart;
