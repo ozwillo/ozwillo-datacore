@@ -6,7 +6,6 @@ import java.net.URISyntaxException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -19,7 +18,6 @@ import javax.ws.rs.WebApplicationException;
 import org.apache.commons.codec.binary.Base64;
 import org.oasis.datacore.common.context.DCRequestContextProvider;
 import org.oasis.datacore.common.context.SimpleRequestContextProvider;
-import org.oasis.datacore.contribution.service.ContributionService;
 import org.oasis.datacore.core.entity.DatabaseSetupService;
 import org.oasis.datacore.core.entity.NativeModelService;
 import org.oasis.datacore.core.entity.model.DCEntity;
@@ -34,7 +32,6 @@ import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.core.meta.model.DCSecurity;
 import org.oasis.datacore.core.meta.pov.DCProject;
-import org.oasis.datacore.historization.service.impl.HistorizationServiceImpl;
 import org.oasis.datacore.model.resource.ModelResourceMappingService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
@@ -74,7 +71,7 @@ import com.google.common.collect.ImmutableMap;
  * @author mdutoo
  *
  */
-public abstract class DatacoreSampleBase extends InitableBase/*implements ApplicationListener<ContextRefreshedEvent> */{
+public abstract class DatacoreSampleBase extends InitableBase {
    
    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -113,20 +110,11 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
    @Autowired
    protected EventService eventService;
 
-   @Autowired
-   private HistorizationServiceImpl historizationService;
-   
-   @Autowired
-   private ContributionService contributionService;
-
    /** for forking */
    @Autowired
    private ModelResourceMappingService mrMappingService;
-   
-   
-   protected HashSet<DCModelBase> storageModels = new HashSet<DCModelBase>();
 
-   
+   private HashSet<DCModelBase> storageModels = new HashSet<>();
    
    ///////////////////////////////////////////////////////////////////////////:
    // Initable impl
@@ -140,11 +128,6 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
       return 1000;
    }
    
-   /*@Override
-   public void onApplicationEvent(ContextRefreshedEvent event) {
-      this.init();
-   }*/
-   //@PostConstruct // NOO deadlock, & same for ApplicationContextAware
    @Override
    protected void doInit() {
       // NB. logged in as admin by Initable above
@@ -160,12 +143,12 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
       } // NB. other exceptions are caught by InitService above
    }
 
-   protected void doInitInternal() {
-      List<DCModelBase> modelsToCreate = new ArrayList<DCModelBase>();
+   private void doInitInternal() {
+      List<DCModelBase> modelsToCreate = new ArrayList<>();
       buildModels(modelsToCreate);
       boolean allCollectionsAlreadyExist = createModels(modelsToCreate, false);
       
-      if (/*enableFillDataAtInit() && */(!allCollectionsAlreadyExist
+      if ((!allCollectionsAlreadyExist
             || alwaysFillData() || hasSomeModelsWithoutResource())) { // sample possibly incomplete
          if (!neverCleanData()) {
             cleanDataOfCreatedModels(modelsToCreate);
@@ -287,9 +270,7 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
          logout();
       }
    }
-   public void initModels(DCModelBase ... modelsToCreate) {
-      initModels(Arrays.asList(modelsToCreate));
-   }
+
    public void initModels(List<DCModelBase> modelsToCreate) {
       login();
       try {
@@ -310,64 +291,29 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
       }
    }
    
-   /**
-    * To be overriden if required
-    * @return 
-    * @return
-    */
-   /*protected boolean enableFillDataAtInit() {
-      return true;
-   }*/
-
    /** should only be storage */
    public HashSet<DCModelBase> getCreatedStorageModels() {
       return this.storageModels;
    }
    // for tests
-   public void cleanModels() {
-      cleanModels(new ArrayList<DCModelBase>(getCreatedStorageModels()));
-   }
-   public void cleanModels(DCModelBase ... models) {
-      cleanModels(Arrays.asList(models));
-   }
-   public void cleanModels(List<DCModelBase> models) {
-      List<DCModelBase> toBeRemovedModels = new ArrayList<DCModelBase>(models.size());
-      for (DCModelBase model : models) {
-         toBeRemovedModels.add(getCreatedModel(model));
-         databaseSetupService.cleanModel(model);
-         
-         modelAdminService.removeModel(model.getName()); // remove model
-      }
-      this.storageModels.removeAll(toBeRemovedModels); // clean sampleBase state
-   }
 
    public void cleanDataOfCreatedModels() {
       for (DCModelBase model : this.getCreatedStorageModels()) {
          this.databaseSetupService.cleanDataOfCreatedModel(model);
       }
    }
-   public void cleanDataOfCreatedModels(DCModelBase ... models) {
-      cleanDataOfCreatedModels(Arrays.asList(models));
-   }
-   public void cleanDataOfCreatedModels(List<DCModelBase> models) {
+
+   private void cleanDataOfCreatedModels(List<DCModelBase> models) {
       for (DCModelBase model : models) {
          this.databaseSetupService.cleanDataOfCreatedModel(model);
       }
    }
    
-   
-
-   public DCModelBase getCreatedModel(DCModelBase dcModel, List<DCModelBase> modelsToCreate) {
-      return getCreatedModel(dcModel.getName(), modelsToCreate, dcModel.getProjectName());
-   }
    /**
     * 
-    * @param modelType
-    * @param modelsToCreate
     * @param projectName if null uses the current one
-    * @return
     */
-   public DCModelBase getCreatedModel(String modelType, List<DCModelBase> modelsToCreate, String projectName) {
+   DCModelBase getCreatedModel(String modelType, List<DCModelBase> modelsToCreate, String projectName) {
       if (projectName == null) {
          projectName = modelAdminService.getProject().getName();
       }
@@ -392,7 +338,7 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
    }
    
    
-   protected boolean hasSomeModelsWithoutResource() throws RuntimeException {
+   private boolean hasSomeModelsWithoutResource() throws RuntimeException {
       for (DCModelBase model : this.storageModels) {
          String modelType = model.getName();
          // set context project beforehands :
@@ -409,13 +355,8 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
       return false;
    }
    
-   /*protected void createModels(DCModelBase ... modelOrMixins) {
-      createModels(false, modelOrMixins);
-   }*/
    /**
     * 
-    * @param deleteCollectionsFirst
-    * @param modelOrMixins
     * @return allCollectionsAlreadyExist
     */
    protected boolean createModels(List<DCModelBase> modelOrMixins, boolean deleteCollectionsFirst) {
@@ -428,11 +369,9 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
    }
    /**
     * 
-    * @param deleteCollectionsFirst
-    * @param modelOrMixin
     * @return collectionAlreadyExists
     */
-   protected boolean createModel(DCModelBase model, boolean deleteCollectionsFirst) {
+   private boolean createModel(DCModelBase model, boolean deleteCollectionsFirst) {
       if (model.isStorage()) {
          DCModelBase existingModel = modelAdminService.getModelBase(model.getName());
          storageModels.remove(getCreatedModel(model)); // even if !deleteCollectionsFirst !!!
@@ -496,9 +435,7 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
             } else {
                throw e;
             }
-         } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-         } catch (URISyntaxException e) {
+         } catch (MalformedURLException | URISyntaxException e) {
             throw new RuntimeException(e);
          }
       }
@@ -572,27 +509,6 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
             .put(DCRequestContextProvider.PROJECT, projectName).build());
    }
 
-   
-   
-   public void dataForkMetamodelIn(DCProject project) {
-      dataForkLocalModels(projectInitService.getMetamodelProject(), project);
-   }
-   public void dataForkLocalModels(DCProject forkedProject, DCProject targetProject) {
-      if (targetProject.getLocalVisibleProject(forkedProject.getName()) == null) {
-         targetProject.addLocalVisibleProject(forkedProject);
-      }
-      for (DCModelBase model : forkedProject.getLocalModels()) {
-         if (targetProject.getLocalModel(model.getName()) != null) {
-            continue; // assume already forked, LATER support changes
-         }
-         // only fork storage models :
-         // (because modelService/project.getStorageModel(model) uses getModel(parentName) to visit hierarchy)
-         if (model.isStorage()) {
-            this.fork(model, targetProject, false, false, true, false);
-         }
-      }
-   }
-   
    /**
     * NB. can't have several at once
     * @param model
@@ -666,8 +582,6 @@ public abstract class DatacoreSampleBase extends InitableBase/*implements Applic
     * helper method to build new DCResources FOR TESTING ; 
     * copies the given Resource's field that are among the given modelOrMixins
     * (or all if modelOrMixins is null or empty) to this Resource
-    * @param source
-    * @param modelOrMixins
     * @return
     */
    public DCResource copy(DCResource THIS, DCResource source, DCModelBase ... modelOrMixins) {

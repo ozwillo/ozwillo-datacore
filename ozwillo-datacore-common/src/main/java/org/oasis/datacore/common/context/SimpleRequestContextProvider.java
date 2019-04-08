@@ -8,10 +8,10 @@ import java.util.Map;
  * @author mdutoo
  *
  */
-public class SimpleRequestContextProvider<T> extends RequestContextProviderBase implements DCRequestContextProvider {
+public class SimpleRequestContextProvider<T> extends RequestContextProviderBase {
    
    /** null means outside context (not set) */
-   private static ThreadLocal<Map<String, Object>> requestContext = new ThreadLocal<Map<String, Object>>();
+   private static ThreadLocal<Map<String, Object>> requestContext = new ThreadLocal<>();
 
    private static boolean isUnitTest;
    private static boolean isInit;
@@ -32,28 +32,20 @@ public class SimpleRequestContextProvider<T> extends RequestContextProviderBase 
     * @return null if none (rather than exploding, to allow to check if there is any)
     */
    public static Map<String, Object> getSimpleRequestContext() {
-      Map<String, Object> existing = SimpleRequestContextProvider.requestContext.get();
-      // NB. don't explode if null to allow to check if there is any ex. in CxfRequestContextProvider
-      /*if (existing == null) {
-         if (shouldEnforce()) {
-            throw new RuntimeException("There is no context");  
-         }
-      }*/
-      return existing;
+      return SimpleRequestContextProvider.requestContext.get();
    }
    
    /**
     * 
-    * @param newContext null allowed (for reset, when going out)
     * @return existing
     */
    public static Map<String, Object> setSimpleRequestContext(Map<String, Object> requestContext) {
       Map<String, Object> existingContext = SimpleRequestContextProvider.requestContext.get();
       if (requestContext != null) {
-         requestContext = new HashMap<String, Object>(requestContext); // to avoid ImmutableMap
+         requestContext = new HashMap<>(requestContext); // to avoid ImmutableMap
       } else {
          // shortcut for empty
-         requestContext = (existingContext != null) ? existingContext : new HashMap<String, Object>(3);
+         requestContext = (existingContext != null) ? existingContext : new HashMap<>(3);
       }
       SimpleRequestContextProvider.requestContext.set(requestContext);
       return existingContext;
@@ -61,48 +53,23 @@ public class SimpleRequestContextProvider<T> extends RequestContextProviderBase 
    
    /**
     * Adds it to the existing context
-    * @param newContext null allowed (for reset, when going out)
     * @return existing
     * @throws RuntimeException if null context (unstack is rather set(null))
     */
-   public static Map<String, Object> stackSimpleRequestContext(Map<String, Object> requestContext) {
+   private static Map<String, Object> stackSimpleRequestContext(Map<String, Object> requestContext) {
       if (requestContext == null) {
          throw new RuntimeException("Can't stack null context (unstack is rather set(null))");
       }
       Map<String, Object> existingContext = SimpleRequestContextProvider.requestContext.get();
       HashMap<String, Object> newContext;
       if (existingContext != null) {
-         newContext = new HashMap<String, Object>(existingContext); // copy, to keep existingContext unchanged for later
+         newContext = new HashMap<>(existingContext); // copy, to keep existingContext unchanged for later
          newContext.putAll(requestContext); // override
       } else {
-         newContext = new HashMap<String, Object>(requestContext); // to avoid ImmutableMap
+         newContext = new HashMap<>(requestContext); // to avoid ImmutableMap
       }
       SimpleRequestContextProvider.requestContext.set(newContext);
       return existingContext;
-   }
-
-   /**
-    * @obsolete
-    * @return
-    */
-   public static boolean isUnitTest() {
-      if (inited) {
-         return isUnitTest;
-      }
-      init();
-      return isUnitTest;
-   }
-
-   /**
-    * @obsolete
-    * @return
-    */
-   public static boolean isInit() {
-      if (inited) {
-         return isInit;
-      }
-      init();
-      return isInit;
    }
 
    /**
@@ -121,7 +88,6 @@ public class SimpleRequestContextProvider<T> extends RequestContextProviderBase 
     * @obsolete
     */
    private static synchronized void init() {
-      //synchronized(SimpleRequestContextProvider.class) {
       for (StackTraceElement stackElt : Thread.currentThread().getStackTrace()) {
          if (stackElt.getClassName().contains("junit")) { // org.springframework.test.context.junit4.SpringJUnit4ClassRunner
             isUnitTest = true;
@@ -141,14 +107,9 @@ public class SimpleRequestContextProvider<T> extends RequestContextProviderBase 
     */
    public T execInContext(Map<String, Object> requestContext) {
       Map<String, Object> existingContext = SimpleRequestContextProvider.requestContext.get();
-      /*if (existingContext != null) {
-         throw new RuntimeException("There already is a context, clear it first");
-      }*/
       try {
          if (requestContext != null) {
             stackSimpleRequestContext(requestContext);
-         } else {
-            setSimpleRequestContext(requestContext);
          }
          
          try {

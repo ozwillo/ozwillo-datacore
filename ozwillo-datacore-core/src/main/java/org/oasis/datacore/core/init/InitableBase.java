@@ -75,10 +75,9 @@ public abstract class InitableBase implements Initable {
    }
 
    /** override it to disable login or change user name */
-   protected String getLoginAsUserName() {
+   private String getLoginAsUserName() {
       return LocalAuthenticationService.ADMIN_USER;
    }
-
 
    /** override it else none, null means must be set explicitly in
     * buildModels (or initModels), cleanDataOfCreatedModels, fillData */

@@ -14,10 +14,8 @@ import org.oasis.datacore.core.meta.model.DCModel;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.oasis.datacore.core.meta.model.DCResourceField;
 import org.oasis.datacore.core.meta.pov.DCProject;
-import org.oasis.datacore.model.resource.ModelResourceMappingService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.util.UriHelper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 
@@ -46,14 +44,9 @@ public class PublicPrivateOrganizationSample extends DatacoreSampleMethodologyBa
    ///public static final String ORGPRI3_PROJECT = "samples_orgpri3"; // transparent, only to give project scope
    public static final String AGRILOC_OFFER3 = "agriloco3:Offer_0";
    public static final String USER3 = "user3:User_0";
-   public static final String ORG3_SANDBOX = ORG3; /// "orgpri3:Organization_0";
    public static final String ORG3_SANDBOX_PROJECT = ORG3_PROJECT + ".sandbox";
    
 
-   /** to POST models */
-   @Autowired
-   private ModelResourceMappingService mrMappingService;
-   
    @Override
    public void doOSelectPerimeter() {
       
@@ -70,12 +63,6 @@ public class PublicPrivateOrganizationSample extends DatacoreSampleMethodologyBa
    @Override
    public void do2ExternalizeModelAsMixins() {
    }
-
-   /** disable, manual handling NOO else can't find odisp because meta not added to main project yet NEITHER */
-   /*@Override
-   public DCProject getProject() {
-      return null;
-   }*/
 
    // see doc in overriden
    @Override
