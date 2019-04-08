@@ -56,7 +56,7 @@
          <ref bean="datacore.playground.configurationResource" />
          
          <!-- swagger dynamic spec server, for apidoc : -->
-         <ref bean="swagger.resourceJSON" />
+         <ref bean="apiListingResource" />
       </jaxrs:serviceBeans>
       <jaxrs:providers>
          <!-- api : -->

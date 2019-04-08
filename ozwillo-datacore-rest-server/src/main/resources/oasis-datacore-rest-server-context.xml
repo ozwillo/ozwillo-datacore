@@ -172,7 +172,7 @@
          <ref bean="datacore.playground.configurationResource" />
          
          <!-- swagger dynamic spec server, for apidoc : -->
-         <ref bean="swagger.resourceJSON" /><!--  -->
+         <ref bean="apiListingResource" /><!--  -->
       </jaxrs:serviceBeans>
       <jaxrs:providers>
          <!-- api : -->
@@ -193,8 +193,7 @@
          http://stackoverflow.com/questions/17109405/jax-rs-exception-handling http://markmail.org/message/3bgzqq7ewgtxauh2 -->
          
          <!-- swagger dynamic spec server, for apidoc : -->
-         <ref bean="swagger.resourceWriter" />
-         <ref bean="swagger.apiWriter" />
+         <ref bean="swaggerSerializers" />
       </jaxrs:providers>
       <!-- Single value array POST handling interceptors (rather than whole bus) : -->
       <jaxrs:inInterceptors>

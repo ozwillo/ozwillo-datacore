@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xmlns:p="http://www.springframework.org/schema/p"
       xmlns:context="http://www.springframework.org/schema/context"
       xsi:schemaLocation=
       "http://www.springframework.org/schema/beans
@@ -20,18 +19,9 @@
    <context:property-placeholder location="classpath:oasis-datacore-rest-api.properties,classpath:oasis-datacore-rest-server.properties,classpath*:oasis-datacore-deploy*.properties"
       order="-1" ignore-unresolvable="true"/><!-- so defaults to importing PropertyPlaceholder/*Resolver -->
 
-
-   <!-- SWAGGER -->
-<!--   &lt;!&ndash; Swagger API listing resource &ndash;&gt;-->
-<!--   <bean id="swagger.resourceJSON" class="com.wordnik.swagger.jaxrs.listing.ApiListingResourceJSON" />-->
-<!--   &lt;!&ndash; Swagger writers &ndash;&gt;-->
-<!--   <bean id="swagger.resourceWriter" class="com.wordnik.swagger.jaxrs.listing.ResourceListingProvider" />-->
-<!--   <bean id="swagger.apiWriter" class="com.wordnik.swagger.jaxrs.listing.ApiDeclarationProvider" />-->
-   <!-- Application Beans -->
-
    <!-- Swagger Beans -->
    <bean id="apiListingResource" class="io.swagger.jaxrs.listing.ApiListingResource"/>
-   <bean id="swaggerSerializers" class="io.swagger.jaxrs.listing.SwaggerSerializers" scope="singleton"/>
+   <bean id="swaggerSerializers" class="io.swagger.jaxrs.listing.SwaggerSerializers" />
    
    <!-- SWAGGER - this scans the classes for resources -->
    <bean id="swaggerConfig" class="io.swagger.jaxrs.config.BeanConfig">
