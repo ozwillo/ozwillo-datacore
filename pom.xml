@@ -908,22 +908,37 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 			    * json4s-native (Apache 2.0 License), which depends on scala-library (again) and json4s-core,
 			    which also depends on json4s-ast paranamer (again) and scalap (BSD-like that is GPL3 compatible,
 			    see https://typesafe.com/legal/licenses ) -->
+<!--			<dependency>-->
+<!--				<groupId>com.wordnik</groupId>-->
+<!--				<artifactId>swagger-jaxrs_2.10</artifactId>-->
+<!--				<version>${swagger.version}</version>-->
+<!--				<exclusions>-->
+<!--					<exclusion>-->
+<!--						<groupId>javax.ws.rs</groupId>-->
+<!--						<artifactId>jsr311-api</artifactId>-->
+<!--					</exclusion>-->
+<!--				</exclusions>-->
+<!--			</dependency>-->
+			<!-- https://mvnrepository.com/artifact/io.swagger/swaggswagger-annotationser-jaxrs -->
 			<dependency>
-				<groupId>com.wordnik</groupId>
-				<artifactId>swagger-jaxrs_2.10</artifactId>
-				<version>${swagger.version}</version>
-				<exclusions>
-					<exclusion>
-						<groupId>javax.ws.rs</groupId>
-						<artifactId>jsr311-api</artifactId>
-					</exclusion>
-				</exclusions>
+				<groupId>io.swagger</groupId>
+				<artifactId>swagger-jaxrs</artifactId>
+				<version>1.5.22</version>
 			</dependency>
+
+			<!-- https://mvnrepository.com/artifact/io.swagger/swagger-annotations -->
 			<dependency>
-				<groupId>com.wordnik</groupId>
+				<groupId>io.swagger</groupId>
 				<artifactId>swagger-annotations</artifactId>
-				<version>${swagger.version}</version>
+				<version>1.5.22</version>
 			</dependency>
+
+
+			<!--			<dependency>-->
+<!--				<groupId>com.wordnik</groupId>-->
+<!--				<artifactId>swagger-annotations</artifactId>-->
+<!--				<version>${swagger.version}</version>-->
+<!--			</dependency>-->
 
 			<!-- for packaging as webapp (Apache 2.0 License) TODO dev webapp (in -web project) ? -->
 			<dependency>

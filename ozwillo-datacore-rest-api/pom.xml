@@ -43,7 +43,7 @@
       
       <!-- swagger jaxrs (for spec generation) : -->
       <dependency>
-         <groupId>com.wordnik</groupId>
+         <groupId>io.swagger</groupId>
          <artifactId>swagger-annotations</artifactId>
       </dependency>
       <!-- for ImmutableMap/List(.Builder) -->

@@ -135,8 +135,8 @@
       
       <!-- swagger, for apidoc spec generation -->
       <dependency>
-         <groupId>com.wordnik</groupId>
-         <artifactId>swagger-jaxrs_2.10</artifactId>
+         <groupId>io.swagger</groupId>
+         <artifactId>swagger-jaxrs</artifactId>
       </dependency>
          
       <!-- import, for tests : -->
