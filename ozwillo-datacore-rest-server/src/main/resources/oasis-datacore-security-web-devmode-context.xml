@@ -44,7 +44,6 @@
 		
 		<!-- Datacore protection : -->
 		<security:intercept-url pattern="/dc/**" access="hasAnyRole('SCOPE_DATACORE', 'IS_AUTHENTICATED_FULLY')" /><!-- DEVMODE ONLY protect API use (not required outside devmode) -->
-		<!-- security:intercept-url pattern="/**" access="SCOPE_DATACORE, IS_AUTHENTICATED_FULLY" / --><!-- OUTSIDE DEVMODE protect everything -->
 		<security:intercept-url pattern="/**" access="hasRole('IS_AUTHENTICATED_ANONYMOUSLY')" /><!-- DEVMODE ONLY for root redirect to playground UI -->
 		
 		<security:custom-filter position="BASIC_AUTH_FILTER" ref="basicAuthenticationFilter" /><!-- DEVMODE ONLY -->

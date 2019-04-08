@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:security="http://www.springframework.org/schema/security"
 	xsi:schemaLocation="
       http://www.springframework.org/schema/beans
@@ -17,36 +17,34 @@
 		<constructor-arg name="loginFormUrl" value="${datacorePlayground.loginUrl}" />
 	</bean>
 
-   <!-- Spring Security web filterChain : -->	
+   <!-- Spring Security web filterChain : -->
 	<!-- NB. could maybe be overriden (name="org.springframework.security.filterChains") but not its filters  -->
-	<security:http name="org.springframework.security.filterChains" entry-point-ref="oauthAuthenticationEntryPoint"
+	<security:http name="org.springframework.security.filterChains"
+				   entry-point-ref="oauthAuthenticationEntryPoint"
 				   access-decision-manager-ref="accessDecisionManager"
-				   authentication-manager-ref="authenticationManager" create-session="never">
-	<!-- security:http name="org.springframework.security.filterChains" entry-point-ref="oauthAuthenticationEntryPoint" access-decision-manager-ref="accessDecisionManager" authentication-manager-ref="authenticationManager" create-session="never"
-	      use-expressions="true"><!- else Unsupported configuration attributes: [permitAll], see http://stackoverflow.com/questions/3388779/websphere-unsupported-configuration-attributes-permitall-using-spring -->
-		
+				   authentication-manager-ref="authenticationManager"
+				   create-session="never"
+				   use-expressions="true">
+
 		<!-- Datacore status : -->
-		<security:intercept-url pattern="/dc/status*" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<security:intercept-url pattern="/dc/status*" access="hasRole('IS_AUTHENTICATED_ANONYMOUSLY')" />
 		
 	   <!-- Datacore playground OASIS Kernel OAuth2 auth : -->
-		<security:intercept-url pattern="/dc/playground/login*" access="IS_AUTHENTICATED_ANONYMOUSLY" />
-		<security:intercept-url pattern="/dc/playground/token*" access="IS_AUTHENTICATED_ANONYMOUSLY" />
-		<security:intercept-url pattern="/dc/playground/configuration*" access="IS_AUTHENTICATED_ANONYMOUSLY" /><!-- so configuration can be read by playground --> 
+		<security:intercept-url pattern="/dc/playground/login*" access="hasRole('IS_AUTHENTICATED_ANONYMOUSLY')" />
+		<security:intercept-url pattern="/dc/playground/token*" access="hasRole('IS_AUTHENTICATED_ANONYMOUSLY')" />
+		<security:intercept-url pattern="/dc/playground/configuration*" access="hasRole('IS_AUTHENTICATED_ANONYMOUSLY')" /><!-- so configuration can be read by playground -->
 		
 		
 		<!-- TODO LATER DEVMODE ONLY Datacore playground UI anonymous access :
 		else 401 : undefined http://localhost:8080/api-docs -->
 		<!-- NB. /dc/playground/configuration is called with auth (from ajax) even in devmode -->
-		<security:intercept-url pattern="/api-docs/**" access="IS_AUTHENTICATED_ANONYMOUSLY" /><!-- TODO LATER rather hack swagger to call with auth (from ajax), or add cookie check auth filter instead #47 -->
-		<security:intercept-url pattern="/dc-ui/**" access="IS_AUTHENTICATED_ANONYMOUSLY" /><!-- TOOO LATER rather add cookie check auth filter instead #47 -->
+		<security:intercept-url pattern="/api-docs/**" access="hasRole('IS_AUTHENTICATED_ANONYMOUSLY')" /><!-- TODO LATER rather hack swagger to call with auth (from ajax), or add cookie check auth filter instead #47 -->
+		<security:intercept-url pattern="/dc-ui/**" access="hasRole('IS_AUTHENTICATED_ANONYMOUSLY')" /><!-- TOOO LATER rather add cookie check auth filter instead #47 -->
 		
 		<!-- Datacore protection : -->
-		<!-- security:intercept-url pattern="/dc/**" access="SCOPE_DATACORE, IS_AUTHENTICATED_FULLY" / --><!-- DEVMODE ONLY protect API use (not required outside devmode) -->
-		<security:intercept-url pattern="/**" access="SCOPE_DATACORE, IS_AUTHENTICATED_FULLY" /><!-- OUTSIDE DEVMODE protect everything -->
-		<!-- security:intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY" / --><!-- DEVMODE ONLY for root redirect to playground UI -->
-		
-		<!-- security:custom-filter position="BASIC_AUTH_FILTER" ref="basicAuthenticationFilter" / --><!-- TOOO DEVMODE ONLY -->
-		<security:custom-filter ref="oauth2ProviderFilter" after="BASIC_AUTH_FILTER" /> <!--  before="PRE_AUTH_FILTER" -->
+		<security:intercept-url pattern="/**" access="hasAnyRole('SCOPE_DATACORE', 'IS_AUTHENTICATED_FULLY')" /><!-- OUTSIDE DEVMODE protect everything -->
+
+		<security:custom-filter ref="oauth2ProviderFilter" before="PRE_AUTH_FILTER" />
 		<security:access-denied-handler ref="oauthAccessDeniedHandler" />
 	</security:http>
 	
