@@ -27,22 +27,22 @@
 				   use-expressions="true">
 
 		<!-- Datacore status : -->
-		<security:intercept-url pattern="/dc/status*" access="hasRole('IS_AUTHENTICATED_ANONYMOUSLY')" />
-		
+		<security:intercept-url pattern="/dc/status*" access="isAnonymous()" />
+
 	   <!-- Datacore playground OASIS Kernel OAuth2 auth : -->
-		<security:intercept-url pattern="/dc/playground/login*" access="hasRole('IS_AUTHENTICATED_ANONYMOUSLY')" />
-		<security:intercept-url pattern="/dc/playground/token*" access="hasRole('IS_AUTHENTICATED_ANONYMOUSLY')" />
-		<security:intercept-url pattern="/dc/playground/configuration*" access="hasRole('IS_AUTHENTICATED_ANONYMOUSLY')" /><!-- so configuration can be read by playground -->
+		<security:intercept-url pattern="/dc/playground/login*" access="isAnonymous()" />
+		<security:intercept-url pattern="/dc/playground/token*" access="isAnonymous()" />
+		<security:intercept-url pattern="/dc/playground/configuration*" access="isAnonymous()" /><!-- so configuration can be read by playground -->
 		
 		
 		<!-- TODO LATER DEVMODE ONLY Datacore playground UI anonymous access :
 		else 401 : undefined http://localhost:8080/api-docs -->
 		<!-- NB. /dc/playground/configuration is called with auth (from ajax) even in devmode -->
-		<security:intercept-url pattern="/api-docs/**" access="hasRole('IS_AUTHENTICATED_ANONYMOUSLY')" /><!-- TODO LATER rather hack swagger to call with auth (from ajax), or add cookie check auth filter instead #47 -->
-		<security:intercept-url pattern="/dc-ui/**" access="hasRole('IS_AUTHENTICATED_ANONYMOUSLY')" /><!-- TOOO LATER rather add cookie check auth filter instead #47 -->
+		<security:intercept-url pattern="/api-docs/**" access="isAnonymous()" /><!-- TODO LATER rather hack swagger to call with auth (from ajax), or add cookie check auth filter instead #47 -->
+		<security:intercept-url pattern="/dc-ui/**" access="isAnonymous()" /><!-- TOOO LATER rather add cookie check auth filter instead #47 -->
 		
 		<!-- Datacore protection : -->
-		<security:intercept-url pattern="/**" access="hasAnyRole('SCOPE_DATACORE', 'IS_AUTHENTICATED_FULLY')" /><!-- OUTSIDE DEVMODE protect everything -->
+		<security:intercept-url pattern="/**" access="hasRole('SCOPE_DATACORE') and isFullyAuthenticated()" /><!-- OUTSIDE DEVMODE protect everything -->
 
 		<security:custom-filter ref="oauth2ProviderFilter" before="PRE_AUTH_FILTER" />
 		<security:access-denied-handler ref="oauthAccessDeniedHandler" />
