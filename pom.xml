@@ -158,7 +158,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		<validation-api.version>1.1.0.Final</validation-api.version>
 
 		<!-- REST -->
-		<jackson.version>2.2.3</jackson.version><!-- latest, also jsonld-java's 
+		<jackson.version>2.10.0.pr1</jackson.version><!-- latest, also jsonld-java's 
 			as of 201309 -->
 		<cxf.version>3.1.4</cxf.version><!-- before 3.0.4 for JAXRS 2.0, 3.1.4 for metrics -->
 		<metrics.version>3.1.2</metrics.version><!-- cxf 3.1.4's' (optional dep) version AND latest on 20151201 -->
