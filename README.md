@@ -116,6 +116,50 @@ See online API (ask URL to Ozwillo or run your own local Datacore) and its packa
 Documentation still can be improved. If something is missing, ask us about it. Especially missing is a more formal description of supported data resources : what field types are supported, how to model them, how they behave (especially Map, List and external vs embedded Resource fields types) ; and wider, documentation of the metamodel itself : field types, Mixin (light, reusable, multiple) types and inheritance, security and mediation configuration...
 
 
+Administration & development FAQ
+--------------------------------
+
+How to test Playground handling of historization, encoded uri, post/put, mass delete : create a Resource with a NON-ASCII character in its URI in a historized model such as sample.marka.company in the oasis.samples project (example below), post/ put it a few times, look at historized resources using the H button, click on the slash before the URI id to generate a query that returns several Resources and click on X button :
+
+````javascript
+   {
+      "@id": "http://data.ozwillo.com/dc/type/sample.marka.company/Companyé1",
+      "@type": [
+         "sample.marka.company"
+      ],
+      "name": "Companyé1",
+      "id": 1
+   }   
+````
+
+How to test Playground import : import the OpenElec sample, the results should be :
+
+````
+Handled 8 models or mixins in 2 loops   Posted 8 models or mixins (skipped 0, no error)...
+...
+Handled 17 rows (43 errors) in 0s   Posted 41 resources (skipped 0, no error)...
+````
+
+How to test OAuth2 in development against preprod : in deploy properties change kernel & accound URLs and secret (but don't commit it !!), restart, go the Playground page, login using a preprod user, check that the Playground still works (and in HTTP requests for Bearer in the Authorization header, after enabling web development tools)
+
+
+
+
+**MongoDB tips** :
+
+List models in a given collection (here the metamodel) :
+
+````js
+db["oasis.meta.dcmi:mixin_0"].find().forEach(function(e) { print(e['_p']['dcmo:name'], e['_b']); })
+````
+
+Display (all branch versions of) one model :
+
+````js
+db["oasis.meta.dcmi:mixin_0"].find({ "_p.dcmo:name":"org2:Organization_0" })
+````
+
+
 More
 ----
 See [wiki](https://github.com/ozwillo/ozwillo-datacore/wiki) for
