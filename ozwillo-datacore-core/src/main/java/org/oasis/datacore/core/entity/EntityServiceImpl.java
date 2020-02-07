@@ -1,26 +1,15 @@
 package org.oasis.datacore.core.entity;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.mongodb.MongoClient;
-import org.joda.time.DateTime;
 import org.oasis.datacore.core.entity.model.DCEntity;
 import org.oasis.datacore.core.entity.mongodb.MongoTemplateManager;
-import org.oasis.datacore.core.meta.SimpleUriService;
 import org.oasis.datacore.core.meta.model.DCModelBase;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
@@ -87,9 +76,7 @@ public class EntityServiceImpl implements EntityService {
       
       // if exists (with same uri, and if multiProjectStorage same project),
       // will fail (no need to enforce any version)
-      MongoOperations mongoOps = mgoManager.getDefaultMongoTemplate();
-      mongoOps.insert(dataEntity, collectionName);
-//      mgoManager.getMongoTemplate().insert(dataEntity, collectionName);
+      mgoManager.getMongoTemplate().insert(dataEntity, collectionName);
    }
    
    /* (non-Javadoc)
@@ -106,8 +93,6 @@ public class EntityServiceImpl implements EntityService {
       //entityService.findById(uri, type/collectionName); // TODO
       //dataEntity = dataRepo.findOne(uri); // NO can't be used because can't specify collection
       //dataEntity = mgo.findById(uri, DCEntity.class, collectionName);
-      MongoOperations mongoOps = mgoManager.getDefaultMongoTemplate();
-      mongoOps.find(new Query(criteria) , DCEntity.class, collectionName);
       List<DCEntity> entitiesFound = mgoManager.getMongoTemplate()
             .find(new Query(criteria) , DCEntity.class, collectionName);
       switch (entitiesFound.size()) {
@@ -242,62 +227,6 @@ public class EntityServiceImpl implements EntityService {
 	public void getRights(DCEntity dataEntity) {
 		return;
 	}
-   
-   @Override
-   public DCEntity getSampleData() throws URISyntaxException {
-      String sampleCollectionName = "sample";
-      
-      DCEntity dcEntity = mgoManager.getMongoTemplate()
-            .findOne(new Query(), DCEntity.class, sampleCollectionName);
-      
-      if (dcEntity != null) {
-         return dcEntity;
-      }
-      dcEntity = new DCEntity();
-      dcEntity.setUri("http://data.ozwillo.com/sample/1");
-      Map<String, Object> props = dcEntity.getProperties();
-      
-      props.put("string", "some text");
-      props.put("int", 2);
-      props.put("boolean", true);
-      props.put("date", new DateTime());
-      
-      props.put("geoloc", "SAMPLE_GEOLOC_WKT_FORMAT");
-
-      Map<String,String> i18nMap = new HashMap<String,String>();
-      i18nMap.put("en", "London");
-      i18nMap.put("fr", "Londres"); // NB. fallbacks might be defined on type data governance...
-      props.put("i18nAlt1Field", i18nMap);
-      props.put("i18nAlt2Field", "London"); // "real" value
-      props.put("i18nAlt2Field__i18n", i18nMap); // TODO __i ??
-      
-      props.put("dcRef", SimpleUriService.buildUri(null, "city", "London"));
-      props.put("scRef", SimpleUriService.buildUri(new URI("http://social.ozwillo.com"), "user", "john"));
-      
-      List<String> stringList = new ArrayList<String>();
-      stringList.add("a");
-      stringList.add("b");
-      Map<String,Object> map = new HashMap<String,Object>();
-      map.put("a", "a");
-      map.put("b", 2);
-      map.put("c", new ArrayList<String>(stringList));
-      map.put("dcRef", SimpleUriService.buildUri(null, "city", "London"));
-      map.put("scRef", SimpleUriService.buildUri(new URI("http://social.ozwillo.com"), "user", "john"));
-      List<Map<String,Object>> mapList = new ArrayList<Map<String,Object>>();
-      mapList.add(new HashMap<String,Object>(map));
-      props.put("stringList", stringList);
-      props.put("map", map);
-      props.put("mapList", mapList);
-      
-      // TODO partial copy
-      // OPT if used / modeled : URL...
-      // OPT if modeled : BigInteger/Decimal, Locale, Serializing (NOT mongo binary)
-      
-      mgoManager.getMongoTemplate().insert(dcEntity, sampleCollectionName);
-      
-      return getSampleData();
-   }
-
 
    @Override
    public void aliasOf(DCEntity target, String uri) throws NonTransientDataAccessException {

@@ -111,11 +111,6 @@ public interface EntityService {
     */
    @PreAuthorize("hasPermission(#dataEntity, 'getRights')")
    void getRights(DCEntity dataEntity);
-   
-   /** TODO (re)move ?
-    * @deprecated
-    */
-   DCEntity getSampleData() throws URISyntaxException;
 
    /**
     * Create an alias of 'target' with the provided URI
