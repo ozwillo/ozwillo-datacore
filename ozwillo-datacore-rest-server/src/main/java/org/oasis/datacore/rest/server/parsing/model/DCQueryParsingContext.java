@@ -228,13 +228,13 @@ public class DCQueryParsingContext extends DCResourceParsingContext {
       if (sortEnum != null) {
          switch (sortEnum) {
          case SORT_ASC:
-            this.addSort(new Sort(Direction.ASC, this.currentOrigEntityFieldPath));
+            this.addSort(Sort.by(this.currentOrigEntityFieldPath).ascending());
             // (so that if fulltext, sorts on name rather than on _p._ft.v which would be meaningless
             // ex. otherwise Saint-Lô is after ex. Saint-Martin-de-Londres)
             // (even then, Saint-Lô is after ex. Saint-Loup-sur-Aujon => also do an exact match query first)
             break;
          case SORT_DESC:
-            this.addSort(new Sort(Direction.DESC, this.currentOrigEntityFieldPath));
+            this.addSort(Sort.by(this.currentOrigEntityFieldPath).descending());
             // (so that if fulltext, sorts on name rather than on _p._ft.v which would be meaningless
             // ex. otherwise Saint-Lô is after Saint-Martin-de-Londres)
             // (even then, Saint-Lô is after ex. Saint-Loup-sur-Aujon => also do an exact match query first)

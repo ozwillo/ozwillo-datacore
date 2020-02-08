@@ -66,6 +66,14 @@
          <artifactId>spring-security-oauth2</artifactId>
       </dependency>
       
+      <dependency>
+         <groupId>jakarta.annotation</groupId>
+         <artifactId>jakarta.annotation-api</artifactId>
+      </dependency><!-- dependency>
+         <groupId>org.apache.geronimo.specs</groupId>
+         <artifactId>geronimo-annotation_1.2_spec</artifactId>
+      </dependency --><!-- in Java 11 required to bring javax.annotation for @PostConstruct -->
+     
  
 		<!-- mongodb java driver -->
 		<!--<dependency>-->

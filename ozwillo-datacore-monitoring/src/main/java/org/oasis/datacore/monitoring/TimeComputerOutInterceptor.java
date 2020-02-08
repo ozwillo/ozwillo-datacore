@@ -55,7 +55,7 @@ public class TimeComputerOutInterceptor extends AbstractPhaseInterceptor<Message
          exchange.put("dc.res.headers", resHeader.toString());//TODO extract useful data to string
 
          //Determine which function has been used to provide the response
-         String operationName = serverOutResponseMessage.getContextualProperty("org.apache.cxf.resource.operation.name").toString();
+         String operationName = "" + serverOutResponseMessage.getContextualProperty("org.apache.cxf.resource.operation.name"); // NOT toString() which NPE when 404
          exchange.put("dc.operation", operationName);
 
          //Information about user

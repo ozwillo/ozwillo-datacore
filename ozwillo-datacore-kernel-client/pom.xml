@@ -85,6 +85,10 @@
       <artifactId>cxf-rt-transports-http-jetty</artifactId>
     </dependency>
     <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId><!-- required in tests by jetty -->
+    </dependency>
+    <dependency>
       <groupId>org.apache.cxf</groupId>
       <artifactId>cxf-rt-transports-local</artifactId>
     </dependency>
@@ -115,18 +119,6 @@
          <type>pom</type --><!-- NO worked in 2.6.0 but not in 2.7.4 anymore because
          no more dependencies to ehcache-core etc. (but in 2.9 works again !) ;
          would probably work without type=pom but brings in too much stuff (hibernate, terracotta...) -->
-      </dependency>
-
-      <!-- for IOUtils TODO used ?? -->
-      <dependency>
-         <groupId>commons-io</groupId>
-         <artifactId>commons-io</artifactId>
-      </dependency>
-      
-      <!-- for sending events to Riemann -->
-      <dependency>
-         <groupId>com.aphyr</groupId>
-         <artifactId>riemann-java-client</artifactId>
       </dependency>
 
    </dependencies>

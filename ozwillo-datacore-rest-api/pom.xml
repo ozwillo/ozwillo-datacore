@@ -25,13 +25,17 @@
       </dependency><!-- TODO or only annotations ? -->
       <!-- JAXRS API -->
       <dependency>
+         <groupId>jakarta.ws.rs</groupId>
+         <artifactId>jakarta.ws.rs-api</artifactId>
+      </dependency>
+      <!-- dependency>
        <groupId>org.apache.geronimo.specs</groupId>
        <artifactId>geronimo-jaxrs_2.0_spec</artifactId>
-      </dependency>
+      </dependency -->
       <!-- Servlet 3, from CXF's Jetty and compatible with Tomcat 7 ; otherwise javax.servlet javax.servlet-api 3.1.0 ?? -->
       <dependency>
-       <groupId>org.apache.geronimo.specs</groupId>
-       <artifactId>geronimo-servlet_3.0_spec</artifactId>
+       <groupId>javax.servlet</groupId>
+       <artifactId>javax.servlet-api</artifactId>
        <scope>provided</scope>
       </dependency>
       <!-- dates in jackson REST using Joda's DateTime :

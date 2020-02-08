@@ -1,6 +1,5 @@
 package org.oasis.datacore.monitoring;
 
-import java.io.IOException;
 import java.util.Map;
 
 import org.apache.cxf.message.Exchange;
@@ -11,7 +10,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
-import com.aphyr.riemann.client.RiemannClient;
+import io.riemann.riemann.client.RiemannClient;
 
 /*
  * List of available information available in cxf exchange:
@@ -67,11 +66,7 @@ abstract class RiemannExtractorBase implements InitializingBean {
     * Need destroy-method="disconnect" in bean definition.
     */
    public void disconnect() {
-      try {
-         client.disconnect();
-      } catch (IOException e) {
-
-      }
+      client.close();
    }
 
    /*

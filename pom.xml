@@ -129,7 +129,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		<!-- testing : -->
 		<junit.version>4.12</junit.version><!-- cxf3' ; 4.11 solves method execution order
 			bug -->
-		<jetty.version>9.4.15.v20190215</jetty.version><!-- cxf 3.1.4's (3.0.4's 8.1.12.v20130726) -->
+		<jetty.version>9.4.24.v20191120</jetty.version><!-- cxf's -->
 
 
 		<!-- logging -->
@@ -138,70 +138,61 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 
 		<!-- spring IoC -->
 		<!-- spring.version>3.2.4.RELEASE</spring.version -->
-		<spring.version>5.1.3.RELEASE</spring.version><!-- brought by spring data's ; older : 3.1.4.RELEASE -->
-		<cglib.version>3.2.10</cglib.version>
+		<spring.version>5.2.3.RELEASE</spring.version><!-- brought by spring data's -->
+		<cglib.version>3.2.12</cglib.version>
 		<hibernate-validator.version>6.0.13.Final</hibernate-validator.version>
 
 		<!-- spring data on mongodb -->
-		<spring-data-mongodb.version>2.1.3.RELEASE</spring-data-mongodb.version><!--
-			WARNING depends on spring 3.2.10.RELEASE --><!-- older : 1.2.3.RELEASE with spring 3.1.4.RELEASE -->
-		<mongodb.version>3.9.1</mongodb.version><!-- supports MongoDB 2.6 ; older : 2.11.2 -->
+		<spring-data-mongodb.version>2.2.4.RELEASE</spring-data-mongodb.version>
+		<mongodb.version>3.12.1</mongodb.version><!-- supports MongoDB 2.6 ; older : 2.11.2 -->
 		<joda-time.version>2.10.1</joda-time.version><!-- from Jackson -->
 
 		<!-- spring data on neo4j (TODO for Social Graph mock ?!?) -->
 		<spring-data-neo4j.version>2.2.2.RELEASE</spring-data-neo4j.version>
-		<neo4j.version>1.8.1</neo4j.version><!-- depended on by spring ; NB. 1.9.4
+		<!-- neo4j.version>1.8.1</neo4j.version --><!-- depended on by spring ; NB. 1.9.4
 			not compatible, 2.0 not out yet -->
 
 		<!-- TODO ? -->
-		<logback.version>1.0.13</logback.version>
+		<logback.version>1.2.3</logback.version>
 		<validation-api.version>1.1.0.Final</validation-api.version>
 
 		<!-- REST -->
-		<jackson.version>2.9.8</jackson.version><!-- latest, also jsonld-java's
+		<jackson.version>2.10.2</jackson.version><!-- latest ; swagger's : 2.9.8, jsonld-java's : 2.3.3
 			as of 201309 -->
-		<cxf.version>3.3.1</cxf.version><!-- before 3.0.4 for JAXRS 2.0, 3.1.4 for metrics -->
+		<cxf.version>3.3.5</cxf.version><!-- NB. 3.3.5 would rather bring :
+        spring & security 5.1.12 & 5.1.7, metrics 3.2.6 https://github.com/apache/cxf/blob/cxf-3.3.5/parent/pom.xml
+        OLD : before 3.0.4 for JAXRS 2.0, 3.1.4 for metrics -->
 		<metrics.version>3.1.2</metrics.version><!-- cxf 3.1.4's' (optional dep) version AND latest on 20151201 -->
-		<ehcache.version>2.7.4</ehcache.version><!-- for client-side cache ; spring's version -->
+		<ehcache.version>2.10.6</ehcache.version><!-- for client-side cache ; cxf's (& spring's) -->
 
-      <guava.version>27.1-jre</guava.version><!-- for ImmutableMap/List(.Builder) (prefer it to Apache Commons Collections),
-      also used by MITRE OpenIdConnect & Swagger (in 13.0.1, 11.0.2) -->
-		<commons-collections.version>3.2.2</commons-collections.version><!-- for
-			ListUtils NOO never used, rather use guava -->
+        <guava.version>27.1-jre</guava.version><!-- for ImmutableMap/List(.Builder) (prefer it to Apache Commons Collections),
+        also used by MITRE OpenIdConnect & Swagger (in 13.0.1, 11.0.2) -->
 		<commons-lang.version>2.6</commons-lang.version><!-- for ExceptionUtils -->
-		<commons-io.version>2.4</commons-io.version><!-- for IOUtils TODO used ?? -->
+		<commons-io.version>2.6</commons-io.version><!-- for IOUtils TODO used ?? -->
 
-		<swagger.version>1.3.12</swagger.version><!-- for apidoc -->
+		<swagger.version>1.5.22</swagger.version><!-- latest 1.5 i.e. swagger spec 2.0 (but NOT swagger 2.0 / OpenAPI 3.0) -->
 
-      <!-- monitoring -->
-      <!-- UDP is bugged in 0.2.10, rather use TCP for now -->
-      <riemann-client.version>0.2.10</riemann-client.version>
+        <!-- monitoring -->
+        <!-- UDP is bugged in 0.2.10, rather use TCP for now -->
+        <riemann-client.version>0.5.1</riemann-client.version>
 
-      <!-- spring security & al : BEWARE,
-      * security core 3.1.4 depends on aop, beans, expression 3.0.7 (others are 3.1.4)
-      * security config 3.1.4 depends on aop, beans 3.0.7 (others are 3.1.4)
-      * security oauth2 1.0.5 depends on beans, webmvc 3.1.2 security web 3.1.3 (others are 3.1.4)
-      * security web 3.1.4 on core, context, beans, expression, aop, web, jdbc 3.0.7 (though not used)
-      so version of aop, beans, expression, webmvc, security web must be forced to 3.1.4
-      in dependencyManagement even if not used !!
-      see http://www.baeldung.com/spring-security-with-maven -->
-		<spring.security.version>5.1.3.RELEASE</spring.security.version>
-      <spring.security.oauth2.version>2.3.5.RELEASE</spring.security.oauth2.version>
-		<mitre-openid-client.version>1.1.0</mitre-openid-client.version><!-- for client & test -->
-		<google.oauth.client.java6.version>1.17.0-rc</google.oauth.client.java6.version><!-- for tests -->
+        <!-- spring security & al -->
+		<spring.security.version>5.2.2.RELEASE</spring.security.version>
+        <spring.security.oauth2.version>2.4.0.RELEASE</spring.security.oauth2.version>
+		<mitre-openid-client.version>1.3.3</mitre-openid-client.version><!-- for client & test -->
 
-      <!-- JSON-LD (for RDF facade) -->
-      <jsonld-java.version>0.4</jsonld-java.version>
-      <httpclient.version>4.2.5</httpclient.version><!-- same as openid-connect-common 1.1.0's -->
-      <!-- jackson.version>2.3.3</jackson.version><!- would conflict ->
-      <sesame.version>2.7.11</sesame.version>
-      <slf4j.version>1.7.7</slf4j.version -><!- would conflict -->
+        <!-- JSON-LD (for RDF facade) -->
+        <jsonld-java.version>0.4.1</jsonld-java.version><!-- no later than 0.4.1 else no -jena so no turtle format support -->
+        <httpclient.version>4.5.3</httpclient.version><!-- rather same as openid-connect-common 1.1.0's -->
+        <!-- jackson.version>2.3.3</jackson.version><!- would conflict ->
+        <sesame.version>2.7.11</sesame.version>
+        <slf4j.version>1.7.7</slf4j.version -><!- would conflict -->
 
-      <!-- import, for tests : -->
-      <opencsv.version>2.3</opencsv.version>
+        <!-- import, for tests : -->
+        <opencsv.version>2.3</opencsv.version>
 
 		<!-- mockito, for better unit tests -->
-		<mockito.version>2.23.4</mockito.version>
+		<mockito.version>2.28.1</mockito.version>
 	</properties>
 
 	<!-- ======= -->
@@ -730,14 +721,24 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 			</dependency>
 			<!-- NB. other Jackson deps : ex. for mere (JSONLD) parsing only core
 				& databind -->
-			<!-- Servlet 3 (Apache 2.0 License), from CXF's Jetty and compatible with Tomcat 7 ; otherwise
-				javax.servlet javax.servlet-api 3.1.0 ?? -->
+			<!-- Servlet API 3 (Apache 2.0 License), provided by Tomcat 7.0.96's (but Tomcat 9 would be 4.0)
+                 CXF 3.3.1 supports <= 4.0, in tests jetty uses 3.1 (excluded) ; 
+                 otherwise javax.servlet javax.servlet-api 3.1.0 ?? -->
 			<dependency>
-				<groupId>org.apache.geronimo.specs</groupId>
-				<artifactId>geronimo-servlet_3.0_spec</artifactId>
-				<version>1.0</version>
-				<scope>provided</scope>
+                <groupId>javax.servlet</groupId>
+                <artifactId>javax.servlet-api</artifactId>
+                <version>3.1.0</version>
+				<!-- groupId>org.jboss.spec.javax.servlet</groupId>
+				<artifactId>jboss-servlet-api_3.1_spec</artifactId>
+				<version>1.0.2.Final</version -->
+				<scope>provided</scope><!-- provided so doesn't affect license NB. provided makes it also available in tests -->
 			</dependency>
+            <!-- Java 11 : adding removed default deps using jakarta libs -->
+            <dependency>
+               <groupId>jakarta.ws.rs</groupId>
+               <artifactId>jakarta.ws.rs-api</artifactId>
+               <version>2.1.5</version>
+            </dependency>
 			<!-- CXF 3 (Apache 2.0 License) :
 			- core (since 3 includes api) brings deps in Apache 2.0 License : xmlschema-core, woodstox' core which brings stax2-api
 			- frontend-jaxrs also brings javax.annotation 1.2 & jaxrs 2.0.1 (both GPL2 with classpath Exception or CDDL 1.0 licensed,
@@ -748,36 +749,71 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 				<artifactId>cxf-rt-core</artifactId><!-- auto brought by -rt-*
 				but explicited there to centralize exclusions -->
 				<version>${cxf.version}</version>
+				<exclusions><!-- Java 11 : adding removed default deps using jakarta libs -->
+				  <exclusion>
+				    <groupId>javax.annotation</groupId>
+				    <artifactId>javax.annotation-api</artifactId>
+				  </exclusion>
+				  <exclusion>
+				    <groupId>javax.activation</groupId>
+				    <artifactId>javax.activation-api</artifactId>
+				  </exclusion>
+				</exclusions>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.cxf</groupId>
 				<artifactId>cxf-rt-frontend-jaxrs</artifactId>
 				<version>${cxf.version}</version>
 				<exclusions>
-				  <exclusion>
+				  <!-- exclusion>
 				    <groupId>javax.ws.rs</groupId>
 				    <artifactId>javax.ws.rs-api</artifactId>
-				  </exclusion>
+				  </exclusion Java 11 : adding removed default deps using jakarta libs -->
 				  <exclusion>
 				    <groupId>javax.annotation</groupId>
 				    <artifactId>javax.annotation-api</artifactId>
 				  </exclusion>
+				  <exclusion><!-- Java 11 : adding removed default deps using jakarta libs -->
+				    <groupId>javax.activation</groupId>
+				    <artifactId>javax.activation-api</artifactId>
+				  </exclusion>
 				</exclusions>
 			</dependency>
-			<dependency>
+			<!-- dependency>
 				<groupId>org.apache.geronimo.specs</groupId>
 				<artifactId>geronimo-jaxrs_2.0_spec</artifactId>
 				<version>1.0-alpha-1</version>
-			</dependency><!-- replaces javax.ws.rs api, brought by frontend-jaxrs -->
-			<dependency>
+			</dependency Java 11 : adding removed default deps using jakarta libs --><!-- replaces javax.ws.rs api, brought by frontend-jaxrs JAKARTA -->
+    <!-- Java 11 : adding removed default deps using jakarta libs -->
+    <dependency>
+      <groupId>jakarta.activation</groupId>
+      <artifactId>jakarta.activation-api</artifactId>
+      <version>1.2.1</version>
+    </dependency>
+      <dependency>
+         <groupId>jakarta.annotation</groupId>
+         <artifactId>jakarta.annotation-api</artifactId>
+         <version>1.3.3</version>
+      </dependency>
+			<!-- dependency>
 				<groupId>org.apache.geronimo.specs</groupId>
 				<artifactId>geronimo-annotation_1.2_spec</artifactId>
 				<version>1.0-alpha-1</version>
-			</dependency><!-- replaces javax.annotation, brought by frontend-jaxrs -->
+			</dependency Java 11 : adding removed default deps using jakarta libs --><!-- replaces javax.annotation, brought by frontend-jaxrs -->
 			<dependency>
 				<groupId>org.apache.cxf</groupId>
 				<artifactId>cxf-rt-rs-client</artifactId><!-- was before in frontend-jaxrs -->
 				<version>${cxf.version}</version>
+				<exclusions><!-- Java 11 : adding removed default deps using jakarta libs -->
+				  <exclusion>
+				    <groupId>javax.annotation</groupId>
+				    <artifactId>javax.annotation-api</artifactId>
+				  </exclusion>
+				  <exclusion>
+				    <groupId>javax.activation</groupId>
+				    <artifactId>javax.activation-api</artifactId>
+				  </exclusion>
+				</exclusions>
 			</dependency>
 			<!-- would be for SOAP :
 			brings cxf-wsdl which brings wsdl4j (CPL 1.0, therefore replaced by servicemix'),
@@ -830,6 +866,16 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 				<groupId>org.apache.cxf</groupId>
 				<artifactId>cxf-rt-transports-http</artifactId>
 				<version>${cxf.version}</version>
+				<exclusions><!-- Java 11 : adding removed default deps using jakarta libs -->
+				  <exclusion>
+				    <groupId>javax.annotation</groupId>
+				    <artifactId>javax.annotation-api</artifactId>
+				  </exclusion>
+				  <exclusion>
+				    <groupId>javax.activation</groupId>
+				    <artifactId>javax.activation-api</artifactId>
+				  </exclusion>
+				</exclusions>
 			</dependency>
 			<!-- for testing on embedded jetty -->
 			<dependency>
@@ -837,6 +883,20 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 				<artifactId>cxf-rt-transports-http-jetty</artifactId>
 				<version>${cxf.version}</version>
 				<scope>test</scope>
+				<exclusions><!-- Java 11 : adding removed default deps using jakarta libs -->
+				  <exclusion>
+				    <groupId>javax.annotation</groupId>
+				    <artifactId>javax.annotation-api</artifactId>
+				  </exclusion>
+				  <exclusion>
+				    <groupId>javax.activation</groupId>
+				    <artifactId>javax.activation-api</artifactId>
+				  </exclusion>
+                  <exclusion>
+                     <groupId>javax.servlet</groupId>
+                     <artifactId>javax.servlet-api</artifactId>
+                  </exclusion>
+				</exclusions>
 			</dependency>
 			<!-- for tests (OR LATER local consumption between micro services ?) -->
 			<dependency>
@@ -844,6 +904,16 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 				<artifactId>cxf-rt-transports-local</artifactId>
 				<version>${cxf.version}</version>
 				<!-- scope>test</scope --><!-- NB. would work with it -->
+				<exclusions><!-- Java 11 : adding removed default deps using jakarta libs -->
+				  <exclusion>
+				    <groupId>javax.annotation</groupId>
+				    <artifactId>javax.annotation-api</artifactId>
+				  </exclusion>
+				  <exclusion>
+				    <groupId>javax.activation</groupId>
+				    <artifactId>javax.activation-api</artifactId>
+				  </exclusion>
+				</exclusions>
 			</dependency>
 			<!-- for async BUT ONLY ON JETTY -->
 			<!-- dependency>
@@ -923,14 +993,30 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 			<dependency>
 				<groupId>io.swagger</groupId>
 				<artifactId>swagger-jaxrs</artifactId>
-				<version>1.5.22</version>
+				<version>${swagger.version}</version>
+				<exclusions>
+					<exclusion>
+						<groupId>javax.ws.rs</groupId>
+						<artifactId>jsr311-api</artifactId>
+					</exclusion>
+				</exclusions>
 			</dependency>
+           <dependency>
+              <groupId>io.swagger</groupId>
+              <artifactId>swagger-core</artifactId>
+              <exclusions>
+                 <exclusion>
+                    <groupId>javax.validation</groupId>
+                    <artifactId>validation-api</artifactId><!-- else 1.1.0 -->
+                 </exclusion>
+              </exclusions>
+           </dependency>
 
 			<!-- https://mvnrepository.com/artifact/io.swagger/swagger-annotations -->
 			<dependency>
 				<groupId>io.swagger</groupId>
 				<artifactId>swagger-annotations</artifactId>
-				<version>1.5.22</version>
+				<version>${swagger.version}</version>
 			</dependency>
 
 
@@ -951,7 +1037,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 			protbuf-java ((new) BSD license), netty (Apache 2.0 License),
 			CodaHale com.yammer.metrics (Apache 2.0 License) which brings slf4j-api (MIT License) -->
 			<dependency>
-				<groupId>com.aphyr</groupId>
+				<groupId>io.riemann</groupId>
 				<artifactId>riemann-java-client</artifactId>
 				<version>${riemann-client.version}</version>
             <exclusions>
@@ -968,7 +1054,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
          <!-- JSON-LD facade ((new) BSD License) and deps (all Apache 2.0 License) : -->
          <dependency>
             <groupId>com.github.jsonld-java</groupId>
-            <artifactId>jsonld-java</artifactId><!-- also brought by openid -->
+            <artifactId>jsonld-java</artifactId>
             <version>${jsonld-java.version}</version>
          </dependency>
          <!-- dependency>
@@ -987,11 +1073,23 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId><!-- also brought by openid -->
             <version>${httpclient.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
          </dependency>
          <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient-cache</artifactId>
             <version>${httpclient.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
          </dependency>
 
          <!-- import, for samples & tests (Apache 2.0 License) : -->

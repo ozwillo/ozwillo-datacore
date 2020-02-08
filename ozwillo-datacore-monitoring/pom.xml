@@ -130,7 +130,7 @@
       
       <!-- for sending events to Riemann -->
       <dependency>
-         <groupId>com.aphyr</groupId>
+         <groupId>io.riemann</groupId>
          <artifactId>riemann-java-client</artifactId>
       </dependency>
 

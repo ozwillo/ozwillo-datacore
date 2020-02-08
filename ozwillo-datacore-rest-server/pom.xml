@@ -103,14 +103,14 @@
 		
       <!-- for sending events to Riemann -->
       <dependency>
-         <groupId>com.aphyr</groupId>
+         <groupId>io.riemann</groupId>
          <artifactId>riemann-java-client</artifactId>
       </dependency>
       
       <!-- JSON-LD facade -->
       <dependency>
          <groupId>com.github.jsonld-java</groupId>
-         <artifactId>jsonld-java</artifactId><!-- also brought by openid -->
+         <artifactId>jsonld-java</artifactId>
       </dependency>
       <!-- dependency>
          <groupId>com.fasterxml.jackson.core</groupId>
@@ -138,12 +138,17 @@
          <groupId>io.swagger</groupId>
          <artifactId>swagger-jaxrs</artifactId>
       </dependency>
+      <dependency>
+         <groupId>javax.servlet</groupId>
+         <artifactId>javax.servlet-api</artifactId><!-- required by ApiListingResource adaptation and in tests by jetty -->
+      </dependency>
          
       <!-- import, for tests : -->
       <dependency>
         <groupId>org.apache.cxf</groupId>
         <artifactId>cxf-rt-transports-http-jetty</artifactId><!-- test only,
         not brought by -rest-cxf (because of that ?) -->
+        <!-- scope>test</scope -->
       </dependency>
       <dependency>
          <groupId>net.sf.opencsv</groupId>

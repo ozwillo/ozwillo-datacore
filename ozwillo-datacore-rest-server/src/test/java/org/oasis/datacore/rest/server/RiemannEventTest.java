@@ -8,7 +8,7 @@ import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.aphyr.riemann.client.RiemannClient;
+import io.riemann.riemann.client.RiemannClient;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:oasis-datacore-rest-server-test-context.xml" })
@@ -52,7 +52,7 @@ public class RiemannEventTest {
 			  send();
 
 			//c.query("tagged \"cold\" and metric > 0"); // => List<Event>;
-			c.disconnect();
+			c.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
