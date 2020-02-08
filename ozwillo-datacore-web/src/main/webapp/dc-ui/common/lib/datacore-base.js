@@ -4,8 +4,12 @@
 
 // see http://stackoverflow.com/questions/13353352/use-this-javascript-to-load-cookie-into-variable
 function readCookie(key) {
-   var result;
-   return (result = new RegExp('(?:^|; )' + encodeURIComponent(key) + '=([^;]*)').exec(document.cookie)) ? (result[1]) : null;
+   var result = (result = new RegExp('(?:^|; )' + encodeURIComponent(key) + '=([^;]*)').exec(document.cookie)) ? (result[1]) : null;
+   if (result && result.length  != 0 && result[0] == '"' && result[result.length - 1] == '"') {
+      // it is quoted so unquote it first
+      result = result.substring(1, result.length - 1);
+   }
+   return result;
 }
 function deleteCookie(key) {
    document.cookie = encodeURIComponent(key) + '=; Path=/; expires=' + new Date(-1).toGMTString();
@@ -110,7 +114,6 @@ function initUserInfoUi() {
    });
 }
 
-
 ////////////////////////////////////////////////
 // PLAYGROUND UI (without Swagger UI)
 
@@ -120,100 +123,10 @@ function initPlayground() {
       window.dcConf = JSON.parse(result);
       console.log("conf", dcConf);
 
-      initDcApi();
       completePlaygroundInit();
 
       initUserInfoUi();
    });
-}
-
-function initDcApi() {
-   var apiDocsUrl = window.dcConf.apiDocsUrl; // Ozwillo ; OLD "/api-docs", STATIC /dc-ui/api-docs
-   var options = {
-         url: apiDocsUrl,
-         supportedSubmitMethods: ['get', 'post', 'put', 'delete'] // Ozwillo TODO PATCH ?!?
-       };
-   if (options.url.indexOf("http") !== 0) {
-      // else CORS request to ex. http://localhost/ and "uncaught exception: Please specify the protocol for /api-docs"
-      options.url = buildUrl(window.location.href.toString(), options.url);
-   }
-   ///this.headerView.update(options.url);
-   var dcApi = new SwaggerApi(options.url, this.options);
-   dcApi.build();
-   window.dcApi = dcApi;
-}
-
-function buildUrl(base, url) {
-  var parts;
-  console.log("base is " + base);
-  parts = base.split("/");
-  base = parts[0] + "//" + parts[2];
-  if (url.indexOf("/") === 0) {
-    return base + url;
-  } else {
-    return base + "/" + url;
-  }
-}
-
-
-////////////////////////////////////////////////
-//PLAYGROUND UI - WITH SWAGGER UI
-
-function initPlaygroundWithSwaggerUi() {
-   // getting dc playground conf ex. localauthdevmode :
-   initDcConf(function(result){
-      window.dcConf = JSON.parse(result);
-      console.log("conf", dcConf);
-
-      initDcApiWithSwaggerUi(function() {
-         // adding logo :
-         $('#resources').prepend('<div style="padding: 10px 0 20px 40px;"/><div id="header"><a id="logo" href="http://swagger.wordnik.com" class="swagger-ui-wrap">swagger</a></div>');
-         
-         completePlaygroundInit();
-      });
-
-      initUserInfoUi();
-   });
-}
-
-function initDcApiWithSwaggerUi(success) {
-   var apiDocsUrl = window.dcConf.apiDocsUrl; // Ozwillo ; OLD "/api-docs", STATIC /dc-ui/api-docs
-   /*if (url.indexOf("http") !== 0) {
-      // else CORS request to ex. http://localhost/ and "uncaught exception: Please specify the protocol for /api-docs"
-      url = buildUrl(window.location.href.toString(), url);
-   }*/
-   window.swaggerUi = new SwaggerUi({
-      url: apiDocsUrl,
-      dom_id: "swagger-ui-container",
-      supportedSubmitMethods: ['get', 'post', 'put', 'delete'], // Ozwillo TODO PATCH ?!?
-      onComplete: function(swaggerApi, swaggerUi){
-         if(console) {
-            console.log("Loaded SwaggerUI")
-         }
-         $("input[name='Authorization']").val(getAuthHeader());//FOR use the token in swager
-         $("input[name='X-Datacore-Project']").val(getProject());
-         window.dcApi = swaggerUi.api; // Ozwillo
-         if (success) {
-            success();
-         }
-      },
-      onFailure: function(data) {
-         if(console) {
-            console.log("Unable to Load SwaggerUI");
-            console.log(data);
-         }
-      },
-      docExpansion: "list" // Ozwillo rather than none, full see https://github.com/wordnik/swagger-ui
-   });
-   /*$('#input_apiKey').change(function() {
-      var key = $('#input_apiKey')[0].value;
-      console.log("key: " + key);
-      if(key && key.trim() != "") {
-         console.log("added key " + key);
-         window.authorizations.add("key", new ApiKeyAuthorization("api_key", key, "query"));
-      }
-   })*/
-   window.swaggerUi.load();
 }
 
 
@@ -227,7 +140,14 @@ function initDcConf(success) {
       headers: { Authorization:getAuthHeader() },
       success: success,
       error: function(jqXHR, textStatus, errorThrown) { // such as when 401 Not Authorized
-          window.location.assign('/'); // which will require auth and redirect to login page
+          if (jqXHR.status == 500) {
+              var msg = "Error getting /dc/playground/configuration (maybe Spring Security configuration problem ?) : " + jqXHR.responseText; // such as when Spring Security configuration error ex. IllegalArgumentException: There is no PasswordEncoder mapped for the id &quot;null&quot;
+              console.log(msg);
+              var unusedBlockingAnswer = confirm(msg); // (confirm() is blocking while alert() isn't)
+              // DON'T redirect to / in devmode else RootRedirectResource
+          } else {
+              window.location.assign('/'); // which will require auth and redirect to login page
+          }
       }
    });
 }
@@ -240,5 +160,4 @@ function initDcConfReplacements() {
 
 function completePlaygroundInit() {
    initDcConfReplacements(); // Ozwillo
-   $('pre code').each(function(i, e) {hljs.highlightBlock(e)});
 }

@@ -1,4 +1,3 @@
-//var containerUrl = "http://data.ozwillo.com/"; // rather in dcConf filled at init by /dc/playground/configuration
 
 
 //////////////////////////////////////////////////:
@@ -561,11 +560,14 @@ function setError(errorMsg) {
    return false;
 }
 function requestToRelativeUrl(request) {
+   /*
    var relativeUrl = request.path;
    if (request._query) {
       relativeUrl += '?' + request._query;
    }
    return relativeUrl;
+   */
+   return request.url;
 }
 
 
@@ -582,7 +584,7 @@ function setProject(newProject) {
 }
 function initProjectPortal(options) {
    findData(buildProjectPortalQuery(options), projectPortalSuccess,
-         null, null, 25, {'X-Datacore-View':'-'}, options);
+         null, null, 100, {'X-Datacore-View':'-'}, options);
 }
 function buildProjectPortalQuery(options) {
    var query = 'dcmo:model_0?';
@@ -598,7 +600,7 @@ function buildProjectPortalQuery(options) {
 }
 function buildProjectPortalQueryLink(options, linkText) {
    return '<a href="/dc/type/' + buildProjectPortalQuery(options) + '" class="dclink" onclick="'
-      + 'javascript:return findData($(this).attr(\'href\'), projectPortalSuccess, null, null, 25, {\'X-Datacore-View\':\'-\'}, '
+      + 'javascript:return findData($(this).attr(\'href\'), projectPortalSuccess, null, null, 100, {\'X-Datacore-View\':\'-\'}, '
       + (options ? stringifyForAttribute(options) : 'null') + ');">' + linkText + '</a>';
 }
 function buildProjectPortalTitleHtml(options) {
@@ -646,10 +648,10 @@ function buildListOfStorageModelLinks(models) {
          + 'javascript:return getData($(this).attr(\'href\'));'
          + '">' + modelName + '</a> : its stored '
          + '<a href="/dc/type/dcmo:model_0?dcmo:storageModel=' + modelName + '" class="dclink" onclick="'
-         + 'javascript:return findData($(this).attr(\'href\'), null, null, null, 25, {\'X-Datacore-View\':\'-\'});'
+         + 'javascript:return findData($(this).attr(\'href\'), null, null, null, 100, {\'X-Datacore-View\':\'-\'});'
          + '">models</a> and '
          + '<a href="/dc/type/' + modelName + '" class="dclink" onclick="'
-         + 'javascript:return findData($(this).attr(\'href\'), null, null, null, 25, {\'X-Datacore-View\':\'-\'});'
+         + 'javascript:return findData($(this).attr(\'href\'), null, null, null, 100, {\'X-Datacore-View\':\'-\'});'
          + '">all their resources</a>...'
          + '<br/>';
    }
@@ -664,139 +666,114 @@ function buildListOfStorageModelLinks(models) {
 // READ
 
 // relativeUrl must be an encoded URI (encode it using builUri and buildUriQuery)
-// or a {modelType, query} object where query is encoded (encode it
+// in the /dc/type/modelType?query form, or a {modelType, query} object where query is encoded (encode it
 // using buildUriQuery)
 // success : success handler, providing it disables displaying results in playground
 // optional : success, error, start (else 0, max 500), limit (else 10 !!! max 100 !)
 // optionalHeaders : 'Accept':'text/x-nquads' for RDF, 'X-Datacore-View', 'X-Datacore-Project'...
 // handlerOptions : business options to pass to (outside call conf i.e. path / query / headers
-// which will be in data._request anyway)
-function findDataByType(relativeUrl, success, error, start, limit, optionalHeaders, handlerOptions) {
-   if (typeof relativeUrl === 'string') {
+// which will be in data.request anyway)
+function findDataByType(relativeUrlOrString, success, error, start, limit, optionalHeaders, handlerOptions) {
+   const relativeUrl = (typeof relativeUrlOrString === 'string') ?
       // NB. modelType should be encoded as URIs, BUT must be decoded before used as GET URI
       // because swagger.js re-encodes
-      relativeUrl = parseUri(relativeUrl);
-   }
+      parseUri(relativeUrlOrString) : relativeUrlOrString;
    setUrl(relativeUrl, success);
-   var swaggerParams = {type:relativeUrl.modelType, '#queryParameters':relativeUrl.query,
-         Authorization:getAuthHeader()};
+
+   const request = { path : '/dc/type/' + relativeUrl.modelType,
+         _query : relativeUrl.query, _headers:{ Authorization:getAuthHeader() } };
+
+   var parameters = [];
+   if (request._query) {
+      parameters.push(request._query);
+   }
    if (start) {
-      swaggerParams.start = start;
+      parameters.push('start=' + start);
    }
    if (limit) {
-      swaggerParams.limit = limit;
+      parameters.push('limit=' + limit);
    }
-   var supplParams = null; // handlerOptions == null ? null : {parent:handlerOptions}; // NO else no error callback
-   if (optionalHeaders) {
-      for (var headerName in optionalHeaders) {
-         swaggerParams[headerName] = optionalHeaders[headerName];
-      }
-      if (optionalHeaders['Accept']) {
-         supplParams = supplParams == null ? {} : supplParams;
-         supplParams['responseContentType'] = optionalHeaders['Accept']; // for RDF (no other way)
-      }
+   request.url = request.path;
+   if (parameters.length != 0) {
+      request.url += '?' + parameters.join('&');
    }
-   if (!swaggerParams['X-Datacore-Project']) {
-      swaggerParams['X-Datacore-Project'] = getProject();
-   }
-   var mySuccess = function(data) { // , handlerOptions
+   
+   completeRequest(request, optionalHeaders);
+
+   var mySuccess = function(data, textStatus, jqXHR) { // , handlerOptions
       var resResourcesOrText;
-      if (data.request._headers['X-Datacore-Debug'] === 'true') {
+      if (request._headers['X-Datacore-Debug'] === 'true') {
          // displaying debug info (index used) : (NB. not in other operations)
-         var explainRes = displayJsonObjectResult(data, success);
+         var explainRes = displayJsonObjectResult(data, request, success);///jqXHR.responseText
          if (explainRes) {
             resResourcesOrText = explainRes.results;
          }
       } else {
-         var contentType = data.request._headers['Accept'];
+         var contentType = request._headers['Accept'];
          if (contentType && contentType.indexOf('text/') === 0) { // ex. RDF : 'text/x-nquads'
-            resResourcesOrText = displayTextResult(data, success);
+            resResourcesOrText = displayTextResult(jqXHR.responseText, request, success);
          } else {
-            resResourcesOrText = displayJsonListResult(data, success);
+            resResourcesOrText = displayJsonListResult(data, request, success);
          }
       }
       if (success) {
-         success(resResourcesOrText, requestToRelativeUrl(data.request), data, handlerOptions);
+         const data = buildLegacySuccessData(request, textStatus, jqXHR);
+         success(resResourcesOrText, relativeUrl, data, handlerOptions);
       } else {
          setError('');
       }
    };
-   var myError = function(data) { // , handlerOptions
-      setError(data._body._body);
-      if (error) {
-         error(data, requestToRelativeUrl(data.request), handlerOptions);
-      }
-   };
-   if (supplParams) {
-      dcApi.dc.findDataInType(swaggerParams, supplParams, mySuccess);
-      // NB. to still allow RDF, see https://github.com/swagger-api/swagger-js/issues/101
-      // "Unable to pass 'opts' for method invocation (swagger.js)?"
-   } else {
-      dcApi.dc.findDataInType(swaggerParams, mySuccess, myError);
-   }
+   
+   $.ajax({
+      url:request.url,
+      headers: request._headers,
+      success: mySuccess,
+      error: buildErrorHandlerForGet(request, relativeUrl, handlerOptions, error)
+   });
    return false;
 }
 // relativeUrl must be an encoded URI (encode it using builUri)
-// or a {modelType, id} object
+// in the /dc/type/modelType/id(/version) form, or a {modelType, id(, version)} object
 // optional : success, error
-function getData(relativeUrl, success, error, optionalHeaders, handlerOptions) {
-   if (typeof relativeUrl === 'string') {
-      // NB. modelType should be encoded as URIs, BUT must be decoded before used as GET URI
-      // because swagger.js re-encodes (for resourceId, per path element because __unencoded__-prefixed per hack)
-      relativeUrl = parseUri(relativeUrl);
-   }
+function getData(relativeUrlOrString, success, error, optionalHeaders, handlerOptions) {
+   const relativeUrl = (typeof relativeUrlOrString === 'string') ?
+         // NB. modelType should be encoded as URIs, BUT must be decoded before used as GET URI
+         // because swagger.js re-encodes
+         parseUri(relativeUrlOrString) : relativeUrlOrString;
    setUrl(relativeUrl, success);
-   var swaggerParams = {type:relativeUrl.modelType, __unencoded__iri:relativeUrl.id,
-           'If-None-Match':-1, Authorization:getAuthHeader()};
-   var supplParams = null; // handlerOptions == null ? null : {parent:handlerOptions}; // NO else no error callback
-   if (optionalHeaders) {
-      for (var headerName in optionalHeaders) {
-         swaggerParams[headerName] = optionalHeaders[headerName];
-      }
-      if (optionalHeaders['Accept']) {
-         supplParams = supplParams == null ? {} : supplParams;
-         supplParams['responseContentType'] = optionalHeaders['Accept']; // for RDF (no other way)
-      }
-   }
-   if (!swaggerParams['X-Datacore-Project']) {
-      swaggerParams['X-Datacore-Project'] = getProject();
-   }
-   var mySuccess = function(data) {
+   
+   const request = { _headers:{ Authorization:getAuthHeader(), 'If-None-Match':-1 } };
+   request.path = (typeof relativeUrl.version) != 'number' ? '/dc/type/' + relativeUrl.modelType + '/' + relativeUrl.id
+         : '/dc/h/' + relativeUrl.modelType + '/' + relativeUrl.id + '/' + relativeUrl.version;
+   completeRequest(request, optionalHeaders);
+   
+   var mySuccess = function(data, textStatus, jqXHR) {
       var resResourceOrText;
-      var contentType = data.request._headers['Accept'];
+      var contentType = request._headers['Accept'];
       if (contentType && contentType.indexOf('text/') === 0) { // ex. RDF : 'text/x-nquads'
-         resResourceOrText = displayTextResult(data, success);
+         resResourceOrText = displayTextResult(jqXHR.responseText, request, success);
       } else {
-         resResourceOrText = displayJsonObjectResult(data, success);
+         resResourceOrText = displayJsonObjectResult(data, request, success);///jqXHR.responseText
       }
       if (success) {
+         const data = buildLegacySuccessData(request, textStatus, jqXHR);
          success(resResourceOrText, relativeUrl, data, handlerOptions);
       } else {
          setError('');
       }
    };
-   var myError = function(data) {
-      setError(data._body._body);
-      if (error) {
-         error(data, relativeUrl, handlerOptions);
-      }
-   };
-   var dcApiFunction = dcApi.dc.getData;
-   if (relativeUrl.version != null && typeof relativeUrl.version !== 'undefined') { // NOT (version) which is false
-      dcApiFunction = dcApi.dc.findHistorizedResource;
-      swaggerParams['version'] = relativeUrl.version + ''; // toString else swagger hack encodeUriPathComponent fails
-   }
-   if (supplParams) {
-      dcApiFunction(swaggerParams, supplParams, mySuccess);
-      // NB. to still allow RDF, see https://github.com/swagger-api/swagger-js/issues/101
-      // "Unable to pass 'opts' for method invocation (swagger.js)?"
-   } else {
-      dcApiFunction(swaggerParams, mySuccess, myError);
-   }
+   
+   $.ajax({
+      url:request.url,
+      headers: request._headers,
+      success: mySuccess,
+      error: buildErrorHandlerForGet(request, relativeUrl, handlerOptions, error)
+   });
    return false;
 }
 // relativeUrl must be an encoded URI (encode it using builUri and buildUriQuery)
-// or a {containerUrl (optional), modelType, id, query} object where query is encoded (encode it
+// in the /dc/type/modelType(/id(/version))?query form,
+// or a {containerUrl (optional), modelType, id, (version,) query} object where query is encoded (encode it
 // using buildUriQuery)
 // optional : success, error
 function findData(relativeUrl, success, error, start, limit, optionalHeaders, handlerOptions) {
@@ -808,18 +785,15 @@ function findData(relativeUrl, success, error, start, limit, optionalHeaders, ha
    }
    return getData(relativeUrl, success, error, optionalHeaders, handlerOptions);
 }
-function getPreviousData(relativeUrl, success, error, optionalHeaders, handlerOptions) {
-   var historyUrl;
-   if (typeof relativeUrl === 'string') {
-      // NB. modelType should be encoded as URIs, BUT must be decoded before used as GET URI
-      // because swagger.js re-encodes
-       relativeUrl = parseUri(relativeUrl);
-   }
+function getPreviousData(relativeUrlOrString, success, error, optionalHeaders, handlerOptions) {
+   const relativeUrl = (typeof relativeUrlOrString === 'string') ?
+         // NB. modelType should be encoded as URIs, BUT must be decoded before used as GET URI
+         // because swagger.js re-encodes
+         parseUri(relativeUrlOrString) : relativeUrlOrString;
    if (relativeUrl.version != null && typeof relativeUrl.version !== 'undefined') { // NOT (version) which is false
       // get previous one :
-      var previousUrl = relativeUrl.uri.replace(new RegExp('/'
-            + relativeUrl.version + '$'), '/' + (relativeUrl.version - 1));
-      getData(previousUrl, success, error, optionalHeaders, handlerOptions);
+      relativeUrl.version = relativeUrl.version - 1;
+      getData(relativeUrl, success, error, optionalHeaders, handlerOptions);
       return;
    }
    // first retrieve last version :
@@ -836,52 +810,68 @@ function getPreviousData(relativeUrl, success, error, optionalHeaders, handlerOp
 ///////////////////////////////////////////////////
 // WRITE
 
-// relativeUrl must be an encoded URI (encode it using builUri) or a {modelType} object,
+// relativeUrl must be an encoded URI (encode it using builUri)
+// in the /dc/type/modelType form or a {modelType} object,
 // resources can be a single resource or an array
 // optional : success, error
-function postAllDataInType(relativeUrl, resources, success, error, optionalHeaders, handlerOptions) {
-   if (typeof relativeUrl === 'string') {
-      // NB. modelType should be encoded as URIs, BUT must be decoded before used as GET URI
-      // because swagger.js re-encodes
-      relativeUrl = parseUri(relativeUrl);
-   }
+function postAllDataInType(relativeUrlOrString, resources, success, error, optionalHeaders, handlerOptions) {
+   const relativeUrl = (typeof relativeUrlOrString === 'string') ?
+         // NB. modelType should be encoded as URIs, BUT must be decoded before used as GET URI
+         // because swagger.js re-encodes
+         parseUri(relativeUrlOrString) : relativeUrlOrString;
    setUrl(relativeUrl, success);
-   if (!(resources instanceof Array)) { // single resource
-      resources = [ resources ];
-   }
-   var swaggerParams = {type:relativeUrl.modelType, body:JSON.stringify(resources, null, null),
-         Authorization:getAuthHeader()};
+
+   return changeAllData(resources, success, error, optionalHeaders, handlerOptions, '/dc/type/' + relativeUrl.modelType, 'POST');
+}
+
+// REST helpers
+function completeRequest(request, optionalHeaders) {
    if (optionalHeaders) {
-      for (var headerName in optionalHeaders) {
-         swaggerParams[headerName] = optionalHeaders[headerName];
+      for (var name in optionalHeaders) {
+         request._headers[name] = optionalHeaders[name];
       }
    }
-   if (!swaggerParams['X-Datacore-Project']) {
-      swaggerParams['X-Datacore-Project'] = getProject();
+   if (!request._headers['X-Datacore-Project']) {
+      request._headers['X-Datacore-Project'] = getProject();
    }
-   dcApi.dc.postAllDataInType(swaggerParams,
-      function(data) {
-         var resResources = displayJsonListResult(data, success);
-         if (success) {
-    	    success(resResources, resources, data, handlerOptions);
-         } else {
-            setError('');
-         }
-      },
-      function(data) {
-         setError(data._body._body);
-         if (error) {
-            error(data, resources, handlerOptions);
-         }
-         /*if (error._body._body.indexOf("already existing") != -1) { // TODO better
-          findDataByType(relativeUrl, callback);
-         }*/
-      });
-   return false;
+   if (!request.url) {
+      request.url = request.path;
+   }
+   request.path = encodeUriPath(request.path); // else in import csvDataCompleted getData's error callback, resourceUri.uri not encoded
 }
-// NB. no postDataInType in swagger (js) API (because would be a JAXRS conflict)
-// postDataInType would only differ on dcApi.dc.postDataInType function, TODO better & also for put
-// TODO putDataInType and use it...
+function buildErrorHandlerForGet(request, relativeUrl, handlerOptions, error) { // , handlerOptions
+   return function(jqXHR, textStatus, errorThrown) {
+     setError(jqXHR.status + ' ' + jqXHR.statusText + ' : ' + jqXHR.responseText);
+      if (error) {
+         error(buildLegacyErrorData(request, textStatus, jqXHR), relativeUrl, handlerOptions);
+      }
+   }
+};
+function buildErrorHandlerForPostPutDelete(request, resources, handlerOptions, error) {
+   return function(jqXHR, textStatus, errorThrown) {
+      setError(jqXHR.status + ' ' + jqXHR.statusText + ' : ' + jqXHR.responseText);
+      if (error) {
+         error(buildLegacyErrorData(request, textStatus, jqXHR), resources, handlerOptions);
+      }
+      /*if (error._body._body.indexOf("already existing") != -1) { // TODO better
+         findDataByType(relativeUrl, callback);
+      }*/
+   }
+}
+function buildLegacySuccessData(request, textStatus, jqXHR, resJson) {
+   const data = { _body:{_body:jqXHR.responseText, _type:jqXHR.getResponseHeader('Content-Type')},
+      request:request, content:{data:jqXHR.responseText},
+      _raw:{statusCode:jqXHR.status, xhr:{response:jqXHR.responseText}}};
+   if (resJson) {
+      data.resources = resJson;
+   } // else GET or DELETE
+   return data;
+}
+function buildLegacyErrorData(request, textStatus, jqXHR) {
+   return { _body:{_body:jqXHR.responseText, _type:jqXHR.getResponseHeader('Content-Type')},
+      request:request, content:{data:jqXHR.responseText},
+      _raw:{statusCode:jqXHR.status, xhr:{response:jqXHR.responseText}}}; // only when error
+}
 
 // resource's o:version must be up to date
 // optional : success, error
@@ -890,98 +880,66 @@ function deleteDataInType(resource, success, error, optionalHeaders, handlerOpti
    // because swagger.js re-encodes (for resourceId, per path element because __unencoded__-prefixed per hack)
    var parsedUri = parseUri(resource["@id"]);
    setUrl(parsedUri, success);
-   var swaggerParams = {type:parsedUri.modelType, __unencoded__iri:parsedUri.id,
-         'If-Match':resource["o:version"], Authorization:getAuthHeader()};
-   if (optionalHeaders) {
-      for (var headerName in optionalHeaders) {
-         swaggerParams[headerName] = optionalHeaders[headerName];
-      }
-   }
-   if (!swaggerParams['X-Datacore-Project']) {
-      swaggerParams['X-Datacore-Project'] = getProject();
-   }
-   dcApi.dc.deleteData(swaggerParams,
-      function(data) {
-         var resResource = displayJsonObjectResult(data, success);
+   
+   const request = { path : '/dc/type/' + parsedUri.modelType + '/' + parsedUri.id,
+         _headers:{ Authorization:getAuthHeader(), 'If-Match':resource["o:version"] },
+         body:JSON.stringify(resource, null, null) };
+   completeRequest(request, optionalHeaders);
+   
+   $.ajax({ // https://api.jquery.com/jQuery.ajax/
+      url: request.url,
+      headers: request._headers,
+      type: 'DELETE',
+      success: function(data, textStatus, jqXHR) {
+         var resResource = displayJsonObjectResult(data, request, success);
          if (success) {
+            const data = buildLegacySuccessData(request, textStatus, jqXHR, resResource);
             success(resResource, resource, data, handlerOptions);
+         } else {
+            setError('');
          }
       },
-      function(data) {
-         setError(data._body._body);
-         if (error) {
-            error(data, resource, handlerOptions);
-         }
-      });
-   return false;
+      error : buildErrorHandlerForPostPutDelete(request, resource, handlerOptions, error)
+   });
 }
 
 // resources can be a single resource or an array
 // optional : success, error
 function postAllData(resources, success, error, optionalHeaders, handlerOptions) {
+   return changeAllData(resources, success, error, optionalHeaders, handlerOptions, '/dc', 'POST');
+}
+function changeAllData(resources, success, error, optionalHeaders, handlerOptions, path, method) {
    if (!(resources instanceof Array)) { // single resource
       resources = [ resources ];
    }
-   var swaggerParams = {body:JSON.stringify(resources, null, null),
-         Authorization:getAuthHeader()};
-   if (optionalHeaders) {
-      for (var headerName in optionalHeaders) {
-         swaggerParams[headerName] = optionalHeaders[headerName];
-      }
-   }
-   if (!swaggerParams['X-Datacore-Project']) {
-      swaggerParams['X-Datacore-Project'] = getProject();
-   }
-   dcApi.dc.postAllData(swaggerParams,
-      function(data) {
-         var resResources = displayJsonListResult(data, success);
+   
+   const request = { path : path, _headers:{ Authorization:getAuthHeader(), 'Content-Type':'application/json' },
+         body:JSON.stringify(resources, null, null) };
+   completeRequest(request, optionalHeaders);
+
+   $.ajax({ // https://api.jquery.com/jQuery.ajax/
+      url: request.url,
+      headers: request._headers,
+      type: method,
+      data: request.body,
+      success: function(data, textStatus, jqXHR) {
+         var resResources = displayJsonListResult(data, request, success);
          if (success) {
+            const data = buildLegacySuccessData(request, textStatus, jqXHR, resResources);
             success(resResources, resources, data, handlerOptions);
+         } else {
+            setError('');
          }
-      }, function(data) {
-         setError(data._body._body);
-         /*if (data._body._body.indexOf("already existing") != -1) { // TODO better
-            findDataByType(relativeUrl, callback);
-         }*/
-         if (error) {
-            error(data, resources, handlerOptions); // , resources // NB. always undefined ! NOO ?!
-         }
-      });
+      },
+      error : buildErrorHandlerForPostPutDelete(request, resources, handlerOptions, error)
+   });
    return false;
 }
 
 //resources can be a single resource or an array ; same code as postAllData same for putAllData()
 //optional : success, error
 function putAllData(resources, success, error, optionalHeaders, handlerOptions) {
-   if (!(resources instanceof Array)) { // single resource
-      resources = [ resources ];
-   }
-   var swaggerParams = {body:JSON.stringify(resources, null, null),
-         Authorization:getAuthHeader()};
-   if (optionalHeaders) {
-      for (var headerName in optionalHeaders) {
-         swaggerParams[headerName] = optionalHeaders[headerName];
-      }
-   }
-   if (!swaggerParams['X-Datacore-Project']) {
-      swaggerParams['X-Datacore-Project'] = getProject();
-   }
-   dcApi.dc.putAllData(swaggerParams,
-      function(data) {
-         var resResources = displayJsonListResult(data, success);
-         if (success) {
-            success(resResources, resources, data, handlerOptions);
-         }
-      }, function(data) {
-         setError(data._body._body);
-         /*if (data._body._body.indexOf("already existing") != -1) { // TODO better
-            findDataByType(relativeUrl, callback);
-         }*/
-         if (error) {
-            error(data, resources, handlerOptions); // , resources // NB. always undefined ! NOO ?!
-         }
-      });
-   return false;
+   return changeAllData(resources, success, error, optionalHeaders, handlerOptions, '/dc', 'PUT');
 }
 
 // displays as editable data or post current editable data, depending on whether myeditabledata displayed or not
@@ -1090,9 +1048,9 @@ function switchToEditable(doSwitchToEditable) {
    $('#putButton').css('display', !doSwitchToEditable ? 'none' : 'inline');
 }
 
-function displayTextResult(data, dontUpdateDisplay, displayAsEditable) {
+function displayTextResult(textResult, request, dontUpdateDisplay, displayAsEditable) {
    if (!dontUpdateDisplay && doUpdateDisplay) {
-      var prettyText = data.content.data;
+      var prettyText = textResult;
       $('.mydata').text(prettyText);
       if (data.request._query !== null && data.request._query.trim().length !== 0
             || parseUri(data.request.path).id === null) { // a query or no id
@@ -1105,8 +1063,9 @@ function displayTextResult(data, dontUpdateDisplay, displayAsEditable) {
    return data.content.data;
 }
 
-function displayJsonObjectResult(data, dontUpdateDisplay) {
-   var resource = eval('[' + data.content.data + ']')[0];
+// called when debug or get/deleteData not text
+function displayJsonObjectResult(jsonObjectResult, request, dontUpdateDisplay) {
+   var resource = jsonObjectResult;
    if (!dontUpdateDisplay && doUpdateDisplay) {
       var prettyJson = toolifyDcResource(resource, 0); // ,  parseUri(data.request.path).modelType // , upperResource, keyPathInResource
       //var prettyJson = JSON.stringify(resource, null, '\t').replace(/\n/g, '<br/>');
@@ -1117,11 +1076,10 @@ function displayJsonObjectResult(data, dontUpdateDisplay) {
    return resource;
 }
 
-function displayJsonListResult(data, dontUpdateDisplay) {
-   var resResources = eval(data.content.data);
+function displayJsonListResult(resResources, request, dontUpdateDisplay) {
    if (!dontUpdateDisplay && doUpdateDisplay) {
-      var prettyJson = toolifyDcList(resResources, 0, null, parseUri(data.request.path).modelType);
-      prettyJson = addPaginationLinks(data.request, prettyJson, resResources);
+      var prettyJson = toolifyDcList(resResources, 0, null, parseUri(request.path).modelType);
+      prettyJson = addPaginationLinks(request, prettyJson, resResources);
       ///var prettyJson = JSON.stringify(resResources, null, '\t').replace(/\n/g, '<br>');
       ///prettyJson = toolifyDcResourceJson(prettyJson);
       $('.mydata').html(prettyJson);

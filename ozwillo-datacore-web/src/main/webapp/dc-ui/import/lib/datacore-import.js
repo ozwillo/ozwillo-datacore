@@ -73,7 +73,7 @@
      if (fSepI === -1) { // linux ?!
          fSepI = modelFileName.lastIndexOf('/');
      }
-     return modelFileName.substring(fSepI + 1, 3).toLowerCase();
+     return modelFileName.substring(fSepI + 1, fSepI + 4).toLowerCase();
   }
   
   function trimIfAnyElseNull(value) {
@@ -675,6 +675,7 @@
    
    
 
+   // resourcesOrErrorData comes from POST success callback
    function importedResourcePosted(resourcesOrErrorData, importStateRes, importState, kind, counter, origResources,
          success, error) { // optional
       if (resourcesOrErrorData !== null && typeof resourcesOrErrorData === 'object'
@@ -1799,7 +1800,8 @@
                  csvToData(importState, getResourceRow, nextRow); // next iteration
               } else {
                  var lookupQuery = importState.data.row.lookupQueriesToRun.pop();
-                 findData(lookupQuery, function(resourcesFound, relativeUrl, data, importState) { // NB. works on query AND GET uri
+                 findData(lookupQuery, function(resourcesFound, relativeUrl, data, importState) { // NB. works on query AND GET uri ////
+                    // GET success callback
                     if (resourcesFound) {
                        var resourceFound = null;
                        if (resourcesFound instanceof Array) {
@@ -1835,6 +1837,7 @@
                     }
                     csvToData(importState, getResourceRow, nextRow); // next iteration
                  }, function(data) {
+                    // GET error callback
                     if (lookupQuery.indexOf('?') !== -1) {
                     var error = (data._body && data._body._body) ? data._body._body : data;
                     importState.data.errors.push({ code : "lookupQueryError",
@@ -1898,7 +1901,8 @@
          }
          
          // TODO mass version update !
-         getData(uri, function (returnedResource, relativeUrl, data, importState) {
+         getData(uri, function (returnedResource, relativeUrl, data, importState) { ////
+            // GET success callback
             // existing resource... 
             // NB. can't access original "resource" variable because has been changed since call is async
             var upToDateResourceUri = parseUri(returnedResource["@id"]); // ex. "http://data.ozwillo.com/dc/type/geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
@@ -1922,11 +1926,12 @@
             // TODO LATER OPT check project again, in case returnedResource has a different modelType ???
             // updating version :
             upToDateResource["o:version"] = returnedResource["o:version"];
-            postAllDataInType({ modelType: upToDateResourceUri.modelType },
+            postAllDataInType({ modelType: upToDateResourceUri.modelType }, ////
                   upToDateResource, importedDataPosted, importedDataPosted,
                   // post in project of resource else 403 Forbidden :
                   { 'X-Datacore-Project': getProjectOfModelType(upToDateResourceUri.modelType, importState) });
          }, function (data, relativeUrl, importState) {
+            // GET error callback
             var resourceUri = parseUri(data.request.path); // ex. "/dc/type/geo%3ACityGroup_0/FR/CC%20les%20Ch%C3%A2teaux"
             // and .modelType ex. "geo:CityGroup_0", .id ex. "FR/CC les Châteaux"
             var upToDateResource = importState.data.resources[resourceUri.uri];
@@ -1937,7 +1942,7 @@
             } // else does not exist
             // TODO better skipping error
             // so creating new resource :
-            postAllDataInType({ modelType: resourceUri.modelType },
+            postAllDataInType({ modelType: resourceUri.modelType }, ////
                   upToDateResource, importedDataPosted, importedDataPosted,
                   // post in project of resource else 403 Forbidden :
                   { 'X-Datacore-Project': getProjectOfModelType(resourceUri.modelType, importState) });
@@ -2140,11 +2145,12 @@
       
       // range-based iteration on dcmo:globalFields.dcmf:name (indexed thanks to #168) :
       // (sort must ALSO be on dcmo:globalFields.dcmf:name else "maxScan reached" error)
-      findDataByType({ modelType : 'dcmo:model_0', query : new UriQuery(
+      findDataByType({ modelType : 'dcmo:model_0', query : new UriQuery( ////
          'dcmo:globalFields.dcmf:name', '$in'
          // globalFields else won't get ex. CountryFR inheriting from Country but with no additional field (??)
          + JSON.stringify(fieldNamesOnePerModelIfPossible, null, null)
       ).p('dcmo:globalFields.dcmf:name', (lastEnrichedModelOrMixinName ? '>' + lastEnrichedModelOrMixinName : '') +  '+').s() },
+         // GET success callback
          function(fieldNameMixinsFound, relativeUrl, data, importState) {
             for (var fnmInd in fieldNameMixinsFound) {
                var involvedMixin = fieldNameMixinsFound[fnmInd];
@@ -2732,19 +2738,21 @@
    
    // only for models
    function refreshAndSchedulePost(modelOrMixinArray, relativeTypeUrl, postedCallback, importState) {
+      // POST error callback
       function refreshAndPostObsoleteUntilFresh(data, origResource) {
          if (data._raw.statusCode === 409) {
             // refresh then repost :
             if (origResource instanceof Array) { // because arg of postAllDataInType()
                 origResource = origResource[0];
             }
-            getData(origResource['@id'], function (resource) {
+            getData(origResource['@id'], function (resource) { ////
+               // GET success callback
                // updating existing resource : 
                // NB. can't access "mixin" variable because has been changed since call is async
                /*var upToDateMixin = findMixin(resource["dcmo:name"], modelOrMixinArray);
                upToDateMixin["o:version"] = resource["o:version"];*/
                origResource["o:version"] = resource["o:version"];
-               postAllDataInType(data.request.path, origResource,
+               postAllDataInType(data.request.path, origResource, ////
                      postedCallback, refreshAndPostObsoleteUntilFresh);
             }, postedCallback);
             
@@ -2772,7 +2780,8 @@
          
          // posting one at a time rather than all at once because version has
          // to be refreshed and it is easier to do it in sync this way
-         getData(uri, function (resource, relativeUrl, data, importState) {
+         getData(uri, function (resource, relativeUrl, data, importState) { ////
+            // GET success callback
             // existing resource...
             // NB. can't access "mixin" variable because has been changed since call is async
             var upToDateMixin = findMixin(resource["dcmo:name"], modelOrMixinArray);
@@ -2788,9 +2797,10 @@
                return;
             }
             // TODO LATER OPT check project again, in case returnedResource has a different modelType ???
-            postAllDataInType(relativeTypeUrl, upToDateMixin,
+            postAllDataInType(relativeTypeUrl, upToDateMixin, ////
                   postedCallback, refreshAndPostObsoleteUntilFresh);
          }, function (data, relativeUrl, importState) { // error because resource does not exist
+            // GET error callback
             // new resource...
             var relativeUrl = data.request.path;
             var resourceIri = relativeUrl.substring(relativeUrl.indexOf("/dc/type/") + "/dc/type/".length);
@@ -2807,7 +2817,7 @@
             }
             // TODO better skipped error
             // so creating :
-            postAllDataInType(relativeTypeUrl, upToDateMixin,
+            postAllDataInType(relativeTypeUrl, upToDateMixin, ////
                   postedCallback, postedCallback);
          }, null, importState);
       }
@@ -3090,7 +3100,8 @@
       
       
       // loading existing metamodel : 
-      findDataByType({ modelType : 'dcmo:model_0' }, function (resources, relativeUrl, data, importState) {
+      findDataByType({ modelType : 'dcmo:model_0' }, function (resources, relativeUrl, data, importState) { ////
+         // GET success callback
       /*findDataByType({ modelType : 'dcmo:model_0', query : new UriQuery(
          'dcmo:name', '$regex' + importState.metamodelPrefix + '.*'
       ).s() }, function (resources) {*/
@@ -3123,6 +3134,7 @@
                   return abortImport(importState.model.errors.length + ' model parsing errors');
                }
                
+               // resourcesOrData comes from POST success callback
                function fillDataWhenAllModelsUpdated(resourcesOrData, origResources) {
                   importedResourcePosted(resourcesOrData, importState.model.posted, importState,
                         "models or mixin", $('.modelCounter'), origResources, fillData, concludeImport);

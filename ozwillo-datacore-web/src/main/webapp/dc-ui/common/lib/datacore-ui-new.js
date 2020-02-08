@@ -459,7 +459,7 @@ function toolifyDcListOrResource(valuesOrResource) {
 }
 
 function toolifyDcResourcePartial(resources, rowNb) {
-   var partialRes = artial(resources, rowNb);
+   var partialRes = getPartial(resources, rowNb);
    return toolifyDcResource(partialRes.res, 0) + ((partialRes.isPartial) ? '<br/>...' : '');
 }
 function stringifyPartial(arrayOrHashmap, rowNb) {
@@ -573,7 +573,13 @@ function requestToRelativeUrl(request) {
 }
 
 function getProject() {
-  return window.getCurrentProject();
+   if (window.getCurrentProject) { // Playground v2
+      return window.getCurrentProject();
+   }
+   if (!window.currentProject || window.currentProject.length === 0) {
+      return 'oasis.sandbox'; // by default don't pollute anything // oasis.sandbox oasis.main (oasis.sample)
+   }
+   return window.currentProject;
 }
 
 function setProject(newProject) {

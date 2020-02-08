@@ -2,46 +2,127 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Ozwillo Datacore Playground</title>
+  <title>Ozwillo Datacore Playground - Swagger</title>
+
+   <!-- Swagger UI : -->
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+   <script src="//unpkg.com/swagger-ui-dist@3/swagger-ui-standalone-preset.js"></script>
+   <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/3.22.1/swagger-ui-standalone-preset.js"></script> -->
+   <script src="//unpkg.com/swagger-ui-dist@3/swagger-ui-bundle.js"></script>
+   <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/3.22.1/swagger-ui-bundle.js"></script> -->
+   <link rel="stylesheet" href="//unpkg.com/swagger-ui-dist@3/swagger-ui.css" />
+   <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/3.22.1/swagger-ui.css" /> -->
+    
+    <!-- Playground v2 : -->
   <link rel="stylesheet" type="text/css" href="css/style_perso.css">
   <link href='//fonts.googleapis.com/css?family=Droid+Sans:400,700' rel='stylesheet' type='text/css'/>
   <link href='css/highlight.default.css' media='screen' rel='stylesheet' type='text/css'/>
   <link href='css/screen.css' media='screen' rel='stylesheet' type='text/css'/>
   <link href='common/css/datacore-ui.css' rel='stylesheet' type='text/css'/>
-
   <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
-
   <link rel="stylesheet" type="text/css" href="semantic/dist/semantic.css">
 
-  <script type="text/javascript" src="lib/shred.bundle.js" /></script>
+    <!-- Auth & Login from old Playground as well as business code required by Playground v2 : -->
   <script src='lib/jquery-1.8.0.min.js' type='text/javascript'></script>
   <script src='lib/jquery.slideto.min.js' type='text/javascript'></script>
   <script src='lib/jquery.wiggle.min.js' type='text/javascript'></script>
   <script src='lib/jquery.ba-bbq.min.js' type='text/javascript'></script>
-  <script src='lib/handlebars-1.0.0.js' type='text/javascript'></script>
-  <script src='lib/underscore-min.js' type='text/javascript'></script>
-  <script src='lib/backbone-min.js' type='text/javascript'></script>
-  <script src='lib/swagger.js' type='text/javascript'></script>
-  <script src='swagger-ui.js' type='text/javascript'></script>
-  <script src='lib/highlight.7.3.pack.js' type='text/javascript'></script>
-  <script src='common/lib/datacore-base-new.js' type='text/javascript'></script>
+  <script src='common/lib/datacore-base.js' type='text/javascript'></script>
   <script src='common/lib/datacore-ui-new.js' type='text/javascript'></script>
-  <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
 </head>
 
 <body>
   <div class="generalContainer">
   </div>
-  <div id="swagger-ui-container" class="swagger-ui-wrap"></div>
-  <div class="myCentering">
-    <a href="/dc-ui/index_old.html" style="color: grey;">Go to old version</a>
-  </div>
+  
+   <div id='dc-header'>
+   <div class="dc-ui-wrap">
+   <a class="dc-logo" href="http://www.ozwillo.com"></a>
+   <a class="dc-logo-name" href="http://www.ozwillo.com">Datacore</a>
+   <a class="dc-menu" href="/dc-ui/index.html">Play</a><span class="dc-menu">|</span><a class="dc-menu" href="/dc-ui/import/index.html">Import</a>
+   <select id="project" class="dc-ui-project"></select>
+   <div class="dc-ui-userinfo" style="margin-top:8px">
+      <div class='input' id="userinfo"></div>
+      <div class='input'><a id="logout" href="#">logout</a></div>
+   </div>
+   </div>
+</div>
+  
+  
+  <div id="dc-ui-container" class="dc-ui-wrap"></div>
 </body>
 
-<script src="bundle.js"></script>
 <script type="text/javascript">
-  $(function () {
-    initPlaygroundWithSwaggerUi(); // also window.dcApi
- });
+// only used by playground v2
+function getAllProjects(){
+  var myReturn = [];
+  $.ajax({
+     url:"/dc/type/dcmp:Project_0?dcmpv:name=%2B&limit=100", // sorted on dcmpv:name (%2B = + ; would allow range pagination)
+     headers: { Authorization:getAuthHeader() }, // , 'X-Datacore-View':'dcmpv:PointOfView_0' (any project should do)
+     async: false, //we need to make a synchronous call here to return corrects datas
+     success: function(userProjects) {
+        for (var i in userProjects) {
+           var projectName = userProjects[i]['dcmpv:name'];
+           myReturn.push(projectName);
+        }
+     }
+  });
+  return myReturn;
+}
+</script>
+
+<!-- Playground v2 -->
+<script src="bundle.js"></script>
+
+<script type="text/javascript">
+   function enrichSwaggerRequestForDatacore(swaggerRequest) {
+      // add auth header :
+      swaggerRequest.headers.Authorization = getAuthHeader();
+
+      // add project header :
+      swaggerRequest.headers['X-Datacore-Project'] = getProject();
+
+      // transform #23queryParameters in actual HTTP query parameters :
+      const questionInd = swaggerRequest.url.indexOf('?');
+      if (questionInd >= 0) { //  && parsedUri.query.indexOf('%23queryParameters=')
+         const query = swaggerRequest.url.substring(questionInd + 1);
+         const queryParamValues = query.split('&');
+         for ( var i in queryParamValues) {
+            var splitQueryParamValue = queryParamValues[i]
+                  .split('%23queryParameters=');
+            for (j in splitQueryParamValue) {
+               if (j == 0) {
+                  continue;
+               }
+               splitQueryParamValue[j] = splitQueryParamValue[j].replace(
+                     /%26/gi, '&').replace(/%3D/gi, '=');
+            }
+            queryParamValues[i] = splitQueryParamValue.join('&');
+         }
+         swaggerRequest.url = swaggerRequest.url.substring(0, questionInd)
+               + '?' + queryParamValues.join('&'); // NB. some & are doubled
+      }
+      return swaggerRequest;
+   }
+
+   $(function() { // or window.onload = function() {
+
+      // Swagger UI init
+      SwaggerUIBundle({
+         url : "/api-docs",
+         dom_id : '#dc-ui-container',
+         presets : [ SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset ],
+         layout : "StandaloneLayout",
+         requestInterceptor : enrichSwaggerRequestForDatacore,
+         oauth2RedirectUrl : "TODO" // also responseInterceptor
+      });
+
+      // Customize Swagger UI : hide url input. NB. easier than using plugins https://stackoverflow.com/questions/49610988/how-to-remove-the-api-definition-url-under-title-in-swagger-ui
+      $('.download-url-wrapper').remove();
+
+      // init Auth, Project as well as old Playground business code required by Playground v2
+      initPlayground();
+   });
 </script>
 </html>

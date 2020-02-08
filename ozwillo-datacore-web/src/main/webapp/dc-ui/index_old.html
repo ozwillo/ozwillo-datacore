@@ -1,67 +1,45 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>Ozwillo Datacore Playground</title>
   <link href='//fonts.googleapis.com/css?family=Droid+Sans:400,700' rel='stylesheet' type='text/css'/>
   <link href='css/highlight.default.css' media='screen' rel='stylesheet' type='text/css'/>
   <link href='css/screen.css' media='screen' rel='stylesheet' type='text/css'/>
   <link href='common/css/datacore-ui.css' rel='stylesheet' type='text/css'/>
-  <script type="text/javascript" src="lib/shred.bundle.js" /></script>
+  
   <script src='lib/jquery-1.8.0.min.js' type='text/javascript'></script>
   <script src='lib/jquery.slideto.min.js' type='text/javascript'></script>
   <script src='lib/jquery.wiggle.min.js' type='text/javascript'></script>
   <script src='lib/jquery.ba-bbq.min.js' type='text/javascript'></script>
-  <script src='lib/handlebars-1.0.0.js' type='text/javascript'></script>
-  <script src='lib/underscore-min.js' type='text/javascript'></script>
-  <script src='lib/backbone-min.js' type='text/javascript'></script>
-  <script src='lib/swagger.js' type='text/javascript'></script>
-  <script src='swagger-ui.js' type='text/javascript'></script>
-  <script src='lib/highlight.7.3.pack.js' type='text/javascript'></script>
   <script src='common/lib/datacore-base.js' type='text/javascript'></script>
   <script src='common/lib/datacore-ui.js' type='text/javascript'></script>
+  
   <script type="text/javascript">
-
+   // old Playground ; uses jquery (for ajax & some div updates)
    $(function () {
-      initPlaygroundWithSwaggerUi(); // also window.dcApi
+      initPlayground();
    });
   </script>
 </head>
 
 <body>
 <div id='dc-header'>
-  <div class="dc-ui-wrap">
+<div class="dc-ui-wrap">
    <a class="dc-logo" href="http://www.ozwillo.com"></a>
    <a class="dc-logo-name" href="http://www.ozwillo.com">Datacore</a>
    <a class="dc-menu" href="/dc-ui/index.html">Play</a><span class="dc-menu">|</span><a class="dc-menu" href="/dc-ui/import/index.html">Import</a>
-    <select id="project" class="dc-ui-project"></select>
-    <div class="dc-ui-userinfo" style="margin-top:8px">
-    <!-- form id='api_selector'>
-      <div class='input icon-btn'>
-        <img id="show-pet-store-icon" src="images/pet_store_api.png" title="Show Swagger Petstore Example Apis">
-      </div>
-      <div class='input icon-btn'>
-        <img id="show-wordnik-dev-icon" src="images/wordnik_api.png" title="Show Wordnik Developer Apis">
-      </div>
-      <div class='input'><input placeholder="http://example.com/api" id="input_baseUrl" name="baseUrl" type="text"/></div>
-      <div class='input'><input placeholder="api_key" id="input_apiKey" name="apiKey" type="text"/></div>
-      <div class='input'><a id="explore" href="#">Explore</a></div --><!-- [Ozwillo] -->
+   <select id="project" class="dc-ui-project"></select>
+   <div class="dc-ui-userinfo" style="margin-top:8px">
       <div class='input' id="userinfo"></div>
       <div class='input'><a id="logout" href="#">logout</a></div>
-    <!-- /form -->
-    </div>
-
-  </div>
+   </div>
+</div>
 </div>
 
-<!-- div id="dc-ui-container" class="dc-ui-wrap">
-<div class="info_title">Datacore Import UI</div>
-</div -->
-
-<div id="message-bar" class="swagger-ui-wrap">
-  &nbsp;
-</div>
-
-<div class="swagger-ui-wrap">
+<div id="dc-ui-container" class="dc-ui-wrap">
+<!-- div class="info_title">Datacore Playground UI</div -->
+<p></p>
   <!--
  doc, with mini online playground using swagger.js client
  see http://developers-blog.helloreverb.com/the-fastest-way-to-connect-to-an-api-with-javascript/
@@ -112,7 +90,7 @@ but also drafted and published (<b>upcoming</b>).
 examples, FAQ, how to &amp; common use cases, cookbook (writing clients...) and full documentation.
 <p>
 <div class="dc-import-subtitle">Datacore (<span class="dcConf_baseUrl json dcjsonline">NOT INITED</span>) :</div>
-<span class="json dcjsonline"><input type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 552px" value="/dc/type/dcmo:model_0"></span>
+<span class="json dcjsonline"><input type="text" id="myurl" class="myurl json dcjsonline" style="padding: 0; width: 510px" value="/dc/type/dcmo:model_0"></span>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()));">GET</button>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, 50, {'X-Datacore-View':'-'});" title="List view (view : empty i.e. minimal : @id, o:version)">l</button>
 <button onclick="javascript:return findData(encodeUri($('.myurl').val()), null, null, null, 25, {'X-Datacore-View':'dc:DubclinCore_0'});" title="List view (view : dc:DubclinCore_0)">dc</button>
@@ -755,6 +733,12 @@ or of a LDP-like Datacore query (see documentation below in Swagger UI of operat
 
 <h1>This server's configuration</h1>
 <pre><code>
+## Deployment environment
+environment=<span class="dcConf_environment">NOT INITED</span>
+
+## Development security mode (if empty, HTTP Basic Auth is not allowed)
+datacore.securitymode=<span class="dcConf_securitymode">NOT INITED</span>
+
 ## Development mode (also allows to set system property datacore.dropdb=true ex. in maven)
 datacore.devmode=<span class="dcConf_devmode">NOT INITED</span>
 
@@ -784,13 +768,6 @@ datacoreApiServer.query.defaultLimit=<span class="dcConf_queryDefaultLimit">NOT 
 kernel.baseUrl=<span class="dcConf_kernelBaseUrl">NOT INITED</span>
 </code></pre>
 <br/><br/>
-
-<a id="swagger"></a>
-</div>
-
-<div id="swagger-ui-container" class="swagger-ui-wrap">
-
-</div>
 
 </body>
 
