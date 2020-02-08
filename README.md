@@ -159,6 +159,12 @@ Display (all branch versions of) one model :
 db["oasis.meta.dcmi:mixin_0"].find({ "_p.dcmo:name":"org2:Organization_0" })
 ````
 
+Upgrade error "Index with name: _uri already exists with different options" : delete the dCEntity dummy collection
+
+````js
+db["dCEntity"].drop()
+````
+
 
 More
 ----

@@ -40,6 +40,10 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import com.google.common.collect.ImmutableMap;
 
 
+/**
+ * Used to load test the Datacore
+ * @author vvoisin
+ */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath:oasis-datacore-rest-server-test-context.xml" })
 public class UseCaseTest {

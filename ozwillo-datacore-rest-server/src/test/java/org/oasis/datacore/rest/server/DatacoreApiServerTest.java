@@ -265,7 +265,7 @@ public class DatacoreApiServerTest {
          datacoreApiClient.putDataInType(ukCountryData, CityCountrySample.COUNTRY_MODEL_NAME, "UK");
          Assert.fail("Should not be able to update / PUT a non existing Resource");
       } catch (BadRequestException e) {
-         Assert.assertTrue(true);
+         Assert.assertTrue(true); // server-side exception contains : Version of data resource to update is required in PUT
       } catch (Exception e) {
          Assert.fail("Bad exception");
       }
