@@ -37,8 +37,6 @@ public class PlaygroundAuthenticationResourceBase extends PlaygroundResourceBase
    protected String playgroundTokenExchangeRedirectUrl; // = "https://data.ozwillo.com/dc/playground/token"; // = https://portal.ozwillo.com/callback // TODO rm
    @Value("${datacorePlayground.uiUrl}")
    protected String playgroundUiUrl; // = "http://localhost:8080/dc-ui/index.html";
-   ///@Value("${datacore.devmode}")
-   ///protected boolean devmode;
    @Value("${kernel.userInfoEndpointUrl}")
    protected String kernelUserInfoEndpointUrl; // = "https://kernel.ozwillo.com/a/userinfo";
    @Value("${kernel.checkTokenEndpointUrl}")

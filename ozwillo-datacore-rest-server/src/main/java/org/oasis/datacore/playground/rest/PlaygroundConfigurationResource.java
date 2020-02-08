@@ -52,6 +52,8 @@ public class PlaygroundConfigurationResource extends PlaygroundResourceBase {
       }*/
       // so ideal solution would be reflection or better a @ClientConfiguration annotation,
       // but for now merely (which has the benefit of nice js prop names) :
+      confMap.put("environment", environment);
+      confMap.put("securitymode", securitymode);
       confMap.put("devmode", devmode);
       confMap.put("localauthdevmode", localauthdevmode);
       confMap.put("baseUrl", baseUrl);

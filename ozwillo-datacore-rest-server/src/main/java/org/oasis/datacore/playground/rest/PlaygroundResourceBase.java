@@ -19,6 +19,10 @@ public abstract class PlaygroundResourceBase {
    @Autowired
    protected AbstractBeanFactory beanFactory;
 
+   @Value("${spring.profiles.current:dev}")
+   protected String environment;
+   @Value("${datacore.securitymode:devmode}")
+   protected String securitymode;
    @Value("${datacore.devmode}")
    protected boolean devmode;
    @Value("${datacore.localauthdevmode}")

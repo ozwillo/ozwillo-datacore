@@ -18,7 +18,9 @@
 	
 	
 	<!-- Spring Security OAuth2 filter : -->
-	<oauth:resource-server id="oauth2ProviderFilter" resource-id="oasis-datacore" token-services-ref="tokenServices" />
+	<oauth:resource-server id="oauth2ProviderFilter"
+        resource-id="oasis-datacore" token-services-ref="tokenServices"
+        stateless="#{!T(java.lang.Boolean).valueOf(true)}" /><!-- OAuth2 auth is optional in devmode but mandatory otherwise  -->
 	
    <security:authentication-manager id="authenticationManager">
 		<security:authentication-provider user-service-ref="clientDetailsUserService" />
