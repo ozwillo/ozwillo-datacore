@@ -1,10 +1,11 @@
 package org.oasis.datacore.core.entity.mongodb;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
 
-import com.mongodb.*;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.pov.DCProject;
 import org.slf4j.Logger;
@@ -19,12 +20,18 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoCredential;
+import com.mongodb.ReadPreference;
+import com.mongodb.ServerAddress;
+
 
 /**
  * Provides MongoTemplate (= MongoOperations implementation)
  * that may have custom configuration, according to the current project's configuration :
  * - allows to use a specific secondary for read queries instead
- * - allows to write without waiting for confirmation
+ * NB. DCProject.isDbRobust is applied by DatacoreWriteConcernResolver
  * @author mdutoo
  *
  */
@@ -47,10 +54,6 @@ public class MongoTemplateManager {
 
    @Value("${oasis.datacore.mongodb.dbname}")
    private String dbName;
-
-   /** default WriteConcern */
-   @Value("#{T(com.mongodb.WriteConcern).valueOf(\"${oasis.datacore.mongodb.writeConcern}\")}")
-   private WriteConcern writeConcern;
 
    /** host:port allowed to only be secondaries (comma-separated, * is wildcard) */
    @Value("${oasis.datacore.mongodb.allowedSecondaryOnlyServerAddresses}")
@@ -107,10 +110,7 @@ public class MongoTemplateManager {
    }
    
    public MongoTemplate getMongoTemplate() {
-      return getDefaultMongoTemplate();
-      // I guess this was meant for some sort of sharding based on projects
-      // but I will never go that point ...
-      // return getMongoTemplate(modelService.getProject());
+      return getMongoTemplate(modelService.getProject());
    }
 
    /**
@@ -133,27 +133,16 @@ public class MongoTemplateManager {
          // by comparing server address to replica set addresses injected from conf
       }
       
-      Boolean isDbRobust = project.isDbRobust();
-      if (isDbRobust == null) {
-         isDbRobust = true;
-      } else if (!isDbRobust) {
-         isDefault = false;
-      }
-      // (isDbRobust and dbUri should never occur both at the same time anyway)
-      
       if (isDefault) {
-         return mgo; // default when not set
+         return getDefaultMongoTemplate(); // default when not set
       }
       
-      if (dbUri != null && !isDbRobust) {
-         throw new RuntimeException("DB's robust and uri can't be set both in project "
-               + project.getName());
-      }
+      project.checkConfig();
       
-      String mgoId = buildCustomMgoId(dbUri, isDbRobust);
+      String mgoId = buildCustomMgoId(dbUri);
       MongoTemplate mgo = customMongoTemplateCacheMap.get(mgoId);
       if (mgo == null) {
-         mgo = createMongoTemplate(dbUri, isDbRobust);
+         mgo = createMongoTemplate(dbUri);
          
          synchronized(customMongoTemplateCacheMap) {
             MongoTemplate justSetMgo = customMongoTemplateCacheMap.get(mgoId);
@@ -174,11 +163,11 @@ public class MongoTemplateManager {
     * 
     * @param dbUri can be null if default (and another param is not default)
     */
-   private String buildCustomMgoId(MongoUri dbUri, Boolean isDbRobust) {
-      return "uri=" + dbUri + "," + "robust=" + isDbRobust;
+   private String buildCustomMgoId(MongoUri dbUri) {
+      return "uri=" + dbUri;
    }
 
-   private MongoTemplate createMongoTemplate(MongoUri dbUri, Boolean isDbRobust) {
+   private MongoTemplate createMongoTemplate(MongoUri dbUri) {
       MongoTemplate mgo;
       if (dbUri == null) { // we can reuse the default mongoDbFactory :
          mgo = new MongoTemplate(mongoDbFactory, this.mgo.getConverter());
@@ -194,22 +183,17 @@ public class MongoTemplateManager {
                     MongoClientOptions.builder()
                         .readPreference(ReadPreference.secondaryPreferred())
                         .build();
-            mongoClient = new MongoClient(serverAddress, mongoCredential, mongoClientOptions);
+            mongoClient = (mongoCredential == null) ? new MongoClient(serverAddress, mongoClientOptions)
+                  : new MongoClient(serverAddress, mongoCredential, mongoClientOptions);
          } catch (Exception e) {
             // configuration problem, don't hide it :
             throw new RuntimeException("Error creating custom mongo " + dbUri, e);
          }
          MongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(mongoClient, dbUri.getDatabase());
-         NoIndexCreationMongoConverter readonlyMongoConverter = new NoIndexCreationMongoConverter(mongoConverter);
-         mgo = new MongoTemplate(mongoDbFactory, readonlyMongoConverter);
-         readonlyMongoConverter.completeInit(mgo);
+         mgo = new MongoTemplate(mongoDbFactory, mongoConverter);
       }
 
-      if (isDbRobust) {
-         mgo.setWriteConcern(writeConcern);
-      } else {
-         mgo.setWriteConcern(WriteConcern.UNACKNOWLEDGED);
-      }
+      // NB. DCProject.isDbRobust is applied by DatacoreWriteConcernResolver
       
       return mgo;
    }

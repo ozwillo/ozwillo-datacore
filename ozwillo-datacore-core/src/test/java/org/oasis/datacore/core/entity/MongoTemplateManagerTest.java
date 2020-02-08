@@ -7,12 +7,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.oasis.datacore.common.context.DCRequestContextProvider;
 import org.oasis.datacore.common.context.SimpleRequestContextProvider;
+import org.oasis.datacore.core.entity.mongodb.DatacoreWriteConcernResolver;
 import org.oasis.datacore.core.entity.mongodb.MongoTemplateManager;
 import org.oasis.datacore.core.entity.mongodb.MongoUri;
 import org.oasis.datacore.core.meta.DataModelServiceImpl;
 import org.oasis.datacore.core.meta.pov.DCProject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.CannotGetMongoDbConnectionException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.context.ContextConfiguration;
@@ -23,6 +23,7 @@ import org.springframework.test.context.support.DirtiesContextTestExecutionListe
 import org.springframework.test.context.transaction.TransactionalTestExecutionListener;
 
 import com.google.common.collect.ImmutableMap;
+import com.mongodb.WriteConcern;
 
 
 /**
@@ -65,10 +66,14 @@ public class MongoTemplateManagerTest {
       modelAdminService.removeProject(testProject); // in case of previous test (?)
       modelAdminService.addProject(testProject);
 
+      MongoTemplate defaultMongoTemplate = mtm.getMongoTemplate();
+      Assert.assertEquals(mt, defaultMongoTemplate);
       Assert.assertEquals(null, testProject.isDbRobust());
 
       testProject.setDbRobust(false);
       Assert.assertEquals(testProject.isDbRobust(), false);
+      new DatacoreWriteConcernResolver().resolve(testProject).equals(WriteConcern.UNACKNOWLEDGED);
+      // TODO test
 
       String localhostMongoUri = "mongodb://localhost:27017/datacore";
       testProject.setDbUri(localhostMongoUri);
@@ -79,20 +84,19 @@ public class MongoTemplateManagerTest {
       }
       testProject.setDbRobust(true);
       MongoOperations localhostMongoTemplate = mtm.getMongoTemplate();
-      Assert.assertEquals(mt, localhostMongoTemplate);
+      Assert.assertNotEquals(mt, localhostMongoTemplate);
 
       String localhostNoPortMongoUri = "mongodb://localhost/datacore";
       testProject.setDbUri(localhostNoPortMongoUri);
+      Assert.assertEquals(localhostMongoTemplate, mtm.getMongoTemplate());
       String loopbackIpMongoUri = "mongodb://127.0.0.1:27017/datacore";
       testProject.setDbUri(loopbackIpMongoUri);
       MongoOperations loopbackIpMongoTemplate = mtm.getMongoTemplate();
-      Assert.assertEquals(mt, loopbackIpMongoTemplate);
+      Assert.assertNotEquals(localhostMongoTemplate, loopbackIpMongoTemplate);
 
       // test connection of loopbackIp mongoTemplate :
       try {
          loopbackIpMongoTemplate.collectionExists("test.index");
-      } catch (CannotGetMongoDbConnectionException cgmdbex) {
-         Assert.assertTrue(cgmdbex.getMessage().contains("not configured among secondary only ones"));
       } catch (Exception rex) {
          Assert.assertTrue(rex.getMessage().contains("not configured among secondary only ones"));
       }

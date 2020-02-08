@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.oasis.datacore.core.entity.mongodb.MongoTemplateManager;
 import org.oasis.datacore.core.meta.SimpleUriService;
 import org.oasis.datacore.core.meta.model.DCField;
 import org.oasis.datacore.core.meta.model.DCI18nField;
@@ -51,9 +50,6 @@ public class ModelResourceMappingService {
     * LATER use it in the whole model mapping process ? */
    @Autowired
    private ResourceEntityMapperService resourceEntityMapperService;
-   /** to check parsed project conf according to its rules */
-   @Autowired
-   private MongoTemplateManager mgoManager;
    
    //////////////////////////////////////////////////////
    // DCModel to Resource (used in ResourceModelIniter) :
@@ -566,7 +562,7 @@ public class ModelResourceMappingService {
          project.setDbUri((String) dbUri);
       } // otherwise projet with default or old project without it
       // checking that those values are valid :
-      mgoManager.getMongoTemplate(project); // else explodes
+      project.checkConfig();
       
       return project;
    }

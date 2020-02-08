@@ -461,6 +461,14 @@ public class DCProject extends DCPointOfViewBase {
    public void setDbUri(String dbUri) {
       this.dbUri = dbUri;
    }
+
+
+   public void checkConfig() {
+      if (dbUri != null && !dbRobust) {
+         throw new RuntimeException("DB's robust and uri can't be set both in project "
+               + this.getName());
+      }
+   }
    
    
    @Override
