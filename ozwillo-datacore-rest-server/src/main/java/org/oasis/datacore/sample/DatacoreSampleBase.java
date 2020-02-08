@@ -295,7 +295,22 @@ public abstract class DatacoreSampleBase extends InitableBase {
    public HashSet<DCModelBase> getCreatedStorageModels() {
       return this.storageModels;
    }
-   // for tests
+   
+
+   // test helpers (some are not used yet)
+   public void cleanModels() {
+      cleanModels(new ArrayList<DCModelBase>(getCreatedStorageModels()));
+   }
+   public void cleanModels(List<DCModelBase> models) {
+      List<DCModelBase> toBeRemovedModels = new ArrayList<DCModelBase>(models.size());
+      for (DCModelBase model : models) {
+         toBeRemovedModels.add(getCreatedModel(model));
+         databaseSetupService.cleanModel(model);
+         
+         modelAdminService.removeModel(model.getName()); // remove model
+      }
+      this.storageModels.removeAll(toBeRemovedModels); // clean sampleBase state
+   }
 
    public void cleanDataOfCreatedModels() {
       for (DCModelBase model : this.getCreatedStorageModels()) {
@@ -507,6 +522,27 @@ public abstract class DatacoreSampleBase extends InitableBase {
          }
       }.execInContext(new ImmutableMap.Builder<String, Object>()
             .put(DCRequestContextProvider.PROJECT, projectName).build());
+   }
+
+   
+   // model & data fork helpers
+   public void dataForkMetamodelIn(DCProject project) {
+      dataForkLocalModels(projectInitService.getMetamodelProject(), project);
+   }
+   public void dataForkLocalModels(DCProject forkedProject, DCProject targetProject) {
+      if (targetProject.getLocalVisibleProject(forkedProject.getName()) == null) {
+         targetProject.addLocalVisibleProject(forkedProject);
+      }
+      for (DCModelBase model : forkedProject.getLocalModels()) {
+         if (targetProject.getLocalModel(model.getName()) != null) {
+            continue; // assume already forked, LATER support changes
+         }
+         // only fork storage models :
+         // (because modelService/project.getStorageModel(model) uses getModel(parentName) to visit hierarchy)
+         if (model.isStorage()) {
+            this.fork(model, targetProject, false, false, true, false);
+         }
+      }
    }
 
    /**

@@ -70,13 +70,13 @@ public abstract class DCEntityBase implements Comparable<DCEntityBase>, Serializ
    @Field(KEY_V)
    private Long version = null;
    /** NB. could not be a valid ObjectId because of its constraints (size...)
-    * unique index in each shard, while mongo ensures uniqueness of
+    * there is a unique index on _b+_uri in each shard, while mongo ensures uniqueness of
     * (indexInId-based) shard key http://docs.mongodb.org/manual/tutorial/enforce-unique-keys-for-sharded-collections/
     * BUT NOT UNIQUE in ex. history. NB. created in DatacoreSampleBase since not in a single collection
     * TODO Q not obligatory if embedded ? or then only sub-uri ??
     * TODO Q contains rdf:type, because collection = use case != rdf:type ? or even several types ???
     * TODO Q contains containerUrl, if we were to have local copies of remote federated datacores ???? */
-   @Indexed(unique = true)
+   @Indexed
    @Field(KEY_URI)
    private String uri;
    /**

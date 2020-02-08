@@ -34,7 +34,7 @@ public class PublicPrivateOrganizationSample extends DatacoreSampleMethodologyBa
    public static final String ORG2 = "org2:Organization_0";
    public static final String ORG2_PROJECT = "samples_org2";
    public static final String ORGPRI2 = ORG2; /// "orgpri2:Organization_0";
-   private static final String ORGPRI2_MIXIN = "orgpri2:Organization_0";
+   public static final String ORGPRI2_MIXIN = "orgpri2:Organization_0";
    public static final String ORGPRI2_PROJECT = ORG2_PROJECT + ".pri";
    public static final String AGRILOC_OFFER2 = "agriloco2:Offer_0";
    public static final String USER2 = "user2:User_0";
@@ -199,9 +199,7 @@ public class PublicPrivateOrganizationSample extends DatacoreSampleMethodologyBa
             orgpri2Project, false, false, true, false);*/
       modelAdminService.addLocalModel(orgpri2Project, orgpri2mixin); // else not visible to orgpri2 when adding it
       modelAdminService.addLocalModel(orgpri2Project, agrilocorgpri2); // else not visible to orgpri2 when adding it
-      modelAdminService.addLocalModel(orgpri2Project, orgpri2, true); // NOOOOOOOOOOOOOOOOOOOOOO or at least in orgpri2.Security.requiredProject/Scope
-      ///modelAdminService.addForkedUri(orgpri2Project, UriHelper.buildUri(containerUrl,
-      ///      ResourceModelIniter.MODEL_NAME_PROP, ORG2)); // allowing fork of org2:Organization_0
+      modelAdminService.addLocalModel(orgpri2Project, orgpri2, true); // NOOOOOOOOOOOOOOOOOOOOOO or at least in orgpri2.Security.requiredProject/Scope ; forking org2:Organisation_0 (this does addForkedUri())
       
       
       // org3 : org is model-visible (to authentified users since pub) and has the orgpri mixin which

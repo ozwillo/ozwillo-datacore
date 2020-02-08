@@ -40,9 +40,9 @@ import org.oasis.datacore.model.resource.ModelResourceMappingService;
 import org.oasis.datacore.rest.api.DCResource;
 import org.oasis.datacore.rest.api.DatacoreApi;
 import org.oasis.datacore.rest.api.util.UnitTestHelper;
+import org.oasis.datacore.rest.api.util.UriHelper;
 import org.oasis.datacore.rest.client.DatacoreCachedClient;
 import org.oasis.datacore.rest.client.QueryParameters;
-import org.oasis.datacore.rest.server.event.EventService;
 import org.oasis.datacore.rest.server.resource.ResourceException;
 import org.oasis.datacore.rest.server.resource.ResourceService;
 import org.oasis.datacore.sample.CityCountrySample;
@@ -900,6 +900,51 @@ public class ResourceModelTest {
          Assert.assertEquals(sampleProjectLocalVisibleProjectNames, actualProject
                .getLocalVisibleProjects().stream().map(p1 -> p1.getName()).collect(Collectors.toList()));
       }
+   }
+
+   @SuppressWarnings("unchecked")
+   @Test
+   public void testForkModel() throws Exception {
+      Assert.assertEquals(DCProject.OASIS_SAMPLE, modelAdminService.getProject().getName());
+      DCModelBase org2Model = modelAdminService.getModelBase(PublicPrivateOrganizationSample.ORG2);
+      DCProject org2priProject = modelAdminService.getProject(PublicPrivateOrganizationSample.ORGPRI2_PROJECT);
+      Assert.assertEquals("org2:Organisation_0 model is configured as forked in org2pri project",
+            UriHelper.buildUri(this.containerUrl, ResourceModelIniter.MODEL_MODEL_NAME, PublicPrivateOrganizationSample.ORG2), // "http://data-test.ozwillo.com/dc/type/dcmo:model_0/org2:Organization_0"
+            org2priProject.getForkedUris().iterator().next());
+
+      DCModelBase org2Org2Model = new SimpleRequestContextProvider<DCModelBase>() { // set context project beforehands :
+         protected DCModelBase executeInternal() throws ResourceException {
+            return modelAdminService.getModelBase(PublicPrivateOrganizationSample.ORG2);
+         }
+      }.execInContext(new ImmutableMap.Builder<String, Object>()
+            .put(DCRequestContextProvider.PROJECT, PublicPrivateOrganizationSample.ORG2_PROJECT).build());
+      Assert.assertEquals("org2:Organisation_0 model in org2 project is the same as the generic one (gotten in oasis.samples)",
+            org2Org2Model.getAbsoluteName(), org2Model.getAbsoluteName());
+      Assert.assertFalse("org2:Organisation_0 model in org2 project has not the mixin specific to the org2pri project",
+            org2Org2Model.getMixinNames().contains(PublicPrivateOrganizationSample.ORGPRI2_MIXIN));
+      
+      DCModelBase org2priOrg2Model = new SimpleRequestContextProvider<DCModelBase>() { // set context project beforehands :
+         protected DCModelBase executeInternal() throws ResourceException {
+            return modelAdminService.getModelBase(PublicPrivateOrganizationSample.ORG2);
+         }
+      }.execInContext(new ImmutableMap.Builder<String, Object>()
+            .put(DCRequestContextProvider.PROJECT, PublicPrivateOrganizationSample.ORGPRI2_PROJECT).build());
+      Assert.assertNotEquals("org2:Organisation_0 model in org2pri project is NOT the same as the generic one",
+            org2priOrg2Model.getAbsoluteName(), org2Model.getAbsoluteName());
+      Assert.assertTrue("org2:Organisation_0 model in org2pri project has a mixin specific to this project",
+            org2priOrg2Model.getMixinNames().contains(PublicPrivateOrganizationSample.ORGPRI2_MIXIN));
+      
+      DCResource org2ModelResource = datacoreApiClient.getData(ResourceModelIniter.MODEL_MODEL_NAME, PublicPrivateOrganizationSample.ORG2);
+      Assert.assertNotNull(org2ModelResource);
+      DCResource org2priOrg2ModelResource = new SimpleRequestContextProvider<DCResource>() { // set context project beforehands :
+         protected DCResource executeInternal() throws ResourceException {
+            return datacoreApiClient.getData(ResourceModelIniter.MODEL_MODEL_NAME, PublicPrivateOrganizationSample.ORG2);
+         }
+      }.execInContext(new ImmutableMap.Builder<String, Object>()
+            .put(DCRequestContextProvider.PROJECT, PublicPrivateOrganizationSample.ORGPRI2_PROJECT).build());
+      Assert.assertNotNull("Persistence of forked model has succeeded", org2priOrg2ModelResource);
+      Assert.assertTrue("org2:Organisation_0 model in org2pri project has a mixin specific to this project",
+            ((List<String>) org2priOrg2ModelResource.get("dcmo:mixins")).contains(PublicPrivateOrganizationSample.ORGPRI2_MIXIN));
    }
    
 }

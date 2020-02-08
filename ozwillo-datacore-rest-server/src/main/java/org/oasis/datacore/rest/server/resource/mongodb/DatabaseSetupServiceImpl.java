@@ -37,7 +37,7 @@ import com.mongodb.client.model.Indexes;
  *
  */
 @Component
-public class   DatabaseSetupServiceImpl implements DatabaseSetupService {
+public class DatabaseSetupServiceImpl implements DatabaseSetupService {
 
    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -173,11 +173,8 @@ public class   DatabaseSetupServiceImpl implements DatabaseSetupService {
          List<IndexModel> list = new ArrayList<>();
 
          // compound index on uri & version :
-         IndexOptions indexOptions = new IndexOptions().unique(true);
-         mongoTemplate.getCollection(historizedCollectionName).createIndex(Indexes.descending(DCEntity.KEY_URI, DCEntity.KEY_V), indexOptions);
-//         mongoTemplate.getCollection(historizedCollectionName).createIndex(
-//               new BasicDBObject(DCEntity.KEY_URI, 1).append(DCEntity.KEY_V, 1),
-//               new BasicDBObject("unique", true));
+         mongoTemplate.getCollection(historizedCollectionName).createIndex(
+               Indexes.ascending(DCEntity.KEY_URI, DCEntity.KEY_V), new IndexOptions().unique(true));
          // NB. does nothing if already exists http://docs.mongodb.org/manual/tutorial/create-an-index/
          return collectionAlreadyExists;
       } catch (HistorizationException e) {
@@ -203,17 +200,14 @@ public class   DatabaseSetupServiceImpl implements DatabaseSetupService {
     */
    private boolean ensureCollectionAndIndices(DCModelBase model) {
       boolean res = ensureGenericCollectionAndIndices(model);
-      BasicDBObject dataEntityUniqueIndex = new BasicDBObject();
+      ArrayList<String> dataEntityUniqueIndexNames = new ArrayList<>();
       if (model.isMultiProjectStorage()) {
-         dataEntityUniqueIndex.append(DCEntity.KEY_B, 1);
+         dataEntityUniqueIndexNames.add(DCEntity.KEY_B); // else can't have forked versions of a model
       }
       // TODO isMultiVersionStorage for History
-      IndexOptions indexOptions = new IndexOptions().unique(true);
-      mongoTemplate.getCollection(model.getCollectionName()).createIndex(Indexes.descending(DCEntity.KEY_URI), indexOptions);
-
-//      dataEntityUniqueIndex.append(DCEntity.KEY_URI, 1);
-//      mongoTemplate.getCollection(model.getCollectionName()).createIndex(
-//            dataEntityUniqueIndex, new BasicDBObject("unique", true)); // TODO dropDups ??
+      dataEntityUniqueIndexNames.add(DCEntity.KEY_URI);
+      mongoTemplate.getCollection(model.getCollectionName()).createIndex(
+            Indexes.ascending(dataEntityUniqueIndexNames), new IndexOptions().unique(true)); // TODO dropDups ??
       // NB. does nothing if already exists http://docs.mongodb.org/manual/tutorial/create-an-index/
       return res;
    }

@@ -540,7 +540,8 @@ public class ResourceModelIniter extends DatacoreSampleBase {
       Set<String> projectsNotToPersistNames = new HashSet<String>(
             projectsNotToPersist.stream().map(p -> p.getName()).collect(Collectors.toSet()));
       Collection<DCProject> allProjects = modelAdminService.getProjects();
-      logger.info("Persisting all projects : " + allProjects + " ; save : " + projectsNotToPersistNames);
+      logger.info("Persisting all projects : " + allProjects
+            + " ; save : " + projectsNotToPersistNames); // in order not to override them ??
       projectsToResource(alsoTheirModels, allProjects, projectsNotToPersistNames);
    }
    private void projectsToResource(boolean alsoTheirModels,
