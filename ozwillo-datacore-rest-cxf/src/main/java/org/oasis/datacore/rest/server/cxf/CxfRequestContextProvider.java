@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.apache.cxf.message.Exchange;
 import org.oasis.datacore.common.context.DCRequestContextProvider;
+import org.oasis.datacore.common.context.DCRequestContextProviderFactory;
 import org.oasis.datacore.common.context.SimpleRequestContextProvider;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +23,10 @@ import org.springframework.stereotype.Component;
 public class CxfRequestContextProvider extends CxfJaxrsApiProvider implements DCRequestContextProvider {
    
    protected DelegateRequestContextProvider delegate = new DelegateRequestContextProvider(this);
+   
+   public CxfRequestContextProvider() {
+      DCRequestContextProviderFactory.setRequestContextProvider(this);
+   }
 
    @Override
    public Map<String, Object> getRequestContext() {

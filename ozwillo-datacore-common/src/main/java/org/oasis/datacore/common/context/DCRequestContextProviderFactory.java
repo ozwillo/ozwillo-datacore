@@ -17,7 +17,7 @@ public class DCRequestContextProviderFactory extends RequestContextProviderBase 
    
    private static DCRequestContextProviderFactory instance = null;
    
-   @Autowired(required=false)
+   /** default is SimpleRequestContextProvider */
    private DCRequestContextProvider requestContextProvider = new SimpleRequestContextProvider<>();
    
    public DCRequestContextProviderFactory() {
@@ -33,6 +33,15 @@ public class DCRequestContextProviderFactory extends RequestContextProviderBase 
    @Override
    public Map<String, Object> getRequestContext() {
       return DCRequestContextProviderFactory.getProvider().getRequestContext();
+   }
+   
+   /**
+    * Must be called only by non default DCRequestContextProvider implementations
+    * so that they override the default one.
+    * @param requestContextProvider
+    */
+   public static void setRequestContextProvider(DCRequestContextProvider requestContextProvider) {
+      DCRequestContextProviderFactory.instance.requestContextProvider = requestContextProvider;
    }
    
 }

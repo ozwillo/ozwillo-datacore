@@ -29,15 +29,17 @@ public class SimpleRequestContextProvider<T> extends RequestContextProviderBase 
 
    /**
     * 
-    * @return null if none (rather than exploding, to allow to check if there is any)
+    * @return null if none (rather than exploding, to allow to check if there is any
+    * ex. in CxfRequestContextProvider)
     */
    public static Map<String, Object> getSimpleRequestContext() {
       return SimpleRequestContextProvider.requestContext.get();
    }
    
    /**
-    * 
-    * @return existing
+    * @param requestContext new context to set, null allowed (for reset, when going out)
+    * @return current context : new context that has been set or if null previous one
+    * or if null empty one
     */
    public static Map<String, Object> setSimpleRequestContext(Map<String, Object> requestContext) {
       Map<String, Object> existingContext = SimpleRequestContextProvider.requestContext.get();
@@ -53,7 +55,9 @@ public class SimpleRequestContextProvider<T> extends RequestContextProviderBase 
    
    /**
     * Adds it to the existing context
-    * @return existing
+    * @param requestContext new context to set, null allowed (for reset, when going out)
+    * @return current context : new context that has been set or if null previous one
+    * or if null empty one
     * @throws RuntimeException if null context (unstack is rather set(null))
     */
    private static Map<String, Object> stackSimpleRequestContext(Map<String, Object> requestContext) {
@@ -101,7 +105,8 @@ public class SimpleRequestContextProvider<T> extends RequestContextProviderBase 
    }
 
    /**
-    * sets the given context, or adds ("stacks") it to existing context if any
+    * sets the given context, or adds ("stacks") it to existing context if any.
+    * Not synchronized.
     * @param requestContext null means empty ; may be immutable, will be recreated anyway
     * @throws RuntimeException thrown, or wrapping what's thrown, by executeInternal()
     */
