@@ -158,7 +158,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		<validation-api.version>1.1.0.Final</validation-api.version>
 
 		<!-- REST -->
-		<jackson.version>2.2.3</jackson.version><!-- latest, also jsonld-java's 
+		<jackson.version>2.10.0</jackson.version><!-- latest, also jsonld-java's 
 			as of 201309 -->
 		<cxf.version>3.1.4</cxf.version><!-- before 3.0.4 for JAXRS 2.0, 3.1.4 for metrics -->
 		<metrics.version>3.1.2</metrics.version><!-- cxf 3.1.4's' (optional dep) version AND latest on 20151201 -->
@@ -191,7 +191,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		<google.oauth.client.java6.version>1.17.0-rc</google.oauth.client.java6.version><!-- for tests -->
       
       <!-- JSON-LD (for RDF facade) -->
-      <jsonld-java.version>0.4</jsonld-java.version>
+      <jsonld-java.version>0.13.0</jsonld-java.version>
       <httpclient.version>4.2.5</httpclient.version><!-- same as openid-connect-common 1.1.0's -->
       <!-- jackson.version>2.3.3</jackson.version><!- would conflict ->
       <sesame.version>2.7.11</sesame.version>
