@@ -11,7 +11,7 @@ To interact and scale up, it uses Web technologies (HTTP REST API, OAuth2) and a
 To achieve data model flexibility, it follows Semantic Web principles ("almost" W3C JSON-LD compatible), but curbed to fit real world constraints.
 
 Features
-   * HTTP REST API for sharing data, with OAuth2 authentication, client-side caching and Entity Tag-based optimistic locking
+   * HTTP REST API for sharing data, with OAuth2 authentication, client-side caching and Entity Tag-based optimistic locking, metrics
    * W3C JSON-LD-like data Resource representation, as well as RDF (nquads, turtle). Views allow outputting less fields.
    * W3C LDP-inspired query filters (logical operators including "between", regex, fulltext, pagination, MongoDB-inspired operators, capped)
    * Scalable MongoDB storage (replicated, sharded cluster-ready), Java server (Apache CXF 3 / Spring 3)
@@ -140,8 +140,14 @@ Handled 8 models or mixins in 2 loops   Posted 8 models or mixins (skipped 0, no
 Handled 17 rows (43 errors) in 0s   Posted 41 resources (skipped 0, no error)...
 ````
 
-How to test OAuth2 in development against preprod : in deploy properties change kernel & accound URLs and secret (but don't commit it !!), restart, go the Playground page, login using a preprod user, check that the Playground still works (and in HTTP requests for Bearer in the Authorization header, after enabling web development tools)
+How to test OAuth2 in development against preprod : in deploy properties change kernel & account URLs and secret (but don't commit it !!), restart, go the Playground page, login using a preprod user, check that the Playground still works (and in HTTP requests for Bearer in the Authorization header, after enabling web development tools)
 
+How to test metrics : in deploy properties uncomment and set datacoreApiServer.metrics.csvReportPeriod=5, start the server, then check that every 5 seconds Codahale Dropwizard metrics are output in CSV ex. to see "number of requests per minute" use (as said at https://github.com/ozwillo/ozwillo-datacore/commit/80131f88de9266bc440f4694b6a40ed1ad690d38 ) :
+
+````
+# in start directory ex. tomcat/bin
+tail -f "target/metrics/DatacoreApiImpl_Attribute=Totals.csv" | awk ' { print $14 }' FS=","
+````
 
 
 

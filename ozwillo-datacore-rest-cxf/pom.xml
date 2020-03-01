@@ -125,6 +125,11 @@
       <!-- scope>test</scope -->
     </dependency>
     <dependency>
+       <groupId>jakarta.xml.ws</groupId>
+       <artifactId>jakarta.xml.ws-api</artifactId> <!-- JAXWS API, not used but javax version is dep of cxf-core/rt-* -->
+    </dependency>
+    
+    <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>javax.servlet-api</artifactId><!-- required in tests by jetty -->
     </dependency>
