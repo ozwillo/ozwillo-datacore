@@ -191,7 +191,7 @@ public class DCSecurity {
 
 	public boolean isResourceOwner(User user) {
 		for (GrantedAuthority authority : user.getAuthorities()) {
-			if (this.resourceOwners.contains(authority.getAuthority())) {
+			if (this.resourceOwners != null && this.resourceOwners.contains(authority.getAuthority())) {
 				return true;
 			}
 		}
@@ -200,7 +200,7 @@ public class DCSecurity {
 
 	public boolean isResourceCreator(User user) {
 		for (GrantedAuthority authority : user.getAuthorities()) {
-			if (this.resourceCreators.contains(authority.getAuthority())) {
+			if (this.resourceCreators != null && this.resourceCreators.contains(authority.getAuthority())) {
 				return true;
 			}
 		}
@@ -209,7 +209,7 @@ public class DCSecurity {
 	
 	public boolean isResourceReader(User user) {
 		for (GrantedAuthority authority : user.getAuthorities()) {
-			if (this.resourceReaders.contains(authority.getAuthority())) {
+			if (this.resourceReaders != null && this.resourceReaders.contains(authority.getAuthority())) {
 				return true;
 			}
 		}
@@ -218,7 +218,7 @@ public class DCSecurity {
 	
 	public boolean isResourceWriter(User user) {
 		for (GrantedAuthority authority : user.getAuthorities()) {
-			if (this.resourceWriters.contains(authority.getAuthority())) {
+			if (this.resourceWriters != null && this.resourceWriters.contains(authority.getAuthority())) {
 				return true;
 			}
 		}
