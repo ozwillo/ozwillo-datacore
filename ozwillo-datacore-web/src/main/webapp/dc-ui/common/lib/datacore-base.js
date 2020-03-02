@@ -46,8 +46,14 @@ function initUserInfo() {
                anonymous : true
          };
       } else {
-         // redirect to login :
-         window.location.href = "/dc/playground/login"; // .href simulates a link http://stackoverflow.com/questions/1655065/redirecting-to-a-relative-url-in-javascript
+         // DON'T redirect to login in order to allow doc being public :
+         // window.location.href = "/dc/playground/login"; // .href simulates a link http://stackoverflow.com/questions/1655065/redirecting-to-a-relative-url-in-javascript
+         userinfo = {
+               nickname : 'anonymous',
+               sub_groups : [],
+               test : false,
+               anonymous : true
+         };
       }
       $('#logout').hide();
    }
@@ -75,8 +81,11 @@ function initUserInfoUi() {
       var id_client = userinfo['id_token'];
       deleteCookie('authorization');
       deleteCookie('userinfo');
-      window.location.assign(dcConf.accountsBaseUrl + '/a/logout?id_token_hint='
-            + id_client + '&post_logout_redirect_uri=' + dcConf.baseUrl);
+
+      // DON'T redirect to login in order to allow doc being public :
+      //window.location.assign(dcConf.accountsBaseUrl + '/a/logout?id_token_hint='
+      //      + id_client + '&post_logout_redirect_uri=' + dcConf.baseUrl);
+      initUserInfo(); // display anonymous user
       return ;//if no return don't work window.location.assign
    });
 
