@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.bson.Document;
+import org.bson.json.JsonWriterSettings;
 import org.oasis.datacore.core.context.DatacoreRequestContextService;
 import org.oasis.datacore.core.entity.EntityModelService;
 import org.oasis.datacore.core.entity.NativeModelService;
@@ -37,11 +39,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
+
+import com.mongodb.client.FindIterable;
 
 
 /**
@@ -56,6 +59,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
 
+   public static final String DEBUG_QUERY_EXPLAIN = "queryExplain";
    private static final String DEBUG_WARNINGS = "warnings";
 
    private static final Logger logger = LoggerFactory.getLogger(LdpEntityQueryServiceImpl.class);
@@ -93,7 +97,9 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    /** microseconds after which db.killOp() if > 0, requires 2.6+ server http://docs.mongodb.org/manual/reference/method/cursor.maxTimeMS/#cursor.maxTimeMS */
    @Value("${datacoreApiServer.query.maxTime}")
    protected int maxTime;
-
+   @SuppressWarnings("deprecation")
+   private JsonWriterSettings indentedMongoJsonWriterSettings = new JsonWriterSettings(true);
+   
    
    /** to get storage model */
    @Autowired
@@ -126,7 +132,7 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    /** to evaluate model-level rights */
    @Autowired
    private EntityPermissionEvaluator permissionEvaluator;
-   
+ 
    
    @Override
    public List<DCEntity> findDataInType(String modelType, Map<String, List<String>> params,
@@ -719,10 +725,13 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          // sortExplain & getSort(), getSpecial() (ex. maxScan), getOptions()?
          // or even Model (type(s), fields)...
          // TODO constants
+         FindIterable<Document> explainRes = mgo.getCollection(storageModel.getCollectionName())
+               .find(springMongoQuery.getQueryObject()).modifiers(new Document("$explain", true));
          Map<String, Object> debugCtx = serverRequestContext.getDebug(); // never null because isDebug()
          debugCtx.put("collectionName", storageModel.getCollectionName());
          debugCtx.put("mongoQuery", springMongoQuery.getQueryObject());
          debugCtx.put("springMongoQuery", springMongoQuery);
+         debugCtx.put(DEBUG_QUERY_EXPLAIN, explainRes.first()); // toJson(indentedMongoJsonWriterSettings) WARNING requires mongo conf for Joda DateTime (in MongoTemplateManager)
          debugCtx.put("hasNoIndexedField", queryParsingContext.isHasNoIndexedField());
          debugCtx.put("queryParsingContext.aggregatedQueryLimit", queryParsingContext.getAggregatedQueryLimit());
          debugCtx.put("storageModel.maxScan", storageModel.getMaxScan());

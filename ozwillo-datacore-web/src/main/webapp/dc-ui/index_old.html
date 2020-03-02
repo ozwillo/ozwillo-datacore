@@ -277,6 +277,13 @@ javascript:return findDataByType(encodeUri($(this).attr('href')));
 <a id="faq"></a>
 <b>FAQ:</b>
 <br/><br/>
+&nbsp;&nbsp;- <u>How to know that an index is used in a query</u> : execute the query in the Playground
+using the "?" debug button, then interprete results according to
+<a href="https://docs.mongodb.com/manual/reference/explain-results/">Mongo $explain reference</a>.
+In short, in an efficient query, in inputStage objects below debug.queryExplain.queryPlanner.winningPlan,
+"stage" should never be COLLSCAN, and used fields should be in "filter" (when "stage" is FETCH)
+or "keyPattern" (when "stage" is IXSCAN i.e. uses an index).
+<br/><br/>
 &nbsp;&nbsp;- <u>"reached maxScan (300) before document limit"</u> errors (or no return)
 on ex. "by geo area" queries : ask model designer to
 <a href="https://github.com/pole-numerique/oasis-datacore/wiki/Playground-&-Import-UI-demo-scenario---Provto-&-OpenElec">add the right indexes</a>

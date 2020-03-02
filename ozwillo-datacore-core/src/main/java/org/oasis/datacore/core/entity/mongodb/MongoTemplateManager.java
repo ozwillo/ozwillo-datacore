@@ -1,11 +1,17 @@
 package org.oasis.datacore.core.entity.mongodb;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
 
+import org.bson.codecs.configuration.CodecProvider;
+import org.bson.internal.ProvidersCodecRegistry;
+import org.oasis.datacore.core.entity.mongodb.joda.DateTimeCodecProvider;
+import org.oasis.datacore.core.entity.mongodb.joda.DateTimeTransformer;
 import org.oasis.datacore.core.meta.model.DCModelService;
 import org.oasis.datacore.core.meta.pov.DCProject;
 import org.slf4j.Logger;
@@ -90,6 +96,22 @@ public class MongoTemplateManager {
       } else {
          username = unquote(username);
          password = unquote(password);
+      }
+      
+      configureMongoForJoda(mgo);
+   }
+
+   @SuppressWarnings("deprecation")
+   private void configureMongoForJoda(MongoTemplate mgo) {
+      org.bson.BSON.addEncodingHook(org.joda.time.DateTime.class, new DateTimeTransformer());
+      try {
+         Field f = ProvidersCodecRegistry.class.getDeclaredField("codecProviders");
+         f.setAccessible(true);
+         @SuppressWarnings("unchecked")
+         List<CodecProvider> codecProviders = (List<CodecProvider>) f.get(mgo.getDb().getCodecRegistry());
+         codecProviders.add(new DateTimeCodecProvider());
+      } catch (Exception e) {
+         throw new RuntimeException("Error configuring Mongo for Joda DateTime");
       }
    }
    
@@ -192,6 +214,8 @@ public class MongoTemplateManager {
          MongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(mongoClient, dbUri.getDatabase());
          mgo = new MongoTemplate(mongoDbFactory, mongoConverter);
       }
+      
+      configureMongoForJoda(mgo);
 
       // NB. DCProject.isDbRobust is applied by DatacoreWriteConcernResolver
       

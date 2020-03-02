@@ -1051,6 +1051,7 @@ public class DatacoreApiServerTest {
             new QueryParameters().add(DCResource.KEY_URI,  ">=" + londonCityData.getUri()
                   + "+") // adding sort in >= operator to remove default sort on _chAt
             .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
+      Assert.assertTrue(TestHelper.getDebugWinningPlanFilterFields(debugResult).contains("_uri"));
       List<Map<String, Object>> resources = TestHelper.getDebugResources(debugResult);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(londonCityData.getUri(), resources.get(0).get(DCResource.KEY_URI));
@@ -1060,6 +1061,7 @@ public class DatacoreApiServerTest {
             new QueryParameters().add(DCResource.KEY_DCMODIFIED, bordeauxCityData.getLastModified().toString())
             // NB. there is a sort on _chAt by default !
             .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
+      Assert.assertTrue(TestHelper.getDebugWinningPlanFilterFields(debugResult).contains("_chAt"));
       resources = TestHelper.getDebugResources(debugResult);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(bordeauxCityData.getLastModified(),
@@ -1070,6 +1072,7 @@ public class DatacoreApiServerTest {
             new QueryParameters().add("n:name", "=Bordeaux")
             // NB. there is a sort on _chAt by default !
             .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
+      Assert.assertTrue(TestHelper.getDebugWinningPlanFilterFields(debugResult).contains("_p.n:name"));
       resources = TestHelper.getDebugResources(debugResult);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(bordeauxCityData.getUri(), resources.get(0).get(DCResource.KEY_URI));
@@ -1079,6 +1082,7 @@ public class DatacoreApiServerTest {
             new QueryParameters().add("city:historicalEvents.city:historicalEventDate", ">\"-0143-04-01T00:00:00.000Z\"")
             // NB. there is a sort on _chAt by default !
             .add(DatacoreApi.DEBUG_PARAM, "true"), null, 10);
+      Assert.assertTrue(TestHelper.getDebugWinningPlanFilterFields(debugResult).contains("_p.city:historicalEvents.city:historicalEventDate"));
       resources = TestHelper.getDebugResources(debugResult);
       Assert.assertEquals(1, resources.size());
       Assert.assertEquals(bordeauxCityData.getUri(), resources.get(0).get(DCResource.KEY_URI));
