@@ -402,13 +402,13 @@ public class DatacoreApiServerMixinTest {
          resourceService.createOrUpdate(buildSofiaMonastery(++i),
                AltTourismPlaceAddressSample.ALTTOURISM_PLACE, true, false, false);
          Assert.fail("Resource in guest type should not be creatable as guest");
-      } catch (Exception e) {
+      } catch (AccessDeniedException e) {
          Assert.assertTrue(true);
       }
       try {
          datacoreApiClient.postDataInType(buildSofiaMonastery(++i)); // client side
          Assert.fail("Resource in guest type should not be creatable as guest");
-      } catch (Exception e) {
+      } catch (ForbiddenException e) {
          Assert.assertTrue(true);
       }
       

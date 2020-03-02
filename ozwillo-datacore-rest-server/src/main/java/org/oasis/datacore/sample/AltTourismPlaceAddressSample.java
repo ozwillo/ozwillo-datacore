@@ -58,6 +58,8 @@ public class AltTourismPlaceAddressSample extends DatacoreSampleBase {
       oasisAddress.addField(new DCField("countryName", "string", false, 100)); // OR only resource ??
       oasisAddress.addField(new DCResourceField("country", "country", false, 100)); // TODO create country model, or reuse sample ?!?
 
+      // NB. oasisAddress is not added to both place models here but only in unit tests
+      
       modelsToCreate.addAll(Arrays.asList(myAppPlaceAddress, altTourismPlaceKind, altTourismPlace, oasisAddress));
    }
    
