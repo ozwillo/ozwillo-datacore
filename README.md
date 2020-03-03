@@ -41,7 +41,7 @@ License : Affero GPL3, except for client libraries which are LGPL3
 Getting Started with the server
 -------------------------------
 
-Requirements : [Java JDK 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html), [MongoDB 2.6](http://docs.mongodb.org/manual/installation/)
+Requirements : [Java JDK 8-11](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html), [MongoDB 2.6-4.2](http://docs.mongodb.org/manual/installation/)
 
 Build ([Maven 3](http://maven.apache.org/download.cgi) required) : at root, do : mvn clean install
 
@@ -49,11 +49,17 @@ Deployment : go in the ozwillo-datacore-web subproject and do `mvn jetty:run`
 
 Then go have a look at API documentation and playground at [http://localhost:8080/dc-ui/index.html](http://localhost:8080/dc-ui/index.html). To try it out, for instance do a GET ``/dc/type/geo:Area_0`` to see what geographical areas (cities...) are available. To learn more about available operations, follow the [wiki Playground tutorial](https://github.com/ozwillo/ozwillo-datacore/wiki/Playground-&-Import-UI-demo-scenario---Provto-&-OpenElec) and do the [city & country Tutorial](https://github.com/ozwillo/ozwillo-datacore/wiki/Tutorial---city-&-country). To learn about out to use them, have a look at the detailed API doc below.
 
-Alternatively, to deploy it in production ([Tomcat 7](http://tomcat.apache.org/download-70.cgi) required) : put the war contents in a tomcat 7 root and start it :
+Alternatively, deploy it on ([Tomcat 8](http://tomcat.apache.org/download-80.cgi) required) : put the war contents in a tomcat 8 root and start it :
 
-    cd tomcat7/bin
-    cp -rf ../../workspace/ozwillo-datacore/ozwillo-datacore-web/target/datacore/* ../webapps/ROOT/
-    ./catalina.sh start
+    cd tomcat8
+    cp -rf ozwillo-datacore/ozwillo-datacore-web/target/datacore/* webapps/ROOT/
+    # edit environment and security mode in bin/setenv.sh : export JAVA_OPTS="-Dspring.profiles.active=prod -Ddatacore.securitymode="
+    # edit configuration in webapps/ROOT/WEB-INF/classes : oasis-datacore-deploy.properties or optional oasis-datacore-deploy-env<env>.properties
+    ./catalina.sh jpda start
+
+In production :
+- override dev environment and security mode in bin/setenv.sh : export JAVA_OPTS="-Dspring.profiles.active=prod -Ddatacore.securitymode="
+- edit configuration in webapps/ROOT/WEB-INF/classes : oasis-datacore-deploy.properties or / and optional oasis-datacore-deploy-env<env>.properties
 
 
 Adding Business Configuration

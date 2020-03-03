@@ -13,8 +13,9 @@
       http://www.springframework.org/schema/security/oauth2
       http://www.springframework.org/schema/security/spring-security-oauth2.xsd">
 
-   <context:property-placeholder location="classpath:oasis-datacore-security.properties,classpath:oasis-datacore-rest-api.properties,classpath:oasis-datacore-rest-server.properties,classpath*:oasis-datacore-deploy*.properties"
-      order="-1" ignore-unresolvable="true"/>
+   <!-- properties that must be imported in root application context XML : -->
+   <!-- context:property-placeholder location="classpath:oasis-datacore-security.properties,classpath:oasis-datacore-rest-api.properties,classpath:oasis-datacore-rest-server.properties"
+      order="-1" ignore-unresolvable="true"/ -->
 	
 	
 	<!-- Spring Security OAuth2 filter : -->

@@ -17,7 +17,7 @@
    NB. using "classpath*:" rather than "classpath" to allow not finding files (in unit tests...)
    (though not that it also means that it looks for such files in ALL jars)
    See also http://www.baeldung.com/2012/02/06/properties-with-spring/ -->
-   <context:property-placeholder location="classpath:oasis-datacore-rest-api.properties,classpath:oasis-datacore-rest-server.properties,classpath*:oasis-datacore-deploy-env-${spring.profiles.active:dev}.properties,classpath*:oasis-datacore-deploy-host-${datacore.host}.properties"
+   <context:property-placeholder location="classpath:oasis-datacore-security.properties,classpath:oasis-datacore-rest-api.properties,classpath:oasis-datacore-rest-server.properties,classpath*:oasis-datacore-deploy.properties,classpath*:oasis-datacore-deploy-env-${spring.profiles.active:dev}.properties,classpath*:oasis-datacore-deploy-host-${datacore.host}.properties"
       order="-1" ignore-unresolvable="true"/><!-- so defaults to importing PropertyPlaceholder/*Resolver -->
    
    <import resource="classpath:oasis-datacore-core-context.xml" />
