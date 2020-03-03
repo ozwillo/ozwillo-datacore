@@ -30,6 +30,10 @@
 		Spring recommendation : If you are only creating a service that is used by non-browser clients, you will likely want to disable CSRF protection. https://stackoverflow.com/questions/21128058/invalid-csrf-token-null-was-found-on-the-request-parameter-csrf-or-header
 		else when PUT from Playground Invalid CSRF Token &#39;null&#39; was found on the request parameter... -->
 		<security:csrf disabled="true"/>
+        <!-- ONLY IN DEV PROFILE (local deployment) Enable CORS, else browser console errors on login :
+        Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://accounts.ozwillo-preprod.eu/a/auth?response_type=cod…email&redirect_uri=http://localhost:8080/dc/playground/token. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing).
+        Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://accounts.ozwillo-preprod.eu/a/auth?response_type=cod…email&redirect_uri=http://localhost:8080/dc/playground/token. (Reason: CORS request did not succeed). -->
+        <security:cors configuration-source-ref="datacore.corsConfigurationSource"/>
 		
 		<!-- Datacore status : -->
 		<security:intercept-url pattern="/dc/status*" access="permitAll()" />
@@ -53,5 +57,23 @@
 		<security:custom-filter ref="oauth2ProviderFilter" before="PRE_AUTH_FILTER" />
 		<security:access-denied-handler ref="oauthAccessDeniedHandler" />
 	</security:http>
+
+
+   <beans profile="!dev">
+      <!-- Disable CORS -->
+      <bean id="datacore.corsConfigurationSource" class="org.springframework.web.cors.UrlBasedCorsConfigurationSource" />
+   </beans>
+   <beans profile="dev">
+      <!-- ONLY IN DEV PROFILE (local deployment) Enable CORS -->
+      <bean id="datacore.corsConfigurationSource" class="org.springframework.web.cors.UrlBasedCorsConfigurationSource">
+         <property name="corsConfigurations">
+            <map>
+               <entry key="/**" value-ref="datacore.corsConfiguration" />
+            </map>
+         </property>
+      </bean>
+      <bean id="datacore.corsConfiguration" factory-bean="datacore.corsConfigurationFactoryBean" factory-method="applyPermitDefaultValues" />
+      <bean id="datacore.corsConfigurationFactoryBean" class="org.springframework.web.cors.CorsConfiguration" />
+   </beans>
 	
 </beans>

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:security="http://www.springframework.org/schema/security"
-	xsi:schemaLocation="
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:security="http://www.springframework.org/schema/security"
+    xsi:schemaLocation="
       http://www.springframework.org/schema/beans
       http://www.springframework.org/schema/beans/spring-beans.xsd
       http://www.springframework.org/schema/security
@@ -10,50 +10,71 @@
 
    <!-- context:property-placeholder location="classpath:oasis-datacore-security.properties,classpath:oasis-datacore-rest-api.properties,classpath:oasis-datacore-rest-server.properties,classpath*:oasis-datacore-deploy*.properties"
       order="-1" ignore-unresolvable="true"/ -->
+    <import resource="classpath:oasis-datacore-security-oauth2-context.xml" />
 
-   <!-- no login entry point since playground is not protected (?????) -->
-	<bean id="oauthAuthenticationEntryPoint" class="org.springframework.security.oauth2.provider.error.OAuth2AuthenticationEntryPoint">
-		<property name="realmName" value="datacore" />
-	</bean>
-   
-   <!-- login, must be first see http://www.baeldung.com/security-none-filters-none-access-permitAll -->
-	<!-- security:http name="org.springframework.security.filterChains.login" pattern="/dc/login*" security="none" / -->
+   <!-- login entry point is Kernel's -->
+    <bean id="oauthAuthenticationEntryPoint" class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
+        <constructor-arg name="loginFormUrl" value="${datacorePlayground.loginUrl}" />
+    </bean>
 
    <!-- Spring Security web filterChain : -->
-	<!-- NB. could maybe be overriden (name="org.springframework.security.filterChains") but not its filters  -->
-	<security:http name="org.springframework.security.filterChains"
-	               entry-point-ref="oauthAuthenticationEntryPoint"
-				   access-decision-manager-ref="accessDecisionManager"
-				   authentication-manager-ref="authenticationManager"
-				   create-session="never"
-				   use-expressions="true"><!-- else Unsupported configuration attributes: [permitAll], see http://stackoverflow.com/questions/3388779/websphere-unsupported-configuration-attributes-permitall-using-spring -->
-	
-		<!-- As of Spring Security 4.0, CSRF protection is enabled by default https://stackoverflow.com/questions/31312844/spring-security-4-csrf-disable-via-xml
-		Spring recommendation : If you are only creating a service that is used by non-browser clients, you will likely want to disable CSRF protection. https://stackoverflow.com/questions/21128058/invalid-csrf-token-null-was-found-on-the-request-parameter-csrf-or-header
-		else when PUT from Playground Invalid CSRF Token &#39;null&#39; was found on the request parameter... -->
-		<security:csrf disabled="true"/>
-		
-		<!-- Datacore status : -->
-		<security:intercept-url pattern="/dc/status*" access="permitAll()" />
-		
-	   <!-- Datacore playground OASIS Kernel OAuth2 auth : -->
-		<security:intercept-url pattern="/dc/playground/login*" access="permitAll()" />
-		<security:intercept-url pattern="/dc/playground/token*" access="permitAll()" />
-		<security:intercept-url pattern="/dc/playground/configuration*" access="permitAll()" /><!-- so configuration can be read by playground -->
-		
-		
-		<!-- Datacore playground UI access : -->
-		<!-- NB. /dc/playground/configuration is called with auth (from ajax) even in devmode -->
-		<security:intercept-url pattern="/api-docs/**" access="permitAll()" /><!-- Swagger spec ; else 401 : undefined http://localhost:8080/api-docs -->
-		<security:intercept-url pattern="/dc-ui/**" access="permitAll()" /><!-- playground UIs -->
-		<security:intercept-url pattern="/" access="permitAll()" /><!-- for root redirect to playground UI -->
-		
-		<!-- Datacore protection : -->
-		<security:intercept-url pattern="/**" access="isFullyAuthenticated()" /><!-- hasRole('SCOPE_DATACORE') and ; NB. datacore scope is already required in oauth:client-details-service ; protect everything else esp. /dc/** -->
+    <!-- NB. could maybe be overriden (name="org.springframework.security.filterChains") but not its filters  -->
+    <security:http name="org.springframework.security.filterChains"
+                   entry-point-ref="oauthAuthenticationEntryPoint"
+                   access-decision-manager-ref="accessDecisionManager"
+                   authentication-manager-ref="authenticationManager"
+                   create-session="never"
+                   use-expressions="true"><!-- else Unsupported configuration attributes: [permitAll], see http://stackoverflow.com/questions/3388779/websphere-unsupported-configuration-attributes-permitall-using-spring -->
 
-		<security:custom-filter position="BASIC_AUTH_FILTER" ref="basicAuthenticationFilter" /><!-- DEVMODE ONLY -->
-		<security:custom-filter ref="oauth2ProviderFilter" after="BASIC_AUTH_FILTER" /> <!--  before="PRE_AUTH_FILTER" -->
-		<security:access-denied-handler ref="oauthAccessDeniedHandler" />
-	</security:http>
-	
+        <!-- As of Spring Security 4.0, CSRF protection is enabled by default https://stackoverflow.com/questions/31312844/spring-security-4-csrf-disable-via-xml
+        Spring recommendation : If you are only creating a service that is used by non-browser clients, you will likely want to disable CSRF protection. https://stackoverflow.com/questions/21128058/invalid-csrf-token-null-was-found-on-the-request-parameter-csrf-or-header
+        else when PUT from Playground Invalid CSRF Token &#39;null&#39; was found on the request parameter... -->
+        <security:csrf disabled="true"/>
+        <!-- ONLY IN DEV PROFILE (local deployment) Enable CORS, else browser console errors on login :
+        Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://accounts.ozwillo-preprod.eu/a/auth?response_type=cod…email&redirect_uri=http://localhost:8080/dc/playground/token. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing).
+        Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://accounts.ozwillo-preprod.eu/a/auth?response_type=cod…email&redirect_uri=http://localhost:8080/dc/playground/token. (Reason: CORS request did not succeed). -->
+        <security:cors configuration-source-ref="datacore.corsConfigurationSource"/>
+        
+        <!-- Datacore status : -->
+        <security:intercept-url pattern="/dc/status*" access="permitAll()" />
+
+       <!-- Datacore playground OASIS Kernel OAuth2 auth : -->
+        <security:intercept-url pattern="/dc/playground/login*" access="permitAll()" />
+        <security:intercept-url pattern="/dc/playground/token*" access="permitAll()" />
+        <security:intercept-url pattern="/dc/playground/configuration*" access="permitAll()" /><!-- so configuration can be read by playground -->
+        
+        
+        <!-- Datacore playground UI access : -->
+        <!-- NB. /dc/playground/configuration is called with auth (from ajax) even in devmode -->
+        <security:intercept-url pattern="/api-docs/**" access="permitAll()" /><!-- Swagger spec ; else 401 : undefined http://localhost:8080/api-docs -->
+        <security:intercept-url pattern="/dc-ui/import/samples/**" access="isFullyAuthenticated()" /><!-- OUTSIDE DEVMODE protect data & model samples (?) or setup a Basic Auth form -->
+        <security:intercept-url pattern="/dc-ui/**" access="permitAll()" /><!-- playground UIs -->
+        <security:intercept-url pattern="/" access="permitAll()" /><!-- for root redirect to playground UI -->
+        
+        <!-- Datacore protection : -->
+        <security:intercept-url pattern="/**" access="isFullyAuthenticated()" /><!-- hasRole('SCOPE_DATACORE') and ; NB. datacore scope is already required in oauth:client-details-service ; protect everything else esp. /dc/** -->
+
+        <security:custom-filter position="BASIC_AUTH_FILTER" ref="basicAuthenticationFilter" /><!-- DEVMODE ONLY -->
+        <security:custom-filter ref="oauth2ProviderFilter" after="BASIC_AUTH_FILTER" /> <!-- DEVMODE ONLY instead of before="PRE_AUTH_FILTER" -->
+        <security:access-denied-handler ref="oauthAccessDeniedHandler" />
+    </security:http>
+
+
+   <beans profile="!dev">
+      <!-- Disable CORS -->
+      <bean id="datacore.corsConfigurationSource" class="org.springframework.web.cors.UrlBasedCorsConfigurationSource" />
+   </beans>
+   <beans profile="dev">
+      <!-- ONLY IN DEV PROFILE (local deployment) Enable CORS -->
+      <bean id="datacore.corsConfigurationSource" class="org.springframework.web.cors.UrlBasedCorsConfigurationSource">
+         <property name="corsConfigurations">
+            <map>
+               <entry key="/**" value-ref="datacore.corsConfiguration" />
+            </map>
+         </property>
+      </bean>
+      <bean id="datacore.corsConfiguration" factory-bean="datacore.corsConfigurationFactoryBean" factory-method="applyPermitDefaultValues" />
+      <bean id="datacore.corsConfigurationFactoryBean" class="org.springframework.web.cors.CorsConfiguration" />
+   </beans>
+    
 </beans>
