@@ -1,13 +1,13 @@
 language: java
 jdk:
-  - oraclejdk8
+  - openjdk11
 #services:
 #  - mongodb
-# does not support 2.x, so see https://github.com/mongodb/pymodm/blob/master/.travis.yml https://docs.travis-ci.com/user/languages/java/
+# does not allow to specify MongoDB version, so instally it explicitly see https://github.com/mongodb/pymodm/blob/master/.travis.yml https://docs.travis-ci.com/user/languages/java/
 
 env:
   matrix:
-    - MONGODB=4.0.6
+    - MONGODB=4.0.6 # no newer (4.2.3) using fastdl, else switch to apt install
 
 matrix:
   fast_finish: true
