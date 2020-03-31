@@ -24,8 +24,8 @@
    <!-- Default mongo bean name is 'mongo'
    NB. most of the mongo conf is done on client side !
    NB. no socket timeout because would NOT stop the query on the mongo server see #23 -->
-   <mongo:mongo-client id="mongoClient" host="${oasis.datacore.mongodb.host}" port="${oasis.datacore.mongodb.port}">
-   <!--credentials="${oasis.datacore.mongodb.username}:${oasis.datacore.mongodb.password}@${oasis.datacore.mongodb.dbname}">-->
+   <mongo:mongo-client id="mongoClient" host="${oasis.datacore.mongodb.host}" port="${oasis.datacore.mongodb.port}"
+   credentials="#{&quot;${oasis.datacore.mongodb.username}&quot; == null || &quot;${oasis.datacore.mongodb.username}&quot;.trim().isEmpty() || &quot;${oasis.datacore.mongodb.username}&quot;.trim().equals(&quot;null&quot;) ? &quot;&quot; : &quot;${oasis.datacore.mongodb.username}:${oasis.datacore.mongodb.password}@${oasis.datacore.mongodb.dbname}&quot;}">
       <mongo:client-options
          connections-per-host="100"
          threads-allowed-to-block-for-connection-multiplier="4"
@@ -36,31 +36,6 @@
   
   
   <!-- DB -->
-  
-   <!-- TODO replacing default MappingMongoConverter for null prop save hack
-   (can't be done using mongo:mapping-converter, see http://forum.springsource.org/showthread.php?141254-Spring-Data-MongoDB-mappingConverter-mapKeyDotReplacement-config-problem )
-   see also :
-   http://www.mkyong.com/mongodb/spring-data-mongodb-remove-_class-column/
-   http://www.javacodegeeks.com/2012/01/mongodb-with-spring-data-project.html
-   http://aredko.blogspot.fr/2011/08/exploiting-mongodb-together-with-spring.html
-   -->
-   <!-- bean id="mappingContext" class="org.springframework.data.mongodb.core.mapping.MongoMappingContext"/>
-   <bean id="mappingConverter" class="org.springframework.data.mongodb.core.convert.DatacoreMappingMongoConverter">
-      <constructor-arg name="mongoDbFactory" ref="mongoDbFactory" />
-      <constructor-arg name="mappingContext" ref="mappingContext" />
-      <!- TODO custom converters ?!? ->
-      <!- property name="customConversions">
-         <bean class="org.springframework.data.mongodb.core.convert.CustomConversions">
-            <constructor-arg name="converters">
-               <list>
-                  <bean class="org.oasis.datacore.sample.converter.DCURIConverter"/>
-                  <bean class="org.oasis.datacore.sample.converter.DCEntityConverter"/>
-               </list>
-            </constructor-arg>
-         </bean>
-      </property ->
-   </bean -->
-   
 
    <!-- in order to remove _class in mongo stored objects
    see http://www.mkyong.com/mongodb/spring-data-mongodb-remove-_class-column/ -->
@@ -87,9 +62,7 @@
    see http://stackoverflow.com/questions/17865270/error-handling-with-spring-data-and-mongo-java-driver-->
       <mongo:db-factory id="mongoDbFactory" dbname="${oasis.datacore.mongodb.dbname}"
       mongo-ref="mongoClient" />
-      <!--write-concern="#{T(com.mongodb.WriteConcern).valueOf(&quot;${oasis.datacore.mongodb.writeConcern}&quot;)}"/>-->
-      <!--username="#{${oasis.datacore.mongodb.username}}"-->
-      <!--password="#{${oasis.datacore.mongodb.password}}"/>-->
+      <!-- NB. WriteConcern rather by operation, conf used by DatacoreWriteConcernResolver -->
 
    <!-- Mongo Template.
    Referenced components (mappingConverter...) have to be specified if they are custom
@@ -99,15 +72,7 @@
    <bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
       <constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
       <constructor-arg name="mongoConverter" ref="mappingConverter"/>
-      <!-- RATHER AT DB LEVEL here only per operation, and error "no replication has been enabled, so w=\"1\" won't work" -->
-      <!-- property name="writeConcern">
-         <bean class="com.mongodb.WriteConcern">
-            <constructor-arg name="w" value="#{new Integer(0)}" /><!- wait for ack but not replication ; or type="int", else string version ->
-            <constructor-arg name="wtimeout" value="0" />
-            <constructor-arg name="fsync" value="false" /><!- force fsync to disk ->
-            <constructor-arg name="j" value="true" /><!- wait for journaled ->
-         </bean>
-      </property -->
+      <!-- NB. WriteConcern rather by operation, conf used by DatacoreWriteConcernResolver -->
       <!--<property name="readPreference" value="${oasis.datacore.mongodb.readPreference}"/>-->
    </bean>
    <bean class=
