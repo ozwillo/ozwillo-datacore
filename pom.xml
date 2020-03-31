@@ -1058,6 +1058,17 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
             <groupId>com.github.jsonld-java</groupId>
             <artifactId>jsonld-java</artifactId>
             <version>${jsonld-java.version}</version>
+            <exclusions>
+               <!-- exclude its older jackson : -->
+               <exclusion>
+                  <groupId>com.fasterxml.jackson.core</groupId>
+                  <artifactId>jackson-core</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>com.fasterxml.jackson.core</groupId>
+                  <artifactId>jackson-databind</artifactId>
+               </exclusion>
+            </exclusions>
          </dependency>
          <!-- dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
