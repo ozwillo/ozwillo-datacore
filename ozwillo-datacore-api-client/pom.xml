@@ -65,7 +65,7 @@
 
 	<properties>
 		<jersey-version>1.7</jersey-version>
-		<jackson-version>2.1.4</jackson-version>
+		<jackson-version>2.9.9.1</jackson-version>
 		<scala-version>2.9.1-1</scala-version>
 		<junit-version>4.8.1</junit-version>
 		<maven-plugin-version>1.0.0</maven-plugin-version>
