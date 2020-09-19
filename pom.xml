@@ -138,7 +138,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 
 		<!-- spring IoC -->
 		<!-- spring.version>3.2.4.RELEASE</spring.version -->
-		<spring.version>5.2.3.RELEASE</spring.version><!-- brought by spring data's -->
+		<spring.version>5.2.8.RELEASE</spring.version><!-- brought by spring data's -->
 		<cglib.version>3.2.12</cglib.version>
 		<hibernate-validator.version>6.0.13.Final</hibernate-validator.version>
 
