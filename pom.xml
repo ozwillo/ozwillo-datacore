@@ -156,7 +156,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		<validation-api.version>1.1.0.Final</validation-api.version>
 
 		<!-- REST -->
-		<jackson.version>2.10.2</jackson.version><!-- latest ; swagger's : 2.9.8, jsonld-java's : 2.3.3
+		<jackson.version>2.11.0</jackson.version><!-- latest ; swagger's : 2.9.8, jsonld-java's : 2.3.3
 			as of 201309 -->
 		<cxf.version>3.3.5</cxf.version><!-- NB. 3.3.5 brings :
         spring & security 5.1.12 & 5.1.7, metrics 3.2.6 https://github.com/apache/cxf/blob/cxf-3.3.5/parent/pom.xml
