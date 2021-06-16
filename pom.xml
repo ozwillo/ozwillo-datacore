@@ -158,7 +158,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		<!-- REST -->
 		<jackson.version>2.10.2</jackson.version><!-- latest ; swagger's : 2.9.8, jsonld-java's : 2.3.3
 			as of 201309 -->
-		<cxf.version>3.3.5</cxf.version><!-- NB. 3.3.5 brings :
+		<cxf.version>3.3.10</cxf.version><!-- NB. 3.3.5 brings :
         spring & security 5.1.12 & 5.1.7, metrics 3.2.6 https://github.com/apache/cxf/blob/cxf-3.3.5/parent/pom.xml
         OLD : before 3.0.4 for JAXRS 2.0, 3.1.4 for metrics -->
 		<metrics.version>3.2.6</metrics.version><!-- TODO 3.2.6 OLD : 3.1.2 is cxf 3.1.4's' (optional dep) version AND latest on 20151201 -->
