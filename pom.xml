@@ -156,7 +156,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		<validation-api.version>1.1.0.Final</validation-api.version>
 
 		<!-- REST -->
-		<jackson.version>2.10.2</jackson.version><!-- latest ; swagger's : 2.9.8, jsonld-java's : 2.3.3
+		<jackson.version>2.10.5</jackson.version><!-- latest ; swagger's : 2.9.8, jsonld-java's : 2.3.3
 			as of 201309 -->
 		<cxf.version>3.3.5</cxf.version><!-- NB. 3.3.5 brings :
         spring & security 5.1.12 & 5.1.7, metrics 3.2.6 https://github.com/apache/cxf/blob/cxf-3.3.5/parent/pom.xml
@@ -164,10 +164,10 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		<metrics.version>3.2.6</metrics.version><!-- TODO 3.2.6 OLD : 3.1.2 is cxf 3.1.4's' (optional dep) version AND latest on 20151201 -->
 		<ehcache.version>2.10.6</ehcache.version><!-- for client-side cache ; cxf's (& spring's) -->
 
-        <guava.version>27.1-jre</guava.version><!-- for ImmutableMap/List(.Builder) (prefer it to Apache Commons Collections),
+        <guava.version>30.0-jre</guava.version><!-- for ImmutableMap/List(.Builder) (prefer it to Apache Commons Collections),
         also used by MITRE OpenIdConnect & Swagger (in 13.0.1, 11.0.2) -->
 		<commons-lang.version>2.6</commons-lang.version><!-- for ExceptionUtils -->
-		<commons-io.version>2.6</commons-io.version><!-- for IOUtils TODO used ?? -->
+		<commons-io.version>2.7</commons-io.version><!-- for IOUtils TODO used ?? -->
 
 		<swagger.version>1.6.0</swagger.version><!-- latest 1.5+ i.e. swagger spec 2.0 (but NOT swagger 2.0 / OpenAPI 3.0) -->
 
