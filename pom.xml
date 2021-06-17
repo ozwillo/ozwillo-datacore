@@ -164,7 +164,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		<metrics.version>3.2.6</metrics.version><!-- TODO 3.2.6 OLD : 3.1.2 is cxf 3.1.4's' (optional dep) version AND latest on 20151201 -->
 		<ehcache.version>2.10.6</ehcache.version><!-- for client-side cache ; cxf's (& spring's) -->
 
-        <guava.version>27.1-jre</guava.version><!-- for ImmutableMap/List(.Builder) (prefer it to Apache Commons Collections),
+        <guava.version>30.0-jre</guava.version><!-- for ImmutableMap/List(.Builder) (prefer it to Apache Commons Collections),
         also used by MITRE OpenIdConnect & Swagger (in 13.0.1, 11.0.2) -->
 		<commons-lang.version>2.6</commons-lang.version><!-- for ExceptionUtils -->
 		<commons-io.version>2.6</commons-io.version><!-- for IOUtils TODO used ?? -->
