@@ -7,7 +7,7 @@
   <parent>
    <groupId>org.ozwillo.datacore</groupId>
    <artifactId>ozwillo-datacore</artifactId>
-    <version>1.12.0.RELEASE</version>
+    <version>1.13-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   
@@ -75,11 +75,11 @@
       </dependency --><!-- in Java 11 required to bring javax.annotation for @PostConstruct -->
      
  
-		<!-- mongodb java driver -->
-		<!--<dependency>-->
-			<!--<groupId>org.mongodb</groupId>-->
-			<!--<artifactId>mongo-java-driver</artifactId>-->
-		<!--</dependency>-->
+		<!-- mongodb java driver (optional in Spring Data Mongo) -->
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongodb-driver-sync</artifactId>
+		</dependency>
 		<!-- Spring data mongodb -->
 		<dependency>
 			<groupId>org.springframework.data</groupId>
@@ -125,7 +125,6 @@
       <dependency>
          <groupId>org.hibernate.validator</groupId>
          <artifactId>hibernate-validator</artifactId>
-          <version>6.0.13.Final</version>
       </dependency>
       
       <!-- for ImmutableMap/List(.Builder), also used by MITRE OpenIdConnect & Swagger -->

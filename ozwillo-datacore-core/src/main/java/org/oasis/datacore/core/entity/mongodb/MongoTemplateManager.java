@@ -1,6 +1,7 @@
 package org.oasis.datacore.core.entity.mongodb;
 
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +10,11 @@ import java.util.Set;
 import javax.annotation.PostConstruct;
 
 import org.bson.codecs.configuration.CodecProvider;
+import org.bson.codecs.configuration.CodecRegistries;
+import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.internal.OverridableUuidRepresentationCodecRegistry;
 import org.bson.internal.ProvidersCodecRegistry;
+import org.oasis.datacore.core.entity.mongodb.joda.DateTimeCodec;
 import org.oasis.datacore.core.entity.mongodb.joda.DateTimeCodecProvider;
 import org.oasis.datacore.core.entity.mongodb.joda.DateTimeTransformer;
 import org.oasis.datacore.core.meta.model.DCModelService;
@@ -19,18 +24,21 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoClientSettings.Builder;
 import com.mongodb.MongoCredential;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.connection.ServerSettings;
 
 
 /**
@@ -81,7 +89,7 @@ public class MongoTemplateManager {
    /** used to build default URI-mongos (with another customized param) */
    @Qualifier("mongoDbFactory")
    @Autowired
-   private MongoDbFactory mongoDbFactory;
+   private MongoDatabaseFactory mongoDbFactory;
 
    /** caches default & custom mongos ONLY (not default because can be cluster so not only host prop !) */
    private Map<String,MongoTemplate> customMongoTemplateCacheMap = new HashMap<>();
@@ -103,15 +111,19 @@ public class MongoTemplateManager {
 
    @SuppressWarnings("deprecation")
    private void configureMongoForJoda(MongoTemplate mgo) {
-      org.bson.BSON.addEncodingHook(org.joda.time.DateTime.class, new DateTimeTransformer());
+      /////org.bson.BSON.addEncodingHook(org.joda.time.DateTime.class, new DateTimeTransformer());
       try {
          Field f = ProvidersCodecRegistry.class.getDeclaredField("codecProviders");
          f.setAccessible(true);
+         CodecRegistry codecRegistry = mgo.getDb().getCodecRegistry();
+         if (codecRegistry instanceof OverridableUuidRepresentationCodecRegistry) {
+            codecRegistry = (CodecRegistry) ((OverridableUuidRepresentationCodecRegistry) codecRegistry).getWrapped();
+         }
          @SuppressWarnings("unchecked")
-         List<CodecProvider> codecProviders = (List<CodecProvider>) f.get(mgo.getDb().getCodecRegistry());
+         List<CodecProvider> codecProviders = (List<CodecProvider>) f.get(codecRegistry);
          codecProviders.add(new DateTimeCodecProvider());
       } catch (Exception e) {
-         throw new RuntimeException("Error configuring Mongo for Joda DateTime");
+         throw new RuntimeException("Error configuring Mongo for Joda DateTime", e);
       }
    }
    
@@ -201,17 +213,29 @@ public class MongoTemplateManager {
                     || username.trim().equals("null") ? null
                     : MongoCredential.createPlainCredential(username, dbUri.getDatabase(), password.toCharArray());
             ServerAddress serverAddress = new ServerAddress(dbUri.getHost(), dbUri.getPort());
-            MongoClientOptions mongoClientOptions =
-                    MongoClientOptions.builder()
-                        .readPreference(ReadPreference.secondaryPreferred())
-                        .build();
-            mongoClient = (mongoCredential == null) ? new MongoClient(serverAddress, mongoClientOptions)
-                  : new MongoClient(serverAddress, mongoCredential, mongoClientOptions);
+            Builder clientSettingsBuilder = MongoClientSettings.builder()
+                  .codecRegistry(
+                        CodecRegistries.fromRegistries(
+                              MongoClientSettings.getDefaultCodecRegistry(),
+                              CodecRegistries.fromCodecs(new DateTimeCodec())
+                              )
+                        )
+                  .readPreference(ReadPreference.secondaryPreferred())
+                  //.writeConcern(legacyMongoClient.getWriteConcern())
+                  ///.readConcern(legacyMongoClient.getReadConcern())
+                  ///.retryWrites(mongoClientOptions.getRetryWrites())
+                  .applyToClusterSettings(clusterSettings -> {
+                     clusterSettings.hosts(Collections.singletonList(serverAddress));
+                  });
+            if (mongoCredential != null) {
+               clientSettingsBuilder.credential(mongoCredential);
+            }
+            mongoClient = MongoClients.create(clientSettingsBuilder.build());
          } catch (Exception e) {
             // configuration problem, don't hide it :
             throw new RuntimeException("Error creating custom mongo " + dbUri, e);
          }
-         MongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(mongoClient, dbUri.getDatabase());
+         MongoDatabaseFactory mongoDbFactory = new SimpleMongoClientDatabaseFactory(mongoClient, dbUri.getDatabase());
          mgo = new MongoTemplate(mongoDbFactory, mongoConverter);
       }
       

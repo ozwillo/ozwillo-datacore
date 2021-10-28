@@ -3,16 +3,21 @@ package org.oasis.datacore.core.entity;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.bson.Document;
+import org.bson.codecs.configuration.CodecRegistries;
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.oasis.datacore.core.entity.mongodb.joda.DateTimeCodec;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -21,7 +26,9 @@ import org.springframework.test.context.support.DirtiesContextTestExecutionListe
 import org.springframework.test.context.transaction.TransactionalTestExecutionListener;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.MongoClient;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.ReadPreference;
+import com.mongodb.ServerAddress;
 
 import static org.junit.Assert.*;
 
@@ -75,7 +82,7 @@ public class MongoBasicTest {
 		}
 		
 		try {
-			MongoClient mongo = new MongoClient("localhost" , 4242);						
+			MongoClient mongo = createMongoClient("localhost" , 4242);
 			MongoDatabase admin = mongo.getDatabase("admin");
 			Document params = admin.runCommand(new Document("getCmdLineOpts", 1));
 			
@@ -112,7 +119,7 @@ public class MongoBasicTest {
 			Runtime.getRuntime().exec("mongod --dbpath /tmp/mongod/ --logpath /tmp/mongod/testJournal.log --journal --port 2121");
 			Thread.sleep(10000);
 			
-			mongo = new MongoClient("localhost" , 2121);
+			mongo = createMongoClient("localhost" , 2121);
 			db = mongo.getDatabase("test");
 			coll = db.getCollection("journal");
 			long findLyonCount = coll.countDocuments(new BasicDBObject("name", "Lyon"));
@@ -131,6 +138,23 @@ public class MongoBasicTest {
 		}
    }
    
+   private MongoClient createMongoClient(String host, int port) {
+      return MongoClients.create(MongoClientSettings.builder()
+            .codecRegistry(
+                  CodecRegistries.fromRegistries(
+                        MongoClientSettings.getDefaultCodecRegistry(),
+                        CodecRegistries.fromCodecs(new DateTimeCodec())
+                        )
+                  )
+            .readPreference(ReadPreference.secondaryPreferred())
+            //.writeConcern(legacyMongoClient.getWriteConcern())
+            ///.readConcern(legacyMongoClient.getReadConcern())
+            ///.retryWrites(mongoClientOptions.getRetryWrites())
+            .applyToClusterSettings(clusterSettings -> {
+               clusterSettings.hosts(Collections.singletonList(new ServerAddress(host , port)));
+            }).build());
+   }
+
    /**
     * WARNING: This test needs text search to be enabled.
     * WARNING: Takes some time !
@@ -173,7 +197,7 @@ public class MongoBasicTest {
 		}
 	   
 		try {
-			MongoClient mongo = new MongoClient("localhost" , 2424);						
+			MongoClient mongo = createMongoClient("localhost" , 2424);						
 			MongoDatabase admin = mongo.getDatabase("admin");
 			Document params = admin.runCommand(new Document("getCmdLineOpts", 1));
 			

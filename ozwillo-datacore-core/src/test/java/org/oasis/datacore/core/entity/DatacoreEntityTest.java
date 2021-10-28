@@ -25,7 +25,7 @@ import org.oasis.datacore.core.meta.pov.DCProject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -66,7 +66,7 @@ public class DatacoreEntityTest {
    private MongoConverter mongoConverter;
    @Qualifier("mongoDbFactory")
    @Autowired
-   private MongoDbFactory mongoDbFactory;
+   private MongoDatabaseFactory mongoDbFactory;
    
    /** to check mongo conf, last operation result... */
    @Autowired

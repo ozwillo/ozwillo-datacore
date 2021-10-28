@@ -6,6 +6,10 @@ package org.oasis.datacore.core.entity.mongodb.joda;
  *
  */
 public class DateTimeCodec implements org.bson.codecs.Codec<org.joda.time.DateTime> {
+   public DateTimeCodec() {
+      
+   }
+   
    @Override
    public void encode(final org.bson.BsonWriter writer, final org.joda.time.DateTime value, final org.bson.codecs.EncoderContext encoderContext) {
        writer.writeDateTime(value.getMillis());

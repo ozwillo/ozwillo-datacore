@@ -97,8 +97,8 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
    /** microseconds after which db.killOp() if > 0, requires 2.6+ server http://docs.mongodb.org/manual/reference/method/cursor.maxTimeMS/#cursor.maxTimeMS */
    @Value("${datacoreApiServer.query.maxTime}")
    protected int maxTime;
-   @SuppressWarnings("deprecation")
-   private JsonWriterSettings indentedMongoJsonWriterSettings = new JsonWriterSettings(true);
+   ///@SuppressWarnings("deprecation") deprecated
+   ///private JsonWriterSettings indentedMongoJsonWriterSettings = new JsonWriterSettings(true);
    
    
    /** to get storage model */
@@ -725,13 +725,13 @@ public class LdpEntityQueryServiceImpl implements LdpEntityQueryService {
          // sortExplain & getSort(), getSpecial() (ex. maxScan), getOptions()?
          // or even Model (type(s), fields)...
          // TODO constants
-         FindIterable<Document> explainRes = mgo.getCollection(storageModel.getCollectionName())
-               .find(springMongoQuery.getQueryObject()).modifiers(new Document("$explain", true));
+         Document explainRes = mgo.getCollection(storageModel.getCollectionName())
+               .find(springMongoQuery.getQueryObject()).explain();
          Map<String, Object> debugCtx = serverRequestContext.getDebug(); // never null because isDebug()
          debugCtx.put("collectionName", storageModel.getCollectionName());
          debugCtx.put("mongoQuery", springMongoQuery.getQueryObject());
          debugCtx.put("springMongoQuery", springMongoQuery);
-         debugCtx.put(DEBUG_QUERY_EXPLAIN, explainRes.first()); // toJson(indentedMongoJsonWriterSettings) WARNING requires mongo conf for Joda DateTime (in MongoTemplateManager)
+         debugCtx.put(DEBUG_QUERY_EXPLAIN, explainRes); // toJson(indentedMongoJsonWriterSettings) WARNING requires mongo conf for Joda DateTime (in MongoTemplateManager)
          debugCtx.put("hasNoIndexedField", queryParsingContext.isHasNoIndexedField());
          debugCtx.put("queryParsingContext.aggregatedQueryLimit", queryParsingContext.getAggregatedQueryLimit());
          debugCtx.put("storageModel.maxScan", storageModel.getMaxScan());
