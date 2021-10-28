@@ -209,6 +209,8 @@ public class MongoTemplateManager {
       } else {
          MongoClient mongoClient;
          try {
+            // creating credentials if required : (for this to work, username has to be
+            // defined in spring props, even if empty)
             MongoCredential mongoCredential = username == null || username.trim().isEmpty()
                     || username.trim().equals("null") ? null
                     : MongoCredential.createPlainCredential(username, dbUri.getDatabase(), password.toCharArray());

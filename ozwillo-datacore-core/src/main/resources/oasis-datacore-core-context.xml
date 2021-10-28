@@ -21,17 +21,7 @@
    <context:annotation-config /><!-- actually auto enabled by previous line -->
 
 
-   <!-- Default mongo bean name is 'mongo'
-   NB. most of the mongo conf is done on client side !
-   NB. no socket timeout because would NOT stop the query on the mongo server see #23 -->
-   <mongo:mongo-client id="mongoClient" host="${oasis.datacore.mongodb.host}" port="${oasis.datacore.mongodb.port}">
-      <!-- TODO prod conf mongo:client-settings
-         connections-per-host="100"
-         threads-allowed-to-block-for-connection-multiplier="4"
-      / -->
-   </mongo:mongo-client>
-
-   <!-- mongo:mongo id="mongo" replica-set="127.0.0.1:27017,localhost:27018"/ -->
+   <import resource="classpath:oasis-datacore-core-mongoclient${datacore.mongosecuritymode:-devmode}-context.xml" />
   
   
   <!-- DB -->
