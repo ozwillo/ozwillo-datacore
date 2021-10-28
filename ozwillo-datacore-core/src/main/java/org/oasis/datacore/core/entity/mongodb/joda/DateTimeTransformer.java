@@ -3,6 +3,7 @@ package org.oasis.datacore.core.entity.mongodb.joda;
 /**
  * mongo conf for Joda DateTime (in MongoTemplateManager)
  * @author mdutoo
+ * @deprecated
  *
  */
 public class DateTimeTransformer implements org.bson.Transformer {
