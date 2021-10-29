@@ -167,7 +167,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
         <guava.version>27.1-jre</guava.version><!-- swagger's ? for ImmutableMap/List(.Builder) (prefer it to Apache Commons Collections),
         also used by MITRE OpenIdConnect & Swagger (in 13.0.1, 11.0.2) -->
 		<commons-lang.version>2.6</commons-lang.version><!-- for ExceptionUtils -->
-		<commons-io.version>2.6</commons-io.version><!-- for IOUtils TODO used ?? -->
+		<commons-io.version>2.7</commons-io.version><!-- for IOUtils TODO used ?? -->
 
 		<swagger.version>1.6.2</swagger.version><!-- latest 1.5+ i.e. swagger spec 2.0 (but NOT swagger 2.0 / OpenAPI 3.0) -->
 
