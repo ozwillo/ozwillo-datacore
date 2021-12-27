@@ -151,7 +151,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		<validation-api.version>1.1.0.Final</validation-api.version>
 
 		<!-- REST -->
-		<jackson.version>2.11.4</jackson.version><!-- latest ; cxf' ; TODO swagger's : 2.9.8, jsonld-java's : 2.3.3
+		<jackson.version>2.12.6</jackson.version><!-- latest ; cxf' ; TODO swagger's : 2.9.8, jsonld-java's : 2.3.3
 			as of 201309 -->
 		<cxf.version>3.4.5</cxf.version><!-- NB. 3.4.5 would bring :
         spring 5.2.17 & security 5.3.11 (though spring security 5.4.9 requires spring 5.2.18),
