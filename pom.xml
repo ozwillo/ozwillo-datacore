@@ -151,7 +151,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		<validation-api.version>1.1.0.Final</validation-api.version>
 
 		<!-- REST -->
-		<jackson.version>2.11.4</jackson.version><!-- latest ; cxf' ; TODO swagger's : 2.9.8, jsonld-java's : 2.3.3
+		<jackson.version>2.12.6</jackson.version><!-- latest ; cxf' ; TODO swagger's : 2.9.8, jsonld-java's : 2.3.3
 			as of 201309 -->
 		<cxf.version>3.4.5</cxf.version><!-- NB. 3.4.5 would bring :
         spring 5.2.17 & security 5.3.11 (though spring security 5.4.9 requires spring 5.2.18),
@@ -181,7 +181,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		<mitre-openid-client.version>1.3.3</mitre-openid-client.version><!-- for client & test -->
 
         <!-- JSON-LD (for RDF facade) -->
-        <jsonld-java.version>0.4.1</jsonld-java.version><!-- no later than 0.4.1 else no -jena so no turtle format support -->
+        <jsonld-java.version>0.6.0</jsonld-java.version><!-- no later than 0.4.1 else no -jena so no turtle format support -->
         <httpclient.version>4.5.3</httpclient.version><!-- rather same as openid-connect-common 1.1.0's -->
         <!-- jackson.version>2.3.3</jackson.version><!- would conflict ->
         <sesame.version>2.7.11</sesame.version>
