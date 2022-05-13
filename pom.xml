@@ -143,7 +143,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		<hibernate-validator.version>6.1.7.Final</hibernate-validator.version>
 
 		<!-- spring data on mongodb -->
-		<spring-data-mongodb.version>3.2.6</spring-data-mongodb.version>
+		<spring-data-mongodb.version>3.4.0</spring-data-mongodb.version>
 		<mongodb-sync.version>4.2.3</mongodb-sync.version><!-- supports MongoDB up to 4.4 -->
 		<joda-time.version>2.10.10</joda-time.version>
 		
