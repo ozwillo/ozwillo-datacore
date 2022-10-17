@@ -169,7 +169,7 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 		<commons-lang.version>2.6</commons-lang.version><!-- for ExceptionUtils -->
 		<commons-io.version>2.6</commons-io.version><!-- for IOUtils TODO used ?? -->
 
-		<swagger.version>1.6.2</swagger.version><!-- latest 1.5+ i.e. swagger spec 2.0 (but NOT swagger 2.0 / OpenAPI 3.0) -->
+		<swagger.version>1.6.8</swagger.version><!-- latest 1.5+ i.e. swagger spec 2.0 (but NOT swagger 2.0 / OpenAPI 3.0) -->
 
         <!-- monitoring -->
         <!-- UDP is bugged in 0.2.10, rather use TCP for now -->
