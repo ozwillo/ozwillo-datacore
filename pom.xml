@@ -138,12 +138,12 @@ Contact : http://www.ozwillo.com/ ozwillo-talk@googlegroups.com
 
 		<!-- spring IoC -->
 		<!-- spring.version>3.2.4.RELEASE</spring.version -->
-		<spring.version>5.3.9</spring.version><!-- brought by spring data's, but chosen by latest spring-security -->
+		<spring.version>5.3.26</spring.version><!-- brought by spring data's, but chosen by latest spring-security -->
 		<cglib.version>3.2.12</cglib.version>
 		<hibernate-validator.version>6.1.7.Final</hibernate-validator.version>
 
 		<!-- spring data on mongodb -->
-		<spring-data-mongodb.version>3.2.6</spring-data-mongodb.version>
+		<spring-data-mongodb.version>3.4.10</spring-data-mongodb.version>
 		<mongodb-sync.version>4.2.3</mongodb-sync.version><!-- supports MongoDB up to 4.4 -->
 		<joda-time.version>2.10.10</joda-time.version>
 		
